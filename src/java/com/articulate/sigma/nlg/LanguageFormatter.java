@@ -482,8 +482,8 @@ public class LanguageFormatter {
         .replaceAll("\\?\\w+", "")
         .replaceAll("\\s{2,}", " ")
         .trim();
-        System.out.println("LLM Summary Input Length: " + cleanedText.length());
-        System.out.println("Proof Step Count: " + proofSteps.size());
+       // System.out.println("LLM Summary Input Length: " + cleanedText.length());
+        // System.out.println("Proof Step Count: " + proofSteps.size());
         
         // prompt for Ollama
         String prompt = "You are an expert instructor who explains formal proofs in clear, structured English.\n"
