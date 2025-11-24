@@ -458,6 +458,15 @@ public class THFnew {
 
 
             for (Formula fnew : processed) {
+
+                // ISSUE 15
+                if (exclude(fnew,kb,bw)){
+                    String flatFormula = f.getFormula().replace("\n", " ").replace("\r", " ");
+                    bw.write("% excluded: " + flatFormula + "\n");
+                    bw.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
+                    continue;
+                }
+
                 if (debug) System.out.println("THFnew.oneTrans(): variableArity(kb,fnew.car()): " + variableArity(kb,fnew.car()));
                 if (variableArity(kb,fnew.car()))
                     fnew = adjustArity(kb,fnew);   // hack to correct arity after adding world argument
@@ -473,9 +482,13 @@ public class THFnew {
 //                }
                 if (bw == null)
                     System.out.println(process(new Formula(fnew), typeMap, false));
-                else
+                else {
+                    System.out.println("axNum: " + axNum+1 );
+                    System.out.println("fnew: " + fnew);
+                    System.out.println("typeMap: " + typeMap);
                     bw.write("thf(ax" + axNum++ + ",axiom," +
                             process(new Formula(fnew), typeMap, false) + ").\n");
+                }
             }
         }
     }
@@ -493,60 +506,78 @@ public class THFnew {
     public static boolean exclude(Formula f, KB kb, Writer out) throws IOException {
 
         if (debug) System.out.println("exclude(): " + f);
-        if (f.getFormula().contains("\"")) {
-            out.write("% exclude(): quote" + "\n");
-            return true;
-        }
-        if (f.getFormula().contains(Formula.LOG_FALSE) || f.getFormula().contains(Formula.LOG_TRUE)) {
-            out.write("% exclude(): contains true or false constant" + "\n");
-            return true;
-        }
-        if (f.isGround()) {
-            if (debug) System.out.println("exclude(): is ground: " + f);
-            List<String> ar = f.complexArgumentsToArrayListString(0);
 
-            // ISSUE 11
-            // NEW: exclude domain axioms for modal operators
-            if (protectedRelation(ar.get(0))) {
-                for (int i = 1; i < ar.size(); i++) {
-                    if (Modals.modalAttributes.contains(ar.get(i))) {
+        // Exclude strings (quotes)
+        if (f.getFormula().contains("\"")) {
+            out.write("% exclude(): quote\n");
+            return true;
+        }
+
+        // Exclude formulas containing true/false
+        if (f.getFormula().contains(Formula.LOG_FALSE) ||
+                f.getFormula().contains(Formula.LOG_TRUE)) {
+            out.write("% exclude(): contains true or false constant\n");
+            return true;
+        }
+
+        // ALWAYS recurse into interior lists (this catches 'format' anywhere)
+        // ISSUE 15
+        List<String> args = f.complexArgumentsToArrayListString(0);
+        System.out.println("Formula: "+f.getFormula());
+        System.out.println("complexArgumentsToArrayListString: "+ args);
+        for (String s : args) {
+            if (Formula.listP(s)) {
+                if (exclude(new Formula(s), kb, out)) {
+                    String flat = f.toString().replace("\n", " ").replace("\r", " ");
+                    out.write("% excluded(): interior list: " + flat + "\n");
+                    return true;
+                }
+            }
+        }
+
+        for (String sub : args) {
+            if (excludePred(sub, out)) {
+                String flat = f.toString().replace("\n", " ").replace("\r", " ");
+                out.write("% excluded(): term from  excludePred: " + flat + "\n");
+                return true;
+            }
+        }
+
+        // Additional checks only when ground
+        if (f.isGround()) {
+
+            // ISSUE 11: modal protected relations
+            if (protectedRelation(args.get(0))) {
+                for (int i = 1; i < args.size(); i++) {
+                    if (Modals.modalAttributes.contains(args.get(i))) {
                         out.write("% exclude(): modal attribute in protected relation: " +
-                                ar.get(0) + " " + ar.get(i) + "\n");
+                                args.get(0) + " " + args.get(i) + "\n");
                         return true;
                     }
                 }
             }
 
-            // ISSUE 10
-            // NEW: exclude domain axioms for modal operators
-            if (ar.get(0).equals("domain") && RESERVED_MODAL_SYMBOLS.contains(ar.get(1))) {
-                out.write("% exclude(): modal operator in domain: " + ar.get(1) + "\n");
+            // ISSUE 10: exclude domain axioms with modal symbols
+            if (args.get(0).equals("domain") &&
+                    RESERVED_MODAL_SYMBOLS.contains(args.get(1))) {
+                out.write("% exclude(): modal operator in domain: " + args.get(1) + "\n");
                 return true;
             }
 
-
-
-            for (String s : ar) {
-                if (Formula.listP(s) && exclude(new Formula(s),kb,out)) {
-                    // ISSUE 8
-                    String flat = f.toString().replace("\n", " ").replace("\r", " ");
-                    out.write("% excluded(): interior list: " + flat + "\n");
-                    return true;
-                }
-                if (debug) System.out.println("exclude(): arguments: " + ar);
-                if (debug) System.out.println("exclude(): testing: " + s);
+            // Ground numeric filtering
+            for (String s : args) {
                 if (StringUtil.isNumeric(s)) {
                     out.write("% exclude(): is numeric(2): \n");
                     if (s.contains(".") || s.contains("-") || s.length() > 1)
                         return true;
                     if (s.charAt(0) < '1' || s.charAt(0) > '6')
                         return true;
-                    if (debug) System.out.println("exclude(): not excluded");
                 }
             }
         }
-        String pred = f.car();
-        return excludePred(pred,out);
+
+        // TOP-LEVEL predicate check (THIS catches format at root)
+        return excludePred(f.car(), out);
     }
 
     /** ***************************************************************
@@ -650,6 +681,16 @@ public class THFnew {
         }
     }
 
+    private static Integer getSuffixNumber(String functor) {
+        // Match: anything, then "__", then digits at the end
+        Matcher m = Pattern.compile("^.*__(\\d+)$").matcher(functor);
+        if (m.matches()) {
+            return Integer.parseInt(m.group(1));
+        }
+        return null;   // no suffix found
+    }
+
+
     /** ***************************************************************
      */
     public static void writeTypes(KB kb, Writer out) throws IOException {
@@ -680,6 +721,8 @@ public class THFnew {
 
                 // Work on a local copy to build the THF type
                 List<String> sig = new ArrayList<>(baseSig);
+
+
                 if (!Formula.isLogicalOperator(t) && !t.equals("equals")) {
                     // ISSUE 1
                     if (MODAL_RELATIONS.contains(t)) {
@@ -692,16 +735,31 @@ public class THFnew {
                     continue;
                 }
                 boolean isFunction = false;
+                String SUMOtoTPTPformula = SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true);
+                System.out.println("SUMOtoTPTPformula is: "+SUMOtoTPTPformula);
                 if (kb.isInstanceOf(t,"Function")) {
-                    out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
-                            SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + " : ("); // write signature
+                    out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : ("); // write signature
                     isFunction = true;
+                }else
+                    out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : ("); // write signature
+
+                // ISSUE 14
+                // Check that the sigStr alligns with the __NUM of the term:
+                Integer suffixNum = getSuffixNumber(SUMOtoTPTPformula);
+
+                if (suffixNum != null && !sig.isEmpty() && sig.size() > (suffixNum+1)) {
+                    while (sig.size() > (suffixNum+1)) {
+                        sig.remove(sig.size() - 1);   // remove from end until sizes match
+                    }
                 }
-                else
-                    out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
-                            SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + " : ("); // write signature
+
                 String sigStr = sigString(sig,kb,isFunction);
+                System.out.println("sig is: "+sig);
+                System.out.println("sigStr is: "+sigStr);
+
+
                 out.write(sigStr + "))).\n");
+
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $i)).\n"); // write relation constant
             }
@@ -732,7 +790,7 @@ public class THFnew {
             out.write(Modals.getTHFHeader() + "\n");
             writeTypes(kb,out);
             for (Formula f : kb.formulaMap.values()) {
-                if (debug) System.out.println("THFnew.transModalTHF(): " + f);
+                if (true) System.out.println("THFnew.transModalTHF(): " + f);
                 if (!exclude(f,kb,out))
                     oneTrans(kb,f,out);
                 else {

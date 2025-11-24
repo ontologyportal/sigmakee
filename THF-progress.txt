@@ -162,6 +162,37 @@ Description:
 What’s wrong is the arity / type of s__disjointDecomposition__3 vs how you use it. s__disjointDecomposition__3 takes 3 individual arguments and returns a Boolean.
 
 
+14)
+
+Parsing Error on line 2247
+Non-boolean term vAPP($i,sTfun($i,$o),s__partition__1,X10) of sort sTfun($i,$o) is used in a formula context
+
+thf(ax960,axiom,( ! [V__ROW2:$i] : (((s__instance @ V__ROW2 @ s__Class) => ((s__partition__1 @ V__ROW2) => ((s__exhaustiveDecomposition__1 @ V__ROW2) & (s__disjointDecomposition__1 @ V__ROW2)))) ) )).
+
+Description:
+
+thf(s__partition__1_tp,type,(s__partition__1 : ($i > $i > $o))).
+thf(s__partition__2_tp,type,(s__partition__2 : ($i > $i > $o))).
+
+The KB is giving identical signatures to different arities.
+
+
+15)
+
+78332 Aborted by signal SIGSEGV on /Users/Mac_1/.sigmakee/KBs/SUMO.thf
+
+
+thf(ax1041,axiom,( ! [V__ROW3:$i,V__ROW4:$i,V__ROW2:$i,V__NUMBER:$i,V__CLASS:$i] : ((((s__instance @ V__ROW4 @ s__SymbolicString) & (s__instance @ V__ROW2 @ s__HumanLanguage) & (s__instance @ V__NUMBER @ s__PositiveInteger) & (s__instance @ V__CLASS @ s__Class)) => (((s__domain @ s__format__m @ V__NUMBER @ V__CLASS) & (s__instance @ s__format__m @ s__Predicate) & (s__format @ V__ROW2 @ V__ROW3 @ V__ROW4)) => (s__instance @ (s__ListOrderFn @ (s__ListFn__3Fn @ V__ROW2 @ V__ROW3 @ V__ROW4) @ V__NUMBER) @ V__CLASS))) ) )).
+
+
+Description:
+
+Even if 'format' is part of the 'excludePred' list, it doesn't get excluded because in the exluce method it checks only the ground term and not the inner ones, so it tries to generate a formula with the format but there is no type declaration.
+
+Solution:
+
+The problem was that the exlude methods checked only the existing formula and not the processed ones, so there were new formulas that were intoducing not allowed terms like 'format' that were never included in the SUMO.thf file.
+
 
 
 
