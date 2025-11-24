@@ -149,6 +149,19 @@ Solution:
 Include Law in the modalAttributes list.
 
 
+13)
+
+78332 Aborted by signal SIGSEGV on /Users/Mac_1/.sigmakee/KBs/SUMO.thf
+
+thf(ax1299,axiom,(s__disjointDecomposition__3 @ s__Language @ s__AnimalLanguage @ s__HumanLanguage @ s__ComputerLanguage)).
+
+(disjointDecomposition Language AnimalLanguage HumanLanguage ComputerLanguage)
+
+Description:
+
+What’s wrong is the arity / type of s__disjointDecomposition__3 vs how you use it. s__disjointDecomposition__3 takes 3 individual arguments and returns a Boolean.
+
+
 
 
 

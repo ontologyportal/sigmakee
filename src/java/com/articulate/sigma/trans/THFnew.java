@@ -341,6 +341,40 @@ public class THFnew {
         return "?W" + num;
     }
 
+    // ISSUE 4
+    // ISSUE 12
+    // Mark variables that occur as the first argument of modalAttribute as Formula-valued
+    private static void markModalAttributeFormulaVars(Formula f, Map<String, Set<String>> typeMap) {
+
+        if (f == null)
+            return;
+
+        // If this is directly a (modalAttribute X Y) form
+        if ("modalAttribute".equals(f.car())) {
+            List<Formula> args = f.complexArgumentsToArrayList(1);
+            if (!args.isEmpty()) {
+                Formula first = args.get(0);
+                String firstStr = first.getFormula();
+                if (Formula.isVariable(firstStr)) {
+                    Set<String> ts = typeMap.get(firstStr);
+                    if (ts == null) {
+                        ts = new HashSet<>();
+                        typeMap.put(firstStr, ts);
+                    }
+                    ts.add("Formula");
+                }
+            }
+        }
+
+        // Recurse into sub-formulas
+        List<Formula> subs = f.complexArgumentsToArrayList(0);
+        if (subs != null) {
+            for (Formula sub : subs) {
+                markModalAttributeFormulaVars(sub, typeMap);
+            }
+        }
+    }
+
     /** ***************************************************************
      */
     public static void oneTrans(KB kb, Formula f, Writer bw) throws IOException {
@@ -354,34 +388,49 @@ public class THFnew {
             if (debug) System.out.println("THFnew.oneTrans(): res.varTypeCache: " + res.varTypeCache);
             if (debug) System.out.println("THFnew.oneTrans(): processed: " + processed);
             if (debug) System.out.println("THFnew.oneTrans(): accreln sig: " + kb.kbCache.getSignature("accreln"));
+
             res.varTypeCache.clear(); // clear so it really computes the types instead of just returning the type cache
-            Map<String, Set<String>> typeMap = fp.findAllTypeRestrictions(res, kb);
+
+            // Start with an empty typeMap
+            Map<String, Set<String>> typeMap = new HashMap<>();
+
+            // Existing typing information from preprocessing
+            typeMap.putAll(fp.findAllTypeRestrictions(res, kb));
             if (debug) System.out.println("THFnew.oneTrans(): typeMap(1): " + typeMap);
             typeMap.putAll(res.varTypeCache);
             if (debug) System.out.println("THFnew.oneTrans(): typeMap(2): " + typeMap);
+
+            // Existing code: add World, FORMULA-name hack, etc.
             Set<String> types = new HashSet<>();
             types.add("World");
             String worldVar = makeWorldVar(kb,f);
             typeMap.put(worldVar,types);
             if (debug) System.out.println("THFnew.oneTrans(): typeMap(3): " + typeMap);
 
+            // APPLY structural modalAttribute rule (after typeMap is built)
+            // ISSUE 4
+            // ISSUE 12
+            markModalAttributeFormulaVars(f, typeMap);   // use the original KIF formula
+
+
             // ISSUE 4
             // NEW: force “FORMULA” variables to be of type Formula
-            Set<String> allVars = res.collectAllVariables();
-            for (String v : allVars) {
-                if (v == null)
-                    continue;
-                String bare = v.startsWith("?") ? v.substring(1) : v;
-                if (bare.toUpperCase().contains("FORMULA")) {
-                    Set<String> ts = typeMap.get(v);
-                    if (ts == null) {
-                        ts = new HashSet<>();
-                        typeMap.put(v, ts);
-                    }
-                    ts.add("Formula");
-                }
-            }
-            if (debug) System.out.println("THFnew.oneTrans(): typeMap(4): " + typeMap);
+//            Set<String> allVars = res.collectAllVariables();
+//            for (String v : allVars) {
+//                if (v == null)
+//                    continue;
+//                String bare = v.startsWith("?") ? v.substring(1) : v;
+//                if (bare.toUpperCase().contains("FORMULA") ||
+//                        bare.equalsIgnoreCase("TEXT")) {
+//                    Set<String> ts = typeMap.get(v);
+//                    if (ts == null) {
+//                        ts = new HashSet<>();
+//                        typeMap.put(v, ts);
+//                    }
+//                    ts.add("Formula");
+//                }
+//            }
+//            if (debug) System.out.println("THFnew.oneTrans(): typeMap(4): " + typeMap);
 
 
             for (Formula fnew : processed) {
