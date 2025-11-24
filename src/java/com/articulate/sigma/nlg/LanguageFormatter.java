@@ -484,21 +484,30 @@ public class LanguageFormatter {
         .trim();
         
         // prompt for Ollama
-                String prompt =
-            "You are an expert explainer of formal logic who writes for students and curious readers.\n\n"
-          + "Below is a proof written in structured English based on formal logic steps.\n"
-          + "Your goal is to explain the proof like a story: describe what the argument assumes, "
-          + "what reasoning or transformations happen, and how those lead to the final conclusion.\n\n"
-          + "Write 3–5 sentences that are smooth, intuitive, and human-readable — "
-          + "as if you were explaining the reasoning to an intelligent student who’s new to logic.\n\n"
-          + "Avoid quoting variable names, step numbers, or symbols like 'forall', 'exists', or 'QED'. "
-          + "Instead, use natural phrases such as 'the proof begins by assuming…', "
-          + "'it considers what would happen if…', or 'eventually it concludes that…'.\n\n"
-          + "End with a clear statement of what the proof shows or confirms.\n\n"
-          + "Proof text:\n"
-          + cleanedText
-          + "\n\n"
-          + "Now write the explanation as a clear and intuitive short narrative paragraph:";
+        String prompt = "You are an expert instructor who explains formal proofs in clear, structured English.\n"
+            + "Your task is to turn the proof steps below into a concise explanation that mirrors the style "
+            + "of a logic textbook or the Lean Logic Workbook.\n\n"
+            + "Follow these guidelines carefully:\n"
+            + "1. Begin by identifying the goal of the proof or the key claim being established.\n"
+            + "2. Describe the initial assumption(s) used in the argument.\n"
+            + "3. Explain how the reasoning unfolds, highlighting important implications, case analyses, or contradictions.\n"
+            + "4. Never mention step numbers, variable names, or logical symbols from the original proof.\n"
+            + "   Do NOT include symbols such as 'forall', 'exists', '=>', or object labels.\n"
+            + "5. Refer to elements generically, using phrases like 'an entity', 'an object', or 'a relation'.\n"
+            + "6. Use natural narrative transitions, such as:\n"
+            + "     - 'The proof begins by assuming that…'\n"
+            + "     - 'It then considers what must follow…'\n"
+            + "     - 'From this, it becomes clear that…'\n"
+            + "     - 'This leads to the conclusion that…'\n"
+            + "7. Write 3–6 sentences that form one smooth, cohesive paragraph.\n"
+            + "8. End with a clear statement of what the proof ultimately establishes.\n"
+            + "9. Highlight the intuition behind *why* the conclusion must be true—go beyond mechanical steps.\n"
+            + "   Explain the reasoning as if teaching a student who is new to logic.\n\n"
+            + "Here are the proof steps:\n"
+            + cleanedText
+            + "\n\n"
+            + "Now write the explanation in the style of a logic-teaching textbook:";
+
  
         String model = "llama3.2";
         String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
