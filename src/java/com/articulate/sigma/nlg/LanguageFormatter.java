@@ -482,6 +482,8 @@ public class LanguageFormatter {
         .replaceAll("\\?\\w+", "")
         .replaceAll("\\s{2,}", " ")
         .trim();
+        System.out.println("LLM Summary Input Length: " + cleanedText.length());
+        System.out.println("Proof Step Count: " + proofSteps.size());
         
         // prompt for Ollama
         String prompt = "You are an expert instructor who explains formal proofs in clear, structured English.\n"
@@ -515,7 +517,7 @@ public class LanguageFormatter {
         String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
         if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
         
-        OllamaClient ollama = new OllamaClient(ollamaHost);
+        OllamaClient ollama = new OllamaClient(ollamaHost, 10_000, 60_000); // longer timeouts for proof summarization
         
         try {
             String summary = ollama.generate(model, prompt);
