@@ -486,7 +486,7 @@ public class LanguageFormatter {
         // prompt for Ollama
         String prompt = "You are an expert instructor who explains formal proofs in clear, structured English.\n"
             + "Your task is to turn the proof steps below into a concise explanation that mirrors the style "
-            + "of a logic textbook or the Lean Logic Workbook.\n\n"
+            + "of a logic textbook\n\n"
             + "Follow these guidelines carefully:\n"
             + "1. Begin by identifying the goal of the proof or the key claim being established.\n"
             + "2. Describe the initial assumption(s) used in the argument.\n"
@@ -494,19 +494,21 @@ public class LanguageFormatter {
             + "4. Never mention step numbers, variable names, or logical symbols from the original proof.\n"
             + "   Do NOT include symbols such as 'forall', 'exists', '=>', or object labels.\n"
             + "5. Refer to elements generically, using phrases like 'an entity', 'an object', or 'a relation'.\n"
-            + "6. Use natural narrative transitions, such as:\n"
+            + "6. give variable names like 'x', 'y', or 'z' to represent generic entities where needed to avoid confusion.\n"
+            + "7. Use natural narrative transitions, such as:\n"
             + "     - 'The proof begins by assuming that…'\n"
             + "     - 'It then considers what must follow…'\n"
             + "     - 'From this, it becomes clear that…'\n"
             + "     - 'This leads to the conclusion that…'\n"
-            + "7. Write 3–6 sentences that form one smooth, cohesive paragraph.\n"
-            + "8. End with a clear statement of what the proof ultimately establishes.\n"
-            + "9. Highlight the intuition behind *why* the conclusion must be true—go beyond mechanical steps.\n"
+            + "8. Write 3–6 sentences that form one smooth, cohesive paragraph.\n"
+            + "9. End with a clear statement of what the proof ultimately establishes.\n"
+            + "10. Highlight the intuition behind *why* the conclusion must be true—go beyond mechanical steps.\n"
             + "   Explain the reasoning as if teaching a student who is new to logic.\n\n"
             + "Here are the proof steps:\n"
             + cleanedText
             + "\n\n"
-            + "Now write the explanation in the style of a logic-teaching textbook:";
+            + "Now write the explanation in the style and tone of a standard proof textbook:"
+            + "ensure that a non-technical reader can follow the logic.\n";
 
  
         String model = "llama3.2";
