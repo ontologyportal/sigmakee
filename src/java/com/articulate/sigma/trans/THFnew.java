@@ -557,6 +557,16 @@ public class THFnew {
             }
         }
 
+        head = args.get(0);
+        if ("confersNorm".equals(head)) {
+            for (String a : args) {
+                if (Modals.modalAttributes.contains(a)) {
+                    out.write("% exclude(): modal operator used as individual in confersNorm: " + a + "\n");
+                    return true;
+                }
+            }
+        }
+
 
         // ============================================================
         // META-LOGIC FILTER
