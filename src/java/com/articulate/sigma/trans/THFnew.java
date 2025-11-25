@@ -14,11 +14,14 @@ public class THFnew {
     public static int axNum = 0;
 
     // ISSUE 1
+    // relations that are treated as modal in the THF embedding, i.e. they get an extra world argument and special THF types.
+    // MODAL_RELATIONS = “when this symbol is in head position, treat it as a Kripke-style modal predicate and give it a world argument.
     public static final Set<String> MODAL_RELATIONS = new HashSet<>(Arrays.asList(
             "believes",
             "knows",
             "desires",
-            "modalAttribute"
+            "modalAttribute",
+            "holdsDuring"
             // (you can add more here if you *explicitly* design them as modal)
     ));
 
@@ -462,7 +465,7 @@ public class THFnew {
                 // ISSUE 15
                 if (exclude(fnew,kb,bw)){
                     String flatFormula = f.getFormula().replace("\n", " ").replace("\r", " ");
-                    bw.write("% excluded: " + flatFormula + "\n");
+                    bw.write("% excluded processed formula: " + flatFormula + "\n");
                     bw.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
                     continue;
                 }
@@ -483,9 +486,6 @@ public class THFnew {
                 if (bw == null)
                     System.out.println(process(new Formula(fnew), typeMap, false));
                 else {
-                    System.out.println("axNum: " + axNum+1 );
-                    System.out.println("fnew: " + fnew);
-                    System.out.println("typeMap: " + typeMap);
                     bw.write("thf(ax" + axNum++ + ",axiom," +
                             process(new Formula(fnew), typeMap, false) + ").\n");
                 }
@@ -520,65 +520,166 @@ public class THFnew {
             return true;
         }
 
-        // ALWAYS recurse into interior lists (this catches 'format' anywhere)
-        // ISSUE 15
+        // ISSUE 16
+        // Exclude formulas mentioning 'Formula' as a type (SUMO meta-logic)
+        if (f.getFormula().contains(" Formula)")) {
+            if (debug) {
+                System.out.println("exclude(): meta-logical axiom with Formula type: "
+                        + f.getFormula());
+            }
+            out.write("% exclude(): meta-logical axiom with Formula type\n");
+            return true;
+        }
+
+        // ISSUE 17
+        // ISSUE 21
+        // ISSUE 22
+        // Generic: modal operators must not appear as non-head arguments
         List<String> args = f.complexArgumentsToArrayListString(0);
-        System.out.println("Formula: "+f.getFormula());
-        System.out.println("complexArgumentsToArrayListString: "+ args);
-        for (String s : args) {
-            if (Formula.listP(s)) {
-                if (exclude(new Formula(s), kb, out)) {
-                    String flat = f.toString().replace("\n", " ").replace("\r", " ");
-                    out.write("% excluded(): interior list: " + flat + "\n");
+        String head = args.get(0);
+        if (!MODAL_RELATIONS.contains(head)) {
+            for (String a : args) {
+                if (MODAL_RELATIONS.contains(a)) {
+                    out.write("% exclude(): modal operator used as individual: " + a + "\n");
                     return true;
                 }
             }
         }
 
-        for (String sub : args) {
-            if (excludePred(sub, out)) {
-                String flat = f.toString().replace("\n", " ").replace("\r", " ");
-                out.write("% excluded(): term from  excludePred: " + flat + "\n");
+        // Exclude domain axioms for formula / HOL predicates
+        if (args.size() >= 2 &&
+                (args.get(0).equals("domain")) || (args.get(0).equals("subrelation")))  {
+            String p = args.get(1);
+            if (Modals.formulaPreds.contains(p) ||
+                    Modals.regHOLpred.contains(p)) {
+                out.write("% exclude(): domain axiom for formula/HOL predicate: " + p + "\n");
                 return true;
+            }
+        }
+
+
+        // ============================================================
+        // META-LOGIC FILTER
+        // Exclude any formula where a bare variable is used directly
+        // in formula position:
+        //   (=> ... ?VAR)
+        //   (not ?VAR)   or  (~ ?VAR)
+        // Because variables are $i, not $o.
+        // This catches the PROP / FORMULA / SITUATION issues in one shot.
+        // ============================================================
+        if (f.listP()) {
+            String op = f.car();
+            // arguments starting at position 1 (operator is at 0)
+            List<String> opArgs = f.complexArgumentsToArrayListString(1);
+
+            if (opArgs != null) {
+                // Case 1: implication with bare variable consequent
+                if (op.equals("=>") && opArgs.size() >= 2) {
+                    String conseq = opArgs.get(1).trim();
+                    if (Formula.isVariable(conseq)) {
+                        if (debug) {
+                            System.out.println("exclude(): META-LOGIC pattern: variable as consequent of => : "
+                                    + conseq + " in " + f.getFormula());
+                        }
+                        out.write("% exclude(): meta-logic (variable as consequent of =>): "
+                                + conseq + "\n");
+                        return true;
+                    }
+                }
+
+                // Case 2: negation of bare variable
+                if ((op.equals("not") || op.equals("~")) && opArgs.size() >= 1) {
+                    String arg0 = opArgs.get(0).trim();
+                    if (Formula.isVariable(arg0)) {
+                        if (debug) {
+                            System.out.println("exclude(): META-LOGIC pattern: variable under not/~ : "
+                                    + arg0 + " in " + f.getFormula());
+                        }
+                        out.write("% exclude(): meta-logic (variable under not/~): "
+                                + arg0 + "\n");
+                        return true;
+                    }
+                }
+            }
+        }
+        // ============================================================
+
+        // ALWAYS recurse into interior lists (this catches nested cases,
+        // since exclude() is called on all sub-formulas)
+        if (args != null) {
+            if (debug) {
+                System.out.println("exclude(): Formula: " + f.getFormula());
+                System.out.println("exclude(): complexArgumentsToArrayListString(0): " + args);
+            }
+            for (String s : args) {
+                if (Formula.listP(s)) {
+                    if (exclude(new Formula(s), kb, out)) {
+                        String flat = f.toString().replace("\n", " ").replace("\r", " ");
+                        out.write("% excluded(): interior list: " + flat + "\n");
+                        return true;
+                    }
+                }
+            }
+
+            // Existing predicate-based exclusion (documentation, format, etc.)
+            for (String sub : args) {
+                if (excludePred(sub, out)) {
+                    String flat = f.toString().replace("\n", " ").replace("\r", " ");
+                    out.write("% excluded(): term from excludePred: " + flat + "\n");
+                    return true;
+                }
             }
         }
 
         // Additional checks only when ground
         if (f.isGround()) {
 
-            // ISSUE 11: modal protected relations
-            if (protectedRelation(args.get(0))) {
-                for (int i = 1; i < args.size(); i++) {
-                    if (Modals.modalAttributes.contains(args.get(i))) {
-                        out.write("% exclude(): modal attribute in protected relation: " +
-                                args.get(0) + " " + args.get(i) + "\n");
-                        return true;
+            if (debug) System.out.println("exclude(): is ground: " + f);
+
+            // Reuse args (we already computed it above)
+            if (args == null)
+                args = f.complexArgumentsToArrayListString(0);
+
+            if (args != null && !args.isEmpty()) {
+
+                // ISSUE 11: modal protected relations
+                if (protectedRelation(args.get(0))) {
+                    for (int i = 1; i < args.size(); i++) {
+                        if (Modals.modalAttributes.contains(args.get(i))) {
+                            out.write("% exclude(): modal attribute in protected relation: " +
+                                    args.get(0) + " " + args.get(i) + "\n");
+                            return true;
+                        }
                     }
                 }
-            }
 
-            // ISSUE 10: exclude domain axioms with modal symbols
-            if (args.get(0).equals("domain") &&
-                    RESERVED_MODAL_SYMBOLS.contains(args.get(1))) {
-                out.write("% exclude(): modal operator in domain: " + args.get(1) + "\n");
-                return true;
-            }
+                // ISSUE 10: exclude domain axioms with modal symbols
+                if (args.get(0).equals("domain") &&
+                        args.size() > 1 &&
+                        RESERVED_MODAL_SYMBOLS.contains(args.get(1))) {
+                    out.write("% exclude(): modal operator in domain: " + args.get(1) + "\n");
+                    return true;
+                }
 
-            // Ground numeric filtering
-            for (String s : args) {
-                if (StringUtil.isNumeric(s)) {
-                    out.write("% exclude(): is numeric(2): \n");
-                    if (s.contains(".") || s.contains("-") || s.length() > 1)
-                        return true;
-                    if (s.charAt(0) < '1' || s.charAt(0) > '6')
-                        return true;
+                // Ground numeric filtering
+                for (String s : args) {
+                    if (StringUtil.isNumeric(s)) {
+                        out.write("% exclude(): is numeric(2): \n");
+                        if (s.contains(".") || s.contains("-") || s.length() > 1)
+                            return true;
+                        if (s.charAt(0) < '1' || s.charAt(0) > '6')
+                            return true;
+                        if (debug) System.out.println("exclude(): numeric arg not excluded: " + s);
+                    }
                 }
             }
         }
 
-        // TOP-LEVEL predicate check (THIS catches format at root)
+        // TOP-LEVEL predicate check (documentation, format, etc.)
         return excludePred(f.car(), out);
     }
+
+
 
     /** ***************************************************************
      * Predicates that denote formulas that shouldn't be included in
@@ -617,8 +718,8 @@ public class THFnew {
                 pred.equals("comment") ||
                 pred.equals("knows") ||  // handled in header
                 pred.equals("believes") ||  //handled in header
-                pred.equals("desires") ||
-                pred.equals("holdsDuring") || // ISSUE 6
+                pred.equals("desires") || //handled in header
+                pred.equals("holdsDuring") || // handled in header | ISSUE 6
                 //StringUtil.isNumeric(pred) ||
                 pred.equals(Formula.EQUAL) ||
                 pred.equals("=") ||
@@ -736,7 +837,6 @@ public class THFnew {
                 }
                 boolean isFunction = false;
                 String SUMOtoTPTPformula = SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true);
-                System.out.println("SUMOtoTPTPformula is: "+SUMOtoTPTPformula);
                 if (kb.isInstanceOf(t,"Function")) {
                     out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : ("); // write signature
                     isFunction = true;
@@ -754,9 +854,6 @@ public class THFnew {
                 }
 
                 String sigStr = sigString(sig,kb,isFunction);
-                System.out.println("sig is: "+sig);
-                System.out.println("sigStr is: "+sigStr);
-
 
                 out.write(sigStr + "))).\n");
 
@@ -790,7 +887,7 @@ public class THFnew {
             out.write(Modals.getTHFHeader() + "\n");
             writeTypes(kb,out);
             for (Formula f : kb.formulaMap.values()) {
-                if (true) System.out.println("THFnew.transModalTHF(): " + f);
+                if (debug) System.out.println("THFnew.transModalTHF(): " + f);
                 if (!exclude(f,kb,out))
                     oneTrans(kb,f,out);
                 else {

@@ -191,8 +191,97 @@ Even if 'format' is part of the 'excludePred' list, it doesn't get excluded beca
 
 Solution:
 
-The problem was that the exlude methods checked only the existing formula and not the processed ones, so there were new formulas that were intoducing not allowed terms like 'format' that were never included in the SUMO.thf file.
+The problem was that the exlude methods were checking only the existing formulas and not the derived/processed ones, so the new formulas were intoducing 'not allowed' terms like 'format'.
+
+16)
+
+Error Message:
+   % Exception at proof search level
+   Parsing Error on line 3941
+   Non-boolean term X25 of sort $i is used in a formula context
+
+   thf(ax1013,axiom,( ! [V__AGENT:$i,V__FORMULA:$i,V__STATE:$i,V__W1:w,V__W2:w,V__W3:w] : (((s__instance @ V__AGENT @ s__AutonomousAgent) => (((s__instance @ V__STATE @ s__Stating) & (s__agent @ V__STATE @ V__AGENT) & (s__patient @ V__STATE @ V__FORMULA) & (s__instance @ V__FORMULA @ s__Formula)) => ((s__accreln @ s__holdsDuring @ (s__WhenFn @ V__STATE) @ V__W1 @ V__W2) => ((s__accreln @ s__believes @ V__AGENT @ V__W2 @ V__W3) => V__FORMULA)))) ) )).
+
+   (=>
+      (and
+         (instance ?STATE Stating)
+         (agent ?STATE ?AGENT)
+         (patient ?STATE ?FORMULA)
+         (instance ?FORMULA Formula))
+      (holdsDuring (WhenFn ?STATE) (believes ?AGENT ?FORMULA)))
+
+Description:
+
+V__FORMULA has type $i (an individual), because all variables are currently typed $i in the quantifier prefix.
+But in the last implication, V__FORMULA is used as a formula (the right-hand side of =>), which must have type $o.
+Vampire is exactly complaining about that.
+
+The underlying axiom is meta-logical (a variable is both an object and a formula).
 
 
+17)
+
+Error Message:
+Immediate (shared) subterms of term/literal vAPP($i,$o,vAPP($i,sTfun($i,$o),s__relatedInternalConcept,s__time__m),s__holdsDuring) have different types/not well-typed!
+
+thf(ax3476,axiom,(s__relatedInternalConcept @ s__time__m @ s__holdsDuring)).
+
+(relatedInternalConcept time holdsDuring)
+
+Description:
+s__relatedInternalConcept : $i > $i > $o (individual > individual)
+thf(holdsDuring_tp,type,(s__holdsDuring : m)). (we provide individual > modal)
 
 
+18)
+
+% Exception at proof search level
+Parsing Error on line 9134
+Non-boolean term X92 of sort $i is used in a formula context
+
+thf(ax3550,axiom,( ! [V__AGENT:$i,V__W1:w,V__W2:w,V__W3:w,V__INVESTIGATE:$i,V__PROP:$i] : (((s__instance @ V__AGENT @ s__AutonomousAgent) => (((s__instance @ V__INVESTIGATE @ s__Investigating) & (s__agent @ V__INVESTIGATE @ V__AGENT) & (s__patient @ V__INVESTIGATE @ V__PROP)) => ((s__accreln @ s__holdsDuring @ (s__WhenFn @ V__INVESTIGATE) @ V__W1 @ V__W2) => ~(((s__accreln @ s__knows @ V__AGENT @ V__W2 @ V__W3) => V__PROP))))) ) )).
+
+Solution:
+
+Update Merge.kif file line 13110:
+
+from:
+   (=>
+      (and
+         (instance ?INVESTIGATE Investigating)
+         (agent ?INVESTIGATE ?AGENT)
+         (patient ?INVESTIGATE ?PROP))
+      (holdsDuring (WhenFn ?INVESTIGATE) (not (knows ?AGENT ?PROP))))
+
+to:
+   (=>
+      (and
+         (instance ?INVESTIGATE Investigating)
+         (agent ?INVESTIGATE ?AGENT)
+         (patient ?INVESTIGATE ?PROP))
+      (exists (?PROP)
+         (holdsDuring 
+            (WhenFn ?INVESTIGATE) (not (knows ?AGENT ?PROP)))))
+
+Error Message:
+Parsing Error on line 16787
+Immediate (shared) subterms of  term/literal vAPP($i,sTfun($i,$o),s__subrelation,s__knows) have different types/not well-typed!
+
+thf(ax7249,axiom,(s__subrelation @ s__knows @ s__inScopeOfInterest__m)).
+
+(subrelation knows inScopeOfInterest)
+
+Description:
+
+thf(s__subrelation_tp,type,(s__subrelation : ($i > $i > $o))).
+
+
+22)
+
+Error Message:
+Parsing Error on line 18835
+Immediate (shared) subterms of  term/literal vAPP($i,sTfun($i,$o),s__subrelation,s__desires) have different types/not well-typed!
+
+thf(ax8257,axiom,(s__subrelation @ s__desires @ s__inScopeOfInterest__m)).
+
+(subrelation desires inScopeOfInterest)

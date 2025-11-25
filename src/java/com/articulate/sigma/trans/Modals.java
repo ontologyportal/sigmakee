@@ -12,6 +12,7 @@ import java.util.Set;
 
 public class Modals {
 
+    // these are predicates that take a formula as (one of) their arguments in SUMO/KIF
     public static final List<String> formulaPreds = new ArrayList<>(
             Arrays.asList(Formula.KAPPAFN, "ProbabilityFn", "believes",
                     "causesProposition", "conditionalProbability",
@@ -25,15 +26,18 @@ public class Modals {
                     "permits", "prefers", "prohibits", "rateDetail", "says",
                     "treatedPageDefinition", "visitorParameter"));
 
+    // a subset of formulaPreds where two arguments are formulas (e.g. entails(φ, ψ)).
     public static final List<String> dualFormulaPreds = new ArrayList<>(
             Arrays.asList("causesProposition", "conditionalProbability",
                     "decreasesLikelihood",
                     "entails",  "increasesLikelihood",
                     "independentProbability","prefers"));
 
+    // these are the ones you want to handle with the special HOL rewrite
     public static final List<String> regHOLpred = new ArrayList<>(
             Arrays.asList("considers","sees","believes","knows","holdsDuring","desires"));
 
+    // these are the attribute constants you can pass to modalAttribute
     public static final Set<String> modalAttributes = new HashSet<>(Arrays.asList(
             "Possibility",
             "Necessity",
