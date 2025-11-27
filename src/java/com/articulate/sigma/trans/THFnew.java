@@ -27,7 +27,7 @@ public class THFnew {
 
     // ISSUE 2
     // Symbols whose types are defined explicitly in Modals.getTHFHeader().
-    private static final Set<String> RESERVED_MODAL_SYMBOLS =
+    public static final Set<String> RESERVED_MODAL_SYMBOLS =
             new HashSet<>(Arrays.asList(
                     "accreln",
                     "accrelnP",
@@ -546,6 +546,29 @@ public class THFnew {
             }
         }
 
+        // Generic rule: if the head is NOT in allowedHeads, then none of the
+        // arguments may be modal/HOL/formula predicates or modal attributes.
+        if (args != null && !args.isEmpty()) {
+            head = args.get(0);
+
+            if (!Modals.allowedHeads.contains(head)) {
+                for (int i = 1; i < args.size(); i++) {   // skip head
+                    String a = args.get(i);
+
+                    if (THFnew.MODAL_RELATIONS.contains(a)
+                            || Modals.modalAttributes.contains(a)
+                            || THFnew.RESERVED_MODAL_SYMBOLS.contains(a)
+                            || Modals.regHOLpred.contains(a)
+                            || Modals.formulaPreds.contains(a)) {
+
+                        out.write("% exclude(): modal/HOL symbol used as individual " +
+                                "argument of non-modal head: " + a + "\n");
+                        return true;
+                    }
+                }
+            }
+        }
+
         // Exclude domain axioms for formula / HOL predicates
         if (args.size() >= 2 &&
                 (args.get(0).equals("domain")) || (args.get(0).equals("subrelation")))  {
@@ -753,14 +776,13 @@ public class THFnew {
         String range = "";
         if (function)
             first = true;
-        for (String t : sig) {
+        for (String t : sig) { //[, Organism, GeographicArea]
             if (t.equals(""))
                 continue;
             if (first) {
                 range = t;
                 first = false;
-            }
-            else if (kb.isInstanceOf(t,"Formula") || t.equals("Formula"))
+            }else if (kb.isInstanceOf(t,"Formula") || t.equals("Formula"))
                 sb.append("$o > ");
             else if (kb.isInstanceOf(t,"World") || t.equals("World"))
                 sb.append("w > ");
@@ -824,6 +846,7 @@ public class THFnew {
 //                if (!Formula.isLogicalOperator(t) && !t.equals("equals")) { // make sure to update the signature
 //                    sig.add("World");
 //                }
+
                 List<String> baseSig = kb.kbCache.signatures.get(t);
                 if (baseSig == null) {
                     System.err.println("Error in THFnew.writeTypes(): bad sig for " + t);

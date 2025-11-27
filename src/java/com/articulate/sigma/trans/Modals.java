@@ -4,11 +4,7 @@ import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Modals {
 
@@ -54,6 +50,20 @@ public class Modals {
             "Illegal",
             "Promise"
     ));
+
+    // list that contains the allowed head predicates for the modal predicates
+    public static final List<String> allowedHeads;
+    static {
+        List<String> tmp = new ArrayList<>();
+        tmp.addAll(THFnew.MODAL_RELATIONS);
+        tmp.addAll(modalAttributes);
+        tmp.addAll(THFnew.RESERVED_MODAL_SYMBOLS);
+        tmp.addAll(regHOLpred);
+        tmp.addAll(formulaPreds);
+        allowedHeads = Collections.unmodifiableList(tmp);
+    }
+
+
 
     /***************************************************************
      * Handle the predicates given in regHOLpred, which have a parameter
