@@ -471,8 +471,8 @@ public class THFnew {
                 }
 
                 if (debug) System.out.println("THFnew.oneTrans(): variableArity(kb,fnew.car()): " + variableArity(kb,fnew.car()));
-                if (variableArity(kb,fnew.car()))
-                    fnew = adjustArity(kb,fnew);   // hack to correct arity after adding world argument
+//                if (variableArity(kb,fnew.car()))
+//                    fnew = adjustArity(kb,fnew);   // hack to correct arity after adding world argument
                 //ISSUE 1
 //                if (fnew.getFormula().startsWith("(instance ") &&
 //                        fnew.getFormula().endsWith("Class)")) {
@@ -587,6 +587,14 @@ public class THFnew {
                     out.write("% exclude(): modal operator used as individual in confersNorm: " + a + "\n");
                     return true;
                 }
+            }
+        }
+
+        // TODO: Fix that in SUMO
+        for (String a : args) {
+            if (a.equals("airTemperature")) {
+                out.write("% exclude(): airTemperature encounter: \n");
+                return true;
             }
         }
 

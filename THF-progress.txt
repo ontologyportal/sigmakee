@@ -285,3 +285,34 @@ Immediate (shared) subterms of  term/literal vAPP($i,sTfun($i,$o),s__subrelation
 thf(ax8257,axiom,(s__subrelation @ s__desires @ s__inScopeOfInterest__m)).
 
 (subrelation desires inScopeOfInterest)
+
+
+23)
+
+Variable-arity predicates broke after the Modals refactor because world arguments were no longer added to all relations, but the old adjustArity() hack in THFnew still expected them. This caused mismatches such as generating s__foo__4 in axioms without producing the corresponding type header. Removing the obsolete arity adjustment and emitting types for all __N functor variants fixed the issue.
+
+
+24)
+
+
+% from file /Users/Mac_1/.sigmakee/KBs/Mid-level-ontology.kif at line 27882
+(=>
+  (instance ?X AirConditioner)
+  (hasPurpose ?X
+    (exists (?PROC ?TEMP ?AREA)
+      (and
+        (located ?X ?AREA)
+        (instance ?PROC Process)
+        (instrument ?PROC ?X)
+        (result ?PROC (airTemperature ?AREA ?TEMP))))))
+
+
+thf(s__result_tp,type,(s__result : ($i > $i > $o))).
+thf(s__airTemperature_tp,type,(s__airTemperature : ($i > $i > $o))).
+
+
+result takes as second arg an $i,
+airTemperature returns an $o
+so we have an incosistency!
+
+
