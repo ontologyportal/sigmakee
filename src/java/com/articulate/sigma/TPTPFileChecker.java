@@ -10,8 +10,12 @@ import tptp_parser.TPTPVisitor;
 import tptp_parser.TPTPFormula;
 import tptp_parser.TptpLexer;
 import tptp_parser.TptpParser;
+import java.util.regex.Matcher; 
+import java.util.regex.Pattern;
 
 public class TPTPFileChecker {
+
+    static boolean debug = true;
 
     private static void showHelp() {
         System.out.println("Usage: java com.articulate.sigma.TPTPFileChecker [options]");
@@ -79,12 +83,15 @@ public class TPTPFileChecker {
      */
     public static List<ErrRec> check(String contents, String fileName) {
 
+        if (debug) System.out.println("TPTPFileChecker.check(): Start");
         List<ErrRec> results = new ArrayList<>();
         if (contents == null || contents.isBlank())
             return results;
+        if (debug) System.out.println("TPTPFileChecker.check(): Checking with ANTLR");
         results.addAll(checkWithAntlr(contents, fileName));
         try {
             File tmp = writeTempFile(contents, ".tptp");
+        if (debug) System.out.println("TPTPFileChecker.check(): Checking with TPTP4X");
             ProcessOutput po = runTptp4x(tmp, "-w", "-z", "-u", "machine");
             if (!po.err.isBlank())
                 results.addAll(parseTptpOutput(fileName, po.err, 2));
@@ -117,38 +124,93 @@ public class TPTPFileChecker {
         return errs;
     }
 
-
     /**
-     * Parse TPTP4X output lines into ErrRec objects.
-     * This is a simple parser; you can make it smarter later to extract line numbers.
-     *
-     * @param fileName pseudo filename
-     * @param text raw stdout or stderr from tptp4X
-     * @param severity 1 = warning, 2 = error
+     * Thin wrapper that turns TPTP4X output into a List<ErrRec>
+     * by delegating to parseTPTP4XOutputToErrRec.
      */
     private static List<ErrRec> parseTptpOutput(String fileName, String text, int severity) {
 
         List<ErrRec> recs = new ArrayList<>();
-        String[] lines = text.split("\\R");
-        for (String line : lines) {
-            if (line.isBlank()) continue;
-            int lineNum = 0;
-            int start = 0;
-            int end = 1;
-            String msg = line;
-            java.util.regex.Matcher m = java.util.regex.Pattern.compile("Line\\s+(\\d+)\\s+Char\\s+(\\d+)").matcher(line);
-            if (m.find()) {
-                try {
-                    lineNum = Integer.parseInt(m.group(1)) - 1;
-                    start = Integer.parseInt(m.group(2)) - 1;
-                    end = start + 1;
-                } catch (NumberFormatException ignored) { }
-            }
-            if (line.contains("SZS status") || line.contains("SyntaxError") || m.find())
-                recs.add(new ErrRec(0, fileName, lineNum, start, end, msg));
-        }
+        ErrRec rec = parseTPTP4XOutputToErrRec(fileName, text, severity);
+        if (rec != null)
+            recs.add(rec);
         return recs;
     }
+
+    /**
+     * Extract a single ErrRec from a chunk of TPTP4X output.
+     * TPTP4X uses 1-based coordinates; ErrRec uses 0-based.
+     *
+     * Example TPTP4X line:
+     *   % SZS status SyntaxError : Line 2 Char 3 Token "tf" ...
+     *
+     * @param fileName    logical file name for the editor
+     * @param tptpOutput  raw TPTP4X stdout/stderr (possibly multi-line)
+     * @param severity    1 = warning, 2 = error (currently unused but kept for API symmetry)
+     * @return ErrRec or null if we couldn't parse anything useful
+     */
+    public static ErrRec parseTPTP4XOutputToErrRec(String fileName,
+                                                   String tptpOutput,
+                                                   int severity) {
+
+        if (tptpOutput == null || tptpOutput.isBlank())
+            return null;
+
+        int lineNum0 = 0;
+        int charStart0 = 0;
+        int charEnd0   = 1;
+
+        // Find "Line <n> Char <m>"
+        Pattern p = Pattern.compile("Line\\s+(\\d+)\\s+Char\\s+(\\d+)");
+        Matcher m = p.matcher(tptpOutput);
+
+        String tptpLocStr = null;
+        if (m.find()) {
+            try {
+                int line1 = Integer.parseInt(m.group(1)); // 1-based from TPTP4X
+                int char1 = Integer.parseInt(m.group(2)); // 1-based from TPTP4X
+
+                // Keep line 1-based to match what the editor prints,
+                // but keep char 0-based so start+1 matches TPTP4X.
+                lineNum0   = Math.max(line1, 0);        // <<-- changed: no "- 1"
+                charStart0 = Math.max(char1 - 1, 0);
+                charEnd0   = charStart0 + 1;
+
+                tptpLocStr = "Line " + line1 + " Char " + char1;
+            }
+            catch (NumberFormatException ignored) {}
+        }
+
+
+        // Try to pick a "main" message line, preferring the SZS line
+        String[] lines = tptpOutput.split("\\R");
+        String msgCore = null;
+        for (String raw : lines) {
+            String trimmed = raw.trim();
+            if (trimmed.isEmpty()) continue;
+            msgCore = trimmed;
+            if (trimmed.contains("SZS status"))
+                break;
+        }
+        if (msgCore == null)
+            msgCore = tptpOutput.trim();
+
+        StringBuilder msg = new StringBuilder(msgCore);
+        if (tptpLocStr != null && !msgCore.contains(tptpLocStr)) {
+            // Append the TPTP4X coordinate so the user can see both
+            msg.append(" [TPTP4X: ").append(tptpLocStr).append("]");
+        }
+
+        return new ErrRec(
+                0,          // code (unused in Sigma)
+                fileName,
+                lineNum0,
+                charStart0,
+                charEnd0,
+                msg.toString()
+        );
+    }
+
 
     /**
      * Format TPTP input text using tptp4X pretty-printing.
