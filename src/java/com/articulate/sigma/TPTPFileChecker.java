@@ -88,7 +88,7 @@ public class TPTPFileChecker {
         if (contents == null || contents.isBlank())
             return results;
         if (debug) System.out.println("TPTPFileChecker.check(): Checking with ANTLR");
-        results.addAll(checkWithAntlr(contents, fileName));
+        //results.addAll(checkWithAntlr(contents, fileName));
         try {
             File tmp = writeTempFile(contents, ".tptp");
         if (debug) System.out.println("TPTPFileChecker.check(): Checking with TPTP4X");
@@ -130,12 +130,26 @@ public class TPTPFileChecker {
      */
     private static List<ErrRec> parseTptpOutput(String fileName, String text, int severity) {
 
-        List<ErrRec> recs = new ArrayList<>();
+        if (text == null || text.isBlank())
+            return Collections.emptyList();
+        if (severity == 1) {
+            String lower = text.toLowerCase(Locale.ROOT);
+            boolean looksLikeError =
+                    lower.contains("syntaxerror") ||
+                    lower.contains("inputerror")  ||
+                    lower.contains("error")       ||
+                    lower.contains("warning");
+
+            if (!looksLikeError) {
+                return Collections.emptyList();
+            }
+        }
         ErrRec rec = parseTPTP4XOutputToErrRec(fileName, text, severity);
         if (rec != null)
-            recs.add(rec);
-        return recs;
+            return Collections.singletonList(rec);
+        return Collections.emptyList();
     }
+
 
     /**
      * Extract a single ErrRec from a chunk of TPTP4X output.
