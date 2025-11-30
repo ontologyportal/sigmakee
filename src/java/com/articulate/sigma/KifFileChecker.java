@@ -233,7 +233,22 @@ public class KifFileChecker {
                 out.append(contents, cursor, spanStart);
             }
 
-            String rawFormula = contents.substring(spanStart, Math.min(spanEnd, contents.length()));
+            // --- NEW: extend span to end of line, but not into the next top-level formula ---
+            int nextSpanStart = (i + 1 < count) ? spans.get(i + 1)[0] : contents.length();
+            int endOfLine = contents.indexOf('\n', spanEnd);
+            if (endOfLine == -1) {
+                endOfLine = contents.length();
+            } else {
+                // include the newline as part of this slice
+                endOfLine = endOfLine;  // keep as position *before* '\n'; tail append will add it
+            }
+            int extendedEnd = Math.min(endOfLine, nextSpanStart);
+
+            if (extendedEnd < spanEnd) {
+                extendedEnd = spanEnd;  // safety, should not happen
+            }
+
+            String rawFormula = contents.substring(spanStart, Math.min(extendedEnd, contents.length()));
             String formatted  = formattedForms.get(i);
 
             // If the original slice contains a ';' comment anywhere,
@@ -254,7 +269,7 @@ public class KifFileChecker {
                 }
             }
 
-            cursor = spanEnd;
+            cursor = extendedEnd;
         }
 
         // 3. Append the tail (after the last formula) exactly as-is.
@@ -323,6 +338,56 @@ public class KifFileChecker {
             i++;
         }
     }
+
+    /** ***************************************************************
+     * Strip KIF-style line comments (starting with ';' and running to
+     * end-of-line), but *ignore* ';' inside double-quoted strings.
+     *
+     * This is used only for feeding clean text into KButilities, while
+     * keeping the original text for line/column mapping and messages.
+     */
+    private static String stripKifComments(String text) {
+
+        if (text == null || text.isEmpty())
+            return "";
+
+        StringBuilder out = new StringBuilder(text.length());
+        String[] lines = text.split("\\R", -1);   // keep empty lines
+
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i];
+            boolean inString = false;
+            boolean escaping = false;
+            int cutPos = line.length();
+
+            for (int j = 0; j < line.length(); j++) {
+                char c = line.charAt(j);
+
+                // Handle string toggling & escaping
+                if (c == '"' && !escaping) {
+                    inString = !inString;
+                }
+                escaping = (c == '\\' && !escaping);
+
+                // First ';' outside of a string starts a comment
+                if (!inString && c == ';') {
+                    cutPos = j;
+                    break;
+                }
+            }
+
+            // Append code portion (before ';' if present)
+            out.append(line, 0, cutPos);
+
+            // Re-add newline between lines (but not after last)
+            if (i < lines.length - 1) {
+                out.append('\n');
+            }
+        }
+
+        return out.toString();
+    }
+
 
     /** ***************************************************************
      * Check for quantified variables that do not appear in the statement body.
@@ -581,31 +646,62 @@ public class KifFileChecker {
      * @param formulaText      raw text of the formula
      * @param msgs             list to collect error records
      */
-    public static void CheckIsValidFormula(String fileName, Formula f, int formulaStartLine, KB kb, String formulaText, List<ErrRec> msgs) {
+public static void CheckIsValidFormula(String fileName,
+                                       Formula f,
+                                       int formulaStartLine,
+                                       KB kb,
+                                       String formulaText,
+                                       List<ErrRec> msgs) {
 
-        if (!KButilities.isValidFormula(kb, formulaText)) {
-            if (formulaText == null)
-                formulaText = "";
-            for (String er : KButilities.errors) {
-                String token = null;
-                Matcher m = Pattern.compile("relation\\s+([\\w-]+)").matcher(er);
-                if (m.find())
-                    token = m.group(1);
-                else {
-                    m = Pattern.compile("[:\\s]\\s*([A-Za-z][A-Za-z0-9_-]*)\\)?$").matcher(er);
-                    if (m.find()) token = m.group(1);
-                }
-                int[] rel = {-1, -1};
-                if (token != null) rel = findLineInFormula(formulaText, token);
-                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + ((rel[0] >= 0) ? rel[0] : 0);
-                int absCol = (rel[1] >= 0) ? rel[1] : 1;
-                String[] lines = formulaText.split("\n", -1);
-                String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : formulaText.trim();
-                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + (token != null ? token.length() : 1), er + (token != null ? " [token: " + token + "] " : "") + " " + offendingLine));
-            }
-            KButilities.errors.clear();
-        }
+    if (formulaText == null)
+        formulaText = "";
+
+    // Strip KIF comments for the *validation* call only
+    String codeOnly = stripKifComments(formulaText).trim();
+    if (codeOnly.isEmpty()) {
+        // Nothing but comments/whitespace => nothing to validate
+        return;
     }
+
+    if (!KButilities.isValidFormula(kb, codeOnly)) {
+        for (String er : KButilities.errors) {
+
+            String token = null;
+            Matcher m = Pattern.compile("relation\\s+([\\w-]+)").matcher(er);
+            if (m.find())
+                token = m.group(1);
+            else {
+                m = Pattern.compile("[:\\s]\\s*([A-Za-z][A-Za-z0-9_-]*)\\)?$").matcher(er);
+                if (m.find()) token = m.group(1);
+            }
+
+            int[] rel = {-1, -1};
+            if (token != null)
+                rel = findLineInFormula(formulaText, token);  // still use ORIGINAL text
+
+            int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine)
+                        + ((rel[0] >= 0) ? rel[0] : 0);
+            int absCol = (rel[1] >= 0) ? rel[1] : 1;
+
+            String[] lines = formulaText.split("\n", -1);
+            String offendingLine =
+                (rel[0] >= 0 && rel[0] < lines.length)
+                    ? lines[rel[0]].trim()
+                    : formulaText.trim();
+
+            msgs.add(new ErrRec(
+                0,
+                fileName,
+                absLine,
+                absCol,
+                absCol + (token != null ? token.length() : 1),
+                er + (token != null ? " [token: " + token + "] " : "") + " " + offendingLine
+            ));
+        }
+        KButilities.errors.clear();
+    }
+}
+
 
     /** ***************************************************************
      * Check that all terms are below Entity in the KB hierarchy.

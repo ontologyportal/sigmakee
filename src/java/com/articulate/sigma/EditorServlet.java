@@ -108,8 +108,7 @@ public class EditorServlet extends HttpServlet {
                     if (isTptp) {
                         fmtErrors = TPTPFileChecker.check(text, "(web-editor)");
                     } else {
-                        Future<List<ErrRec>> fut = KifCheckWorker.submit(text);
-                        fmtErrors = fut.get();
+                        fmtErrors = KifFileChecker.check(text, "(web-editor)");
                     }
                 } catch (Exception ce) {
                     checkMsg = "Check failed: " + ce.getMessage();
@@ -146,8 +145,7 @@ public class EditorServlet extends HttpServlet {
             if (isTptp) {
                 errors = TPTPFileChecker.check(text, "(web-editor)");
             } else {
-                Future<List<ErrRec>> future = KifCheckWorker.submit(text);
-                errors = future.get();
+                errors = KifFileChecker.check(text);
             }
         } catch (Exception e) {
             errorMessage = "Error while checking: " + e.getMessage();
