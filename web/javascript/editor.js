@@ -12,6 +12,11 @@ let errorMarks = [];
 let errorMask = window.initialErrorMask || [];
 let codeEditor;
 
+let checkTimer = null;
+const CHECK_DEBOUNCE_MS = 2000;   // 2 seconds after typing stops
+let lastCheckedText = "";
+let checkSequence = 0; 
+
 const $ = (s) => document.querySelector(s);
 const getContent = () => codeEditor.getValue().trim();
 const setEditorContent = (t = "") => codeEditor.setValue(t);
@@ -276,7 +281,24 @@ function initializeCodeMirror() {
     autoCloseBrackets: true,
     matchBrackets: true
   });
+  codeEditor.on("change", onEditorChange)
 }
+
+function onEditorChange() {
+  const text = getContent();
+  if (checkTimer) clearTimeout(checkTimer);
+  checkTimer = setTimeout(() => {
+    if (!text.trim()) {
+      lastCheckedText = "";
+      renderErrorBox([], null);
+      highlightErrors([], []);
+      return;
+    }
+    if (text === lastCheckedText) return;
+    runCheck(true);
+  }, CHECK_DEBOUNCE_MS);
+}
+
 
 function renderErrorBox(errors = [], message = null) {
   const box = document.querySelector(".scroller.msg");
@@ -466,16 +488,35 @@ function reorderTabs() {
 // 9. EDITOR ACTIONS
 // ======================================================
 
-async function check() {
+async function runCheck(isAuto = false) {
   const text = getContent();
-  if (!text) return alert("Nothing to check.");
-  const fileName = getActiveFileName();
-  const { errors = [], errorMask = [], message } = await postToServlet("check", { fileName, code: text });
-  if (debug) for (e in errors) {
-    console.log(errors);
+
+  // Handle empty buffer
+  if (!text.trim()) {
+    if (!isAuto) alert("Nothing to check.");
+    lastCheckedText = "";
+    renderErrorBox([], null);
+    highlightErrors([], []);
+    return;
   }
+
+  const fileName = getActiveFileName();
+  const thisSeq = ++checkSequence;  // track this request
+
+  const { errors = [], errorMask = [], message } =
+    await postToServlet("check", { fileName, code: text });
+  if (thisSeq !== checkSequence) return;
+
+  lastCheckedText = text;
+
+  if (debug) console.log("Check results:", errors);
+
   renderErrorBox(errors, message);
   highlightErrors(errors, errorMask);
+}
+
+async function check() {
+  return runCheck(false);
 }
 
 async function formatBuffer() {
