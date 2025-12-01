@@ -1213,6 +1213,7 @@ public class THFnew {
             return true;
         }
 
+
         List<String> args = f.complexArgumentsToArrayListString(0);
 
         // TODO: Fix that in SUMO
@@ -1240,6 +1241,22 @@ public class THFnew {
             String op = f.car();
             // arguments starting at position 1 (operator is at 0)
             List<String> opArgs = f.complexArgumentsToArrayListString(1);
+
+            if (args != null && !args.isEmpty()) {
+                String head = args.get(0);
+
+                // Non-modal: we cannot treat relations as individuals,
+                // so drop domain/subrelation axioms whose 2nd arg is a relation.
+                if ((head.equals("domain") || head.equals("subrelation"))
+                        && args.size() >= 2) {
+                    String p = args.get(1);
+                    if (kb.isInstanceOf(p, "Relation")) {
+                        out.write("% excludeNonModal(): meta-logic domain/subrelation over relation: "
+                                + p + "\n");
+                        return true;
+                    }
+                }
+            }
 
             if (opArgs != null) {
                 // Case 1: implication with bare variable consequent
