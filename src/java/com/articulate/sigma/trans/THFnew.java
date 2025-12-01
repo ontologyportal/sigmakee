@@ -591,12 +591,15 @@ public class THFnew {
         }
 
         // TODO: Fix that in SUMO
+        // Problematic Terms
+        List<String> problematic_terms = Arrays.asList("airTemperature", "ListFn", "AssignmentFn", "Organism");
         for (String a : args) {
-            if (a.equals("airTemperature")) {
-                out.write("% exclude(): airTemperature encounter: \n");
+            if (problematic_terms.contains(a)) {
+                out.write("% exclude(): Problematic Term encountered: \n");
                 return true;
             }
         }
+
 
 
         // ============================================================
