@@ -1121,7 +1121,6 @@ public class THFnew {
     public static void analyzeBadUsages(KB kb) {
 
         for (Formula f : kb.formulaMap.values()) {
-            System.out.println( "analyzeBadUsages(): formula: " + f.getFormula());
             analyzeFormula(f, kb);
         }
     }
@@ -1152,14 +1151,14 @@ public class THFnew {
 
         // Check against the declared signature, if any
         List<String> sig = kb.kbCache.signatures.get(head);
-        System.out.println("analyzeFormula(): head: " + head + " sig: " + sig);
+        if (debug) System.out.println("analyzeFormula(): head: " + head + " sig: " + sig);
         if (sig != null && sig.size() > 1) {
             // sig[0] is "", last is range; arguments are 1..sig.size()-2
             int maxArgs = Math.min(args.size(), sig.size() - 1);
             for (int i = 0; i < maxArgs; i++) {
                 String expectedType = sig.get(i + 1);   // KIF type: Entity, Formula, etc.
                 String arg = args.get(i);
-                System.out.println("analyzeFormula(): arg " + i + " | " + arg + " expected: " + expectedType);
+                if (debug) System.out.println("analyzeFormula(): arg " + i + " | " + arg);
                 // If we expect a non-Formula type but the argument is itself a formula (list),
                 // this symbol is being used as if that position were a formula.
                 if ((!"Formula".equals(expectedType) && (Formula.listP(arg) || (predicateTerms.contains(arg))))){
@@ -1218,7 +1217,7 @@ public class THFnew {
 
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
-        String filename = kbDir + sep + kb.name + "_plain.thf";
+        String filename = kbDir + sep + kb.name + ".thf";
 
         if (debug) System.out.println("\n\nTHFnew.transPlainTHF()");
         try (Writer fstream = new FileWriter(filename);

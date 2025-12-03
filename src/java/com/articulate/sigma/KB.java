@@ -2151,7 +2151,7 @@ public class KB implements Serializable {
      * Input  : SUO-KIF query string (stmt).
      * Output : Vampire object with HOL proof output.
      */
-    public Vampire askVampireHOL(String stmt, int timeout, int maxAnswers) {
+    public Vampire askVampireHOL(String stmt, int timeout, int maxAnswers, boolean useModals) {
 
         KBmanager mgr = KBmanager.getMgr();
         Vampire v = new Vampire();
@@ -2166,19 +2166,24 @@ public class KB implements Serializable {
                 System.out.println("KB.askVampireHOL(): timeout: " + timeout + " maxAnswers: " + maxAnswers);
             }
 
-            // 1. Locate the base THF axioms file: <kbName>.thf (e.g., SUMO.thf)
+            // -------- 1. Ensure base <kb>.thf exists (modal vs plain) --------
             String kbThfFile = this.name + ".thf";
             String kbThfPath = kbDir + sep + kbThfFile;
             File thfAxioms = new File(kbThfPath);
+            // TODO: If .thf exists, also check if it was prodused with or without modals.
             if (!thfAxioms.exists()) {
                 System.out.println("KB.askVampireHOL(): no such file: " + kbThfPath + ". Creating it.");
-                // Generate SUMO.thf using the modal THF exporter
-                THFnew.transModalTHF(this);
+                // Generate SUMO.thf
+                if (useModals) {
+                    // using the modal THF exporter
+                    THFnew.transModalTHF(this);
+                }else{
+                    THFnew.transPlainTHF(this);
+                }
             }
 
-            // 2. Create a temporary THF problem file for this specific query.
+            // -------- 2. Create problem file: axioms + conjecture --------
             String problemPath = kbDir + sep + "hol_query_" + System.currentTimeMillis() + ".thf";
-
             if (debug)
                 System.out.println("KB.askVampireHOL(): Problem THF file: " + problemPath);
 
@@ -2194,31 +2199,29 @@ public class KB implements Serializable {
 
                 out.newLine();
                 out.write("% --------------------");
-                out.newLine();
                 out.write("% User HOL conjecture");
-                out.newLine();
                 out.write("% --------------------");
                 out.newLine();
 
                 // 2b. Translate the SUO-KIF query (stmt) into THF using Modals + THFnew.
 
-                // Original SUO-KIF query
+                // -------- 3. Parse SUO-KIF query --------
                 Formula f = new Formula();
                 f.read(stmt);
 
                 if (debug)
                     System.out.println("KB.askVampireHOL(): Original Formula: " + f.getFormula());
 
-                // Expand modal structure and insert world arguments (?W1, ?W2, …)
-                Formula modalized = Modals.processModals(f, this);
+                // 3a. Optional: expand modals and insert world args
+                if (useModals){
+                    f = Modals.processModals(f, this);
+                    if (debug) System.out.println("KB.askVampireHOL(): Modalized Formula: " + f.getFormula());
+                }
 
-                if (debug)
-                    System.out.println("KB.askVampireHOL(): Modalized Formula: " + modalized.getFormula());
-
-                // Preprocess (Skolemization / simplifications / etc.)
+                // -------- 4. Preprocess (Skolemization, simplifications, etc.) --------
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 // second argument "true" indicates this is a query/conjecture
-                Set<Formula> processed = fp.preProcess(modalized, true, this);
+                Set<Formula> processed = fp.preProcess(f, true, this);
 
                 if (debug) {
                     System.out.println("KB.askVampireHOL(): Number of preprocessed formulas: " + processed.size());
@@ -2226,23 +2229,26 @@ public class KB implements Serializable {
                         System.out.println("KB.askVampireHOL(): Preprocessed formula: " + pfDbg.getFormula());
                 }
 
-                // Build the type map similarly to THFnew.oneTrans(...)
-                modalized.varTypeCache.clear();  // force recomputation of types
-                Map<String, Set<String>> typeMap = fp.findAllTypeRestrictions(modalized, this);
-                typeMap.putAll(modalized.varTypeCache);
+                // Build base type map from types in the *original* (possibly modalized) formula
+                f.varTypeCache.clear();  // force recomputation of types
+                Map<String, Set<String>> typeMap = fp.findAllTypeRestrictions(f, this);
+                typeMap.putAll(f.varTypeCache);
 
                 if (debug)
                     System.out.println("KB.askVampireHOL(): Initial typeMap: " + typeMap);
 
-                // Add a fresh world variable and mark it as type "World"
-                String worldVar = THFnew.makeWorldVar(this, f);
-                Set<String> wTypes = new HashSet<>();
-                wTypes.add("World");
-                typeMap.put(worldVar, wTypes);
+                // 4a. If using modals, add a world variable type once
+                String worldVar = null;
+                if (useModals) {
+                    worldVar = THFnew.makeWorldVar(this, f);
+                    Set<String> wTypes = new HashSet<>();
+                    wTypes.add("World");
+                    typeMap.put(worldVar, wTypes);
 
-                if (debug) {
-                    System.out.println("KB.askVampireHOL(): worldVar: " + worldVar);
-                    System.out.println("KB.askVampireHOL(): typeMap after adding worldVar: " + typeMap);
+                    if (debug) {
+                        System.out.println("KB.askVampireHOL(): worldVar: " + worldVar);
+                        System.out.println("KB.askVampireHOL(): typeMap after adding worldVar: " + typeMap);
+                    }
                 }
 
                 int conjIndex = 0;
@@ -2254,72 +2260,57 @@ public class KB implements Serializable {
                  * 3 - Translate it to THF using the same logic as axioms.
                  * 4 - Emit it as a thf(...,conjecture,...) clause in the query file.
                  */
+                // -------- 5. Translate each preprocessed formula to THF --------
                 for (Formula pf : processed) {
 
-                    if (debug)
-                        System.out.println("KB.askVampireHOL(): Processing pf: " + pf.getFormula());
+                    // 5a. Modal-specific adjustments ONLY when useModals == true
+                    if (useModals) {
 
-                    // 1) Handle variable-arity predicates
-                    if (THFnew.variableArity(this, pf.car())) {
-                        if (debug)
-                            System.out.println("KB.askVampireHOL(): variableArity predicate: " + pf.car() +
-                                    " – adjusting arity.");
-                        pf = THFnew.adjustArity(this, pf);   // same hack as in oneTrans()
-                        if (debug)
-                            System.out.println("KB.askVampireHOL(): After adjustArity: " + pf.getFormula());
+                        // Handle variable-arity after worlds (if you still keep this hack)
+                        if (THFnew.variableArity(this, pf.car())) {
+                            pf = THFnew.adjustArity(this, pf);
+                        }
+
+                        // Special case: (instance ?X Class) -> forall worldVar ...
+                        if (worldVar != null &&
+                                pf.getFormula().startsWith("(instance ") &&
+                                pf.getFormula().endsWith("Class)")) {
+
+                            pf.read("(forall (" + worldVar + ") " +
+                                    pf.getFormula().substring(0, pf.getFormula().length() - 1) +
+                                    " " + worldVar + "))");
+
+                            Set<String> types = new HashSet<>();
+                            types.add("World");
+                            pf.varTypeCache.put(worldVar, types);
+                        }
                     }
 
-//                     2) Special case: (instance ?X Class) -> forall worldVar (instance ?X Class worldVar)
-                    if (pf.getFormula().startsWith("(instance ") &&
-                            pf.getFormula().endsWith("Class)")) {
+                    // 5b. Skip formulas headed by symbols we already know are badly typed (optional but recommended)
+//                    String head = pf.car();
+//                    if (THFnew.badUsageSymbols.contains(head)) {
+//                        out.write("% askVampireHOL(): excluded bad-usage symbol in query: " + head + "\n");
+//                        continue;
+//                    }
 
-                        if (debug)
-                            System.out.println("KB.askVampireHOL(): instance ?X Class pattern detected.");
-
-                        pf.read("(forall (" + worldVar + ") " +
-                                pf.getFormula().substring(0, pf.getFormula().length() - 1) +
-                                " " + worldVar + "))");
-
-                        Set<String> types = new HashSet<>();
-                        types.add("World");
-                        pf.varTypeCache.put(worldVar, types);
-
-                        if (debug)
-                            System.out.println("KB.askVampireHOL(): After wrapping with forall worldVar: " +
-                                    pf.getFormula());
-                    }
-
-                    // 3) Convert the (possibly updated) Formula to THF (query = true).
+                    // 5c. Translate to THF using the same engine as axioms (query=true)
                     String thfQuery = THFnew.process(new Formula(pf), typeMap, true);
 
-                    if (debug)
-                        System.out.println("KB.askVampireHOL(): THF query: " + thfQuery);
-
-                    // 4) Emit as a TPTP THF conjecture.
                     String conjName = "user_conj_" + (conjIndex++);
-                    String thfLine = "thf(" + conjName + ",conjecture," + thfQuery + ").\n";
-                    out.write(thfLine);
-
+                    String final_query = "thf(" + conjName + ",conjecture," + thfQuery + ").\n";
+                    out.write(final_query);
                     if (debug)
-                        System.out.println("KB.askVampireHOL(): Wrote conjecture: " + thfLine.trim());
+                        System.out.println("KB.askVampireHOL(): final query: " + final_query);
                 }
             }
-
+            // -------- 6. Actually call Vampire on problemPath (unchanged) --------
             if (debug)
-                System.out.println("KB.askVampireHOL(): Calling askVampireTHF() with: " + problemPath);
-
-            // Reuse existing THF runner (must call Vampire HOL executable)
+                System.out.println("------ KB.askVampireHOL(): Asking Vampire");
             v = askVampireTHF(problemPath, timeout, maxAnswers);
-
-            if (debug && v != null) {
-                System.out.println("KB.askVampireHOL(): askVampireTHF() returned Vampire object.");
-                System.out.println("KB.askVampireHOL(): Vampire output is " +
-                        (v.output == null ? "null" : "non-null"));
-            }
-
+            if (debug)
+                System.out.println("------ KB.askVampireHOL(): Vampire Finished");
             return v;
-        }
-        catch (Exception e) {
+        }catch (Exception e) {
             System.out.println("KB.askVampireHOL(): Exception: " + e.getMessage());
             e.printStackTrace();
             return null;

@@ -181,6 +181,16 @@
     if (dropOnePremise == null) dropOnePremise = false;
     KB.dropOnePremiseFormulas = dropOnePremise;
 
+    Boolean holUseModals = (Boolean) session.getAttribute("HolUseModals");
+    if (req != null) {
+        modensPonens = request.getParameter("HolUseModals") != null
+                || "yes".equalsIgnoreCase(request.getParameter("HolUseModals"))
+                || "on".equalsIgnoreCase(request.getParameter("HolUseModals"))
+                || "true".equalsIgnoreCase(request.getParameter("HolUseModals"));
+        session.setAttribute("HolUseModals", modensPonens);
+    }
+    if (holUseModals == null) holUseModals = false;
+
     // ---- Remember selected test in session ----
     String selectedTest = (String) session.getAttribute("selectedTest");
     if (req != null && request.getParameter("testName") != null) {
@@ -404,6 +414,10 @@
         [ <input type="checkbox" name="dropOnePremise" id="dropOnePremise" value="true"
         <% if (Boolean.TRUE.equals(dropOnePremise)) { out.print(" CHECKED"); } %> >
         <label for="dropOnePremise">Drop One-Premise Formulas</label> ]
+
+        <input type="checkbox" id="HolUseModals" name="HolUseModals" value="yes" <% if (holUseModals) { out.print(" CHECKED"); } %> >
+        <label for="HolUseModals">HOL-Use Modals </label>
+
         <br>
 
         <input type="checkbox" name="showProofInEnglish" value="yes"
@@ -517,6 +531,7 @@
                         out.println("<span style='color:#b00'>Only Vampire is supported for .thf tests.</span><br>");
                     } else {
                         setVampMode(vampireMode);
+
                         com.articulate.sigma.tp.Vampire vRun = kb.askVampireTHF(testPath, tmo, maxAns);
 
                         // Provide a friendly “query label” (TPTP problems don’t have a KIF query string)
@@ -569,11 +584,18 @@
                     boolean isHOL = true;
                     if (isHOL){ // Higher-Order Formula
                         System.out.println(" -- Higher Order Formula Detected - Attempring to run Vampire HOL ");
-                        vampire = kb.askVampireHOL(stmt, timeout, maxAnswers);
+                        vampire = kb.askVampireHOL(stmt, timeout, maxAnswers, holUseModals);
+                        System.out.println("============ Vampire Output Returned =============");
                         List<String> cleaned = TPTPutil.clearProofFile(vampire.output);
+                        System.out.println("============ Vampire Output Cleaned =============");
+                        for (String s:cleaned){
+                            System.out.println(s);
+                        }
                         // Vampire version 4.8→5.0 reordering…
                         List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
+                        System.out.println("============ Vampire Output Reordered =============");
                         vampire.output = THFutil.preprocessTHFProof(normalized);
+                        System.out.println("============ Vampire Output Preprocessed =============");
 
                     }else { // First-Order Formula
                         System.out.println(" -- First Order Formula Detected - Attempring to run normal Vampire");
