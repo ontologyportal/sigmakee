@@ -691,7 +691,7 @@ public class THFnew {
         List<String> problematic_terms = Arrays.asList("airTemperature", "ListFn", "AssignmentFn", "Organism");
         for (String a : args) {
             if (problematic_terms.contains(a)) {
-                out.write("% exclude(): Problematic Term encountered: \n");
+                out.write("% exclude(): Problematic Term encountered: "+a+"\n");
                 return true;
             }
         }
@@ -1128,7 +1128,7 @@ public class THFnew {
     // Recursively analyzes a single formula for typing mismatches: if a predicate's
     // argument position expects a non-Formula type (e.g., Entity/$i) but the argument
     // is itself a formula (list), the predicate is marked as badly used.
-    private static void analyzeFormula(Formula f, KB kb) {
+    private static void     analyzeFormula(Formula f, KB kb) {
 
         if (f == null)
             return;

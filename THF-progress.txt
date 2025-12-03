@@ -1,4 +1,4 @@
-Updates Process:
+Updates/Issues:
 
 0) Work on local signature copy instead of modifying the kb.cache all the times.
 
@@ -8,7 +8,7 @@ Error Message:
 - Non-boolean term vAPP($i,sTfun(w,$o),vAPP($i,sTfun($i,sTfun(w,$o)),s__instance,X4),s__BinaryRelation) of sort sTfun(w,$o) is used in a formula context
 
 Description:
-- instance signature is treated as Modal $i > $i > w > $o instead of $i > $i > $o
+- **instance** term is treated as Modal $i > $i > w > $o instead of $i > $i > $o
 
 Solution:
 - Create a set of Modal relations that we check before introducing the World arg.
@@ -21,7 +21,8 @@ Error Message:
 
 thf(ax227,axiom,( ! [V__FORMULA:$i,V__W1:w,V__W2:w] : (((((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA) => ~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA)))) & (~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA))) => ((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA))) ) )).
 
-
+Description:
+Even if the term's type header was custom created, it wasn't excluded from getting generated again by sigma, and that caused inconsistencies.
 
 3)
 
@@ -33,7 +34,7 @@ thf(ax227,axiom,( ! [V__FORMULA:$i,V__W1:w,V__W2:w] : (((((s__accrelnP @ s__Obli
 Description:
 
 Modal attributes (Obligation, Permission, etc.) were incorrectly typed as $m instead of m, causing Vampire to see conflicting types.
-Fixed exporter to emit : m and excluded these symbols from auto-generated $i types.
+Fixed exporter to emit :m and excluded these symbols from auto-generated $i types.
 
 4)
 
@@ -181,17 +182,15 @@ The KB is giving identical signatures to different arities.
 
 78332 Aborted by signal SIGSEGV on /Users/Mac_1/.sigmakee/KBs/SUMO.thf
 
-
 thf(ax1041,axiom,( ! [V__ROW3:$i,V__ROW4:$i,V__ROW2:$i,V__NUMBER:$i,V__CLASS:$i] : ((((s__instance @ V__ROW4 @ s__SymbolicString) & (s__instance @ V__ROW2 @ s__HumanLanguage) & (s__instance @ V__NUMBER @ s__PositiveInteger) & (s__instance @ V__CLASS @ s__Class)) => (((s__domain @ s__format__m @ V__NUMBER @ V__CLASS) & (s__instance @ s__format__m @ s__Predicate) & (s__format @ V__ROW2 @ V__ROW3 @ V__ROW4)) => (s__instance @ (s__ListOrderFn @ (s__ListFn__3Fn @ V__ROW2 @ V__ROW3 @ V__ROW4) @ V__NUMBER) @ V__CLASS))) ) )).
-
 
 Description:
 
-Even if 'format' is part of the 'excludePred' list, it doesn't get excluded because in the exluce method it checks only the ground term and not the inner ones, so it tries to generate a formula with the format but there is no type declaration.
+Even if 'format' is part of the 'excludePred' list, it doesn't get excluded. In the exclude method it checks only the ground term and not the inner ones, so it tries to generate a formula with the format but there is no type declaration.
 
 Solution:
 
-The problem was that the exlude methods were checking only the existing formulas and not the derived/processed ones, so the new formulas were intoducing 'not allowed' terms like 'format'.
+The problem was that the exclude methods were checking only the existing formulas and not the derived/processed ones, so the new formulas were introducing 'not allowed' terms like 'format'.
 
 16)
 
@@ -211,13 +210,13 @@ Error Message:
       (holdsDuring (WhenFn ?STATE) (believes ?AGENT ?FORMULA)))
 
 Description:
+thf(s__believes_tp,type,(s__believes : ($i > $o > $o))).
+thf(s__instance_tp,type,(s__instance : ($i > $i > $o))).
 
-V__FORMULA has type $i (an individual), because all variables are currently typed $i in the quantifier prefix.
-But in the last implication, V__FORMULA is used as a formula (the right-hand side of =>), which must have type $o.
-Vampire is exactly complaining about that.
+The term 'instance' requires both its arguments to be individuals, while the term 'believes' only requires the second argument to be a formula.
+In both cases we are using the V__FORMULA which has type $i.
 
 The underlying axiom is meta-logical (a variable is both an object and a formula).
-
 
 17)
 
@@ -230,38 +229,10 @@ thf(ax3476,axiom,(s__relatedInternalConcept @ s__time__m @ s__holdsDuring)).
 
 Description:
 s__relatedInternalConcept : $i > $i > $o (individual > individual)
-thf(holdsDuring_tp,type,(s__holdsDuring : m)). (we provide individual > modal)
+thf(holdsDuring_tp,type,(s__holdsDuring : m)). (we provide $i > m > $o)
 
 
 18)
-
-% Exception at proof search level
-Parsing Error on line 9134
-Non-boolean term X92 of sort $i is used in a formula context
-
-thf(ax3550,axiom,( ! [V__AGENT:$i,V__W1:w,V__W2:w,V__W3:w,V__INVESTIGATE:$i,V__PROP:$i] : (((s__instance @ V__AGENT @ s__AutonomousAgent) => (((s__instance @ V__INVESTIGATE @ s__Investigating) & (s__agent @ V__INVESTIGATE @ V__AGENT) & (s__patient @ V__INVESTIGATE @ V__PROP)) => ((s__accreln @ s__holdsDuring @ (s__WhenFn @ V__INVESTIGATE) @ V__W1 @ V__W2) => ~(((s__accreln @ s__knows @ V__AGENT @ V__W2 @ V__W3) => V__PROP))))) ) )).
-
-Solution:
-
-Update Merge.kif file line 13110:
-
-from:
-   (=>
-      (and
-         (instance ?INVESTIGATE Investigating)
-         (agent ?INVESTIGATE ?AGENT)
-         (patient ?INVESTIGATE ?PROP))
-      (holdsDuring (WhenFn ?INVESTIGATE) (not (knows ?AGENT ?PROP))))
-
-to:
-   (=>
-      (and
-         (instance ?INVESTIGATE Investigating)
-         (agent ?INVESTIGATE ?AGENT)
-         (patient ?INVESTIGATE ?PROP))
-      (exists (?PROP)
-         (holdsDuring 
-            (WhenFn ?INVESTIGATE) (not (knows ?AGENT ?PROP)))))
 
 Error Message:
 Parsing Error on line 16787
@@ -314,5 +285,7 @@ thf(s__airTemperature_tp,type,(s__airTemperature : ($i > $i > $o))).
 result takes as second arg an $i,
 airTemperature returns an $o
 so we have an incosistency!
+
+
 
 
