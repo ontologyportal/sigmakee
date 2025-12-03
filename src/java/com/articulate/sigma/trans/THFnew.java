@@ -12,6 +12,8 @@ public class THFnew {
 
     public static boolean debug = false;
     public static int axNum = 0;
+    public static Set<Formula> badUsageSymbols = new HashSet<>();
+    public static Set<String> predicateTerms = new HashSet<>(); //Terms that return $o instead of $i
 
     // ISSUE 1
     // relations that are treated as modal in the THF embedding, i.e. they get an extra world argument and special THF types.
@@ -911,8 +913,8 @@ public class THFnew {
     }
 
     // Non-modal version: only $i and $o.
-// - If pred has a __N suffix, use N as arity: all args $i, result $o / $i.
-// - Otherwise, reuse the old sigString logic, but map World -> $i (no 'w').
+    // - If pred has a __N suffix, use N as arity: all args $i, result $o / $i.
+    // - Otherwise, reuse the old sigString logic, but map World -> $i (no 'w').
     public static String sigStringNonModal(String pred,
                                            List<String> sig,
                                            KB kb,
@@ -920,6 +922,7 @@ public class THFnew {
 
         // Try to read a numeric suffix, e.g. partition__4 -> 4
         Integer suffixNum = getSuffixNumber(pred);
+
         if (suffixNum != null && suffixNum > 0) {
             int arity = suffixNum;
 
@@ -930,8 +933,10 @@ public class THFnew {
 
             if (function)
                 sb.append("$i");   // functions return an individual
-            else
+            else {
                 sb.append("$o");   // relations return a boolean
+                predicateTerms.add(pred);
+            }
 
             return sb.toString();
         }
@@ -965,13 +970,15 @@ public class THFnew {
         }
 
         if (function) {
-            if (kb.isInstanceOf(range, "Formula") || range.equals("Formula"))
+            if (kb.isInstanceOf(range, "Formula") || range.equals("Formula")) {
                 sb.append("$o");
-            else
+                predicateTerms.add(pred);
+            }else
                 sb.append("$i");   // includes World-as-range => $i
         }
         else {
             sb.append("$o");
+            predicateTerms.add(pred);
         }
 
         return sb.toString();
@@ -1107,6 +1114,69 @@ public class THFnew {
     }
 
 
+    // Scans all KIF formulas once before THF translation to detect predicates whose
+    // arguments are used inconsistently with their declared signatures. In particular,
+    // if a predicate expects an $i argument but receives a formula (a list), it is
+    // flagged as a badUsageSymbol and will later be excluded from translation.
+    public static void analyzeBadUsages(KB kb) {
+
+        for (Formula f : kb.formulaMap.values()) {
+            System.out.println( "analyzeBadUsages(): formula: " + f.getFormula());
+            analyzeFormula(f, kb);
+        }
+    }
+
+    // Recursively analyzes a single formula for typing mismatches: if a predicate's
+    // argument position expects a non-Formula type (e.g., Entity/$i) but the argument
+    // is itself a formula (list), the predicate is marked as badly used.
+    private static void analyzeFormula(Formula f, KB kb) {
+
+        if (f == null)
+            return;
+
+        // We only care about list formulas of the form (head arg1 arg2 ...)
+        if (f.atom() || !f.listP())
+            return;
+
+        String head = f.car();
+        if (head == null)
+            return;
+
+        if (head.equals("termFormat") || head.equals("documentation") || head.equals("format"))
+            return;
+
+        // Get argument strings; this may legitimately return null in some cases.
+        List<String> args = f.complexArgumentsToArrayListString(1);
+        if (args == null || args.isEmpty())
+            return;
+
+        // Check against the declared signature, if any
+        List<String> sig = kb.kbCache.signatures.get(head);
+        System.out.println("analyzeFormula(): head: " + head + " sig: " + sig);
+        if (sig != null && sig.size() > 1) {
+            // sig[0] is "", last is range; arguments are 1..sig.size()-2
+            int maxArgs = Math.min(args.size(), sig.size() - 1);
+            for (int i = 0; i < maxArgs; i++) {
+                String expectedType = sig.get(i + 1);   // KIF type: Entity, Formula, etc.
+                String arg = args.get(i);
+                System.out.println("analyzeFormula(): arg " + i + " | " + arg + " expected: " + expectedType);
+                // If we expect a non-Formula type but the argument is itself a formula (list),
+                // this symbol is being used as if that position were a formula.
+                if ((!"Formula".equals(expectedType) && (Formula.listP(arg) || (predicateTerms.contains(arg))))){
+                    THFnew.badUsageSymbols.add(f);
+                    break;
+                }
+            }
+        }
+
+        // Recurse on subformulas in the arguments
+        for (String s : args) {
+            if (Formula.listP(s))
+                analyzeFormula(new Formula(s), kb);
+        }
+    }
+
+
     /** ***************************************************************
      */
     public static void transModalTHF(KB kb) {
@@ -1165,6 +1235,11 @@ public class THFnew {
             // Optionally: out.write(getPlainTHFHeader() + "\n");
             writeTypesNonModal(kb, out);
 
+            analyzeBadUsages(kb);
+            System.out.println("Predicate Terms: " + predicateTerms);
+//            System.out.println("\n\nTHFnew.transPlainTHF(): Analyzing bad usages...");
+//            System.out.println(badUsageSymbols.toString());
+
             for (Formula f : kb.formulaMap.values()) {
                 if (debug) System.out.println("THFnew.transPlainTHF(): " + f);
                 if (!excludeNonModal(f, kb, out))
@@ -1188,6 +1263,15 @@ public class THFnew {
     public static boolean excludeNonModal(Formula f, KB kb, Writer out) throws IOException {
 
         if (debug) System.out.println("exclude(): " + f);
+
+        // Excludes any formula whose main predicate has been flagged as a mixed-result
+        // symbol or a bad-usage symbol. This prevents the generation of THF axioms that
+        // Vampire would reject due to type inconsistencies discovered during analysis.
+        if (THFnew.badUsageSymbols.contains(f)) {
+            String flat = f.toString().replace("\n", " ").replace("\r", " ");
+            out.write("% exclude(): bad usage symbol: " + flat + "\n");
+            return true;
+        }
 
         // Exclude strings (quotes)
         if (f.getFormula().contains("\"")) {
@@ -1225,8 +1309,6 @@ public class THFnew {
                 return true;
             }
         }
-
-
 
         // ============================================================
         // META-LOGIC FILTER
