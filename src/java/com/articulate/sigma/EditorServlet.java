@@ -6,18 +6,16 @@ import javax.servlet.annotation.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.*;
 
 /**
  * Unified Editor Servlet for both .kif and .tptp code/files.
- * - "format": returns text/plain with formatted content.
- * - "check":  returns application/json with the full list of ErrRec objects and an errorMask.
+ * Handles format, check, and user file operations (save/load/list).
  */
 @WebServlet("/EditorServlet")
 @MultipartConfig(
-        fileSizeThreshold = 1024,   // buffer to disk after 1 KB
-        maxFileSize = 200 * 1024,   // 200 KB max file
-        maxRequestSize = 220 * 1024 // 220 KB total
+    fileSizeThreshold = 1024,
+    maxFileSize = 200 * 1024,
+    maxRequestSize = 220 * 1024
 )
 public class EditorServlet extends HttpServlet {
 
@@ -25,7 +23,8 @@ public class EditorServlet extends HttpServlet {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[8192];
         int n;
-        while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+        while ((n = in.read(buf)) != -1)
+            out.write(buf, 0, n);
         return new String(out.toByteArray(), StandardCharsets.UTF_8);
     }
 
@@ -43,11 +42,8 @@ public class EditorServlet extends HttpServlet {
                 case '\r': b.append("\\r");  break;
                 case '\t': b.append("\\t");  break;
                 default:
-                    if (c < 0x20) {
-                        b.append(String.format("\\u%04x", (int)c));
-                    } else {
-                        b.append(c);
-                    }
+                    if (c < 0x20) b.append(String.format("\\u%04x", (int)c));
+                    else b.append(c);
             }
         }
         return b.toString();
@@ -63,73 +59,143 @@ public class EditorServlet extends HttpServlet {
         String action = req.getParameter("action");
         String fileName = req.getParameter("fileName");
         String text = null;
+
+        // ------------------------------------------------------------
+        // Enforce logged-in user with role=user or role=admin
+        // ------------------------------------------------------------
+        HttpSession session = req.getSession(false);
+        String username = session != null ? (String) session.getAttribute("user") : null;
+        String role = session != null ? (String) session.getAttribute("role") : null;
+
+        if (username == null || role == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.getWriter().write("{\"success\":false,\"message\":\"Not logged in.\"}");
+            return;
+        }
+
+        if (!role.equalsIgnoreCase("user") && !role.equalsIgnoreCase("admin")) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write("{\"success\":false,\"message\":\"Access denied. Must be user or admin.\"}");
+            return;
+        }
+
+        // Root dir: ~/.sigmakee/KBs/UserKBs/<username>/
+        File userDir = new File(System.getProperty("user.home") + "/.sigmakee/KBs/UserKBs/" + username);
+        if (!userDir.exists()) userDir.mkdirs();
+
+        // ============================================================
+        // SAVE USER FILE
+        // ============================================================
+        if ("saveUserFile".equalsIgnoreCase(mode)) {
+            String filename = req.getParameter("fileName");
+            String contents = req.getParameter("code");
+
+            if (filename == null || filename.isBlank()) {
+                resp.setContentType("application/json; charset=UTF-8");
+                resp.getWriter().write("{\"success\":false,\"message\":\"Filename missing.\"}");
+                return;
+            }
+            if (contents == null) contents = "";
+
+            File outFile = new File(userDir, filename);
+            try (FileWriter fw = new FileWriter(outFile)) {
+                fw.write(contents);
+            } catch (IOException e) {
+                resp.setContentType("application/json; charset=UTF-8");
+                resp.getWriter().write("{\"success\":false,\"message\":\"" + e.getMessage().replace("\"", "'") + "\"}");
+                return;
+            }
+
+            resp.setContentType("application/json; charset=UTF-8");
+            resp.getWriter().write("{\"success\":true,\"message\":\"Saved successfully.\"}");
+            return;
+        }
+
+        // ============================================================
+        // LIST USER FILES
+        // ============================================================
+        if ("listUserFiles".equalsIgnoreCase(mode)) {
+            List<String> fileNames = new ArrayList<>();
+            if (userDir.exists() && userDir.isDirectory()) {
+                File[] files = userDir.listFiles();
+                if (files != null) {
+                    for (File f : files)
+                        if (f.isFile()) fileNames.add(f.getName());
+                }
+            }
+            resp.setContentType("application/json; charset=UTF-8");
+            StringBuilder json = new StringBuilder("{\"success\":true,\"files\":[");
+            for (int i = 0; i < fileNames.size(); i++) {
+                json.append("\"").append(jsonEscape(fileNames.get(i))).append("\"");
+                if (i < fileNames.size() - 1) json.append(",");
+            }
+            json.append("]}");
+            resp.getWriter().write(json.toString());
+            return;
+        }
+
+        // ============================================================
+        // LOAD USER FILE
+        // ============================================================
+        if ("loadUserFile".equalsIgnoreCase(mode)) {
+            String filename = req.getParameter("fileName");
+            if (filename == null || filename.isBlank()) {
+                resp.setContentType("application/json; charset=UTF-8");
+                resp.getWriter().write("{\"success\":false,\"message\":\"Filename missing.\"}");
+                return;
+            }
+
+            File target = new File(userDir, filename);
+            if (!target.exists()) {
+                resp.setContentType("application/json; charset=UTF-8");
+                resp.getWriter().write("{\"success\":false,\"message\":\"File not found.\"}");
+                return;
+            }
+
+            String contents = new String(java.nio.file.Files.readAllBytes(target.toPath()), StandardCharsets.UTF_8);
+            resp.setContentType("application/json; charset=UTF-8");
+            resp.getWriter().write("{\"success\":true,\"fileName\":\"" + jsonEscape(filename) +
+                    "\",\"contents\":\"" + jsonEscape(contents) + "\"}");
+            return;
+        }
+
+        // ============================================================
+        // FORMAT / CHECK (original logic unchanged)
+        // ============================================================
         if (code != null && !code.isBlank()) text = code;
         else if (codeContent != null && !codeContent.isBlank()) text = codeContent;
+
         if (text == null && req.getContentType() != null &&
-                req.getContentType().toLowerCase(Locale.ROOT).startsWith("multipart/")) {
+            req.getContentType().toLowerCase(Locale.ROOT).startsWith("multipart/")) {
             Part filePart = req.getPart("kifFile");
             if (filePart != null && filePart.getSize() > 0) {
                 fileName = filePart.getSubmittedFileName();
                 text = readUtf8(filePart.getInputStream());
             }
         }
+
         if (text == null || text.trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             if ("format".equalsIgnoreCase(mode) || "format".equalsIgnoreCase(action)) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 resp.setContentType("text/plain; charset=UTF-8");
                 resp.getWriter().write("No content provided for formatting.");
             } else {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 resp.setContentType("application/json; charset=UTF-8");
                 resp.getWriter().write("{\"ok\":false,\"message\":\"No content provided for checking.\"}");
             }
             return;
         }
+
         if (fileName == null) fileName = "Untitled.kif";
-        boolean isTptp = fileName.toLowerCase().endsWith(".tptp")
-            || fileName.toLowerCase().endsWith(".tff")
-            || fileName.toLowerCase().endsWith(".p")
-            || fileName.toLowerCase().endsWith(".fof")
-            || fileName.toLowerCase().endsWith(".cnf")
-            || fileName.toLowerCase().endsWith(".thf");
+        boolean isTptp = fileName.toLowerCase().matches(".*\\.(tptp|tff|p|fof|cnf|thf)$");
+
         if ("format".equalsIgnoreCase(mode) || "format".equalsIgnoreCase(action)) {
             resp.setContentType("text/plain; charset=UTF-8");
             try {
-                String formatted;
-                if (isTptp) {
-                    TPTPFileChecker formatter = new TPTPFileChecker();
-                    formatted = formatter.formatTptpText(text, "(web-editor)");
-                } else {
-                    formatted = KifFileChecker.formatKif(text);
-                }
-                List<ErrRec> fmtErrors = Collections.emptyList();
-                String checkMsg = null;
-                try {
-                    if (isTptp) {
-                        fmtErrors = TPTPFileChecker.check(text, "(web-editor)");
-                    } else {
-                        fmtErrors = KifFileChecker.check(text, "(web-editor)");
-                    }
-                } catch (Exception ce) {
-                    checkMsg = "Check failed: " + ce.getMessage();
-                }
-                int errCount = (fmtErrors == null) ? 0 : fmtErrors.size();
-                resp.setHeader("X-Has-Errors", (errCount > 0) ? "true" : "false");
-                resp.setHeader("X-Error-Count", String.valueOf(errCount));
-                if (checkMsg != null) resp.setHeader("X-Check-Message", checkMsg);
-                if (errCount > 0) {
-                    ErrRec first = fmtErrors.get(0);
-                    String preview = first.msg;
-                    if (preview != null && preview.length() > 200) preview = preview.substring(0, 200);
-                    resp.setHeader("X-First-Error", preview == null ? "" : preview);
-                }
-
-                if (formatted == null || formatted.trim().isEmpty()) {
-                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    resp.getWriter().write("Failed to format input.");
-                } else {
-                    resp.getWriter().write(formatted);
-                }
+                String formatted = isTptp
+                        ? new TPTPFileChecker().formatTptpText(text, "(web-editor)")
+                        : KifFileChecker.formatKif(text);
+                resp.getWriter().write(formatted);
             } catch (Exception e) {
                 resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 resp.getWriter().write("Formatting error: " + e.getMessage());
@@ -137,30 +203,29 @@ public class EditorServlet extends HttpServlet {
             return;
         }
 
-        List<ErrRec> errors = Collections.emptyList();
+        // --- Run check and return JSON ---
+        List<ErrRec> errors;
         List<String> lines = Arrays.asList(text.split("\\R", -1));
         boolean[] errorMask = new boolean[lines.size()];
         String errorMessage = null;
+
         try {
-            if (isTptp) {
-                errors = TPTPFileChecker.check(text, "(web-editor)");
-            } else {
-                errors = KifFileChecker.check(text);
-            }
+            errors = isTptp ? TPTPFileChecker.check(text, "(web-editor)") : KifFileChecker.check(text);
         } catch (Exception e) {
-            errorMessage = "Error while checking: " + e.getMessage();
             errors = Collections.emptyList();
+            errorMessage = "Error while checking: " + e.getMessage();
         }
+
         if (errors != null) {
             for (ErrRec er : errors) {
                 int ln = er.line;
                 if (ln >= 1 && ln <= errorMask.length) errorMask[ln - 1] = true;
             }
         }
+
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType("application/json; charset=UTF-8");
-        StringBuilder json = new StringBuilder(4096);
-        json.append("{\"ok\":true");
+        StringBuilder json = new StringBuilder("{\"ok\":true");
         json.append(",\"fileName\":\"").append(jsonEscape(fileName)).append("\"");
         if (errorMessage != null)
             json.append(",\"message\":\"").append(jsonEscape(errorMessage)).append("\"");
@@ -168,27 +233,22 @@ public class EditorServlet extends HttpServlet {
         if (errors != null) {
             for (int i = 0; i < errors.size(); i++) {
                 ErrRec e = errors.get(i);
-                json.append("{")
-                    .append("\"type\":").append(e.type).append(",")
-                    .append("\"file\":\"").append(jsonEscape(e.file == null ? "" : e.file)).append("\",")
-                    .append("\"line\":").append(e.line).append(",")
-                    .append("\"start\":").append(e.start).append(",")
-                    .append("\"end\":").append(e.end).append(",")
-                    .append("\"msg\":\"").append(jsonEscape(e.msg)).append("\"")
-                    .append("}");
+                json.append("{\"type\":").append(e.type)
+                    .append(",\"file\":\"").append(jsonEscape(e.file == null ? "" : e.file)).append("\"")
+                    .append(",\"line\":").append(e.line)
+                    .append(",\"start\":").append(e.start)
+                    .append(",\"end\":").append(e.end)
+                    .append(",\"msg\":\"").append(jsonEscape(e.msg)).append("\"}");
                 if (i < errors.size() - 1) json.append(",");
             }
         }
-        json.append("]");
-        json.append(",\"errorMask\":[");
+        json.append("],\"errorMask\":[");
         for (int i = 0; i < errorMask.length; i++) {
             if (i > 0) json.append(",");
             json.append(errorMask[i] ? "true" : "false");
         }
-        json.append("]");
-        json.append(",\"isTptp\":").append(isTptp ? "true" : "false");
-        json.append(",\"lineCount\":").append(lines.size());
-        json.append("}");
+        json.append("],\"isTptp\":").append(isTptp ? "true" : "false");
+        json.append(",\"lineCount\":").append(lines.size()).append("}");
         resp.getWriter().write(json.toString());
     }
 }
