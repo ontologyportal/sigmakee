@@ -83,10 +83,8 @@ public class KifFileChecker {
             // Everything after -C is treated as the KIF string; simplest is args[1]
             // (If you want to support spaces w/out quotes, you could join args[1..] here.)
             String kifString = args[1];
-
             KifFileChecker kfc = new KifFileChecker();
             List<ErrRec> errors = kfc.check(kifString, "fileName");  // <- filename forced to "fileName"
-
             System.out.println("*******************************************************");
             if (errors.isEmpty()) {
                 System.out.println("No errors found in fileName");
@@ -259,16 +257,11 @@ public class KifFileChecker {
                 // Reformat-only formulas with no comments.
                 if (formatted != null && !formatted.isEmpty()) {
                     out.append(formatted);
-                    // Ensure trailing newline if there was one before.
-                    if (!formatted.endsWith("\n")) {
-                        out.append("\n");
-                    }
+                    // DO NOT force a newline here; tail copy will preserve original whitespace.
                 } else {
-                    // If formatting somehow produced nothing, fall back to raw.
                     out.append(rawFormula);
                 }
             }
-
             cursor = extendedEnd;
         }
 
@@ -659,7 +652,6 @@ public static void CheckIsValidFormula(String fileName,
     // Strip KIF comments for the *validation* call only
     String codeOnly = stripKifComments(formulaText).trim();
     if (codeOnly.isEmpty()) {
-        // Nothing but comments/whitespace => nothing to validate
         return;
     }
 
