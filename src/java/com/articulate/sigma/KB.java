@@ -2172,7 +2172,13 @@ public class KB implements Serializable {
             }
 
             // -------- 1. Ensure base <kb>.thf exists (modal vs plain) --------
-            String kbThfFile = this.name + ".thf";
+            String kbThfFile = "";
+            if (useModals) {
+                kbThfFile = this.name + "_modals.thf";
+            }else{
+                kbThfFile = this.name + "_plain.thf";
+            }
+
             String kbThfPath = kbDir + sep + kbThfFile;
             File thfAxioms = new File(kbThfPath);
             // TODO: If .thf exists, also check if it was prodused with or without modals.

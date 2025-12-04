@@ -1187,7 +1187,7 @@ public class THFnew {
         String sep = File.separator;
 
         if (debug) System.out.println("\n\nTHFnew.transModalTHF()");
-        String filename = kbDir + sep + kb.name + ".thf";
+        String filename = kbDir + sep + kb.name + "_modals.thf";
         try (Writer fstream = new FileWriter(filename);
              Writer out = new BufferedWriter(fstream)) {
             out.write(Modals.getTHFHeader() + "\n");
@@ -1226,7 +1226,7 @@ public class THFnew {
 
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
-        String filename = kbDir + sep + kb.name + ".thf";
+        String filename = kbDir + sep + kb.name + "_plain.thf";
 
         if (debug) System.out.println("\n\nTHFnew.transPlainTHF()");
         try (Writer fstream = new FileWriter(filename);
@@ -1244,9 +1244,7 @@ public class THFnew {
             writeTypesNonModal(kb, out);
 
             analyzeBadUsages(kb);
-            System.out.println("Predicate Terms: " + predicateTerms);
-//            System.out.println("\n\nTHFnew.transPlainTHF(): Analyzing bad usages...");
-//            System.out.println(badUsageSymbols.toString());
+            if (debug) System.out.println("Predicate Terms: " + predicateTerms);
 
             for (Formula f : kb.formulaMap.values()) {
                 if (debug) System.out.println("THFnew.transPlainTHF(): " + f);
