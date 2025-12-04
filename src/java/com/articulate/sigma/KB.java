@@ -2156,6 +2156,11 @@ public class KB implements Serializable {
         KBmanager mgr = KBmanager.getMgr();
         Vampire v = new Vampire();
 
+        if (useModals)
+            System.out.println("==== Using Modals/HOL mode ====");
+        else
+            System.out.println("==== Using plain HOL mode ====");
+
         try {
             String kbDir = mgr.getPref("kbDir");
             String sep   = File.separator;
@@ -2183,6 +2188,7 @@ public class KB implements Serializable {
             }
 
             // -------- 2. Create problem file: axioms + conjecture --------
+            // TODO: Remove the file after DEBUG phase
             String problemPath = kbDir + sep + "hol_query_" + System.currentTimeMillis() + ".thf";
             if (debug)
                 System.out.println("KB.askVampireHOL(): Problem THF file: " + problemPath);

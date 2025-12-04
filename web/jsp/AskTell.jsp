@@ -63,6 +63,7 @@
             const custom = document.getElementById('Custom');
             const mp     = document.getElementById('ModensPonens');
             const drop   = document.getElementById('dropOnePremise');
+            const holModal = document.getElementById('HolUseModals');
 
             // NEW: check if .thf filter is selected
             const thfRadio = document.querySelector('input[name="testFilter"][value="thf"]');
@@ -75,7 +76,7 @@
 
                 // Still keep Vampire mode radios tied to Vampire on/off
                 const vampireOn = vamp && vamp.checked && !vamp.disabled;
-                [casc, avatar, custom].forEach(el => { if (el) el.disabled = !vampireOn; });
+                [casc, avatar, custom, holModal].forEach(el => { if (el) el.disabled = !vampireOn; });
 
                 custom.checked = false; custom.disabled = true;
                 return; // THF overrides the rest of the logic
@@ -83,7 +84,7 @@
 
             // Original behavior when NOT in THF mode
             const vampireOn = vamp && vamp.checked && !vamp.disabled;
-            [casc, avatar, custom, mp].forEach(el => { if (el) el && (el.disabled = !vampireOn); });
+            [casc, avatar, custom, mp, holModal].forEach(el => { if (el) el && (el.disabled = !vampireOn); });
 
             const mpOn = vampireOn && mp && mp.checked;
             if (drop) {
@@ -92,7 +93,6 @@
             }
             // Disable Custom until it gets fixed and tested!
             custom.checked = false; custom.disabled = true;
-
         }
 
         function toggleRunSource() {
@@ -183,11 +183,11 @@
 
     Boolean holUseModals = (Boolean) session.getAttribute("HolUseModals");
     if (req != null) {
-        modensPonens = request.getParameter("HolUseModals") != null
+        holUseModals = request.getParameter("HolUseModals") != null
                 || "yes".equalsIgnoreCase(request.getParameter("HolUseModals"))
                 || "on".equalsIgnoreCase(request.getParameter("HolUseModals"))
                 || "true".equalsIgnoreCase(request.getParameter("HolUseModals"));
-        session.setAttribute("HolUseModals", modensPonens);
+        session.setAttribute("HolUseModals", holUseModals);
     }
     if (holUseModals == null) holUseModals = false;
 

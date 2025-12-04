@@ -280,7 +280,6 @@ public class Vampire {
         int exitValue = _vampire.waitFor();
         if (exitValue != 0) {
             System.err.println("Error in Vampire.run(): Abnormal process termination");
-            System.err.println(output);
         }
         System.out.println("Vampire.run() done executing");
     }

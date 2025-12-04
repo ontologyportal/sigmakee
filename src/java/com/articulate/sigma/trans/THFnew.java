@@ -1191,6 +1191,15 @@ public class THFnew {
         try (Writer fstream = new FileWriter(filename);
              Writer out = new BufferedWriter(fstream)) {
             out.write(Modals.getTHFHeader() + "\n");
+
+            // Warm Up
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            for (Formula f : kb.formulaMap.values()) {
+                // We ignore the results; we just want preProcessRecurse()
+                // to run and call copyNewPredFromVariableArity(...)
+                fp.preProcess(f, false, kb);
+            }
+
             writeTypes(kb,out);
             for (Formula f : kb.formulaMap.values()) {
                 if (debug) System.out.println("THFnew.transModalTHF(): " + f);
@@ -1274,7 +1283,7 @@ public class THFnew {
 
         // Exclude strings (quotes)
         if (f.getFormula().contains("\"")) {
-            out.write("% exclude(): quote\n");
+            out.write("% exclude(): quote (String Literal)\n");
             return true;
         }
 

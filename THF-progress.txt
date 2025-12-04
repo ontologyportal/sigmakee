@@ -287,5 +287,21 @@ airTemperature returns an $o
 so we have an incosistency!
 
 
+Excluded Formulas (Non-Modal):
+
+Config (Merge, Mid-level-ontology)
+1 - % exclude(): bad usage symbol: 8524
+2 - % exclude(): quote : 39941
+3 - % exclude(): contains true or false constant: 23
+4 - % exclude(): meta-logical axiom with Formula type: 88
+5 - % exclude(): Problematic Term encountered: 251
+6 - % excludeNonModal(): meta-logic domain/subrelation over relation: 187
+7 - % exclude(): meta-logic (variable as consequent of =>): 0
+8 - % exclude(): meta-logic (variable under not/~): 3
+9 - % excluded(): interior list: 3049
+10 - % excluded(): term from excludePred: 0
+11 - % exclude(): is numeric(2): 215
+
+Included: 68064 Formulas
 
 
