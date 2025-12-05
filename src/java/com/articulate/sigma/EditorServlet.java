@@ -1,5 +1,5 @@
 package com.articulate.sigma;
-
+import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
@@ -135,6 +135,14 @@ public class EditorServlet extends HttpServlet {
         }
 
         // ============================================================
+        // Translate Kif to TPTP
+        // ============================================================
+        if ("translateToTPTP".equalsIgnoreCase(mode)) {
+            handleTranslateToTPTP(req, resp);
+            return;
+        }
+
+        // ============================================================
         // LOAD USER FILE
         // ============================================================
         if ("loadUserFile".equalsIgnoreCase(mode)) {
@@ -164,7 +172,6 @@ public class EditorServlet extends HttpServlet {
         // ============================================================
         if (code != null && !code.isBlank()) text = code;
         else if (codeContent != null && !codeContent.isBlank()) text = codeContent;
-
         if (text == null && req.getContentType() != null &&
             req.getContentType().toLowerCase(Locale.ROOT).startsWith("multipart/")) {
             Part filePart = req.getPart("kifFile");
@@ -173,7 +180,6 @@ public class EditorServlet extends HttpServlet {
                 text = readUtf8(filePart.getInputStream());
             }
         }
-
         if (text == null || text.trim().isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             if ("format".equalsIgnoreCase(mode) || "format".equalsIgnoreCase(action)) {
@@ -185,10 +191,8 @@ public class EditorServlet extends HttpServlet {
             }
             return;
         }
-
         if (fileName == null) fileName = "Untitled.kif";
         boolean isTptp = fileName.toLowerCase().matches(".*\\.(tptp|tff|p|fof|cnf|thf)$");
-
         if ("format".equalsIgnoreCase(mode) || "format".equalsIgnoreCase(action)) {
             resp.setContentType("text/plain; charset=UTF-8");
             try {
@@ -202,27 +206,22 @@ public class EditorServlet extends HttpServlet {
             }
             return;
         }
-
-        // --- Run check and return JSON ---
         List<ErrRec> errors;
         List<String> lines = Arrays.asList(text.split("\\R", -1));
         boolean[] errorMask = new boolean[lines.size()];
         String errorMessage = null;
-
         try {
             errors = isTptp ? TPTPFileChecker.check(text, "(web-editor)") : KifFileChecker.check(text);
         } catch (Exception e) {
             errors = Collections.emptyList();
             errorMessage = "Error while checking: " + e.getMessage();
         }
-
         if (errors != null) {
             for (ErrRec er : errors) {
                 int ln = er.line;
                 if (ln >= 1 && ln <= errorMask.length) errorMask[ln - 1] = true;
             }
         }
-
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType("application/json; charset=UTF-8");
         StringBuilder json = new StringBuilder("{\"ok\":true");
@@ -251,4 +250,132 @@ public class EditorServlet extends HttpServlet {
         json.append(",\"lineCount\":").append(lines.size()).append("}");
         resp.getWriter().write(json.toString());
     }
+
+    private void handleTranslateToTPTP(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json; charset=UTF-8");  // ← add this
+        String fileName = Optional.ofNullable(req.getParameter("fileName")).orElse("buffer.kif");
+        String code     = req.getParameter("code");
+        if (code == null || code.trim().isEmpty()) {
+            writeJson(resp, false, "No KIF content received.", null);
+            return;
+        }
+        try {
+            KBmanager.getMgr().initializeOnce();
+            SUMOformulaToTPTPformula.lang = "fof";
+            List<String> kifForms = splitKifFormulas(code);
+            if (kifForms.isEmpty()) {
+                writeJson(resp, false, "No complete KIF formulas found in buffer.", null);
+                return;
+            }
+            String base = fileName.replaceAll("\\.[^.]+$", "");
+            StringBuilder out = new StringBuilder();
+            int idx = 1;
+            for (String kif : kifForms) {
+                String tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kif, false);
+                if (tptpBody == null || tptpBody.trim().isEmpty())
+                    continue;
+                String name = (base.isEmpty() ? "buf" : base) + "_" + idx++;
+                out.append("fof(")
+                .append(name)
+                .append(", axiom, ")
+                .append(tptpBody.trim())
+                .append(").\n");
+            }
+            if (out.length() == 0) {
+                writeJson(resp, false, "Translation produced no output.", null);
+                return;
+            }
+            writeJson(resp, true, null, out.toString());
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            writeJson(resp, false, "Exception during translation: " + e.getMessage(), null);
+        }
+    }
+
+    /**
+     * Very simple SUO-KIF splitter:
+     * - strips ';' comments
+     * - tracks parentheses depth
+     * - whenever depth returns to 0 and we've seen some content,
+     *   we treat that as one complete formula.
+     */
+    private List<String> splitKifFormulas(String text) {
+        
+        List<String> result = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        int depth = 0;
+        boolean inString = false;
+        boolean seenNonWhitespace = false;
+        try (BufferedReader br = new BufferedReader(new StringReader(text))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                int semi = line.indexOf(';');
+                if (semi >= 0)
+                    line = line.substring(0, semi);
+                if (line.isEmpty() && depth == 0)
+                    continue;
+                for (int i = 0; i < line.length(); i++) {
+                    char c = line.charAt(i);
+                    current.append(c);
+                    if (c == '"') {
+                        inString = !inString;
+                    }
+                    if (!inString) {
+                        if (c == '(') {
+                            depth++;
+                            seenNonWhitespace = true;
+                        } else if (c == ')') {
+                            depth--;
+                        } else if (!Character.isWhitespace(c)) {
+                            seenNonWhitespace = true;
+                        }
+                    }
+                    if (!inString && depth == 0 && seenNonWhitespace) {
+                        String f = current.toString().trim();
+                        if (!f.isEmpty()) {
+                            result.add(f);
+                        }
+                        current.setLength(0);
+                        seenNonWhitespace = false;
+                    }
+                }
+                if (depth > 0) current.append('\n');
+            }
+        }
+        catch (IOException ignore) { }
+        String leftover = current.toString().trim();
+        if (!leftover.isEmpty() && depth == 0) {
+            result.add(leftover);
+        }
+        return result;
+    }
+
+    private void writeJson(HttpServletResponse resp,
+                       boolean success,
+                       String message,
+                       String tptp) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\"success\":").append(success);
+        if (message != null) {
+            sb.append(",\"message\":")
+            .append("\"").append(escapeJson(message)).append("\"");
+        }
+        if (tptp != null) {
+            sb.append(",\"tptp\":")
+            .append("\"").append(escapeJson(tptp)).append("\"");
+        }
+        sb.append("}");
+        resp.getWriter().write(sb.toString());
+    }
+
+    private String escapeJson(String s) {
+        return s
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\r", "\\r")
+            .replace("\n", "\\n");
+    }
+
+
 }
