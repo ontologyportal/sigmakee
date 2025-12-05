@@ -1,7 +1,7 @@
 <%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
 <%@ page import="com.articulate.sigma.utils.StringUtil" %>
 <%@ page import="com.articulate.sigma.InferenceTestSuite" %>
-<%@ page import="java.io.File, java.util.Arrays, java.util.Comparator, java.util.Set" %>
+<%@ page import="java.io.File, java.util.Arrays, java.util.ArrayList, java.util.Comparator, java.util.List, java.util.Set" %>
 <%@include file="Prelude.jsp" %>
 <%
     /** Copyright header omitted for brevity; keep your original text **/
@@ -194,6 +194,14 @@
     catch (Exception ignore) { ollamaUp = false; }
     if (!ollamaUp) { llmProof = false; session.setAttribute("showProofFromLLM", false); }
 
+    Boolean showProofSummary = (Boolean) session.getAttribute("showProofSummary");
+    if (req != null) {
+        showProofSummary = "yes".equalsIgnoreCase(request.getParameter("showProofSummary"));
+        session.setAttribute("showProofSummary", showProofSummary);
+    }
+    if (showProofSummary == null) showProofSummary = false;
+
+
     String eproverExec = KBmanager.getMgr().getPref("eprover");
     String tptpFile = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
     File epFile = new File(eproverExec);
@@ -377,7 +385,13 @@
             <%= ollamaUp ? "" : "disabled" %> >
         <label>Use LLM for Paraphrasing</label>
         <% if (!ollamaUp) { %><span title="Ollama is not running.">&#9432;</span><% } %>
+
+        <input type="checkbox" name="showProofSummary" value="yes"
+            <%= Boolean.TRUE.equals(showProofSummary) ? "checked" : "" %> >
+        <label>Show LLM Proof Summary</label><br>
     </fieldset>
+        
+
 
     <div class="row">
         <input type="submit" name="request" value="Run">
@@ -452,6 +466,38 @@
                         if (tpp.bindings   != null) tpp.bindings.clear();
 
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kbName, language));
+                        // Generate proof summary if requested
+                        if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
+                            // Extract proof steps as strings
+                            List<String> proofSteps = new ArrayList<>();
+                            for (Object formula : tpp.proof) {
+                                String stepText = "";
+                                if (formula != null) {
+                                    // Get the string representation of the formula
+                                    stepText = formula.toString();
+                                    // Try to convert to more readable format if it's in TPTP format
+                                    if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
+                                        // Extract just the formula part, skipping the TPTP wrapper
+                                        int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
+                                        int end = stepText.lastIndexOf(')');
+                                        if (start > 0 && end > start) {
+                                            stepText = stepText.substring(start, end).trim();
+                                        }
+                                    }
+                                    // Clean up the text
+                                    stepText = stepText.replaceAll("\\s+", " ").trim();
+                                }
+                                if (!stepText.isEmpty()) {
+                                    proofSteps.add(stepText);
+                                }
+                            }
+                            
+                            // Generate and display the summary
+                            String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
+                            if (!proofSummary.isEmpty()) {
+                                out.println(proofSummary);
+                            }
+                        }
                     }
                 } else if (ext.endsWith(".tptp") || ext.endsWith(".tff")) {
                     // ===== NEW .tptp / .tff FLOW via askVampireTPTP =====
@@ -473,6 +519,38 @@
                         if (tpp.bindings   != null) tpp.bindings.clear();
 
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
+                        // Generate proof summary if requested
+                        if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
+                            // Extract proof steps as strings
+                            List<String> proofSteps = new ArrayList<>();
+                            for (Object formula : tpp.proof) {
+                                String stepText = "";
+                                if (formula != null) {
+                                    // Get the string representation of the formula
+                                    stepText = formula.toString();
+                                    // Try to convert to more readable format if it's in TPTP format
+                                    if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
+                                        // Extract just the formula part, skipping the TPTP wrapper
+                                        int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
+                                        int end = stepText.lastIndexOf(')');
+                                        if (start > 0 && end > start) {
+                                            stepText = stepText.substring(start, end).trim();
+                                        }
+                                    }
+                                    // Clean up the text
+                                    stepText = stepText.replaceAll("\\s+", " ").trim();
+                                }
+                                if (!stepText.isEmpty()) {
+                                    proofSteps.add(stepText);
+                                }
+                            }
+                            
+                            // Generate and display the summary
+                            String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
+                            if (!proofSummary.isEmpty()) {
+                                out.println(proofSummary);
+                            }
+                        }
                     }
                 } else {
                     out.println("<font color='red'>Unsupported test file type: " + ext + "</font>");
@@ -492,6 +570,38 @@
                     if (tpp.bindings   != null) tpp.bindings.clear();
 
                     out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
+                    // Generate proof summary if requested
+                        if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
+                            // Extract proof steps as strings
+                            List<String> proofSteps = new ArrayList<>();
+                            for (Object formula : tpp.proof) {
+                                String stepText = "";
+                                if (formula != null) {
+                                    // Get the string representation of the formula
+                                    stepText = formula.toString();
+                                    // Try to convert to more readable format if it's in TPTP format
+                                    if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
+                                        // Extract just the formula part, skipping the TPTP wrapper
+                                        int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
+                                        int end = stepText.lastIndexOf(')');
+                                        if (start > 0 && end > start) {
+                                            stepText = stepText.substring(start, end).trim();
+                                        }
+                                    }
+                                    // Clean up the text
+                                    stepText = stepText.replaceAll("\\s+", " ").trim();
+                                }
+                                if (!stepText.isEmpty()) {
+                                    proofSteps.add(stepText);
+                                }
+                            }
+                            
+                            // Generate and display the summary
+                            String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
+                            if (!proofSummary.isEmpty()) {
+                                out.println(proofSummary);
+                            }
+                        }
                     if (!StringUtil.emptyString(tpp.status)) out.println("Status: " + tpp.status);
                 } else if ("Vampire".equals(inferenceEngine)) {
                     setVampMode(vampireMode);
@@ -511,6 +621,38 @@
                         if (tpp.bindings   != null) tpp.bindings.clear();
 
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
+                        // Generate proof summary if requested
+                        if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
+                            // Extract proof steps as strings
+                            List<String> proofSteps = new ArrayList<>();
+                            for (Object formula : tpp.proof) {
+                                String stepText = "";
+                                if (formula != null) {
+                                    // Get the string representation of the formula
+                                    stepText = formula.toString();
+                                    // Try to convert to more readable format if it's in TPTP format
+                                    if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
+                                        // Extract just the formula part, skipping the TPTP wrapper
+                                        int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
+                                        int end = stepText.lastIndexOf(')');
+                                        if (start > 0 && end > start) {
+                                            stepText = stepText.substring(start, end).trim();
+                                        }
+                                    }
+                                    // Clean up the text
+                                    stepText = stepText.replaceAll("\\s+", " ").trim();
+                                }
+                                if (!stepText.isEmpty()) {
+                                    proofSteps.add(stepText);
+                                }
+                            }
+                            
+                            // Generate and display the summary
+                            String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
+                            if (!proofSummary.isEmpty()) {
+                                out.println(proofSummary);
+                            }
+                        }
                     }
                 } else if ("LEO".equals(inferenceEngine)) {
                     kb.leo = kb.askLeo(stmt,timeout,maxAnswers);
@@ -527,6 +669,38 @@
                         if (tpp.bindings   != null) tpp.bindings.clear();
 
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
+                         // Generate proof summary if requested
+                        if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
+                            // Extract proof steps as strings
+                            List<String> proofSteps = new ArrayList<>();
+                            for (Object formula : tpp.proof) {
+                                String stepText = "";
+                                if (formula != null) {
+                                    // Get the string representation of the formula
+                                    stepText = formula.toString();
+                                    // Try to convert to more readable format if it's in TPTP format
+                                    if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
+                                        // Extract just the formula part, skipping the TPTP wrapper
+                                        int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
+                                        int end = stepText.lastIndexOf(')');
+                                        if (start > 0 && end > start) {
+                                            stepText = stepText.substring(start, end).trim();
+                                        }
+                                    }
+                                    // Clean up the text
+                                    stepText = stepText.replaceAll("\\s+", " ").trim();
+                                }
+                                if (!stepText.isEmpty()) {
+                                    proofSteps.add(stepText);
+                                }
+                            }
+                            
+                            // Generate and display the summary
+                            String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
+                            if (!proofSummary.isEmpty()) {
+                                out.println(proofSummary);
+                            }
+                        }
                     }
                 }
             }
