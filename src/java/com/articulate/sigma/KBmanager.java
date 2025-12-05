@@ -37,7 +37,6 @@ import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
 /** This is a class that manages a group of knowledge bases.  It should only
  *  have one instance, contained in its own static member variable.
  */
@@ -95,7 +94,8 @@ public class KBmanager implements Serializable {
                     "typePrefix",
                     "userBrowserLimit",
                     "vampire",
-                    "verbnet"
+                    "verbnet",
+                    "ollamaHost"
             );
 
     /** Master file key cache for the config */
