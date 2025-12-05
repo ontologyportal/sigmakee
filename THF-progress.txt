@@ -1,0 +1,307 @@
+Updates/Issues:
+
+0) Work on local signature copy instead of modifying the kb.cache all the times.
+
+1)
+
+Error Message:
+- Non-boolean term vAPP($i,sTfun(w,$o),vAPP($i,sTfun($i,sTfun(w,$o)),s__instance,X4),s__BinaryRelation) of sort sTfun(w,$o) is used in a formula context
+
+Description:
+- **instance** term is treated as Modal $i > $i > w > $o instead of $i > $i > $o
+
+Solution:
+- Create a set of Modal relations that we check before introducing the World arg.
+
+
+2)
+
+Error Message:
+- Immediate (shared) subterms of  term/literal vAPP(m,sTfun(w,sTfun(w,$o)),s__accrelnP,s__Obligation) have different types/not well-typed!
+
+thf(ax227,axiom,( ! [V__FORMULA:$i,V__W1:w,V__W2:w] : (((((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA) => ~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA)))) & (~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA))) => ((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA))) ) )).
+
+Description:
+Even if the term's type header was custom created, it wasn't excluded from getting generated again by sigma, and that caused inconsistencies.
+
+3)
+
+Error Message:
+Immediate (shared) subterms of  term/literal vAPP(m,sTfun(w,sTfun(w,$o)),s__accrelnP,s__Obligation) have different types/not well-typed!
+
+thf(ax227,axiom,( ! [V__FORMULA:$i,V__W1:w,V__W2:w] : (((((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA) => ~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA)))) & (~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA))) => ((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA))) ) )).
+
+Description:
+
+Modal attributes (Obligation, Permission, etc.) were incorrectly typed as $m instead of m, causing Vampire to see conflicting types.
+Fixed exporter to emit :m and excluded these symbols from auto-generated $i types.
+
+4)
+
+Error Message:
+Non-boolean term X25 of sort $i is used in a formula context
+
+thf(ax227,axiom,( ! [V__FORMULA:$i,V__W1:w,V__W2:w] : (((((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA) => ~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA)))) & (~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA))) => ((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA))) ) )).
+
+Description:
+V__FORMULA is declared as an individual ($i), but it is used as a formula (on the right of => and under ~), so Vampire expects it to have type $o.
+
+
+5)
+
+Error Message:
+Immediate (shared) subterms of  term/literal vAPP(m,sTfun(w,sTfun(w,$o)),s__accrelnP,s__Likely) have different types/not well-typed!]
+
+thf(ax269,axiom,( ! [V__CLOTHING:$i,V__W1:w,V__W2:w] : (((s__instance @ V__CLOTHING @ s__Clothing) => ((s__accrelnP @ s__Likely @ V__W1 @ V__W2) => ( ? [V__FABRIC:$i] : (((s__instance @ V__FABRIC @ s__Fabric) & (s__part @ V__FABRIC @ V__CLOTHING)))))) ) )).
+
+Description:
+The problematic bit is that s__accrelnP expects a Modal as its first argument, but s__Likely is currently being typed as a plain $i individual, not as a modal.
+
+
+6)
+
+Error Message:
+[% Exception at proof search level, Parsing Error on line 2488, Immediate (shared) subterms of term/literal vAPP(m,sTfun($i,sTfun(w,sTfun(w,$o))),s__accreln,s__holdsDuring) have different types/not well-typed!]
+
+Description:
+The problematic bit is that s__accreln expects a Modal as its first argument, but s__holdsDuring is currently being typed as a plain $i individual, not as a modal.
+
+
+7)
+
+Error Message:
+Immediate (shared) subterms of term/literal vAPP(m,sTfun(w,sTfun(w,$o)),s__accrelnP,s__Unlikely) have different types/not well-typed!
+
+
+thf(ax427,axiom,( ! [V__OBJECT:$i,V__R:$i,V__U:$i,V__W1:w,V__W2:w,V__INST:$i] : ((((s__subclass @ V__OBJECT @ s__Object) & (s__instance @ V__OBJECT @ s__Class) & (s__instance @ V__R @ s__RealNumber) & (s__instance @ V__U @ s__UnitOfMeasure) & (s__instance @ V__INST @ s__Object)) => (((s__defaultMinimumSphereRadius @ V__OBJECT @ (s__MeasureFn @ V__R @ V__U)) & (s__instance @ V__INST @ V__OBJECT) & (s__attribute @ V__INST @ s__Sphere)) => ((s__accrelnP @ s__Unlikely @ V__W1 @ V__W2) => ( ? [V__RADIUS:$i] : (((s__instance @ V__RADIUS @ s__RealNumber) & ((s__sphereRadius @ V__INST @ (s__MeasureFn @ V__RADIUS @ V__U)) & (s__lessThan @ V__RADIUS @ V__R)))))))) ) )).
+
+Description:
+The problematic bit is that s__accreln expects a Modal as its first argument, but s__Unlikely is currently being typed as a plain $i individual, not as a modal.
+
+
+8)
+
+% excluded(): interior list: (meltingPoint Tungsten
+  (MeasureFn 3680.0 KelvinDegree))% excluded: (meltingPoint Tungsten (MeasureFn 3680.0 KelvinDegree))
+
+Description:
+ Excluded code is been printed in multiple lines, without % in front.
+
+
+9)
+
+Error Message:
+Immediate (shared) subterms of term/literal vAPP(m,sTfun(w,sTfun(w,$o)),s__accrelnP,s__Legal) have different types/not well-typed!
+
+thf(ax938,axiom,( ! [V__X:$i,V__W1:w,V__W2:w] : (((s__instance @ V__X @ s__Object) => ((s__attribute @ V__X @ s__USNonPrescriptionDrug) => ((s__accrelnP @ s__Legal @ V__W1 @ V__W2) => ( ? [V__B:$i] : (((s__instance @ V__B @ s__Buying) & (s__objectTransferred @ V__B @ V__X) & ~(( ? [V__P:$i] : (((s__instance @ V__P @ s__Prescription) & (s__refers @ V__P @ V__X))))))))))) ) )).
+
+Description:
+The problematic bit is that s__accreln expects a Modal as its first argument, but s__Legal is currently being typed as a plain $i individual, not as a modal.
+
+
+10)
+
+Error Message:
+[% Exception at proof search level, Parsing Error on line 7232, Immediate (shared) subterms of  term/literal vAPP($i,sTfun($i,sTfun($i,$o)),s__domain,s__knows) have different types/not well-typed!]
+
+thf(ax1237,axiom,(s__domain @ s__knows @ n__1 @ s__CognitiveAgent)).
+
+Description:
+	s__domain : ($i > $i > $i > $o) → first arg must be an $i.
+	s__knows : m → not an $i, so s__domain @ s__knows @ ... is ill-typed.
+	(domain knows 1 CognitiveAgent) is being translated as if knows were an $i-valued symbol.
+
+Solution:
+Exclude them.
+
+11)
+
+Error Message:
+[% Exception at proof search level, Parsing Error on line 7234, Immediate (shared) subterms of  term/literal vAPP($i,$o,vAPP($i,sTfun($i,$o),s__subAttribute,s__Warranty),s__Obligation) have different types/not well-typed!]
+
+thf(ax1237,axiom,(s__subAttribute @ s__Warranty @ s__Obligation)).
+
+Description:
+
+subAttribute expectes $i and $i and we gave it $i and m.
+thf(s__subAttribute_tp,type,(s__subAttribute : ($i > $i > $o))).
+thf(s__Obligation_tp,type,(s__Obligation : m)).
+thf(s__Warranty_tp,type,(s__Warranty : $i)).
+
+Solution:
+Exclude them.
+
+12)
+
+[% Exception at proof search level, Parsing Error on line 7256, Immediate (shared) subterms of  term/literal vAPP(m,sTfun(w,sTfun(w,$o)),s__accrelnP,s__Law) have different types/not well-typed!]
+
+thf(ax1245,axiom,( ! [V__TEXT:$i,V__TIME1:$i,V__W1:w,V__W2:w,V__W3:w] : ((((s__instance @ V__TEXT @ s__Object) & (s__instance @ V__TIME1 @ s__TimeInterval)) => (((s__accreln @ s__holdsDuring @ V__TIME1 @ V__W1 @ V__W2) => ((s__accrelnP @ s__Law @ V__W2 @ V__W3) => V__TEXT)) => ( ? [V__TIME2:$i] : (((s__instance @ V__TIME2 @ s__TimeInterval) & (((s__accreln @ s__holdsDuring @ V__TIME2 @ V__W1 @ V__W2) => (s__attribute @ V__TEXT @ s__LegislativeBill)) & (s__earlier @ V__TIME2 @ V__TIME1))))))) ) )).
+
+SUO-KIF:
+
+(=>
+   (holdsDuring ?TIME1 (modalAttribute ?TEXT Law))
+   (exists (?TIME2)
+      (and
+         (holdsDuring ?TIME2 (attribute ?TEXT LegislativeBill))
+         (earlier ?TIME2 ?TIME1))))
+
+Solution:
+Include Law in the modalAttributes list.
+
+
+13)
+
+78332 Aborted by signal SIGSEGV on /Users/Mac_1/.sigmakee/KBs/SUMO.thf
+
+thf(ax1299,axiom,(s__disjointDecomposition__3 @ s__Language @ s__AnimalLanguage @ s__HumanLanguage @ s__ComputerLanguage)).
+
+(disjointDecomposition Language AnimalLanguage HumanLanguage ComputerLanguage)
+
+Description:
+
+What’s wrong is the arity / type of s__disjointDecomposition__3 vs how you use it. s__disjointDecomposition__3 takes 3 individual arguments and returns a Boolean.
+
+
+14)
+
+Parsing Error on line 2247
+Non-boolean term vAPP($i,sTfun($i,$o),s__partition__1,X10) of sort sTfun($i,$o) is used in a formula context
+
+thf(ax960,axiom,( ! [V__ROW2:$i] : (((s__instance @ V__ROW2 @ s__Class) => ((s__partition__1 @ V__ROW2) => ((s__exhaustiveDecomposition__1 @ V__ROW2) & (s__disjointDecomposition__1 @ V__ROW2)))) ) )).
+
+Description:
+
+thf(s__partition__1_tp,type,(s__partition__1 : ($i > $i > $o))).
+thf(s__partition__2_tp,type,(s__partition__2 : ($i > $i > $o))).
+
+The KB is giving identical signatures to different arities.
+
+
+15)
+
+78332 Aborted by signal SIGSEGV on /Users/Mac_1/.sigmakee/KBs/SUMO.thf
+
+thf(ax1041,axiom,( ! [V__ROW3:$i,V__ROW4:$i,V__ROW2:$i,V__NUMBER:$i,V__CLASS:$i] : ((((s__instance @ V__ROW4 @ s__SymbolicString) & (s__instance @ V__ROW2 @ s__HumanLanguage) & (s__instance @ V__NUMBER @ s__PositiveInteger) & (s__instance @ V__CLASS @ s__Class)) => (((s__domain @ s__format__m @ V__NUMBER @ V__CLASS) & (s__instance @ s__format__m @ s__Predicate) & (s__format @ V__ROW2 @ V__ROW3 @ V__ROW4)) => (s__instance @ (s__ListOrderFn @ (s__ListFn__3Fn @ V__ROW2 @ V__ROW3 @ V__ROW4) @ V__NUMBER) @ V__CLASS))) ) )).
+
+Description:
+
+Even if 'format' is part of the 'excludePred' list, it doesn't get excluded. In the exclude method it checks only the ground term and not the inner ones, so it tries to generate a formula with the format but there is no type declaration.
+
+Solution:
+
+The problem was that the exclude methods were checking only the existing formulas and not the derived/processed ones, so the new formulas were introducing 'not allowed' terms like 'format'.
+
+16)
+
+Error Message:
+   % Exception at proof search level
+   Parsing Error on line 3941
+   Non-boolean term X25 of sort $i is used in a formula context
+
+   thf(ax1013,axiom,( ! [V__AGENT:$i,V__FORMULA:$i,V__STATE:$i,V__W1:w,V__W2:w,V__W3:w] : (((s__instance @ V__AGENT @ s__AutonomousAgent) => (((s__instance @ V__STATE @ s__Stating) & (s__agent @ V__STATE @ V__AGENT) & (s__patient @ V__STATE @ V__FORMULA) & (s__instance @ V__FORMULA @ s__Formula)) => ((s__accreln @ s__holdsDuring @ (s__WhenFn @ V__STATE) @ V__W1 @ V__W2) => ((s__accreln @ s__believes @ V__AGENT @ V__W2 @ V__W3) => V__FORMULA)))) ) )).
+
+   (=>
+      (and
+         (instance ?STATE Stating)
+         (agent ?STATE ?AGENT)
+         (patient ?STATE ?FORMULA)
+         (instance ?FORMULA Formula))
+      (holdsDuring (WhenFn ?STATE) (believes ?AGENT ?FORMULA)))
+
+Description:
+thf(s__believes_tp,type,(s__believes : ($i > $o > $o))).
+thf(s__instance_tp,type,(s__instance : ($i > $i > $o))).
+
+The term 'instance' requires both its arguments to be individuals, while the term 'believes' only requires the second argument to be a formula.
+In both cases we are using the V__FORMULA which has type $i.
+
+The underlying axiom is meta-logical (a variable is both an object and a formula).
+
+17)
+
+Error Message:
+Immediate (shared) subterms of term/literal vAPP($i,$o,vAPP($i,sTfun($i,$o),s__relatedInternalConcept,s__time__m),s__holdsDuring) have different types/not well-typed!
+
+thf(ax3476,axiom,(s__relatedInternalConcept @ s__time__m @ s__holdsDuring)).
+
+(relatedInternalConcept time holdsDuring)
+
+Description:
+s__relatedInternalConcept : $i > $i > $o (individual > individual)
+thf(holdsDuring_tp,type,(s__holdsDuring : m)). (we provide $i > m > $o)
+
+
+18)
+
+Error Message:
+Parsing Error on line 16787
+Immediate (shared) subterms of  term/literal vAPP($i,sTfun($i,$o),s__subrelation,s__knows) have different types/not well-typed!
+
+thf(ax7249,axiom,(s__subrelation @ s__knows @ s__inScopeOfInterest__m)).
+
+(subrelation knows inScopeOfInterest)
+
+Description:
+
+thf(s__subrelation_tp,type,(s__subrelation : ($i > $i > $o))).
+
+
+22)
+
+Error Message:
+Parsing Error on line 18835
+Immediate (shared) subterms of  term/literal vAPP($i,sTfun($i,$o),s__subrelation,s__desires) have different types/not well-typed!
+
+thf(ax8257,axiom,(s__subrelation @ s__desires @ s__inScopeOfInterest__m)).
+
+(subrelation desires inScopeOfInterest)
+
+
+23)
+
+Variable-arity predicates broke after the Modals refactor because world arguments were no longer added to all relations, but the old adjustArity() hack in THFnew still expected them. This caused mismatches such as generating s__foo__4 in axioms without producing the corresponding type header. Removing the obsolete arity adjustment and emitting types for all __N functor variants fixed the issue.
+
+
+24)
+
+
+% from file /Users/Mac_1/.sigmakee/KBs/Mid-level-ontology.kif at line 27882
+(=>
+  (instance ?X AirConditioner)
+  (hasPurpose ?X
+    (exists (?PROC ?TEMP ?AREA)
+      (and
+        (located ?X ?AREA)
+        (instance ?PROC Process)
+        (instrument ?PROC ?X)
+        (result ?PROC (airTemperature ?AREA ?TEMP))))))
+
+
+thf(s__result_tp,type,(s__result : ($i > $i > $o))).
+thf(s__airTemperature_tp,type,(s__airTemperature : ($i > $i > $o))).
+
+
+result takes as second arg an $i,
+airTemperature returns an $o
+so we have an incosistency!
+
+
+Excluded Formulas (Non-Modal):
+
+Config (Merge, Mid-level-ontology)
+1 - % exclude(): bad usage symbol: 8524
+2 - % exclude(): quote : 39941
+3 - % exclude(): contains true or false constant: 23
+4 - % exclude(): meta-logical axiom with Formula type: 88
+5 - % exclude(): Problematic Term encountered: 251
+6 - % excludeNonModal(): meta-logic domain/subrelation over relation: 187
+7 - % exclude(): meta-logic (variable as consequent of =>): 0
+8 - % exclude(): meta-logic (variable under not/~): 3
+9 - % excluded(): interior list: 3049
+10 - % excluded(): term from excludePred: 0
+11 - % exclude(): is numeric(2): 215
+
+Included: 68064 Formulas
+
+

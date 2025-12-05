@@ -541,6 +541,8 @@
 
     <target name="build.vampire">
 
+        <echo message="=== Building HOL Vampire (branch: ahmed-new-hol) ==="/>
+
         <exec executable="git" dir="${programs.dir}/vampire">
             <arg value="checkout"/>
             <arg value="master"/>

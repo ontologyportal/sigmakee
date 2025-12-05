@@ -1329,20 +1329,29 @@ public class TPTP3ProofProcessor {
     }
 
     public static List<String> reorderVampire4_8 (List<String> cleaned){
-        // Extract only proof section
+
+        // 1. Locate proof section
         int start = -1, end = -1;
         for (int i = 0; i < cleaned.size(); i++) {
             if (cleaned.get(i).contains("SZS output start")) start = i;
             if (cleaned.get(i).contains("SZS output end"))   { end = i; break; }
         }
+
+        // 2. If there is no proper proof block, do not try to reorder
+        if (start < 0 || end < 0 || end <= start) {
+            // No proof (e.g. Vampire timed out, SAT, UNKNOWN, truncated output)
+            return cleaned;
+        }
+
+        // 3. Split into before / proof / after
         List<String> before = (start > 0) ? cleaned.subList(0, start) : Collections.emptyList();
         List<String> proof  = (start >= 0 && end > start) ? new ArrayList<>(cleaned.subList(start+1, end)) : new ArrayList<>();
         List<String> after  = (end >= 0 && end+1 < cleaned.size()) ? cleaned.subList(end+1, cleaned.size()) : Collections.emptyList();
 
-        // Reorder only the proof lines
+        // 4. Reorder only the proof lines
         List<String> proofReordered = TPTP3ProofProcessor.reorderVampireProofAnyDialect(proof);
 
-        // Put it back together
+        // 5. Put everything back together
         List<String> normalized = new ArrayList<>(before);
         normalized.add(cleaned.get(start));
         normalized.addAll(proofReordered);

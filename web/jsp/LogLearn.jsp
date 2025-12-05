@@ -21,10 +21,6 @@
 // ======================================================
 // SECURITY AND ENVIRONMENT
 // ======================================================
-if ("guest".equals(role)) {
-    response.sendRedirect("KBs.jsp");
-    return;
-}
 
 GenPropFormulas gpf = new GenPropFormulas();
 String kbDir = KBmanager.getMgr().getPref("kbDir");

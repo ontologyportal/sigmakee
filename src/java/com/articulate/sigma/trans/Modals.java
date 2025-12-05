@@ -4,14 +4,11 @@ import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Modals {
 
+    // these are predicates that take a formula as (one of) their arguments in SUMO/KIF
     public static final List<String> formulaPreds = new ArrayList<>(
             Arrays.asList(Formula.KAPPAFN, "ProbabilityFn", "believes",
                     "causesProposition", "conditionalProbability",
@@ -25,17 +22,48 @@ public class Modals {
                     "permits", "prefers", "prohibits", "rateDetail", "says",
                     "treatedPageDefinition", "visitorParameter"));
 
+    // a subset of formulaPreds where two arguments are formulas (e.g. entails(φ, ψ)).
     public static final List<String> dualFormulaPreds = new ArrayList<>(
             Arrays.asList("causesProposition", "conditionalProbability",
                     "decreasesLikelihood",
                     "entails",  "increasesLikelihood",
                     "independentProbability","prefers"));
 
+    // these are the ones you want to handle with the special HOL rewrite
     public static final List<String> regHOLpred = new ArrayList<>(
             Arrays.asList("considers","sees","believes","knows","holdsDuring","desires"));
 
-    public static final Set<String> modalAttributes = new HashSet<>(Arrays.asList("Possibility",
-            "Necessity", "Permission", "Obligation", "Prohibition"));
+    // these are the attribute constants you can pass to modalAttribute
+    public static final Set<String> modalAttributes = new HashSet<>(Arrays.asList(
+            "Possibility",
+            "Necessity",
+            "Permission",
+            "Obligation",
+            "Prohibition",
+            // ISSUE 5
+            "Likely",
+            // ISSUE 7
+            "Unlikely",
+            // ISSUE 9
+            "Legal",
+            "Law",
+            "Illegal",
+            "Promise"
+    ));
+
+    // list that contains the allowed head predicates for the modal predicates
+    public static final List<String> allowedHeads;
+    static {
+        List<String> tmp = new ArrayList<>();
+        tmp.addAll(THFnew.MODAL_RELATIONS);
+        tmp.addAll(modalAttributes);
+        tmp.addAll(THFnew.RESERVED_MODAL_SYMBOLS);
+        tmp.addAll(regHOLpred);
+        tmp.addAll(formulaPreds);
+        allowedHeads = Collections.unmodifiableList(tmp);
+    }
+
+
 
     /***************************************************************
      * Handle the predicates given in regHOLpred, which have a parameter
@@ -78,42 +106,66 @@ public class Modals {
             return f;
         if (f.empty())
             return f;
+
         if (f.listP()) {
             if (regHOLpred.contains(f.car()))
                 return handleHOLpred(f,kb,worldNum);
             if (f.car().equals("modalAttribute"))
                 return handleModalAttribute(f,kb,worldNum);
-            //System.out.println("Modals.processRecurse(): " + f);
+
             int argStart = 1;
             if (Formula.isQuantifier(f.car()))
                 argStart = 2;
+
             List<Formula> flist = f.complexArgumentsToArrayList(argStart);
             StringBuilder fstring = new StringBuilder();
             fstring.append(Formula.LP).append(f.car());
-            if (argStart == 2) // append quantifier list without processing
+
+            // Append quantifier variable list as-is
+            if (argStart == 2)
                 fstring.append(Formula.SPACE).append(f.getStringArgument(1));
+
+            // Recursively process arguments
             for (Formula arg : flist)
                 fstring.append(Formula.SPACE).append(processRecurse(arg,kb,worldNum));
+
+            // Close the term / formula
             if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL)))
+                // Pure logical symbols: no world argument
                 fstring.append(Formula.RP);
             else {
-                fstring.append(" ?W").append(worldNum).append(Formula.RP);
-                List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
-                if (sig == null) {
-                    if (!Formula.isVariable(f.car()))
-                        System.err.println("Error in processRecurse(): null signature for " + f.car());
-                    else {
-                        Formula result = new Formula();
-                        result.read(fstring.toString());
-                        return result;
-                    }
+                // ONLY modal relations get a world argument.
+                if (THFnew.MODAL_RELATIONS.contains(f.car()) && worldNum != null) {
+                    fstring.append(" ?W").append(worldNum);
                 }
-                sig.add("World");
+                fstring.append(Formula.RP);
+
+//                fstring.append(" ?W").append(worldNum).append(Formula.RP);
+//                List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
+//                if (sig == null) {
+//                    if (!Formula.isVariable(f.car()))
+//                        System.err.println("Error in processRecurse(): null signature for " + f.car());
+//                    else {
+//                        Formula result = new Formula();
+//                        result.read(fstring.toString());
+//                        return result;
+//                    }
+//                }
+//                sig.add("World");
+
+                // Signatures are read-only here; no mutation.
+                List<String> sig = kb.kbCache.signatures.get(f.car());
+                if (sig == null && !Formula.isVariable(f.car())) {
+                    System.err.println("Error in processRecurse(): null signature for " + f.car());
+                }
+
             }
+
             Formula result = new Formula();
             result.read(fstring.toString());
             return result;
         }
+
         return f;
     }
 
@@ -185,7 +237,9 @@ public class Modals {
                 "thf(desires_tp,type,(s__desires : m)).\n" +
                 "thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__desires @ P @ W @ W))).\n" +
                 "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__knows @ P @ W @ W))).\n" +
-                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n";
+                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n" +
+                // ISSUE 6
+                "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n";
     }
 
     /***************************************************************

@@ -63,6 +63,7 @@
             const custom = document.getElementById('Custom');
             const mp     = document.getElementById('ModensPonens');
             const drop   = document.getElementById('dropOnePremise');
+            const holModal = document.getElementById('HolUseModals');
 
             // NEW: check if .thf filter is selected
             const thfRadio = document.querySelector('input[name="testFilter"][value="thf"]');
@@ -75,7 +76,7 @@
 
                 // Still keep Vampire mode radios tied to Vampire on/off
                 const vampireOn = vamp && vamp.checked && !vamp.disabled;
-                [casc, avatar, custom].forEach(el => { if (el) el.disabled = !vampireOn; });
+                [casc, avatar, custom, holModal].forEach(el => { if (el) el.disabled = !vampireOn; });
 
                 custom.checked = false; custom.disabled = true;
                 return; // THF overrides the rest of the logic
@@ -83,7 +84,7 @@
 
             // Original behavior when NOT in THF mode
             const vampireOn = vamp && vamp.checked && !vamp.disabled;
-            [casc, avatar, custom, mp].forEach(el => { if (el) el && (el.disabled = !vampireOn); });
+            [casc, avatar, custom, mp, holModal].forEach(el => { if (el) el && (el.disabled = !vampireOn); });
 
             const mpOn = vampireOn && mp && mp.checked;
             if (drop) {
@@ -92,7 +93,6 @@
             }
             // Disable Custom until it gets fixed and tested!
             custom.checked = false; custom.disabled = true;
-
         }
 
         function toggleRunSource() {
@@ -180,6 +180,16 @@
     }
     if (dropOnePremise == null) dropOnePremise = false;
     KB.dropOnePremiseFormulas = dropOnePremise;
+
+    Boolean holUseModals = (Boolean) session.getAttribute("HolUseModals");
+    if (req != null) {
+        holUseModals = request.getParameter("HolUseModals") != null
+                || "yes".equalsIgnoreCase(request.getParameter("HolUseModals"))
+                || "on".equalsIgnoreCase(request.getParameter("HolUseModals"))
+                || "true".equalsIgnoreCase(request.getParameter("HolUseModals"));
+        session.setAttribute("HolUseModals", holUseModals);
+    }
+    if (holUseModals == null) holUseModals = false;
 
     // ---- Remember selected test in session ----
     String selectedTest = (String) session.getAttribute("selectedTest");
@@ -404,6 +414,10 @@
         [ <input type="checkbox" name="dropOnePremise" id="dropOnePremise" value="true"
         <% if (Boolean.TRUE.equals(dropOnePremise)) { out.print(" CHECKED"); } %> >
         <label for="dropOnePremise">Drop One-Premise Formulas</label> ]
+
+        <input type="checkbox" id="HolUseModals" name="HolUseModals" value="yes" <% if (holUseModals) { out.print(" CHECKED"); } %> >
+        <label for="HolUseModals">HOL-Use Modals </label>
+
         <br>
 
         <input type="checkbox" name="showProofInEnglish" value="yes"
@@ -517,6 +531,7 @@
                         out.println("<span style='color:#b00'>Only Vampire is supported for .thf tests.</span><br>");
                     } else {
                         setVampMode(vampireMode);
+
                         com.articulate.sigma.tp.Vampire vRun = kb.askVampireTHF(testPath, tmo, maxAns);
 
                         // Provide a friendly “query label” (TPTP problems don’t have a KIF query string)
@@ -566,14 +581,21 @@
                     f.read(stmt);
                     setVampMode(vampireMode);
 //                    boolean isHOL = f.isHigherOrder(kb);
-                    boolean isHOL = false;
+                    boolean isHOL = true;
                     if (isHOL){ // Higher-Order Formula
                         System.out.println(" -- Higher Order Formula Detected - Attempring to run Vampire HOL ");
-                        vampire = kb.askVampireHOL(stmt, timeout, maxAnswers);
+                        vampire = kb.askVampireHOL(stmt, timeout, maxAnswers, holUseModals);
+                        System.out.println("============ Vampire Output Returned =============");
                         List<String> cleaned = TPTPutil.clearProofFile(vampire.output);
+                        System.out.println("============ Vampire Output Cleaned =============");
+                        for (String s:cleaned){
+                            System.out.println(s);
+                        }
                         // Vampire version 4.8→5.0 reordering…
                         List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
+                        System.out.println("============ Vampire Output Reordered =============");
                         vampire.output = THFutil.preprocessTHFProof(normalized);
+                        System.out.println("============ Vampire Output Preprocessed =============");
 
                     }else { // First-Order Formula
                         System.out.println(" -- First Order Formula Detected - Attempring to run normal Vampire");

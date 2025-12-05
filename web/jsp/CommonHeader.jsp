@@ -70,12 +70,12 @@
             if (pageName == null || !pageName.equals("Graph"))
                 out.println("<A href=\"Graph.jsp?kb=" + kbName + "&term=" + term + "&inst=inst" +
                 "&lang=" + language + "\"><B>Graph</B></A>&nbsp;|&nbsp");
+            if (pageName == null || !pageName.equals("LogLearn"))
+                out.println("<A href=\"LogLearn.jsp\"><b>LogLearn</b></A>&nbsp;|&nbsp;");
             if (role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("NLP")))
                 out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp\"><b>NLP</b></A>&nbsp;|&nbsp");
             if (role != null && role.equalsIgnoreCase("admin") &&  (pageName == null || !pageName.equals("Prefs")))
                 out.println("<A href=\"Properties.jsp\"><b>Prefs</b></A>&nbsp;|&nbsp");
-            if (role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("LogLearn")))
-                out.println("<A href=\"LogLearn.jsp\"><b>LogLearn</b></A>&nbsp;|&nbsp;");
             if (role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("CheckKifFile")))
                 out.println("<A href=\"Editor.jsp\"><b>Editor</b></A>&nbsp;|&nbsp;");
             if (role != null && role.equalsIgnoreCase("admin") && (pageName == null || !pageName.equals("manageUsers"))) {
