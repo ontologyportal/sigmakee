@@ -66,11 +66,12 @@
       <!-- Editor Menu -->
       <div>
         <div class="editor-header">
+          <!-- File / Format / Help -->
           <div class="dropdown" id="fileDropdown">
-            <span class="dropdown-file-label" onclick="toggleFileMenu(event)">File</span>
+            <span class="dropdown-file-label" onclick="toggleFileMenu(event)">File ></span>
             <span class="dropdown-file-label" onclick="formatBuffer()">Format</span>
             <span class="dropdown-file-label" onclick="openHelpModal()">Help</span>
-            <a href="#" onclick="translateKifToTptp()">Translate KIF -> TPTP</a>
+
             <div class="dropdown-content" id="dropdownContent">
               <div class="submenu">
                 <a href="#" class="submenu-label">New ></a>
@@ -90,12 +91,34 @@
               <a href="#" onclick="triggerFileUpload()">Upload</a>
             </div>
           </div>
+
+          <!-- NEW: Translate dropdown -->
+          <div class="dropdown" id="translateDropdown">
+            <span class="dropdown-file-label" id="translateLabel"
+                  onclick="toggleTranslateMenu(event)">Translate ></span>
+            <div class="dropdown-content" id="translateDropdownContent">
+              <!-- Only this one is implemented; JS will enable it for .kif files -->
+              <a href="#"
+                id="translate-kif-tptp"
+                class="translate-option"
+                onclick="handleTranslateClick(event, 'kif-tptp')">
+                KIF -> TPTP
+              </a>
+              <a href="#" class="translate-option disabled">KIF -> THF (coming soon)</a>
+              <a href="#" class="translate-option disabled">KIF -> TFF (coming soon)</a>
+              <a href="#" class="translate-option disabled">TPTP -> KIF (coming soon)</a>
+              <a href="#" class="translate-option disabled">TPTP -> THF (coming soon)</a>
+            </div>
+          </div>
+
+          <%-- existing file-name display stays as-is --%>
           <% if (fileName != null) { %>
-          <div class="file-name-display" id="file-name">Uploaded: <%= esc(fileName) %></div>
+            <div class="file-name-display" id="file-name">Uploaded: <%= esc(fileName) %></div>
           <% } else { %>
-          <div class="file-name-display" id="file-name"></div>
+            <div class="file-name-display" id="file-name"></div>
           <% } %>
         </div>
+
         <hr class="divider">
         <div class="tab-bar" id="tabBar"></div>
         <!-- Editor -->

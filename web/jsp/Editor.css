@@ -56,7 +56,12 @@ body {font-family: system-ui, sans-serif;}
 /* Error messages */
 .errors-box { color: #b00020; border:1px solid #ccc;}
 .success { color: #077d3f; border:1px solid #ccc;}
-.editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;  /* instead of space-between */
+  gap: 8px;                     /* optional: space between controls */
+}
 .file-name-display { font-family: monospace; font-size: 12px; color: #666; margin-top: 2px;}
 
 /* Modal Overlay */
@@ -147,4 +152,11 @@ body {font-family: system-ui, sans-serif;}
 .unsaved-dot {
   color: red;
   font-weight: bold;
+}
+
+.translate-option.disabled {
+  color: #9CA3AF;        /* greyed out */
+  cursor: default;
+  pointer-events: none;  /* not clickable */
+  opacity: 0.6;
 }
