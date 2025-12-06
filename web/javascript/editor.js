@@ -768,6 +768,7 @@ async function saveFileAs() {
     alert("Filename cannot be empty.");
     return;
   }
+
   const validationError = validateFilename(filename);
   if (validationError) {
     alert("❌ " + validationError);
@@ -787,15 +788,12 @@ async function saveFileAs() {
     fileName: filename,
     code: content
   });
-
   if (res?.success) {
     const entry = codeEditors[activeTab];
-
     entry[0]       = filename;
     entry.lastSaved = content;
     entry[1]        = content;
     entry.dirty     = false;
-
     updateTabLabels();
     markTabSaved(activeTab);
     alert(`Saved as ${filename}`);
@@ -838,23 +836,16 @@ function updateTabLabels() {
 async function populateFileList(listElemId) {
   const listElem = document.getElementById(listElemId);
   if (!listElem) return;
-
   listElem.innerHTML = "<li>Loading...</li>";
-
   const files = await loadUserFileList();
-
   if (!files.length) {
     listElem.innerHTML = "<li>(No files yet)</li>";
     return;
   }
-
   listElem.innerHTML = "";
-
   files.forEach(f => {
     const li = document.createElement("li");
     li.textContent = f;
-    
-    // Optional: make clicking a filename load it into the text box
     li.onclick = () => {
       if (listElemId === "saveFileList") {
         document.getElementById("saveFileNameInput").value = f;
@@ -867,46 +858,33 @@ async function populateFileList(listElemId) {
   });
 }
 
-
 function validateFilename(name) {
   if (!name || typeof name !== "string") return "Filename cannot be empty.";
-
-  // Trim
   const trimmed = name.trim();
   if (trimmed.length === 0) return "Filename cannot be blank or whitespace.";
-
-  // Illegal characters for Linux + cross-platform compatibility
   const illegal = /[<>:"\/\\|?*\x00-\x1F]/g;
   if (illegal.test(trimmed)) {
     return 'Filename contains illegal characters:  < > : " / \\ | ? *';
   }
-
-  // No control characters
   if (/[\x00-\x1F]/.test(trimmed)) {
     return "Filename contains control characters (ASCII 0–31).";
   }
-
-  // Disallow leading or trailing dots
   if (/^\.+$/.test(trimmed)) {
     return "Filename cannot be only dots.";
   }
-
-  // Optional: common reserved names (Windows)
   const reserved = [
     "CON", "PRN", "AUX", "NUL",
     "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
     "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
   ];
-  if (reserved.includes(trimmed.toUpperCase())) {
+  if (reserved.includes(trimmed.toUpperCase()))
     return `The filename "${trimmed}" is reserved and cannot be used.`;
-  }
-
-  return null; // VALID
+  return null;
 }
 
 function makeEditorEntry(fileName, content = "") {
-  const entry = [fileName, content];  // [0] = name, [1] = buffer
-  entry.lastSaved = content;          // snapshot from disk / server
+  const entry = [fileName, content];
+  entry.lastSaved = content;
   entry.dirty = false;
   return entry;
 }
@@ -953,4 +931,108 @@ async function translateKifToTptp() {
     console.error("Error while translating to TPTP:", e);
     alert("Unexpected error during translation.\nSee console for details.");
   }
+}
+
+// ======================================================
+// Translate DROPDOWN MENU LOGIC
+// ======================================================
+let translateRoot, translateMenu;
+
+function ensureTranslateEls() {
+  if (!translateRoot || !translateMenu) {
+    translateRoot = document.getElementById("translateDropdown");
+    translateMenu = document.getElementById("translateDropdownContent");
+    if (translateRoot) {
+      translateRoot.addEventListener("click", (e) => e.stopPropagation());
+    }
+  }
+}
+
+function isTranslateOpen() {
+  ensureTranslateEls();
+  return translateMenu && translateMenu.style.display === "block";
+}
+
+function openTranslateMenu() {
+  ensureTranslateEls();
+  if (!translateMenu) return;
+  translateMenu.style.display = "block";
+  setTimeout(() => {
+    document.addEventListener("click", onTranslateDocClick, { passive: true });
+    document.addEventListener("keydown", onTranslateEsc, { passive: true });
+  }, 0);
+}
+
+function closeTranslateMenu() {
+  ensureTranslateEls();
+  if (!translateMenu) return;
+  translateMenu.style.display = "none";
+  document.removeEventListener("click", onTranslateDocClick);
+  document.removeEventListener("keydown", onTranslateEsc);
+}
+
+function toggleTranslateMenu(evt) {
+  if (evt) evt.stopPropagation();
+  isTranslateOpen() ? closeTranslateMenu() : openTranslateMenu();
+}
+
+function onTranslateDocClick(e) {
+  ensureTranslateEls();
+  if (!translateRoot || !translateMenu) return;
+  const clickedInside = translateRoot.contains(e.target);
+  const isVisible = translateMenu.style.display === "block";
+  if (isVisible && !clickedInside) closeTranslateMenu();
+}
+
+function onTranslateEsc(e) {
+  if (e.key === "Escape") closeTranslateMenu();
+}
+
+document.addEventListener("DOMContentLoaded", ensureTranslateEls);
+
+// Enable/disable translate options based on active tab extension
+function updateTranslateMenu() {
+  const fileName = getActiveFileName();
+  const ext = (fileName.split(".").pop() || "").toLowerCase();
+
+  const label = document.getElementById("translateLabel");
+  const kifToTptp = document.getElementById("translate-kif-tptp");
+  const allOptions = document.querySelectorAll(".translate-option");
+
+  if (!label || !kifToTptp) return;
+
+  // Default: disable all options
+  allOptions.forEach((opt) => {
+    opt.classList.add("disabled");
+    opt.setAttribute("aria-disabled", "true");
+  });
+
+  // Only enable KIF → TPTP when active file is .kif
+  if (ext === "kif") {
+    kifToTptp.classList.remove("disabled");
+    kifToTptp.removeAttribute("aria-disabled");
+  }
+
+  // You can change the label text if you want:
+  // label.textContent = ext === "kif" ? "Translate ▾" : "Translate ▾";
+}
+
+// Handle clicking on translate menu items
+function handleTranslateClick(event, kind) {
+  event.preventDefault();
+  const target = event.currentTarget;
+  if (target.classList.contains("disabled")) {
+    return; // do nothing for disabled items
+  }
+
+  switch (kind) {
+    case "kif-tptp":
+      translateKifToTptp();
+      break;
+    // future cases can go here
+    default:
+      console.warn("Translate action not implemented:", kind);
+  }
+
+  closeTranslateMenu();
 }
