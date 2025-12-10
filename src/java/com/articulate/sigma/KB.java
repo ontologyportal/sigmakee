@@ -2181,7 +2181,6 @@ public class KB implements Serializable {
 
             String kbThfPath = kbDir + sep + kbThfFile;
             File thfAxioms = new File(kbThfPath);
-            // TODO: If .thf exists, also check if it was prodused with or without modals.
             if (!thfAxioms.exists()) {
                 System.out.println("KB.askVampireHOL(): no such file: " + kbThfPath + ". Creating it.");
                 // Generate SUMO.thf
@@ -2297,13 +2296,6 @@ public class KB implements Serializable {
                             pf.varTypeCache.put(worldVar, types);
                         }
                     }
-
-                    // 5b. Skip formulas headed by symbols we already know are badly typed (optional but recommended)
-//                    String head = pf.car();
-//                    if (THFnew.badUsageSymbols.contains(head)) {
-//                        out.write("% askVampireHOL(): excluded bad-usage symbol in query: " + head + "\n");
-//                        continue;
-//                    }
 
                     // 5c. Translate to THF using the same engine as axioms (query=true)
                     String thfQuery = THFnew.process(new Formula(pf), typeMap, true);

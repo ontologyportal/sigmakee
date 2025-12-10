@@ -9,6 +9,7 @@ import java.util.*;
 public class Modals {
 
     // these are predicates that take a formula as (one of) their arguments in SUMO/KIF
+    // e.g. (holdsDuring ?T ?FORMULA)
     public static final List<String> formulaPreds = new ArrayList<>(
             Arrays.asList(Formula.KAPPAFN, "ProbabilityFn", "believes",
                     "causesProposition", "conditionalProbability",
@@ -23,6 +24,7 @@ public class Modals {
                     "treatedPageDefinition", "visitorParameter"));
 
     // a subset of formulaPreds where two arguments are formulas (e.g. entails(φ, ψ)).
+    // (<dualFormulaPreds> ?FORMULA1 ?FORMULA2)
     public static final List<String> dualFormulaPreds = new ArrayList<>(
             Arrays.asList("causesProposition", "conditionalProbability",
                     "decreasesLikelihood",
@@ -30,10 +32,13 @@ public class Modals {
                     "independentProbability","prefers"));
 
     // these are the ones you want to handle with the special HOL rewrite
+    // Modal operators that take an agent and a formula as arguments are
+    // (<regHOLpred> ?AGENT ?FORMULA)
     public static final List<String> regHOLpred = new ArrayList<>(
             Arrays.asList("considers","sees","believes","knows","holdsDuring","desires"));
 
     // these are the attribute constants you can pass to modalAttribute
+    // (modalAttribute ?FORMULA <modalAttributes>)
     public static final Set<String> modalAttributes = new HashSet<>(Arrays.asList(
             "Possibility",
             "Necessity",
@@ -66,33 +71,72 @@ public class Modals {
 
 
     /***************************************************************
-     * Handle the predicates given in regHOLpred, which have a parameter
-     * followed by a formula.
+     * Handle predicates in regHOLpred that take an individual and a
+     * formula argument, e.g. (confersObligation USGovernment ?A F).
+     * We rewrite them into a Kripke-style implication using accreln:
+     *
+     *   (P A F)  ==>  (=> (accreln P A ?W_{n-1} ?W_n) F')
+     *
+     * where F' is recursively processed and world-indexed, and we
+     * introduce a fresh world variable ?Wn.
      */
     public static Formula handleHOLpred(Formula f, KB kb, Integer worldNum) {
 
         StringBuilder fstring = new StringBuilder();
-        List<Formula> flist = f.complexArgumentsToArrayList(1);
+        List<Formula> flist = f.complexArgumentsToArrayList(1); // args after the head
+        // Expect: flist.get(0) = "agent"/parameter, flist.get(1) = formula argument
         worldNum = worldNum + 1;
-        fstring.append("(=> (accreln ").append(f.car()).append(Formula.SPACE).append(flist.get(0)).append(" ?W").append(worldNum - 1).append(" ?W").append(worldNum).append(") ");
-        fstring.append(Formula.SPACE).append(processRecurse(flist.get(1),kb,worldNum));
+
+        fstring.append("(=> (accreln ")
+                .append(f.car())                // modal kind / operator, e.g. confersObligation, knows, desires
+                .append(Formula.SPACE)
+                .append(flist.get(0))           // parameter (e.g. USGovernment, agent)
+                .append(" ?W").append(worldNum - 1)
+                .append(" ?W").append(worldNum)
+                .append(") ");
+
+        // Recursively process the embedded formula under the *new* world index.
+        fstring.append(Formula.SPACE)
+                .append(processRecurse(flist.get(1), kb, worldNum));
+
         fstring.append(Formula.RP);
+
         Formula result = new Formula();
         result.read(fstring.toString());
         return result;
     }
 
     /***************************************************************
-     * handle the predicate modalAttribute
+     * Handle the predicate modalAttribute:
+     *   (modalAttribute F M)
+     * is read as: "F holds in all worlds accessible via modality M".
+     *
+     * We rewrite:
+     *   (modalAttribute F M)
+     * into
+     *   (=> (accrelnP M ?W_{n-1} ?W_n) F')
+     *
+     * where F' is recursively processed and world-indexed, and
+     * we introduce a fresh world variable ?Wn.
      */
     public static Formula handleModalAttribute(Formula f, KB kb, Integer worldNum) {
 
         StringBuilder fstring = new StringBuilder();
-        List<Formula> flist = f.complexArgumentsToArrayList(1);
+        List<Formula> flist = f.complexArgumentsToArrayList(1); // [F, M]
         worldNum = worldNum + 1;
-        fstring.append("(=> (accrelnP ").append(flist.get(1)).append(" ?W").append(worldNum - 1).append(" ?W").append(worldNum).append(") ");
-        fstring.append(processRecurse(flist.get(0),kb,worldNum));
+
+        // Build antecedent: (accrelnP M ?W_{n-1} ?W_n)
+        fstring.append("(=> (accrelnP ")
+                .append(flist.get(1))           // the modal attribute constant, e.g. Necessity, Legal
+                .append(" ?W").append(worldNum - 1)
+                .append(" ?W").append(worldNum)
+                .append(") ");
+
+        // Consequent: recursively process the embedded formula at the new world.
+        fstring.append(processRecurse(flist.get(0), kb, worldNum));
+
         fstring.append(Formula.RP);
+
         Formula result = new Formula();
         result.read(fstring.toString());
         return result;
@@ -102,16 +146,22 @@ public class Modals {
      */
     public static Formula processRecurse(Formula f, KB kb, Integer worldNum) {
 
-        if (f.atom())
+
+
+        if (f.atom()) {
             return f;
-        if (f.empty())
+        }
+        if (f.empty()) {
             return f;
+        }
 
         if (f.listP()) {
-            if (regHOLpred.contains(f.car()))
-                return handleHOLpred(f,kb,worldNum);
-            if (f.car().equals("modalAttribute"))
-                return handleModalAttribute(f,kb,worldNum);
+            if (regHOLpred.contains(f.car())) {
+                return handleHOLpred(f, kb, worldNum);
+            }
+            if (f.car().equals("modalAttribute")) {
+                return handleModalAttribute(f, kb, worldNum);
+            }
 
             int argStart = 1;
             if (Formula.isQuantifier(f.car()))
@@ -130,35 +180,36 @@ public class Modals {
                 fstring.append(Formula.SPACE).append(processRecurse(arg,kb,worldNum));
 
             // Close the term / formula
-            if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL)))
-                // Pure logical symbols: no world argument
+            if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL))) {
+                // Pure logical symbols: no world argument (and, or, =>, <=>, =, etc.)
                 fstring.append(Formula.RP);
+            }
             else {
-                // ONLY modal relations get a world argument.
-                if (THFnew.MODAL_RELATIONS.contains(f.car()) && worldNum != null) {
+                // For non-logical heads, add a world argument to ALL non-rigid,
+                // non-reserved predicates. This matches the idea that almost
+                // every factual predicate is world-sensitive, except:
+                //  - rigid taxonomy / structural relations (instance, subclass, ...)
+                //  - reserved modal machinery (accreln, accrelnP, knows, believes, ...)
+                //  - modal attribute constants themselves.
+                String head = f.car();
+                String baseHead = baseFunctor(head);   // <-- normalize "partition__7" -> "partition"
+
+                if (worldNum != null
+                        && !Formula.isVariable(baseHead)
+                        && !THFnew.RIGID_RELATIONS.contains(baseHead)
+                        && !THFnew.RESERVED_MODAL_SYMBOLS.contains(baseHead)
+                        && !modalAttributes.contains(baseHead)) {
+
                     fstring.append(" ?W").append(worldNum);
                 }
+
                 fstring.append(Formula.RP);
 
-//                fstring.append(" ?W").append(worldNum).append(Formula.RP);
-//                List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
-//                if (sig == null) {
-//                    if (!Formula.isVariable(f.car()))
-//                        System.err.println("Error in processRecurse(): null signature for " + f.car());
-//                    else {
-//                        Formula result = new Formula();
-//                        result.read(fstring.toString());
-//                        return result;
-//                    }
-//                }
-//                sig.add("World");
-
-                // Signatures are read-only here; no mutation.
-                List<String> sig = kb.kbCache.signatures.get(f.car());
-                if (sig == null && !Formula.isVariable(f.car())) {
-                    System.err.println("Error in processRecurse(): null signature for " + f.car());
+                // Signatures are read-only here; no mutation. We only log missing ones.
+                List<String> sig = kb.kbCache.signatures.get(head);
+                if (sig == null && !Formula.isVariable(head)) {
+                    System.err.println("Error in processRecurse(): null signature for " + head);
                 }
-
             }
 
             Formula result = new Formula();
@@ -167,6 +218,22 @@ public class Modals {
         }
 
         return f;
+    }
+
+    /**
+     * Return the base functor name by stripping a trailing "__<digits>" suffix.
+     * E.g. "partition__7" -> "partition", "disjointDecomposition__4" -> "disjointDecomposition".
+     * If there is no such suffix, returns the input unchanged.
+     */
+    private static String baseFunctor(String head) {
+        if (head == null) return null;
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("^(.*)__\\d+$")
+                .matcher(head);
+        if (m.matches()) {
+            return m.group(1);
+        }
+        return head;
     }
 
     /***************************************************************
