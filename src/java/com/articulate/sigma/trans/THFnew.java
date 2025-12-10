@@ -277,8 +277,11 @@ public class THFnew {
                     .matcher(functor);
             if (m.matches()) {
                 int argCount = args.size();
+
+                // TODO: Fix the hard typed values
+                List<String> worldArgs = List.of("?W1", "?W2");
                 // Don't increase the term's ArityValue if it contains a World argument.
-                if (argCount > 0 && "World".equals(args.get(argCount - 1))) {
+                if (argCount > 0 && (worldArgs.contains(args.get(argCount - 1)))) {
                     argCount--;
                 }
                 int oldN = Integer.parseInt(m.group(2));
@@ -965,7 +968,9 @@ public class THFnew {
                 new ArrayList<>(Arrays.asList(
                         "KappaFn",
                         "increasesLikelihood",
-                        "holdsRight"
+                        "holdsRight",
+                        "ProbabilityFn",
+                        "hasPurpose"
                 ));
 
         if (exceptionFormulas.contains(functor)) {
@@ -1150,8 +1155,9 @@ public class THFnew {
                 //  - skip symbols with explicitly defined modal types (reserved header)
                 //  - every other relation gets a trailing "World" argument
                 if (!Formula.isLogicalOperator(t) && !t.equals("equals")) {
-                    if (!RIGID_RELATIONS.contains(t)
-                            && !RESERVED_MODAL_SYMBOLS.contains(t)) {
+                    String baseHead = Modals.baseFunctor(t);
+                    if (!RIGID_RELATIONS.contains(baseHead)
+                            && !RESERVED_MODAL_SYMBOLS.contains(baseHead)) {
                         sig.add("World");
                         if (suffixNum != null) suffixNum+=1;
                     }

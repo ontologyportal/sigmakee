@@ -225,7 +225,7 @@ public class Modals {
      * E.g. "partition__7" -> "partition", "disjointDecomposition__4" -> "disjointDecomposition".
      * If there is no such suffix, returns the input unchanged.
      */
-    private static String baseFunctor(String head) {
+    public static String baseFunctor(String head) {
         if (head == null) return null;
         java.util.regex.Matcher m = java.util.regex.Pattern
                 .compile("^(.*)__\\d+$")
