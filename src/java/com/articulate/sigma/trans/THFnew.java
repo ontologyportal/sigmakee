@@ -1149,7 +1149,6 @@ public class THFnew {
                 //  - skip rigid relations (instance, subclass, etc.)
                 //  - skip symbols with explicitly defined modal types (reserved header)
                 //  - every other relation gets a trailing "World" argument
-                if (t.startsWith("disjointDecomposition")) System.out.println("writeTypes() t: " + t);
                 if (!Formula.isLogicalOperator(t) && !t.equals("equals")) {
                     if (!RIGID_RELATIONS.contains(t)
                             && !RESERVED_MODAL_SYMBOLS.contains(t)) {
@@ -1157,7 +1156,6 @@ public class THFnew {
                         if (suffixNum != null) suffixNum+=1;
                     }
                 }
-                if (t.startsWith("disjointDecomposition")) System.out.println("writeTypes() sig: " + sig);
 
                 if (t == null) {
                     System.err.println("Error in THFnew.writeTypes(): bad sig for " + t);
@@ -1171,23 +1169,15 @@ public class THFnew {
                 }else
                     out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : ("); // write signature
 
-
-                if (t.startsWith("disjointDecomposition")) System.out.println("writeTypes() suffixNum: " + suffixNum);
-
-
                 if (suffixNum != null && !sig.isEmpty() && sig.size() > (suffixNum+1)) {
                     while (sig.size() > (suffixNum+1)) {
                         sig.remove(sig.size() - 1);   // remove from end until sizes match
                     }
                 }
 
-                if (t.startsWith("disjointDecomposition")) System.out.println("writeTypes() sig after remove: " + sig);
-
                 String sigStr = sigString(t, sig,kb,isFunction);
 
                 out.write(sigStr + "))).\n");
-
-                if (t.startsWith("disjointDecomposition")) System.out.println("writeTypes(): " + sigStr + ")))");
 
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $i)).\n"); // write relation constant
