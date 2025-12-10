@@ -44,6 +44,16 @@ public class Modals {
     public static final Set<String> modalAttributes = new HashSet<>(Arrays.asList("Possibility",
             "Necessity", "Permission", "Obligation", "Prohibition"));
 
+    public static final Set<String> noWorld = new HashSet<>(Arrays.asList(
+            "instance","subclass","domain","domainSubclass","range","rangeSubclass",
+            "immediateInstance","immediateSubclass","disjoint","partition",
+            "exhaustiveDecomposition","successorClass","partialOrderingOn",
+            "trichotomizingOn","totalOrderingOn","disjointDecomposition",
+            "AdditionFn","MultiplicationFn","ArcCosineFn","ArcSineFn",
+            "arcTangentFn","AverageFn","CosineFn","DivisionFn","ExponentiationFn",
+            "ListSumFn","LogFn","MultiplicationFn","ReciprocalFn","RoundFn",
+            "SineFn","SquareRootFn","SubtractionFn","TangentFn"));
+
     /***************************************************************
      * Handle the predicates given in regHOL3pred, which have a parameter
      * followed by a formula.
@@ -124,7 +134,8 @@ public class Modals {
             for (Formula arg : flist) {
                 fstring.append(Formula.SPACE).append(processRecurse(arg, kb, worldNum));
             }
-            if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL)))
+            if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL))  ||
+                noWorld.contains(f.car()))
                 fstring.append(Formula.RP);
             else {
                 fstring.append(" ?W").append(worldNum).append(Formula.RP);
