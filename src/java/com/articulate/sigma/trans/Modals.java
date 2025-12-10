@@ -31,11 +31,37 @@ public class Modals {
                     "entails",  "increasesLikelihood",
                     "independentProbability","prefers"));
 
+    public static final List<String> regHOL3pred = new ArrayList<>(
+            Arrays.asList("confersNorm","confersObligation", "confersRight",
+                    "deprivesNorm","hasPurposeForAgent"));
+
     public static final List<String> regHOLpred = new ArrayList<>(
-            Arrays.asList("considers","sees","believes","knows","holdsDuring","desires"));
+            Arrays.asList("permits","prohibits","considers","sees","believes",
+                    "knows","holdsDuring","desires","hasPurpose","describes",
+                    "disapproves","doubts","expects","holdsObligation",
+                    "holdsRight","says"));
 
     public static final Set<String> modalAttributes = new HashSet<>(Arrays.asList("Possibility",
             "Necessity", "Permission", "Obligation", "Prohibition"));
+
+    /***************************************************************
+     * Handle the predicates given in regHOL3pred, which have a parameter
+     * followed by a formula.
+     */
+    public static Formula handleHOL3pred(Formula f, KB kb, Integer worldNum) {
+
+        StringBuilder fstring = new StringBuilder();
+        List<Formula> flist = f.complexArgumentsToArrayList(1);
+        worldNum = worldNum + 1;
+        fstring.append("(=> (accreln3 ").append(f.car()).append(Formula.SPACE).
+                append(flist.get(0)).append(Formula.SPACE).append(flist.get(1)).
+                append(" ?W").append(worldNum - 1).append(" ?W").append(worldNum).append(") ");
+        fstring.append(Formula.SPACE).append(processRecurse(flist.get(1),kb,worldNum));
+        fstring.append(Formula.RP);
+        Formula result = new Formula();
+        result.read(fstring.toString());
+        return result;
+    }
 
     /***************************************************************
      * Handle the predicates given in regHOLpred, which have a parameter
@@ -79,6 +105,8 @@ public class Modals {
         if (f.empty())
             return f;
         if (f.listP()) {
+            if (regHOL3pred.contains(f.car()))
+                return handleHOL3pred(f,kb,worldNum);
             if (regHOLpred.contains(f.car()))
                 return handleHOLpred(f,kb,worldNum);
             if (f.car().equals("modalAttribute"))
@@ -90,18 +118,20 @@ public class Modals {
             List<Formula> flist = f.complexArgumentsToArrayList(argStart);
             StringBuilder fstring = new StringBuilder();
             fstring.append(Formula.LP).append(f.car());
+            List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
             if (argStart == 2) // append quantifier list without processing
                 fstring.append(Formula.SPACE).append(f.getStringArgument(1));
-            for (Formula arg : flist)
-                fstring.append(Formula.SPACE).append(processRecurse(arg,kb,worldNum));
+            for (Formula arg : flist) {
+                fstring.append(Formula.SPACE).append(processRecurse(arg, kb, worldNum));
+            }
             if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL)))
                 fstring.append(Formula.RP);
             else {
                 fstring.append(" ?W").append(worldNum).append(Formula.RP);
-                List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
                 if (sig == null) {
-                    if (!Formula.isVariable(f.car()))
-                        System.err.println("Error in processRecurse(): null signature for " + f.car());
+                    if (!Formula.isVariable(f.car())) {
+                        System.err.println("Error in Modals.processRecurse(): null signature for " + f.car());
+                    }
                     else {
                         Formula result = new Formula();
                         result.read(fstring.toString());
