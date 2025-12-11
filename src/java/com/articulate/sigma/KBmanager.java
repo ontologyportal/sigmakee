@@ -95,7 +95,11 @@ public class KBmanager implements Serializable {
                     "userBrowserLimit",
                     "vampire",
                     "verbnet",
-                    "ollamaHost"
+                    "ollamaHost",
+                    "smtpEmailAddress",
+                    "smtpEmailUser",
+                    "smtpEmailPassword",
+                    "smtpEmailServer"
             );
 
     /** Master file key cache for the config */

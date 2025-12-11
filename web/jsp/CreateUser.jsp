@@ -45,9 +45,13 @@ else {
     PasswordService ps = new PasswordService();
     User u = ps.addUser(userName, password, email, "guest");
     if (u != null) {
-        u.attributes.put("firstName",firstName);
-        u.attributes.put("lastName",lastName);
-        u.attributes.put("organization",organization);
+        u.attributes.put("firstName", firstName);
+        u.attributes.put("lastName", lastName);
+        u.attributes.put("organization", organization);
+
+        String ip = request.getRemoteAddr();
+        u.attributes.put("ip", ip);
+
         ps.onlineRegister(u);
     }
     else {
