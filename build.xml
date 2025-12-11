@@ -173,6 +173,32 @@
 
     <!--
     ============
+    TEST CONFIGS
+    ============
+    -->
+
+    <!-- Replace 'theuser' placeholder in test config XMLs with the actual username -->
+    <target name="prepare.test.configs" depends="init"
+            description="Update test config XML files with the current user name.">
+        <echo message="Updating test config XML files for user ${user.name} (home: ${user.home})"/>
+        <!-- Simple version: just swap 'theuser' -> ${user.name} -->
+        <replace token="theuser" value="${user.name}">
+            <fileset dir="${basedir}">
+                <!-- Integration test configs -->
+                <include name="test/integration/java/resources/config_all.xml"/>
+                <include name="test/integration/java/resources/config_topAndMid.xml"/>
+                <include name="test/integration/java/resources/config_topOnly.xml"/>
+
+                <!-- Unit test configs -->
+                <include name="test/unit/java/resources/config_all.xml"/>
+                <include name="test/unit/java/resources/config_topAndMid.xml"/>
+                <include name="test/unit/java/resources/config_topOnly.xml"/>
+            </fileset>
+        </replace>
+    </target>
+
+    <!--
+    ============
     BUILD / DIST
     ============
     -->
@@ -269,7 +295,7 @@
     -->
 
     <target name="test" depends="test.unit,test.integration"/>
-    <target name="test.unit" depends="compile.test" description="Runs the UnitTestSuite">
+     <target name="test.unit" depends="prepare.test.configs,compile.test" description="Runs the UnitTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
@@ -284,7 +310,7 @@
         </junit>
         <antcall target="junit.report"/>
     </target>
-    <target name="test.integration" depends="compile.test" description="Runs the IntegrationTestSuite">
+    <target name="test.integration" depends="prepare.test.configs,compile.test" description="Runs the IntegrationTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
