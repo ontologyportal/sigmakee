@@ -11,31 +11,68 @@ public class Modals {
     // these are predicates that take a formula as (one of) their arguments in SUMO/KIF
     // e.g. (holdsDuring ?T ?FORMULA)
     public static final List<String> formulaPreds = new ArrayList<>(
-            Arrays.asList(Formula.KAPPAFN, "ProbabilityFn", "believes",
-                    "causesProposition", "conditionalProbability",
-                    "confersNorm", "confersObligation", "confersRight",
-                    "considers", "containsFormula", "decreasesLikelihood",
-                    "deprivesNorm", "describes", "desires", "disapproves",
-                    "doubts", "entails", "expects", "hasPurpose",
-                    "hasPurposeForAgent", "holdsDuring", "holdsObligation",
-                    "holdsRight", "increasesLikelihood",
-                    "independentProbability", "knows", "modalAttribute",
-                    "permits", "prefers", "prohibits", "rateDetail", "says",
-                    "treatedPageDefinition", "visitorParameter"));
+            Arrays.asList(
+                    Formula.KAPPAFN,
+                    "believes",
+                    "causesProposition",
+                    "conditionalProbability",
+                    "confersNorm",
+                    "confersObligation",
+                    "confersRight",
+                    "considers",
+                    "containsFormula",
+                    "decreasesLikelihood",
+                    "deprivesNorm",
+                    "describes",
+                    "desires",
+                    "disapproves",
+                    "doubts",
+                    "entails",
+                    "expects",
+                    "hasPurpose",
+                    "hasPurposeForAgent",
+                    "holdsDuring",
+                    "holdsObligation",
+                    "holdsRight",
+                    "increasesLikelihood",
+                    "independentProbability",
+                    "knows",
+                    "modalAttribute",
+                    "permits",
+                    "prefers",
+                    "prohibits",
+                    "ProbabilityFn",
+                    "rateDetail",
+                    "says",
+                    "treatedPageDefinition",
+                    "visitorParameter"
+            ));
 
     // a subset of formulaPreds where two arguments are formulas (e.g. entails(φ, ψ)).
     // (<dualFormulaPreds> ?FORMULA1 ?FORMULA2)
     public static final List<String> dualFormulaPreds = new ArrayList<>(
-            Arrays.asList("causesProposition", "conditionalProbability",
+            Arrays.asList(
+                    "causesProposition",
+                    "conditionalProbability",
                     "decreasesLikelihood",
-                    "entails",  "increasesLikelihood",
-                    "independentProbability","prefers"));
+                    "entails",
+                    "increasesLikelihood",
+                    "independentProbability",
+                    "prefers"
+            ));
 
     // these are the ones you want to handle with the special HOL rewrite
     // Modal operators that take an agent and a formula as arguments are
     // (<regHOLpred> ?AGENT ?FORMULA)
     public static final List<String> regHOLpred = new ArrayList<>(
-            Arrays.asList("considers","sees","believes","knows","holdsDuring","desires"));
+            Arrays.asList(
+                    "considers",
+                    "sees",
+                    "believes",
+                    "knows",
+                    "holdsDuring",
+                    "desires"
+            ));
 
     // these are the attribute constants you can pass to modalAttribute
     // (modalAttribute ?FORMULA <modalAttributes>)
@@ -56,13 +93,79 @@ public class Modals {
             "Promise"
     ));
 
+    // Relations that are treated as *rigid* in the Kripke semantics:
+    // they do NOT get a world argument in their THF type. These are
+    // mostly taxonomic / structural relations (types, orders, etc.).
+    public static final Set<String> RIGID_RELATIONS =
+            new HashSet<>(Arrays.asList(
+                    "instance",
+                    "subclass",
+                    "domain",
+                    "domainSubclass",
+                    "range",
+                    "rangeSubclass",
+                    "immediateInstance",
+                    "immediateSubclass",
+                    "disjoint",
+                    "partition",
+                    "exhaustiveDecomposition",
+                    "successorClass",
+                    "partialOrderingOn",
+                    "trichotomizingOn",
+                    "totalOrderingOn",
+                    "disjointDecomposition", // New Entry (Angelos)
+                    // Arithmetic Op
+                    "AdditionFn",
+                    "MultiplicationFn",
+                    "ArcCosineFn",
+                    "ArcSineFn",
+                    "arcTangentFn",
+                    "AverageFn",
+                    "CosineFn",
+                    "DivisionFn",
+                    "ExponentiationFn",
+                    "ListSumFn",
+                    "LogFn",
+                    "MultiplicationFn",
+                    "ReciprocalFn",
+                    "RoundFn",
+                    "SineFn",
+                    "SquareRootFn",
+                    "SubtractionFn",
+                    "TangentFn"
+            ));
+
+    // ISSUE 1
+    // relations that are treated as modal in the THF embedding, i.e. they get an extra world argument and special THF types.
+    // MODAL_RELATIONS = “when this symbol is in head position, treat it as a Kripke-style modal predicate and give it a world argument.
+    public static final Set<String> MODAL_RELATIONS = new HashSet<>(Arrays.asList(
+            "believes",
+            "knows",
+            "desires",
+            "modalAttribute",
+            "holdsDuring"
+            // (you can add more here if you *explicitly* design them as modal)
+    ));
+
+    // ISSUE 2
+    // Symbols whose types are defined explicitly in Modals.getTHFHeader().
+    public static final Set<String> RESERVED_MODAL_SYMBOLS =
+            new HashSet<>(Arrays.asList(
+                    "accreln",
+                    "accrelnP",
+//                    "knows",
+//                    "believes",
+//                    "desires",
+                    "holdsDuring" // ISSUE 6
+            ));
+
     // list that contains the allowed head predicates for the modal predicates
     public static final List<String> allowedHeads;
     static {
         List<String> tmp = new ArrayList<>();
-        tmp.addAll(THFnew.MODAL_RELATIONS);
+        tmp.addAll(MODAL_RELATIONS);
         tmp.addAll(modalAttributes);
-        tmp.addAll(THFnew.RESERVED_MODAL_SYMBOLS);
+        tmp.addAll(RESERVED_MODAL_SYMBOLS);
         tmp.addAll(regHOLpred);
         tmp.addAll(formulaPreds);
         allowedHeads = Collections.unmodifiableList(tmp);
@@ -196,8 +299,8 @@ public class Modals {
 
                 if (worldNum != null
                         && !Formula.isVariable(baseHead)
-                        && !THFnew.RIGID_RELATIONS.contains(baseHead)
-                        && !THFnew.RESERVED_MODAL_SYMBOLS.contains(baseHead)
+                        && !RIGID_RELATIONS.contains(baseHead)
+                        && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)
                         && !modalAttributes.contains(baseHead)) {
 
                     fstring.append(" ?W").append(worldNum);
@@ -299,14 +402,15 @@ public class Modals {
                 "thf(modals_tp,type,(m : $tType)).\n" +
                 "thf(accreln_tp,type,(s__accreln : (m > $i > w > w > $o))).\n" +
                 "thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +
-                "thf(knows_tp,type,(s__knows : m)).\n" +
-                "thf(believes_tp,type,(s__believes : m)).\n" +
-                "thf(desires_tp,type,(s__desires : m)).\n" +
-                "thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__desires @ P @ W @ W))).\n" +
-                "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__knows @ P @ W @ W))).\n" +
-                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n" +
+//                "thf(knows_tp,type,(s__knows : m)).\n" +
+//                "thf(believes_tp,type,(s__believes : m)).\n" +
+//                "thf(desires_tp,type,(s__desires : m)).\n" +
+                "thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__desires__m @ P @ W @ W))).\n" +
+                "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__knows__m @ P @ W @ W))).\n" +
+                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes__m @ P @ W @ W))).\n";
                 // ISSUE 6
-                "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n";
+//                "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n";
+
     }
 
     /***************************************************************

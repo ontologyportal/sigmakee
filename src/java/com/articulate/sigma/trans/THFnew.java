@@ -15,73 +15,6 @@ public class THFnew {
     public static Set<Formula> badUsageSymbols = new HashSet<>();
     public static Set<String> predicateTerms = new HashSet<>(); //Terms that return $o instead of $i
 
-    // ISSUE 1
-    // relations that are treated as modal in the THF embedding, i.e. they get an extra world argument and special THF types.
-    // MODAL_RELATIONS = “when this symbol is in head position, treat it as a Kripke-style modal predicate and give it a world argument.
-    public static final Set<String> MODAL_RELATIONS = new HashSet<>(Arrays.asList(
-            "believes",
-            "knows",
-            "desires",
-            "modalAttribute",
-            "holdsDuring"
-            // (you can add more here if you *explicitly* design them as modal)
-    ));
-
-    // ISSUE 2
-    // Symbols whose types are defined explicitly in Modals.getTHFHeader().
-    public static final Set<String> RESERVED_MODAL_SYMBOLS =
-            new HashSet<>(Arrays.asList(
-                    "accreln",
-                    "accrelnP",
-                    "knows",
-                    "believes",
-                    "desires",
-                    "holdsDuring" // ISSUE 6
-            ));
-
-
-    // Relations that are treated as *rigid* in the Kripke semantics:
-    // they do NOT get a world argument in their THF type. These are
-    // mostly taxonomic / structural relations (types, orders, etc.).
-    public static final Set<String> RIGID_RELATIONS =
-            new HashSet<>(Arrays.asList(
-                    "instance",
-                    "subclass",
-                    "domain",
-                    "domainSubclass",
-                    "range",
-                    "rangeSubclass",
-                    "immediateInstance",
-                    "immediateSubclass",
-                    "disjoint",
-                    "partition",
-                    "exhaustiveDecomposition",
-                    "successorClass",
-                    "partialOrderingOn",
-                    "trichotomizingOn",
-                    "totalOrderingOn",
-                    "disjointDecomposition", // New Entry (Angelos)
-                    // Arithmetic Op
-                    "AdditionFn",
-                    "MultiplicationFn",
-                    "ArcCosineFn",
-                    "ArcSineFn",
-                    "arcTangentFn",
-                    "AverageFn",
-                    "CosineFn",
-                    "DivisionFn",
-                    "ExponentiationFn",
-                    "ListSumFn",
-                    "LogFn",
-                    "MultiplicationFn",
-                    "ReciprocalFn",
-                    "RoundFn",
-                    "SineFn",
-                    "SquareRootFn",
-                    "SubtractionFn",
-                    "TangentFn"
-            ));
-
 
     /** *************************************************************
      */
@@ -686,9 +619,9 @@ public class THFnew {
         // modal relation name in argument position is rejected.
         List<String> args = f.complexArgumentsToArrayListString(0);
         String head = args.get(0);
-        if (!MODAL_RELATIONS.contains(head)) {
+        if (!Modals.MODAL_RELATIONS.contains(head)) {
             for (String a : args) {
-                if (MODAL_RELATIONS.contains(a)) {
+                if (Modals.MODAL_RELATIONS.contains(a)) {
                     out.write("% exclude(): modal operator used as individual: " + a + "\n");
                     return true;
                 }
@@ -704,9 +637,9 @@ public class THFnew {
                 for (int i = 1; i < args.size(); i++) {   // skip head
                     String a = args.get(i);
 
-                    if (THFnew.MODAL_RELATIONS.contains(a)
+                    if (Modals.MODAL_RELATIONS.contains(a)
                             || Modals.modalAttributes.contains(a)
-                            || THFnew.RESERVED_MODAL_SYMBOLS.contains(a)
+                            || Modals.RESERVED_MODAL_SYMBOLS.contains(a)
                             || Modals.regHOLpred.contains(a)
                             || Modals.formulaPreds.contains(a)) {
 
@@ -851,7 +784,7 @@ public class THFnew {
                 // ISSUE 10: exclude domain axioms with modal symbols
                 if (args.get(0).equals("domain") &&
                         args.size() > 1 &&
-                        RESERVED_MODAL_SYMBOLS.contains(args.get(1))) {
+                        Modals.RESERVED_MODAL_SYMBOLS.contains(args.get(1))) {
                     out.write("% exclude(): modal operator in domain: " + args.get(1) + "\n");
                     return true;
                 }
@@ -912,9 +845,9 @@ public class THFnew {
                 pred.equals("format") ||
                 pred.equals("externalImage") ||
                 pred.equals("comment") ||
-                pred.equals("knows") ||  // handled in header
-                pred.equals("believes") ||  //handled in header
-                pred.equals("desires") || //handled in header
+//                pred.equals("knows") ||  // handled in header
+//                pred.equals("believes") ||  //handled in header
+//                pred.equals("desires") || //handled in header
                 pred.equals("holdsDuring") || // handled in header | ISSUE 6
                 //StringUtil.isNumeric(pred) ||
                 pred.equals(Formula.EQUAL) ||
@@ -1128,7 +1061,7 @@ public class THFnew {
 
             // ISSUE 2
             // 1. Skip modal helper symbols – they already have correct types in the header.
-            if (RESERVED_MODAL_SYMBOLS.contains(t)) {
+            if (Modals.RESERVED_MODAL_SYMBOLS.contains(t)) {
                 continue;
             }
 
@@ -1156,8 +1089,8 @@ public class THFnew {
                 //  - every other relation gets a trailing "World" argument
                 if (!Formula.isLogicalOperator(t) && !t.equals("equals")) {
                     String baseHead = Modals.baseFunctor(t);
-                    if (!RIGID_RELATIONS.contains(baseHead)
-                            && !RESERVED_MODAL_SYMBOLS.contains(baseHead)) {
+                    if (!Modals.RIGID_RELATIONS.contains(baseHead)
+                            && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)) {
                         sig.add("World");
                         if (suffixNum != null) suffixNum+=1;
                     }
@@ -1183,10 +1116,14 @@ public class THFnew {
 
                 String sigStr = sigString(t, sig,kb,isFunction);
 
-                out.write(sigStr + "))).\n");
+                String typeStr = "$i";
+                if (Modals.MODAL_RELATIONS.contains(t)) {
+                    typeStr = "m";
+                }
 
+                out.write(sigStr + "))).\n");
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
-                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $i)).\n"); // write relation constant
+                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : "+typeStr+")).\n"); // write relation constant
             }
             // ISSUE 3
             else if (Modals.modalAttributes.contains(t))
@@ -1304,7 +1241,6 @@ public class THFnew {
         String filename = kbDir + sep + kb.name + "_modals.thf";
         try (Writer fstream = new FileWriter(filename);
              Writer out = new BufferedWriter(fstream)) {
-            out.write(Modals.getTHFHeader() + "\n");
 
             // Warm Up
             FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -1315,6 +1251,9 @@ public class THFnew {
             }
 
             writeTypes(kb,out);
+
+            // Write at the end of the header the hard coded types because they use some from the auto-generated ones.
+            out.write(Modals.getTHFHeader() + "\n");
             for (Formula f : kb.formulaMap.values()) {
                 if (debug) System.out.println("THFnew.transModalTHF(): " + f);
                 if (!exclude(f,kb,out))
