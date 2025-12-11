@@ -1069,6 +1069,7 @@ public class THFnew {
                 continue;
             if (kb.isInstanceOf(t,"Relation")) {
 
+                // Start Of first Signature
                 List<String> baseSig = kb.kbCache.signatures.get(t);
                 if (baseSig == null) {
                     System.err.println("Error in THFnew.writeTypes(): bad sig for " + t);
@@ -1082,15 +1083,20 @@ public class THFnew {
                 // Check that the sigStr alligns with the __NUM of the term:
                 Integer suffixNum = getSuffixNumber(t);
 
+                String baseHead = Modals.baseFunctor(t);
+
                 // For relations:
                 //  - skip logical operators and equality
                 //  - skip rigid relations (instance, subclass, etc.)
                 //  - skip symbols with explicitly defined modal types (reserved header)
+                //  - skip modal relations
                 //  - every other relation gets a trailing "World" argument
                 if (!Formula.isLogicalOperator(t) && !t.equals("equals")) {
-                    String baseHead = Modals.baseFunctor(t);
+
                     if (!Modals.RIGID_RELATIONS.contains(baseHead)
-                            && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)) {
+                            && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)
+                            && !Modals.regHOLpred.contains(baseHead)
+                    ) {
                         sig.add("World");
                         if (suffixNum != null) suffixNum+=1;
                     }
@@ -1100,13 +1106,14 @@ public class THFnew {
                     System.err.println("Error in THFnew.writeTypes(): bad sig for " + t);
                     continue;
                 }
+
                 boolean isFunction = false;
                 String SUMOtoTPTPformula = SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true);
                 if (kb.isInstanceOf(t,"Function")) {
-                    out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : ("); // write signature
+                    out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : "); // write signature
                     isFunction = true;
                 }else
-                    out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : ("); // write signature
+                    out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : "); // write signature
 
                 if (suffixNum != null && !sig.isEmpty() && sig.size() > (suffixNum+1)) {
                     while (sig.size() > (suffixNum+1)) {
@@ -1114,16 +1121,27 @@ public class THFnew {
                     }
                 }
 
-                String sigStr = sigString(t, sig,kb,isFunction);
+                String sigStr;
+                if (Modals.regHOLpred.contains(baseHead)){
+                    sigStr = "m";
+                    out.write( sigStr + ")).\n");
+                }else{
+                    sigStr = sigString(t, sig,kb,isFunction);
+                    out.write("(" + sigStr + "))).\n");
+                }
 
+
+                // End Of first Signature
+
+                // Start of Second Signature
                 String typeStr = "$i";
-                if (Modals.MODAL_RELATIONS.contains(t)) {
+                if (Modals.MODAL_RELATIONS.contains(baseHead) && !Modals.regHOLpred.contains(baseHead)) {
                     typeStr = "m";
                 }
 
-                out.write(sigStr + "))).\n");
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : "+typeStr+")).\n"); // write relation constant
+                // End of Second Signature
             }
             // ISSUE 3
             else if (Modals.modalAttributes.contains(t))

@@ -74,6 +74,7 @@ public class Modals {
                     "desires"
             ));
 
+    // TODO: Instead of Hard Typing check that is a subclass of NormativeAttribute
     // these are the attribute constants you can pass to modalAttribute
     // (modalAttribute ?FORMULA <modalAttributes>)
     public static final Set<String> modalAttributes = new HashSet<>(Arrays.asList(
@@ -405,9 +406,9 @@ public class Modals {
 //                "thf(knows_tp,type,(s__knows : m)).\n" +
 //                "thf(believes_tp,type,(s__believes : m)).\n" +
 //                "thf(desires_tp,type,(s__desires : m)).\n" +
-                "thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__desires__m @ P @ W @ W))).\n" +
-                "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__knows__m @ P @ W @ W))).\n" +
-                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes__m @ P @ W @ W))).\n";
+                "thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__desires @ P @ W @ W))).\n" +
+                "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__knows @ P @ W @ W))).\n" +
+                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n";
                 // ISSUE 6
 //                "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n";
 
