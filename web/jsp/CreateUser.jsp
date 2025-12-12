@@ -48,6 +48,7 @@ else {
         u.attributes.put("firstName",firstName);
         u.attributes.put("lastName",lastName);
         u.attributes.put("organization",organization);
+        u.attributes.put("notRobot", notRobot); 
         ps.onlineRegister(u);
     }
     else {

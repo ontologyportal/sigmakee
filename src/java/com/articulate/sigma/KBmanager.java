@@ -97,7 +97,11 @@ public class KBmanager implements Serializable {
                     "vampire",
                     "vampire_hol",
                     "ollamaHost",
-                    "verbnet"
+                    "verbnet",
+                    "smtpEmailAddress",
+                    "smtpEmailUser",
+                    "smtpEmailPassword",
+                    "smtpEmailServer"
             );
 
     /** Master file key cache for the config */
