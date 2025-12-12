@@ -450,6 +450,93 @@ public class LanguageFormatter {
                 .trim();
     }
 
+    /**
+     * Generate a natural language summary of a proof using Ollama LLM
+     * @param proofSteps List of proof steps as strings
+     * @return HTML formatted proof summary
+     */
+    public static String generateProofSummary(List<String> proofSteps) {
+        if (proofSteps == null || proofSteps.isEmpty()) {
+            return "";
+        }
+        
+        // Check if Ollama is available
+        if (!checkOllamaHealth()) {
+            return "<div style='color:#666; font-style:italic;'>Proof summary unavailable (Ollama is offline)</div>";
+        }
+        
+        // Prepare the proof steps as a string
+        StringBuilder proofText = new StringBuilder();
+        for (int i = 0; i < proofSteps.size(); i++) {
+            String step = proofSteps.get(i);
+            // Clean HTML tags and links from the proof step
+            step = step.replaceAll("<[^>]*>", "").trim();
+            if (!step.isEmpty()) {
+                proofText.append("Step ").append(i + 1).append(": ").append(step).append("\n");
+            }
+        }
+
+        String cleanedText = proofText.toString()
+        .replaceAll("forall|exists|instance|=>|<=", "")
+        .replaceAll("[()]", "")
+        .replaceAll("\\?\\w+", "")
+        .replaceAll("\\s{2,}", " ")
+        .trim();
+       // System.out.println("LLM Summary Input Length: " + cleanedText.length());
+        // System.out.println("Proof Step Count: " + proofSteps.size());
+        
+        // prompt for Ollama
+        String prompt = "You are an expert instructor who explains formal proofs in clear, structured English.\n"
+            + "Your task is to turn the proof steps below into a concise explanation that mirrors the style "
+            + "of a logic textbook\n\n"
+            + "Follow these guidelines carefully:\n"
+            + "1. Begin by identifying the goal of the proof or the key claim being established.\n"
+            + "2. Describe the initial assumption(s) used in the argument.\n"
+            + "3. Explain how the reasoning unfolds, highlighting important implications, case analyses, or contradictions.\n"
+            + "4. Never mention step numbers, variable names, or logical symbols from the original proof.\n"
+            + "   Do NOT include symbols such as 'forall', 'exists', '=>', or object labels.\n"
+            + "5. Refer to elements generically, using phrases like 'an entity', 'an object', or 'a relation'.\n"
+            + "6. give variable names like 'x', 'y', or 'z' to represent generic entities where needed to avoid confusion.\n"
+            + "7. Use natural narrative transitions, such as:\n"
+            + "     - 'The proof begins by assuming that…'\n"
+            + "     - 'It then considers what must follow…'\n"
+            + "     - 'From this, it becomes clear that…'\n"
+            + "     - 'This leads to the conclusion that…'\n"
+            + "8. Write 3–6 sentences that form one smooth, cohesive paragraph.\n"
+            + "9. End with a clear statement of what the proof ultimately establishes.\n"
+            + "10. Highlight the intuition behind *why* the conclusion must be true—go beyond mechanical steps.\n"
+            + "   Explain the reasoning as if teaching a student who is new to logic.\n\n"
+            + "Here are the proof steps:\n"
+            + cleanedText
+            + "\n\n"
+            + "Now write the explanation in the style and tone of a standard proof textbook:"
+            + "ensure that a non-technical reader can follow the logic.\n";
+
+ 
+        String model = "llama3.2";
+        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+        if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
+        
+        OllamaClient ollama = new OllamaClient(ollamaHost, 10_000, 60_000); // longer timeouts for proof summarization
+        
+        try {
+            String summary = ollama.generate(model, prompt);
+            if (!StringUtil.emptyString(summary)) {
+                // Format the summary in a nice HTML box
+                return "<div style='background:#f8f9fa; border:1px solid #dee2e6; border-radius:4px; "
+                     + "padding:12px; margin:15px 0;'>"
+                     + "<h4 style='margin:0 0 8px 0; color:#495057;'>Proof Summary</h4>"
+                     + "<p style='margin:0; line-height:1.6; color:#212529;'>" 
+                     + summary + "</p></div>";
+            }
+        } catch (IOException e) {
+            System.out.println("ERROR | LanguageFormatter | generateProofSummary: " + e);
+            return "<div style='color:#b00;'>Error generating proof summary: " + e.getMessage() + "</div>";
+        }
+        
+        return "";
+    }
+
     /*****************************************************************
      * Modify the given variable map so that given key is mapped to a surface form for the entity which includes
      * the given property.

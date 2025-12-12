@@ -1,71 +1,272 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+
 import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.*;
 
 /**
  * Unified Editor Servlet for both .kif and .tptp code/files.
- * - "format": returns text/plain with formatted content.
- * - "check":  returns application/json with the full list of ErrRec objects and an errorMask.
+ * Handles format, check, and user file operations (save/load/list/translate).
  */
 @WebServlet("/EditorServlet")
 @MultipartConfig(
-        fileSizeThreshold = 1024,   // buffer to disk after 1 KB
-        maxFileSize = 200 * 1024,   // 200 KB max file
-        maxRequestSize = 220 * 1024 // 220 KB total
+        fileSizeThreshold = 1024,
+        maxFileSize = 200 * 1024,
+        maxRequestSize = 220 * 1024
 )
 public class EditorServlet extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
+
+        String username = requireUser(req, resp);
+        if (username == null) return;
+        String mode = Optional.ofNullable(req.getParameter("mode")).orElse("").toLowerCase(Locale.ROOT);
+        File userDir = getUserDir(username);
+        switch (mode) {
+            case "saveuserfile":
+                handleSaveUserFile(req, resp, userDir);
+                break;
+            case "listuserfiles":
+                handleListUserFiles(resp, userDir);
+                break;
+            case "loaduserfile":
+                handleLoadUserFile(req, resp, userDir);
+                break;
+            case "translatetotptp":
+                handleTranslateToTPTP(req, resp);
+                break;
+            case "format":
+            case "check":
+            default:
+                handleFormatOrCheck(req, resp);
+                break;
+        }
+    }
 
     private static String readUtf8(InputStream in) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[8192];
         int n;
-        while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+        while ((n = in.read(buf)) != -1)
+            out.write(buf, 0, n);
         return new String(out.toByteArray(), StandardCharsets.UTF_8);
     }
 
     private static String jsonEscape(String s) {
         if (s == null) return "";
-        StringBuilder b = new StringBuilder((int)(s.length() * 1.1));
+        StringBuilder b = new StringBuilder((int) (s.length() * 1.1));
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             switch (c) {
-                case '\\': b.append("\\\\"); break;
-                case '"':  b.append("\\\""); break;
-                case '\b': b.append("\\b");  break;
-                case '\f': b.append("\\f");  break;
-                case '\n': b.append("\\n");  break;
-                case '\r': b.append("\\r");  break;
-                case '\t': b.append("\\t");  break;
+                case '\\':
+                    b.append("\\\\");
+                    break;
+                case '"':
+                    b.append("\\\"");
+                    break;
+                case '\b':
+                    b.append("\\b");
+                    break;
+                case '\f':
+                    b.append("\\f");
+                    break;
+                case '\n':
+                    b.append("\\n");
+                    break;
+                case '\r':
+                    b.append("\\r");
+                    break;
+                case '\t':
+                    b.append("\\t");
+                    break;
                 default:
-                    if (c < 0x20) {
-                        b.append(String.format("\\u%04x", (int)c));
-                    } else {
-                        b.append(c);
-                    }
+                    if (c < 0x20) b.append(String.format("\\u%04x", (int) c));
+                    else b.append(c);
             }
         }
         return b.toString();
     }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+    private void writeJson(HttpServletResponse resp,
+                           boolean success,
+                           String message,
+                           String tptp) throws IOException {
+        
+                            StringBuilder sb = new StringBuilder();
+        sb.append("{\"success\":").append(success);
+        if (message != null) sb.append(",\"message\":\"").append(escapeJson(message)).append("\"");
+        if (tptp != null) sb.append(",\"tptp\":\"").append(escapeJson(tptp)).append("\"");
+        sb.append("}");
+        resp.getWriter().write(sb.toString());
+    }
+
+    private String escapeJson(String s) {
+        if (s == null) return "";
+        return s
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\r", "\\r")
+                .replace("\n", "\\n");
+    }
+
+    /**
+     * Check session + role. Returns username or null if already responded with error.
+     */
+    private String requireUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession(false);
+        String username = session != null ? (String) session.getAttribute("user") : null;
+        String role = session != null ? (String) session.getAttribute("role") : null;
+        if (username == null || role == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.setContentType("application/json; charset=UTF-8");
+            resp.getWriter().write("{\"success\":false,\"message\":\"Not logged in.\"}");
+            return null;
+        }
+        if (!role.equalsIgnoreCase("user") && !role.equalsIgnoreCase("admin")) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.setContentType("application/json; charset=UTF-8");
+            resp.getWriter().write("{\"success\":false,\"message\":\"Access denied. Must be user or admin.\"}");
+            return null;
+        }
+        return username;
+    }
+
+    private File getUserDir(String username) {
+        File userDir = new File(System.getProperty("user.home") + "/.sigmakee/KBs/UserKBs/" + username);
+        if (!userDir.exists()) userDir.mkdirs();
+        return userDir;
+    }
+
+    // ============================================================
+    // Handlers for each mode
+    // ============================================================
+
+    private void handleSaveUserFile(HttpServletRequest req, HttpServletResponse resp, File userDir)
+            throws IOException {
+
+        String filename = req.getParameter("fileName");
+        String contents = req.getParameter("code");
+        resp.setContentType("application/json; charset=UTF-8");
+        if (filename == null || filename.isBlank()) {
+            resp.getWriter().write("{\"success\":false,\"message\":\"Filename missing.\"}");
+            return;
+        }
+        if (contents == null) contents = "";
+        File outFile = new File(userDir, filename);
+        try (FileWriter fw = new FileWriter(outFile)) {
+            fw.write(contents);
+        } catch (IOException e) {
+            resp.getWriter().write("{\"success\":false,\"message\":\"" +
+                    e.getMessage().replace("\"", "'") + "\"}");
+            return;
+        }
+        resp.getWriter().write("{\"success\":true,\"message\":\"Saved successfully.\"}");
+    }
+
+    private void handleListUserFiles(HttpServletResponse resp, File userDir) throws IOException {
+        List<String> fileNames = new ArrayList<>();
+        if (userDir.exists() && userDir.isDirectory()) {
+            File[] files = userDir.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.isFile()) fileNames.add(f.getName());
+                }
+            }
+        }
+        resp.setContentType("application/json; charset=UTF-8");
+        StringBuilder json = new StringBuilder("{\"success\":true,\"files\":[");
+        for (int i = 0; i < fileNames.size(); i++) {
+            json.append("\"").append(jsonEscape(fileNames.get(i))).append("\"");
+            if (i < fileNames.size() - 1) json.append(",");
+        }
+        json.append("]}");
+        resp.getWriter().write(json.toString());
+    }
+
+    private void handleLoadUserFile(HttpServletRequest req, HttpServletResponse resp, File userDir) throws IOException {
+
+        String filename = req.getParameter("fileName");
+        resp.setContentType("application/json; charset=UTF-8");
+        if (filename == null || filename.isBlank()) {
+            resp.getWriter().write("{\"success\":false,\"message\":\"Filename missing.\"}");
+            return;
+        }
+        File target = new File(userDir, filename);
+        if (!target.exists()) {
+            resp.getWriter().write("{\"success\":false,\"message\":\"File not found.\"}");
+            return;
+        }
+        String contents = new String(java.nio.file.Files.readAllBytes(target.toPath()), StandardCharsets.UTF_8);
+        resp.getWriter().write("{\"success\":true,\"fileName\":\"" + jsonEscape(filename) +
+                "\",\"contents\":\"" + jsonEscape(contents) + "\"}");
+    }
+
+    private void handleTranslateToTPTP(HttpServletRequest req, HttpServletResponse resp)
+            throws IOException {
+
+        resp.setContentType("application/json; charset=UTF-8");
+        String fileName = Optional.ofNullable(req.getParameter("fileName")).orElse("buffer.kif");
+        String code = req.getParameter("code");
+        if (code == null || code.trim().isEmpty()) {
+            writeJson(resp, false, "No KIF content received.", null);
+            return;
+        }
+        try {
+            KBmanager.getMgr().initializeOnce();
+            SUMOformulaToTPTPformula.lang = "fof";
+            List<String> kifForms = splitKifFormulas(code);
+            if (kifForms.isEmpty()) {
+                writeJson(resp, false, "No complete KIF formulas found in buffer.", null);
+                return;
+            }
+            String base = fileName.replaceAll("\\.[^.]+$", ""); // strip extension
+            StringBuilder out = new StringBuilder();
+            int idx = 1;
+            for (String kif : kifForms) {
+                String tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kif, false);
+                if (tptpBody == null || tptpBody.trim().isEmpty())
+                    continue;
+                String name = (base.isEmpty() ? "buf" : base) + "_" + idx++;
+                out.append("fof(")
+                        .append(name)
+                        .append(", axiom, ")
+                        .append(tptpBody.trim())
+                        .append(").\n");
+            }
+            if (out.length() == 0) {
+                writeJson(resp, false, "Translation produced no output.", null);
+                return;
+            }
+            writeJson(resp, true, null, out.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            writeJson(resp, false, "Exception during translation: " + e.getMessage(), null);
+        }
+    }
+
+    private void handleFormatOrCheck(HttpServletRequest req, HttpServletResponse resp)
             throws IOException, ServletException {
 
-        String mode = req.getParameter("mode");
+        String mode = Optional.ofNullable(req.getParameter("mode")).orElse("");
+        String action = Optional.ofNullable(req.getParameter("action")).orElse("");
         String code = req.getParameter("code");
         String codeContent = req.getParameter("codeContent");
-        String action = req.getParameter("action");
         String fileName = req.getParameter("fileName");
         String text = null;
-        if (code != null && !code.isBlank()) text = code;
-        else if (codeContent != null && !codeContent.isBlank()) text = codeContent;
-        if (text == null && req.getContentType() != null &&
+        if (code != null && !code.isBlank()) {
+            text = code;
+        } else if (codeContent != null && !codeContent.isBlank()) {
+            text = codeContent;
+        }
+        // Multipart upload case
+        if (text == null &&
+                req.getContentType() != null &&
                 req.getContentType().toLowerCase(Locale.ROOT).startsWith("multipart/")) {
             Part filePart = req.getPart("kifFile");
             if (filePart != null && filePart.getSize() > 0) {
@@ -74,259 +275,139 @@ public class EditorServlet extends HttpServlet {
             }
         }
         if (text == null || text.trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             if ("format".equalsIgnoreCase(mode) || "format".equalsIgnoreCase(action)) {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 resp.setContentType("text/plain; charset=UTF-8");
                 resp.getWriter().write("No content provided for formatting.");
             } else {
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 resp.setContentType("application/json; charset=UTF-8");
                 resp.getWriter().write("{\"ok\":false,\"message\":\"No content provided for checking.\"}");
             }
             return;
         }
         if (fileName == null) fileName = "Untitled.kif";
-        boolean isTptp = fileName.toLowerCase().endsWith(".tptp")
-            || fileName.toLowerCase().endsWith(".tff")
-            || fileName.toLowerCase().endsWith(".p")
-            || fileName.toLowerCase().endsWith(".fof")
-            || fileName.toLowerCase().endsWith(".cnf")
-            || fileName.toLowerCase().endsWith(".thf");
+        boolean isTptp = fileName.toLowerCase().matches(".*\\.(tptp|tff|p|fof|cnf|thf)$");
         if ("format".equalsIgnoreCase(mode) || "format".equalsIgnoreCase(action)) {
             resp.setContentType("text/plain; charset=UTF-8");
             try {
-                String formatted;
-                if (isTptp) {
-                    TPTPFileChecker formatter = new TPTPFileChecker();
-                    formatted = formatter.formatTptpText(text, "(web-editor)");
-                } else {
-                    formatted = formatKif(text);
-                }
-                List<ErrRec> fmtErrors = Collections.emptyList();
-                String checkMsg = null;
-                try {
-                    if (isTptp) {
-                        fmtErrors = TPTPFileChecker.check(text, "(web-editor)");
-                    } else {
-                        Future<List<ErrRec>> fut = KifCheckWorker.submit(text);
-                        fmtErrors = fut.get();
-                    }
-                } catch (Exception ce) {
-                    checkMsg = "Check failed: " + ce.getMessage();
-                }
-                int errCount = (fmtErrors == null) ? 0 : fmtErrors.size();
-                resp.setHeader("X-Has-Errors", (errCount > 0) ? "true" : "false");
-                resp.setHeader("X-Error-Count", String.valueOf(errCount));
-                if (checkMsg != null) resp.setHeader("X-Check-Message", checkMsg);
-                if (errCount > 0) {
-                    ErrRec first = fmtErrors.get(0);
-                    String preview = first.msg;
-                    if (preview != null && preview.length() > 200) preview = preview.substring(0, 200);
-                    resp.setHeader("X-First-Error", preview == null ? "" : preview);
-                }
-
-                if (formatted == null || formatted.trim().isEmpty()) {
-                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    resp.getWriter().write("Failed to format input.");
-                } else {
-                    resp.getWriter().write(formatted);
-                }
+                String formatted = isTptp
+                        ? new TPTPFileChecker().formatTptpText(text, "(web-editor)")
+                        : KifFileChecker.formatKif(text);
+                resp.getWriter().write(formatted);
             } catch (Exception e) {
                 resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 resp.getWriter().write("Formatting error: " + e.getMessage());
             }
             return;
         }
-
-        List<ErrRec> errors = Collections.emptyList();
+        List<ErrRec> errors;
         List<String> lines = Arrays.asList(text.split("\\R", -1));
         boolean[] errorMask = new boolean[lines.size()];
         String errorMessage = null;
         try {
-            if (isTptp) {
-                errors = TPTPFileChecker.check(text, "(web-editor)");
-            } else {
-                Future<List<ErrRec>> future = KifCheckWorker.submit(text);
-                errors = future.get();
-            }
+            errors = isTptp
+                    ? TPTPFileChecker.check(text, "(web-editor)")
+                    : KifFileChecker.check(text);
         } catch (Exception e) {
-            errorMessage = "Error while checking: " + e.getMessage();
             errors = Collections.emptyList();
+            errorMessage = "Error while checking: " + e.getMessage();
         }
         if (errors != null) {
             for (ErrRec er : errors) {
                 int ln = er.line;
-                if (ln >= 1 && ln <= errorMask.length) errorMask[ln - 1] = true;
+                if (ln >= 1 && ln <= errorMask.length) {
+                    errorMask[ln - 1] = true;
+                }
             }
         }
         resp.setStatus(HttpServletResponse.SC_OK);
         resp.setContentType("application/json; charset=UTF-8");
-        StringBuilder json = new StringBuilder(4096);
-        json.append("{\"ok\":true");
+        StringBuilder json = new StringBuilder("{\"ok\":true");
         json.append(",\"fileName\":\"").append(jsonEscape(fileName)).append("\"");
-        if (errorMessage != null)
+        if (errorMessage != null) {
             json.append(",\"message\":\"").append(jsonEscape(errorMessage)).append("\"");
+        }
         json.append(",\"errors\":[");
         if (errors != null) {
             for (int i = 0; i < errors.size(); i++) {
                 ErrRec e = errors.get(i);
-                json.append("{")
-                    .append("\"type\":").append(e.type).append(",")
-                    .append("\"file\":\"").append(jsonEscape(e.file == null ? "" : e.file)).append("\",")
-                    .append("\"line\":").append(e.line).append(",")
-                    .append("\"start\":").append(e.start).append(",")
-                    .append("\"end\":").append(e.end).append(",")
-                    .append("\"msg\":\"").append(jsonEscape(e.msg)).append("\"")
-                    .append("}");
+                json.append("{\"type\":").append(e.type)
+                        .append(",\"file\":\"").append(jsonEscape(e.file == null ? "" : e.file)).append("\"")
+                        .append(",\"line\":").append(e.line)
+                        .append(",\"start\":").append(e.start)
+                        .append(",\"end\":").append(e.end)
+                        .append(",\"msg\":\"").append(jsonEscape(e.msg)).append("\"}");
                 if (i < errors.size() - 1) json.append(",");
             }
         }
-        json.append("]");
-        json.append(",\"errorMask\":[");
+        json.append("],\"errorMask\":[");
         for (int i = 0; i < errorMask.length; i++) {
             if (i > 0) json.append(",");
             json.append(errorMask[i] ? "true" : "false");
         }
-        json.append("]");
-        json.append(",\"isTptp\":").append(isTptp ? "true" : "false");
-        json.append(",\"lineCount\":").append(lines.size());
-        json.append("}");
+        json.append("],\"isTptp\":").append(isTptp ? "true" : "false");
+        json.append(",\"lineCount\":").append(lines.size()).append("}");
         resp.getWriter().write(json.toString());
     }
 
-    public static String formatKif(String contents) {
-        if (contents == null || contents.trim().isEmpty()) return contents;
-        final List<int[]> spans = new ArrayList<>();
-        final List<Integer> commentOffsets = new ArrayList<>();
-        final List<String> commentLines = new ArrayList<>();
-        scanTopLevelSpansAndComments(contents, spans, commentOffsets, commentLines);
-        final List<String> formattedForms = new ArrayList<>();
-        KIF kif = new KIF();
-        try (StringReader sr = new StringReader(contents)) {
-            kif.parse(sr);
-        } catch (Exception e) {
-            System.err.println("EditorServlet.formatKif(): parse failed - returning original: " + e.getMessage());
-            return contents;
-        }
-        if (kif.formulasOrdered == null || kif.formulasOrdered.isEmpty())
-            return contents;
-        for (Formula f : kif.formulasOrdered.values()) {
-            String s = (f == null) ? "" : f.toString();
-            formattedForms.add(s == null ? "" : s.trim());
-        }
-        boolean allEmpty = formattedForms.stream().allMatch(s -> s.isEmpty());
-        if (allEmpty) return contents;
-        if (spans.isEmpty() || spans.size() != formattedForms.size()) {
-            StringBuilder sb = new StringBuilder();
-            for (String s : formattedForms) if (!s.isEmpty()) sb.append(s).append("\n");
-            for (String c : commentLines) sb.append(c).append("\n");  // emit raw comment lines
-            String result = sb.toString();
-            return result.trim().isEmpty() ? contents : result;
-        }
-        for (int i = 0; i < formattedForms.size(); i++) {
-            if (formattedForms.get(i).isEmpty()) {
-                int[] span = spans.get(i);
-                String raw = contents.substring(span[0], Math.min(span[1], contents.length())).trim();
-                if (!raw.isEmpty()) formattedForms.set(i, raw);
-            }
-        }
-        int[] extraBlankAfterPrev = new int[spans.size()];
-        for (int i = 1; i < spans.size(); i++) {
-            int prevEnd = spans.get(i - 1)[1];
-            int curStart = spans.get(i)[0];
-            int extra = 0;
-            if (prevEnd < curStart) {
-                String between = contents.substring(prevEnd, curStart);
-                String[] parts = between.split("\\R", -1);
-                for (int idx = 1; idx < parts.length - 1; idx++) {
-                    if (parts[idx].trim().isEmpty()) extra++;
-                    else break;
-                }
-            }
-            extraBlankAfterPrev[i] = extra;
-        }
-        @SuppressWarnings("unchecked")
-        List<String>[] leading = new List[spans.size()];
-        @SuppressWarnings("unchecked")
-        List<String>[] inside  = new List[spans.size()];
-        for (int i = 0; i < spans.size(); i++) { leading[i] = new ArrayList<>(); inside[i]  = new ArrayList<>(); }
-        int commentIdx = 0, spanIdx = 0;
-        while (commentIdx < commentOffsets.size()) {
-            int cOff = commentOffsets.get(commentIdx);
-            String cLine = commentLines.get(commentIdx);
-            while (spanIdx < spans.size() && spans.get(spanIdx)[1] <= cOff) spanIdx++;
-            if (spanIdx < spans.size()) {
-                int[] span = spans.get(spanIdx);
-                if (cOff < span[0])            leading[spanIdx].add(cLine);
-                else if (cOff < span[1])       inside[spanIdx].add(cLine);
-                else if (spanIdx + 1 < spans.size()) leading[spanIdx + 1].add(cLine);
-                else                           inside[spans.size() - 1].add(cLine);
-            } else {
-                inside[spans.size() - 1].add(cLine);
-            }
-            commentIdx++;
-        }
-        StringBuilder out = new StringBuilder();
-        for (int i = 0; i < formattedForms.size(); i++) {
-            if (i > 0 && extraBlankAfterPrev[i] > 0)
-                for (int k = 0; k < extraBlankAfterPrev[i]; k++) out.append("\n");
-            for (String c : leading[i]) out.append(c).append("\n");
-            String form = formattedForms.get(i).trim();
-            if (!form.isEmpty()) out.append(form).append("\n");
-            for (String c : inside[i]) out.append(c).append("\n");
-        }
-        String result = out.toString();
-        return result.trim().isEmpty() ? contents : result;
-    }
+    // ============================================================
+    // KIF splitter used by translate handler
+    // ============================================================
 
-    private static void scanTopLevelSpansAndComments(
-            String s,
-            List<int[]> spans,
-            List<Integer> commentOffsets,
-            List<String> commentLines
-    ) {
-        int n = s.length();
+    /**
+     * Very simple SUO-KIF splitter:
+     * - strips ';' comments
+     * - tracks parentheses depth
+     * - whenever depth returns to 0 and we've seen some content,
+     *   we treat that as one complete formula.
+     */
+    private List<String> splitKifFormulas(String text) {
+        List<String> result = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
         int depth = 0;
-        int i = 0;
-        int currentSpanStart = -1;
         boolean inString = false;
-        boolean escaping = false;
-        while (i < n) {
-            char ch = s.charAt(i);
-            if (ch == '"' && !escaping) {
-                inString = !inString;
-                i++;
-                continue;
-            }
-            escaping = (ch == '\\' && !escaping);
-            if (!inString) {
-                if (ch == ';') {
-                    int commentStart = i;
-                    int j = i + 1;
-                    while (j < n) {
-                        char cj = s.charAt(j);
-                        if (cj == '\n' || cj == '\r') break;
-                        j++;
-                    }
-                    commentOffsets.add(commentStart);
-                    String rawLine = s.substring(commentStart, j);
-                    commentLines.add(rawLine);
-                    i = j;
+        boolean seenNonWhitespace = false;
+        try (BufferedReader br = new BufferedReader(new StringReader(text))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                int semi = line.indexOf(';');
+                if (semi >= 0)
+                    line = line.substring(0, semi);
+                if (line.isEmpty() && depth == 0)
                     continue;
-                }
-                if (ch == '\r') { i++; continue; }
-                if (ch == '(') {
-                    if (depth == 0) currentSpanStart = i;
-                    depth++;
-                } else if (ch == ')') {
-                    depth = Math.max(0, depth - 1);
-                    if (depth == 0 && currentSpanStart >= 0) {
-                        spans.add(new int[]{ currentSpanStart, i + 1 });
-                        currentSpanStart = -1;
+                for (int i = 0; i < line.length(); i++) {
+                    char c = line.charAt(i);
+                    current.append(c);
+                    if (c == '"') {
+                        inString = !inString;
+                    }
+                    if (!inString) {
+                        if (c == '(') {
+                            depth++;
+                            seenNonWhitespace = true;
+                        } else if (c == ')') {
+                            depth--;
+                        } else if (!Character.isWhitespace(c)) {
+                            seenNonWhitespace = true;
+                        }
+                    }
+                    if (!inString && depth == 0 && seenNonWhitespace) {
+                        String f = current.toString().trim();
+                        if (!f.isEmpty()) {
+                            result.add(f);
+                        }
+                        current.setLength(0);
+                        seenNonWhitespace = false;
                     }
                 }
+                if (depth > 0) current.append('\n');
             }
-            i++;
+        } catch (IOException ignore) {
         }
+        String leftover = current.toString().trim();
+        if (!leftover.isEmpty() && depth == 0) {
+            result.add(leftover);
+        }
+        return result;
     }
 }
