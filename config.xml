@@ -73,7 +73,7 @@
     <constituent filename="MilitaryPersons.kif" />
     <constituent filename="MilitaryProcesses.kif" />
     <constituent filename="Music.kif" />
-    <constituent filename="development/Muscles.kif " />
+    <constituent filename="development/Muscles.kif" />
     <constituent filename="naics.kif" />
     <constituent filename="People.kif" />
     <constituent filename="pictureList.kif" />
