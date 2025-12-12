@@ -57,19 +57,46 @@
 
     <script>
         function toggleVampireOptions() {
-            const vamp = document.querySelector('input[name="inferenceEngine"][value="Vampire"]');
-            const casc = document.getElementById('CASC');
+            const vamp   = document.querySelector('input[name="inferenceEngine"][value="Vampire"]');
+            const casc   = document.getElementById('CASC');
             const avatar = document.getElementById('Avatar');
             const custom = document.getElementById('Custom');
-            const mp = document.getElementById('ModensPonens');
-            const drop = document.getElementById('dropOnePremise');
+            const mp     = document.getElementById('ModensPonens');
+            const drop   = document.getElementById('dropOnePremise');
+            const holModal = document.getElementById('HolUseModals');
+
+            // NEW: check if .thf filter is selected
+            const thfRadio = document.querySelector('input[name="testFilter"][value="thf"]');
+            const isThf = thfRadio && thfRadio.checked;
+
+            // If .thf → always disable Modus Ponens + Drop One Premise
+            if (isThf) {
+                if (mp)   { mp.checked = false;   mp.disabled = true; }
+                if (drop) { drop.checked = false; drop.disabled = true; }
+
+                // Still keep Vampire mode radios tied to Vampire on/off
+                const vampireOn = vamp && vamp.checked && !vamp.disabled;
+                [casc, avatar, custom, holModal].forEach(el => { if (el) el.disabled = !vampireOn; });
+
+                custom.checked = false; custom.disabled = true;
+                return; // THF overrides the rest of the logic
+            }
+
+            // Original behavior when NOT in THF mode
             const vampireOn = vamp && vamp.checked && !vamp.disabled;
-            [casc, avatar, custom, mp].forEach(el => { if (el) el.disabled = !vampireOn; });
+            [casc, avatar, custom, mp, holModal].forEach(el => { if (el) el && (el.disabled = !vampireOn); });
+
             const mpOn = vampireOn && mp && mp.checked;
-            if (drop) { drop.disabled = !mpOn; if (!mpOn) drop.checked = false; }
+            if (drop) {
+                drop.disabled = !mpOn;
+                if (!mpOn) drop.checked = false;
+            }
+            // Disable Custom until it gets fixed and tested!
+            custom.checked = false; custom.disabled = true;
         }
+
         function toggleRunSource() {
-            const src = document.querySelector('input[name="runSource"]:checked')?.value || 'custom';
+            const src  = document.querySelector('input[name="runSource"]:checked')?.value || 'custom';
             const ta   = document.getElementById('stmtArea');
             const test = document.getElementById('testName');
             const lblC = document.getElementById('lblCustom');
@@ -80,9 +107,18 @@
             lblC.style.opacity = isTest ? .5 : 1;
             lblT.style.opacity = isTest ? 1 : .5;
         }
-        window.onload = function(){ toggleVampireOptions(); toggleRunSource();
+
+        window.onload = function () {
+            toggleVampireOptions();
+            toggleRunSource();
+
             document.querySelectorAll('input[name="inferenceEngine"], #ModensPonens')
                 .forEach(el => el.addEventListener('change', toggleVampireOptions));
+
+            // NEW: when .thf / other filters change, re-apply logic
+            document.querySelectorAll('input[name="testFilter"]')
+                .forEach(el => el.addEventListener('change', toggleVampireOptions));
+
             document.querySelectorAll('input[name="runSource"]')
                 .forEach(el => el.addEventListener('change', toggleRunSource));
         };
@@ -94,7 +130,7 @@
             if (!sel || !sel.value) return;
             const name = sel.value.toLowerCase();
             // .tq via ViewTest.jsp, others directly from /tests/
-            const url = name.endsWith('.tq') || name.endsWith('.tptp') || name.endsWith('.tff')
+            const url = name.endsWith('.tq') || name.endsWith('.tptp') || name.endsWith('.tff') || name.endsWith('.thf')
                 ? ('ViewTest.jsp?name=' + encodeURIComponent(sel.value))
                 : ('tests/' + encodeURIComponent(sel.value));
             window.open(url, '_blank');
@@ -144,6 +180,16 @@
     }
     if (dropOnePremise == null) dropOnePremise = false;
     KB.dropOnePremiseFormulas = dropOnePremise;
+
+    Boolean holUseModals = (Boolean) session.getAttribute("HolUseModals");
+    if (req != null) {
+        holUseModals = request.getParameter("HolUseModals") != null
+                || "yes".equalsIgnoreCase(request.getParameter("HolUseModals"))
+                || "on".equalsIgnoreCase(request.getParameter("HolUseModals"))
+                || "true".equalsIgnoreCase(request.getParameter("HolUseModals"));
+        session.setAttribute("HolUseModals", holUseModals);
+    }
+    if (holUseModals == null) holUseModals = false;
 
     // ---- Remember selected test in session ----
     String selectedTest = (String) session.getAttribute("selectedTest");
@@ -284,7 +330,7 @@
             <!-- Radio label -->
             <label><input type="radio" name="runSource" value="test"
                 <%= "test".equals(session.getAttribute("runSource")) ? "checked" : "" %> >
-                Saved test (.tq / .tptp / .tff)
+                Saved test (.tq / .tptp / .tff / .thf)
             </label>
         </div>
 
@@ -295,7 +341,7 @@
         <%
             String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
             File[] allFiles = (testDir == null) ? new File[0]
-                    : new File(testDir).listFiles((d,n) -> n.endsWith(".tq") || n.endsWith(".tptp") || n.endsWith(".tff"));
+                    : new File(testDir).listFiles((d,n) -> n.endsWith(".tq") || n.endsWith(".tptp") || n.endsWith(".tff") || n.endsWith(".thf"));
             if (allFiles == null) allFiles = new File[0];
 
             File[] testFiles = allFiles;
@@ -327,6 +373,7 @@
                 <label><input type="radio" name="testFilter" value="tq"   <%= "tq".equalsIgnoreCase(testFilter)   ? "checked":"" %>> tq</label>
                 <label><input type="radio" name="testFilter" value="tptp" <%= "tptp".equalsIgnoreCase(testFilter) ? "checked":"" %>> tptp</label>
                 <label><input type="radio" name="testFilter" value="tff"  <%= "tff".equalsIgnoreCase(testFilter)  ? "checked":"" %>> tff</label>
+                <label><input type="radio" name="testFilter" value="thf"  <%= "thf".equalsIgnoreCase(testFilter)  ? "checked":"" %>> thf</label>
             </div>
             <input type="hidden" name="testFilter" id="testFilterHidden" value="<%= testFilter %>">
 
@@ -353,7 +400,7 @@
         Choose an inference engine:<br>
 
         <input type="radio" name="inferenceEngine" value="LEO" <% if ("LEO".equals(inferenceEngine)) {%>checked<%}%>
-               onclick="toggleVampireOptions()"> LEO-III <br>
+               onclick="toggleVampireOptions()" <% if (kb.leo == null) { %> disabled <% } %>> LEO-III <br>
 
         <input type="radio" name="inferenceEngine" value="EProver" <% if ("EProver".equals(inferenceEngine)) {%>checked<%}%>
                onclick="toggleVampireOptions()" <% if (kb.eprover == null) { %> disabled <% } %> > EProver <br>
@@ -370,10 +417,15 @@
 
         <input type="checkbox" id="ModensPonens" name="ModensPonens" value="yes" <% if (modensPonens) { out.print(" CHECKED"); } %> >
         <label for="ModensPonens">Modens Ponens</label>
+
         <span title="Runs Vampire with modus-ponens-only routine over authored axioms">&#9432;</span>
         [ <input type="checkbox" name="dropOnePremise" id="dropOnePremise" value="true"
         <% if (Boolean.TRUE.equals(dropOnePremise)) { out.print(" CHECKED"); } %> >
         <label for="dropOnePremise">Drop One-Premise Formulas</label> ]
+
+        <input type="checkbox" id="HolUseModals" name="HolUseModals" value="yes" <% if (holUseModals) { out.print(" CHECKED"); } %> >
+        <label for="HolUseModals">HOL-Use Modals </label>
+
         <br>
 
         <input type="checkbox" name="showProofInEnglish" value="yes"
@@ -552,7 +604,37 @@
                             }
                         }
                     }
-                } else {
+                } else if (ext.endsWith(".thf")) {
+                    if (!"Vampire".equals(inferenceEngine)) {
+                        out.println("<span style='color:#b00'>Only Vampire is supported for .thf tests.</span><br>");
+                    } else {
+                        setVampMode(vampireMode);
+
+                        com.articulate.sigma.tp.Vampire vRun = kb.askVampireTHF(testPath, tmo, maxAns);
+
+                        // Provide a friendly “query label” (TPTP problems don’t have a KIF query string)
+                        String pseudoQuery = "TPTP file: " + new File(testPath).getName();
+
+                        List<String> cleaned = TPTPutil.clearProofFile(vRun.output);
+
+                        // Vampire version 4.8→5.0 reordering…
+                        List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
+
+                        normalized = THFutil.preprocessTHFProof(normalized);
+
+                        tpp.parseProofOutput(normalized, pseudoQuery, kb, vRun.qlist);
+
+                        publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
+//                        tpp.processAnswersFromProof(vRun.qlist, pseudoQuery);
+
+                        printAnswersBlock(tpp, kbName, language, out);
+                        /* Prevent duplicate answers inside HTMLformatter */
+                        if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                        if (tpp.bindings   != null) tpp.bindings.clear();
+
+                        out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
+                    }
+            } else {
                     out.println("<font color='red'>Unsupported test file type: " + ext + "</font>");
                 }
             } else {
@@ -604,12 +686,37 @@
                         }
                     if (!StringUtil.emptyString(tpp.status)) out.println("Status: " + tpp.status);
                 } else if ("Vampire".equals(inferenceEngine)) {
+
+                    Formula f = new Formula();
+                    f.read(stmt);
                     setVampMode(vampireMode);
-                    vampire = Boolean.TRUE.equals(modensPonens)
-                            ? kb.askVampireModensPonens(stmt, timeout, maxAnswers)
-                            : kb.askVampire(stmt, timeout, maxAnswers);
-                    if (vampire == null || vampire.output == null) out.println("<font color='red'>Error. No response from Vampire.</font>");
-                    else {
+//                    boolean isHOL = f.isHigherOrder(kb);
+                    boolean isHOL = true;
+                    if (isHOL){ // Higher-Order Formula
+                        System.out.println(" -- Higher Order Formula Detected - Attempring to run Vampire HOL ");
+                        vampire = kb.askVampireHOL(stmt, timeout, maxAnswers, holUseModals);
+                        System.out.println("============ Vampire Output Returned =============");
+                        List<String> cleaned = TPTPutil.clearProofFile(vampire.output);
+                        System.out.println("============ Vampire Output Cleaned =============");
+                        for (String s:cleaned){
+                            System.out.println(s);
+                        }
+                        // Vampire version 4.8→5.0 reordering…
+                        List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
+                        System.out.println("============ Vampire Output Reordered =============");
+                        vampire.output = THFutil.preprocessTHFProof(normalized);
+                        System.out.println("============ Vampire Output Preprocessed =============");
+
+                    }else { // First-Order Formula
+                        System.out.println(" -- First Order Formula Detected - Attempring to run normal Vampire");
+                        vampire = Boolean.TRUE.equals(modensPonens)
+                                ? kb.askVampireModensPonens(stmt, timeout, maxAnswers)
+                                : kb.askVampire(stmt, timeout, maxAnswers);
+                    }
+
+                    if (vampire == null || vampire.output == null){
+                        out.println("<font color='red'>Error. No response from Vampire.</font>");
+                    } else {
                         com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                         tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
@@ -654,6 +761,8 @@
                             }
                         }
                     }
+
+
                 } else if ("LEO".equals(inferenceEngine)) {
                     kb.leo = kb.askLeo(stmt,timeout,maxAnswers);
                     if (kb.leo == null || kb.leo.output == null) out.println("<font color='red'>Error. No response from LEO-III.</font>");

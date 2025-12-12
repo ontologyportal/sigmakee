@@ -19,6 +19,7 @@ import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
+import com.esotericsoftware.minlog.Log;
 
 import java.io.*;
 import java.util.*;
@@ -40,6 +41,9 @@ public class Vampire {
     public static int axiomIndex = 0;
     public enum ModeType {AVATAR, CASC, CUSTOM}; // Avatar is faster but doesn't provide answer variables.
                                                  // Custom takes value from env var
+    public enum Logic { FOL, HOL }
+
+    public Logic logic = Logic.FOL;
     public static ModeType mode = null;
     public static boolean debug = false;
     public static boolean askQuestion = true;
@@ -97,18 +101,25 @@ public class Vampire {
 
         String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder();
-        if (mode == ModeType.AVATAR)
+
+        if (mode == ModeType.AVATAR) {
             opts.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space);
-        if (mode == ModeType.CASC)
+        } else if (mode == ModeType.CASC) {
             opts.append("--mode").append(space).append("casc").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
-        if (mode == ModeType.CUSTOM)
+        } else if (mode == ModeType.CUSTOM) {
             opts.append(System.getenv("VAMPIRE_OPTS"));
+        } else {
+            System.err.println("Error in Vampire.createCustomCommandList(): no mode selected");
+        }
+
+
         for (String s : commands)
             opts.append(s).append(space);
         if (timeout != 0) {
             opts.append("-t").append(space);
             opts.append(timeout).append(space);
         }
+
         opts.append(kbFile.toString());
         String[] optar = opts.toString().split(Formula.SPACE);
         String[] cmds = new String[optar.length + 1];
@@ -230,7 +241,13 @@ public class Vampire {
     public void runCustom(File kbFile, int timeout, Collection<String> commands) throws Exception {
 
         output = new ArrayList<>();
-        String vampex = KBmanager.getMgr().getPref("vampire");
+        String vampex = "";
+        if (logic == Logic.HOL) {
+            vampex = KBmanager.getMgr().getPref("vampire_hol");
+        }else{
+            vampex = KBmanager.getMgr().getPref("vampire");
+        }
+
         if (StringUtil.emptyString(vampex)) {
             System.err.println("Error in Vampire.runCustom(): no executable string in preferences");
         }
@@ -263,7 +280,6 @@ public class Vampire {
         int exitValue = _vampire.waitFor();
         if (exitValue != 0) {
             System.err.println("Error in Vampire.run(): Abnormal process termination");
-            System.err.println(output);
         }
         System.out.println("Vampire.run() done executing");
     }

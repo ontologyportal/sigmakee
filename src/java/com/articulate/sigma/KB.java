@@ -71,7 +71,9 @@ import com.google.common.collect.Sets;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -1971,7 +1973,6 @@ public class KB implements Serializable {
      * @param maxAnswers
      * @return
      */
-
     public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers){
 
         // STEP 1
@@ -2015,7 +2016,17 @@ public class KB implements Serializable {
     }
 
 
-
+    /**
+     * Executes a Vampire theorem prover query on a given TPTP problem file.
+     * This method validates included files in TPTP format, processes the result
+     * by running multiple configurations of Vampire, and optionally applies
+     * modus ponens reasoning or drops one-premise formulas.
+     *
+     * @param test_path The file path to the TPTP problem file to be processed.
+     * @param timeout The maximum amount of time (in seconds) allowed for the inference process.
+     * @param maxAnswers The maximum number of answers to retrieve from the theorem prover.
+     * @return A Vampire object containing the results of the theorem prover execution, including output and proofs.
+     */
     public Vampire askVampireTPTP(String test_path, int timeout, int maxAnswers){
 
         String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
@@ -2046,8 +2057,7 @@ public class KB implements Serializable {
             cmds.add(includesPath);
         }
 
-
-        // STEP 1 - First TPTP pass (main proof)
+        // First TPTP pass (main proof)
         Vampire vampire = new Vampire();
 
         try{
@@ -2056,9 +2066,7 @@ public class KB implements Serializable {
             System.out.println("-- ERROR KB.askVampireTPTP runCustom: "+e.getMessage());
         }
 
-        System.out.println("---- 2 ----");
-
-        // STEP 2 - Second TPTP pass (modus Ponens)
+        // Second TPTP pass (modus Ponens)
         if (modensPonens) {
             List<String> cmds_modus_ponens = Arrays.asList(
                     "--input_syntax","tptp",
@@ -2078,23 +2086,246 @@ public class KB implements Serializable {
                 System.out.println("-- ERROR KB.askVampireModusPonens: "+e.getMessage());
             }
 
-            // STEP 3 - Drop One Premise Formulas
+            // Drop One Premise Formulas
             if (dropOnePremiseFormulas) {
                 vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
             }
 
             vampire = vampire_pomens;
         }
-
-        // STEP 6
         return vampire;
+    }
+
+
+    /**
+     * Executes the Vampire automated theorem prover with higher-order logic (HOL) mode
+     * on a given THF problem file. This method processes the includes
+     * and runs the Vampire prover with the specified parameters.
+     *
+     * @param test_path The file path of the TPTP problem to be processed.
+     * @param timeout The maximum amount of time (in seconds) that Vampire is allowed to run.
+     * @param maxAnswers The maximum number of answers that Vampire should produce (not currently used in logic).
+     * @return A Vampire instance populated with the results of the proof attempt.
+     */
+    public Vampire askVampireTHF(String test_path, int timeout, int maxAnswers) {
+
+        String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
+        String includesPath = testDir + File.separator + "includes";
+
+        File test = new File(test_path);
+        List<String> includes = TPTPutil.extractIncludesFromTPTP(test);
+
+        if (!includes.isEmpty()) {
+            String error = TPTPutil.validateIncludesInTPTPFiles(includes, includesPath);
+            if (error != null) {
+                System.err.println(error);
+            }
+        }
+
+        List<String> cmds = new ArrayList<>(Arrays.asList(
+                "--input_syntax", "tptp",
+                "--proof", "tptp",   // <-- TSTP-style proof lines
+                "--output_axiom_names","on",
+                "--mode","portfolio",
+                "--schedule","snake_slh"
+        ));
+
+        // This HOL Vampire version (4.8) does not support "-qa plain"
+        if (!includes.isEmpty()){
+            cmds.add("--include");
+            cmds.add(includesPath);
+        }
+
+        Vampire vampire = new Vampire();
+        vampire.logic = Vampire.Logic.HOL;
+        try{
+            vampire.runCustom(test, timeout, cmds);
+        } catch (Exception e){
+            System.out.println("-- ERROR KB.askVampireTHF runCustom: "+e.getMessage());
+        }
+        return vampire;
+    }
+
+    /**
+     * Ask Vampire HOL using the existing <kbName>.thf axioms.
+     * Input  : SUO-KIF query string (stmt).
+     * Output : Vampire object with HOL proof output.
+     */
+    public Vampire askVampireHOL(String stmt, int timeout, int maxAnswers, boolean useModals) {
+
+        KBmanager mgr = KBmanager.getMgr();
+        Vampire v = new Vampire();
+
+        if (useModals)
+            System.out.println("==== Using Modals/HOL mode ====");
+        else
+            System.out.println("==== Using plain HOL mode ====");
+
+        try {
+            String kbDir = mgr.getPref("kbDir");
+            String sep   = File.separator;
+
+            if (debug) {
+                System.out.println("KB.askVampireHOL(): kbDir: " + kbDir);
+                System.out.println("KB.askVampireHOL(): stmt: " + stmt);
+                System.out.println("KB.askVampireHOL(): timeout: " + timeout + " maxAnswers: " + maxAnswers);
+            }
+
+            // -------- 1. Ensure base <kb>.thf exists (modal vs plain) --------
+            String kbThfFile = "";
+            if (useModals) {
+                kbThfFile = this.name + "_modals.thf";
+            }else{
+                kbThfFile = this.name + "_plain.thf";
+            }
+
+            String kbThfPath = kbDir + sep + kbThfFile;
+            File thfAxioms = new File(kbThfPath);
+            if (!thfAxioms.exists()) {
+                System.out.println("KB.askVampireHOL(): no such file: " + kbThfPath + ". Creating it.");
+                // Generate SUMO.thf
+                if (useModals) {
+                    // using the modal THF exporter
+                    THFnew.transModalTHF(this);
+                }else{
+                    THFnew.transPlainTHF(this);
+                }
+            }
+
+            // -------- 2. Create problem file: axioms + conjecture --------
+            // TODO: Remove the file after DEBUG phase
+            String problemPath = kbDir + sep + "hol_query_" + System.currentTimeMillis() + ".thf";
+            if (debug)
+                System.out.println("KB.askVampireHOL(): Problem THF file: " + problemPath);
+
+            // 1) Copy SUMO.thf to the problem file in one shot
+            Path source = Paths.get(kbThfPath);
+            Path target = Paths.get(problemPath);
+            Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+
+            if (debug)
+                System.out.println("KB.askVampireHOL(): Copied axioms to problem file.");
+
+            try (BufferedWriter out = new BufferedWriter(new FileWriter(problemPath, true))) {
+
+                out.newLine();
+                out.write("% --------------------");
+                out.write("% User HOL conjecture");
+                out.write("% --------------------");
+                out.newLine();
+
+                // 2b. Translate the SUO-KIF query (stmt) into THF using Modals + THFnew.
+
+                // -------- 3. Parse SUO-KIF query --------
+                Formula f = new Formula();
+                f.read(stmt);
+
+                if (debug)
+                    System.out.println("KB.askVampireHOL(): Original Formula: " + f.getFormula());
+
+                // 3a. Optional: expand modals and insert world args
+                if (useModals){
+                    f = Modals.processModals(f, this);
+                    if (debug) System.out.println("KB.askVampireHOL(): Modalized Formula: " + f.getFormula());
+                }
+
+                // -------- 4. Preprocess (Skolemization, simplifications, etc.) --------
+                FormulaPreprocessor fp = new FormulaPreprocessor();
+                // second argument "true" indicates this is a query/conjecture
+                Set<Formula> processed = fp.preProcess(f, true, this);
+
+                if (debug) {
+                    System.out.println("KB.askVampireHOL(): Number of preprocessed formulas: " + processed.size());
+                    for (Formula pfDbg : processed)
+                        System.out.println("KB.askVampireHOL(): Preprocessed formula: " + pfDbg.getFormula());
+                }
+
+                // Build base type map from types in the *original* (possibly modalized) formula
+                f.varTypeCache.clear();  // force recomputation of types
+                Map<String, Set<String>> typeMap = fp.findAllTypeRestrictions(f, this);
+                typeMap.putAll(f.varTypeCache);
+
+                if (debug)
+                    System.out.println("KB.askVampireHOL(): Initial typeMap: " + typeMap);
+
+                // 4a. If using modals, add a world variable type once
+                String worldVar = null;
+                if (useModals) {
+                    worldVar = THFnew.makeWorldVar(this, f);
+                    Set<String> wTypes = new HashSet<>();
+                    wTypes.add("World");
+                    typeMap.put(worldVar, wTypes);
+
+                    if (debug) {
+                        System.out.println("KB.askVampireHOL(): worldVar: " + worldVar);
+                        System.out.println("KB.askVampireHOL(): typeMap after adding worldVar: " + typeMap);
+                    }
+                }
+
+                int conjIndex = 0;
+
+                /*
+                 * For each preprocessed query formula:
+                 * 1 - Fix variable-arity predicate names after adding worlds.
+                 * 2 - If it’s an (instance ?X Class) fact, make it hold in all worlds.
+                 * 3 - Translate it to THF using the same logic as axioms.
+                 * 4 - Emit it as a thf(...,conjecture,...) clause in the query file.
+                 */
+                // -------- 5. Translate each preprocessed formula to THF --------
+                for (Formula pf : processed) {
+
+                    // 5a. Modal-specific adjustments ONLY when useModals == true
+                    if (useModals) {
+
+                        // Handle variable-arity after worlds (if you still keep this hack)
+                        if (THFnew.variableArity(this, pf.car())) {
+                            pf = THFnew.adjustArity(this, pf);
+                        }
+
+                        // Special case: (instance ?X Class) -> forall worldVar ...
+                        if (worldVar != null &&
+                                pf.getFormula().startsWith("(instance ") &&
+                                pf.getFormula().endsWith("Class)")) {
+
+                            pf.read("(forall (" + worldVar + ") " +
+                                    pf.getFormula().substring(0, pf.getFormula().length() - 1) +
+                                    " " + worldVar + "))");
+
+                            Set<String> types = new HashSet<>();
+                            types.add("World");
+                            pf.varTypeCache.put(worldVar, types);
+                        }
+                    }
+
+                    // 5c. Translate to THF using the same engine as axioms (query=true)
+                    String thfQuery = THFnew.process(new Formula(pf), typeMap, true);
+
+                    String conjName = "user_conj_" + (conjIndex++);
+                    String final_query = "thf(" + conjName + ",conjecture," + thfQuery + ").\n";
+                    out.write(final_query);
+                    if (debug)
+                        System.out.println("KB.askVampireHOL(): final query: " + final_query);
+                }
+            }
+            // -------- 6. Actually call Vampire on problemPath (unchanged) --------
+            if (debug)
+                System.out.println("------ KB.askVampireHOL(): Asking Vampire");
+            v = askVampireTHF(problemPath, timeout, maxAnswers);
+            if (debug)
+                System.out.println("------ KB.askVampireHOL(): Vampire Finished");
+            return v;
+        }catch (Exception e) {
+            System.out.println("KB.askVampireHOL(): Exception: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 
 
 
     /***************************************************************
-     * Return a SUMO-formatted proof string
-     */
+         * Return a SUMO-formatted proof string
+         */
     public String askVampireFormat(String suoKifFormula, int timeout, int maxAnswers) {
 
         StringBuilder sb = new StringBuilder();

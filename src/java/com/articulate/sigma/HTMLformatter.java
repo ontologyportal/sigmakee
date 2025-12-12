@@ -208,7 +208,7 @@ public class HTMLformatter {
         f.read(ProofProcessor.removeNestedAnswerClause(f.getFormula()));
         String kbHref = HTMLformatter.createKBHref(kbName, language);
 
-        if (f.getFormula().equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.
+        if (f.getFormula().equalsIgnoreCase("FALSE") || f.getFormula().equalsIgnoreCase("(FALSE)")) {        // Successful resolution theorem proving results in a contradiction.
             f.read("true");                           // Change "FALSE" to "True" so it makes more sense to the user.
             result.append("<td valign=\"top\" width=\"50%\">" + "QED" + "</td>");
         }

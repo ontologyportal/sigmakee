@@ -31,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import tptp_parser.*;
@@ -1326,6 +1327,242 @@ public class TPTP3ProofProcessor {
         }
         return result;
     }
+
+    public static List<String> reorderVampire4_8 (List<String> cleaned){
+
+        // 1. Locate proof section
+        int start = -1, end = -1;
+        for (int i = 0; i < cleaned.size(); i++) {
+            if (cleaned.get(i).contains("SZS output start")) start = i;
+            if (cleaned.get(i).contains("SZS output end"))   { end = i; break; }
+        }
+
+        // 2. If there is no proper proof block, do not try to reorder
+        if (start < 0 || end < 0 || end <= start) {
+            // No proof (e.g. Vampire timed out, SAT, UNKNOWN, truncated output)
+            return cleaned;
+        }
+
+        // 3. Split into before / proof / after
+        List<String> before = (start > 0) ? cleaned.subList(0, start) : Collections.emptyList();
+        List<String> proof  = (start >= 0 && end > start) ? new ArrayList<>(cleaned.subList(start+1, end)) : new ArrayList<>();
+        List<String> after  = (end >= 0 && end+1 < cleaned.size()) ? cleaned.subList(end+1, cleaned.size()) : Collections.emptyList();
+
+        // 4. Reorder only the proof lines
+        List<String> proofReordered = TPTP3ProofProcessor.reorderVampireProofAnyDialect(proof);
+
+        // 5. Put everything back together
+        List<String> normalized = new ArrayList<>(before);
+        normalized.add(cleaned.get(start));
+        normalized.addAll(proofReordered);
+        normalized.add(cleaned.get(end));
+        normalized.addAll(after);
+        return normalized;
+    }
+
+
+    /**
+     * Reorder a Vampire 4.8-style reverse proof into 5.0-style forward order.
+     * Works for FOF/TFF/THF (and CNF) blocks. Input and output are lists of lines.
+     *
+     * Expected input: ONLY the proof section lines (between SZS start/end).
+     * If you pass the whole file, non-formula lines will be preserved around the reordered blocks.
+     */
+    public static List<String> reorderVampireProofAnyDialect(List<String> lines) {
+
+        // ---- Dialects we recognise as "formula blocks" ----
+        final Set<String> DIALECTS = new LinkedHashSet<>(Arrays.asList("fof(", "tff(", "thf(", "cnf("));
+
+        // id is the 1st argument inside the parentheses, up to the first comma.
+        final Pattern HEAD_ID =
+                Pattern.compile("^\\s*(fof|tff|thf|cnf)\\(([^,\\s]+)\\s*,", Pattern.CASE_INSENSITIVE);
+
+        // Grab only parents from the [...] that follows inference(...) or introduced(...)
+        final Pattern PARENTS =
+                Pattern.compile("(?:inference|introduced)\\([^\\]]*\\[(.*?)\\]\\)", Pattern.CASE_INSENSITIVE);
+
+        // Only accept formula ids like f1234
+        final Pattern FORMULA_ID = Pattern.compile("\\bf\\d+\\b", Pattern.CASE_INSENSITIVE);
+
+        // Parent ids inside the block: be liberal—Vampire usually uses fNNN.
+        // We accept tokens like f123, t456, c789, etc.
+        final Pattern ANY_ID_TOKEN = Pattern.compile("\\b[a-z]\\d+\\b", Pattern.CASE_INSENSITIVE);
+
+        // --- Split into three buckets: prefix (non-formula), blocks (formula items), suffix (non-formula) ---
+        List<String> prefix = new ArrayList<>();
+        List<String> suffix = new ArrayList<>();
+        List<ProofItem> items = new ArrayList<>();
+
+        boolean seenBlock = false;
+        boolean collecting = false;
+        List<String> cur = new ArrayList<>();
+        int appearanceIdx = 0; // stable order within the original proof
+
+        for (String ln : lines) {
+            String trimmed = ln.trim();
+            boolean startsBlock = DIALECTS.stream().anyMatch(d -> trimmed.startsWith(d));
+            if (!collecting && !seenBlock && !startsBlock) {
+                // Still before first block
+                prefix.add(ln);
+                continue;
+            }
+            if (startsBlock && !collecting) {
+                collecting = true;
+                seenBlock = true;
+                cur.clear();
+            }
+            if (collecting) {
+                cur.add(ln);
+                if (trimmed.endsWith(").")) {
+                    String blockText = String.join("\n", cur);
+                    Matcher m = HEAD_ID.matcher(cur.get(0));
+                    String id = null;
+                    if (m.find()) id = m.group(2); // raw id token (e.g., f5276)
+
+                    if (id == null) {
+                        // If we cannot parse, treat as non-formula noise
+                        suffix.addAll(cur);
+                    } else {
+                        // NEW: collect parents only from [ ... ] inside inference(...) / introduced(...)
+                        Set<String> parents = new LinkedHashSet<>();
+
+                        Matcher br = PARENTS.matcher(blockText);
+                        while (br.find()) {
+                            String inside = br.group(1);              // content of [...]
+                            Matcher ids = FORMULA_ID.matcher(inside); // f123, f77, etc.
+                            while (ids.find()) {
+                                String pid = ids.group();
+                                if (!pid.equalsIgnoreCase(id)) {
+                                    parents.add(pid);
+                                }
+                            }
+                        }
+                        boolean containsFalse = blockText.contains("$false");
+                        items.add(new ProofItem(id, blockText, parents, appearanceIdx++, containsFalse));
+                    }
+                    collecting = false;
+                    cur.clear();
+                }
+                continue;
+            }
+            // After we’ve seen blocks, any stray non-formula lines go to suffix
+            suffix.add(ln);
+        }
+
+        // If nothing to reorder, return original
+        if (items.isEmpty()) return new ArrayList<>(lines);
+
+        // Find the $false node (target). If multiple, pick the last by appearance.
+        ProofItem falseItem = null;
+        for (ProofItem it : items) if (it.containsFalse) falseItem = it;
+
+        // If no $false present, nothing to derive a frontier from; keep original
+        if (falseItem == null) return new ArrayList<>(lines);
+
+        // Build quick lookup by id
+        Map<String, ProofItem> byId = new HashMap<>();
+        for (ProofItem it : items) byId.put(it.id, it);
+
+        // Compute the subset reachable backwards from $false (typical proof-relevant subgraph)
+        Set<String> reachable = new LinkedHashSet<>();
+        Deque<String> stack = new ArrayDeque<>();
+        stack.push(falseItem.id);
+        while (!stack.isEmpty()) {
+            String id = stack.pop();
+            if (!reachable.add(id)) continue;
+            for (String p : byId.getOrDefault(id, ProofItem.EMPTY).parents) {
+                if (byId.containsKey(p)) stack.push(p);
+            }
+        }
+
+        // Topological sort over the reachable subgraph
+        Map<String, Integer> indeg = new HashMap<>();
+        Map<String, Set<String>> children = new HashMap<>();
+        for (String id : reachable) {
+            indeg.put(id, 0);
+            children.put(id, new LinkedHashSet<>());
+        }
+        for (String id : reachable) {
+            ProofItem it = byId.get(id);
+            if (it == null) continue;
+            for (String p : it.parents) {
+                if (!reachable.contains(p)) continue;
+                children.get(p).add(id);
+                indeg.put(id, indeg.get(id) + 1);
+            }
+        }
+
+        // Seed with in-degree 0 nodes (premises). Tie-break by numeric part if present, otherwise by appearance order.
+        Comparator<String> idCmp = (a, b) -> {
+            long na = numericTail(a), nb = numericTail(b);
+            if (na != -1 && nb != -1) return Long.compare(na, nb);
+            // fallback: appearance index
+            return Integer.compare(byId.get(a).appearance, byId.get(b).appearance);
+        };
+        PriorityQueue<String> q = new PriorityQueue<>(idCmp);
+        for (Map.Entry<String,Integer> e : indeg.entrySet()) if (e.getValue() == 0) q.add(e.getKey());
+
+        List<String> topo = new ArrayList<>();
+        while (!q.isEmpty()) {
+            String u = q.poll();
+            topo.add(u);
+            for (String v : children.getOrDefault(u, Collections.emptySet())) {
+                indeg.put(v, indeg.get(v) - 1);
+                if (indeg.get(v) == 0) q.add(v);
+            }
+        }
+
+        // Cycle or parse oddity: bail out, keep original
+        if (topo.size() != reachable.size()) {
+            if (debug) System.out.println("RVPA: topo/reachable mismatch, returning original order");
+            return new ArrayList<>(lines);
+        }
+        // Unreachable formula blocks (rare noise): keep them in their original order before the reachable ones
+        List<ProofItem> unreachable = new ArrayList<>();
+        for (ProofItem it : items) if (!reachable.contains(it.id)) unreachable.add(it);
+        unreachable.sort(Comparator.comparingInt(x -> x.appearance));
+
+        // Rebuild
+        List<String> out = new ArrayList<>(prefix);
+        for (ProofItem it : unreachable) out.add(it.blockText);
+        for (String id : topo) out.add(byId.get(id).blockText);
+        out.addAll(suffix);
+        return joinAndSplitStable(out);
+    }
+
+    /** Helper to keep types tidy */
+    private static final class ProofItem {
+        static final ProofItem EMPTY = new ProofItem("", "", Collections.emptySet(), -1, false);
+        final String id;
+        final String blockText;
+        final Set<String> parents;
+        final int appearance;
+        final boolean containsFalse;
+        ProofItem(String id, String blockText, Set<String> parents, int appearance, boolean containsFalse) {
+            this.id = id; this.blockText = blockText; this.parents = parents;
+            this.appearance = appearance; this.containsFalse = containsFalse;
+        }
+    }
+
+    /** Extract numeric tail from ids like f95855/t123/etc., or -1 if absent. */
+    private static long numericTail(String id) {
+        int i = id.length() - 1;
+        while (i >= 0 && Character.isDigit(id.charAt(i))) i--;
+        if (i == id.length() - 1) return -1;
+        try { return Long.parseLong(id.substring(i + 1)); } catch (Exception e) { return -1; }
+    }
+
+    /** Ensure output is a flat list of lines (preserve existing newlines inside blocks). */
+    private static List<String> joinAndSplitStable(List<String> chunks) {
+        List<String> result = new ArrayList<>();
+        for (String ch : chunks) {
+            // split on \n but keep empty lines if present
+            String[] arr = ch.split("\\R", -1);
+            Collections.addAll(result, arr);
+        }
+        return result;
+    }
+
 
     /** Format a TPTPFormula as a single fof(...) line. */
     public static String toFOFLine(final TPTPFormula f) {

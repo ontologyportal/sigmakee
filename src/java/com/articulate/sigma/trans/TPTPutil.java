@@ -363,60 +363,45 @@ public class TPTPutil {
      *
      */
     public static List<String> clearProofFile(List<String> lines) {
+        List<String> out = new ArrayList<>();
+        StringBuilder cur = null;
 
-        List<String> firstComments = new ArrayList<>();
-        List<String> lastComments = new ArrayList<>();
-        boolean beforeFOF = true;
-        boolean afterFOF = false;
-        // Keep the comments before and after the fof lines
-        for (String line : lines) {
-            String trim = line.trim();
-            if (beforeFOF && trim.startsWith("%")) {
-                firstComments.add(line);
-            } else if (trim.startsWith("fof(")) {
-                beforeFOF = false;
-            } else if (!beforeFOF && trim.startsWith("%")) {
-                afterFOF = true;
-                lastComments.add(line);
-            } else if (afterFOF && trim.startsWith("%")) {
-                lastComments.add(line);
-            }
-        }
+        // start of a TPTP formula line (FOF/TFF/THF)
+        Pattern start = Pattern.compile("^(fof|tff|thf)\\(");
 
-        // --- merge multi-line fof(...) into single lines ---
-        List<String> mergedFofs = new ArrayList<String>();
-        StringBuilder current = new StringBuilder();
-        boolean insideFof = false;
+        for (String raw : lines) {
+            String s = raw == null ? "" : raw.trim();
+            if (s.isEmpty()) continue;
 
-        for (int i = 0; i < lines.size(); i++) {
-            String trimmed = lines.get(i).trim();
-
-            // skip markers here; we'll add them explicitly later
-            if (trimmed.startsWith("%")) {
+            // If we’re currently merging a multi-line TPTP item
+            if (cur != null) {
+                cur.append(' ').append(s);
+                if (s.endsWith(").")) {             // end of the item
+                    out.add(cur.toString());
+                    cur = null;
+                }
                 continue;
             }
 
-            if (trimmed.startsWith("fof(")) {
-                insideFof = true;
-                current.setLength(0);
-                current.append(trimmed);
-            } else if (insideFof) {
-                current.append(" ").append(trimmed);
+            // New TPTP item starts
+            if (start.matcher(s).find()) {
+                cur = new StringBuilder(s);
+                if (s.endsWith(").")) {             // single-line case
+                    out.add(cur.toString());
+                    cur = null;
+                }
+                continue;
             }
 
-            if (insideFof && trimmed.endsWith(").")) {
-                mergedFofs.add(current.toString());
-                insideFof = false;
+            // Keep useful non-formula lines (comments and SZS markers/answers)
+            if (s.startsWith("%") || s.startsWith("SZS ")) {
+                out.add(raw);
             }
         }
 
-        // --- 3) build the final list: status + start + merged fof + end ---
-        List<String> finalLines = new ArrayList<String>();
-        finalLines.addAll(firstComments);
-        finalLines.addAll(mergedFofs);
-        finalLines.addAll(lastComments);
-
-        return finalLines;
+        // Flush unterminated item just in case
+        if (cur != null) out.add(cur.toString());
+        return out;
     }
 
     /**

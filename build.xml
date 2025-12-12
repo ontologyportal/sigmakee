@@ -500,6 +500,7 @@
         <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${programs.dir}/E/PROVER/e_ltb_runner"/>
         <replace file="${sigma.home}/KBs/config.xml" token="/usr/local/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests" value="${programs.dir}/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests"/>
         <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/Programs/vampire/build/vampire" value="${programs.dir}/vampire/build/vampire"/>
+        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/Programs/vampire/build_hol/vampire" value="${programs.dir}/vampire/build_hol/vampire"/>
     </target>
     <target name="retrieve.E">
         <get src="http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.6/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
@@ -563,7 +564,17 @@
             <arg value="make"/>
         </exec>
     </target>
+
     <target name="build.vampire">
+
+        <echo message="=== Building HOL Vampire (branch: ahmed-new-hol) ==="/>
+
+        <exec executable="git" dir="${programs.dir}/vampire">
+            <arg value="checkout"/>
+            <arg value="master"/>
+        </exec>
+
+        <!-- Normal Vampire build -->
         <mkdir dir="${programs.dir}/vampire/build"/>
         <exec executable="cmake" dir="${programs.dir}/vampire/build">
             <arg value=".."/>
@@ -572,6 +583,47 @@
             <arg value="-c"/>
             <arg value="make"/>
         </exec>
+
+        <!-- Build HOL Vampire in separate directory -->
+        <echo message="=== Building HOL Vampire (branch: ahmed-new-hol) ==="/>
+
+        <!-- Switch to HOL branch -->
+        <exec executable="git" dir="${programs.dir}/vampire">
+            <arg value="checkout"/>
+            <arg value="ahmed-new-hol"/>
+        </exec>
+
+        <!-- Create HOL build directory -->
+        <mkdir dir="${programs.dir}/vampire/build_hol"/>
+
+        <!-- Configure HOL build -->
+        <!-- Configure HOL build -->
+        <exec executable="cmake" dir="${programs.dir}/vampire/build_hol" failonerror="true">
+            <arg value=".."/>
+            <arg value="-DCMAKE_BUILD_TYPE=Release"/>
+            <arg value="-DCMAKE_BUILD_HOL=On"/>
+            <arg value="-DCMAKE_DISABLE_FIND_PACKAGE_Z3=ON"/>
+        </exec>
+
+        <!-- Compile HOL Vampire -->
+        <exec executable="sh" dir="${programs.dir}/vampire/build_hol">
+            <arg value="-c"/>
+            <arg value="make"/>
+        </exec>
+
+        <!-- Copy and rename whatever is in build_hol/bin to build_hol/vampire -->
+        <copy todir="${programs.dir}/vampire/build_hol" overwrite="true">
+            <fileset dir="${programs.dir}/vampire/build_hol/bin">
+                <include name="*"/>
+            </fileset>
+            <mapper type="glob" from="*" to="vampire"/>
+        </copy>
+
+        <!-- Make sure it's executable -->
+        <chmod file="${programs.dir}/vampire/build_hol/vampire" perm="755"/>
+
+        <echo message="HOL Vampire executable created at: ${programs.dir}/vampire/build_hol/vampire"/>
+
     </target>
 
     <!-- If Vampire fails to build on Hamming, here is an alternate source of the binary, but may not work due to sys arch type differences -->
