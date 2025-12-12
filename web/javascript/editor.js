@@ -267,6 +267,17 @@ document.addEventListener("DOMContentLoaded", async function() {
   reorderTabs();
 });
 
+document.addEventListener("click", function (e) {
+  const entry = e.target.closest(".error-entry");
+  if (!entry) return;
+
+  const line  = Number(entry.dataset.line || 1);
+  const start = Number(entry.dataset.start || 0);
+
+  jumpToError(line, start);
+});
+
+
 // ======================================================
 // 7. EDITOR CORE FUNCTIONS
 // ======================================================
@@ -329,11 +340,10 @@ function onEditorChange() {
   }, CHECK_DEBOUNCE_MS);
 }
 
-
-
 function renderErrorBox(errors = [], message = null) {
   const box = document.querySelector(".scroller.msg");
   if (!box) return;
+  box.innerHTML = "";
   if (message) {
     box.classList.remove("success");
     box.classList.add("errors-box");
@@ -344,16 +354,24 @@ function renderErrorBox(errors = [], message = null) {
     box.classList.remove("errors-box");
     box.classList.add("success");
     box.textContent = "✅ No errors found.";
-  } else {
-    box.classList.remove("success");
-    box.classList.add("errors-box");
-    box.textContent = errors.map(e => {
-      const sev = Number(e.type) === 1 ? "WARNING" : "ERROR";
-      const lineHuman = (Number(e.line) ?? 0);
-      const colHuman  = (Number(e.start) ?? 0) + 1;
-      return `${sev} ${e.file ? e.file : "(buffer)"}:${lineHuman}:${colHuman}\n${e.msg || ""}`;
-    }).join("\n\n");
+    return;
   }
+  box.classList.remove("success");
+  box.classList.add("errors-box");
+  errors.forEach((e, idx) => {
+    if (idx > 0) box.appendChild(document.createElement("br"));
+    const div = document.createElement("div");
+    div.className = "error-entry";
+    div.dataset.line  = String(e.line ?? 1);
+    div.dataset.start = String(e.start ?? 0);
+    div.dataset.end   = String(e.end ?? 0);
+    const sev = Number(e.type) === 1 ? "WARNING" : "ERROR";
+    const lineHuman = Number(e.line ?? 0);
+    const colHuman  = Number(e.start ?? 0) + 1;
+    div.textContent =
+      `${sev} ${e.file ? e.file : "(buffer)"}:${lineHuman}:${colHuman}\n${e.msg || ""}`;
+    box.appendChild(div);
+  });
 }
 
 function highlightErrors(errors = [], mask = []) {
@@ -1036,3 +1054,23 @@ function handleTranslateClick(event, kind) {
 
   closeTranslateMenu();
 }
+
+function jumpToError(line, start = 0) {
+  if (!codeEditor) return;
+
+  const lineIndex = Math.max(0, line - 1);
+
+  codeEditor.focus();
+  codeEditor.setCursor({ line: lineIndex, ch: start });
+  codeEditor.scrollIntoView(
+    { line: lineIndex, ch: start },
+    100   // margin
+  );
+
+  // Optional: flash the line
+  const handle = codeEditor.addLineClass(lineIndex, "background", "error-flash");
+  setTimeout(() => {
+    if (handle) codeEditor.removeLineClass(lineIndex, "background", "error-flash");
+  }, 800);
+}
+

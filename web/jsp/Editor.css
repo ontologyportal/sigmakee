@@ -160,3 +160,18 @@ body {font-family: system-ui, sans-serif;}
   pointer-events: none;  /* not clickable */
   opacity: 0.6;
 }
+
+.error-entry {
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.error-entry:hover {
+  background-color: rgba(220, 53, 69, 0.12);
+}
+
+.error-flash {
+  background-color: rgba(255, 0, 0, 0.15) !important;
+  transition: background-color 0.8s ease;
+}

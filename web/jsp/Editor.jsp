@@ -71,7 +71,6 @@
             <span class="dropdown-file-label" onclick="toggleFileMenu(event)">File ></span>
             <span class="dropdown-file-label" onclick="formatBuffer()">Format</span>
             <span class="dropdown-file-label" onclick="openHelpModal()">Help</span>
-
             <div class="dropdown-content" id="dropdownContent">
               <div class="submenu">
                 <a href="#" class="submenu-label">New ></a>
@@ -90,6 +89,10 @@
               <a href="#" onclick="downloadFile()">Download</a>
               <a href="#" onclick="triggerFileUpload()">Upload</a>
             </div>
+            <label class="switch">
+              <input type="checkbox">
+              <span class="slider round"></span>
+            </label>
           </div>
 
           <!-- NEW: Translate dropdown -->
@@ -151,9 +154,16 @@
           }
           boolean first = true;
           for (ErrRec e : errors) {
-              if (!first) out.print("<br/><br/>");
-              out.print(esc(e.toString()));
-              first = false;
+            if (!first) out.print("<br/>");
+            out.print(
+              "<div class=\"error-entry\" " +
+              "data-line=\"" + e.line + "\" " +
+              "data-start=\"" + e.start + "\" " +
+              "data-end=\"" + e.end + "\">" +
+              esc(e.toString()) +
+              "</div>"
+            );
+            first = false;
           }
         }
     %>

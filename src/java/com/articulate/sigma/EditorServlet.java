@@ -20,6 +20,7 @@ import java.util.*;
         maxRequestSize = 220 * 1024
 )
 public class EditorServlet extends HttpServlet {
+    boolean debug = true;
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
@@ -209,45 +210,50 @@ public class EditorServlet extends HttpServlet {
 
     private void handleTranslateToTPTP(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
-
+        
         resp.setContentType("application/json; charset=UTF-8");
         String fileName = Optional.ofNullable(req.getParameter("fileName")).orElse("buffer.kif");
         String code = req.getParameter("code");
+        if (debug) System.out.println("editorServlet.handleTranslateToTPTP(): Entering function with following parameters... \n    File = " + fileName + "\n    Code = " + code);
         if (code == null || code.trim().isEmpty()) {
             writeJson(resp, false, "No KIF content received.", null);
             return;
         }
         try {
-            KBmanager.getMgr().initializeOnce();
-            SUMOformulaToTPTPformula.lang = "fof";
-            List<String> kifForms = splitKifFormulas(code);
-            if (kifForms.isEmpty()) {
-                writeJson(resp, false, "No complete KIF formulas found in buffer.", null);
-                return;
-            }
-            String base = fileName.replaceAll("\\.[^.]+$", ""); // strip extension
-            StringBuilder out = new StringBuilder();
-            int idx = 1;
-            for (String kif : kifForms) {
-                String tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kif, false);
-                if (tptpBody == null || tptpBody.trim().isEmpty())
-                    continue;
-                String name = (base.isEmpty() ? "buf" : base) + "_" + idx++;
-                out.append("fof(")
-                        .append(name)
-                        .append(", axiom, ")
-                        .append(tptpBody.trim())
-                        .append(").\n");
-            }
-            if (out.length() == 0) {
+            String tptp = EditorWorkerQueue.submit(() -> {
+                KBmanager.getMgr().initializeOnce();
+                SUMOformulaToTPTPformula.lang = "fof";
+                final String codeFinal = code;
+                final String fileNameFinal = fileName;
+                List<String> kifForms = splitKifFormulas(codeFinal);
+                if (kifForms.isEmpty())
+                    return null;
+                String base = fileNameFinal.replaceAll("\\.[^.]+$", "");
+                StringBuilder out = new StringBuilder();
+                int idx = 1;
+                for (String kif : kifForms) {
+                    String tptpBody =
+                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(kif, false);
+                    if (tptpBody == null || tptpBody.isBlank())
+                        continue;
+                    out.append("fof(")
+                    .append((base.isEmpty() ? "buf" : base)).append("_").append(idx++)
+                    .append(", axiom, ")
+                    .append(tptpBody.trim())
+                    .append(").\n");
+                }
+                return out.length() == 0 ? null : out.toString();
+            });
+            if (tptp == null) {
                 writeJson(resp, false, "Translation produced no output.", null);
                 return;
             }
-            writeJson(resp, true, null, out.toString());
+            writeJson(resp, true, null, tptp);
         } catch (Exception e) {
             e.printStackTrace();
             writeJson(resp, false, "Exception during translation: " + e.getMessage(), null);
         }
+
     }
 
     private void handleFormatOrCheck(HttpServletRequest req, HttpServletResponse resp)
@@ -290,9 +296,15 @@ public class EditorServlet extends HttpServlet {
         if ("format".equalsIgnoreCase(mode) || "format".equalsIgnoreCase(action)) {
             resp.setContentType("text/plain; charset=UTF-8");
             try {
-                String formatted = isTptp
-                        ? new TPTPFileChecker().formatTptpText(text, "(web-editor)")
-                        : KifFileChecker.formatKif(text);
+                final String textFinal = text;
+                final boolean isTptpFinal = isTptp;
+
+                String formatted = EditorWorkerQueue.submit(() -> {
+                    return isTptpFinal
+                        ? new TPTPFileChecker().formatTptpText(textFinal, "(web-editor)")
+                        : KifFileChecker.formatKif(textFinal);
+                });
+
                 resp.getWriter().write(formatted);
             } catch (Exception e) {
                 resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -305,9 +317,13 @@ public class EditorServlet extends HttpServlet {
         boolean[] errorMask = new boolean[lines.size()];
         String errorMessage = null;
         try {
-            errors = isTptp
-                    ? TPTPFileChecker.check(text, "(web-editor)")
-                    : KifFileChecker.check(text);
+            final String textFinal = text;
+            final boolean isTptpFinal = isTptp;
+            errors = EditorWorkerQueue.submit(() -> {
+                return isTptpFinal
+                    ? TPTPFileChecker.check(textFinal, "(web-editor)")
+                    : KifFileChecker.check(textFinal);
+            });
         } catch (Exception e) {
             errors = Collections.emptyList();
             errorMessage = "Error while checking: " + e.getMessage();
