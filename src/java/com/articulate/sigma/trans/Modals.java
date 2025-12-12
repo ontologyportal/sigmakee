@@ -186,24 +186,24 @@ public class Modals {
      */
     public static Formula handleHOLpred(Formula f, KB kb, Integer worldNum) {
 
-        StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1); // args after the head
         // Expect: flist.get(0) = "agent"/parameter, flist.get(1) = formula argument
         worldNum = worldNum + 1;
 
+        // Recursively process the “parameter” term as well
+        Formula param = processRecurse(flist.get(0), kb, worldNum - 1);
+        Formula embedded = processRecurse(flist.get(1), kb, worldNum);
+
+        StringBuilder fstring = new StringBuilder();
         fstring.append("(=> (accreln ")
-                .append(f.car())                // modal kind / operator, e.g. confersObligation, knows, desires
+                .append(f.car())          // modal operator
                 .append(Formula.SPACE)
-                .append(flist.get(0))           // parameter (e.g. USGovernment, agent)
+                .append(param.toString()) // now world-annotated
                 .append(" ?W").append(worldNum - 1)
                 .append(" ?W").append(worldNum)
-                .append(") ");
-
-        // Recursively process the embedded formula under the *new* world index.
-        fstring.append(Formula.SPACE)
-                .append(processRecurse(flist.get(1), kb, worldNum));
-
-        fstring.append(Formula.RP);
+                .append(") ")
+                .append(embedded.toString())
+                .append(Formula.RP);
 
         Formula result = new Formula();
         result.read(fstring.toString());
@@ -408,9 +408,9 @@ public class Modals {
 //                "thf(desires_tp,type,(s__desires : m)).\n" +
                 "thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__desires @ P @ W @ W))).\n" +
                 "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__knows @ P @ W @ W))).\n" +
-                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n";
+                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n" +
                 // ISSUE 6
-//                "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n";
+                "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n";
 
     }
 

@@ -619,14 +619,14 @@ public class THFnew {
         // modal relation name in argument position is rejected.
         List<String> args = f.complexArgumentsToArrayListString(0);
         String head = args.get(0);
-        if (!Modals.MODAL_RELATIONS.contains(head)) {
-            for (String a : args) {
-                if (Modals.MODAL_RELATIONS.contains(a)) {
-                    out.write("% exclude(): modal operator used as individual: " + a + "\n");
-                    return true;
-                }
-            }
-        }
+//        if (!Modals.MODAL_RELATIONS.contains(head)) {
+//            for (String a : args) {
+//                if (Modals.MODAL_RELATIONS.contains(a)) {
+//                    out.write("% exclude(): modal operator used as individual: " + a + "\n");
+//                    return true;
+//                }
+//            }
+//        }
 
         // Generic rule: if the head is NOT in allowedHeads, then none of the
         // arguments may be modal/HOL/formula predicates or modal attributes.
@@ -903,7 +903,8 @@ public class THFnew {
                         "increasesLikelihood",
                         "holdsRight",
                         "ProbabilityFn",
-                        "hasPurpose"
+                        "hasPurpose",
+                        "containsFormula"
                 ));
 
         if (exceptionFormulas.contains(functor)) {
@@ -923,7 +924,8 @@ public class THFnew {
                 if (formulaAsWorldFunction) {
                     // For deontic/epistemic predicates etc. we treat Formula args as
                     // functions from worlds to booleans: F : w > $o.
-                    sb.append("(w > $o) > ");
+//                    sb.append("(w > $o) > ");
+                    sb.append("$o > ");
                 }
                 else {
                     // For KappaFn and any other non-modal functor with a Formula arg
