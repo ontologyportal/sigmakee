@@ -25,6 +25,15 @@ public class ErrRec {
         this.msg = msg;
     }
 
+    public ErrRec() {
+        this.type = 0;
+        this.file = "";
+        this.line = 0;
+        this.start = 0;
+        this.end = 0;
+        this.msg = "";
+    }
+
     @Override
     public String toString() {
         String sev = (type == WARNING) ? "WARNING" : "ERROR";

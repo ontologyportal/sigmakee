@@ -64,15 +64,15 @@ public class Modals {
     // these are the ones you want to handle with the special HOL rewrite
     // Modal operators that take an agent and a formula as arguments are
     // (<regHOLpred> ?AGENT ?FORMULA)
+    public static final List<String> regHOL3pred = new ArrayList<>(
+            Arrays.asList("confersNorm","confersObligation", "confersRight",
+                    "deprivesNorm","hasPurposeForAgent"));
+
     public static final List<String> regHOLpred = new ArrayList<>(
-            Arrays.asList(
-                    "considers",
-                    "sees",
-                    "believes",
-                    "knows",
-                    "holdsDuring",
-                    "desires"
-            ));
+            Arrays.asList("permits","prohibits","considers","sees","believes",
+                    "knows","holdsDuring","desires","hasPurpose","describes",
+                    "disapproves","doubts","expects","holdsObligation",
+                    "holdsRight","says"));
 
     // TODO: Instead of Hard Typing check that is a subclass of NormativeAttribute
     // these are the attribute constants you can pass to modalAttribute
@@ -160,6 +160,7 @@ public class Modals {
                     "holdsDuring" // ISSUE 6
             ));
 
+
     // list that contains the allowed head predicates for the modal predicates
     public static final List<String> allowedHeads;
     static {
@@ -171,8 +172,34 @@ public class Modals {
         tmp.addAll(formulaPreds);
         allowedHeads = Collections.unmodifiableList(tmp);
     }
+    public static final Set<String> noWorld = new HashSet<>(Arrays.asList(
+            "instance","subclass","domain","domainSubclass","range","rangeSubclass",
+            "immediateInstance","immediateSubclass","disjoint","partition",
+            "exhaustiveDecomposition","successorClass","partialOrderingOn",
+            "trichotomizingOn","totalOrderingOn","disjointDecomposition",
+            "AdditionFn","MultiplicationFn","ArcCosineFn","ArcSineFn",
+            "arcTangentFn","AverageFn","CosineFn","DivisionFn","ExponentiationFn",
+            "ListSumFn","LogFn","MultiplicationFn","ReciprocalFn","RoundFn",
+            "SineFn","SquareRootFn","SubtractionFn","TangentFn"));
 
+    /***************************************************************
+     * Handle the predicates given in regHOL3pred, which have a parameter
+     * followed by a formula.
+     */
+    public static Formula handleHOL3pred(Formula f, KB kb, Integer worldNum) {
 
+        StringBuilder fstring = new StringBuilder();
+        List<Formula> flist = f.complexArgumentsToArrayList(1);
+        worldNum = worldNum + 1;
+        fstring.append("(=> (accreln3 ").append(f.car()).append(Formula.SPACE).
+                append(flist.get(0)).append(Formula.SPACE).append(flist.get(1)).
+                append(" ?W").append(worldNum - 1).append(" ?W").append(worldNum).append(") ");
+        fstring.append(Formula.SPACE).append(processRecurse(flist.get(1),kb,worldNum));
+        fstring.append(Formula.RP);
+        Formula result = new Formula();
+        result.read(fstring.toString());
+        return result;
+    }
 
     /***************************************************************
      * Handle predicates in regHOLpred that take an individual and a
@@ -250,8 +277,6 @@ public class Modals {
      */
     public static Formula processRecurse(Formula f, KB kb, Integer worldNum) {
 
-
-
         if (f.atom()) {
             return f;
         }
@@ -260,6 +285,8 @@ public class Modals {
         }
 
         if (f.listP()) {
+            if (regHOL3pred.contains(f.car()))
+                return handleHOL3pred(f,kb,worldNum);
             if (regHOLpred.contains(f.car())) {
                 return handleHOLpred(f, kb, worldNum);
             }
@@ -274,15 +301,14 @@ public class Modals {
             List<Formula> flist = f.complexArgumentsToArrayList(argStart);
             StringBuilder fstring = new StringBuilder();
             fstring.append(Formula.LP).append(f.car());
-
             // Append quantifier variable list as-is
             if (argStart == 2)
                 fstring.append(Formula.SPACE).append(f.getStringArgument(1));
 
             // Recursively process arguments
-            for (Formula arg : flist)
-                fstring.append(Formula.SPACE).append(processRecurse(arg,kb,worldNum));
-
+            for (Formula arg : flist) {
+                fstring.append(Formula.SPACE).append(processRecurse(arg, kb, worldNum));
+            }
             // Close the term / formula
             if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL))) {
                 // Pure logical symbols: no world argument (and, or, =>, <=>, =, etc.)
