@@ -29,9 +29,12 @@
             if (u != null && ps.encrypt(password).equals(u.password)) {
                 session.setAttribute("user",u.username);
                 session.setAttribute("role",u.role);
-                ServletContext siblingContext = request.getSession().getServletContext().getContext("/sigma");
-                siblingContext.setAttribute("user",u.username);
-                siblingContext.setAttribute("role",u.role);
+                session.setMaxInactiveInterval(60 * 60);
+
+                //ServletContext siblingContext = request.getSession().getServletContext().getContext("/sigma");
+                //siblingContext.setAttribute("user",u.username);
+                //siblingContext.setAttribute("role",u.role);
+
                 System.out.println("login.jsp: Set sibling context");
                 System.out.println("login.jsp: Successful login for " + u.username + " with role " + u.role);
                 response.sendRedirect("KBs.jsp");

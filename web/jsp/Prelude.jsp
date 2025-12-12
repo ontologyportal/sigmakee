@@ -45,6 +45,27 @@ String pageURLString = URLString.substring(URLString.lastIndexOf("/") + 1);
 
 String username = (String) session.getAttribute("user");
 String role = (String) session.getAttribute("role");
+
+if (username != null) {
+%>
+<script>
+let idleTimer;
+const timeoutMs = (60 - 15) * 60 * 1000;
+
+function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+        alert("You have been inactive and will be logged out in 15 minutes.");
+    }, timeoutMs);
+}
+['mousemove','keydown','click','scroll'].forEach(evt =>
+    document.addEventListener(evt, resetIdleTimer)
+);
+resetIdleTimer();
+</script>
+<%
+}
+
 if (username != null && role != null)
     System.out.println("Prelude.jsp: username:role  " + username + " : " + role);
 else

@@ -73,12 +73,28 @@
         <description>Default lead directory for all Sigma knowledge base out files</description>
     </context-param>
 
+    <filter>
+        <filter-name>SessionTimeoutFilter</filter-name>
+        <filter-class>com.articulate.sigma.SessionTimeoutFilter</filter-class>
+    </filter>
+
   <!-- <security-role>
       <role-name>tomcat</role-name>
     </security-role> -->
 
+    <filter-mapping>
+        <filter-name>SessionTimeoutFilter</filter-name>
+        <url-pattern>*.jsp</url-pattern>
+    </filter-mapping>
+
+
     <welcome-file-list>
         <welcome-file>KBs.jsp</welcome-file>
     </welcome-file-list>
+
+    <session-config>
+        <!-- Timeout in minutes -->
+        <session-timeout>60</session-timeout>
+    </session-config>
 
 </web-app>

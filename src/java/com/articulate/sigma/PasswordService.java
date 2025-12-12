@@ -32,7 +32,8 @@ import javax.servlet.annotation.WebListener;
  */
 @WebListener
 public final class PasswordService implements ServletContextListener {
-
+    
+    Boolean debug = true;
     private static PasswordService instance;
 
     // open the password DB as a server so both Sigma and SigmaNLP can access at once
@@ -220,17 +221,18 @@ public final class PasswordService implements ServletContextListener {
      */
     public void mailModerator(User user) {
 
-        String destmailid = user.attributes.get("email");
-        /* Environment variables temporarily overwritten, hardcoded a burner email for now. */
-        // String from = System.getenv("SIGMA_EMAIL_ADDRESS");
-        // final String pwd = System.getenv("SIGMA_EMAIL_PASS");
-        // final String uname = System.getenv("SIGMA_EMAIL_USER");
-        // String smtphost = System.getenv("SIGMA_EMAIL_SERVER");
+        List<String> adminEmails = getAdminEmails();
+        if (debug) System.out.println("PasswordService.mailModerator() Admins:\n" + adminEmails);
+        if (adminEmails.isEmpty()) {
+            System.err.println("ERROR: No admin emails found. Cannot send moderator request.");
+            return;
+        }
+        String destmailid = String.join(",", adminEmails);
 
-        String from = "simgauserverif@gmail.com";
-        final String pwd = "kouojgulatnaeuaq";
-        final String uname = from;
-        String smtphost = "smtp.gmail.com";
+        String from = KBmanager.getMgr().getPref("smtpEmailAddress");
+        final String uname = KBmanager.getMgr().getPref("smtpEmailUser");
+        final String pwd = KBmanager.getMgr().getPref("smtpEmailPassword");
+        String smtphost = KBmanager.getMgr().getPref("smtpEmailServer");
         
         String firstName = user.attributes.get("firstName");
         String lastName = user.attributes.get("lastName");
@@ -276,15 +278,45 @@ public final class PasswordService implements ServletContextListener {
             Message messageobj = new MimeMessage(sessionobj);
             messageobj.setFrom(new InternetAddress(from));
             messageobj.setRecipients(Message.RecipientType.TO,InternetAddress.parse(destmailid));
-            messageobj.setSubject("Registration request from " + firstName + " " + lastName);
-            messageobj.setText("Thank you for registering on ontologyportal " + firstName + " " + lastName + ". " +
-                    "Please reply to this message to complete your registration, which will submit your request to the moderator.\n\n" +
-                    "Dear Moderator, please approve this <a href=\"" + appURL + "\">request</a>");
+            messageobj.setSubject("SigmaKEE: Account Registration Request from " + firstName + " " + lastName);
+            String manageUsersURL = "https://" + host + ":" + port + "/sigma/ManageUsers.jsp";
+            String loginURL       = "https://" + host + ":" + port + "/sigma/login.html";
+            String safeNotRobot =
+            (notRobot == null || notRobot.trim().isEmpty())
+                ? "(No statement provided)"
+                : escapeHtml(notRobot);
+            String htmlMsg =
+                "<h2>New SigmaKEE User Registration Request</h2>" +
+                "<p>The following user has requested access to SigmaKEE:</p>" +
+                "<ul>" +
+                "<li><b>First Name:</b> " + firstName + "</li>" +
+                "<li><b>Last Name:</b> " + lastName + "</li>" +
+                "<li><b>Username:</b> " + username + "</li>" +
+                "<li><b>Email:</b> " + user.attributes.get("email") + "</li>" +
+                "<li><b>Organization:</b> " + user.attributes.get("organization") + "</li>" +
+                "</ul>" +
+                "<h3>Human Verification Statement</h3>" +
+                "<blockquote style='border-left:3px solid #ccc;padding-left:10px;color:#444'>" +
+                safeNotRobot +
+                "</blockquote>" +
+                "<hr>" +
+                "<p style='font-size:12px;color:#666'>This email was generated automatically by SigmaKEE.</p>";
+
+            messageobj.setContent(htmlMsg, "text/html; charset=utf-8");
             Transport.send(messageobj);
         }
         catch (MessagingException exp) {
             throw new RuntimeException(exp);
         }
+    }
+
+    private static String escapeHtml(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 
     /** *****************************************************************
@@ -308,8 +340,8 @@ public final class PasswordService implements ServletContextListener {
     public void onlineRegister(User u) {
 
         if (u != null)
-            // mailModerator(u);
-            System.err.println("PasswordService.onlineRegister(): User registration successful");
+            mailModerator(u);
+            // System.err.println("PasswordService.onlineRegister(): User registration successful");
         else
             System.err.println("Error in PasswordService.onlineRegister(): unable to register user");
     }
@@ -338,6 +370,37 @@ public final class PasswordService implements ServletContextListener {
         u.attributes.put("registrId",encrypt(Long.toString(System.currentTimeMillis())));
         u.toDB(conn);
         return u;
+    }
+
+    /** *****************************************************************
+     * Return a list of all admin users' email addresses.
+     */
+    public List<String> getAdminEmails() {
+
+        List<String> result = new ArrayList<>();
+
+        try (Statement stmt = conn.createStatement();
+            ResultSet res = stmt.executeQuery("SELECT username FROM USERS WHERE role='admin';")) {
+
+            while (res.next()) {
+                String uname = res.getString(1);
+                User u = User.fromDB(conn, uname);
+                if (u != null) {
+                    String email = u.attributes.get("email");
+                    if (email != null && !email.trim().isEmpty()) {
+                        result.add(email.trim());
+                    } else {
+                        System.err.println("WARNING: Admin user " + uname + " has no valid email.");
+                    }
+                }
+            }
+        }
+        catch (SQLException e) {
+            System.err.println("Error in getAdminEmails(): " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return result;
     }
 
     /** *****************************************************************
