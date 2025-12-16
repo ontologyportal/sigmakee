@@ -885,17 +885,17 @@
                     if (isHOL){ // Higher-Order Formula
                         System.out.println(" -- Higher Order Formula Detected - Attempring to run Vampire HOL ");
                         vampire = kb.askVampireHOL(stmt, timeout, maxAnswers, holUseModals);
-                        System.out.println("============ Vampire Output Returned =============");
+                        System.out.println("============ Vampire_HOL Output Returned =============");
                         List<String> cleaned = TPTPutil.clearProofFile(vampire.output);
-                        System.out.println("============ Vampire Output Cleaned =============");
+                        System.out.println("============ Vampire-HOL Output Cleaned =============");
                         for (String s:cleaned){
                             System.out.println(s);
                         }
                         // Vampire version 4.8→5.0 reordering…
                         List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
-                        System.out.println("============ Vampire Output Reordered =============");
+                        System.out.println("============ Vampire_HOL Output Reordered =============");
                         vampire.output = THFutil.preprocessTHFProof(normalized);
-                        System.out.println("============ Vampire Output Preprocessed =============");
+                        System.out.println("============ Vampire_HOL Output Preprocessed =============");
 
                     }else { // First-Order Formula
                         System.out.println(" -- First Order Formula Detected - Attempring to run normal Vampire");

@@ -253,7 +253,7 @@ public class HTMLformatter {
         result.append("</td><td width=\"40%\" valign=\"top\">");
         // if proof paraphrase in English is checked in AskTell.jsp page return the paraphrased version of the proof
         if (StringUtil.isNonEmptyString(language) && (proofParaphraseInEnglish)) {
-
+            System.out.println("HTMLFormatter STATEMENT:" + f.getFormula());
             String pph = NLGUtils.htmlParaphrase(kbHref,
                     f.getFormula(),
                     KBmanager.getMgr().getKB(kbName).getFormatMap(language),
