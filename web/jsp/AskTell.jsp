@@ -331,7 +331,7 @@
     if (kb.eprover == null && epFile.exists())
         kb.eprover = new com.articulate.sigma.tp.EProver(eproverExec);
 
-    String leoExec = KBmanager.getMgr().getPref("leo");
+    String leoExec = KBmanager.getMgr().getPref("leoExecutable");
     if (!StringUtil.emptyString(leoExec)) {
         File leoFile = new File(leoExec);
         if (kb.leo == null && leoFile.exists()) {
@@ -476,6 +476,7 @@
                 <label><input type="radio" name="testFilter" value="tff"  <%= "tff".equalsIgnoreCase(testFilter)  ? "checked":"" %>> tff</label>
                 <label><input type="radio" name="testFilter" value="thf"  <%= "thf".equalsIgnoreCase(testFilter)  ? "checked":"" %>> thf</label>
             </div>
+            <input type="hidden" name="testFilter" id="testFilterHidden" value="<%= testFilter %>">
         </div>
     </fieldset>
 
