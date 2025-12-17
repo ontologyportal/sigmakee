@@ -91,9 +91,23 @@
     <property name="reports.dir" value="${build.home}/test/results"/>
     <property name="unit.test.suite" value="com.articulate.sigma.UnitTestSuite"/>
     <property name="integration.test.suite" value="com.articulate.sigma.IntegrationTestSuite"/>
-    <property name="report.html" value="file:${basedir}/${reports.dir}/html/index.html"/>
+   <property name="report.html" value="file:${basedir}/${reports.dir}/html/index.html"/>
 
     <property environment="env"/>
+
+    <!-- External ATP tests:
+         - default ON locally
+         - default OFF on GitHub Actions
+         - allow manual override via env RUN_EXTERNAL_ATP_TESTS -->
+    <condition property="external.atp.tests.enabled" value="${env.RUN_EXTERNAL_ATP_TESTS}">
+        <isset property="env.RUN_EXTERNAL_ATP_TESTS"/>
+    </condition>
+    <condition property="external.atp.tests.enabled" value="true" else="false">
+        <not>
+            <isset property="env.GITHUB_ACTIONS"/>
+        </not>
+    </condition>
+
     <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
     <property name="dist.home" value="${tomcat.home}/webapps"/>
     <property name="dist.war" value="${dist.home}/${app.name}.war"/>
@@ -311,11 +325,15 @@
     -->
 
     <target name="test" depends="test.unit,test.integration"/>
-     <target name="test.unit" depends="prepare.test.configs,compile.test" description="Runs the UnitTestSuite">
+    <target name="test.unit" depends="prepare.test.configs,compile.test" description="Runs the UnitTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
             <jvmarg line="${run.jvmargs}"/>
+
+            <!-- Make LeoExecutableConfigTest run locally, skip on GitHub Actions -->
+            <env key="RUN_EXTERNAL_ATP_TESTS" value="${external.atp.tests.enabled}"/>
+
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="run.test.classpath"/>
@@ -510,7 +528,13 @@
         </copy>
     </target>
     <target name="sigma.config">
-        <copy tofile="${sigma.home}/KBs/config.xml" file="${sigma.src}/test/unit/java/resources/config_topAndMid.xml" overwrite="true"/>
+        <available file="${sigma.home}/KBs/config.xml" property="sigma.config.exists"/>
+
+        <copy tofile="${sigma.home}/KBs/config.xml"
+              file="${sigma.src}/test/unit/java/resources/config_topAndMid.xml"
+              overwrite="false"
+              unless="sigma.config.exists"/>
+
         <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser/workspace/sumo" value="${kbs.home}"/>
         <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser" value="${user.home}"/>
         <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${programs.dir}/E/PROVER/e_ltb_runner"/>
