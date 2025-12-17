@@ -177,11 +177,27 @@
     ============
     -->
 
-    <!-- Replace 'theuser' placeholder in test config XMLs with the actual username -->
+    <!-- Replace placeholders in test config XMLs with portable paths for the current machine -->
     <target name="prepare.test.configs" depends="init"
-            description="Update test config XML files with the current user name.">
+            description="Update test config XML files with the current user name and home directory.">
         <echo message="Updating test config XML files for user ${user.name} (home: ${user.home})"/>
-        <!-- Simple version: just swap 'theuser' -> ${user.name} -->
+
+        <!-- 1) Make home path portable (macOS: /Users/..., Linux: /home/...) -->
+        <replace token="/home/theuser" value="${user.home}">
+            <fileset dir="${basedir}">
+                <!-- Integration test configs -->
+                <include name="test/integration/java/resources/config_all.xml"/>
+                <include name="test/integration/java/resources/config_topAndMid.xml"/>
+                <include name="test/integration/java/resources/config_topOnly.xml"/>
+
+                <!-- Unit test configs -->
+                <include name="test/unit/java/resources/config_all.xml"/>
+                <include name="test/unit/java/resources/config_topAndMid.xml"/>
+                <include name="test/unit/java/resources/config_topOnly.xml"/>
+            </fileset>
+        </replace>
+
+        <!-- 2) Replace remaining username placeholder -->
         <replace token="theuser" value="${user.name}">
             <fileset dir="${basedir}">
                 <!-- Integration test configs -->
