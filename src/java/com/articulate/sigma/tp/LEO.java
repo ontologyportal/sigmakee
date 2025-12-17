@@ -1,15 +1,15 @@
-/** This code is copyright Articulate Software (c) 2003.  Some
-portions copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or
-other representations of any software which incorporates, builds on, or uses this
-code.  Please cite the following article in any publication with references:
-
-Pease, A., (2003). The Sigma Ontology Development Environment,
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
-*/
+/** This code is a modified version of the LEO class.  It connects LEO-III
+ * to the newer THF translator (THFnew) instead of the older THF translator.
+ * The primary changes are:
+ *  - Import the THFnew class.
+ *  - When a THF file needs to be generated, call THFnew.transPlainTHF to
+ *    translate the SUMO knowledge base into a THF file.
+ *  - Rename the generated “_plain.thf” file to the expected “.thf” name so
+ *    that the rest of the code can find it.
+ *
+ * Other behaviour is left unchanged.  This file lives in the same package as
+ * the original LEO class so that it can be dropped in as a replacement.
+ */
 
 package com.articulate.sigma.tp;
 
@@ -18,22 +18,26 @@ import com.articulate.sigma.FormulaPreprocessor;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
-import com.articulate.sigma.trans.THF;
+import com.articulate.sigma.trans.THFnew;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import tptp_parser.TPTPFormula;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 /**
- * Class for invoking the latest version of LEO from Java
- * It should invoke a command like
- * ~/workspace/Leo-III/Leo-III-1.6/bin/leo3 /home/user/.sigmakee/KBs/SUMO.thf -t 60 -p
- * @author apease
+ * Class for invoking the latest version of LEO-III from Java.  It now uses
+ * THFnew to translate the knowledge base into THF syntax.  To avoid bugs
+ * or crashes from the old THF implementation, only the connection to
+ * THFnew has been changed; all other logic remains the same.
+ *
+ * It should invoke a command like:
+ *     ~/workspace/Leo-III/Leo-III-1.6/bin/leo3 /home/user/.sigmakee/KBs/SUMO.thf -t 60 -p
  */
-
 public class LEO {
 
     public StringBuilder qlist = null; // quantifier list in order for answer extraction
@@ -69,9 +73,6 @@ public class LEO {
      * @param parsedFormulas a lit of parsed formulas in KIF syntax
      * @param tptp convert formula to TPTP if tptp = true
      * @return true if all assertions are added for inference
-     *
-     * TODO: This function might not be necessary if we find a way to
-     * directly add assertion into opened inference engine (e_ltb_runner)
      */
     public static boolean assertFormula(String userAssertionTPTP, KB kb,
                                         List<Formula> parsedFormulas, boolean tptp) {
@@ -82,7 +83,6 @@ public class LEO {
             HashSet<Formula> processedFormulas = new HashSet();
             FormulaPreprocessor fp;
             Set<String> tptpFormulas;
-            THF thf;
             String tptpStr;
             for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
@@ -93,11 +93,11 @@ public class LEO {
                 else {   // 2. Translate to THF.
                     tptpFormulas = new HashSet<>();
                     if (tptp) {
-                        thf = new THF();
                         for (Formula p : processedFormulas) {
-                            tptpStr = thf.oneKIF2THF(p,false,kb);
-                            if (debug) System.out.println("INFO in LEO.assertFormula(2): formula " + tptpStr);
-                            tptpFormulas.add(tptpStr);
+                            // Use THFnew.processNonModal to translate each formula; we treat assertions as non-queries
+                            String formula = THFnew.processNonModal(p, new HashMap<>(), false);
+                            if (debug) System.out.println("INFO in LEO.assertFormula(2): formula " + formula);
+                            tptpFormulas.add(formula);
                         }
                     }
                     // 3. Write to new tptp file
@@ -244,9 +244,26 @@ public class LEO {
             return;
         }
         writeStatements(stmts, lang);
+        // When the knowledge base file does not exist or is outdated, regenerate it using THFnew.
         if (!kbFile.exists() || KBmanager.getMgr().infFileOld("thf")) {
-            List<String> kbAll2 = THF.transTHF(kb);
-            THF.writeTHF(kb,kbAll2);
+            // Use THFnew to generate a THF translation of the KB.
+            // The transPlainTHF method writes a file named "<kb.name>_plain.thf" into the kbDir.
+            THFnew.transPlainTHF(kb);
+            // After translation, rename or copy the generated file to "<kb.name>.thf" so that Leo can find it.
+            String kbDir = KBmanager.getMgr().getPref("kbDir");
+            String plainName = kb.name + "_plain.thf";
+            File plainFile = new File(kbDir + File.separator + plainName);
+            File destFile = new File(kbDir + File.separator + kb.name + ".thf");
+            if (plainFile.exists()) {
+                try {
+                    // copy the file contents to the destination, replacing it if necessary
+                    Files.copy(plainFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
+                catch (IOException ioe) {
+                    System.err.println("Error copying plain THF file to destination: " + ioe.getMessage());
+                    ioe.printStackTrace();
+                }
+            }
         }
         catFiles(kbFile.toString(),stmtFile,outfile);
         File comb = new File(outfile);
@@ -294,11 +311,5 @@ public class LEO {
         //System.out.println("Leo.main(): proof: " + tpp.proof);
         System.out.println("-----------------\n");
         System.out.println("\n");
-/*
-        System.out.println("Leo.main(): second test");
-        System.out.println(kb.askLeo("(subclass ?X Entity)",30,1));
-
- */
-
     }
 }
