@@ -48,11 +48,59 @@
     </style>
 
     <style>
-        .spin-overlay { position:fixed; inset:0; background:rgba(255,255,255,.95); display:none; z-index:9999; }
-        body.busy .spin-overlay { display:block; }   /* spinner visible on the new page until load */
-        .bounce-icon { position:absolute; top:50%; left:50%; width:120px; height:120px;
-            transform:translate(-50%,-50%); animation:bounce 1.2s ease-in-out infinite; }
-        @keyframes bounce { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-60%) scale(1.1)} }
+        .spin-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,.95);
+            display: none;
+            z-index: 9999;
+        }
+        /*body.busy .spin-overlay { display: block; }*/
+
+        .spin-card {
+            position: absolute;
+            left: 50%;
+            top: 42%;
+            transform: translate(-50%,-50%);
+            background: #fff;
+            border: 1px solid #d8dee4;
+            border-radius: 10px;
+            padding: 16px 18px;
+            min-width: 420px;
+            box-shadow: 0 6px 22px rgba(0,0,0,.10);
+        }
+
+        .spin-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .bounce-icon { width: 56px; height: 56px; animation: bounce 1.2s ease-in-out infinite; }
+        @keyframes bounce {
+            0%,100% { transform: scale(1); }
+            50% { transform: translateY(-6px) scale(1.06); }
+        }
+
+        .spin-title { font-weight: 700; margin: 0; }
+        .spin-sub { color:#666; font-size: 0.92em; margin-top: 2px; }
+
+        .bar-wrap {
+            height: 10px;
+            background: #eef2f6;
+            border-radius: 999px;
+            overflow: hidden;
+            border: 1px solid #dde5ee;
+        }
+        .bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #4a90e2;
+            transition: width 80ms linear;
+        }
+
+        .spin-meta {
+            display:flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            color:#666;
+            font-size: 0.9em;
+        }
     </style>
 
     <style>
@@ -400,10 +448,27 @@
 
 <body class="<%= busy ? "busy" : "" %>" aria-busy="<%= busy %>">
 
-<div id="loading" class="spin-overlay">
-    <img src="pixmaps/sumo.gif" class="bounce-icon" alt="Loading...">
-</div>
 
+<div id="loading" class="spin-overlay" aria-live="polite" aria-atomic="true">
+    <div class="spin-card">
+        <div class="spin-row">
+            <img src="pixmaps/sumo.gif" class="bounce-icon" alt="Loading...">
+            <div>
+                <div class="spin-title">Running inference...</div>
+                <div id="spinSub" class="spin-sub">Time limit: <span id="spinLimit">30</span>s</div>
+            </div>
+        </div>
+
+        <div class="bar-wrap">
+            <div id="spinBar" class="bar-fill"></div>
+        </div>
+
+        <div class="spin-meta">
+            <span id="spinPct">0%</span>
+            <span id="spinEta">~30s remaining</span>
+        </div>
+    </div>
+</div>
 
 <form name="AskTell" id="AskTell" action="AskTell.jsp" method="POST">
     <%
@@ -642,9 +707,12 @@
 
 </form>
 
+<div id="resultsHost"></div>
+
 <table align='left' width='80%'><tr><td bgcolor='#AAAAAA'>
     <img src='pixmaps/1pixel.gif' width=1 height=1 border=0></td></tr></table><br>
 
+<div id="serverResults">
 <%
     // ===== Server-side execution for single "Run" button =====
     if ("Run".equalsIgnoreCase(req) && !syntaxError) {
@@ -1010,6 +1078,7 @@
 
     if (status != null && status.toString().length() > 0) { out.println("Status: "); out.println(status.toString()); }
 %>
+</div>
 
 <%!
     /** 1) One place to set Vampire mode */
@@ -1103,28 +1172,120 @@
 
 <p>
     <%@ include file="Postlude.jsp" %>
+        <iframe name="runFrame" id="runFrame" style="display:none;"></iframe>
+        <script>
+            (function(){
+                const form = document.getElementById('AskTell');
+                const overlay = document.getElementById('loading');
+                const frame = document.getElementById('runFrame');
 
-    <script>
-        (function(){
-            const form = document.getElementById('AskTell');
-            let clicked = null;
-            form.querySelectorAll('input[type=submit]').forEach(b =>
-                b.addEventListener('click', e => clicked = e.target.value)
-            );
-            form.addEventListener('submit', function(){
-                if (clicked === 'Run') {
-                    // show spinner on the OLD page immediately
-                    document.getElementById('loading').style.display = 'block';
+                const bar   = document.getElementById('spinBar');
+                const pct   = document.getElementById('spinPct');
+                const eta   = document.getElementById('spinEta');
+                const limit = document.getElementById('spinLimit');
+
+                let clicked = null;
+                let rafId = null;
+                let runInFlight = false;
+
+                function clampInt(n, def) {
+                    const x = parseInt(n, 10);
+                    return Number.isFinite(x) && x > 0 ? x : def;
                 }
-            });
-            // hide spinner when the NEW page is fully loaded
-            window.addEventListener('load', () => document.body.classList.remove('busy'));
-            // BFCache: ensure spinner is hidden when navigating back
-            window.addEventListener('pageshow', e => { if (e.persisted) document.body.classList.remove('busy'); });
-        })();
-    </script>
 
-    <script>
+                function stopProgress() {
+                    if (rafId) cancelAnimationFrame(rafId);
+                    rafId = null;
+                }
+
+                function startProgress(durationSec) {
+                    stopProgress();
+                    if (limit) limit.textContent = String(durationSec);
+                    if (bar) bar.style.width = '0%';
+                    if (pct) pct.textContent = '0%';
+                    if (eta) eta.textContent = `~${durationSec}s remaining`;
+
+                    const durationMs = durationSec * 1000;
+                    const start = performance.now();
+
+                    function tick(now) {
+                        const elapsed = now - start;
+                        const p = Math.min(1, elapsed / durationMs);
+
+                        if (bar) bar.style.width = (p * 100).toFixed(1) + '%';
+                        if (pct) pct.textContent = Math.floor(p * 100) + '%';
+
+                        const remaining = Math.max(0, Math.ceil((durationMs - elapsed) / 1000));
+                        if (eta) eta.textContent = remaining > 0 ? `~${remaining}s remaining` : 'Timeout reached';
+
+                        if (p < 1 && runInFlight) rafId = requestAnimationFrame(tick);
+                    }
+
+                    rafId = requestAnimationFrame(tick);
+                }
+
+                // Track which submit button was pressed
+                form.querySelectorAll('input[type=submit]').forEach(b =>
+                    b.addEventListener('click', e => clicked = e.target.value)
+                );
+
+                // Run submits into iframe so the page stays alive
+                form.addEventListener('submit', function(){
+                    if (clicked !== 'Run') {
+                        form.removeAttribute('target'); // normal for Tell
+                        return;
+                    }
+
+                    form.setAttribute('target', 'runFrame');
+
+                    const timeoutField = form.querySelector('input[name="timeout"]');
+                    const tSec = clampInt(timeoutField ? timeoutField.value : null, 30);
+
+                    runInFlight = true;
+                    overlay.style.display = 'block';
+                    startProgress(tSec);
+                });
+
+                // IMPORTANT: hide overlay when iframe finishes loading server response
+                frame.addEventListener('load', function(){
+                    if (!runInFlight) return;
+                    runInFlight = false;
+
+                    stopProgress();
+                    overlay.style.display = 'none';
+
+                    // Pull results from iframe and inject into main page
+                    try {
+                        const doc = frame.contentDocument || frame.contentWindow.document;
+                        const results = doc.getElementById('serverResults');
+                        const host = document.getElementById('resultsHost');
+
+                        if (!host) return;
+
+                        if (results) {
+                            host.innerHTML = results.innerHTML;
+                        } else {
+                            // Fallback: show something instead of "nothing"
+                            host.innerHTML = "<div style='color:#b00'>No #serverResults found in response.</div>";
+                        }
+                    } catch (e) {
+                        document.getElementById('resultsHost').innerHTML =
+                            "<div style='color:#b00'>Could not read iframe response (same-origin issue).</div>";
+                    }
+                });
+
+                // Safety: if user navigates back/forward
+                window.addEventListener('pageshow', e => {
+                    if (e.persisted) {
+                        runInFlight = false;
+                        stopProgress();
+                        overlay.style.display = 'none';
+                    }
+                });
+            })();
+        </script>
+
+        <script>
         document.addEventListener('DOMContentLoaded', function(){
             const sel = document.getElementById('testName');
             const radios = document.querySelectorAll('input[name="testFilter"]');
