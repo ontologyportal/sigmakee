@@ -131,7 +131,7 @@
     <!-- The above property can be overriden on the command line with:
          -Dinstall.home=/data/fsg, or any other path the user deems necessary
     -->
-    <property name="programs.dir" value="${install.home}/Programs"/>
+    <property name="programs.dir" value="${install.home}${file.separator}Programs"/>
 
     <condition property="isUnixNotMac">
         <and>
@@ -140,6 +140,46 @@
                 <os family="mac"/>
             </not>
         </and>
+    </condition>
+
+    <!--
+    =========================
+    External ATP configuration
+    =========================
+    -->
+
+    <!-- OS flags -->
+    <condition property="is.windows">
+        <os family="windows"/>
+    </condition>
+    <condition property="is.mac">
+        <os family="mac"/>
+    </condition>
+    <condition property="is.unix">
+        <os family="unix"/>
+    </condition>
+
+    <!-- LEO-III (Higher-Order ATP) -->
+    <property name="leo.version" value="1.7.18"/>
+
+    <!-- Leo-III ZIP on Zenodo for v1.7.18 -->
+    <property name="leo.zip.url"
+            value="https://zenodo.org/records/15149454/files/leoprover/Leo-III-v1.7.18.zip?download=1"/>
+
+    <!-- Fallback: GitHub release asset (zip) -->
+    <property name="leo.zip.url.fallback"
+            value="https://github.com/leoprover/Leo-III/releases/download/v${leo.version}/Leo-III-v${leo.version}.zip"/>
+
+    <!-- Where we download the ZIP before extracting -->
+    <property name="leo.zip.file"
+            value="${install.home}${file.separator}downloads${file.separator}Leo-III-v${leo.version}.zip"/>
+    <property name="leo.install.dir" value="${programs.dir}${file.separator}Leo-III"/>
+    <property name="leo.bin.dir" value="${leo.install.dir}${file.separator}bin"/>
+    <property name="leo.jar.file" value="${leo.bin.dir}${file.separator}leo3.jar"/>
+    <property name="leo.exec.unix" value="${leo.bin.dir}${file.separator}leo3"/>
+    <property name="leo.exec.win" value="${leo.bin.dir}${file.separator}leo3.bat"/>
+    <condition property="leo.exec.path" value="${leo.exec.win}" else="${leo.exec.unix}">
+        <os family="windows"/>
     </condition>
 
     <path id="core.sourcepath">
@@ -429,6 +469,9 @@
         <!-- Retrieve WordNet -->
         <antcall target="retrieve.wordnet"/>
 
+        <!-- Install LEO-III (Higher-Order ATP) -->
+        <antcall target="install.Leo"/>
+
         <!-- Copy config.xml, sumo and WordNet files to ${sigma.home}/KBs -->
         <antcall target="setup.sigma.home"/>
 
@@ -530,17 +573,94 @@
     <target name="sigma.config">
         <available file="${sigma.home}/KBs/config.xml" property="sigma.config.exists"/>
 
-        <copy tofile="${sigma.home}/KBs/config.xml"
-              file="${sigma.src}/test/unit/java/resources/config_topAndMid.xml"
-              overwrite="false"
-              unless="sigma.config.exists"/>
+        <antcall target="sigma.config.copy.template"/>
 
         <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser/workspace/sumo" value="${kbs.home}"/>
         <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser" value="${user.home}"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${programs.dir}/E/PROVER/e_ltb_runner"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="/usr/local/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests" value="${programs.dir}/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/Programs/vampire/build/vampire" value="${programs.dir}/vampire/build/vampire"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/Programs/vampire/build_hol/vampire" value="${programs.dir}/vampire/build_hol/vampire"/>
+
+        <!-- External ATP executables -->
+        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/leo" value="${leo.exec.path}"/>
+        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${programs.dir}${file.separator}E${file.separator}PROVER${file.separator}e_ltb_runner"/>
+
+        <replace file="${sigma.home}/KBs/config.xml" token="/usr/local/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests" value="${programs.dir}${file.separator}tomcat${file.separator}apache-tomcat-${tomcat.version}${file.separator}webapps${file.separator}sigma${file.separator}tests"/>
+        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/Programs/vampire/build/vampire" value="${programs.dir}${file.separator}vampire${file.separator}build${file.separator}vampire"/>
+        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/Programs/vampire/build_hol/vampire" value="${programs.dir}${file.separator}vampire${file.separator}build_hol${file.separator}vampire"/>
+    </target>
+    <target name="sigma.config.copy.template" unless="sigma.config.exists">
+        <copy tofile="${sigma.home}/KBs/config.xml"
+            file="${sigma.src}/test/unit/java/resources/config_topAndMid.xml"
+            overwrite="false"/>
+    </target>
+    <!--
+    =======================
+    LEO-III install (leo3)
+    =======================
+    -->
+    <target name="download.Leo.zip">
+        <mkdir dir="${sigma.install.downloads}"/>
+
+        <!-- Try Zenodo first (do NOT fail the build if Zenodo is down) -->
+        <get src="${leo.zip.url}"
+            dest="${leo.zip.file}"
+            usetimestamp="true"
+            ignoreerrors="true"/>
+
+        <!-- Did Zenodo succeed? -->
+        <available file="${leo.zip.file}" property="leo.zip.present"/>
+
+        <!-- If Zenodo failed, try GitHub fallback (also non-fatal) -->
+        <get src="${leo.zip.url.fallback}"
+            dest="${leo.zip.file}"
+            usetimestamp="true"
+            ignoreerrors="true"
+            verbose="true"/>
+
+        <!-- Final check -->
+        <available file="${leo.zip.file}" property="leo.zip.present.final"/>
+
+        <!-- If still missing, we skip Leo installation (but do NOT fail install) -->
+        <condition property="leo.skip.install">
+            <not>
+                <isset property="leo.zip.present.final"/>
+            </not>
+        </condition>
+
+        <echo message="Leo-III ZIP present? ${leo.zip.present.final}"/>
+        <echo message="Leo-III install will be skipped? ${leo.skip.install}"/>
+    </target>
+    <target name="install.Leo" depends="install.Leo.common,install.Leo.unix-perms"
+            unless="leo.skip.install"
+            description="Installs Leo-III (leo3.jar + launcher) into ${leo.install.dir}"/>
+
+    <target name="install.Leo.common" depends="download.Leo.zip" unless="leo.skip.install">
+        <mkdir dir="${leo.bin.dir}"/>
+
+        <!-- Unzip into Leo-III install dir -->
+        <unzip src="${leo.zip.file}" dest="${leo.install.dir}"/>
+
+        <!-- Copy leo3.jar from wherever it lands inside the zip into bin/leo3.jar -->
+        <copy tofile="${leo.jar.file}" overwrite="true" flatten="true">
+            <fileset dir="${leo.install.dir}">
+                <include name="**/leo3.jar"/>
+            </fileset>
+        </copy>
+
+        <!-- Create leo3 launcher for Unix-like systems -->
+        <echo file="${leo.exec.unix}" append="false"><![CDATA[#!/usr/bin/env sh
+    DIR="$(cd "$(dirname "$0")" && pwd)"
+    exec java -jar "$DIR/leo3.jar" "$@"
+    ]]></echo>
+
+        <!-- Create leo3 launcher for Windows -->
+        <echo file="${leo.exec.win}" append="false"><![CDATA[@echo off
+    set DIR=%~dp0
+    java -jar "%DIR%leo3.jar" %*
+    ]]></echo>
+    </target>
+
+    <target name="install.Leo.unix-perms" if="is.unix" unless="leo.skip.install">
+        <mkdir dir="${leo.bin.dir}"/>
+        <chmod file="${leo.exec.unix}" perm="ugo+rx"/>
     </target>
     <target name="retrieve.E">
         <get src="http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.6/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
