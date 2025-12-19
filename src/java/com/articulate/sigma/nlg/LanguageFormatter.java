@@ -23,6 +23,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import edu.stanford.nlp.ling.CoreAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import java.io.IOException;
 import java.util.*;
@@ -1279,6 +1281,7 @@ public class LanguageFormatter {
         if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): varString " + varString);
         if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): varType " + varType);
         if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): varPretty " + varPretty);
+
         if (outputMap.keySet().contains(varString)) {
             CoreLabel cl = outputMap.get(varString);
             cl.setOriginalText(varPretty);
@@ -1288,22 +1291,26 @@ public class LanguageFormatter {
             argNumStr = Integer.toString(cl.get(RelationArgumentAnnotation.class));
             outputMap.put(varString, cl); // create a "dummy" CoreLabel to hold the variable value
         }
+
         if (!form.contains(Formula.V_PREF)) // if there are variables, the replacements are not done yet
             createObjectMap(form);
-        String result = form;
-        // Make necessary changes if the variable is a quoted string, i.e. a name.
 
-        if (varPretty == null && varType.matches("\".*\""))    {
+        String result = form;
+
+        // Make necessary changes if the variable is a quoted string, i.e. a name.
+        if (varPretty == null && varType.matches("\".*\"")) {
             String name = varType.substring(1, varType.length() - 1);
-            result = result.replaceAll("\\?" + varString.substring(1), name);
+            // Avoid substring collisions here too
+            String nameRegex = "\\?" + Pattern.quote(varString.substring(1)) + "(?![A-Za-z0-9_])";
+            result = result.replaceAll(nameRegex, Matcher.quoteReplacement(name));
             if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): result " + result);
             return result;
         }
 
-        boolean isArabic = (language.matches(".*(?i)arabic.*")
-                || language.equalsIgnoreCase("ar"));
+        boolean isArabic = (language.matches(".*(?i)arabic.*") || language.equalsIgnoreCase("ar"));
         if (StringUtil.emptyString(varPretty))
             varPretty = varType;
+
         boolean found = true;
         int occurrenceCounter = 1;
         if (typeMap.keySet().contains(varType)) {
@@ -1313,10 +1320,15 @@ public class LanguageFormatter {
         }
         else
             typeMap.put(varType, 1);
+
         int count = 1;
         String article;
         String replacement;
         String defArt;
+
+        // Key fix: only match the exact variable token (don't replace ?S inside ?SP)
+        final String varRegex = "\\?" + Pattern.quote(varString.substring(1)) + "(?![A-Za-z0-9_])";
+
         while (found) {
             if (result.contains(varString) && count < 20) {
                 if (isClass) {
@@ -1325,9 +1337,11 @@ public class LanguageFormatter {
                             + Formula.SPACE + varPretty);
                     if (isArabic)
                         replacement = (NLGUtils.getKeyword("kind of", language) + Formula.SPACE + varPretty);
-                    result =
-                        result.replaceFirst(("\\?" + varString.substring(1)),
-                                ("\\&\\%" + varType + "\\$\"" + replacement + "\"" + argNumStr));
+
+                    result = result.replaceFirst(
+                            varRegex,
+                            Matcher.quoteReplacement("&%" + varType + "$\"" + replacement + "\"" + argNumStr)
+                    );
                 }
                 else {
                     article = NLGUtils.getArticle(varPretty, count, occurrenceCounter, language);
@@ -1340,14 +1354,18 @@ public class LanguageFormatter {
                         }
                         replacement = (varPretty + Formula.SPACE + article);
                     }
+
+                    result = result.replaceFirst(
+                            varRegex,
+                            Matcher.quoteReplacement("&%" + varType + "$\"" + replacement + "\"" + argNumStr)
+                    );
                 }
-                result = result.replaceFirst(("\\?" + varString.substring(1)),
-                        ("\\&\\%" + varType + "\\$\"" + replacement + "\"" + argNumStr));
             }
             else
                 found = false;
             count++;
         }
+
         if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): result (2) " + result);
         return result;
     }
