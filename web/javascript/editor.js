@@ -93,7 +93,9 @@ document.addEventListener('DOMContentLoaded', ensureDropdownEls);
 // 3. BACKEND COMMUNICATION (SERVLET API)
 // ======================================================
 
-async function postToServlet(mode, data = {}) {
+let inFlightCheck = null;
+
+async function postToServlet(mode, data = {}, opts = {}) {
   const body = new URLSearchParams({ mode, ...data }).toString();
   const res = await fetch("EditorServlet", {
     method: "POST",
@@ -101,7 +103,8 @@ async function postToServlet(mode, data = {}) {
       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
       "Accept": "application/json"
     },
-    body
+    body,
+    signal: opts.signal
   });
   const text = await res.text();
   try {

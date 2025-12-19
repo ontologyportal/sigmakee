@@ -8,6 +8,9 @@ import javax.servlet.annotation.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Unified Editor Servlet for both .kif and .tptp code/files.
@@ -21,6 +24,7 @@ import java.util.*;
 )
 public class EditorServlet extends HttpServlet {
     boolean debug = true;
+    private static final Object TRANSLATE_LOCK = new Object();
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
@@ -221,39 +225,45 @@ public class EditorServlet extends HttpServlet {
         }
         try {
             String tptp = EditorWorkerQueue.submit(() -> {
-                KBmanager.getMgr().initializeOnce();
-                SUMOformulaToTPTPformula.lang = "fof";
-                final String codeFinal = code;
-                final String fileNameFinal = fileName;
-                List<String> kifForms = splitKifFormulas(codeFinal);
-                if (kifForms.isEmpty())
-                    return null;
-                String base = fileNameFinal.replaceAll("\\.[^.]+$", "");
-                StringBuilder out = new StringBuilder();
-                int idx = 1;
-                for (String kif : kifForms) {
-                    String tptpBody =
-                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(kif, false);
-                    if (tptpBody == null || tptpBody.isBlank())
-                        continue;
-                    out.append("fof(")
-                    .append((base.isEmpty() ? "buf" : base)).append("_").append(idx++)
-                    .append(", axiom, ")
-                    .append(tptpBody.trim())
-                    .append(").\n");
+                synchronized (TRANSLATE_LOCK) {
+                    KBmanager.getMgr().initializeOnce();
+                    SUMOformulaToTPTPformula.lang = "fof";
+                    final String codeFinal = code;
+                    final String fileNameFinal = fileName;
+                    List<String> kifForms = splitKifFormulas(codeFinal);
+                    if (kifForms.isEmpty())
+                        return null;
+                    String base = fileNameFinal.replaceAll("\\.[^.]+$", "");
+                    StringBuilder out = new StringBuilder();
+                    int idx = 1;
+                    for (String kif : kifForms) {
+                        String tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kif, false);
+                        if (tptpBody == null || tptpBody.isBlank())
+                            continue;
+                        out.append("fof(")
+                                .append((base.isEmpty() ? "buf" : base)).append("_").append(idx++)
+                                .append(", axiom, ")
+                                .append(tptpBody.trim())
+                                .append(").\n");
+                    }
+                    return out.length() == 0 ? null : out.toString();
                 }
-                return out.length() == 0 ? null : out.toString();
-            });
+            }, 20000); // 20s timeout for translation (tune)
             if (tptp == null) {
                 writeJson(resp, false, "Translation produced no output.", null);
                 return;
             }
             writeJson(resp, true, null, tptp);
+        } catch (RejectedExecutionException rex) {
+            resp.setStatus(429);
+            writeJson(resp, false, "Server busy. Please retry.", null);
+        } catch (TimeoutException tex) {
+            resp.setStatus(503);
+            writeJson(resp, false, "Translation timed out. Please retry.", null);
         } catch (Exception e) {
             e.printStackTrace();
             writeJson(resp, false, "Exception during translation: " + e.getMessage(), null);
         }
-
     }
 
     private void handleFormatOrCheck(HttpServletRequest req, HttpServletResponse resp)
@@ -295,18 +305,25 @@ public class EditorServlet extends HttpServlet {
         boolean isTptp = fileName.toLowerCase().matches(".*\\.(tptp|tff|p|fof|cnf|thf)$");
         if ("format".equalsIgnoreCase(mode) || "format".equalsIgnoreCase(action)) {
             resp.setContentType("text/plain; charset=UTF-8");
+            final String textFinal = text;
+            final boolean isTptpFinal = isTptp;
             try {
-                final String textFinal = text;
-                final boolean isTptpFinal = isTptp;
-
                 String formatted = EditorWorkerQueue.submit(() -> {
                     return isTptpFinal
-                        ? new TPTPFileChecker().formatTptpText(textFinal, "(web-editor)")
-                        : KifFileChecker.formatKif(textFinal);
-                });
-
+                            ? new TPTPFileChecker().formatTptpText(textFinal, "(web-editor)")
+                            : KifFileChecker.formatKif(textFinal);
+                }, 4000); // 4s timeout (tune)
                 resp.getWriter().write(formatted);
-            } catch (Exception e) {
+            }
+            catch (RejectedExecutionException rex) {
+                resp.setStatus(429);
+                resp.getWriter().write("Server busy. Please retry.");
+            }
+            catch (TimeoutException tex) {
+                resp.setStatus(503);
+                resp.getWriter().write("Formatting timed out. Please retry.");
+            }
+            catch (Exception e) {
                 resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 resp.getWriter().write("Formatting error: " + e.getMessage());
             }
@@ -319,11 +336,25 @@ public class EditorServlet extends HttpServlet {
         try {
             final String textFinal = text;
             final boolean isTptpFinal = isTptp;
-            errors = EditorWorkerQueue.submit(() -> {
-                return isTptpFinal
-                    ? TPTPFileChecker.check(textFinal, "(web-editor)")
-                    : KifFileChecker.check(textFinal);
-            });
+            try {
+                errors = EditorWorkerQueue.submit(() -> {
+                    return isTptpFinal
+                            ? TPTPFileChecker.check(textFinal, "(web-editor)")
+                            : KifFileChecker.check(textFinal);
+                }, 4000); // 4s timeout for auto-checks
+
+            } catch (RejectedExecutionException rex) {
+                writeBusy(resp, "Server busy. Please retry.");
+                return;
+
+            } catch (TimeoutException tex) {
+                writeTimeout(resp, "Check timed out. Please retry.");
+                return;
+
+            } catch (Exception e) {
+                errors = Collections.emptyList();
+                errorMessage = "Error while checking: " + e.getMessage();
+            }
         } catch (Exception e) {
             errors = Collections.emptyList();
             errorMessage = "Error while checking: " + e.getMessage();
@@ -425,5 +456,27 @@ public class EditorServlet extends HttpServlet {
             result.add(leftover);
         }
         return result;
+    }
+
+    private void writeBusy(HttpServletResponse resp, String msg) throws IOException {
+        resp.setStatus(429); // Too Many Requests
+        resp.setContentType("application/json; charset=UTF-8");
+        String json = "{\"ok\":false,\"retry\":true,\"message\":\"" + jsonEscape(msg) + "\"" +
+                ",\"queueDepth\":" + EditorWorkerQueue.queueDepth() +
+                ",\"active\":" + EditorWorkerQueue.activeCount() +
+                ",\"workers\":" + EditorWorkerQueue.workers() +
+                "}";
+        resp.getWriter().write(json);
+    }
+
+    private void writeTimeout(HttpServletResponse resp, String msg) throws IOException {
+        resp.setStatus(503); // Service Unavailable
+        resp.setContentType("application/json; charset=UTF-8");
+        String json = "{\"ok\":false,\"retry\":true,\"message\":\"" + jsonEscape(msg) + "\"" +
+                ",\"queueDepth\":" + EditorWorkerQueue.queueDepth() +
+                ",\"active\":" + EditorWorkerQueue.activeCount() +
+                ",\"workers\":" + EditorWorkerQueue.workers() +
+                "}";
+        resp.getWriter().write(json);
     }
 }

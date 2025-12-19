@@ -89,10 +89,6 @@
               <a href="#" onclick="downloadFile()">Download</a>
               <a href="#" onclick="triggerFileUpload()">Upload</a>
             </div>
-            <label class="switch">
-              <input type="checkbox">
-              <span class="slider round"></span>
-            </label>
           </div>
 
           <!-- NEW: Translate dropdown -->
