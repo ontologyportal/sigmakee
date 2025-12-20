@@ -93,7 +93,9 @@ document.addEventListener('DOMContentLoaded', ensureDropdownEls);
 // 3. BACKEND COMMUNICATION (SERVLET API)
 // ======================================================
 
-async function postToServlet(mode, data = {}) {
+let inFlightCheck = null;
+
+async function postToServlet(mode, data = {}, opts = {}) {
   const body = new URLSearchParams({ mode, ...data }).toString();
   const res = await fetch("EditorServlet", {
     method: "POST",
@@ -101,7 +103,8 @@ async function postToServlet(mode, data = {}) {
       "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
       "Accept": "application/json"
     },
-    body
+    body,
+    signal: opts.signal
   });
   const text = await res.text();
   try {
@@ -267,6 +270,17 @@ document.addEventListener("DOMContentLoaded", async function() {
   reorderTabs();
 });
 
+document.addEventListener("click", function (e) {
+  const entry = e.target.closest(".error-entry");
+  if (!entry) return;
+
+  const line  = Number(entry.dataset.line || 1);
+  const start = Number(entry.dataset.start || 0);
+
+  jumpToError(line, start);
+});
+
+
 // ======================================================
 // 7. EDITOR CORE FUNCTIONS
 // ======================================================
@@ -290,11 +304,17 @@ function initializeCodeMirror() {
     indentUnit: 2,
     tabSize: 2,
     lineWrapping: true,
+
+    // These two do nothing without addons, but harmless to leave:
     autoCloseBrackets: true,
-    matchBrackets: true
+    matchBrackets: true,
   });
-  codeEditor.on("change", onEditorChange)
+  codeEditor.on("change", onEditorChange);
+  codeEditor.on("cursorActivity", () => updateParenContext(codeEditor, { highlightRange: true }));
+  codeEditor.on("focus", () => updateParenContext(codeEditor, { highlightRange: true }));
+  codeEditor.on("change", () => updateParenContext(codeEditor, { highlightRange: true }));
 }
+
 
 function onEditorChange() {
   // 🔒 Ignore changes that come from setEditorContent / setMode
@@ -329,11 +349,10 @@ function onEditorChange() {
   }, CHECK_DEBOUNCE_MS);
 }
 
-
-
 function renderErrorBox(errors = [], message = null) {
   const box = document.querySelector(".scroller.msg");
   if (!box) return;
+  box.innerHTML = "";
   if (message) {
     box.classList.remove("success");
     box.classList.add("errors-box");
@@ -344,16 +363,24 @@ function renderErrorBox(errors = [], message = null) {
     box.classList.remove("errors-box");
     box.classList.add("success");
     box.textContent = "✅ No errors found.";
-  } else {
-    box.classList.remove("success");
-    box.classList.add("errors-box");
-    box.textContent = errors.map(e => {
-      const sev = Number(e.type) === 1 ? "WARNING" : "ERROR";
-      const lineHuman = (Number(e.line) ?? 0);
-      const colHuman  = (Number(e.start) ?? 0) + 1;
-      return `${sev} ${e.file ? e.file : "(buffer)"}:${lineHuman}:${colHuman}\n${e.msg || ""}`;
-    }).join("\n\n");
+    return;
   }
+  box.classList.remove("success");
+  box.classList.add("errors-box");
+  errors.forEach((e, idx) => {
+    if (idx > 0) box.appendChild(document.createElement("br"));
+    const div = document.createElement("div");
+    div.className = "error-entry";
+    div.dataset.line  = String(e.line ?? 1);
+    div.dataset.start = String(e.start ?? 0);
+    div.dataset.end   = String(e.end ?? 0);
+    const sev = Number(e.type) === 1 ? "WARNING" : "ERROR";
+    const lineHuman = Number(e.line ?? 0);
+    const colHuman  = Number(e.start ?? 0) + 1;
+    div.textContent =
+      `${sev} ${e.file ? e.file : "(buffer)"}:${lineHuman}:${colHuman}\n${e.msg || ""}`;
+    box.appendChild(div);
+  });
 }
 
 function highlightErrors(errors = [], mask = []) {
@@ -1035,4 +1062,154 @@ function handleTranslateClick(event, kind) {
   }
 
   closeTranslateMenu();
+}
+
+function jumpToError(line, start = 0) {
+  if (!codeEditor) return;
+
+  const lineIndex = Math.max(0, line - 1);
+
+  codeEditor.focus();
+  codeEditor.setCursor({ line: lineIndex, ch: start });
+  codeEditor.scrollIntoView(
+    { line: lineIndex, ch: start },
+    100   // margin
+  );
+
+  // Optional: flash the line
+  const handle = codeEditor.addLineClass(lineIndex, "background", "error-flash");
+  setTimeout(() => {
+    if (handle) codeEditor.removeLineClass(lineIndex, "background", "error-flash");
+  }, 800);
+}
+
+// ======================================================
+// PAREN CONTEXT HIGHLIGHTING (NO ADDONS REQUIRED)
+// ======================================================
+let parenContextMarks = [];
+let parensRAF = 0;
+
+function clearParenContext() {
+  for (const m of parenContextMarks) m.clear();
+  parenContextMarks = [];
+}
+
+function samePos(a, b) {
+  return a && b && a.line === b.line && a.ch === b.ch;
+}
+
+function beforeOrEqual(a, b) { return CodeMirror.cmpPos(a, b) <= 0; }
+function afterOrEqual(a, b)  { return CodeMirror.cmpPos(a, b) >= 0; }
+
+function getCharAt(cm, pos) {
+  const line = cm.getLine(pos.line);
+  if (!line) return "";
+  return line.charAt(pos.ch) || "";
+}
+
+function nextPos(cm, pos) {
+  const lineText = cm.getLine(pos.line) || "";
+  if (pos.ch + 1 <= lineText.length - 1) return { line: pos.line, ch: pos.ch + 1 };
+  // move to next line
+  if (pos.line + 1 >= cm.lineCount()) return null;
+  return { line: pos.line + 1, ch: 0 };
+}
+
+function prevPos(cm, pos) {
+  if (pos.ch - 1 >= 0) return { line: pos.line, ch: pos.ch - 1 };
+  if (pos.line - 1 < 0) return null;
+  const prevLine = cm.getLine(pos.line - 1) || "";
+  return { line: pos.line - 1, ch: Math.max(0, prevLine.length - 1) };
+}
+
+// Scan backwards from cursor to find the nearest enclosing '('
+function findEnclosingOpenParen(cm, cursor, maxScanChars = 50000) {
+  let pos = { line: cursor.line, ch: cursor.ch - 1 };
+  let depth = 0;
+  let scanned = 0;
+
+  while (pos && scanned < maxScanChars) {
+    const c = getCharAt(cm, pos);
+    if (c === ')') depth++;
+    else if (c === '(') {
+      if (depth === 0) return pos;
+      depth--;
+    }
+    pos = prevPos(cm, pos);
+    scanned++;
+  }
+  return null;
+}
+
+// From an open '(', scan forward to its matching ')'
+function findMatchingCloseParen(cm, openPos, maxScanChars = 50000) {
+  let pos = { line: openPos.line, ch: openPos.ch + 1 };
+  let depth = 1;
+  let scanned = 0;
+
+  while (pos && scanned < maxScanChars) {
+    const c = getCharAt(cm, pos);
+    if (c === '(') depth++;
+    else if (c === ')') {
+      depth--;
+      if (depth === 0) return pos;
+    }
+    pos = nextPos(cm, pos);
+    scanned++;
+  }
+  return null;
+}
+
+function findEnclosingParenPair(cm, cursor) {
+  // Optional: avoid doing this in strings/comments
+  const tok = cm.getTokenAt(cursor);
+  if (tok?.type && (tok.type.includes("string") || tok.type.includes("comment"))) return null;
+
+  const open = findEnclosingOpenParen(cm, cursor);
+  if (!open) return null;
+
+  const close = findMatchingCloseParen(cm, open);
+  if (!close) return null;
+
+  // ensure cursor is within [open, close]
+  if (!beforeOrEqual(open, cursor) || !afterOrEqual(close, cursor)) return null;
+
+  return { open, close };
+}
+
+function updateParenContext(cm, { highlightRange = true } = {}) {
+  if (!cm) return;
+
+  const cursor = cm.getCursor("head");
+
+  cancelAnimationFrame(parensRAF);
+  parensRAF = requestAnimationFrame(() => {
+    const pair = findEnclosingParenPair(cm, cursor);
+
+    if (!pair) {
+      clearParenContext();
+      cm.state._parenContextPrev = null;
+      return;
+    }
+
+    const prev = cm.state._parenContextPrev;
+    if (prev && samePos(prev.open, pair.open) && samePos(prev.close, pair.close)) return;
+
+    cm.state._parenContextPrev = pair;
+    clearParenContext();
+
+    const openFrom = pair.open;
+    const openTo   = { line: pair.open.line, ch: pair.open.ch + 1 };
+    const closeFrom = pair.close;
+    const closeTo   = { line: pair.close.line, ch: pair.close.ch + 1 };
+
+    parenContextMarks.push(cm.markText(openFrom, openTo, { className: "cm-paren-context-edge" }));
+    parenContextMarks.push(cm.markText(closeFrom, closeTo, { className: "cm-paren-context-edge" }));
+
+    if (highlightRange) {
+      parenContextMarks.push(
+        cm.markText(openFrom, closeTo, { className: "cm-paren-context-range" })
+      );
+    }
+  });
 }
