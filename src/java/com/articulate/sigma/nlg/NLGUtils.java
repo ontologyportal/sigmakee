@@ -538,6 +538,7 @@ public class NLGUtils implements Serializable {
     public static String htmlParaphrase(String href, String stmt, Map<String,String> phraseMap,
                                         Map<String,String> termMap, KB kb, String language) {
 
+        System.out.println("NGUTILS STATEMENT: "+ stmt);
         LanguageFormatter languageFormatter = new LanguageFormatter(stmt, phraseMap, termMap, kb, language);
         outputMap = LanguageFormatter.outputMap;
         return languageFormatter.htmlParaphrase(href);

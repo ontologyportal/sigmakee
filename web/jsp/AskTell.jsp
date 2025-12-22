@@ -22,6 +22,18 @@
         legend { font-weight:600; }
         .row { margin:6px 0; }
         .muted { color:#666; font-size:0.9em; }
+        /* Layout helpers */
+        .step { margin: 14px 0; }
+        .helpText { color:#555; font-size:0.92em; margin-top:4px; }
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { border:1px solid #d8dee4; border-radius:8px; padding:12px 14px; background:#fff; }
+        .card h4 { margin:0 0 8px; font-size:1.0rem; }
+        .card .sub { color:#666; font-size:0.9em; margin:4px 0 0; }
+        .pill { display:inline-block; padding:2px 8px; border:1px solid #cfd7de; border-radius:999px; font-size:0.85em; color:#444; }
+        details.advanced { margin-top: 10px; }
+        details.advanced summary { cursor: pointer; font-weight: 600; }
+        .inline { display:inline-flex; gap:12px; align-items:center; flex-wrap:wrap; }
+        .engineDisabled { opacity: .55; }
     </style>
 
     <style>
@@ -36,11 +48,59 @@
     </style>
 
     <style>
-        .spin-overlay { position:fixed; inset:0; background:rgba(255,255,255,.95); display:none; z-index:9999; }
-        body.busy .spin-overlay { display:block; }   /* spinner visible on the new page until load */
-        .bounce-icon { position:absolute; top:50%; left:50%; width:120px; height:120px;
-            transform:translate(-50%,-50%); animation:bounce 1.2s ease-in-out infinite; }
-        @keyframes bounce { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-60%) scale(1.1)} }
+        .spin-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,.95);
+            display: none;
+            z-index: 9999;
+        }
+        /*body.busy .spin-overlay { display: block; }*/
+
+        .spin-card {
+            position: absolute;
+            left: 50%;
+            top: 42%;
+            transform: translate(-50%,-50%);
+            background: #fff;
+            border: 1px solid #d8dee4;
+            border-radius: 10px;
+            padding: 16px 18px;
+            min-width: 420px;
+            box-shadow: 0 6px 22px rgba(0,0,0,.10);
+        }
+
+        .spin-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .bounce-icon { width: 56px; height: 56px; animation: bounce 1.2s ease-in-out infinite; }
+        @keyframes bounce {
+            0%,100% { transform: scale(1); }
+            50% { transform: translateY(-6px) scale(1.06); }
+        }
+
+        .spin-title { font-weight: 700; margin: 0; }
+        .spin-sub { color:#666; font-size: 0.92em; margin-top: 2px; }
+
+        .bar-wrap {
+            height: 10px;
+            background: #eef2f6;
+            border-radius: 999px;
+            overflow: hidden;
+            border: 1px solid #dde5ee;
+        }
+        .bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #4a90e2;
+            transition: width 80ms linear;
+        }
+
+        .spin-meta {
+            display:flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            color:#666;
+            font-size: 0.9em;
+        }
     </style>
 
     <style>
@@ -69,8 +129,12 @@
             const thfRadio = document.querySelector('input[name="testFilter"][value="thf"]');
             const isThf = thfRadio && thfRadio.checked;
 
-            // If .thf → always disable Modus Ponens + Drop One Premise
-            if (isThf) {
+            // NEW: Translation Mode toggle (FOL vs HOL)
+            const holRadio = document.getElementById('modeHOL');
+            const isHolMode = holRadio && holRadio.checked;
+
+            // If THF file OR HOL Translation Mode → always disable Modus Ponens + Drop One Premise
+            if (isThf || isHolMode) {
                 if (mp)   { mp.checked = false;   mp.disabled = true; }
                 if (drop) { drop.checked = false; drop.disabled = true; }
 
@@ -84,13 +148,15 @@
 
             // Original behavior when NOT in THF mode
             const vampireOn = vamp && vamp.checked && !vamp.disabled;
-            [casc, avatar, custom, mp, holModal].forEach(el => { if (el) el && (el.disabled = !vampireOn); });
+            [casc, avatar, custom, mp].forEach(el => { if (el) el && (el.disabled = !vampireOn); });
 
             const mpOn = vampireOn && mp && mp.checked;
             if (drop) {
                 drop.disabled = !mpOn;
                 if (!mpOn) drop.checked = false;
             }
+            // Modal is Disabled on Non-HOL option
+            holModal.checked = false; holModal.disabled = true;
             // Disable Custom until it gets fixed and tested!
             custom.checked = false; custom.disabled = true;
         }
@@ -108,9 +174,66 @@
             lblT.style.opacity = isTest ? 1 : .5;
         }
 
+
+        function toggleTranslationMode() {
+            const fol = document.getElementById('modeFOL');
+            const hol = document.getElementById('modeHOL');
+            const folBlock = document.getElementById('folOptions');
+            const holBlock = document.getElementById('holOptions');
+
+            const leo = document.getElementById('engineLEO');
+            const epr = document.getElementById('engineEProver');
+            const vamp = document.getElementById('engineVampire');
+
+            const isHol = hol && hol.checked;
+
+            if (folBlock) folBlock.style.display = isHol ? 'none' : 'block';
+            if (holBlock) holBlock.style.display = isHol ? 'block' : 'none';
+
+            // In HOL mode, only Vampire is currently supported.
+            if (isHol) {
+                if (vamp) vamp.checked = true;
+                [leo, epr].forEach(el => { if (el) { el.dataset.prevDisabled = String(el.disabled); el.disabled = true; } });
+            } else {
+                // Restore engine availability (server may still disable missing binaries)
+                [leo, epr].forEach(el => { if (el) { const prev = el.dataset.prevDisabled; if (prev !== undefined) el.disabled = (prev === "true"); } });
+            }
+
+            // Re-apply dependent enabling/disabling
+            toggleVampireOptions();
+        }
+
+        function filterTestsByExtension(ext) {
+            const select = document.getElementById("testFile");
+            let hasVisibleSelected = false;
+
+            for (let opt of select.options) {
+                if (ext === "all") {
+                    opt.style.display = "";
+                    hasVisibleSelected = hasVisibleSelected || opt.selected;
+                } else {
+                    const show = opt.value.endsWith("." + ext);
+                    opt.style.display = show ? "" : "none";
+                    if (show && opt.selected) hasVisibleSelected = true;
+                }
+            }
+
+            // reset selection if current one is hidden
+            if (!hasVisibleSelected) {
+                select.selectedIndex = 0;
+            }
+        }
+
+        document.querySelectorAll("input[name='testFilter']").forEach(radio => {
+            radio.addEventListener("change", () => {
+                filterTestsByExtension(radio.value);
+            });
+        });
+
         window.onload = function () {
             toggleVampireOptions();
             toggleRunSource();
+            toggleTranslationMode();
 
             document.querySelectorAll('input[name="inferenceEngine"], #ModensPonens')
                 .forEach(el => el.addEventListener('change', toggleVampireOptions));
@@ -121,6 +244,9 @@
 
             document.querySelectorAll('input[name="runSource"]')
                 .forEach(el => el.addEventListener('change', toggleRunSource));
+
+            document.querySelectorAll('input[name="translationMode"]')
+                .forEach(el => el.addEventListener('change', toggleTranslationMode));
         };
     </script>
 
@@ -249,11 +375,19 @@
 
 
     String eproverExec = KBmanager.getMgr().getPref("eprover");
-    String tptpFile = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
     File epFile = new File(eproverExec);
     if (kb.eprover == null && epFile.exists())
-        kb.eprover = new com.articulate.sigma.tp.EProver(eproverExec,tptpFile);
-    if (inferenceEngine == null) inferenceEngine = (kb.eprover != null) ? "EProver" : "Vampire";
+        kb.eprover = new com.articulate.sigma.tp.EProver(eproverExec);
+
+    String leoExec = KBmanager.getMgr().getPref("leoExecutable");
+    if (!StringUtil.emptyString(leoExec)) {
+        File leoFile = new File(leoExec);
+        if (kb.leo == null && leoFile.exists()) {
+            kb.leo = new com.articulate.sigma.tp.LEO();
+        }
+    }
+
+    if (inferenceEngine == null) inferenceEngine = "Vampire";
 
     if (request.getParameter("maxAnswers") != null)
         maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));
@@ -288,6 +422,14 @@
     if (testFilter == null) testFilter = "all";
     session.setAttribute("testFilter", testFilter);
 
+
+    // ---- Translation mode (persist) ----
+    // FOL: standard TPTP/TFF pipeline.  HOL: THF pipeline via Vampire HOL.
+    String translationMode = request.getParameter("translationMode");
+    if (translationMode == null) translationMode = (String) session.getAttribute("translationMode");
+    if (translationMode == null) translationMode = "FOL";
+    session.setAttribute("translationMode", translationMode);
+
     com.articulate.sigma.tp.EProver eProver = null;
     com.articulate.sigma.tp.Vampire vampire = null;
 
@@ -306,10 +448,27 @@
 
 <body class="<%= busy ? "busy" : "" %>" aria-busy="<%= busy %>">
 
-<div id="loading" class="spin-overlay">
-    <img src="pixmaps/sumo.gif" class="bounce-icon" alt="Loading...">
-</div>
 
+<div id="loading" class="spin-overlay" aria-live="polite" aria-atomic="true">
+    <div class="spin-card">
+        <div class="spin-row">
+            <img src="pixmaps/sumo.gif" class="bounce-icon" alt="Loading...">
+            <div>
+                <div class="spin-title">Running inference...</div>
+                <div id="spinSub" class="spin-sub">Time limit: <span id="spinLimit">30</span>s</div>
+            </div>
+        </div>
+
+        <div class="bar-wrap">
+            <div id="spinBar" class="bar-fill"></div>
+        </div>
+
+        <div class="spin-meta">
+            <span id="spinPct">0%</span>
+            <span id="spinEta">~30s remaining</span>
+        </div>
+    </div>
+</div>
 
 <form name="AskTell" id="AskTell" action="AskTell.jsp" method="POST">
     <%
@@ -320,22 +479,26 @@
     <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
         <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
-    <!-- ===== INPUT ===== -->
-    <fieldset>
-        <legend>Input</legend>
-        <div class="row">
+
+    <!-- ===== STEP 1: INPUT ===== -->
+    <fieldset class="step">
+        <legend>Step 1 - Input</legend>
+
+        <div class="row inline">
             <label><input type="radio" name="runSource" value="custom"
-                <%= "test".equals(session.getAttribute("runSource")) ? "" : "checked" %> > Custom query</label>
-            &nbsp;&nbsp;
-            <!-- Radio label -->
+                <%= "test".equals(session.getAttribute("runSource")) ? "" : "checked" %> >
+                Custom query</label>
+
             <label><input type="radio" name="runSource" value="test"
                 <%= "test".equals(session.getAttribute("runSource")) ? "checked" : "" %> >
-                Saved test (.tq / .tptp / .tff / .thf)
-            </label>
+                Saved test file</label>
+
+            <span class="pill">.tq / .tptp / .tff / .thf</span>
         </div>
 
         <div class="row" id="lblCustom">
-            <textarea rows="5" cols="70" name="stmt" id="stmtArea"><%=stmt%></textarea>
+            <textarea rows="5" cols="80" name="stmt" id="stmtArea"><%=stmt%></textarea>
+            <div class="helpText">Enter a KIF query..</div>
         </div>
 
         <%
@@ -349,26 +512,29 @@
             if (selectedTest == null && testFiles.length > 0) selectedTest = testFiles[0].getName();
         %>
 
-            <!-- ===== Open test in a new page ===== -->
         <div class="row" id="lblTest">
-            <b>Test:</b>
-            <select name="testName" id="testName">
-                <% for (File f : testFiles) {
-                    String fname = f.getName();
-                    boolean sel = fname.equals(selectedTest);
-                %>
-                <option value="<%= fname %>" <%= sel ? "selected" : "" %>><%= fname %></option>
-                <% } %>
-            </select>
+            <div class="inline">
+                <label><b>Test:</b>
+                    <select name="testName" id="testName">
+                        <% for (File f : testFiles) {
+                            String fname = f.getName();
+                            boolean sel = fname.equals(selectedTest);
+                        %>
+                        <option value="<%= fname %>" <%= sel ? "selected" : "" %>><%= fname %></option>
+                        <% } %>
+                    </select>
+                </label>
 
-            <!-- JS-driven, always fresh -->
-            <a href="javascript:void(0)" onclick="viewSelectedTest()"
-               style="margin-left:10px; text-decoration:underline; color:#0073e6;">
-                View Test
-            </a>
+                <a href="javascript:void(0)" onclick="viewSelectedTest()"
+                   style="text-decoration:underline; color:#0073e6;">
+                    View
+                </a>
 
-            <div class="row" id="filterRow">
-                Filter:
+                <span class="muted">Applies the configuration below.</span>
+            </div>
+
+            <div class="row">
+                <span class="muted">Filter:</span>
                 <label><input type="radio" name="testFilter" value="all"  <%= "all".equalsIgnoreCase(testFilter)  ? "checked":"" %>> All</label>
                 <label><input type="radio" name="testFilter" value="tq"   <%= "tq".equalsIgnoreCase(testFilter)   ? "checked":"" %>> tq</label>
                 <label><input type="radio" name="testFilter" value="tptp" <%= "tptp".equalsIgnoreCase(testFilter) ? "checked":"" %>> tptp</label>
@@ -376,73 +542,160 @@
                 <label><input type="radio" name="testFilter" value="thf"  <%= "thf".equalsIgnoreCase(testFilter)  ? "checked":"" %>> thf</label>
             </div>
             <input type="hidden" name="testFilter" id="testFilterHidden" value="<%= testFilter %>">
-
-            <span class="muted">(Uses the configuration below)</span>
         </div>
     </fieldset>
 
-    <!-- ===== CONFIG ===== -->
-    <fieldset>
-        <legend>Configuration (applies to both)</legend>
+    <!-- ===== STEP 2: TRANSLATION MODE ===== -->
+    <fieldset class="step">
+        <legend>Step 2 - Translation mode</legend>
 
-        Maximum answers: <input type="text" name="maxAnswers" value="<%=maxAnswers%>">
-        &nbsp; Query time limit: <input type="text" name="timeout" value="<%=timeout%>"><br>
+        <div class="row inline">
+            <label><input type="radio" id="modeFOL" name="translationMode" value="FOL"
+                <%= "HOL".equalsIgnoreCase((String)session.getAttribute("translationMode")) ? "" : "checked" %> >
+                FOL (TPTP / TFF)</label>
 
-        [ <input type="radio" id="langFof" name="TPTPlang" value="fof" <%= "fof".equals(TPTPlang)?"checked":"" %> >
-        <label for="langFof">tptp mode</label>
+            <label><input type="radio" id="modeHOL" name="translationMode" value="HOL"
+                <%= "HOL".equalsIgnoreCase((String)session.getAttribute("translationMode")) ? "checked" : "" %> >
+                HOL (THF)</label>
+        </div>
 
-        <input type="radio" id="langTff" name="TPTPlang" value="tff" <%= "tff".equals(TPTPlang)?"checked":"" %> >
-        <label for="langTff">tff mode</label>]
+        <div id="folOptions" class="row">
+            <div class="inline">
+                <span class="muted">Language:</span>
+                <label><input type="radio" id="langFof" name="TPTPlang" value="fof" <%= "fof".equals(TPTPlang)?"checked":"" %> >
+                    tptp (fof)</label>
 
-        &nbsp;&nbsp;<input type="checkbox" name="CWA" id="CWA" value="yes" <% if ("yes".equals(cwa)) {%>checked<%}%> >
-        <label>Closed World Assumption</label><br>
+                <label><input type="radio" id="langTff" name="TPTPlang" value="tff" <%= "tff".equals(TPTPlang)?"checked":"" %> >
+                    tff</label>
 
-        Choose an inference engine:<br>
+                <label class="inline" style="margin-left:14px;">
+                    <input type="checkbox" name="CWA" id="CWA" value="yes" <% if ("yes".equals(cwa)) {%>checked<%}%> >
+                    Closed World Assumption
+                </label>
+            </div>
+        </div>
 
-        <input type="radio" name="inferenceEngine" value="LEO" <% if ("LEO".equals(inferenceEngine)) {%>checked<%}%>
-               onclick="toggleVampireOptions()" <% if (kb.leo == null) { %> disabled <% } %>> LEO-III <br>
-
-        <input type="radio" name="inferenceEngine" value="EProver" <% if ("EProver".equals(inferenceEngine)) {%>checked<%}%>
-               onclick="toggleVampireOptions()" <% if (kb.eprover == null) { %> disabled <% } %> > EProver <br>
-
-        <input type="radio" name="inferenceEngine" value="Vampire" <% if ("Vampire".equals(inferenceEngine)) {%>checked<%}%>
-               onclick="toggleVampireOptions()" <% if (KBmanager.getMgr().getPref("vampire") == null) { %> disabled <% } %> >
-        Vampire :
-        [ <input type="radio" id="CASC" name="vampireMode" value="CASC"
-        <% if ("CASC".equals(vampireMode)) { out.print(" CHECKED"); } %> > <label>CASC mode</label>
-        <input type="radio" id="Avatar" name="vampireMode" value="Avatar"
-            <% if ("Avatar".equals(vampireMode)) { out.print(" CHECKED"); } %> > <label>Avatar mode</label>
-        <input type="radio" id="Custom" name="vampireMode" value="Custom"
-            <% if ("Custom".equals(vampireMode)) { out.print(" CHECKED"); } %> > <label>Custom mode</label> ]
-
-        <input type="checkbox" id="ModensPonens" name="ModensPonens" value="yes" <% if (modensPonens) { out.print(" CHECKED"); } %> >
-        <label for="ModensPonens">Modens Ponens</label>
-
-        <span title="Runs Vampire with modus-ponens-only routine over authored axioms">&#9432;</span>
-        [ <input type="checkbox" name="dropOnePremise" id="dropOnePremise" value="true"
-        <% if (Boolean.TRUE.equals(dropOnePremise)) { out.print(" CHECKED"); } %> >
-        <label for="dropOnePremise">Drop One-Premise Formulas</label> ]
-
-        <input type="checkbox" id="HolUseModals" name="HolUseModals" value="yes" <% if (holUseModals) { out.print(" CHECKED"); } %> >
-        <label for="HolUseModals">HOL-Use Modals </label>
-
-        <br>
-
-        <input type="checkbox" name="showProofInEnglish" value="yes"
-               <% if (Boolean.TRUE.equals(showEnglish)) { %>checked<% } %> >
-        <label>Show English Paraphrases</label><br>
-
-        <input type="checkbox" name="showProofFromLLM" value="yes"
-            <%= (Boolean.TRUE.equals(llmProof) && ollamaUp) ? "checked" : "" %>
-            <%= ollamaUp ? "" : "disabled" %> >
-        <label>Use LLM for Paraphrasing</label>
-        <% if (!ollamaUp) { %><span title="Ollama is not running.">&#9432;</span><% } %>
-
-        <input type="checkbox" name="showProofSummary" value="yes"
-            <%= Boolean.TRUE.equals(showProofSummary) ? "checked" : "" %> >
-        <label>Show LLM Proof Summary</label><br>
+        <div id="holOptions" class="row" style="display:none;">
+            <div class="helpText">
+                HOL uses THF translation and currently requires Vampire (HOL-enabled build). "Modus Ponens" and
+                "Drop One-Premise" are disabled in HOL mode.
+            </div>
+        </div>
     </fieldset>
-        
+
+    <!-- ===== STEP 3: REASONER ===== -->
+    <fieldset class="step">
+        <legend>Step 3 - Reasoner</legend>
+
+        <div class="row inline">
+            <label>Maximum answers:
+                <input type="text" name="maxAnswers" value="<%=maxAnswers%>" size="4">
+            </label>
+
+            <label>Query time limit (sec):
+                <input type="text" name="timeout" value="<%=timeout%>" size="4">
+            </label>
+        </div>
+
+        <div class="row grid2">
+            <div class="card <%= (kb.leo == null ? "engineDisabled" : "") %>">
+                <h4>
+                    <label>
+                        <input type="radio" id="engineLEO" name="inferenceEngine" value="LEO" <% if ("LEO".equals(inferenceEngine)) {%>checked<%}%>
+                            <% if (kb.leo == null) { %> disabled <% } %>
+                               onclick="toggleVampireOptions()">
+                        LEO-III
+                    </label>
+                </h4>
+                <div class="sub">Higher-order prover (available if configured).</div>
+            </div>
+
+            <div class="card <%= (kb.eprover == null ? "engineDisabled" : "") %>">
+                <h4>
+                    <label>
+                        <input type="radio" id="engineEProver" name="inferenceEngine" value="EProver" <% if ("EProver".equals(inferenceEngine)) {%>checked<%}%>
+                            <% if (kb.eprover == null) { %> disabled <% } %>
+                               onclick="toggleVampireOptions()">
+                        EProver
+                    </label>
+                </h4>
+                <div class="sub">First-order prover (fof/tff).</div>
+            </div>
+
+            <div class="card <%= (KBmanager.getMgr().getPref("vampire") == null ? "engineDisabled" : "") %>">
+                <h4>
+                    <label>
+                        <input type="radio" id="engineVampire" name="inferenceEngine" value="Vampire" <% if ("Vampire".equals(inferenceEngine)) {%>checked<%}%>
+                            <% if (KBmanager.getMgr().getPref("vampire") == null) { %> disabled <% } %>
+                               onclick="toggleVampireOptions()">
+                        Vampire
+                    </label>
+                </h4>
+
+                <div class="inline" style="margin-top:6px;">
+                    <span class="muted">Mode:</span>
+                    <label><input type="radio" id="CASC" name="vampireMode" value="CASC" <% if ("CASC".equals(vampireMode)) { out.print(" CHECKED"); } %> > CASC</label>
+                    <label><input type="radio" id="Avatar" name="vampireMode" value="Avatar" <% if ("Avatar".equals(vampireMode)) { out.print(" CHECKED"); } %> > Avatar</label>
+                    <label title="Disabled until fully tested.">
+                        <input type="radio" id="Custom" name="vampireMode" value="Custom" <% if ("Custom".equals(vampireMode)) { out.print(" CHECKED"); } %> > Custom
+                    </label>
+                </div>
+
+                <details class="advanced">
+                    <summary>Advanced (Vampire)</summary>
+                    <div class="row">
+                        <label>
+                            <input type="checkbox" id="ModensPonens" name="ModensPonens" value="yes" <% if (modensPonens) { out.print(" CHECKED"); } %> >
+                            Modus Ponens
+                        </label>
+                        <span title="Runs Vampire with modus-ponens-only routine over authored axioms">&#9432;</span>
+
+                        <label style="margin-left:14px;">
+                            <input type="checkbox" name="dropOnePremise" id="dropOnePremise" value="true" <% if (Boolean.TRUE.equals(dropOnePremise)) { out.print(" CHECKED"); } %> >
+                            Drop one-premise formulas
+                        </label>
+                    </div>
+
+                    <div class="row">
+                        <label>
+                            <input type="checkbox" id="HolUseModals" name="HolUseModals" value="yes" <% if (holUseModals) { out.print(" CHECKED"); } %> >
+                            HOL - use modals
+                        </label>
+                        <span class="muted">Only relevant in HOL mode.</span>
+                    </div>
+                </details>
+            </div>
+        </div>
+    </fieldset>
+
+    <!-- ===== STEP 4: OUTPUT OPTIONS ===== -->
+    <fieldset class="step">
+        <legend>Step 4 - Output</legend>
+
+        <div class="row">
+            <label>
+                <input type="checkbox" name="showProofInEnglish" value="yes" <% if (Boolean.TRUE.equals(showEnglish)) { %>checked<% } %> >
+                Show English paraphrases
+            </label>
+        </div>
+
+        <div class="row inline">
+            <label>
+                <input type="checkbox" name="showProofFromLLM" value="yes"
+                    <%= (Boolean.TRUE.equals(llmProof) && ollamaUp) ? "checked" : "" %>
+                    <%= ollamaUp ? "" : "disabled" %> >
+                Use LLM for paraphrasing
+            </label>
+            <% if (!ollamaUp) { %><span title="Ollama is not running.">&#9432;</span><% } %>
+
+            <label style="margin-left:14px;">
+                <input type="checkbox" name="showProofSummary" value="yes" <%= Boolean.TRUE.equals(showProofSummary) ? "checked" : "" %> >
+                Show LLM proof summary
+            </label>
+        </div>
+    </fieldset>
+
+
 
 
     <div class="row">
@@ -454,9 +707,12 @@
 
 </form>
 
+<div id="resultsHost"></div>
+
 <table align='left' width='80%'><tr><td bgcolor='#AAAAAA'>
     <img src='pixmaps/1pixel.gif' width=1 height=1 border=0></td></tr></table><br>
 
+<div id="serverResults">
 <%
     // ===== Server-side execution for single "Run" button =====
     if ("Run".equalsIgnoreCase(req) && !syntaxError) {
@@ -543,7 +799,7 @@
                                     proofSteps.add(stepText);
                                 }
                             }
-                            
+
                             // Generate and display the summary
                             String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
                             if (!proofSummary.isEmpty()) {
@@ -596,7 +852,7 @@
                                     proofSteps.add(stepText);
                                 }
                             }
-                            
+
                             // Generate and display the summary
                             String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
                             if (!proofSummary.isEmpty()) {
@@ -634,7 +890,7 @@
 
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
                     }
-            } else {
+                } else {
                     out.println("<font color='red'>Unsupported test file type: " + ext + "</font>");
                 }
             } else {
@@ -653,37 +909,37 @@
 
                     out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                     // Generate proof summary if requested
-                        if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
-                            // Extract proof steps as strings
-                            List<String> proofSteps = new ArrayList<>();
-                            for (Object formula : tpp.proof) {
-                                String stepText = "";
-                                if (formula != null) {
-                                    // Get the string representation of the formula
-                                    stepText = formula.toString();
-                                    // Try to convert to more readable format if it's in TPTP format
-                                    if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
-                                        // Extract just the formula part, skipping the TPTP wrapper
-                                        int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
-                                        int end = stepText.lastIndexOf(')');
-                                        if (start > 0 && end > start) {
-                                            stepText = stepText.substring(start, end).trim();
-                                        }
+                    if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
+                        // Extract proof steps as strings
+                        List<String> proofSteps = new ArrayList<>();
+                        for (Object formula : tpp.proof) {
+                            String stepText = "";
+                            if (formula != null) {
+                                // Get the string representation of the formula
+                                stepText = formula.toString();
+                                // Try to convert to more readable format if it's in TPTP format
+                                if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
+                                    // Extract just the formula part, skipping the TPTP wrapper
+                                    int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
+                                    int end = stepText.lastIndexOf(')');
+                                    if (start > 0 && end > start) {
+                                        stepText = stepText.substring(start, end).trim();
                                     }
-                                    // Clean up the text
-                                    stepText = stepText.replaceAll("\\s+", " ").trim();
                                 }
-                                if (!stepText.isEmpty()) {
-                                    proofSteps.add(stepText);
-                                }
+                                // Clean up the text
+                                stepText = stepText.replaceAll("\\s+", " ").trim();
                             }
-                            
-                            // Generate and display the summary
-                            String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
-                            if (!proofSummary.isEmpty()) {
-                                out.println(proofSummary);
+                            if (!stepText.isEmpty()) {
+                                proofSteps.add(stepText);
                             }
                         }
+
+                        // Generate and display the summary
+                        String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
+                        if (!proofSummary.isEmpty()) {
+                            out.println(proofSummary);
+                        }
+                    }
                     if (!StringUtil.emptyString(tpp.status)) out.println("Status: " + tpp.status);
                 } else if ("Vampire".equals(inferenceEngine)) {
 
@@ -691,21 +947,23 @@
                     f.read(stmt);
                     setVampMode(vampireMode);
 //                    boolean isHOL = f.isHigherOrder(kb);
-                    boolean isHOL = true;
+                    // Use explicit UI toggle (Translation Mode) rather than auto-detection.
+                    // This makes behavior predictable for users and avoids accidental HOL attempts.
+                    boolean isHOL = "HOL".equalsIgnoreCase(translationMode);
                     if (isHOL){ // Higher-Order Formula
                         System.out.println(" -- Higher Order Formula Detected - Attempring to run Vampire HOL ");
                         vampire = kb.askVampireHOL(stmt, timeout, maxAnswers, holUseModals);
-                        System.out.println("============ Vampire Output Returned =============");
+                        System.out.println("============ Vampire_HOL Output Returned =============");
                         List<String> cleaned = TPTPutil.clearProofFile(vampire.output);
-                        System.out.println("============ Vampire Output Cleaned =============");
+                        System.out.println("============ Vampire-HOL Output Cleaned =============");
                         for (String s:cleaned){
                             System.out.println(s);
                         }
                         // Vampire version 4.8→5.0 reordering…
                         List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
-                        System.out.println("============ Vampire Output Reordered =============");
+                        System.out.println("============ Vampire_HOL Output Reordered =============");
                         vampire.output = THFutil.preprocessTHFProof(normalized);
-                        System.out.println("============ Vampire Output Preprocessed =============");
+                        System.out.println("============ Vampire_HOL Output Preprocessed =============");
 
                     }else { // First-Order Formula
                         System.out.println(" -- First Order Formula Detected - Attempring to run normal Vampire");
@@ -753,7 +1011,7 @@
                                     proofSteps.add(stepText);
                                 }
                             }
-                            
+
                             // Generate and display the summary
                             String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
                             if (!proofSummary.isEmpty()) {
@@ -778,7 +1036,7 @@
                         if (tpp.bindings   != null) tpp.bindings.clear();
 
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
-                         // Generate proof summary if requested
+                        // Generate proof summary if requested
                         if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
                             // Extract proof steps as strings
                             List<String> proofSteps = new ArrayList<>();
@@ -803,7 +1061,7 @@
                                     proofSteps.add(stepText);
                                 }
                             }
-                            
+
                             // Generate and display the summary
                             String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
                             if (!proofSummary.isEmpty()) {
@@ -820,6 +1078,7 @@
 
     if (status != null && status.toString().length() > 0) { out.println("Status: "); out.println(status.toString()); }
 %>
+</div>
 
 <%!
     /** 1) One place to set Vampire mode */
@@ -913,55 +1172,147 @@
 
 <p>
     <%@ include file="Postlude.jsp" %>
-
+        <iframe name="runFrame" id="runFrame" style="display:none;"></iframe>
         <script>
             (function(){
                 const form = document.getElementById('AskTell');
+                const overlay = document.getElementById('loading');
+                const frame = document.getElementById('runFrame');
+
+                const bar   = document.getElementById('spinBar');
+                const pct   = document.getElementById('spinPct');
+                const eta   = document.getElementById('spinEta');
+                const limit = document.getElementById('spinLimit');
+
                 let clicked = null;
+                let rafId = null;
+                let runInFlight = false;
+
+                function clampInt(n, def) {
+                    const x = parseInt(n, 10);
+                    return Number.isFinite(x) && x > 0 ? x : def;
+                }
+
+                function stopProgress() {
+                    if (rafId) cancelAnimationFrame(rafId);
+                    rafId = null;
+                }
+
+                function startProgress(durationSec) {
+                    stopProgress();
+                    if (limit) limit.textContent = String(durationSec);
+                    if (bar) bar.style.width = '0%';
+                    if (pct) pct.textContent = '0%';
+                    if (eta) eta.textContent = `~${durationSec}s remaining`;
+
+                    const durationMs = durationSec * 1000;
+                    const start = performance.now();
+
+                    function tick(now) {
+                        const elapsed = now - start;
+                        const p = Math.min(1, elapsed / durationMs);
+
+                        if (bar) bar.style.width = (p * 100).toFixed(1) + '%';
+                        if (pct) pct.textContent = Math.floor(p * 100) + '%';
+
+                        const remaining = Math.max(0, Math.ceil((durationMs - elapsed) / 1000));
+                        if (eta) eta.textContent = remaining > 0 ? `~${remaining}s remaining` : 'Timeout reached';
+
+                        if (p < 1 && runInFlight) rafId = requestAnimationFrame(tick);
+                    }
+
+                    rafId = requestAnimationFrame(tick);
+                }
+
+                // Track which submit button was pressed
                 form.querySelectorAll('input[type=submit]').forEach(b =>
                     b.addEventListener('click', e => clicked = e.target.value)
                 );
+
+                // Run submits into iframe so the page stays alive
                 form.addEventListener('submit', function(){
-                    if (clicked === 'Run') {
-                        // show spinner on the OLD page immediately
-                        document.getElementById('loading').style.display = 'block';
+                    if (clicked !== 'Run') {
+                        form.removeAttribute('target'); // normal for Tell
+                        return;
+                    }
+
+                    form.setAttribute('target', 'runFrame');
+
+                    const timeoutField = form.querySelector('input[name="timeout"]');
+                    const tSec = clampInt(timeoutField ? timeoutField.value : null, 30);
+
+                    runInFlight = true;
+                    overlay.style.display = 'block';
+                    startProgress(tSec);
+                });
+
+                // IMPORTANT: hide overlay when iframe finishes loading server response
+                frame.addEventListener('load', function(){
+                    if (!runInFlight) return;
+                    runInFlight = false;
+
+                    stopProgress();
+                    overlay.style.display = 'none';
+
+                    // Pull results from iframe and inject into main page
+                    try {
+                        const doc = frame.contentDocument || frame.contentWindow.document;
+                        const results = doc.getElementById('serverResults');
+                        const host = document.getElementById('resultsHost');
+
+                        if (!host) return;
+
+                        if (results) {
+                            host.innerHTML = results.innerHTML;
+                        } else {
+                            // Fallback: show something instead of "nothing"
+                            host.innerHTML = "<div style='color:#b00'>No #serverResults found in response.</div>";
+                        }
+                    } catch (e) {
+                        document.getElementById('resultsHost').innerHTML =
+                            "<div style='color:#b00'>Could not read iframe response (same-origin issue).</div>";
                     }
                 });
-                // hide spinner when the NEW page is fully loaded
-                window.addEventListener('load', () => document.body.classList.remove('busy'));
-                // BFCache: ensure spinner is hidden when navigating back
-                window.addEventListener('pageshow', e => { if (e.persisted) document.body.classList.remove('busy'); });
+
+                // Safety: if user navigates back/forward
+                window.addEventListener('pageshow', e => {
+                    if (e.persisted) {
+                        runInFlight = false;
+                        stopProgress();
+                        overlay.style.display = 'none';
+                    }
+                });
             })();
         </script>
 
         <script>
-            document.addEventListener('DOMContentLoaded', function(){
-                const sel = document.getElementById('testName');
-                const radios = document.querySelectorAll('input[name="testFilter"]');
-                const hidden = document.getElementById('testFilterHidden');
-                const form = document.getElementById('AskTell');
-                if (!sel || !radios.length) return;
+        document.addEventListener('DOMContentLoaded', function(){
+            const sel = document.getElementById('testName');
+            const radios = document.querySelectorAll('input[name="testFilter"]');
+            const hidden = document.getElementById('testFilterHidden');
+            const form = document.getElementById('AskTell');
+            if (!sel || !radios.length) return;
 
-                const original = Array.from(sel.options).map(o => ({text:o.text, value:o.value}));
+            const original = Array.from(sel.options).map(o => ({text:o.text, value:o.value}));
 
-                function applyFilter(kind){
-                    const prev = sel.value;
-                    const match = f => kind === 'all' || f.toLowerCase().endsWith('.' + kind);
-                    sel.innerHTML = '';
-                    original.filter(o => match(o.value)).forEach(o => {
-                        const opt = document.createElement('option'); opt.value=o.value; opt.text=o.text; sel.add(opt);
-                    });
-                    sel.value = Array.from(sel.options).some(o => o.value===prev) ? prev : (sel.options[0]?.value || '');
-                }
-                function currentFilter(){ return document.querySelector('input[name="testFilter"]:checked')?.value || 'all'; }
+            function applyFilter(kind){
+                const prev = sel.value;
+                const match = f => kind === 'all' || f.toLowerCase().endsWith('.' + kind);
+                sel.innerHTML = '';
+                original.filter(o => match(o.value)).forEach(o => {
+                    const opt = document.createElement('option'); opt.value=o.value; opt.text=o.text; sel.add(opt);
+                });
+                sel.value = Array.from(sel.options).some(o => o.value===prev) ? prev : (sel.options[0]?.value || '');
+            }
+            function currentFilter(){ return document.querySelector('input[name="testFilter"]:checked')?.value || 'all'; }
 
-                // initialize from session-backed radio
-                applyFilter(currentFilter());
+            // initialize from session-backed radio
+            applyFilter(currentFilter());
 
-                // keep session in sync on change + submit
-                radios.forEach(r => r.addEventListener('change', e => { hidden.value = e.target.value; applyFilter(e.target.value); }));
-                form.addEventListener('submit', () => { hidden.value = currentFilter(); });
-            });
-        </script>
+            // keep session in sync on change + submit
+            radios.forEach(r => r.addEventListener('change', e => { hidden.value = e.target.value; applyFilter(e.target.value); }));
+            form.addEventListener('submit', () => { hidden.value = currentFilter(); });
+        });
+    </script>
 </body>
 </html>
