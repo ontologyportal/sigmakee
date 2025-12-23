@@ -1,0 +1,46 @@
+<configuration >
+  <preference name="sumokbname" value="SUMO" />
+  <preference name="imageFormat" value="png" />
+  <preference name="testOutputDir" value="/Users/Mac_1/Programs/tomcat/apache-tomcat-9.0.107/webapps/sigma/tests" />
+  <preference name="TPTPDisplay" value="no" />
+  <preference name="ollamaHost" value="http://127.0.0.1:11434" />
+  <preference name="inferenceEngine" value="/Users/Mac_1/workspace/sigmakee/e_ltb_runner" />
+  <preference name="reportFnError" value="no" />
+  <preference name="inferenceTestDir" value="/Users/Mac_1/.sigmakee/KBs/tests" />
+  <preference name="baseDir" value="/Users/Mac_1/.sigmakee" />
+  <preference name="hostname" value="localhost" />
+  <preference name="logLevel" value="warning" />
+  <preference name="editDir" value="/Users/Mac_1/workspace/sumo" />
+  <preference name="eprover" value="/Users/Mac_1/Programs/E/PROVER/e_ltb_runner" />
+  <preference name="systemsDir" value="/Users/Mac_1" />
+  <preference name="vampire" value="/Users/Mac_1/Programs/vampire/build/vampire" />
+  <preference name="loadFresh" value="false" />
+  <preference name="userBrowserLimit" value="25" />
+  <preference name="adminBrowserLimit" value="200" />
+  <preference name="https" value="false" />
+  <preference name="reportDup" value="no" />
+  <preference name="termFormats" value="no" />
+  <preference name="typePrefix" value="yes" />
+  <preference name="graphDir" value="/Users/Mac_1/Programs/apache-tomcat-9.0.107/webapps/sigma/graph" />
+  <preference name="TPTP" value="yes" />
+  <preference name="cache" value="yes" />
+  <preference name="graphVizDir" value="/opt/homebrew/bin" />
+  <preference name="kbDir" value="/Users/Mac_1/.sigmakee/KBs" />
+  <preference name="loadCELT" value="no" />
+  <preference name="celtdir" value="" />
+  <preference name="lineNumberCommand" value="" />
+  <preference name="prolog" value="" />
+  <preference name="jedit" value="/usr/share/jedit/jedit" />
+  <preference name="port" value="8080" />
+  <preference name="tptpHomeDir" value="/Users/Mac_1" />
+  <preference name="showcached" value="no" />
+  <preference name="leoExecutable" value="/Users/Mac_1/leo" />
+  <preference name="holdsPrefix" value="no" />
+  <preference name="logDir" value="/Users/Mac_1/.sigmakee/logs" />
+  <kb name="SUMO" >
+    <constituent filename="/Users/Mac_1/.sigmakee/KBs/english_format.kif" />
+    <constituent filename="/Users/Mac_1/.sigmakee/KBs/domainEnglishFormat.kif" />
+    <constituent filename="/Users/Mac_1/.sigmakee/KBs/Merge.kif" />
+  </kb>
+</configuration>
+

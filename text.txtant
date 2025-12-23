@@ -1,0 +1,29 @@
+========================================
+INFO in THFnew.main()
+args:1 : [-m]
+[KButilities] SIGMA_HOME set to /Users/Mac_1/.sigmakee
+WordNet.initOnce(): 'disable' is: false
+WordNet.initOnce(): using baseDir = /Users/Mac_1/.sigmakee/KBs/WordNetMappings
+WordNet.serializedExists(): true
+WordNet.serializedOld(): wn.ser save date: Wed Oct 01 13:30:45 EEST 2025
+WordNet.loadSerialized(): WN has been deserialized 
+INFO in WordNet.loadSerialized(): origMaxNounSynsetID: 15300051 maxNounSynsetID: 15300051
+ENTER DB.readSpreadsheet(/Users/Mac_1/.sigmakee/KBs/WordNetMappings/sentiment.csv, null)
+ENTER DB.readSpreadsheet(java.io.FileReader@3567135c, null)
+EXIT DB.readSpreadsheet(java.io.FileReader@3567135c, null)
+  rows == [list of 8222 rows]
+  0.061 seconds elapsed time
+EXIT DB.readSpreadsheet(/Users/Mac_1/.sigmakee/KBs/WordNetMappings/sentiment.csv, null)
+WordNet.initOnce(): 117659 senses loaded
+NLGUtils.init(): 
+NLGUtils.init(): initializing with /Users/Mac_1/.sigmakee/KBs
+NLGUtils.readKeywordMap():
+NLGUtils.serializedExists(): true
+NLGUtils.serializedOld(): NLGUtils.ser save date: Wed Oct 01 13:30:41 EEST 2025
+NLGUtils.loadSerialized(): NLGUtils has been deserialized 
+OMWordnet.serializedExists(): true
+OMWordnet.serializedOld(): omw.ser save date: Wed Oct 01 13:30:45 EEST 2025
+OMWordnet.loadSerialized(): OMW has been deserialized 
+VerbNet.readVerbFiles(): loading files from: 
+THFnew.main(): KB loaded
+THFnew.main(): translate to THF with modals

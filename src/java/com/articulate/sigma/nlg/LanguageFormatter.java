@@ -25,6 +25,7 @@ import edu.stanford.nlp.ling.CoreAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import tptp_parser.TPTPFormula;
 
 import java.io.IOException;
 import java.util.*;
@@ -42,6 +43,7 @@ public class LanguageFormatter {
 
     // a list of format parameters or words and the sentence words they match with
     public static Map<String,CoreLabel> outputMap = new HashMap<>();
+    public static TPTPFormula tptpStep;
     private final String statement;
 
     private final Map<String, String> phraseMap;
@@ -101,6 +103,20 @@ public class LanguageFormatter {
         @Override
         public Class<Integer> getType() {
             return Integer.class;
+        }
+    }
+
+    public static class StepExplanation {
+        public int stepNumber;
+        public String paraphrase;
+        public String because;
+        public List<Integer> uses = new ArrayList<>();
+        public String infRule;                // inference rule label (if any)
+        public double confidence;
+
+        @Override
+        public String toString() {
+            return "Step " + stepNumber + ": " + paraphrase;
         }
     }
 
@@ -186,8 +202,6 @@ public class LanguageFormatter {
         try {
             theStack.pushNew();
             StackElement element = theStack.getCurrStackElement();
-
-            System.out.println("HTML STATEMENT: " + statement + "");
             String template = paraphraseStatement(statement, false, false, 1);
 
             // Check for successful informal NLG of the entire statement.
@@ -247,12 +261,13 @@ public class LanguageFormatter {
                 // Get rid of the percentage signs.
                 nlFormat = NLGUtils.resolveFormatSpecifiers(template, href);
                 if (debug) System.out.println("LanguageFormatter.htmlParaphrase(): nlFormat: " + nlFormat);
+
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        if (debug) System.out.println("htmlParaphrase() - outputMap: " + outputMap);
+
 
         // nlFormat = paraphrased with links!
         // e.g <a href="http://localhost:8080/sigma/Browse.jsp?lang=EnglishLanguage&kb=SUMO&term=instrument">instrument</a> is an <a href="http://localhost:8080/sigma/Browse.jsp?lang=EnglishLanguage&kb=SUMO&term=instance">instance</a> of <a href="http://localhost:8080/sigma/Browse.jsp?lang=EnglishLanguage&kb=SUMO&term=Relation">relation</a>
@@ -293,8 +308,6 @@ public class LanguageFormatter {
         Formula f = new Formula(stmt);
 
         theStack.insertFormulaArgs(f);
-        System.out.println("Statement is: " + stmt + "");
-        System.out.println("Formula is: " + f + "");
         if (f.atom()) {
             ans = processAtom(stmt, termMap);
             return ans;
@@ -404,49 +417,357 @@ public class LanguageFormatter {
         return ans;
     }
 
-    private String paraphraseWithLLM (String initialText) {
 
-        String prompt =
-                "You are an expert at rewriting formal or structured English sentences (derived from SUMO logical statements) "
-                        + "into more natural English while keeping the logical meaning and terminology intact.\n"
-                        + "When rewriting, follow these rules:\n"
-                        + "Keep all SUMO-related terms or placeholders (e.g., entity, relation, process) unchanged.\n"
-                        + "Make the sentence grammatical, fluent, and natural for a human reader.\n"
-                        + "Preserve logical quantifiers or structure (e.g., “for all”, “if”, “then”, “not”, “is an instance of”).\n"
-                        + "Only add small grammatical adjustments (articles, pluralization, verb forms, etc.) to improve readability.\n"
-                        + "Do not simplify or paraphrase away the logical meaning.\n"
-                        + "Answer only with the rewrited sentence, nothing else!"
-                        + "Input sentence: ";
+    private String unescapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace("\\r", "\r")
+                .replace("\\\"", "\"")
+                .replace("\\\\", "\\");
+    }
 
 
-        String model = "llama3.2";
+    private String buildGlossaryFromMaps(String kif) {
 
-        String cleanedText = removeLinks(initialText);
-        prompt = prompt + cleanedText;
+        if (StringUtil.emptyString(kif)) return "";
+
+        Set<String> symbols = extractSymbolsFromKif(kif);
+
+        StringBuilder sb = new StringBuilder();
+        for (String sym : symbols) {
+            String gloss = null;
+
+            // termMap/phraseMap are already in the LanguageFormatter instance
+            if (termMap != null) gloss = termMap.get(sym);
+            if (gloss == null && phraseMap != null) gloss = phraseMap.get(sym);
+
+            if (StringUtil.isNonEmptyString(gloss)) {
+                sb.append(sym).append(" = ").append(gloss).append("\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    private Set<String> extractSymbolsFromKif(String kif) {
+        Set<String> out = new LinkedHashSet<>();
+        String cleaned = kif.replace('(', ' ').replace(')', ' ');
+        for (String tok : cleaned.split("\\s+")) {
+            if (tok.isEmpty()) continue;
+            if (tok.startsWith("?")) continue; // variables
+            if (tok.matches("[A-Za-z][A-Za-z0-9_+-]*")) out.add(tok);
+        }
+        return out;
+    }
+
+
+    private String buildParentContext(List<Integer> parents, Map<Integer, String> priorNL) {
+        if (parents == null || parents.isEmpty()) return "(none)\n";
+        StringBuilder sb = new StringBuilder();
+        for (Integer p : parents) {
+            if (p == null) continue;
+            String nl = priorNL.get(p);
+            if (nl == null) nl = "";
+            sb.append("Step ").append(p).append(": ").append(nl).append("\n");
+        }
+        return sb.toString();
+    }
+
+
+    private Set<String> extractSymbols(String kif) {
+        Set<String> out = new HashSet<>();
+        String[] tokens = kif.replace("(", " ")
+                .replace(")", " ")
+                .split("\\s+");
+
+        for (String t : tokens) {
+            if (t.matches("[A-Za-z][A-Za-z0-9_+-]*")) {
+                out.add(t);
+            }
+        }
+        return out;
+    }
+
+    private String callOllamaJson(String prompt) {
+
+//        String model = "llama3.2";
+        String model = "qwen2.5:14b-instruct";
 
         String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
         if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
 
         OllamaClient ollama = new OllamaClient(ollamaHost);
 
-        String out = "";
+        Map<String,Object> opts = new HashMap<>();
+        opts.put("temperature", 0);
+        opts.put("top_p", 1);
+        opts.put("num_predict", 500);
+        opts.put("seed", 0);
+
         try {
-            out = ollama.generate(model, prompt);
+            return ollama.generate(model, prompt, opts, true);
         } catch (IOException e) {
-            System.out.println(" ERROR | LanguageFormatter | paraphraseWithLLM : " + e);
+            System.out.println("ERROR | LanguageFormatter | callOllamaJson: " + e);
+            return "{}";
         }
-        return out;
     }
 
-        public static boolean checkOllamaHealth(){
-            String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
-            if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
-            OllamaClient oc = new OllamaClient(ollamaHost, 1000, 1500); // short timeouts
-            return oc.isHealthy();
+
+
+
+    private void parseStepExplanationJson(String json, StepExplanation res) {
+        if (json == null) return;
+
+        String paraphrase = jsonExtractField(json, "paraphrase");
+        String because    = jsonExtractField(json, "because");
+        String usesArr    = jsonExtractArray(json, "uses");
+        Double conf       = jsonExtractDouble(json, "confidence");
+
+        res.paraphrase = (paraphrase != null) ? paraphrase : "";
+        res.because    = (because != null) ? because : "";
+        res.confidence = (conf != null) ? conf : 0.0;
+
+        res.uses = new ArrayList<>();
+        if (usesArr != null && !usesArr.trim().isEmpty()) {
+            for (String u : usesArr.split(",")) {
+                try { res.uses.add(Integer.parseInt(u.trim())); }
+                catch (Exception ignore) {}
+            }
+        }
+    }
+
+
+    private String jsonExtractField(String json, String field) {
+        if (json == null) return "";
+        String key = "\"" + field + "\"";
+        int k = json.indexOf(key);
+        if (k < 0) return "";
+        int colon = json.indexOf(':', k);
+        if (colon < 0) return "";
+
+        int q1 = json.indexOf('"', colon + 1);
+        if (q1 < 0) return "";
+
+        boolean esc = false;
+        for (int i = q1 + 1; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (esc) { esc = false; continue; }
+            if (c == '\\') { esc = true; continue; }
+            if (c == '"') return unescapeJson(json.substring(q1 + 1, i));
+        }
+        return "";
+    }
+
+
+    private String jsonExtractArray(String json, String field) {
+        String key = "\"" + field + "\"";
+        int k = json.indexOf(key);
+        if (k < 0) return null;
+        int s = json.indexOf('[', k);
+        int e = json.indexOf(']', s);
+        if (s < 0 || e < 0 || e <= s) return null;
+        return json.substring(s + 1, e).trim();
+    }
+
+
+    private Double jsonExtractDouble(String json, String field) {
+        String key = "\"" + field + "\"";
+        int k = json.indexOf(key);
+        if (k < 0) return null;
+        int colon = json.indexOf(':', k);
+        if (colon < 0) return null;
+        String tail = json.substring(colon + 1).trim();
+        String num = tail.split("[,}\\s]")[0];
+        try { return Double.parseDouble(num); }
+        catch (Exception e) { return null; }
+    }
+
+
+    private String paraphraseWithLLM(String currentHtmlOrTemplate) {
+
+        // We will ask the LLM to explain the *SUO-KIF* (this.statement),
+        // while still allowing it to produce fluent English.
+        final String stepKif = (this.statement != null) ? this.statement : "";
+        final String cleanedTemplate = removeLinks(currentHtmlOrTemplate);
+
+        // Build parent context from what you injected (supports/intsupports).
+        // If supports contains the parent formulas as strings, include them.
+        String parentsBlock = buildParentsBlockFromInjectedStep();
+
+        // Build a small glossary grounded in Sigma maps (termFormat/format equivalents).
+        String glossaryBlock = buildGlossaryFromMaps(stepKif);
+
+        // Stronger instruction: explain meaning, do not "polish" blindly.
+        String prompt1 =
+                "You are a SUO-KIF to natural-language translator.\n"
+                        + "Your task is to produce a literal, structure-preserving English rendering of a SUO-KIF formula.\n\n"
+
+                        + "STRICT RULES:\n"
+                        + "- Preserve the logical structure exactly (quantifiers, implication, conjunction, negation).\n"
+                        + "- Do NOT invent facts or relationships.\n"
+                        + "- Do NOT simplify or interpret semantics beyond the formula structure.\n"
+                        + "- Keep all SUMO terms and variables unchanged.\n"
+                        + "- Use plain English words only (no logical symbols).\n"
+                        + "- Focus on structural faithfulness, not natural plausibility.\n"
+                        + "- After verbalizing each predicate, append the exact predicate in parentheses.\n\n"
+
+                        + "OUTPUT FORMAT:\n"
+                        + "- Output VALID JSON ONLY.\n"
+                        + "- Schema: {\"paraphrase\":\"...\"}\n\n"
+
+                        + "EXAMPLE 1:\n"
+                        + "SUO-KIF:\n"
+                        + "(orientation A C Right)\n"
+                        + "OUTPUT:\n"
+                        + "{\"paraphrase\":\"A is at Right of C (orientation A C Right)\"}\n\n"
+
+                        + "EXAMPLE 1:\n"
+                        + "SUO-KIF:\n"
+                        + "(=>\n"
+                        + "  (and\n"
+                        + "    (instance ?CHILD Human)\n"
+                        + "    (holdsDuring ?TIME (attribute ?CHILD NonFullyFormed)))\n"
+                        + "  (holdsDuring ?TIME (instance ?CHILD HumanYouth)))\n\n"
+                        + "OUTPUT:\n"
+                        + "{\"paraphrase\":\"If ?CHILD is an instance of Human (instance ?CHILD Human) "
+                        + "and during ?TIME the child has the attribute NonFullyFormed "
+                        + "(holdsDuring ?TIME (attribute ?CHILD NonFullyFormed)), "
+                        + "then during the same time ?CHILD is an instance of HumanYouth "
+                        + "(holdsDuring ?TIME (instance ?CHILD HumanYouth)).\"}\n\n"
+
+                        + "EXAMPLE 2:\n"
+                        + "SUO-KIF:\n"
+                        + "(=>\n"
+                        + "  (instance ?AT AnimalTeam)\n"
+                        + "  (exists (?P)\n"
+                        + "    (and\n"
+                        + "      (instance ?P Pulling)\n"
+                        + "      (agent ?P ?AT))))\n\n"
+                        + "OUTPUT:\n"
+                        + "{\"paraphrase\":\"If ?AT is an instance of AnimalTeam (instance ?AT AnimalTeam), "
+                        + "then there exists ?P such that ?P is an instance of Pulling "
+                        + "(instance ?P Pulling) and ?P has agent ?AT (agent ?P ?AT).\"}\n\n"
+
+                        + "GLOSSARY (Sigma):\n" + glossaryBlock + "\n\n"
+                        + "SUO-KIF:\n" + stepKif;
+
+
+        System.out.println("------------PROMPT 1-----------------");
+        System.out.println(prompt1);
+
+        String json1 = callOllamaJson(prompt1);
+
+
+        String paraphrase1 = jsonExtractField(json1, "paraphrase");
+        if (StringUtil.emptyString(paraphrase1)) {
+            // Fallback: if JSON failed, return whatever we got
+            return StringUtil.isNonEmptyString(json1) ? json1 : cleanedTemplate;
+        }
+        System.out.println("-------Answer 1---------");
+        System.out.println(json1);
+        System.out.println("--------------------------------------");
+
+        // SKIP second pass for now, because it adds a lot of time to the execution.
+//        // Verifier pass: keep meaning tight
+//        String prompt2 =
+//                "You are a strict SUO-KIF paraphrase verifier.\n"
+//                        + "Compare STEP and PARAPHRASE for structural equivalence.\n"
+//                        + "For each check, output one of: PASS, FAIL, or NA (not applicable).\n"
+//                        + "A check is NA if STEP does not contain that construct.\n\n"
+//
+//                        + "CHECKS:\n"
+//                        + "Q: Quantifiers (forall/exists) variables and scopes preserved.\n"
+//                        + "N: Negation (not) scope preserved.\n"
+//                        + "I: Conditionals (=>) and nesting preserved.\n"
+//                        + "B: Boolean structure (and/or) groupings preserved.\n"
+//                        + "P: Predicates preserved: same predicate names and same argument order.\n"
+//                        + "X: No extra predicates/facts introduced.\n"
+//                        + "S: Symbols preserved exactly (variables/constants names unchanged).\n\n"
+//
+//                        + "OUTPUT VALID JSON ONLY with this schema:\n"
+//                        + "{"
+//                        + "\"verdict\":\"PASS|FAIL\","
+//                        + "\"checks\":{\"Q\":\"PASS|FAIL|NA\",\"N\":\"PASS|FAIL|NA\",\"I\":\"PASS|FAIL|NA\",\"B\":\"PASS|FAIL|NA\",\"P\":\"PASS|FAIL|NA\",\"X\":\"PASS|FAIL|NA\",\"S\":\"PASS|FAIL|NA\"},"
+//                        + "\"issues\":[\"...\"],"
+//                        + "\"corrected_paraphrase\":\"...\""
+//                        + "}\n\n"
+//
+//                        + "RULES:\n"
+//                        + "- verdict is FAIL if ANY check is FAIL.\n"
+//                        + "- If verdict is PASS: corrected_paraphrase MUST equal PARAPHRASE exactly.\n"
+//                        + "- If verdict is FAIL: corrected_paraphrase MUST be corrected.\n"
+//                        + "- Keep SUMO terms and symbols unchanged.\n"
+//                        + "- Do not add facts.\n\n"
+//
+//                        + "STEP (SUO-KIF):\n" + stepKif + "\n\n"
+//                        + "PARAPHRASE:\n" + paraphrase1;
+//
+//
+//        System.out.println("\n\n----------- PROMPT 2 ------------------");
+//        System.out.println(prompt2);
+//
+//        String json2 = callOllamaJson(prompt2);
+//        System.out.println("------Answer 2------");
+//        String verdict = jsonExtractField(json2, "verdict");
+//        String corrected = jsonExtractField(json2, "corrected_paraphrase");
+//        System.out.println(json2);
+//        System.out.println("----------------------------------------\n\n");
+//        if ("FAIL".equalsIgnoreCase(verdict) && StringUtil.isNonEmptyString(corrected)) {
+//            return corrected;
+//        }
+        return paraphrase1;
+    }
+
+    private String buildParentsBlockFromInjectedStep() {
+
+        // Replace "tptpStep" with your actual injected field name:
+        // e.g., private TPTPFormula tptpStep;
+        if (this.tptpStep == null) return "(none)\n";
+
+        StringBuilder sb = new StringBuilder();
+
+//         If supports contains parent formulas as strings, include them.
+//        if (this.tptpStep.supports != null && !this.tptpStep.supports.isEmpty()) {
+//            for (int i = 0; i < this.tptpStep.supports.size(); i++) {
+//                String s = this.tptpStep.supports.get(i);
+//                if (StringUtil.isNonEmptyString(s)) {
+//                    sb.append("- ").append(s).append("\n");
+//                }
+//            }
+//            return sb.toString();
+//        }
+
+        // Return indices
+        if (this.tptpStep.intsupports != null && !this.tptpStep.intsupports.isEmpty()) {
+            for (int i = 0; i < this.tptpStep.supports.size(); i++) {
+                String s = this.tptpStep.intsupports.get(i).toString();
+                sb.append("Parent indices: ").append(this.tptpStep.intsupports);
+                if (StringUtil.isNonEmptyString(s)) {
+                    sb.append(", ").append(s);
+                }
+            }
+            return sb.toString();
         }
 
+        return "(none)\n";
+    }
 
-        private String removeLinks(String initialText){
+    private String getInfRuleSafe() {
+        if (this.tptpStep == null) return "";
+        return (this.tptpStep.infRule != null) ? this.tptpStep.infRule : "";
+    }
+
+
+
+    public static boolean checkOllamaHealth(){
+        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+        if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
+        OllamaClient oc = new OllamaClient(ollamaHost, 1000, 1500); // short timeouts
+        return oc.isHealthy();
+    }
+
+
+    private String removeLinks(String initialText){
         if (initialText == null) return null;
         // Replace <a ...> and </a> tags with nothing, keeping only the inner text
         return initialText.replaceAll("<a[^>]*>", "")   // remove opening <a ...>

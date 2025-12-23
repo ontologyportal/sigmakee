@@ -1,0 +1,443 @@
+[
+  {
+    "f1": "(=>
+          (instance ?C WalkingCane)
+            (hasPurpose ?C
+               (exists (?W)
+                  (and
+                        (instance ?W Walking)
+                        (instrument ?W ?C)))))",
+    "f2": "(=>
+        (instance ?C WalkingCane)
+          (hasPurpose ?C
+          (exists (?W)
+            (and
+            (instance ?W Walking)
+            (instrument ?W ?C)))))",
+    "equal": true
+  },
+  {
+    "f1": "(=>
+      (instance ?C WalkingCane)
+        (hasPurpose ?C
+          (exists (?W)
+            (and
+              (instance ?W Walking)
+              (instrument ?W ?C)))))",
+    "f2": "(=>
+      (instance ?C WalkingCane)
+        (hasPurpose ?C
+          (exists (?W)
+            (and
+              (instance ?W Walking)
+              (instrument ?V ?C)))))",
+    "equal": false
+  },
+  {
+    "f1": "(<=>
+        (and
+          (equal
+            (AbsoluteValueFn ?NUMBER1) ?NUMBER2)
+          (instance ?NUMBER1 RealNumber)
+          (instance ?NUMBER2 RealNumber))
+        (or
+          (and
+            (instance ?NUMBER1 NonnegativeRealNumber)
+            (equal ?NUMBER1 ?NUMBER2))
+          (and
+            (instance ?NUMBER1 NegativeRealNumber)
+            (equal ?NUMBER2
+              (SubtractionFn 0 ?NUMBER1)))))",
+    "f2": "(<=>
+    (and
+    (equal
+    (AbsoluteValueFn ?NUMBER1) ?NUMBER2)
+    (instance ?NUMBER2 RealNumber)
+    (instance ?NUMBER1 RealNumber))
+    (or
+    (and
+    (instance ?NUMBER1 NonnegativeRealNumber)
+    (equal ?NUMBER1 ?NUMBER2))
+    (and
+    (instance ?NUMBER1 NegativeRealNumber)
+    (equal ?NUMBER2
+    (SubtractionFn 0 ?NUMBER1)))))",
+    "equal": true
+  },
+  {
+    "f1": "(<=>
+    (equal
+    (MaleToFemaleRatioFn ?AREA) ?REALNUMBER)
+    (and
+    (equal ?MALECOUNT
+    (CardinalityFn
+    (KappaFn ?MALE
+    (and
+    (instance ?MALE Human)
+    (attribute ?MALE Male)
+    (inhabits ?MALE ?AREA)))))
+    (equal ?FEMALECOUNT
+    (CardinalityFn
+    (KappaFn ?FEMALE
+    (and
+    (instance ?FEMALE Human)
+    (attribute ?FEMALE Female)
+    (inhabits ?FEMALE ?AREA)))))
+    (equal
+    (DivisionFn ?MALECOUNT ?FEMALECOUNT) ?REALNUMBER)))",
+    "f2": "(<=>
+    (equal
+    (MaleToFemaleRatioFn ?AREA) ?REALNUMBER)
+    (and
+    (equal ?MALENUMBER
+    (CardinalityFn
+    (KappaFn ?MALE
+    (and
+    (instance ?MALE Human)
+    (attribute ?MALE Male)
+    (inhabits ?MALE ?AREA)))))
+    (equal ?FEMALENUMBER
+    (CardinalityFn
+    (KappaFn ?FEMALE
+    (and
+    (instance ?FEMALE Human)
+    (attribute ?FEMALE Female)
+    (inhabits ?FEMALE ?AREA)))))
+    (equal
+    (DivisionFn ?MALENUMBER ?FEMALENUMBER) ?REALNUMBER)))",
+    "equal": true
+  },
+  {
+    "f1": "
+    (<=>
+    (and
+    (accountHolder ?Account ?Agent)
+    (instance ?Agent Human))
+    (instance ?Account PersonalAccount))",
+    "f2": "
+    (<=>
+      (and
+      (accountHolder ?Account ?Agent)
+      (instance ?Agent Human))
+      (not
+        (instance ?Account PersonalAccount)))",
+    "equal": false
+  },
+  {
+    "f1": "(=>
+    (and
+    (instance ?ORG MilitaryOrganization)
+    (holdsDuring ?T1
+    (member ?X ?ORG))
+    (instance ?X Human))
+    (holdsDuring ?T1
+    (attribute ?X MilitaryPerson)))",
+    "f2": "(=>
+    (and
+    (instance ?ORG MilitaryOrganization)
+    (holdsDuring ?T1
+    (member ?X ?ORG))
+    (instance ?X Human))
+    (holdsDuring ?T1
+    (attribute ?X OccupationalRole)))",
+    "equal": false
+  },
+  {
+    "f1": "(=>
+      (and
+        (instance ?ORG MilitaryOrganization)
+        (holdsDuring ?T1
+          (member ?X ?ORG))
+        (instance ?X Human))
+      (holdsDuring ?T1
+        (attribute ?X MilitaryPerson)))",
+    "f2": "(=>
+      (and
+        (instance ?X Human)
+        (holdsDuring ?T1
+          (member ?X ?ORG))
+        (instance ?ORG MilitaryOrganization))
+      (holdsDuring ?T1
+        (attribute ?X MilitaryPerson)))",
+    "equal": true
+  },
+  {
+    "f1": "(<=>
+    (equal
+    (DeathsPerThousandLiveBirthsFn ?AREA
+    (YearFn ?YEAR)) ?REALNUMBER)
+    (and
+    (equal ?BIRTHCOUNT
+    (CardinalityFn
+    (KappaFn ?BIRTH
+    (and
+    (instance ?BIRTH Birth)
+    (experiencer ?BIRTH ?INFANT)
+    (instance ?INFANT Human)
+    (during
+    (WhenFn ?BIRTH)
+    (YearFn ?YEAR))
+    (equal
+    (WhereFn ?BIRTH
+    (WhenFn ?BIRTH)) ?AREA)))))
+    (equal
+    (DivisionFn ?BIRTHCOUNT 1000) ?THOUSANDSOFBIRTHS)
+    (equal ?INFANTDEATHCOUNT
+    (CardinalityFn
+    (KappaFn ?DEATH
+    (and
+    (instance ?DEATH Death)
+    (experiencer ?DEATH ?INFANT)
+    (experiencer ?DEATH ?INFANT)
+    (instance ?INFANT Human)
+    (age ?INFANT
+    (MeasureFn ?AGE YearDuration))
+    (lessThan ?AGE 1)
+    (during
+    (WhenFn ?DEATH)
+    (YearFn ?YEAR))
+    (equal
+    (WhereFn ?DEATH
+    (WhenFn ?DEATH)) ?AREA)))))
+    (equal
+    (DivisionFn ?INFANTDEATHCOUNT ?THOUSANDSOFBIRTHS) ?REALNUMBER)))",
+    "f2": "(<=>
+    (equal
+    (DeathsPerThousandLiveBirthsFn ?AREA
+    (YearFn ?YEAR)) ?REALNUMBER)
+    (and
+    (equal ?BIRTHCOUNT
+    (CardinalityFn
+    (KappaFn ?BIRTH
+    (and
+    (instance ?BIRTH Birth)
+    (experiencer ?BIRTH ?INFANT)
+    (instance ?INFANT Human)
+    (during
+    (WhenFn ?BIRTH)
+    (YearFn ?YEAR))
+    (equal
+    (WhereFn ?BIRTH
+    (WhenFn ?BIRTH)) ?AREA)))))
+    (equal
+    (DivisionFn ?BIRTHCOUNT 1000) ?THOUSANDSOFBIRTHS)
+    (equal ?INFANTDEATHCOUNT
+    (CardinalityFn
+    (KappaFn ?DEATH
+    (and
+    (instance ?DEATH Death)
+    (experiencer ?DEATH ?INFANT)
+    (instance ?INFANT Human)
+    (age ?INFANT
+    (MeasureFn ?AGE YearDuration))
+    (lessThan ?AGE 1)
+    (during
+    (WhenFn ?DEATH)
+    (YearFn ?YEAR))
+    (equal
+    (WhereFn ?DEATH
+    (WhenFn ?DEATH)) ?AREA)))))
+    (equal
+    (DivisionFn ?INFANTDEATHCOUNT ?THOUSANDSOFBIRTHS) ?REALNUMBER)))",
+    "equal": false
+  },
+  {
+    "f1": "(<=>
+    (equal
+    (DeathsPerThousandLiveBirthsFn ?AREA
+    (YearFn ?YEAR)) ?REALNUMBER)
+    (and
+    (equal ?BIRTHCOUNT
+    (CardinalityFn
+    (KappaFn ?BIRTH
+    (and
+    (instance ?BIRTH Birth)
+    (experiencer ?BIRTH ?INFANT)
+    (instance ?INFANT Human)
+    (during
+    (WhenFn ?BIRTH)
+    (YearFn ?YEAR))
+    (equal
+    (WhereFn ?BIRTH
+    (WhenFn ?BIRTH)) ?AREA)))))
+    (equal
+    (DivisionFn ?BIRTHCOUNT 1000) ?THOUSANDSOFBIRTHS)
+    (equal ?INFANTDEATHCOUNT
+    (CardinalityFn
+    (KappaFn ?DEATH
+    (and
+    (instance ?DEATH Death)
+    (experiencer ?DEATH ?INFANT)
+    (experiencer ?DEATH ?INFANT)
+    (instance ?INFANT Human)
+    (age ?INFANT
+    (MeasureFn ?AGE YearDuration))
+    (lessThan ?AGE 1)
+    (during
+    (WhenFn ?DEATH)
+    (YearFn ?YEAR))
+    (equal
+    (WhereFn ?DEATH
+    (WhenFn ?DEATH)) ?AREA)))))
+    (equal
+    (DivisionFn ?INFANTDEATHCOUNT ?THOUSANDSOFBIRTHS) ?REALNUMBER)))",
+    "f2": "(<=>
+    (equal
+    (DeathsPerThousandLiveBirthsFn ?AREA
+    (YearFn ?YEAR)) ?REALNUMBER)
+    (and
+    (equal ?BIRTHCOUNT
+    (CardinalityFn
+    (KappaFn ?BIRTH
+    (and
+    (instance ?BIRTH Birth)
+    (experiencer ?BIRTH ?INFANT)
+    (instance ?INFANT Human)
+    (during
+    (WhenFn ?BIRTH)
+    (YearFn ?YEAR))
+    (equal
+    (WhereFn ?BIRTH
+    (WhenFn ?BIRTH)) ?AREA)))))
+    (equal
+    (DivisionFn ?BIRTHCOUNT 1000) ?THOUSANDSOFBIRTHS)
+    (equal ?INFANTDEATHCOUNT
+    (CardinalityFn
+    (KappaFn ?DEATH
+    (and
+    (instance ?DEATH Death)
+    (experiencer ?DEATH ?INFANT)
+    (experiencer ?DEATH ?INFANT)
+    (instance ?INFANT Human)
+    (age ?INFANT
+    (MeasureFn ?AGE YearDuration))
+    (lessThan ?AGE 1)
+    (during
+    (WhenFn ?DEATH)
+    (YearFn ?YEAR))
+    (equal
+    (WhereFn ?DEATH
+    (WhenFn ?DEATH)) ?AREA)))))
+    (equal
+    (DivisionFn ?INFANTDEATHCOUNT ?THOUSANDSOFBIRTHS) ?REALNUMBER)))",
+   "equal": true
+  },
+  {
+    "f1": "(<=>
+    (equal
+    (DeathsPerThousandLiveBirthsFn ?AREA
+    (YearFn ?YEAR)) ?REALNUMBER)
+    (and
+    (equal ?BIRTHCOUNT
+    (CardinalityFn
+    (KappaFn ?BIRTH
+    (and
+    (instance ?BIRTH Birth)
+    (experiencer ?BIRTH ?INFANT)
+    (instance ?INFANT Human)
+    (during
+    (WhenFn ?BIRTH)
+    (YearFn ?YEAR))
+    (equal
+    (WhereFn ?BIRTH
+    (WhenFn ?BIRTH)) ?AREA)))))
+    (equal
+    (DivisionFn ?BIRTHCOUNT 1000) ?THOUSANDSOFBIRTHS)
+    (equal ?INFANTDEATHCOUNT
+    (CardinalityFn
+    (KappaFn ?DEATH
+    (and
+    (experiencer ?DEATH ?INFANT)
+    (instance ?DEATH Death)
+    (experiencer ?DEATH ?INFANT)
+    (age ?INFANT
+    (MeasureFn ?AGE YearDuration))
+    (instance ?INFANT Human)
+    (lessThan ?AGE 1)
+    (during
+    (WhenFn ?DEATH)
+    (YearFn ?YEAR))
+    (equal
+    (WhereFn ?DEATH
+    (WhenFn ?DEATH)) ?AREA)))))
+    (equal
+    (DivisionFn ?INFANTDEATHCOUNT ?THOUSANDSOFBIRTHS) ?REALNUMBER)))",
+    "f2": "(<=>
+    (equal
+    ?REALNUMBER (DeathsPerThousandLiveBirthsFn ?AREA
+    (YearFn ?YEAR)))
+    (and
+    (equal ?BIRTHCOUNT
+    (CardinalityFn
+    (KappaFn ?BIRTH
+    (and
+    (instance ?BIRTH Birth)
+    (experiencer ?BIRTH ?INFANT)
+    (instance ?INFANT Human)
+    (during
+    (WhenFn ?BIRTH)
+    (YearFn ?YEAR))
+    (equal
+    (WhereFn ?BIRTH
+    (WhenFn ?BIRTH)) ?AREA)))))
+    (equal
+    (DivisionFn ?BIRTHCOUNT 1000) ?THOUSANDSOFBIRTHS)
+    (equal ?INFANTDEATHCOUNT
+    (CardinalityFn
+    (KappaFn ?DEATH
+    (and
+    (instance ?DEATH Death)
+    (experiencer ?DEATH ?INFANT)
+    (experiencer ?DEATH ?INFANT)
+    (instance ?INFANT Human)
+    (age ?INFANT
+    (MeasureFn ?AGE YearDuration))
+    (lessThan ?AGE 1)
+    (during
+    (WhenFn ?DEATH)
+    (YearFn ?YEAR))
+    (equal
+    (WhereFn ?DEATH
+    (WhenFn ?DEATH)) ?AREA)))))
+    (equal
+    (DivisionFn ?INFANTDEATHCOUNT ?THOUSANDSOFBIRTHS) ?REALNUMBER)))",
+    "equal": true
+  },
+  {
+    "f1": "
+    (=>
+    (copy ?OBJ1 ?OBJ2)
+    (forall (?ATTR)
+    (=>
+    (attribute ?OBJ1 ?ATTR)
+    (attribute ?OBJ2 ?ATTR))))",
+    "f2": "
+    (=>
+    (copy ?OB2 ?OB1)
+    (forall (?ATTR)
+    (=>
+    (attribute ?OB1 ?ATTR)
+    (attribute ?OB2 ?ATTR))))",
+    "equal":true
+  }
+  {
+    "f1": "
+    (=>
+    (copy ?OBJ1 ?OBJ2)
+    (forall (?ATTR)
+    (=>
+    (attribute ?OBJ1 ?ATTR)
+    (attribute ?OBJ2 ?ATTR))))",
+    "f2": "
+    (=>
+    (copy ?OB2 ?OB2)
+    (forall (?ATTR)
+    (=>
+    (attribute ?OB1 ?ATTR)
+    (attribute ?OB2 ?ATTR))))",
+    "equal":false
+  }
+
+
+
+]

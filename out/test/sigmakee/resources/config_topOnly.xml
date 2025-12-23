@@ -1,0 +1,43 @@
+<configuration>
+  <preference name="adminBrowserLimit" value="200" />
+  <preference name="baseDir" value="/home/Mac/.sigmakee" />
+  <preference name="cache" value="yes" />
+  <preference name="celtdir" value="" />
+  <preference name="editDir" value="/home/Mac/workspace/sumo" />
+  <preference name="eprover" value="/home/Mac/E/bin/e_ltb_runner" />
+  <preference name="graphVizDir" value="/usr/bin" />
+  <preference name="holdsPrefix" value="no" />
+  <preference name="hostname" value="localhost" />
+  <preference name="https" value="false" />
+  <preference name="imageFormat" value="png"/>
+  <preference name="inferenceTestDir" value="/home/Mac/.sigmakee/KBs/tests" />
+  <preference name="jedit" value="/usr/share/jedit/jedit" />
+  <preference name="kbDir" value="/home/Mac/.sigmakee/KBs" />
+  <preference name="leoExecutable" value="/home/Mac/leo" />
+  <preference name="lineNumberCommand" value="" />
+  <preference name="loadCELT" value="no" />
+  <preference name="loadFresh" value="false" />
+  <preference name="logDir" value="/home/Mac/.sigmakee/logs" />
+  <preference name="logLevel" value="warning" />
+  <preference name="port" value="8080" />
+  <preference name="prolog" value="" />
+  <preference name="reportDup" value="no" />
+  <preference name="reportFnError" value="no" />
+  <preference name="showcached" value="no" />
+  <preference name="sumokbname" value="SUMO" />
+  <preference name="systemsDir" value="/home/Mac" />
+  <preference name="termFormats" value="no" />
+  <preference name="testOutputDir" value="/usr/local/tomcat/apache-tomcat-9.0.107/webapps/sigma/tests" />
+  <preference name="TPTPDisplay" value="no" />
+  <preference name="tptpHomeDir" value="/home/Mac" />
+  <preference name="TPTP" value="yes" />
+  <preference name="typePrefix" value="yes" />
+  <preference name="userBrowserLimit" value="25" />
+  <preference name="vampire" value="/home/Mac/Programs/vampire/build/vampire" />
+  <kb name="SUMO" >
+    <constituent filename="Merge.kif" />
+    <constituent filename="english_format.kif" />
+    <constituent filename="domainEnglishFormat.kif" />
+  </kb>
+</configuration>
+

@@ -5,6 +5,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Map;
 
 public class OllamaClient {
 
@@ -23,6 +24,11 @@ public class OllamaClient {
         this.readTimeoutMs = readTimeoutMs;
     }
 
+    /** Backwards-compatible convenience wrapper. */
+    public String generate(String model, String prompt) throws IOException {
+        return generate(model, prompt, null, false);
+    }
+
     /**
      * One-shot text generation via /api/generate (no conversation state).
      * @param model  e.g., "llama3.2"
@@ -30,13 +36,43 @@ public class OllamaClient {
      * @return generated text (response field) or raw JSON if parsing fails
      * @throws IOException on network errors
      */
-    public String generate(String model, String prompt) throws IOException {
+    /**
+     * One-shot text generation via /api/generate (no conversation state).
+     *
+     * @param model     e.g., "llama3.2"
+     * @param prompt    prompt
+     * @param options   Ollama options (e.g., temperature, top_p, num_predict, seed)
+     * @param jsonMode  if true, requests JSON-mode output when supported by Ollama/model
+     */
+    public String generate(String model, String prompt, Map<String,Object> options, boolean jsonMode) throws IOException {
         String endpoint = baseUrl + "/api/generate";
-        String body = "{"
-                + "\"model\":\"" + escapeJson(model) + "\","
-                + "\"prompt\":\"" + escapeJson(prompt) + "\","
-                + "\"stream\":false"
-                + "}";
+
+        StringBuilder body = new StringBuilder();
+        body.append("{")
+                .append("\"model\":\"").append(escapeJson(model)).append("\",")
+                .append("\"prompt\":\"").append(escapeJson(prompt)).append("\",")
+                .append("\"stream\":false");
+
+        // Request JSON mode when supported
+        if (jsonMode) body.append(",\"format\":\"json\"");
+
+        // Options block (temperature, seed, num_predict, etc.)
+        if (options != null && !options.isEmpty()) {
+            body.append(",\"options\":{");
+            boolean first = true;
+            for (Map.Entry<String,Object> e : options.entrySet()) {
+                if (!first) body.append(",");
+                first = false;
+                body.append("\"").append(escapeJson(e.getKey())).append("\":");
+                Object v = e.getValue();
+                if (v == null) body.append("null");
+                else if (v instanceof Number || v instanceof Boolean) body.append(v.toString());
+                else body.append("\"").append(escapeJson(String.valueOf(v))).append("\"");
+            }
+            body.append("}");
+        }
+
+        body.append("}");
 
         HttpURLConnection conn = (HttpURLConnection) new URL(endpoint).openConnection();
         conn.setRequestMethod("POST");
@@ -44,11 +80,11 @@ public class OllamaClient {
         conn.setConnectTimeout(connectTimeoutMs);
         conn.setReadTimeout(readTimeoutMs);
         conn.setRequestProperty("Content-Type", "application/json");
-        conn.setRequestProperty("Connection", "close");              // avoid keep-alive edge cases
-        System.setProperty("java.net.useSystemProxies", "false");    // bypass OS proxies
+        conn.setRequestProperty("Connection", "close");
+        System.setProperty("java.net.useSystemProxies", "false");
 
-        byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
-        conn.setFixedLengthStreamingMode(bodyBytes.length);          // prevent indefinite buffering
+        byte[] bodyBytes = body.toString().getBytes(StandardCharsets.UTF_8);
+        conn.setFixedLengthStreamingMode(bodyBytes.length);
 
         try (OutputStream os = conn.getOutputStream()) {
             os.write(bodyBytes);
@@ -59,7 +95,7 @@ public class OllamaClient {
         InputStream is = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
         String json = readAll(is);
 
-        // Minimal extraction of "response" field from Ollama JSON
+        // Extract "response"
         String marker = "\"response\":\"";
         int i = json.indexOf(marker);
         if (i >= 0) {
@@ -70,7 +106,7 @@ public class OllamaClient {
                 return unescapeJsonString(raw);
             }
         }
-        return json; // fallback: return raw JSON if structure changes
+        return json;
     }
 
     // ===== Helpers =====

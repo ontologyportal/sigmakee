@@ -13,6 +13,7 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
  */
 
+import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.TPTP2SUMO;
@@ -253,7 +254,7 @@ public class HTMLformatter {
         result.append("</td><td width=\"40%\" valign=\"top\">");
         // if proof paraphrase in English is checked in AskTell.jsp page return the paraphrased version of the proof
         if (StringUtil.isNonEmptyString(language) && (proofParaphraseInEnglish)) {
-            System.out.println("HTMLFormatter STATEMENT:" + f.getFormula());
+            LanguageFormatter.tptpStep = step;
             String pph = NLGUtils.htmlParaphrase(kbHref,
                     f.getFormula(),
                     KBmanager.getMgr().getKB(kbName).getFormatMap(language),
