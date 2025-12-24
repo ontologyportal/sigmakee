@@ -1821,7 +1821,7 @@ public class KB implements Serializable {
             e.printStackTrace();
             return null;
         }
-        THF thf = new THF();
+//        THF thf = new THF();
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             loadLeo();
             Formula query = new Formula();
@@ -1829,15 +1829,22 @@ public class KB implements Serializable {
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processedQuery = fp.preProcess(query, true, this);
             if (!processedQuery.isEmpty() && this.leo != null) {
+                int axiomIndex = 0;
                 String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
                 String kbName = name;
-                File s = new File(dir + kbName + ".thf");
+                String lang = "tff";
+                if (SUMOKBtoTPTPKB.lang.equals("fof"))
+                    lang = "tptp";
+                else
+                    SUMOtoTFAform.initOnce();
+                System.out.println("KB.askLeo(): lang: " + lang);
+                File s = new File(dir + kbName + "." + lang);
                 if (!s.exists()) {
                     System.out.println("KB.askLeo(): no such file: " + s + ". Creating it.");
                     KB kb = KBmanager.getMgr().getKB(kbName);
                     KBmanager.getMgr().loadKBforInference(kb);
                 }
-                Set<String> thfquery = new HashSet<>();
+                Set<String> tptpquery = new HashSet<>();
                 StringBuilder combined = new StringBuilder();
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
@@ -1845,19 +1852,24 @@ public class KB implements Serializable {
                         combined.append(p.getFormula()).append(Formula.SPACE);
                     }
                     combined.append(Formula.RP);
-                    String theTHFstatement =
-                            thf.oneKIF2THF(new Formula(combined.toString()), true, this).trim(); // true - it's a query
-                    thfquery.add(theTHFstatement);
+                    String theTPTPstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
+                            ",conjecture,(" +
+                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true) // true - it's a query
+                            + ")).";
+                    tptpquery.add(theTPTPstatement);
                 }
                 else {
-                    String theTPTPstatement =
-                            thf.oneKIF2THF(processedQuery.iterator().next(), true, this).trim(); // true - it's a query
-                    thfquery.add(theTPTPstatement);
+                    String theTPTPstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
+                            ",conjecture,(" +
+                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().getFormula(), true) // true - it's a query
+                            + ")).";
+                    tptpquery.add(theTPTPstatement);
                 }
                 try {
-                    System.out.println("KB.askLeo(): calling with: " + s + ", " + timeout + ", " + thfquery);
+                    tptpQuery = tptpquery;
+                    System.out.println("KB.askLeo(): calling with: " + s + ", " + timeout + ", " + tptpquery);
                     System.out.println("KB.askLeo(): qlist: " + leo.qlist);
-                    leo.run(this, s, timeout, thfquery);
+                    leo.run(this, s, timeout, tptpQuery);
                     return leo;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -4092,8 +4104,11 @@ public class KB implements Serializable {
             System.err.println("Error in loadLeo(): no executable " + leoex);
             return;
         }
-        String lang = "thf";
+        String lang = "tff";
+        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+            lang = "tptp";
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
+
         if (new File(infFilename).exists() && !KBmanager.getMgr().infFileOld())
             System.out.println("INFO in KB.loadLeo(): no need to generate " + lang + "file " + infFilename);
         else

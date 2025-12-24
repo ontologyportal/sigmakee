@@ -942,7 +942,6 @@
                     }
                     if (!StringUtil.emptyString(tpp.status)) out.println("Status: " + tpp.status);
                 } else if ("Vampire".equals(inferenceEngine)) {
-
                     Formula f = new Formula();
                     f.read(stmt);
                     setVampMode(vampireMode);
@@ -1034,6 +1033,12 @@
                         /* Prevent duplicate answers inside HTMLformatter */
                         if (tpp.bindingMap != null) tpp.bindingMap.clear();
                         if (tpp.bindings   != null) tpp.bindings.clear();
+
+                        System.out.println("========== PROOF LEO ===========");
+                        for(String s : kb.leo.output){
+                            System.out.println(s);
+                        }
+
 
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                         // Generate proof summary if requested
