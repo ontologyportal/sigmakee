@@ -17,6 +17,7 @@ import com.articulate.sigma.Formula;
 import com.articulate.sigma.FormulaPreprocessor;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.THFnew;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
@@ -161,7 +162,7 @@ public class LEO {
     }
 
     /** ***************************************************************
-     * Write the THF statements to the temp-stmt.thf file
+     * Write the statements to the temp-stmt.<type></> file
      */
     public void writeStatements(Set<String> stmts, String type) {
 
@@ -180,13 +181,20 @@ public class LEO {
     }
 
     /** ***************************************************************
+     * Read in two files and write their contents to a new file
      */
-    public void catFiles(String f1, String f2, String fout) throws Exception {
+    public void catFiles(String f1, String f2, String fout) throws IOException {
 
-        System.out.println("catFiles(): concatenating " + f1 + " and " + f2 + " into " + fout);
-        String line;
-        try (PrintWriter pw = new PrintWriter(fout); BufferedReader br = new BufferedReader(new FileReader(f1))) {
-            line = br.readLine();
+        System.out.println("concatFiles(): " + f1 + " and " + f2 + " to " + fout);
+        File f1file = new File(f1);
+        File f2file = new File(f2);
+        if (!f1file.exists())
+            System.err.println("ERROR in concatFiles(): " + f1 + " does not exist");
+        if (!f2file.exists())
+            System.err.println("ERROR in concatFiles(): " + f2 + " does not exist");
+        try (PrintWriter pw = new PrintWriter(fout);
+             BufferedReader br = new BufferedReader(new FileReader(f1))) {
+            String line = br.readLine();
             while (line != null) {
                 pw.println(line);
                 line = br.readLine();
@@ -226,7 +234,9 @@ public class LEO {
     public void run(KB kb, File kbFile, int timeout, Set<String> stmts) throws Exception {
 
         System.out.println("Leo.run(): query : " + stmts);
-        String lang = "thf";
+        String lang = "tff";
+        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+            lang = "tptp";
         String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
         String outfile = dir + "temp-comb." + lang;
         String stmtFile = dir + "temp-stmt." + lang;
@@ -244,27 +254,6 @@ public class LEO {
             return;
         }
         writeStatements(stmts, lang);
-        // When the knowledge base file does not exist or is outdated, regenerate it using THFnew.
-        if (!kbFile.exists() || KBmanager.getMgr().infFileOld("thf")) {
-            // Use THFnew to generate a THF translation of the KB.
-            // The transPlainTHF method writes a file named "<kb.name>_plain.thf" into the kbDir.
-            THFnew.transPlainTHF(kb);
-            // After translation, rename or copy the generated file to "<kb.name>.thf" so that Leo can find it.
-            String kbDir = KBmanager.getMgr().getPref("kbDir");
-            String plainName = kb.name + "_plain.thf";
-            File plainFile = new File(kbDir + File.separator + plainName);
-            File destFile = new File(kbDir + File.separator + kb.name + ".thf");
-            if (plainFile.exists()) {
-                try {
-                    // copy the file contents to the destination, replacing it if necessary
-                    Files.copy(plainFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                }
-                catch (IOException ioe) {
-                    System.err.println("Error copying plain THF file to destination: " + ioe.getMessage());
-                    ioe.printStackTrace();
-                }
-            }
-        }
         catFiles(kbFile.toString(),stmtFile,outfile);
         File comb = new File(outfile);
         run(comb,timeout);

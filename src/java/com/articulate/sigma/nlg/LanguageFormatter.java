@@ -187,7 +187,6 @@ public class LanguageFormatter {
             theStack.pushNew();
             StackElement element = theStack.getCurrStackElement();
 
-            System.out.println("HTML STATEMENT: " + statement + "");
             String template = paraphraseStatement(statement, false, false, 1);
 
             // Check for successful informal NLG of the entire statement.
@@ -293,8 +292,6 @@ public class LanguageFormatter {
         Formula f = new Formula(stmt);
 
         theStack.insertFormulaArgs(f);
-        System.out.println("Statement is: " + stmt + "");
-        System.out.println("Formula is: " + f + "");
         if (f.atom()) {
             ans = processAtom(stmt, termMap);
             return ans;
