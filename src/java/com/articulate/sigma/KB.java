@@ -1869,7 +1869,9 @@ public class KB implements Serializable {
                     tptpQuery = tptpquery;
                     System.out.println("KB.askLeo(): calling with: " + s + ", " + timeout + ", " + tptpquery);
                     System.out.println("KB.askLeo(): qlist: " + leo.qlist);
+                    LEO leo = new LEO();
                     leo.run(this, s, timeout, tptpQuery);
+                    leo.qlist = SUMOformulaToTPTPformula.qlist;
                     return leo;
                 } catch (Exception e) {
                     e.printStackTrace();
