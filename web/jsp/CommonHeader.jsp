@@ -76,7 +76,7 @@
                 out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp\"><b>NLP</b></A>&nbsp;|&nbsp");
             if (role != null && role.equalsIgnoreCase("admin") &&  (pageName == null || !pageName.equals("Prefs")))
                 out.println("<A href=\"Properties.jsp\"><b>Prefs</b></A>&nbsp;|&nbsp");
-            if (role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("CheckKifFile")))
+            if (!awsMode && role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("Editor")))
                 out.println("<A href=\"Editor.jsp\"><b>Editor</b></A>&nbsp;|&nbsp;");
             if (role != null && role.equalsIgnoreCase("admin") && (pageName == null || !pageName.equals("manageUsers"))) {
                 out.println("<A href=\"ManageUsers.jsp\"><b>Manage Users</b></A>&nbsp;|&nbsp;");
