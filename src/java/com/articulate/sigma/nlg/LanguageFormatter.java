@@ -80,6 +80,33 @@ public class LanguageFormatter {
         doInformalNLG = doIt;
     }
 
+    private static final Map<String,String> LOGIC_DOCS;
+
+    static {
+        Map<String,String> m = new LinkedHashMap<>();
+
+        m.put("=>",
+                "Implication. (=> A B) means: if A is true, then B must be true. It does not assert A; it constrains cases where A holds.");
+        m.put("and",
+                "Conjunction. (and A B ...) means all listed subformulas are true.");
+        m.put("or",
+                "Disjunction. (or A B ...) means at least one listed subformula is true.");
+        m.put("xor",
+                "Exclusive-or. (xor A B) means exactly one of A or B is true, but not both.");
+        m.put("<=>",
+                "Biconditional (equivalence). (<=> A B) means A is true if and only if B is true.");
+        m.put("not",
+                "Negation. (not A) means A is false.");
+        m.put("forall",
+                "Universal quantification. (forall (?X ...) A) means A holds for all values of the variables.");
+        m.put("exists",
+                "Existential quantification. (exists (?X ...) A) means there exists at least one assignment of the variables making A true.");
+        m.put("holds",
+                "Temporal holding. (holds T P) means predicate/formula P holds at time/interval T. In SUMO this is commonly expressed as holdsDuring/holdsAt, but 'holds' is treated here as a temporal wrapper.");
+
+        LOGIC_DOCS = Collections.unmodifiableMap(m);
+    }
+
     /**
      * The stack holds information on the formula being processed, so that successive recursive calls can refer to it.
      */
@@ -103,20 +130,6 @@ public class LanguageFormatter {
         @Override
         public Class<Integer> getType() {
             return Integer.class;
-        }
-    }
-
-    public static class StepExplanation {
-        public int stepNumber;
-        public String paraphrase;
-        public String because;
-        public List<Integer> uses = new ArrayList<>();
-        public String infRule;                // inference rule label (if any)
-        public double confidence;
-
-        @Override
-        public String toString() {
-            return "Step " + stepNumber + ": " + paraphrase;
         }
     }
 
@@ -428,11 +441,7 @@ public class LanguageFormatter {
     }
 
 
-    private String buildGlossaryFromMaps(String kif) {
-
-        if (StringUtil.emptyString(kif)) return "";
-
-        Set<String> symbols = extractSymbolsFromKif(kif);
+    private String buildGlossaryFromMaps(Set<String> symbols) {
 
         StringBuilder sb = new StringBuilder();
         for (String sym : symbols) {
@@ -450,48 +459,54 @@ public class LanguageFormatter {
     }
 
     private Set<String> extractSymbolsFromKif(String kif) {
+
+        Set<String> logops = new HashSet<>(Arrays.asList(
+                "if","then","=>","and","or","xor","<=>","not","forall","exists","holds"
+        ));
+
+        if (StringUtil.emptyString(kif)) return Collections.singleton("");
+
         Set<String> out = new LinkedHashSet<>();
-        String cleaned = kif.replace('(', ' ').replace(')', ' ');
+        // Space out punctuation/operators so they tokenize cleanly
+        String cleaned = kif
+                .replace("(", " ")
+                .replace(")", " ")
+                .replace("\n", " ")
+                .replace("\r", " ")
+                .replace("\t", " ")
+                .replace("=>", " => ")
+                .replace("<=>", " <=> ");
+
         for (String tok : cleaned.split("\\s+")) {
             if (tok.isEmpty()) continue;
             if (tok.startsWith("?")) continue; // variables
-            if (tok.matches("[A-Za-z][A-Za-z0-9_+-]*")) out.add(tok);
-        }
-        return out;
-    }
 
+            // Accept logical operators explicitly
+            if (logops.contains(tok)) {
+                out.add(tok);
+                continue;
+            }
 
-    private String buildParentContext(List<Integer> parents, Map<Integer, String> priorNL) {
-        if (parents == null || parents.isEmpty()) return "(none)\n";
-        StringBuilder sb = new StringBuilder();
-        for (Integer p : parents) {
-            if (p == null) continue;
-            String nl = priorNL.get(p);
-            if (nl == null) nl = "";
-            sb.append("Step ").append(p).append(": ").append(nl).append("\n");
-        }
-        return sb.toString();
-    }
-
-
-    private Set<String> extractSymbols(String kif) {
-        Set<String> out = new HashSet<>();
-        String[] tokens = kif.replace("(", " ")
-                .replace(")", " ")
-                .split("\\s+");
-
-        for (String t : tokens) {
-            if (t.matches("[A-Za-z][A-Za-z0-9_+-]*")) {
-                out.add(t);
+            // Accept standard SUMO symbols
+            if (tok.matches("[A-Za-z][A-Za-z0-9_+\\-]*")) {
+                out.add(tok);
             }
         }
         return out;
     }
 
+    private String normalizeSigmaMarkup(String doc) {
+        if (StringUtil.emptyString(doc)) return doc;
+
+        // Remove Sigma markup like &%Term
+        return doc.replaceAll("&%([A-Za-z0-9_+-]+)", "$1");
+    }
+
+
     private String callOllamaJson(String prompt) {
 
-//        String model = "llama3.2";
-        String model = "qwen2.5:14b-instruct";
+        String model = "llama3.2";
+//        String model = "qwen2.5:14b-instruct";
 
         String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
         if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
@@ -502,37 +517,18 @@ public class LanguageFormatter {
         opts.put("temperature", 0);
         opts.put("top_p", 1);
         opts.put("num_predict", 500);
-        opts.put("seed", 0);
+
+        boolean jsonMode = true;
 
         try {
-            return ollama.generate(model, prompt, opts, true);
-        } catch (IOException e) {
-            System.out.println("ERROR | LanguageFormatter | callOllamaJson: " + e);
-            return "{}";
-        }
-    }
-
-
-
-
-    private void parseStepExplanationJson(String json, StepExplanation res) {
-        if (json == null) return;
-
-        String paraphrase = jsonExtractField(json, "paraphrase");
-        String because    = jsonExtractField(json, "because");
-        String usesArr    = jsonExtractArray(json, "uses");
-        Double conf       = jsonExtractDouble(json, "confidence");
-
-        res.paraphrase = (paraphrase != null) ? paraphrase : "";
-        res.because    = (because != null) ? because : "";
-        res.confidence = (conf != null) ? conf : 0.0;
-
-        res.uses = new ArrayList<>();
-        if (usesArr != null && !usesArr.trim().isEmpty()) {
-            for (String u : usesArr.split(",")) {
-                try { res.uses.add(Integer.parseInt(u.trim())); }
-                catch (Exception ignore) {}
+            if (model != null && model.startsWith("gpt-oss")) {
+                return ollama.chat(model, prompt, opts, jsonMode);
             }
+            opts.put("seed", 0);
+            return ollama.generate(model, prompt, opts, jsonMode);
+        } catch (IOException e) {
+            System.out.println("ERROR | callOllamaJson: " + e);
+            return "{}";
         }
     }
 
@@ -559,30 +555,6 @@ public class LanguageFormatter {
     }
 
 
-    private String jsonExtractArray(String json, String field) {
-        String key = "\"" + field + "\"";
-        int k = json.indexOf(key);
-        if (k < 0) return null;
-        int s = json.indexOf('[', k);
-        int e = json.indexOf(']', s);
-        if (s < 0 || e < 0 || e <= s) return null;
-        return json.substring(s + 1, e).trim();
-    }
-
-
-    private Double jsonExtractDouble(String json, String field) {
-        String key = "\"" + field + "\"";
-        int k = json.indexOf(key);
-        if (k < 0) return null;
-        int colon = json.indexOf(':', k);
-        if (colon < 0) return null;
-        String tail = json.substring(colon + 1).trim();
-        String num = tail.split("[,}\\s]")[0];
-        try { return Double.parseDouble(num); }
-        catch (Exception e) { return null; }
-    }
-
-
     private String paraphraseWithLLM(String currentHtmlOrTemplate) {
 
         // We will ask the LLM to explain the *SUO-KIF* (this.statement),
@@ -590,82 +562,65 @@ public class LanguageFormatter {
         final String stepKif = (this.statement != null) ? this.statement : "";
         final String cleanedTemplate = removeLinks(currentHtmlOrTemplate);
 
-        // Build parent context from what you injected (supports/intsupports).
-        // If supports contains the parent formulas as strings, include them.
-        String parentsBlock = buildParentsBlockFromInjectedStep();
+        Set<String> symbols = extractSymbolsFromKif(stepKif);
+
+        String documentationBlock = buildDocumentationFromMaps(symbols);
 
         // Build a small glossary grounded in Sigma maps (termFormat/format equivalents).
-        String glossaryBlock = buildGlossaryFromMaps(stepKif);
+        String glossaryBlock = buildGlossaryFromMaps(symbols);
 
-        // Stronger instruction: explain meaning, do not "polish" blindly.
         String prompt1 =
-                "You are a SUO-KIF to natural-language translator.\n"
-                        + "Your task is to produce a literal, structure-preserving English rendering of a SUO-KIF formula.\n\n"
+                "### SYSTEM ROLE:\n"
+                        + "You are a logic-to-English translator. Your sole purpose is to rewrite the 'TEMPLATE' into natural English while maintaining a 1:1 logical mapping to the 'SUO-KIF' formula.\n\n"
 
-                        + "STRICT RULES:\n"
-                        + "- Preserve the logical structure exactly (quantifiers, implication, conjunction, negation).\n"
-                        + "- Do NOT invent facts or relationships.\n"
-                        + "- Do NOT simplify or interpret semantics beyond the formula structure.\n"
-                        + "- Keep all SUMO terms and variables unchanged.\n"
-                        + "- Use plain English words only (no logical symbols).\n"
-                        + "- Focus on structural faithfulness, not natural plausibility.\n"
-                        + "- After verbalizing each predicate, append the exact predicate in parentheses.\n\n"
+                        + "### REFERENCE MATERIAL:\n"
+                        + "<GLOSSARY>\n" + glossaryBlock + "\n</GLOSSARY>\n"
+                        + "<DOCUMENTATION>\n" + documentationBlock + "\n</DOCUMENTATION>\n\n"
 
-                        + "OUTPUT FORMAT:\n"
-                        + "- Output VALID JSON ONLY.\n"
-                        + "- Schema: {\"paraphrase\":\"...\"}\n\n"
+                        + "### MANDATORY CONSTRAINTS:\n"
+                        + "1. ISOMORPHISM: Maintain the exact logical skeleton. If the formula is a disjunction (OR), the output must be a disjunction. If it is a conditional (IF/THEN), the output must be a conditional.\n"
+                        + "2. NO SUMMARIZATION: Do not explain the 'meaning' of the formula. Describe the logical relationship exactly as written.\n"
+                        + "3. NO LEAKAGE: Do not use terms like 'parent' or 'sibling' unless they appear in the SUO-KIF or Glossary below.\n"
+                        + "4. PREDICATE NAMES: Use the <GLOSSARY> to translate predicate symbols into English words.\n"
+                        + "5. VERBALIZE SYMBOLS: Do not include mathematical or logical symbols (e.g., ¬, ∨, →, =>, symbols for 'not', 'or', 'implies'). Replace all logical operators with their full English word equivalents (e.g., 'it is not the case that', 'or', 'if... then').\n\n"
 
-                        + "EXAMPLE 1:\n"
-                        + "SUO-KIF:\n"
-                        + "(orientation A C Right)\n"
-                        + "OUTPUT:\n"
-                        + "{\"paraphrase\":\"A is at Right of C (orientation A C Right)\"}\n\n"
+                        + "### STYLE EXAMPLE (Abstract):\n"
+                        + "SUO-KIF: (forall (?X) (or (not (instance ?X A)) (instance ?X B)))\n"
+                        + "Correct: 'For every entity, either that entity is not an instance of A, or it is an instance of B.'\n"
+                        + "Wrong: 'All A are B.' (Reason: This collapses the logical structure).\n"
+                        + "Wrong: 'For all X, ¬A(X) ∨ B(X).' (Reason: Uses prohibited symbols).\n\n"
 
-                        + "EXAMPLE 1:\n"
-                        + "SUO-KIF:\n"
-                        + "(=>\n"
-                        + "  (and\n"
-                        + "    (instance ?CHILD Human)\n"
-                        + "    (holdsDuring ?TIME (attribute ?CHILD NonFullyFormed)))\n"
-                        + "  (holdsDuring ?TIME (instance ?CHILD HumanYouth)))\n\n"
-                        + "OUTPUT:\n"
-                        + "{\"paraphrase\":\"If ?CHILD is an instance of Human (instance ?CHILD Human) "
-                        + "and during ?TIME the child has the attribute NonFullyFormed "
-                        + "(holdsDuring ?TIME (attribute ?CHILD NonFullyFormed)), "
-                        + "then during the same time ?CHILD is an instance of HumanYouth "
-                        + "(holdsDuring ?TIME (instance ?CHILD HumanYouth)).\"}\n\n"
+                        + "### CURRENT TASK DATA:\n"
+                        + "SUO-KIF: " + stepKif + "\n"
+                        + "TEMPLATE: " + cleanedTemplate + "\n\n"
 
-                        + "EXAMPLE 2:\n"
-                        + "SUO-KIF:\n"
-                        + "(=>\n"
-                        + "  (instance ?AT AnimalTeam)\n"
-                        + "  (exists (?P)\n"
-                        + "    (and\n"
-                        + "      (instance ?P Pulling)\n"
-                        + "      (agent ?P ?AT))))\n\n"
-                        + "OUTPUT:\n"
-                        + "{\"paraphrase\":\"If ?AT is an instance of AnimalTeam (instance ?AT AnimalTeam), "
-                        + "then there exists ?P such that ?P is an instance of Pulling "
-                        + "(instance ?P Pulling) and ?P has agent ?AT (agent ?P ?AT).\"}\n\n"
+                        + "### FINAL OUTPUT INSTRUCTION:\n"
+                        + "Generate valid JSON ONLY. No preamble. Ensure the 'paraphrase' uses natural English words only, with no logical symbols.\n"
+                        + "{\n"
+                        + "  \"variable_mapping\": { \"?X0\": \"...\" },\n"
+                        + "  \"paraphrase\": \"...\"\n"
+                        + "}";
 
-                        + "GLOSSARY (Sigma):\n" + glossaryBlock + "\n\n"
-                        + "SUO-KIF:\n" + stepKif;
-
-
-        System.out.println("------------PROMPT 1-----------------");
-        System.out.println(prompt1);
-
+        long start = System.nanoTime();
         String json1 = callOllamaJson(prompt1);
-
+        long end = System.nanoTime();
+        double seconds = (end - start) / 1_000_000_000.0;
 
         String paraphrase1 = jsonExtractField(json1, "paraphrase");
+
+        System.out.println("===================== Ollama Call  ===================");
+        System.out.println("\nSUO-KIF: "+stepKif);
+        System.out.println("\nGlossary block: "+glossaryBlock);
+        System.out.println("\nDocumentation block: "+documentationBlock);
+        System.out.println("\nCleaned Template: "+cleanedTemplate);
+        System.out.println("\nParaphrase: "+paraphrase1);
+        System.out.printf("\nOllama call took %.3f seconds%n%n", seconds);
+
         if (StringUtil.emptyString(paraphrase1)) {
             // Fallback: if JSON failed, return whatever we got
             return StringUtil.isNonEmptyString(json1) ? json1 : cleanedTemplate;
         }
-        System.out.println("-------Answer 1---------");
-        System.out.println(json1);
-        System.out.println("--------------------------------------");
+
 
         // SKIP second pass for now, because it adds a lot of time to the execution.
 //        // Verifier pass: keep meaning tight
@@ -718,43 +673,27 @@ public class LanguageFormatter {
         return paraphrase1;
     }
 
-    private String buildParentsBlockFromInjectedStep() {
-
-        // Replace "tptpStep" with your actual injected field name:
-        // e.g., private TPTPFormula tptpStep;
-        if (this.tptpStep == null) return "(none)\n";
-
+    private String buildDocumentationFromMaps(Set<String> symbols) {
         StringBuilder sb = new StringBuilder();
 
-//         If supports contains parent formulas as strings, include them.
-//        if (this.tptpStep.supports != null && !this.tptpStep.supports.isEmpty()) {
-//            for (int i = 0; i < this.tptpStep.supports.size(); i++) {
-//                String s = this.tptpStep.supports.get(i);
-//                if (StringUtil.isNonEmptyString(s)) {
-//                    sb.append("- ").append(s).append("\n");
-//                }
-//            }
-//            return sb.toString();
-//        }
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
-        // Return indices
-        if (this.tptpStep.intsupports != null && !this.tptpStep.intsupports.isEmpty()) {
-            for (int i = 0; i < this.tptpStep.supports.size(); i++) {
-                String s = this.tptpStep.intsupports.get(i).toString();
-                sb.append("Parent indices: ").append(this.tptpStep.intsupports);
-                if (StringUtil.isNonEmptyString(s)) {
-                    sb.append(", ").append(s);
-                }
+        for (String sym : symbols) {
+
+            // 1) Built-in docs for logical operators / keywords
+            String doc = LOGIC_DOCS.get(sym);
+
+            // 2) Fallback to SUMO KB docs for domain predicates/classes
+            if (doc == null) {
+                String gloss = KButilities.getDocumentation(kb, sym);
+                doc = normalizeSigmaMarkup(gloss);
             }
-            return sb.toString();
+
+            if (StringUtil.isNonEmptyString(doc)) {
+                sb.append(sym).append(" = \"").append(doc.trim()).append("\"").append("\n");
+            }
         }
-
-        return "(none)\n";
-    }
-
-    private String getInfRuleSafe() {
-        if (this.tptpStep == null) return "";
-        return (this.tptpStep.infRule != null) ? this.tptpStep.infRule : "";
+        return sb.toString();
     }
 
 

@@ -1573,9 +1573,6 @@ public class TPTP3ProofProcessor {
         final String source;
         if (TPTPutil.sourceAxiom(f)) {
             // Authored axiom → file('path',unknown)
-            System.out.println("ROLE: " + f.role);
-            System.out.println("infRule: " + f.infRule);
-            System.out.println("sourceFile: " + f.sourceFile);
             String path = "";
 
             path = (f.infRule == null || f.infRule.isEmpty()) ? "unknown" : f.infRule;

@@ -14,7 +14,7 @@ public class OllamaClient {
     private final int readTimeoutMs;
 
     public OllamaClient(String baseUrl) {
-        this(baseUrl, 5000, 30000); // tighter defaults to avoid hangs
+        this(baseUrl, 10000, 40000); // tighter defaults to avoid hangs
     }
 
     public OllamaClient(String baseUrl, int connectTimeoutMs, int readTimeoutMs) {
@@ -42,9 +42,9 @@ public class OllamaClient {
      * @param model     e.g., "llama3.2"
      * @param prompt    prompt
      * @param options   Ollama options (e.g., temperature, top_p, num_predict, seed)
-     * @param jsonMode  if true, requests JSON-mode output when supported by Ollama/model
+     * @param requestJsonFormat  if true, requests JSON-mode output when supported by Ollama/model
      */
-    public String generate(String model, String prompt, Map<String,Object> options, boolean jsonMode) throws IOException {
+    public String generate(String model, String prompt, Map<String,Object> options, boolean requestJsonFormat) throws IOException {
         String endpoint = baseUrl + "/api/generate";
 
         StringBuilder body = new StringBuilder();
@@ -54,7 +54,7 @@ public class OllamaClient {
                 .append("\"stream\":false");
 
         // Request JSON mode when supported
-        if (jsonMode) body.append(",\"format\":\"json\"");
+        if (requestJsonFormat) body.append(",\"format\":\"json\"");
 
         // Options block (temperature, seed, num_predict, etc.)
         if (options != null && !options.isEmpty()) {
@@ -105,6 +105,67 @@ public class OllamaClient {
                 String raw = json.substring(start, end);
                 return unescapeJsonString(raw);
             }
+        }
+        return json;
+    }
+
+    public String chat(String model, String prompt, Map<String,Object> options, boolean jsonMode) throws IOException {
+        String endpoint = baseUrl + "/api/chat";
+
+        StringBuilder body = new StringBuilder();
+        body.append("{")
+                .append("\"model\":\"").append(escapeJson(model)).append("\",")
+                .append("\"messages\":[")
+                .append("{\"role\":\"user\",\"content\":\"").append(escapeJson(prompt)).append("\"}")
+                .append("],")
+                .append("\"stream\":false");
+
+        if (jsonMode) body.append(",\"format\":\"json\"");
+
+        if (options != null && !options.isEmpty()) {
+            body.append(",\"options\":{");
+            boolean first = true;
+            for (Map.Entry<String,Object> e : options.entrySet()) {
+                if (!first) body.append(",");
+                first = false;
+                body.append("\"").append(escapeJson(e.getKey())).append("\":");
+                Object v = e.getValue();
+                if (v == null) body.append("null");
+                else if (v instanceof Number || v instanceof Boolean) body.append(v.toString());
+                else body.append("\"").append(escapeJson(String.valueOf(v))).append("\"");
+            }
+            body.append("}");
+        }
+
+        body.append("}");
+
+        HttpURLConnection conn = (HttpURLConnection) new URL(endpoint).openConnection();
+        conn.setRequestMethod("POST");
+        conn.setDoOutput(true);
+        conn.setConnectTimeout(connectTimeoutMs);
+        conn.setReadTimeout(readTimeoutMs);
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setRequestProperty("Connection", "close");
+
+        byte[] bodyBytes = body.toString().getBytes(StandardCharsets.UTF_8);
+        conn.setFixedLengthStreamingMode(bodyBytes.length);
+
+        try (OutputStream os = conn.getOutputStream()) {
+            os.write(bodyBytes);
+            os.flush();
+        }
+
+        int code = conn.getResponseCode();
+        InputStream is = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
+        String json = readAll(is);
+
+        // Extract message.content (chat response)
+        String marker = "\"content\":\"";
+        int i = json.indexOf(marker);
+        if (i >= 0) {
+            int start = i + marker.length();
+            int end = findJsonStringEnd(json, start);
+            if (end > start) return unescapeJsonString(json.substring(start, end));
         }
         return json;
     }
