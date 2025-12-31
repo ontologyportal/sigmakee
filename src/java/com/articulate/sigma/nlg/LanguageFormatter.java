@@ -69,6 +69,13 @@ public class LanguageFormatter {
 
     private static OllamaClient ollamaClient = null;
 
+    private RenderMode renderMode = RenderMode.HTML;
+
+    enum RenderMode {
+        HTML,
+        TEXT
+    }
+
     /**
      * "Informal" NLG refers to natural language generation in which the formal logic terms are expressions are
      * eliminated--e.g. "a man drives" instead of "there exist a process and an agent such that the process is an instance of driving and
@@ -1001,12 +1008,22 @@ public class LanguageFormatter {
         return "";
     }
 
+
+    // Overload for backward compatibility
+    public String generateFormalNaturalLanguage(List<String> args,
+                                                String pred,
+                                                boolean isNegMode) {
+        return generateFormalNaturalLanguage(args, pred, isNegMode, renderMode);
+    }
+
     /** ***************************************************************
      */
-    public String generateFormalNaturalLanguage(List<String> args, String pred, boolean isNegMode) {
+    public String generateFormalNaturalLanguage(List<String> args, String pred, boolean isNegMode, RenderMode mode) {
 
-        if (args.isEmpty())
-            return "";
+        if (args.isEmpty()) return "";
+
+        if (mode == null) mode = RenderMode.HTML;
+
         String COMMA = NLGUtils.getKeyword(",", language);
         //String QUESTION = getKeyword(Formula.V_PREF,language);
         String IF = NLGUtils.getKeyword("if", language);
@@ -1039,25 +1056,29 @@ public class LanguageFormatter {
                 sb.append("}");
             }
             else {
-                // Special handling for Arabic.
-                boolean isArabic = (language.matches(".*(?i)arabic.*")
-                        || language.equalsIgnoreCase("ar"));
-                sb.append("<ul><li>");
-                sb.append(isArabic ? "<span dir=\"rtl\">" : "");
-                sb.append(IF);
-                sb.append(Formula.SPACE);
-                sb.append(args.get(0));
-                sb.append(COMMA);
-                sb.append(isArabic ? "</span>" : "");
-                sb.append("</li><li>");
-                sb.append(isArabic ? "<span dir=\"rtl\">" : "");
-                sb.append(THEN);
-                sb.append(Formula.SPACE);
-                sb.append(args.get(1));
-                sb.append(isArabic ? "</span>" : "");
-                sb.append("</li></ul>");
+                if (mode == RenderMode.HTML) {
+                    // Special handling for Arabic.
+                    boolean isArabic = isArabicLanguage(language);
+                    sb.append("<ul><li>");
+                    if (isArabic) sb.append("<span dir=\"rtl\">");
+                    sb.append(IF).append(Formula.SPACE).append(args.get(0)).append(COMMA);
+                    if (isArabic) sb.append("</span>");
+                    sb.append("</li><li>");
+                    if (isArabic) sb.append("<span dir=\"rtl\">");
+                    sb.append(THEN).append(Formula.SPACE).append(args.get(1));
+                    if (isArabic) sb.append("</span>");
+                    sb.append("</li></ul>");
+                } else { // TEXT
+                    sb.append(IF)
+                            .append(Formula.SPACE)
+                            .append(args.get(0))
+                            .append(COMMA)
+                            .append(Formula.SPACE)
+                            .append(THEN)
+                            .append(Formula.SPACE)
+                            .append(args.get(1));
+                }
             }
-
             return sb.toString();
         }
         if (pred.equalsIgnoreCase(Formula.AND)) {
@@ -1198,6 +1219,11 @@ public class LanguageFormatter {
             return sb.toString();
         }
         return "";
+    }
+
+    private boolean isArabicLanguage(String lang) {
+        return lang != null &&
+                (lang.matches(".*(?i)arabic.*") || lang.equalsIgnoreCase("ar"));
     }
 
     /** ***************************************************************

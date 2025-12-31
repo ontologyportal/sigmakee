@@ -1,5 +1,6 @@
 package com.articulate.sigma.nlg;
 
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.SigmaTestBase;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.UnitTestBase;
@@ -194,6 +195,79 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         assertFalse("BUG: 'or,' is not a token/operator; it's a substring artifact",
                 NLGUtils.logicalOperator("or,"));
+    }
+
+    @Test
+    public void testIfHtmlMode_matchesLegacyMarkup() {
+        LanguageFormatter lf = new LanguageFormatter("stmt", kb.getFormatMap("EnglishLanguage"),
+                kb.getTermFormatMap("EnglishLanguage"),
+                kb, "EnglishLanguage");
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.IF,
+                false,
+                LanguageFormatter.RenderMode.HTML
+        );
+
+        assertEquals("<ul><li>if A,</li><li>then B</li></ul>", out);
+    }
+
+    @Test
+    public void testIfTextMode_plainSentence() {
+        LanguageFormatter lf = new LanguageFormatter("stmt", kb.getFormatMap("EnglishLanguage"),
+                kb.getTermFormatMap("EnglishLanguage"),
+                kb, "EnglishLanguage");
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.IF,
+                false,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertEquals("if A, then B", out);
+    }
+
+    @Test
+    public void testIfArabicHtmlMode_wrapsRtlSpan() {
+        LanguageFormatter lf = new LanguageFormatter("stmt", kb.getFormatMap("EnglishLanguage"),
+                kb.getTermFormatMap("EnglishLanguage"),
+                kb, "ArabicLanguage");
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.IF,
+                false,
+                LanguageFormatter.RenderMode.HTML
+        );
+
+        assertTrue(out.contains("<span dir=\"rtl\">"));
+        assertTrue(out.startsWith("<ul><li>"));
+        assertTrue(out.endsWith("</li></ul>"));
+    }
+
+
+    @Test
+    public void testAndModeDoesNotMatter() {
+        LanguageFormatter lf = new LanguageFormatter("stmt", kb.getFormatMap("EnglishLanguage"),
+                kb.getTermFormatMap("EnglishLanguage"),
+                kb, "EnglishLanguage");
+
+        String html = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.AND,
+                false,
+                LanguageFormatter.RenderMode.HTML
+        );
+        String text = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.AND,
+                false,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertEquals(html, text);
     }
 
 
