@@ -1051,7 +1051,7 @@ public class LanguageFormatter {
 
         if (pred.equals(Formula.IF)) {
             if (isNegMode) {
-                return tArgs.get(1) + Formula.SPACE + AND + Formula.SPACE + negateClause(tArgs.get(0));
+                return tArgs.get(0) + Formula.SPACE + AND + Formula.SPACE + negateClause(tArgs.get(1));
             } else {
                 if (mode == RenderMode.HTML) {
                     // Special handling for Arabic.
@@ -1102,23 +1102,24 @@ public class LanguageFormatter {
 
         if (pred.equalsIgnoreCase(Formula.OR)) {
             // Note: current neg-mode behavior flips the joiner but does NOT negate operands.
-            return join(tArgs, (isNegMode ? AND : OR));
+            if (isNegMode) {
+                List<String> negated = new ArrayList<>(tArgs.size());
+                for (int i = 0; i < tArgs.size(); i++) {
+                    negated.add(negateClause(tArgs.get(i)));
+                }
+                return join(negated, AND);
+            }
+            return join(tArgs, OR);
         }
 
         if (pred.equalsIgnoreCase(Formula.XOR)) {
-            // Keep existing behavior (joins with OR);
-            return join(tArgs, OR);
+            // Keep existing behavior (joins with XOR);
+            return renderXor(tArgs);
         }
 
         if (pred.equals(Formula.IFF)) {
             if (isNegMode) {
-                // Keep existing behavior but normalize negate syntax.
-                List<String> parts = new ArrayList<>(4);
-                parts.add(tArgs.get(1));
-                parts.add(negateClause(tArgs.get(0)));
-                parts.add(tArgs.get(0));
-                parts.add(negateClause(tArgs.get(1)));
-                return join(parts, OR);
+                return renderXor(tArgs);
             }
             return tArgs.get(0) + Formula.SPACE + IFANDONLYIF + Formula.SPACE + tArgs.get(1);
         }
@@ -1177,6 +1178,47 @@ public class LanguageFormatter {
 
     private String join(List<String> parts, String op) {
         return String.join(Formula.SPACE + op + Formula.SPACE, parts);
+    }
+
+    /** User-friendly XOR for 2 args; fallback to AND/OR expansion for others. */
+    private String renderXor(List<String> parts) {
+
+        String COMMA = NLGUtils.getKeyword(",", language);
+        String AND = NLGUtils.getKeyword(Formula.AND, language);
+        String OR = NLGUtils.getKeyword(Formula.OR, language);
+
+        if (parts == null || parts.isEmpty()) return "";
+        if (parts.size() == 1) return parts.get(0);
+
+        if (parts.size() == 2) {
+            String either = NLGUtils.getKeyword("either", language);
+            String butNotBoth = NLGUtils.getKeyword("but not both", language);
+            if (StringUtil.emptyString(either)) either = "either";
+            if (StringUtil.emptyString(butNotBoth)) butNotBoth = "but not both";
+
+            return either + Formula.SPACE + parts.get(0)
+                    + Formula.SPACE + OR + Formula.SPACE + parts.get(1)
+                    + COMMA + Formula.SPACE + butNotBoth;
+        }
+
+        // n-ary: parity (odd number true) in DNF.
+        // Complexity: O(n * 2^(n-1)) clauses. Fine for small n (typical here).
+        List<String> disjuncts = new ArrayList<>();
+
+        int n = parts.size();
+        int maskMax = 1 << n;
+        for (int mask = 0; mask < maskMax; mask++) {
+            if ((Integer.bitCount(mask) % 2) == 1) { // odd parity
+                List<String> conj = new ArrayList<>(n);
+                for (int i = 0; i < n; i++) {
+                    boolean isTrue = ((mask >> i) & 1) == 1;
+                    String lit = parts.get(i);
+                    conj.add(isTrue ? lit : negateClause(lit));
+                }
+                disjuncts.add(join(conj, AND));
+            }
+        }
+        return join(disjuncts, OR);
     }
 
     /** ***************************************************************

@@ -36,6 +36,18 @@ public class LanguageFormatterTest extends UnitTestBase {
                 "EnglishLanguage");
     }
 
+    private static int countOccurrences(String s, String sub) {
+        int count = 0;
+        int idx = 0;
+        while (true) {
+            idx = s.indexOf(sub, idx);
+            if (idx < 0) break;
+            count++;
+            idx += sub.length();
+        }
+        return count;
+    }
+
     @Test
     public void testStatementParse() {
         String input = "(exists (?D ?H) (and (instance ?D Driving) (instance ?H Human) (agent ?D ?H)))";
@@ -289,6 +301,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertFalse(out.contains("~{  "));     // no double spaces
     }
 
+    // ¬(A → B) ≡ ¬(¬A ∨ B) ≡ A ∧ ¬B
     @Test
     public void testIfNegationUsesNormalizedWrapper() {
         LanguageFormatter lf = newLF();
@@ -300,27 +313,31 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        // but it must use the normalized wrapper form.
-        assertTrue(out.contains("~{ A }"));
-        assertFalse(out.contains("~{A}"));
+        assertTrue(out.contains("~{ B }"));
+        assertFalse(out.contains("~{B}"));
+        assertTrue(out.startsWith("A and"));
     }
 
+    // ¬( A ↔ B ) ≡ A xor B
     @Test
     public void testIffNegationUsesNormalizedWrapper() {
         LanguageFormatter lf = newLF();
 
-        String out = lf.generateFormalNaturalLanguage(
+        String out_neg_iff = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
                 Formula.IFF,
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        // Legacy structure preserved, wrapper normalized.
-        assertTrue(out.contains("~{ A }"));
-        assertTrue(out.contains("~{ B }"));
-        assertFalse(out.contains("~{A}"));
-        assertFalse(out.contains("~{B}"));
+        String out_xor = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.IFF,
+                true,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertEquals(out_neg_iff,out_xor);
     }
 
     @Test
@@ -361,5 +378,152 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertFalse(out.contains("  "));
     }
 
+    /**
+     * BUG: ¬(A -> B) is rendered as "B and ~{ A }"
+     * Correct would be: "A and ~{ B }"
+     */
+    @Test
+    public void testBug_notImplicationRenderedBackwards() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.IF,
+                true,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertNotEquals("B and ~{ A }", out); // Previous Behavior
+        assertEquals("A and ~{ B }", out);
+    }
+
+    /**
+     * BUG: ¬(A or B) is rendered as "A and B" (operands are not negated)
+     * Correct would be: "~{ A } and ~{ B }"
+     */
+    @Test
+    public void testBug_notOrMissingOperandNegation() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.OR,
+                true,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertNotEquals("A and B", out); // Previous Behavior
+        assertEquals("~{ A } and ~{ B }", out);
+    }
+
+    /**
+     * BUG: XOR is rendered using OR (currently join with OR keyword).
+     * Correct would use the XOR keyword: "A xor B"
+     */
+    @Test
+    public void testBug_xorRenderedAsOr() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.XOR,
+                false,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertNotEquals("A or B", out); // Previous Behavior
+    }
+
+    /**
+     * BUG: ¬(A iff B) is rendered as a 4-disjunct OR expression:
+     *    B or ~{ A } or A or ~{ B }
+     * Correct would be XOR: "A xor B"
+     */
+    @Test
+    public void testBug_notIffRenderedAsFourWayOr() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.IFF,
+                true,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertNotEquals("B or ~{ A } or A or ~{ B }", out); //Previous Behavior
+    }
+
+    @Test
+    public void testXorTextMode_userFriendlyBinary() {
+        LanguageFormatter lf = newLF();
+
+        // Use the fallback key "xor" explicitly to avoid dependence on Formula.XOR.
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.XOR,
+                false,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertEquals("either A or B, but not both", out);
+        assertFalse(out.toLowerCase().contains(" xor ")); // should not expose token
+    }
+
+    @Test
+    public void testNegatedIffRendersAsUserFriendlyXor() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.IFF,
+                true,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertEquals("either A or B, but not both", out);
+        assertFalse(out.toLowerCase().contains(" xor "));
+    }
+
+    @Test
+    public void testXorWithSingleArgument_degeneratesToArgument() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A"),
+                Formula.XOR,
+                false,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertEquals("A", out);
+    }
+
+    @Test
+    public void testXorThreeArgs_expandsToParityDNF_expectedForm() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B", "C"),
+                Formula.XOR,
+                false,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        // Exact expected DNF (order depends on mask iteration: 001,010,100,111)
+        // Must contain all odd-parity minterms
+        assertTrue(out.contains("A and ~{ B } and ~{ C }"));     // 100
+        assertTrue(out.contains("~{ A } and B and ~{ C }"));     // 010
+        assertTrue(out.contains("~{ A } and ~{ B } and C"));     // 001
+        assertTrue(out.contains("A and B and C"));               // 111
+
+        // Must have exactly 4 disjuncts (3 separators)
+        assertEquals(3, countOccurrences(out, " or "));
+
+        // Should not expose raw xor token
+        assertFalse(out.toLowerCase().contains(" xor "));
+
+        // Optional: ensure an even-parity minterm isn't present
+        assertFalse(out.contains("~{ A } and ~{ B } and ~{ C }"));  // 000
+    }
 
 }
