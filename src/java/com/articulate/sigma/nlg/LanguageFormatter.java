@@ -67,6 +67,8 @@ public class LanguageFormatter {
 
     private static final String OLLAMA_HOST = "http://127.0.0.1:11434";
 
+    private static OllamaClient ollamaClient = null;
+
     /**
      * "Informal" NLG refers to natural language generation in which the formal logic terms are expressions are
      * eliminated--e.g. "a man drives" instead of "there exist a process and an agent such that the process is an instance of driving and
@@ -511,7 +513,7 @@ public class LanguageFormatter {
         String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
         if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
 
-        OllamaClient ollama = new OllamaClient(ollamaHost);
+        if (ollamaClient == null) ollamaClient = new OllamaClient(ollamaHost);
 
         Map<String,Object> opts = new HashMap<>();
         opts.put("temperature", 0);
@@ -522,10 +524,10 @@ public class LanguageFormatter {
 
         try {
             if (model != null && model.startsWith("gpt-oss")) {
-                return ollama.chat(model, prompt, opts, jsonMode);
+                return ollamaClient.chat(model, prompt, opts, jsonMode);
             }
             opts.put("seed", 0);
-            return ollama.generate(model, prompt, opts, jsonMode);
+            return ollamaClient.generate(model, prompt, opts, jsonMode);
         } catch (IOException e) {
             System.out.println("ERROR | callOllamaJson: " + e);
             return "{}";
@@ -571,35 +573,29 @@ public class LanguageFormatter {
 
         String prompt1 =
                 "### SYSTEM ROLE:\n"
-                        + "You are a logic-to-English translator. Your sole purpose is to rewrite the 'TEMPLATE' into natural English while maintaining a 1:1 logical mapping to the 'SUO-KIF' formula.\n\n"
+                        + "You are an English rewriter.\n"
+                        + "Your sole job is to rewrite the given TEMPLATE into clear, grammatical, natural English.\n"
+                        + "Do NOT use any external knowledge. Do NOT interpret SUMO. Do NOT infer new meaning.\n\n"
 
-                        + "### REFERENCE MATERIAL:\n"
-                        + "<GLOSSARY>\n" + glossaryBlock + "\n</GLOSSARY>\n"
-                        + "<DOCUMENTATION>\n" + documentationBlock + "\n</DOCUMENTATION>\n\n"
+                        + "### HARD CONSTRAINTS:\n"
+                        + "1. PRESERVE LOGICAL SKELETON: Keep the same logical connectives already present in the TEMPLATE.\n"
+                        + "   - Keep all occurrences of: \"if\", \"then\", \"and\", \"or\", \"either\", \"not\", \"for all\", \"there exists\".\n"
+                        + "   - Do NOT change \"and\" into \"or\" or vice versa.\n"
+                        + "   - Do NOT introduce \"either/or\" unless the TEMPLATE already contains \"or\".\n"
+                        + "2. NO NEW FACTS: Do not add information not stated in the TEMPLATE.\n"
+                        + "3. NO SYMBOLS: Do not use logical symbols (¬, ∨, →, =>). Use plain English words only.\n"
+                        + "4. ENTITY CONSISTENCY: Do not merge or split entities. If the TEMPLATE mentions X and Y, keep them distinct.\n\n"
 
-                        + "### MANDATORY CONSTRAINTS:\n"
-                        + "1. ISOMORPHISM: Maintain the exact logical skeleton. If the formula is a disjunction (OR), the output must be a disjunction. If it is a conditional (IF/THEN), the output must be a conditional.\n"
-                        + "2. NO SUMMARIZATION: Do not explain the 'meaning' of the formula. Describe the logical relationship exactly as written.\n"
-                        + "3. NO LEAKAGE: Do not use terms like 'parent' or 'sibling' unless they appear in the SUO-KIF or Glossary below.\n"
-                        + "4. PREDICATE NAMES: Use the <GLOSSARY> to translate predicate symbols into English words.\n"
-                        + "5. VERBALIZE SYMBOLS: Do not include mathematical or logical symbols (e.g., ¬, ∨, →, =>, symbols for 'not', 'or', 'implies'). Replace all logical operators with their full English word equivalents (e.g., 'it is not the case that', 'or', 'if... then').\n\n"
+                        + "### OUTPUT FORMAT:\n"
+                        + "Return valid JSON ONLY. No preamble.\n"
+                        + "Schema: {\"paraphrase\":\"...\"}\n\n"
 
-                        + "### STYLE EXAMPLE (Abstract):\n"
-                        + "SUO-KIF: (forall (?X) (or (not (instance ?X A)) (instance ?X B)))\n"
-                        + "Correct: 'For every entity, either that entity is not an instance of A, or it is an instance of B.'\n"
-                        + "Wrong: 'All A are B.' (Reason: This collapses the logical structure).\n"
-                        + "Wrong: 'For all X, ¬A(X) ∨ B(X).' (Reason: Uses prohibited symbols).\n\n"
+                        + "### INPUT:\n"
+                        + "TEMPLATE:\n"
+                        + cleanedTemplate + "\n\n"
 
-                        + "### CURRENT TASK DATA:\n"
-                        + "SUO-KIF: " + stepKif + "\n"
-                        + "TEMPLATE: " + cleanedTemplate + "\n\n"
-
-                        + "### FINAL OUTPUT INSTRUCTION:\n"
-                        + "Generate valid JSON ONLY. No preamble. Ensure the 'paraphrase' uses natural English words only, with no logical symbols.\n"
-                        + "{\n"
-                        + "  \"variable_mapping\": { \"?X0\": \"...\" },\n"
-                        + "  \"paraphrase\": \"...\"\n"
-                        + "}";
+                        + "### INSTRUCTION:\n"
+                        + "Rewrite the TEMPLATE now and output the JSON:";
 
         long start = System.nanoTime();
         String json1 = callOllamaJson(prompt1);
