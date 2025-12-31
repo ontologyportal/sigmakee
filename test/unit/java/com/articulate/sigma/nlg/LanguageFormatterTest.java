@@ -168,4 +168,33 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertEquals(expected, StringUtil.filterHtml(resolveFormatSpecifiersOutput));
     }
 
+    @Test
+    public void testLogicalOperator_knownOperators() {
+        assertTrue(NLGUtils.logicalOperator("and"));
+        assertTrue(NLGUtils.logicalOperator("or"));
+        assertTrue(NLGUtils.logicalOperator("forall"));
+        assertTrue(NLGUtils.logicalOperator("exists"));
+        assertTrue(NLGUtils.logicalOperator("holds"));
+        assertTrue(NLGUtils.logicalOperator("not"));
+        assertTrue(NLGUtils.logicalOperator("=>"));
+        assertTrue(NLGUtils.logicalOperator("<=>"));
+    }
+
+    @Test
+    public void testLogicalOperator_falsePositives_substrings() {
+        // These SHOULD be false, but the current implementation returns true.
+        assertFalse("BUG: 'all' is not an operator; it's only a substring of 'forall'",
+                NLGUtils.logicalOperator("all"));
+
+        assertFalse("BUG: 'exist' is not an operator; it's only a substring of 'exists'",
+                NLGUtils.logicalOperator("exist"));
+
+        assertFalse("BUG: 'hold' is not an operator; it's only a substring of 'holds'",
+                NLGUtils.logicalOperator("hold"));
+
+        assertFalse("BUG: 'or,' is not a token/operator; it's a substring artifact",
+                NLGUtils.logicalOperator("or,"));
+    }
+
+
 }
