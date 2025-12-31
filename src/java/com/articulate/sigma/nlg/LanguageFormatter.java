@@ -1043,187 +1043,140 @@ public class LanguageFormatter {
         String SUCHTHAT = NLGUtils.getKeyword("such that", language);
         if (StringUtil.emptyString(SUCHTHAT)) { SUCHTHAT = SOTHAT; }
 
-        StringBuilder sb = new StringBuilder();
+        // Local helper to avoid repeating translateWord(...) everywhere.
+        List<String> tArgs = new ArrayList<>(args.size());
+        for (int i = 0; i < args.size(); i++) {
+            tArgs.add(translateWord(termMap, args.get(i)));
+        }
 
         if (pred.equals(Formula.IF)) {
             if (isNegMode) {
-                sb.append(args.get(1));
-                sb.append(Formula.SPACE);
-                sb.append(AND);
-                sb.append(Formula.SPACE);
-                sb.append("~{");
-                sb.append(args.get(0));
-                sb.append("}");
-            }
-            else {
+                return tArgs.get(1) + Formula.SPACE + AND + Formula.SPACE + negateClause(tArgs.get(0));
+            } else {
                 if (mode == RenderMode.HTML) {
                     // Special handling for Arabic.
                     boolean isArabic = isArabicLanguage(language);
+                    StringBuilder sb = new StringBuilder();
                     sb.append("<ul><li>");
                     if (isArabic) sb.append("<span dir=\"rtl\">");
-                    sb.append(IF).append(Formula.SPACE).append(args.get(0)).append(COMMA);
+                    sb.append(IF).append(Formula.SPACE).append(tArgs.get(0)).append(COMMA);
                     if (isArabic) sb.append("</span>");
                     sb.append("</li><li>");
                     if (isArabic) sb.append("<span dir=\"rtl\">");
-                    sb.append(THEN).append(Formula.SPACE).append(args.get(1));
+                    sb.append(THEN).append(Formula.SPACE).append(tArgs.get(1));
                     if (isArabic) sb.append("</span>");
                     sb.append("</li></ul>");
-                } else { // TEXT
-                    sb.append(IF)
-                            .append(Formula.SPACE)
-                            .append(args.get(0))
-                            .append(COMMA)
-                            .append(Formula.SPACE)
-                            .append(THEN)
-                            .append(Formula.SPACE)
-                            .append(args.get(1));
+                    return sb.toString();
                 }
+                // TEXT
+                return IF + Formula.SPACE + tArgs.get(0) + COMMA + Formula.SPACE + THEN + Formula.SPACE + tArgs.get(1);
             }
-            return sb.toString();
         }
+
         if (pred.equalsIgnoreCase(Formula.AND)) {
             if (isNegMode) {
-                for (int i = 0; i < args.size(); i++) {
-                    if (i > 0) {
-                        sb.append(Formula.SPACE);
-                        sb.append(OR);
-                        sb.append(Formula.SPACE);
-                    }
-                    sb.append("~{ ");
-                    sb.append(translateWord(termMap, args.get(i)));
-                    sb.append(" }");
+                List<String> negated = new ArrayList<>(tArgs.size());
+                for (int i = 0; i < tArgs.size(); i++) {
+                    negated.add(negateClause(tArgs.get(i)));
                 }
+                return join(negated, OR);
             }
-            else {
-                for (int i = 0; i < args.size(); i++) {
-                    if (i > 0) {
-                        sb.append(Formula.SPACE);
-                        sb.append(AND);
-                        sb.append(Formula.SPACE);
-                    }
-                    sb.append(translateWord(termMap, args.get(i)));
-                }
-            }
-
-            return sb.toString();
+            return join(tArgs, AND);
         }
+
         if (pred.equalsIgnoreCase("holds")) {
-            for (int i = 0; i < args.size(); i++) {
+            // Keep existing behavior (odd chaining preserved).
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < tArgs.size(); i++) {
                 if (i > 0) {
                     if (isNegMode) {
-                        sb.append(Formula.SPACE);
-                        sb.append(NOT);
+                        sb.append(Formula.SPACE).append(NOT);
                     }
-                    sb.append(Formula.SPACE);
-                    sb.append(HOLDS);
-                    sb.append(Formula.SPACE);
+                    sb.append(Formula.SPACE).append(HOLDS).append(Formula.SPACE);
                 }
-                sb.append(translateWord(termMap, args.get(i)));
+                sb.append(tArgs.get(i));
             }
-
             return sb.toString();
         }
+
+
         if (pred.equalsIgnoreCase(Formula.OR)) {
-            for (int i = 0; i < args.size(); i++) {
-                if (i > 0) {
-                    sb.append(Formula.SPACE);
-                    sb.append(isNegMode ? AND : OR);
-                    sb.append(Formula.SPACE);
-                }
-                sb.append(translateWord(termMap, args.get(i)));
-            }
-
-            return sb.toString();
+            // Note: current neg-mode behavior flips the joiner but does NOT negate operands.
+            return join(tArgs, (isNegMode ? AND : OR));
         }
+
         if (pred.equalsIgnoreCase(Formula.XOR)) {
-            for (int i = 0; i < args.size(); i++) {
-                if (i > 0) {
-                    sb.append(Formula.SPACE);
-                    sb.append(OR); // TODO: determine if this is correct for XOR
-                    sb.append(Formula.SPACE);
-                }
-                sb.append(translateWord(termMap, args.get(i)));
-            }
-
-            return sb.toString();
+            // Keep existing behavior (joins with OR);
+            return join(tArgs, OR);
         }
+
         if (pred.equals(Formula.IFF)) {
             if (isNegMode) {
-                sb.append(translateWord(termMap, args.get(1)));
-                sb.append(Formula.SPACE);
-                sb.append(OR);
-                sb.append(Formula.SPACE);
-                sb.append("~{ ");
-                sb.append(translateWord(termMap, args.get(0)));
-                sb.append(" }");
-                sb.append(Formula.SPACE);
-                sb.append(OR);
-                sb.append(Formula.SPACE);
-                sb.append(translateWord(termMap, args.get(0)));
-                sb.append(Formula.SPACE);
-                sb.append(OR);
-                sb.append(Formula.SPACE);
-                sb.append("~{ ");
-                sb.append(translateWord(termMap, args.get(1)));
-                sb.append(" }");
+                // Keep existing behavior but normalize negate syntax.
+                List<String> parts = new ArrayList<>(4);
+                parts.add(tArgs.get(1));
+                parts.add(negateClause(tArgs.get(0)));
+                parts.add(tArgs.get(0));
+                parts.add(negateClause(tArgs.get(1)));
+                return join(parts, OR);
             }
-            else {
-                sb.append(translateWord(termMap, args.get(0)));
-                sb.append(Formula.SPACE);
-                sb.append(IFANDONLYIF);
-                sb.append(Formula.SPACE);
-                sb.append(translateWord(termMap, args.get(1)));
-            }
-
-            return sb.toString();
+            return tArgs.get(0) + Formula.SPACE + IFANDONLYIF + Formula.SPACE + tArgs.get(1);
         }
+
         if (pred.equalsIgnoreCase(Formula.UQUANT)) {
+            StringBuilder sb = new StringBuilder();
             if (isNegMode) {
-                sb.append(Formula.SPACE);
-                sb.append(NOT);
-                sb.append(Formula.SPACE);
+                sb.append(NOT).append(Formula.SPACE);
             }
-            sb.append(FORALL);
-            sb.append(Formula.SPACE);
-            if (args.get(0).contains(Formula.SPACE)) {
-                // If more than one variable ...
-                sb.append(translateWord(termMap, NLGUtils.formatList(args.get(0), language)));
-            }
-            else {
-                // If just one variable ...
-                sb.append(translateWord(termMap, args.get(0)));
-            }
-            sb.append(Formula.SPACE);
-            sb.append(translateWord(termMap, args.get(1)));
+            sb.append(FORALL).append(Formula.SPACE);
 
+            String vars = args.get(0);
+            if (vars.contains(Formula.SPACE)) {
+                sb.append(translateWord(termMap, NLGUtils.formatList(vars, language)));
+            } else {
+                sb.append(translateWord(termMap, vars));
+            }
+
+            sb.append(Formula.SPACE).append(tArgs.get(1));
             return sb.toString();
         }
+
+
         if (pred.equalsIgnoreCase(Formula.EQUANT)) {
-            if (args.get(0).contains(Formula.SPACE)) {
-                // If more than one variable ...
-                sb.append(isNegMode ? NOTEXIST : EXIST);
-                sb.append(Formula.SPACE);
-                sb.append(translateWord(termMap, NLGUtils.formatList(args.get(0), language)));
+            StringBuilder sb = new StringBuilder();
+            String vars = args.get(0);
+
+            if (vars.contains(Formula.SPACE)) {
+                sb.append(isNegMode ? NOTEXIST : EXIST)
+                        .append(Formula.SPACE)
+                        .append(translateWord(termMap, NLGUtils.formatList(vars, language)));
+            } else {
+                sb.append(isNegMode ? NOTEXISTS : EXISTS)
+                        .append(Formula.SPACE)
+                        .append(translateWord(termMap, vars));
             }
-            else {
-                // If just one variable ...
-                sb.append(isNegMode ? NOTEXISTS : EXISTS);
-                sb.append(Formula.SPACE);
-                sb.append(translateWord(termMap, args.get(0)));
-            }
-            sb.append(Formula.SPACE);
-            sb.append(SUCHTHAT);
-            sb.append(Formula.SPACE);
-            sb.append(translateWord(termMap, args.get(1)));
+
+            sb.append(Formula.SPACE)
+                    .append(SUCHTHAT)
+                    .append(Formula.SPACE)
+                    .append(tArgs.get(1));
 
             return sb.toString();
         }
         return "";
     }
 
+    private String negateClause(String s) {
+        return "~{ " + s + " }";
+    }
+
     private boolean isArabicLanguage(String lang) {
         return lang != null &&
                 (lang.matches(".*(?i)arabic.*") || lang.equalsIgnoreCase("ar"));
+    }
+
+    private String join(List<String> parts, String op) {
+        return String.join(Formula.SPACE + op + Formula.SPACE, parts);
     }
 
     /** ***************************************************************

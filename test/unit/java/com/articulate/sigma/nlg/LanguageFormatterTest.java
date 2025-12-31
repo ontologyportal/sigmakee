@@ -28,6 +28,14 @@ public class LanguageFormatterTest extends UnitTestBase {
         LanguageFormatter.outputMap.clear();
     }
 
+    private LanguageFormatter newLF() {
+        return new LanguageFormatter("stmt",
+                kb.getFormatMap("EnglishLanguage"),
+                kb.getTermFormatMap("EnglishLanguage"),
+                kb,
+                "EnglishLanguage");
+    }
+
     @Test
     public void testStatementParse() {
         String input = "(exists (?D ?H) (and (instance ?D Driving) (instance ?H Human) (agent ?D ?H)))";
@@ -199,9 +207,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
     @Test
     public void testIfHtmlMode_matchesLegacyMarkup() {
-        LanguageFormatter lf = new LanguageFormatter("stmt", kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        LanguageFormatter lf = newLF();
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
@@ -215,9 +221,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
     @Test
     public void testIfTextMode_plainSentence() {
-        LanguageFormatter lf = new LanguageFormatter("stmt", kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        LanguageFormatter lf = newLF();
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
@@ -250,9 +254,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
     @Test
     public void testAndModeDoesNotMatter() {
-        LanguageFormatter lf = new LanguageFormatter("stmt", kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "EnglishLanguage");
+        LanguageFormatter lf = newLF();
 
         String html = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
@@ -268,6 +270,95 @@ public class LanguageFormatterTest extends UnitTestBase {
         );
 
         assertEquals(html, text);
+    }
+
+    @Test
+    public void testAndNegationUsesNormalizedWrapperAndOrJoin() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.AND,
+                true,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        // ¬(A ∧ B) rendered (current behavior) as "~{ A } or ~{ B }"
+        assertEquals("~{ A } or ~{ B }", out);
+        assertFalse(out.contains("~{A}"));     // no missing spaces
+        assertFalse(out.contains("~{  "));     // no double spaces
+    }
+
+    @Test
+    public void testIfNegationUsesNormalizedWrapper() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.IF,
+                true,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        // but it must use the normalized wrapper form.
+        assertTrue(out.contains("~{ A }"));
+        assertFalse(out.contains("~{A}"));
+    }
+
+    @Test
+    public void testIffNegationUsesNormalizedWrapper() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B"),
+                Formula.IFF,
+                true,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        // Legacy structure preserved, wrapper normalized.
+        assertTrue(out.contains("~{ A }"));
+        assertTrue(out.contains("~{ B }"));
+        assertFalse(out.contains("~{A}"));
+        assertFalse(out.contains("~{B}"));
+    }
+
+    @Test
+    public void testUquantNegationNoLeadingSpaceAndUsesBodyVerbatim() {
+        LanguageFormatter lf = newLF();
+
+        // Body includes spaces and negation wrapper; translateWord() must NOT try to remap it.
+        String body = "some complex body ~{ X }";
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("?X", body),
+                Formula.UQUANT,
+                true,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        // No leading whitespace.
+        assertFalse("Output must not start with a space", out.startsWith(" "));
+
+        // Begins with "not for all"
+        assertTrue(out.startsWith("not for all"));
+
+        // Body must appear unchanged.
+        assertTrue("Body must be used verbatim (tArgs), not re-translated", out.contains(body));
+    }
+
+    @Test
+    public void testJoinSpacingIsConsistent() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B", "C"),
+                Formula.AND,
+                false,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertEquals("A and B and C", out);
+        assertFalse(out.contains("  "));
     }
 
 
