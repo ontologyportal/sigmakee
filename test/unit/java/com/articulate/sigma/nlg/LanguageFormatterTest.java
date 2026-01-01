@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
 import java.util.*;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -88,10 +89,12 @@ public class LanguageFormatterTest extends UnitTestBase {
         actual = formatter.generateFormalNaturalLanguage(translations, "=>", true);
         actual = StringUtil.filterHtml(actual);
 
-        assertEquals("Socrates is mortal and ~{Socrates is a man}", actual);
+        assertEquals("Socrates is a man and ~{ Socrates is mortal }", actual);
     }
 
     @Test
+    @Ignore
+    // Deprecated Behavior (Replaced)
     public void testGenerateFormalNaturalLanguageIfAndOnlyIf() {
         LanguageFormatter formatter = new LanguageFormatter("", SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
@@ -142,7 +145,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         actual = formatter.generateFormalNaturalLanguage(translations, "or", true);
         actual = StringUtil.filterHtml(actual);
 
-        assertEquals("Socrates is a man and Socrates is mortal", actual);
+        assertEquals("~{ Socrates is a man } and ~{ Socrates is mortal }", actual);
     }
 
     /**

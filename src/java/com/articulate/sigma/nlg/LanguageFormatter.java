@@ -142,6 +142,49 @@ public class LanguageFormatter {
         }
     }
 
+    private static final class Keywords {
+        final String COMMA;
+        final String IF;
+        final String THEN;
+        final String AND;
+        final String OR;
+        final String XOR;
+        final String IFF;
+        final String NOT;
+        final String FORALL;
+        final String EXISTS;
+        final String EXIST;
+        final String NOTEXIST;
+        final String NOTEXISTS;
+        final String HOLDS;
+        final String SOTHAT;
+        final String SUCHTHAT;
+
+        Keywords(String language) {
+            this.COMMA = NLGUtils.getKeyword(",", language);
+            this.IF = NLGUtils.getKeyword("if", language);
+            this.THEN = NLGUtils.getKeyword("then", language);
+            this.AND = NLGUtils.getKeyword(Formula.AND, language);
+            this.OR = NLGUtils.getKeyword(Formula.OR, language);
+
+            // Formula.XOR may be empty; use same fallback you used elsewhere.
+            String xorKey = StringUtil.isNonEmptyString(Formula.XOR) ? Formula.XOR : "xor";
+            this.XOR = NLGUtils.getKeyword(xorKey, language);
+            this.IFF = NLGUtils.getKeyword("if and only if", language);
+            this.NOT = NLGUtils.getKeyword(Formula.NOT, language);
+            this.FORALL = NLGUtils.getKeyword("for all", language);
+            this.EXISTS = NLGUtils.getKeyword("there exists", language);
+            this.EXIST = NLGUtils.getKeyword("there exist", language);
+            this.NOTEXIST = NLGUtils.getKeyword("there don't exist", language);
+            this.NOTEXISTS = NLGUtils.getKeyword("there doesn't exist", language);
+            this.HOLDS = NLGUtils.getKeyword("holds", language);
+            this.SOTHAT = NLGUtils.getKeyword("so that", language);
+
+            String such = NLGUtils.getKeyword("such that", language);
+            this.SUCHTHAT = StringUtil.emptyString(such) ? this.SOTHAT : such;
+        }
+    }
+
     /*******************************************************************************
      * @param stmt The statement to be formatted.
      * @param phraseMap kb.getFormatMap() for this language
@@ -1024,24 +1067,7 @@ public class LanguageFormatter {
 
         if (mode == null) mode = RenderMode.HTML;
 
-        String COMMA = NLGUtils.getKeyword(",", language);
-        //String QUESTION = getKeyword(Formula.V_PREF,language);
-        String IF = NLGUtils.getKeyword("if", language);
-        String THEN = NLGUtils.getKeyword("then", language);
-        String AND = NLGUtils.getKeyword(Formula.AND, language);
-        String OR = NLGUtils.getKeyword(Formula.OR, language);
-        String XOR = NLGUtils.getKeyword(Formula.XOR, language);
-        String IFANDONLYIF = NLGUtils.getKeyword("if and only if", language);
-        String NOT = NLGUtils.getKeyword(Formula.NOT, language);
-        String FORALL = NLGUtils.getKeyword("for all", language);
-        String EXISTS = NLGUtils.getKeyword("there exists", language);
-        String EXIST = NLGUtils.getKeyword("there exist", language);
-        String NOTEXIST = NLGUtils.getKeyword("there don't exist", language);
-        String NOTEXISTS = NLGUtils.getKeyword("there doesn't exist", language);
-        String HOLDS = NLGUtils.getKeyword("holds", language);
-        String SOTHAT = NLGUtils.getKeyword("so that", language);
-        String SUCHTHAT = NLGUtils.getKeyword("such that", language);
-        if (StringUtil.emptyString(SUCHTHAT)) { SUCHTHAT = SOTHAT; }
+        Keywords k = new Keywords(language);
 
         // Local helper to avoid repeating translateWord(...) everywhere.
         List<String> tArgs = new ArrayList<>(args.size());
@@ -1051,7 +1077,7 @@ public class LanguageFormatter {
 
         if (pred.equals(Formula.IF)) {
             if (isNegMode) {
-                return tArgs.get(0) + Formula.SPACE + AND + Formula.SPACE + negateClause(tArgs.get(1));
+                return tArgs.get(0) + Formula.SPACE + k.AND + Formula.SPACE + negateClause(tArgs.get(1));
             } else {
                 if (mode == RenderMode.HTML) {
                     // Special handling for Arabic.
@@ -1059,17 +1085,17 @@ public class LanguageFormatter {
                     StringBuilder sb = new StringBuilder();
                     sb.append("<ul><li>");
                     if (isArabic) sb.append("<span dir=\"rtl\">");
-                    sb.append(IF).append(Formula.SPACE).append(tArgs.get(0)).append(COMMA);
+                    sb.append(k.IF).append(Formula.SPACE).append(tArgs.get(0)).append(k.COMMA);
                     if (isArabic) sb.append("</span>");
                     sb.append("</li><li>");
                     if (isArabic) sb.append("<span dir=\"rtl\">");
-                    sb.append(THEN).append(Formula.SPACE).append(tArgs.get(1));
+                    sb.append(k.THEN).append(Formula.SPACE).append(tArgs.get(1));
                     if (isArabic) sb.append("</span>");
                     sb.append("</li></ul>");
                     return sb.toString();
                 }
                 // TEXT
-                return IF + Formula.SPACE + tArgs.get(0) + COMMA + Formula.SPACE + THEN + Formula.SPACE + tArgs.get(1);
+                return k.IF + Formula.SPACE + tArgs.get(0) + k.COMMA + Formula.SPACE + k.THEN + Formula.SPACE + tArgs.get(1);
             }
         }
 
@@ -1079,9 +1105,9 @@ public class LanguageFormatter {
                 for (int i = 0; i < tArgs.size(); i++) {
                     negated.add(negateClause(tArgs.get(i)));
                 }
-                return join(negated, OR);
+                return join(negated, k.OR);
             }
-            return join(tArgs, AND);
+            return join(tArgs, k.AND);
         }
 
         if (pred.equalsIgnoreCase("holds")) {
@@ -1090,9 +1116,9 @@ public class LanguageFormatter {
             for (int i = 0; i < tArgs.size(); i++) {
                 if (i > 0) {
                     if (isNegMode) {
-                        sb.append(Formula.SPACE).append(NOT);
+                        sb.append(Formula.SPACE).append(k.NOT);
                     }
-                    sb.append(Formula.SPACE).append(HOLDS).append(Formula.SPACE);
+                    sb.append(Formula.SPACE).append(k.HOLDS).append(Formula.SPACE);
                 }
                 sb.append(tArgs.get(i));
             }
@@ -1107,9 +1133,9 @@ public class LanguageFormatter {
                 for (int i = 0; i < tArgs.size(); i++) {
                     negated.add(negateClause(tArgs.get(i)));
                 }
-                return join(negated, AND);
+                return join(negated, k.AND);
             }
-            return join(tArgs, OR);
+            return join(tArgs, k.OR);
         }
 
         if (pred.equalsIgnoreCase(Formula.XOR)) {
@@ -1121,15 +1147,15 @@ public class LanguageFormatter {
             if (isNegMode) {
                 return renderXor(tArgs);
             }
-            return tArgs.get(0) + Formula.SPACE + IFANDONLYIF + Formula.SPACE + tArgs.get(1);
+            return tArgs.get(0) + Formula.SPACE + k.IFF + Formula.SPACE + tArgs.get(1);
         }
 
         if (pred.equalsIgnoreCase(Formula.UQUANT)) {
             StringBuilder sb = new StringBuilder();
             if (isNegMode) {
-                sb.append(NOT).append(Formula.SPACE);
+                sb.append(k.NOT).append(Formula.SPACE);
             }
-            sb.append(FORALL).append(Formula.SPACE);
+            sb.append(k.FORALL).append(Formula.SPACE);
 
             String vars = args.get(0);
             if (vars.contains(Formula.SPACE)) {
@@ -1148,17 +1174,17 @@ public class LanguageFormatter {
             String vars = args.get(0);
 
             if (vars.contains(Formula.SPACE)) {
-                sb.append(isNegMode ? NOTEXIST : EXIST)
+                sb.append(isNegMode ? k.NOTEXIST : k.EXIST)
                         .append(Formula.SPACE)
                         .append(translateWord(termMap, NLGUtils.formatList(vars, language)));
             } else {
-                sb.append(isNegMode ? NOTEXISTS : EXISTS)
+                sb.append(isNegMode ? k.NOTEXISTS : k.EXISTS)
                         .append(Formula.SPACE)
                         .append(translateWord(termMap, vars));
             }
 
             sb.append(Formula.SPACE)
-                    .append(SUCHTHAT)
+                    .append(k.SUCHTHAT)
                     .append(Formula.SPACE)
                     .append(tArgs.get(1));
 
@@ -1183,9 +1209,7 @@ public class LanguageFormatter {
     /** User-friendly XOR for 2 args; fallback to AND/OR expansion for others. */
     private String renderXor(List<String> parts) {
 
-        String COMMA = NLGUtils.getKeyword(",", language);
-        String AND = NLGUtils.getKeyword(Formula.AND, language);
-        String OR = NLGUtils.getKeyword(Formula.OR, language);
+        Keywords k = new Keywords(language);
 
         if (parts == null || parts.isEmpty()) return "";
         if (parts.size() == 1) return parts.get(0);
@@ -1197,8 +1221,8 @@ public class LanguageFormatter {
             if (StringUtil.emptyString(butNotBoth)) butNotBoth = "but not both";
 
             return either + Formula.SPACE + parts.get(0)
-                    + Formula.SPACE + OR + Formula.SPACE + parts.get(1)
-                    + COMMA + Formula.SPACE + butNotBoth;
+                    + Formula.SPACE + k.OR + Formula.SPACE + parts.get(1)
+                    + k.COMMA + Formula.SPACE + butNotBoth;
         }
 
         // n-ary: parity (odd number true) in DNF.
@@ -1215,10 +1239,10 @@ public class LanguageFormatter {
                     String lit = parts.get(i);
                     conj.add(isTrue ? lit : negateClause(lit));
                 }
-                disjuncts.add(join(conj, AND));
+                disjuncts.add(join(conj, k.AND));
             }
         }
-        return join(disjuncts, OR);
+        return join(disjuncts, k.OR);
     }
 
     /** Args reaching generateFormalNaturalLanguage() are usually already paraphrased.
