@@ -598,5 +598,75 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertEquals("&%Human$\"human\"", twice); // Current Behavior
     }
 
+    @Test
+    public void testParaphraseWithFormat_positiveSelectsPBlock() {
+
+        Map<String,String> phraseMap = Maps.newHashMap(ImmutableMap.of(
+                "foo", "%p{P %1} %n{N %1}"
+        ));
+        // Must be non-empty, otherwise LanguageFormatter returns "" early.
+        Map<String,String> termMap = Maps.newHashMap(ImmutableMap.of("dummy","dummy"));
+
+        LanguageFormatter lf = new LanguageFormatter("stmt", phraseMap, termMap, kb, "EnglishLanguage");
+
+        String out = lf.paraphraseStatement("(foo ?X)", false, false, 0);
+
+        assertEquals("P ?X", out);
+        assertFalse(out.contains("%p"));
+        assertFalse(out.contains("%n"));
+    }
+
+    @Test
+    public void testParaphraseWithFormat_negativeSelectsNBlock() {
+
+        Map<String,String> phraseMap = Maps.newHashMap(ImmutableMap.of(
+                "foo", "%p{P %1} %n{N %1}"
+        ));
+        Map<String,String> termMap = Maps.newHashMap(ImmutableMap.of("dummy","dummy"));
+
+        LanguageFormatter lf = new LanguageFormatter("stmt", phraseMap, termMap, kb, "EnglishLanguage");
+
+        String out = lf.paraphraseStatement("(foo ?X)", true, false, 0);
+
+        assertEquals("N ?X", out);
+        assertFalse(out.contains("%p"));
+        assertFalse(out.contains("%n"));
+    }
+
+    @Test
+    public void testParaphraseWithFormat_positiveQuestionSelectsQPBlock() {
+
+        Map<String,String> phraseMap = Maps.newHashMap(ImmutableMap.of(
+                "foo", "%qp{QP %1} %qn{QN %1}"
+        ));
+        Map<String,String> termMap = Maps.newHashMap(ImmutableMap.of("dummy","dummy"));
+
+        LanguageFormatter lf = new LanguageFormatter("stmt", phraseMap, termMap, kb, "EnglishLanguage");
+
+        String out = lf.paraphraseStatement("(foo ?X)", false, true, 0);
+
+        assertEquals("QP ?X", out);
+        assertFalse(out.contains("%qp"));
+        assertFalse(out.contains("%qn"));
+    }
+
+    @Test
+    public void testParaphraseWithFormat_negativeQuestionSelectsQNBlock() {
+
+        Map<String,String> phraseMap = Maps.newHashMap(ImmutableMap.of(
+                "foo", "%qp{QP %1} %qn{QN %1}"
+        ));
+        Map<String,String> termMap = Maps.newHashMap(ImmutableMap.of("dummy","dummy"));
+
+        LanguageFormatter lf = new LanguageFormatter("stmt", phraseMap, termMap, kb, "EnglishLanguage");
+
+        String out = lf.paraphraseStatement("(foo ?X)", true, true, 0);
+
+        assertEquals("QN ?X", out);
+        assertFalse(out.contains("%qp"));
+        assertFalse(out.contains("%qn"));
+    }
+
+
 
 }

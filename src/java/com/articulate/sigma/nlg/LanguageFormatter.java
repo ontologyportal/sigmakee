@@ -76,6 +76,8 @@ public class LanguageFormatter {
         TEXT
     }
 
+    private enum Dir { P, N, QP, QN }
+
     /**
      * "Informal" NLG refers to natural language generation in which the formal logic terms are expressions are
      * eliminated--e.g. "a man drives" instead of "there exist a process and an agent such that the process is an instance of driving and
@@ -1280,84 +1282,17 @@ public class LanguageFormatter {
     private String paraphraseWithFormat(String stmt, boolean isNegMode, boolean isQuestionMode) {
 
         if (debug) System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + stmt);
-        //System.out.println("neg mode: " + isNegMode);
+
         Formula f = new Formula();
         f.read(stmt);
         String pred = f.car();
         String strFormat = phraseMap.get(pred);
-        //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 1 format: " + strFormat);
-        // System.out.println("str format: " + strFormat);
-        //int index;
 
         if (strFormat.contains("&%"))                    // setup the term hyperlink
             strFormat = strFormat.replaceAll("&%(\\w+)","&%" + pred + "\\$\"$1\"");
 
-        //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 2 format: " + strFormat);
-        if (isNegMode) {                                  // handle negation
-            if (isQuestionMode) {
-                if (strFormat.contains("%qn{")) {
-                    int start = strFormat.indexOf("%qn{") + 4;
-                    int end = strFormat.indexOf("}", start);
-                    strFormat = (strFormat.substring(0, start - 4)
-                            + strFormat.substring(start, end)
-                            + strFormat.substring(end + 1, strFormat.length()));
-                }
-            } else {
-                if (!strFormat.contains("%n")) {
-                    strFormat = NLGUtils.getKeyword(Formula.NOT, language) + Formula.SPACE + strFormat;
-                } else {
-                    if (!strFormat.contains("%n{")) {
-                        strFormat = strFormat.replace("%n", NLGUtils.getKeyword(Formula.NOT, language));
-                    } else {
-                        int start = strFormat.indexOf("%n{") + 3;
-                        int end = strFormat.indexOf("}", start);
-                        strFormat = (strFormat.substring(0, start - 3)
-                                + strFormat.substring(start, end)
-                                + strFormat.substring(end + 1, strFormat.length()));
-                    }
-                }
-            }
-            // delete all the unused positive commands
-            isNegMode = false;
-        }
-        else {
-            if (isQuestionMode) {
-                if (strFormat.contains("%qp{")) {
-                    int start = strFormat.indexOf("%qp{") + 4;
-                    int end = strFormat.indexOf("}", start);
-                    strFormat = (strFormat.substring(0, start - 4)
-                            + strFormat.substring(start, end)
-                            + strFormat.substring(end + 1, strFormat.length()));
-                }
-            } else {
-                if (strFormat.contains("%p{")) {
-                    int start = strFormat.indexOf("%p{") + 3;
-                    int end = strFormat.indexOf("}", start);
-                    strFormat = (strFormat.substring(0, start - 3)
-                            + strFormat.substring(start, end)
-                            + strFormat.substring(end + 1, strFormat.length()));
-                }
-            }
-        }
-        // delete all the unused negative commands
-        strFormat = strFormat.replaceAll(" %n\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%n\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%n\\{.+?\\}","");
-        strFormat = strFormat.replace(" %n ",Formula.SPACE);
-        strFormat = strFormat.replace("%n ",Formula.SPACE);
-        strFormat = strFormat.replace("%n","");
-        // delete all unused positive commands
-        strFormat = strFormat.replaceAll(" %p\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%p\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%p\\{.+?\\}","");
-        // delete all unused positive question commands
-        strFormat = strFormat.replaceAll(" %qp\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%qp\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%qp\\{.+?\\}","");
-        // delete all unused negative question commands
-        strFormat = strFormat.replaceAll(" %qn\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%qn\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%qn\\{.+?\\}","");
+        // Apply directive selection/cleanup deterministically
+        strFormat = applyDirectives(strFormat, isNegMode, isQuestionMode);
 
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 3 format: " + strFormat);
         if (strFormat.contains("%*"))
@@ -1415,6 +1350,101 @@ public class LanguageFormatter {
         }
         return strFormat;
     }
+
+    private Dir chooseDir(boolean isNegMode, boolean isQuestionMode) {
+        if (isQuestionMode) return isNegMode ? Dir.QN : Dir.QP;
+        return isNegMode ? Dir.N : Dir.P;
+    }
+
+    private static Dir parseDir(String tag) {
+        if ("p".equals(tag)) return Dir.P;
+        if ("n".equals(tag)) return Dir.N;
+        if ("qp".equals(tag)) return Dir.QP;
+        if ("qn".equals(tag)) return Dir.QN;
+        return null;
+    }
+
+    /** Selects the active directive blocks (%p/%n/%qp/%qn) and removes the rest deterministically. */
+    private String applyDirectives(String fmt, boolean isNegMode, boolean isQuestionMode) {
+
+        if (StringUtil.emptyString(fmt)) return fmt;
+
+        Dir keep = chooseDir(isNegMode, isQuestionMode);
+        StringBuilder out = new StringBuilder(fmt.length());
+
+        int i = 0;
+        while (i < fmt.length()) {
+
+            int pct = fmt.indexOf('%', i);
+            if (pct < 0) {
+                out.append(fmt.substring(i));
+                break;
+            }
+
+            // copy everything before %
+            out.append(fmt.substring(i, pct));
+            i = pct;
+
+            // Try to parse directive token: %p{...} / %n{...} / %qp{...} / %qn{...}
+            int j = i + 1;
+            if (j >= fmt.length()) {
+                out.append('%');
+                break;
+            }
+
+            // Read tag (letters only)
+            int tagStart = j;
+            while (j < fmt.length() && Character.isLetter(fmt.charAt(j))) j++;
+            String tag = fmt.substring(tagStart, j);
+            Dir dir = parseDir(tag);
+
+            // Not a known directive -> keep '%' and continue
+            if (dir == null) {
+                out.append('%');
+                i = i + 1;
+                continue;
+            }
+
+            // If next char is '{', we have a braced directive block
+            if (j < fmt.length() && fmt.charAt(j) == '{') {
+                int bodyStart = j + 1;
+                int bodyEnd = fmt.indexOf('}', bodyStart);
+
+                // If no closing brace, treat as literal text (preserve old behavior best-effort)
+                if (bodyEnd < 0) {
+                    out.append(fmt.substring(i, j + 1)); // includes "%tag{"
+                    i = j + 1;
+                    continue;
+                }
+
+                String body = fmt.substring(bodyStart, bodyEnd);
+
+                // Keep only the chosen directive content; drop others
+                if (dir == keep) {
+                    out.append(body);
+                }
+
+                i = bodyEnd + 1;
+                continue;
+            }
+
+            // Unbraced directives (%n / %p) were previously used as NOT keyword insertion.
+            // Preserve existing behavior: only %n is meaningful (negation keyword injection),
+            // and only when neg-mode and not question-mode.
+            if ("n".equals(tag)) {
+                if (isNegMode && !isQuestionMode) {
+                    out.append(NLGUtils.getKeyword(Formula.NOT, language));
+                }
+            }
+            // %p without braces is a no-op historically; drop it.
+
+            i = j;
+        }
+
+        // Normalize whitespace a bit (keep conservative to avoid behavior drift)
+        return out.toString().replaceAll("\\s+", Formula.SPACE).trim();
+    }
+
 
     /** ***************************************************************
      * Process an atom into an appropriate NL string.  If a URL, add
