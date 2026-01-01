@@ -192,6 +192,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertEquals(expected, StringUtil.filterHtml(resolveFormatSpecifiersOutput));
     }
 
+
     @Test
     public void testLogicalOperator_knownOperators() {
         assertTrue(NLGUtils.logicalOperator("and"));
@@ -203,6 +204,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertTrue(NLGUtils.logicalOperator("=>"));
         assertTrue(NLGUtils.logicalOperator("<=>"));
     }
+
 
     @Test
     public void testLogicalOperator_falsePositives_substrings() {
@@ -220,6 +222,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 NLGUtils.logicalOperator("or,"));
     }
 
+
     @Test
     public void testIfHtmlMode_matchesLegacyMarkup() {
         LanguageFormatter lf = newLF();
@@ -234,6 +237,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertEquals("<ul><li>if A,</li><li>then B</li></ul>", out);
     }
 
+
     @Test
     public void testIfTextMode_plainSentence() {
         LanguageFormatter lf = newLF();
@@ -247,6 +251,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         assertEquals("if A, then B", out);
     }
+
 
     @Test
     public void testIfArabicHtmlMode_wrapsRtlSpan() {
@@ -287,6 +292,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertEquals(html, text);
     }
 
+
     @Test
     public void testAndNegationUsesNormalizedWrapperAndOrJoin() {
         LanguageFormatter lf = newLF();
@@ -304,6 +310,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertFalse(out.contains("~{  "));     // no double spaces
     }
 
+
     // ¬(A → B) ≡ ¬(¬A ∨ B) ≡ A ∧ ¬B
     @Test
     public void testIfNegationUsesNormalizedWrapper() {
@@ -320,6 +327,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertFalse(out.contains("~{B}"));
         assertTrue(out.startsWith("A and"));
     }
+
 
     // ¬( A ↔ B ) ≡ A xor B
     @Test
@@ -342,6 +350,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         assertEquals(out_neg_iff,out_xor);
     }
+
 
     @Test
     public void testUquantNegationNoLeadingSpaceAndUsesBodyVerbatim() {
@@ -366,6 +375,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertTrue("Body must be used verbatim (tArgs), not re-translated", out.contains(body));
     }
 
+
     @Test
     public void testJoinSpacingIsConsistent() {
         LanguageFormatter lf = newLF();
@@ -380,6 +390,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertEquals("A and B and C", out);
         assertFalse(out.contains("  "));
     }
+
 
     /**
      * BUG: ¬(A -> B) is rendered as "B and ~{ A }"
@@ -400,6 +411,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertEquals("A and ~{ B }", out);
     }
 
+
     /**
      * BUG: ¬(A or B) is rendered as "A and B" (operands are not negated)
      * Correct would be: "~{ A } and ~{ B }"
@@ -419,6 +431,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertEquals("~{ A } and ~{ B }", out);
     }
 
+
     /**
      * BUG: XOR is rendered using OR (currently join with OR keyword).
      * Correct would use the XOR keyword: "A xor B"
@@ -436,6 +449,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         assertNotEquals("A or B", out); // Previous Behavior
     }
+
 
     /**
      * BUG: ¬(A iff B) is rendered as a 4-disjunct OR expression:
@@ -456,6 +470,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertNotEquals("B or ~{ A } or A or ~{ B }", out); //Previous Behavior
     }
 
+
     @Test
     public void testXorTextMode_userFriendlyBinary() {
         LanguageFormatter lf = newLF();
@@ -472,6 +487,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertFalse(out.toLowerCase().contains(" xor ")); // should not expose token
     }
 
+
     @Test
     public void testNegatedIffRendersAsUserFriendlyXor() {
         LanguageFormatter lf = newLF();
@@ -487,6 +503,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertFalse(out.toLowerCase().contains(" xor "));
     }
 
+
     @Test
     public void testXorWithSingleArgument_degeneratesToArgument() {
         LanguageFormatter lf = newLF();
@@ -500,6 +517,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         assertEquals("A", out);
     }
+
 
     @Test
     public void testXorThreeArgs_expandsToParityDNF_expectedForm() {
@@ -529,6 +547,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertFalse(out.contains("~{ A } and ~{ B } and ~{ C }"));  // 000
     }
 
+
     @Test
     public void testFormalNLG_doesNotTranslateComposedArgs() {
         LanguageFormatter lf = newLF();
@@ -545,6 +564,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         assertTrue(out.contains(clause));
     }
+
 
     @Test
     public void testFormalNLG_doubleTranslation_canCorruptAlreadyParaphrasedArg() {
@@ -579,6 +599,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertEquals("A and ~{ B } or C", out); // current behavior
     }
 
+
     @Test
     public void testBug_processAtom_doubleWrapsAlreadyAnnotatedTerm() {
 
@@ -598,6 +619,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertEquals("&%Human$\"human\"", twice); // Current Behavior
     }
 
+
     @Test
     public void testParaphraseWithFormat_positiveSelectsPBlock() {
 
@@ -616,6 +638,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertFalse(out.contains("%n"));
     }
 
+
     @Test
     public void testParaphraseWithFormat_negativeSelectsNBlock() {
 
@@ -633,6 +656,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertFalse(out.contains("%n"));
     }
 
+
     @Test
     public void testParaphraseWithFormat_positiveQuestionSelectsQPBlock() {
 
@@ -649,6 +673,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertFalse(out.contains("%qp"));
         assertFalse(out.contains("%qn"));
     }
+
 
     @Test
     public void testParaphraseWithFormat_negativeQuestionSelectsQNBlock() {
@@ -668,5 +693,62 @@ public class LanguageFormatterTest extends UnitTestBase {
     }
 
 
+    @Test
+    public void golden_uquant_textMode() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("?X", "A and B"),
+                Formula.UQUANT,
+                false,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertEquals("for all ?X A and B", out);
+    }
+
+
+    @Test
+    public void golden_equant_textMode() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("?X", "A and B"),
+                Formula.EQUANT,
+                false,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertEquals("there exists ?X such that A and B", out);
+    }
+
+
+    @Test
+    public void golden_holds_chainingPreserved() {
+        LanguageFormatter lf = newLF();
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList("A", "B", "C"),
+                "holds",
+                false,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertEquals("A holds B holds C", out);
+    }
+
+
+    @Test
+    public void golden_directives_adjacent_noSpaces() {
+        Map<String,String> phraseMap = new HashMap<>();
+        phraseMap.put("foo", "%p{P%1}%n{N%1}");
+        Map<String,String> termMap = new HashMap<>();
+        termMap.put("dummy","dummy");
+
+        LanguageFormatter lf = new LanguageFormatter("stmt", phraseMap, termMap, kb, "EnglishLanguage");
+
+        assertEquals("P?X", lf.paraphraseStatement("(foo ?X)", false, false, 0));
+        assertEquals("N?X", lf.paraphraseStatement("(foo ?X)", true,  false, 0));
+    }
 
 }
