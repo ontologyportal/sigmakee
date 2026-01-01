@@ -1046,7 +1046,7 @@ public class LanguageFormatter {
         // Local helper to avoid repeating translateWord(...) everywhere.
         List<String> tArgs = new ArrayList<>(args.size());
         for (int i = 0; i < args.size(); i++) {
-            tArgs.add(translateWord(termMap, args.get(i)));
+            tArgs.add(maybeTranslateArg(args.get(i)));
         }
 
         if (pred.equals(Formula.IF)) {
@@ -1219,6 +1219,23 @@ public class LanguageFormatter {
             }
         }
         return join(disjuncts, OR);
+    }
+
+    /** Args reaching generateFormalNaturalLanguage() are usually already paraphrased.
+     * Only translate when the arg looks like a raw atomic token.
+     */
+    private String maybeTranslateArg(String s) {
+        if (StringUtil.emptyString(s)) return s;
+
+        // If it looks like a composed clause or already-rendered markup, do NOT translate.
+        if (s.indexOf(' ') >= 0) return s;          // multiword / composed
+        if (s.contains("&%")) return s;             // Sigma hyperlink marker
+        if (s.contains("~{")) return s;             // negation wrapper
+        if (s.contains("<")) return s;              // HTML fragment
+        if (s.startsWith("\"") && s.endsWith("\"")) return s; // quoted string
+
+        // Otherwise it's plausibly a raw atom; translate once.
+        return translateWord(termMap, s);
     }
 
     /** ***************************************************************

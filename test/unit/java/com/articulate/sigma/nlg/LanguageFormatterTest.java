@@ -526,4 +526,54 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertFalse(out.contains("~{ A } and ~{ B } and ~{ C }"));  // 000
     }
 
+    @Test
+    public void testFormalNLG_doesNotTranslateComposedArgs() {
+        LanguageFormatter lf = newLF();
+
+        // This string must remain unchanged; it is already rendered.
+        String clause = "A and ~{ B }";
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList(clause, "C"),
+                Formula.OR,
+                false,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        assertTrue(out.contains(clause));
+    }
+
+    @Test
+    public void testFormalNLG_doubleTranslation_canCorruptAlreadyParaphrasedArg() {
+
+        // Start from the real maps so the formatter has normal behavior.
+        Map<String,String> phraseMap = new HashMap<>(kb.getFormatMap("EnglishLanguage"));
+        Map<String,String> termMap   = new HashMap<>(kb.getTermFormatMap("EnglishLanguage"));
+
+        // This is the "already paraphrased" clause we will pass as an argument to OR.
+        String paraphrasedClause = "A and ~{ B }";
+
+        // Inject a malicious/accidental entry to show why translating again is dangerous.
+        termMap.put(paraphrasedClause, "CORRUPTED");
+
+        LanguageFormatter lf = new LanguageFormatter(
+                "stmt",
+                phraseMap,
+                termMap,
+                kb,
+                "EnglishLanguage"
+        );
+
+        String out = lf.generateFormalNaturalLanguage(
+                Arrays.asList(paraphrasedClause, "C"),
+                Formula.OR,
+                false,
+                LanguageFormatter.RenderMode.TEXT
+        );
+
+        // Current buggy behavior (double-translation) will remap the whole clause.
+        assertNotEquals("CORRUPTED or C", out); // previous behavior
+        assertEquals("A and ~{ B } or C", out); // current behavior
+    }
+
 }
