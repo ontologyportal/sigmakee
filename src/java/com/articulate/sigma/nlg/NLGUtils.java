@@ -839,4 +839,26 @@ public class NLGUtils implements Serializable {
         }
         return false;
     }
+
+    /** Insert spaces into long URLs to improve readability in NL output. */
+    public static String formatLongUrl(String quotedUrl) {
+
+        if (StringUtil.emptyString(quotedUrl))
+            return quotedUrl;
+
+        String unquoted = StringUtil.removeEnclosingQuotes(quotedUrl);
+        if (!unquoted.startsWith("http"))
+            return quotedUrl;
+
+        StringBuilder formatted = new StringBuilder(quotedUrl);
+        if (formatted.length() <= 50)
+            return quotedUrl;
+
+        for (int i = 50; i < formatted.length(); i++) {
+            if (i > 50 && formatted.charAt(i) == '/')
+                formatted.insert(i + 1, ' ');
+        }
+        return formatted.toString();
+    }
+
 }

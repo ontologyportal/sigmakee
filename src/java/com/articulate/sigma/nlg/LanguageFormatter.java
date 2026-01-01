@@ -1238,6 +1238,13 @@ public class LanguageFormatter {
         return translateWord(termMap, s);
     }
 
+    /** True if s already looks like Sigma's annotated term placeholder: &%TERM$"label" */
+    private static boolean isAnnotatedTerm(String s) {
+        if (StringUtil.emptyString(s)) return false;
+        // Minimal and fast check (no regex): must start with &% and contain $" and end with "
+        return s.startsWith("&%") && s.contains("$\"") && s.endsWith("\"");
+    }
+
     /** ***************************************************************
      * Create a natural language paraphrase of a logical statement, where the
      * predicate is not a logical operator.  Use a printf-like format string to generate
@@ -1390,45 +1397,46 @@ public class LanguageFormatter {
      * spaces for readability.  Return variable unaltered.  Add
      * term format string to all other atoms.
      */
-    private static String processAtom(String atom, Map<String, String> termMap) {
+     static String processAtom(String atom, Map<String, String> termMap) {
 
-        String result = atom;
+        if (StringUtil.emptyString(atom))
+            return atom;
+
+        // If already annotated, do nothing (idempotent).
+        if (isAnnotatedTerm(atom))
+            return atom;
+
         String unquoted = StringUtil.removeEnclosingQuotes(atom);
+
+        // Numbers: keep raw
         boolean isNumber;
         try {
             Double dbl = Double.valueOf(unquoted);
             isNumber = !dbl.isNaN();
-        }
-        catch (NumberFormatException nex) {
+        }catch (NumberFormatException nex) {
             isNumber = false;
         }
-        if (isNumber)
-            ; // do nothing
-        else if (StringUtil.isQuotedString(atom)) {
-            if (unquoted.startsWith("http")) {
-                StringBuilder formatted = new StringBuilder(atom);
-                if (formatted.length() > 50) {
-                    for (int i = 50; i < formatted.length(); i++) {
-                        if (i > 50 && formatted.charAt(i) == '/')
-                            // add spaces to long URL strings
-                            formatted = formatted.insert(i+1,' ');
-                    }
-                    result = formatted.toString();
-                }
-            }
+        if (isNumber) return atom;
+
+        if (StringUtil.isQuotedString(atom)) {
+            return NLGUtils.formatLongUrl(atom);
         }
-        else if (Formula.isVariable(atom))
-            ; // do nothing
-        else if (StringUtil.isDigitString(unquoted))
-            ; // do nothing
-        else if (termMap.containsKey(atom)) {
-            String formattedString = termMap.get(atom);
-            result = ("&%" + atom + "$\"" + formattedString + "\"");
+
+        // Variables and digit strings: keep raw
+        if (Formula.isVariable(atom)) return atom;
+
+        if (StringUtil.isDigitString(unquoted)) return atom;
+
+        // Otherwise: ontology term (or constant) -> annotated consistently
+        String label = atom;
+        if (termMap != null) {
+            String mapped = termMap.get(atom);
+            if (StringUtil.isNonEmptyString(mapped))
+                label = mapped;
         }
-        else
-            result = ("&%" + atom + "$\"" + atom + "\"");
-        return result;
+        return "&%" + atom + "$\"" + label + "\"";
     }
+
 
     /** ***************************************************************
      * Return the NL format of an individual word.

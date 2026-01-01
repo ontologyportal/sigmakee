@@ -576,4 +576,24 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertEquals("A and ~{ B } or C", out); // current behavior
     }
 
+    @Test
+    public void testBug_processAtom_doubleWrapsAlreadyAnnotatedTerm() {
+
+        Map<String,String> termMap = new HashMap<>();
+        termMap.put("Human", "human");
+
+        // First call produces an annotated term.
+        String once = LanguageFormatter.processAtom("Human", termMap);
+        assertEquals("&%Human$\"human\"", once);
+
+        // Old buggy behavior: calling processAtom() again on the already-annotated string
+        // treated it like a normal atom and wrapped it again.
+        String twice = LanguageFormatter.processAtom(once, termMap);
+
+        // This is the *bug*: double-annotation.
+        assertNotEquals("&%&%Human$\"human\"$\"&%Human$\"human\"\"", twice); // Previous Behavior
+        assertEquals("&%Human$\"human\"", twice); // Current Behavior
+    }
+
+
 }

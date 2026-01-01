@@ -10,8 +10,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -188,6 +187,24 @@ public class NLGUtilsTest extends UnitTestBase {
     @Test
     public void testDecoder() {
         assertNotNull(NLGUtils.decoder());
+    }
+
+    @Test
+    public void testFormatLongUrl_insertsSpaces() {
+        String url = "\"http://example.com/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p/q/r/s/t/u/v\"";
+        String out = NLGUtils.formatLongUrl(url);
+        System.out.println("out: "+out);
+        assertTrue("Expected spaces after slashes for long URLs, got: " + out, out.contains("/ "));
+        assertTrue(out.startsWith("\"http"));
+    }
+
+    @Test
+    public void testFormatLongUrl_shortUrl_unchanged() {
+        String url = "\"http://example.com/a/b/c\"";
+        String out = NLGUtils.formatLongUrl(url);
+
+        assertEquals(url, out);
+        assertFalse(out.contains("/ "));
     }
 
 }
