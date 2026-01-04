@@ -20,8 +20,7 @@ public final class NLGReadability {
         if (template == null || template.isEmpty())
             return template;
 
-        // (We will generate <ul>...</ul> ourselves when mode==HTML, but we do not want to rewrite
-        // already-marked-up strings repeatedly.)
+        // This hook runs pre-linkification. If markup already exists, do nothing.
         if (template.indexOf('<') >= 0 || template.indexOf('>') >= 0)
             return template;
 
@@ -35,19 +34,26 @@ public final class NLGReadability {
         Protection prot = protectAnnotatedTerms(template);
         String work = prot.protectedText;
 
-        // Commit 2: conservative comma-list smoothing for 3..6 items.
+        // Commit 4: If the paraphrase starts with a quantifier header ("for all"/"there exists"),
+        // preserve the header (variable declarations) and apply readability only to the body.
+        QuantifierSplit qs = splitLeadingQuantifierHeader(work, andKw);
+        String prefix = qs.prefix;
+        String body   = qs.body;
+
+        // Apply Commit 2/3 improvements to the body only.
         if (andKw != null && !andKw.isEmpty())
-            work = smoothSimpleConnectorChains(work, andKw);
+            body = smoothSimpleConnectorChains(body, andKw);
 
         if (orKw != null && !orKw.isEmpty())
-            work = smoothSimpleConnectorChains(work, orKw);
+            body = smoothSimpleConnectorChains(body, orKw);
 
-        // Commit 3: chunk long flat chains (7+ items) into bullet/numbered lists.
         if (andKw != null && !andKw.isEmpty())
-            work = chunkLongConnectorChains(work, andKw, mode, language, /*isAnd*/true);
+            body = chunkLongConnectorChains(body, andKw, mode, language, /*isAnd*/true);
 
         if (orKw != null && !orKw.isEmpty())
-            work = chunkLongConnectorChains(work, orKw, mode, language, /*isAnd*/false);
+            body = chunkLongConnectorChains(body, orKw, mode, language, /*isAnd*/false);
+
+        work = prefix + body;
 
         // Restore protected annotated terms.
         return restoreAnnotatedTerms(work, prot.placeholderToOriginal);
@@ -109,9 +115,6 @@ public final class NLGReadability {
         if (containsAny(s, "~{", "}", "(", ")", "[", "]", "{", "}", "\n", "\r", ";"))
             return s;
 
-        String trimmed = s.trim().toLowerCase();
-        if (trimmed.startsWith("for all ") || trimmed.startsWith("there exists "))
-            return s;
 
         String kwRegex = "\\s+" + Pattern.quote(connectorKw) + "\\s+";
         String[] parts = s.split(kwRegex);
@@ -177,10 +180,6 @@ public final class NLGReadability {
 
         // Do not chunk negation blocks, scoped structures, or quantifier-leading templates in commit 3.
         if (containsAny(s, "~{", "}", "(", ")", "[", "]", "{", "}", "\n", "\r", ";"))
-            return s;
-
-        String trimmed = s.trim().toLowerCase();
-        if (trimmed.startsWith("for all ") || trimmed.startsWith("there exists "))
             return s;
 
         String kwRegex = "\\s+" + Pattern.quote(connectorKw) + "\\s+";
@@ -257,4 +256,99 @@ public final class NLGReadability {
             this.placeholderToOriginal = placeholderToOriginal;
         }
     }
+
+    /**
+     * If s begins with a quantifier header ("for all"/"there exists"), split it into:
+     * - prefix: the quantifier + declared variables + trailing space
+     * - body: the remainder
+     *
+     * This is conservative and English-surface based. It is designed to work with
+     * Sigma’s template patterns such as:
+     *   "for all VAR and VAR BODY..."
+     *
+     * It relies on annotated vars being protected as placeholders (e.g., §T0§),
+     * so we can safely identify the variable list as placeholders separated by "and".
+     */
+    private static QuantifierSplit splitLeadingQuantifierHeader(String s, String andKw) {
+
+        if (s == null || s.isEmpty())
+            return new QuantifierSplit("", s);
+
+        String trimmed = s.trim();
+        String lower = trimmed.toLowerCase();
+
+        boolean isForAll = lower.startsWith("for all ");
+        boolean isExists = lower.startsWith("there exists ");
+
+        if (!isForAll && !isExists)
+            return new QuantifierSplit("", s);
+
+        // We want to preserve the quantifier header exactly as it appears (including original spacing
+        // as much as possible). To keep this simple and stable, we operate on the trimmed view but
+        // return a prefix with a single trailing space.
+        String qPrefix = isForAll ? "for all " : "there exists ";
+
+        // If we can't detect "and" keyword, do not split.
+        if (andKw == null || andKw.isEmpty())
+            return new QuantifierSplit("", s);
+
+        // Tokenize the trimmed string and attempt to parse:
+        // qPrefix + <var> (and <var>)* + <body>
+        // where <var> is a protected placeholder like §T0§.
+        String rest = trimmed.substring(qPrefix.length());
+        String[] toks = rest.split("\\s+");
+
+        int i = 0;
+
+        // First var must be a placeholder.
+        if (i >= toks.length || !isPlaceholderToken(toks[i]))
+            return new QuantifierSplit("", s);
+
+        i++; // consume first var
+
+        // Consume (and <var>)* pattern.
+        while (i + 1 < toks.length) {
+            if (!toks[i].equals(andKw))
+                break;
+            if (!isPlaceholderToken(toks[i + 1]))
+                break;
+            i += 2;
+        }
+
+        // i is now the index of the first token of the body.
+        // Reconstruct prefix and body using tokens to avoid fragile substring math.
+        StringBuilder prefix = new StringBuilder();
+        prefix.append(qPrefix);
+
+        // Rebuild the declared vars portion from toks[0..i-1]
+        for (int j = 0; j < i; j++) {
+            if (j > 0) prefix.append(' ');
+            prefix.append(toks[j]);
+        }
+        prefix.append(' ');
+
+        StringBuilder body = new StringBuilder();
+        for (int j = i; j < toks.length; j++) {
+            if (j > i) body.append(' ');
+            body.append(toks[j]);
+        }
+
+        return new QuantifierSplit(prefix.toString(), body.toString());
+    }
+
+    private static boolean isPlaceholderToken(String tok) {
+        if (tok == null) return false;
+        // Commit 2/3 placeholders are of the form §T<number>§
+        return tok.matches("§T\\d+§");
+    }
+
+    private static final class QuantifierSplit {
+        final String prefix;
+        final String body;
+        QuantifierSplit(String prefix, String body) {
+            this.prefix = prefix;
+            this.body = body;
+        }
+    }
+
 }

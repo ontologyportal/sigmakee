@@ -102,6 +102,45 @@ public class NLGReadabilityTest extends UnitTestBase {
         assertEquals(t, out);
     }
 
+    @Test
+    public void readabilityQuantifierHeader_preserved_bodyCanBeSmoothed() {
+
+        String t =
+                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1 " +
+                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1 or " +
+                        "&%Organism$\"the other organism\"1 is not a &%mother$\"mother\" of &%Organism$\"the organism\"1 or " +
+                        "&%Organism$\"the organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\" or " +
+                        "&%Organism$\"the other organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        // Expect quantifier header preserved: "for all <var> and <var> "
+        // and the OR-chain body rewritten as a comma list (4 items).
+        String expected =
+                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1 " +
+                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1, " +
+                        "&%Organism$\"the other organism\"1 is not a &%mother$\"mother\" of &%Organism$\"the organism\"1, " +
+                        "&%Organism$\"the organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\", or " +
+                        "&%Organism$\"the other organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"";
+
+        assertEquals(expected, out);
+    }
+
+    @Test
+    public void readabilityQuantifierHeader_preserved_whenBodyNotEligible() {
+
+        String t =
+                "for all &%A$\"A\"1 and &%B$\"B\"1 " +
+                        "~{ &%C$\"C\" } or ~{ &%D$\"D\" }";
+
+        // Body contains "~{", and our current smoothing/chunking conservatively skips such bodies.
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        assertEquals(t, out);
+    }
+
+
+
 
 
 }
