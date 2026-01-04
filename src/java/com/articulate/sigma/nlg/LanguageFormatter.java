@@ -325,6 +325,10 @@ public class LanguageFormatter {
                     template = variableReplace(template, instanceMap, classMap, kb, language);
                     if (debug) System.out.println("LanguageFormatter.htmlParaphrase(): template: " + template);
                 }
+
+                // Readability layer (pre-linkification).
+                template = NLGReadability.improveTemplate(template, RenderMode.HTML, language);
+
                 // Get rid of the percentage signs.
                 nlFormat = NLGUtils.resolveFormatSpecifiers(template, href);
                 if (debug) System.out.println("LanguageFormatter.htmlParaphrase(): nlFormat: " + nlFormat);
