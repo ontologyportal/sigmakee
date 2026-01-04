@@ -20,7 +20,7 @@ public final class NLGReadability {
         if (template == null || template.isEmpty())
             return template;
 
-        // This hook runs pre-linkification. If markup already exists, do nothing.
+        // Pre-linkification hook. If markup already exists, do nothing.
         if (template.indexOf('<') >= 0 || template.indexOf('>') >= 0)
             return template;
 
@@ -34,13 +34,22 @@ public final class NLGReadability {
         Protection prot = protectAnnotatedTerms(template);
         String work = prot.protectedText;
 
-        // Commit 4: If the paraphrase starts with a quantifier header ("for all"/"there exists"),
-        // preserve the header (variable declarations) and apply readability only to the body.
+        // Split leading quantifier header (Commit 4).
         QuantifierSplit qs = splitLeadingQuantifierHeader(work, andKw);
         String prefix = qs.prefix;
         String body   = qs.body;
 
-        // Apply Commit 2/3 improvements to the body only.
+        // Commit 5: If this is a quantified statement and the body is a flat OR chain (3+),
+        // render the disjunction as a list of smaller valid clauses.
+        if (!prefix.isEmpty() && orKw != null && !orKw.isEmpty()) {
+            String listed = renderQuantifiedFlatOrAsList(prefix, body, orKw, mode);
+            if (listed != null) {
+                // Restore protected annotated terms and return.
+                return restoreAnnotatedTerms(listed, prot.placeholderToOriginal);
+            }
+        }
+
+        // Fallback: apply existing Commit 2/3 improvements to the body only.
         if (andKw != null && !andKw.isEmpty())
             body = smoothSimpleConnectorChains(body, andKw);
 
@@ -58,6 +67,7 @@ public final class NLGReadability {
         // Restore protected annotated terms.
         return restoreAnnotatedTerms(work, prot.placeholderToOriginal);
     }
+
 
     // =========================
     // Protection: annotated terms
@@ -341,6 +351,85 @@ public final class NLGReadability {
         // Commit 2/3 placeholders are of the form §T<number>§
         return tok.matches("§T\\d+§");
     }
+
+    /**
+     * If (prefix + body) represents a quantified statement whose body is a flat OR chain,
+     * render it as:
+     *
+     *   "<quantifier header>, at least one of the following holds:<ul>...</ul>"  (HTML)
+     *   "<quantifier header>, at least one of the following holds: (1) ... (2) ..." (TEXT)
+     *
+     * Returns null if the pattern is not safely recognized.
+     */
+    private static String renderQuantifiedFlatOrAsList(String prefix,
+                                                       String body,
+                                                       String orKw,
+                                                       LanguageFormatter.RenderMode mode) {
+
+        if (prefix == null || prefix.isEmpty() || body == null || body.isEmpty())
+            return null;
+
+        // Extremely conservative: do not touch negation blocks or explicit scoping punctuation yet.
+        if (containsAny(body, "~{", "}", "(", ")", "[", "]", "{", "}", "\n", "\r", ";"))
+            return null;
+
+        // Must contain OR keyword bounded by spaces.
+        String needle = " " + orKw + " ";
+        if (body.indexOf(needle) < 0)
+            return null;
+
+        // Split on OR with whitespace boundaries.
+        String kwRegex = "\\s+" + Pattern.quote(orKw) + "\\s+";
+        String[] parts = body.split(kwRegex);
+
+        // Only trigger for 3+ disjuncts (this is the “small valid ones” benefit).
+        if (parts.length < 3 || parts.length > 30)
+            return null;
+
+        List<String> items = new ArrayList<>(parts.length);
+        for (String p : parts) {
+            String item = p.trim();
+            if (item.isEmpty())
+                return null;
+
+            // Avoid nested OR inside an item (indicates complexity we are not parsing yet).
+            String bounded = " " + item + " ";
+            if (bounded.contains(needle))
+                return null;
+
+            // Keep conservative: if any item is extremely long, treat as too complex.
+            if (item.length() > 400)
+                return null;
+
+            items.add(item);
+        }
+
+        // Build a stable lead-in.
+        String header = prefix.trim();
+        String leadIn = header + ", at least one of the following holds:";
+
+        if (mode == LanguageFormatter.RenderMode.HTML) {
+            StringBuilder out = new StringBuilder(leadIn.length() + body.length() + 64);
+            out.append(leadIn);
+            out.append("<ul>");
+            for (String item : items) {
+                out.append("<li>").append(item).append("</li>");
+            }
+            out.append("</ul>");
+            return out.toString();
+        }
+
+        // TEXT mode
+        StringBuilder out = new StringBuilder(leadIn.length() + body.length() + 64);
+        out.append(leadIn).append(" ");
+        for (int i = 0; i < items.size(); i++) {
+            out.append("(").append(i + 1).append(") ").append(items.get(i));
+            if (i < items.size() - 1)
+                out.append(" ");
+        }
+        return out.toString();
+    }
+
 
     private static final class QuantifierSplit {
         final String prefix;

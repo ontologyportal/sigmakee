@@ -102,29 +102,29 @@ public class NLGReadabilityTest extends UnitTestBase {
         assertEquals(t, out);
     }
 
-    @Test
-    public void readabilityQuantifierHeader_preserved_bodyCanBeSmoothed() {
-
-        String t =
-                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1 " +
-                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1 or " +
-                        "&%Organism$\"the other organism\"1 is not a &%mother$\"mother\" of &%Organism$\"the organism\"1 or " +
-                        "&%Organism$\"the organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\" or " +
-                        "&%Organism$\"the other organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"";
-
-        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
-
-        // Expect quantifier header preserved: "for all <var> and <var> "
-        // and the OR-chain body rewritten as a comma list (4 items).
-        String expected =
-                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1 " +
-                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1, " +
-                        "&%Organism$\"the other organism\"1 is not a &%mother$\"mother\" of &%Organism$\"the organism\"1, " +
-                        "&%Organism$\"the organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\", or " +
-                        "&%Organism$\"the other organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"";
-
-        assertEquals(expected, out);
-    }
+//    @Test
+//    public void readabilityQuantifierHeader_preserved_bodyCanBeSmoothed() {
+//
+//        String t =
+//                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1 " +
+//                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1 or " +
+//                        "&%Organism$\"the other organism\"1 is not a &%mother$\"mother\" of &%Organism$\"the organism\"1 or " +
+//                        "&%Organism$\"the organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\" or " +
+//                        "&%Organism$\"the other organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"";
+//
+//        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+//
+//        // Expect quantifier header preserved: "for all <var> and <var> "
+//        // and the OR-chain body rewritten as a comma list (4 items).
+//        String expected =
+//                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1 " +
+//                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1, " +
+//                        "&%Organism$\"the other organism\"1 is not a &%mother$\"mother\" of &%Organism$\"the organism\"1, " +
+//                        "&%Organism$\"the organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\", or " +
+//                        "&%Organism$\"the other organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"";
+//
+//        assertEquals(expected, out);
+//    }
 
     @Test
     public void readabilityQuantifierHeader_preserved_whenBodyNotEligible() {
@@ -139,8 +139,57 @@ public class NLGReadabilityTest extends UnitTestBase {
         assertEquals(t, out);
     }
 
+    @Test
+    public void readabilityQuantifiedOrChain_becomesBullets_html() {
 
+        String t =
+                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1 " +
+                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1 or " +
+                        "&%Organism$\"the other organism\"1 is not a &%mother$\"mother\" of &%Organism$\"the organism\"1 or " +
+                        "&%Organism$\"the organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\" or " +
+                        "&%Organism$\"the other organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"";
 
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        String expected =
+                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1, at least one of the following holds:" +
+                        "<ul>" +
+                        "<li>&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1</li>" +
+                        "<li>&%Organism$\"the other organism\"1 is not a &%mother$\"mother\" of &%Organism$\"the organism\"1</li>" +
+                        "<li>&%Organism$\"the organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"</li>" +
+                        "<li>&%Organism$\"the other organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"</li>" +
+                        "</ul>";
+
+        assertEquals(expected, out);
+    }
+
+    @Test
+    public void readabilityQuantifiedOrChain_becomesNumbered_text() {
+
+        String t =
+                "for all &%A$\"A\"1 and &%B$\"B\"1 " +
+                        "&%C$\"C\" or &%D$\"D\" or &%E$\"E\"";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+
+        String expected =
+                "for all &%A$\"A\"1 and &%B$\"B\"1, at least one of the following holds: " +
+                        "(1) &%C$\"C\" (2) &%D$\"D\" (3) &%E$\"E\"";
+
+        assertEquals(expected, out);
+    }
+
+    @Test
+    public void readabilityQuantifiedOrChain_doesNotTrigger_withNegationBlocks() {
+
+        String t =
+                "for all &%A$\"A\"1 and &%B$\"B\"1 " +
+                        "~{ &%C$\"C\" } or ~{ &%D$\"D\" } or ~{ &%E$\"E\" }";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        assertEquals(t, out);
+    }
 
 
 }
