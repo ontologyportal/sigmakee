@@ -5,9 +5,21 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 public class NLGReadabilityTest extends UnitTestBase {
+
+    // Helper Methods
+    private static int countOccurrences(String s, String needle) {
+        int count = 0, idx = 0;
+        while ((idx = s.indexOf(needle, idx)) >= 0) {
+            count++;
+            idx += needle.length();
+        }
+        return count;
+    }
 
     @Test
     public void readabilityCommaList_preservesAnnotatedTerms_andRewritesAndChain() {
@@ -190,6 +202,93 @@ public class NLGReadabilityTest extends UnitTestBase {
 
         assertEquals(t, out);
     }
+
+
+    @Test
+    public void readabilityFactoring_orChain_joinsTailsWithOr() {
+
+        String t =
+                "&%X$\"X\" is a &%parent$\"parent\" of &%A$\"A\" or " +
+                        "&%X$\"X\" is a &%parent$\"parent\" of &%B$\"B\" or " +
+                        "&%X$\"X\" is a &%parent$\"parent\" of &%C$\"C\"";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        assertEquals("&%X$\"X\" is a &%parent$\"parent\" of " +
+                "&%A$\"A\" or &%B$\"B\" or &%C$\"C\"", out);
+    }
+
+
+    @Test
+    public void readabilityFactoring_andChain_joinsTailsWithAnd() {
+
+        String t =
+                "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Bill7_1$\"Bill7_1\" and " +
+                        "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Bob7_1$\"Bob7_1\" and " +
+                        "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Sue7_1$\"Sue7_1\"";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        assertEquals("&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of " +
+                "&%Bill7_1$\"Bill7_1\" and &%Bob7_1$\"Bob7_1\" and &%Sue7_1$\"Sue7_1\"", out);
+    }
+
+
+    @Test
+    public void readabilityFactoring_quantifiedOrList_collapsesAndUsesOr() {
+
+        String t =
+                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1 " +
+                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1 or " +
+                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"2 or " +
+                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"3";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        String expected =
+                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1, at least one of the following holds:" +
+                        "<ul>" +
+                        "<li>&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of " +
+                        "&%Organism$\"the organism\"1 or &%Organism$\"the organism\"2 or &%Organism$\"the organism\"3</li>" +
+                        "</ul>";
+
+        assertEquals(expected, out);
+    }
+
+
+    @Test
+    public void readabilityFactoring_doesNotTrigger_ifPrefixDiffers() {
+
+        String t =
+                "&%X$\"X\" is a &%parent$\"parent\" of &%A$\"A\" or " +
+                        "&%X$\"X\" is a &%mother$\"mother\" of &%B$\"B\" or " +
+                        "&%X$\"X\" is a &%parent$\"parent\" of &%C$\"C\"";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        // Factoring would collapse repeated "is a parent of" into a single occurrence.
+        // Here it must still appear twice.
+        String parentPhrase = "is a &%parent$\"parent\" of";
+        assertTrue(out.contains(parentPhrase));
+        assertEquals(2, countOccurrences(out, parentPhrase));
+    }
+
+
+    @Test
+    public void readabilityFactoring_doesNotTrigger_forTwoItems() {
+
+        String t =
+                "&%X$\"X\" is a &%parent$\"parent\" of &%A$\"A\" or " +
+                        "&%X$\"X\" is a &%parent$\"parent\" of &%B$\"B\"";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        assertEquals(t, out);
+    }
+
+
+
+
 
 
 }

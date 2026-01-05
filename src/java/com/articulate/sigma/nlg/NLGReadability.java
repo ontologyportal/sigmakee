@@ -11,9 +11,30 @@ import java.util.regex.Pattern;
 
 public final class NLGReadability {
 
+
+    private static final class Protection {
+        final String protectedText;
+        final Map<String,String> placeholderToOriginal;
+        Protection(String protectedText, Map<String,String> placeholderToOriginal) {
+            this.protectedText = protectedText;
+            this.placeholderToOriginal = placeholderToOriginal;
+        }
+    }
+
+
+    private static final class QuantifierSplit {
+        final String prefix;
+        final String body;
+        QuantifierSplit(String prefix, String body) {
+            this.prefix = prefix;
+            this.body = body;
+        }
+    }
+
     private NLGReadability() {
         // utility class
     }
+
 
     public static String improveTemplate(String template, LanguageFormatter.RenderMode mode, String language) {
 
@@ -39,7 +60,6 @@ public final class NLGReadability {
         String prefix = qs.prefix;
         String body   = qs.body;
 
-        // Commit 5: If this is a quantified statement and the body is a flat OR chain (3+),
         // render the disjunction as a list of smaller valid clauses.
         if (!prefix.isEmpty() && orKw != null && !orKw.isEmpty()) {
             String listed = renderQuantifiedFlatOrAsList(prefix, body, orKw, mode);
@@ -49,7 +69,6 @@ public final class NLGReadability {
             }
         }
 
-        // Fallback: apply existing Commit 2/3 improvements to the body only.
         if (andKw != null && !andKw.isEmpty())
             body = smoothSimpleConnectorChains(body, andKw);
 
@@ -80,7 +99,11 @@ public final class NLGReadability {
         Matcher m = p.matcher(s);
 
         StringBuilder out = new StringBuilder(s.length());
-        Map<String,String> map = new LinkedHashMap<>();
+
+        // placeholder -> original
+        Map<String,String> phToOrig = new LinkedHashMap<>();
+        // original -> placeholder (dedupe)
+        Map<String,String> origToPh = new LinkedHashMap<>();
 
         int last = 0;
         int idx = 0;
@@ -89,16 +112,20 @@ public final class NLGReadability {
             out.append(s, last, m.start());
             String tok = m.group();
 
-            String ph = "§T" + (idx++) + "§";
-            map.put(ph, tok);
+            String ph = origToPh.get(tok);
+            if (ph == null) {
+                ph = "§T" + (idx++) + "§";
+                origToPh.put(tok, ph);
+                phToOrig.put(ph, tok);
+            }
             out.append(ph);
-
             last = m.end();
         }
         out.append(s.substring(last));
 
-        return new Protection(out.toString(), map);
+        return new Protection(out.toString(), phToOrig);
     }
+
 
     private static String restoreAnnotatedTerms(String s, Map<String,String> placeholderToOriginal) {
 
@@ -147,6 +174,11 @@ public final class NLGReadability {
 
             items.add(item);
         }
+
+        // If we can safely factor a shared prefix, collapse the list into one concise clause.
+        String factored = factorSharedPrefix(items, connectorKw);
+        if (factored != null)
+            return factored;
 
         StringBuilder out = new StringBuilder(s.length());
         for (int i = 0; i < items.size(); i++) {
@@ -216,6 +248,13 @@ public final class NLGReadability {
             items.add(item);
         }
 
+        // collapse into a single item with a factored object list.
+        String factored = factorSharedPrefix(items, connectorKw);
+        if (factored != null) {
+            items.clear();
+            items.add(factored);
+        }
+
         // Lead-in text. Keep it stable for golden tests.
         final String leadIn;
         if (isAnd) {
@@ -258,14 +297,6 @@ public final class NLGReadability {
         return false;
     }
 
-    private static final class Protection {
-        final String protectedText;
-        final Map<String,String> placeholderToOriginal;
-        Protection(String protectedText, Map<String,String> placeholderToOriginal) {
-            this.protectedText = protectedText;
-            this.placeholderToOriginal = placeholderToOriginal;
-        }
-    }
 
     /**
      * If s begins with a quantifier header ("for all"/"there exists"), split it into:
@@ -404,6 +435,13 @@ public final class NLGReadability {
             items.add(item);
         }
 
+        // Try subject/prefix factoring inside the OR list.
+        String factored = factorSharedPrefix(items, orKw);
+        if (factored != null) {
+            items.clear();
+            items.add(factored);
+        }
+
         // Build a stable lead-in.
         String header = prefix.trim();
         String leadIn = header + ", at least one of the following holds:";
@@ -431,13 +469,146 @@ public final class NLGReadability {
     }
 
 
-    private static final class QuantifierSplit {
-        final String prefix;
-        final String body;
-        QuantifierSplit(String prefix, String body) {
-            this.prefix = prefix;
-            this.body = body;
+    /**
+     * Attempt to factor a shared prefix across a list of clauses, producing one concise clause.
+     *
+     * Example (AND):
+     *   ["Jane is mother of Bill", "Jane is mother of Bob", "Jane is mother of Sue"]
+     *    -> "Jane is mother of Bill, Bob, and Sue"
+     *
+     * Example (OR):
+     *   ["X is parent of A", "X is parent of B", "X is parent of C"]
+     *    -> "X is parent of A, B, or C"
+     *
+     * Returns null if not safely applicable.
+     */
+    private static String factorSharedPrefix(List<String> items, String connectorKw) {
+
+        if (items == null || items.size() < 3 || items.size() > 30)
+            return null;
+
+        // Conservative: do not factor if any item includes scope punctuation or block negation.
+        for (String it : items) {
+            if (it == null) return null;
+            if (containsAny(it, "~{", "}", "(", ")", "[", "]", "{", "}", "\n", "\r", ";"))
+                return null;
         }
+
+        // Compute longest common prefix across all items.
+        String prefix = longestCommonPrefix(items);
+        if (prefix == null || prefix.trim().length() < 12)
+            return null;
+
+        // Trim prefix to a "safe boundary" to avoid cutting mid-token.
+        prefix = trimPrefixToSafeBoundary(prefix);
+        if (prefix == null || prefix.trim().length() < 12)
+            return null;
+
+        // Extract suffixes and ensure they are simple (ideally single placeholders like §T12§).
+        List<String> tails = new ArrayList<>(items.size());
+        for (String it : items) {
+            if (!it.startsWith(prefix))
+                return null;
+
+            String tail = it.substring(prefix.length()).trim();
+            tail = tail.replaceAll("[\\.,:;]+$", "").trim();
+            if (tail.isEmpty())
+                return null;
+
+            // Strictly allow a simple tail:
+            // - a protected placeholder token (preferred): §T123§
+            // - or a short tail without connectors/punctuation (fallback)
+            if (!isSimpleTail(tail, connectorKw))
+                return null;
+
+            tails.add(tail);
+        }
+
+        // Build the aggregated clause: prefix + joined tails.
+        String joinedTails = joinWithConnector(tails, connectorKw);
+        if (joinedTails == null)
+            return null;
+
+        return prefix + joinedTails;
     }
+
+    private static String longestCommonPrefix(List<String> items) {
+        if (items.isEmpty()) return "";
+
+        String p = items.get(0);
+        for (int i = 1; i < items.size(); i++) {
+            p = commonPrefix(p, items.get(i));
+            if (p.isEmpty())
+                return "";
+        }
+        return p;
+    }
+
+    private static String commonPrefix(String a, String b) {
+        if (a == null || b == null) return "";
+        int n = Math.min(a.length(), b.length());
+        int i = 0;
+        while (i < n && a.charAt(i) == b.charAt(i)) i++;
+        return a.substring(0, i);
+    }
+
+    /**
+     * Prefer trimming at " of " if present; otherwise trim to the last whitespace boundary.
+     * Ensures the prefix ends with a space.
+     */
+    private static String trimPrefixToSafeBoundary(String prefix) {
+
+        if (prefix == null) return null;
+
+        // For Commit 6, we only factor patterns of the form "... of <ARG>".
+        // This avoids cutting through placeholder tokens like "§T".
+        int idxOf = prefix.lastIndexOf(" of ");
+        if (idxOf < 0)
+            return null;
+
+        String p = prefix.substring(0, idxOf + " of ".length());
+        return p.endsWith(" ") ? p : (p + " ");
+    }
+
+
+    private static boolean isSimpleTail(String tail, String connectorKw) {
+
+        // Preferred: single protected placeholder token
+        if (tail.matches("§T\\d+§"))
+            return true;
+
+        // Conservative fallback: allow short tails without obvious structure.
+        if (tail.length() > 80)
+            return false;
+
+        // No connectors/punctuation that suggest complexity.
+        String bounded = " " + tail + " ";
+        if (connectorKw != null && !connectorKw.isEmpty()) {
+            if (bounded.contains(" " + connectorKw + " "))
+                return false;
+        }
+        if (containsAny(tail, "~{", "}", "(", ")", "[", "]", "{", "}", ";", ","))
+            return false;
+
+        // No multiword tails (usually indicates clause remainder, not a single argument).
+        if (tail.indexOf(' ') >= 0)
+            return false;
+
+        return true;
+    }
+
+
+    private static String joinWithConnector(List<String> items, String connectorKw) {
+        if (items == null || items.isEmpty())
+            return null;
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < items.size(); i++) {
+            if (i > 0) sb.append(" ").append(connectorKw).append(" ");
+            sb.append(items.get(i));
+        }
+        return sb.toString();
+    }
+
 
 }
