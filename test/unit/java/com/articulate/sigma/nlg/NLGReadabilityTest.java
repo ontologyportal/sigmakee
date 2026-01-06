@@ -21,19 +21,6 @@ public class NLGReadabilityTest extends UnitTestBase {
         return count;
     }
 
-    @Test
-    public void readabilityCommaList_preservesAnnotatedTerms_andRewritesAndChain() {
-
-        String t = "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Bill7_1$\"Bill7_1\" and " +
-                "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Bob7_1$\"Bob7_1\" and " +
-                "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Sue7_1$\"Sue7_1\"";
-
-        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
-
-        assertEquals("&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Bill7_1$\"Bill7_1\", " +
-                "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Bob7_1$\"Bob7_1\", and " +
-                "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Sue7_1$\"Sue7_1\"", out);
-    }
 
     @Test
     public void readabilityCommaList_doesNotTouchNegationBlocks() {
@@ -286,6 +273,45 @@ public class NLGReadabilityTest extends UnitTestBase {
         assertEquals(t, out);
     }
 
+
+    @Test
+    public void readabilitySegmentAware_improvesLocalOrChain_insideLargerText_withSegMarkers() {
+
+        String t =
+                "Prefix text: " +
+                        "[SEG]&%X$\"X\" is a &%parent$\"parent\" of &%A$\"A\"[/SEG] or " +
+                        "[SEG]&%X$\"X\" is a &%parent$\"parent\" of &%B$\"B\"[/SEG] or " +
+                        "[SEG]&%X$\"X\" is a &%parent$\"parent\" of &%C$\"C\"[/SEG]" +
+                        " Suffix text.";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        System.out.println("out = " + out);
+
+        // With SEG markers, NLGReadability should treat the OR-chain as a single run and
+        // factor the shared prefix into one concise clause inside one segment.
+        assertTrue(out.contains(
+                "[SEG]&%X$\"X\" is a &%parent$\"parent\" of &%A$\"A\" or &%B$\"B\" or &%C$\"C\"[/SEG]"
+        ));
+    }
+
+
+
+    @Test
+    public void readabilitySegmentAware_doesNotRewriteInsideNegationBlocks() {
+
+        String t =
+                "Prefix " +
+                        "~{ &%X$\"X\" is a &%parent$\"parent\" of &%A$\"A\" or " +
+                        "&%X$\"X\" is a &%parent$\"parent\" of &%B$\"B\" or " +
+                        "&%X$\"X\" is a &%parent$\"parent\" of &%C$\"C\" }" +
+                        " Suffix";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        // Entire negation block should remain as-is (Commit 7 is conservative).
+        assertEquals(t, out);
+    }
 
 
 

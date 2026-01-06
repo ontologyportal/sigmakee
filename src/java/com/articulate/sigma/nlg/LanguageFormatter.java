@@ -69,6 +69,9 @@ public class LanguageFormatter {
 
     private static OllamaClient ollamaClient = null;
 
+    private static final String SEG_S = "[SEG]";
+    private static final String SEG_E = "[/SEG]";
+
     private RenderMode renderMode = RenderMode.HTML;
 
     enum RenderMode {
@@ -326,8 +329,17 @@ public class LanguageFormatter {
                     if (debug) System.out.println("LanguageFormatter.htmlParaphrase(): template: " + template);
                 }
 
+                System.out.println("---------------------------------------");
+                System.out.println("--[template]: "+template+"\n");
+
                 // Readability layer (pre-linkification).
                 template = NLGReadability.improveTemplate(template, RenderMode.HTML, language);
+
+                System.out.println("--[NLG Template]: "+template+"\n");
+                System.out.println("---------------------------------------");
+
+                // Remove [SEG] markers from the template.
+                template = LanguageFormatter.stripSegMarkers(template);
 
                 // Get rid of the percentage signs.
                 nlFormat = NLGUtils.resolveFormatSpecifiers(template, href);
@@ -486,6 +498,17 @@ public class LanguageFormatter {
         }
         ans = result.toString();
         return ans;
+    }
+
+    /**
+     * Remove internal segmentation markers before returning user-visible output.
+     * SEG markers are used only for internal readability processing and must never
+     * appear in final HTML or TEXT output.
+     */
+    public static String stripSegMarkers(String s) {
+        if (s == null || s.isEmpty())
+            return s;
+        return s.replace("[SEG]", "").replace("[/SEG]", "");
     }
 
 
@@ -1089,15 +1112,15 @@ public class LanguageFormatter {
                     // Special handling for Arabic.
                     boolean isArabic = isArabicLanguage(language);
                     StringBuilder sb = new StringBuilder();
-                    sb.append("<ul><li>");
+//                    sb.append("<ul><li>");
                     if (isArabic) sb.append("<span dir=\"rtl\">");
                     sb.append(k.IF).append(Formula.SPACE).append(tArgs.get(0)).append(k.COMMA);
                     if (isArabic) sb.append("</span>");
-                    sb.append("</li><li>");
+//                    sb.append("</li><li>");
                     if (isArabic) sb.append("<span dir=\"rtl\">");
                     sb.append(k.THEN).append(Formula.SPACE).append(tArgs.get(1));
                     if (isArabic) sb.append("</span>");
-                    sb.append("</li></ul>");
+//                    sb.append("</li></ul>");
                     return sb.toString();
                 }
                 // TEXT
@@ -1107,13 +1130,21 @@ public class LanguageFormatter {
 
         if (pred.equalsIgnoreCase(Formula.AND)) {
             if (isNegMode) {
+                // ¬(A ∧ B ∧ ...) => ¬A ∨ ¬B ∨ ...
                 List<String> negated = new ArrayList<>(tArgs.size());
                 for (int i = 0; i < tArgs.size(); i++) {
-                    negated.add(negateClause(tArgs.get(i)));
+                    // Wrap each negated operand as a segment boundary to preserve structure.
+                    negated.add(seg(negateClause(tArgs.get(i))));
                 }
                 return join(negated, k.OR);
             }
-            return join(tArgs, k.AND);
+
+            // Normal AND: wrap each operand so downstream readability can isolate clauses reliably.
+            List<String> marked = new ArrayList<>(tArgs.size());
+            for (int i = 0; i < tArgs.size(); i++) {
+                marked.add(seg(tArgs.get(i)));
+            }
+            return join(marked, k.AND);
         }
 
         if (pred.equalsIgnoreCase("holds")) {
@@ -1133,16 +1164,25 @@ public class LanguageFormatter {
 
 
         if (pred.equalsIgnoreCase(Formula.OR)) {
-            // Note: current neg-mode behavior flips the joiner but does NOT negate operands.
+            // ¬(A ∨ B ∨ ...) => ¬A ∧ ¬B ∧ ...
+            // (Note: existing behavior negates operands and flips the joiner.)
             if (isNegMode) {
                 List<String> negated = new ArrayList<>(tArgs.size());
                 for (int i = 0; i < tArgs.size(); i++) {
-                    negated.add(negateClause(tArgs.get(i)));
+                    // Wrap each negated operand as a segment boundary.
+                    negated.add(seg(negateClause(tArgs.get(i))));
                 }
                 return join(negated, k.AND);
             }
-            return join(tArgs, k.OR);
+
+            // Normal OR: wrap each operand so downstream readability can isolate clauses reliably.
+            List<String> marked = new ArrayList<>(tArgs.size());
+            for (int i = 0; i < tArgs.size(); i++) {
+                marked.add(seg(tArgs.get(i)));
+            }
+            return join(marked, k.OR);
         }
+
 
         if (pred.equalsIgnoreCase(Formula.XOR)) {
             // Keep existing behavior (joins with XOR);
@@ -1198,6 +1238,8 @@ public class LanguageFormatter {
         }
         return "";
     }
+
+    private String seg(String s) { return SEG_S + s + SEG_E; }
 
     private String negateClause(String s) {
         return "~{ " + s + " }";

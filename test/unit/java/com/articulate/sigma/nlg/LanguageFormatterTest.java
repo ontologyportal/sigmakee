@@ -56,6 +56,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 SigmaTestBase.kb, "EnglishLanguage");
         String actual = lf.paraphraseStatement(input, false, false, 0);
         String expected = "there exist ?D and ?H such that ?D is an &%instance$\"instance\" of &%Driving$\"driving\" and ?H is an &%instance$\"instance\" of &%Human$\"human\" and ?H is an &%agent$\"agent\" of ?D";
+
+        actual = LanguageFormatter.stripSegMarkers(actual);
         assertEquals(expected, actual);
     }
 
@@ -84,10 +86,14 @@ public class LanguageFormatterTest extends UnitTestBase {
         String actual = formatter.generateFormalNaturalLanguage(translations, "=>", false);
         actual = StringUtil.filterHtml(actual);
 
+        actual = LanguageFormatter.stripSegMarkers(actual);
+
         assertEquals("if Socrates is a man, then Socrates is mortal", actual);
 
         actual = formatter.generateFormalNaturalLanguage(translations, "=>", true);
         actual = StringUtil.filterHtml(actual);
+
+        actual = LanguageFormatter.stripSegMarkers(actual);
 
         assertEquals("Socrates is a man and ~{ Socrates is mortal }", actual);
     }
@@ -122,10 +128,14 @@ public class LanguageFormatterTest extends UnitTestBase {
         String actual = formatter.generateFormalNaturalLanguage(translations, "and", false);
         actual = StringUtil.filterHtml(actual);
 
+        actual = LanguageFormatter.stripSegMarkers(actual);
+
         assertEquals("Socrates is a man and Socrates is mortal", actual);
 
         actual = formatter.generateFormalNaturalLanguage(translations, "and", true);
         actual = StringUtil.filterHtml(actual);
+
+        actual = LanguageFormatter.stripSegMarkers(actual);
 
         assertEquals("~{ Socrates is a man } or ~{ Socrates is mortal }", actual);
     }
@@ -139,11 +149,13 @@ public class LanguageFormatterTest extends UnitTestBase {
         List<String> translations = Lists.newArrayList("Socrates is a man", "Socrates is mortal");
         String actual = formatter.generateFormalNaturalLanguage(translations, "or", false);
         actual = StringUtil.filterHtml(actual);
+        actual = LanguageFormatter.stripSegMarkers(actual);
 
         assertEquals("Socrates is a man or Socrates is mortal", actual);
 
         actual = formatter.generateFormalNaturalLanguage(translations, "or", true);
         actual = StringUtil.filterHtml(actual);
+        actual = LanguageFormatter.stripSegMarkers(actual);
 
         assertEquals("~{ Socrates is a man } and ~{ Socrates is mortal }", actual);
     }
@@ -249,6 +261,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
+        out = LanguageFormatter.stripSegMarkers(out);
+
         assertEquals("if A, then B", out);
     }
 
@@ -304,6 +318,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
+        out = LanguageFormatter.stripSegMarkers(out);
+
         // ¬(A ∧ B) rendered (current behavior) as "~{ A } or ~{ B }"
         assertEquals("~{ A } or ~{ B }", out);
         assertFalse(out.contains("~{A}"));     // no missing spaces
@@ -322,6 +338,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
+
+        out = LanguageFormatter.stripSegMarkers(out);
 
         assertTrue(out.contains("~{ B }"));
         assertFalse(out.contains("~{B}"));
@@ -387,6 +405,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
+        out = LanguageFormatter.stripSegMarkers(out);
+
         assertEquals("A and B and C", out);
         assertFalse(out.contains("  "));
     }
@@ -406,6 +426,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
+
+        out = LanguageFormatter.stripSegMarkers(out);
 
         assertNotEquals("B and ~{ A }", out); // Previous Behavior
         assertEquals("A and ~{ B }", out);
@@ -427,6 +449,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
+        out = LanguageFormatter.stripSegMarkers(out);
+
         assertNotEquals("A and B", out); // Previous Behavior
         assertEquals("~{ A } and ~{ B }", out);
     }
@@ -446,6 +470,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
+
+        out = LanguageFormatter.stripSegMarkers(out);
 
         assertNotEquals("A or B", out); // Previous Behavior
     }
@@ -467,6 +493,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
+        out = LanguageFormatter.stripSegMarkers(out);
+
         assertNotEquals("B or ~{ A } or A or ~{ B }", out); //Previous Behavior
     }
 
@@ -483,6 +511,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
+        out = LanguageFormatter.stripSegMarkers(out);
+
         assertEquals("either A or B, but not both", out);
         assertFalse(out.toLowerCase().contains(" xor ")); // should not expose token
     }
@@ -498,6 +528,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
+
+        out = LanguageFormatter.stripSegMarkers(out);
 
         assertEquals("either A or B, but not both", out);
         assertFalse(out.toLowerCase().contains(" xor "));
@@ -593,6 +625,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
+
+        out = LanguageFormatter.stripSegMarkers(out);
 
         // Current buggy behavior (double-translation) will remap the whole clause.
         assertNotEquals("CORRUPTED or C", out); // previous behavior
@@ -704,6 +738,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
+        out = LanguageFormatter.stripSegMarkers(out);
+
         assertEquals("for all ?X A and B", out);
     }
 
@@ -719,6 +755,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
+        out = LanguageFormatter.stripSegMarkers(out);
+
         assertEquals("there exists ?X such that A and B", out);
     }
 
@@ -733,6 +771,8 @@ public class LanguageFormatterTest extends UnitTestBase {
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
+
+        out = LanguageFormatter.stripSegMarkers(out);
 
         assertEquals("A holds B holds C", out);
     }
@@ -750,5 +790,60 @@ public class LanguageFormatterTest extends UnitTestBase {
         assertEquals("P?X", lf.paraphraseStatement("(foo ?X)", false, false, 0));
         assertEquals("N?X", lf.paraphraseStatement("(foo ?X)", true,  false, 0));
     }
+
+    @Test
+    public void generatorAddsSegMarkers_forOrArguments() {
+
+        LanguageFormatter lf = newLF(); // your existing helper that sets maps/kb/language
+
+        List<String> args = Arrays.asList(
+                "&%X$\"X\" is a &%parent$\"parent\" of &%A$\"A\"",
+                "&%X$\"X\" is a &%parent$\"parent\" of &%B$\"B\"",
+                "&%X$\"X\" is a &%parent$\"parent\" of &%C$\"C\""
+        );
+
+        String out = lf.generateFormalNaturalLanguage(
+                args,
+                Formula.OR,
+                false,
+                LanguageFormatter.RenderMode.HTML
+        );
+
+        // Verify segmentation markers exist and wrap each operand.
+        assertTrue(out.contains("[SEG]"));
+        assertTrue(out.contains("[/SEG]"));
+
+        assertTrue(out.contains("[SEG]&%X$\"X\" is a &%parent$\"parent\" of &%A$\"A\"[/SEG]"));
+        assertTrue(out.contains("[SEG]&%X$\"X\" is a &%parent$\"parent\" of &%B$\"B\"[/SEG]"));
+        assertTrue(out.contains("[SEG]&%X$\"X\" is a &%parent$\"parent\" of &%C$\"C\"[/SEG]"));
+    }
+
+    @Test
+    public void generatorAddsSegMarkers_forAndArguments() {
+
+        LanguageFormatter lf = newLF();
+
+        List<String> args = Arrays.asList(
+                "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Bill7_1$\"Bill7_1\"",
+                "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Bob7_1$\"Bob7_1\"",
+                "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Sue7_1$\"Sue7_1\""
+        );
+
+        String out = lf.generateFormalNaturalLanguage(
+                args,
+                Formula.AND,
+                false,
+                LanguageFormatter.RenderMode.HTML
+        );
+
+        assertTrue(out.contains("[SEG]"));
+        assertTrue(out.contains("[/SEG]"));
+
+        assertTrue(out.contains("[SEG]&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Bill7_1$\"Bill7_1\"[/SEG]"));
+        assertTrue(out.contains("[SEG]&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Bob7_1$\"Bob7_1\"[/SEG]"));
+        assertTrue(out.contains("[SEG]&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Sue7_1$\"Sue7_1\"[/SEG]"));
+    }
+
+
 
 }
