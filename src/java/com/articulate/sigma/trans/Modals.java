@@ -573,5 +573,19 @@ public class Modals {
                 "        (conclusion ?CONCLUSION ?ARGUMENT ?W1)))))";
         f = new Formula(fstr);
         System.out.println(processModals(f,kb)+ "\n\n");
+
+        // this one is wrong due to the two relations not conforming to argument order
+        fstr = "(=>\n" +
+                "    (confersRight ?FORMULA ?AGENT1 ?AGENT2)\n" +
+                "    (holdsRight ?FORMULA ?AGENT2))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f,kb)+ "\n\n");
+
+        fstr = "(holdsDuring (YearFn 2025)\n" +
+                "  (knows John \n" +
+                "    (believes Sue \n" +
+                "      (acquaintance Bill Jane))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f,kb)+ "\n\n");
     }
 }

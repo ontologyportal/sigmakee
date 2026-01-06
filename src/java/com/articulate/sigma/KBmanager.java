@@ -101,7 +101,8 @@ public class KBmanager implements Serializable {
                     "smtpEmailAddress",
                     "smtpEmailUser",
                     "smtpEmailPassword",
-                    "smtpEmailServer"
+                    "smtpEmailServer",
+                    "aws"
             );
 
     /** Master file key cache for the config */
