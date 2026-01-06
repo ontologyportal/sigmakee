@@ -339,4 +339,176 @@ public class NLGReadabilityTest extends UnitTestBase {
     }
 
 
+    @Test
+    public void nestedIf_html_rendersNestedLists_andDoesNotDuplicateAntecedent() {
+        String template =
+                "if [IF_A][AND][SEG]A[/SEG] and [SEG]B[/SEG][/AND][/IF_A], then " +
+                        "[IF_C]if [IF_A][AND][SEG]C[/SEG][/AND][/IF_A], then [IF_C]D[/IF_C][/IF_C]";
+
+        String out = NLGReadability.improveTemplate(
+                template, LanguageFormatter.RenderMode.HTML, "EnglishLanguage"
+        );
+
+        // Must contain HTML list structure (IF renders as <ul><li>if ...</li><li>then ...</li></ul>)
+        assertTrue(out.contains("<ul>"));
+        assertTrue(out.contains("<li>"));
+
+        // Nested IF => at least 2 <ul>
+        int firstUl = out.indexOf("<ul>");
+        int secondUl = out.indexOf("<ul>", firstUl + 1);
+        assertTrue("Expected nested <ul> for nested IF", secondUl > firstUl);
+
+        // Regression guard: consequent must NOT be rewritten from antecedent.
+        // If the “then A” bug exists, D will disappear.
+        assertTrue("Expected consequent D to appear", out.contains("D"));
+        assertTrue("Expected antecedent A to appear", out.contains("A"));
+
+        // No markers leak
+        assertFalse(out.contains("[IF_A]"));
+        assertFalse(out.contains("[IF_C]"));
+        assertFalse(out.contains("[AND]"));
+        assertFalse(out.contains("[OR]"));
+        assertFalse(out.contains("[SEG]"));
+    }
+
+    @Test
+    public void nestedIf_text_preservesIfThenStructure_andContainsAllAtoms() {
+        String template =
+                "if [IF_A][AND][SEG]A[/SEG] and [SEG]B[/SEG][/AND][/IF_A], then " +
+                        "[IF_C]if [IF_A][AND][SEG]C[/SEG][/AND][/IF_A], then [IF_C]D[/IF_C][/IF_C]";
+
+        String out = NLGReadability.improveTemplate(
+                template, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage"
+        );
+
+        // Must contain if/then tokens (localized via Keywords; EnglishLanguage uses "if"/"then")
+        assertTrue(out.toLowerCase().contains("if"));
+        assertTrue(out.toLowerCase().contains("then"));
+
+        // All atoms must survive
+        assertTrue(out.contains("A"));
+        assertTrue(out.contains("B"));
+        assertTrue(out.contains("C"));
+        assertTrue(out.contains("D"));
+
+        // No markers leak
+        assertFalse(out.contains("[IF_A]"));
+        assertFalse(out.contains("[IF_C]"));
+        assertFalse(out.contains("[AND]"));
+        assertFalse(out.contains("[OR]"));
+        assertFalse(out.contains("[SEG]"));
+    }
+
+    @Test
+    public void andBlock_countsTopLevelSegOnly_whenNestedOrInsideSeg() {
+        // Top-level AND has 2 operands:
+        //  1) a SEG that itself contains an OR block
+        //  2) W
+        String template =
+                "[AND]" +
+                        "[SEG][OR][SEG]X[/SEG] or [SEG]Y[/SEG][/OR][/SEG] and " +
+                        "[SEG]W[/SEG]" +
+                        "[/AND]";
+
+        String out = NLGReadability.improveTemplate(
+                template, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage"
+        );
+
+        // Should include X, Y, W
+        assertTrue(out.contains("X"));
+        assertTrue(out.contains("Y"));
+        assertTrue(out.contains("W"));
+
+        // Should include both connectors somewhere
+        assertTrue(out.toLowerCase().contains("and"));
+        assertTrue(out.toLowerCase().contains("or"));
+
+        // Markers removed
+        assertFalse(out.contains("[AND]"));
+        assertFalse(out.contains("[OR]"));
+        assertFalse(out.contains("[SEG]"));
+
+        // Regression guard: ensure W is still a separate operand (not lost / merged)
+        assertTrue("Expected W to remain present as separate operand", out.matches("(?s).*W.*"));
+    }
+
+    @Test
+    public void orBlock_nestedAndInsideSeg_isHandled() {
+        String template =
+                "[OR]" +
+                        "[SEG][AND][SEG]A[/SEG] and [SEG]B[/SEG][/AND][/SEG] or " +
+                        "[SEG]C[/SEG]" +
+                        "[/OR]";
+
+        String out = NLGReadability.improveTemplate(
+                template, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage"
+        );
+
+        // All atoms present
+        assertTrue(out.contains("A"));
+        assertTrue(out.contains("B"));
+        assertTrue(out.contains("C"));
+
+        // Both connectors present
+        assertTrue(out.toLowerCase().contains("and"));
+        assertTrue(out.toLowerCase().contains("or"));
+
+        // No markers leak
+        assertFalse(out.contains("[AND]"));
+        assertFalse(out.contains("[OR]"));
+        assertFalse(out.contains("[SEG]"));
+    }
+
+    @Test
+    public void quantified_prefix_isPreserved_withIfBody() {
+        String template =
+                "for all §T0§ and §T1§ " +
+                        "if [IF_A][AND][SEG]A[/SEG] and [SEG]B[/SEG][/AND][/IF_A], then " +
+                        "[IF_C]C[/IF_C]";
+
+        String out = NLGReadability.improveTemplate(
+                template, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage"
+        );
+
+        // Prefix preserved
+        assertTrue(out.startsWith("for all"));
+
+        // Body preserved
+        assertTrue(out.contains("A"));
+        assertTrue(out.contains("B"));
+        assertTrue(out.contains("C"));
+
+        // No markers leak
+        assertFalse(out.contains("[IF_A]"));
+        assertFalse(out.contains("[IF_C]"));
+        assertFalse(out.contains("[AND]"));
+        assertFalse(out.contains("[SEG]"));
+    }
+
+    @Test
+    public void annotatedTerms_areProtected_andRestored() {
+        // Use real Sigma-style annotated tokens (these will be protected and restored)
+        String template =
+                "if [IF_A][AND]" +
+                        "[SEG]&%Organism$\"the organism\"1 is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG] and " +
+                        "[SEG]&%Organism$\"the other organism\"1 is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG]" +
+                        "[/AND][/IF_A], then " +
+                        "[IF_C]&%Organism$\"the organism\"1 is an &%sibling$\"sibling\" of &%Organism$\"the other organism\"1[/IF_C]";
+
+        String out = NLGReadability.improveTemplate(
+                template, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage"
+        );
+
+        // Must restore &%... tokens (no placeholders should remain)
+        assertTrue(out.contains("&%Organism$\"the organism\"1"));
+        assertFalse("Should not leak placeholders", out.contains("§T"));
+
+        // No markers leak
+        assertFalse(out.contains("[IF_A]"));
+        assertFalse(out.contains("[IF_C]"));
+        assertFalse(out.contains("[AND]"));
+        assertFalse(out.contains("[SEG]"));
+    }
+
+
 }

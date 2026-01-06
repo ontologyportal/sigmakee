@@ -31,6 +31,9 @@ public final class NLGReadability {
     private static final String OR_O  = "[OR]";
     private static final String OR_C  = "[/OR]";
 
+    private enum Kind { ATOM, IF, AND, OR }
+
+
 
     private static final class Protection {
         final String protectedText;
@@ -73,31 +76,58 @@ public final class NLGReadability {
         }
     }
 
-    private interface Node {}
-
-    private static final class Atom implements Node {
-        final String text;
-        Atom(String text) { this.text = text; }
+    private static abstract class Node {
+        final Kind kind;
+        Node parent;                 // set during parsing
+        Node(Kind k) { this.kind = k; }
+        int depth() {
+            int d = 0; Node p = parent;
+            while (p != null) { d++; p = p.parent; }
+            return d;
+        }
     }
 
-    private static final class IfNode implements Node {
-        final Node antecedent;
-        final Node consequent;
-        IfNode(Node a, Node c) { this.antecedent = a; this.consequent = c; }
+    private static final class AtomNode extends Node {
+        String text;
+        AtomNode(String t) { super(Kind.ATOM); this.text = t; }
     }
 
-    private static final class AndNode implements Node {
-        final List<Node> ops;
-        AndNode(List<Node> ops) { this.ops = ops; }
+    private static final class IfNode extends Node {
+        Node antecedent;
+        Node consequent;
+        IfNode(Node a, Node c) {
+            super(Kind.IF);
+            this.antecedent = a;
+            this.consequent = c;
+        }
     }
-    private static final class OrNode implements Node {
-        final List<Node> ops;
-        OrNode(List<Node> ops) { this.ops = ops; }
+
+    private static abstract class NAryNode extends Node {
+        final List<Node> children;
+        NAryNode(Kind k, List<Node> kids) { super(k); this.children = kids; }
+    }
+
+    private static final class AndNode extends NAryNode {
+        AndNode(List<Node> kids) { super(Kind.AND, kids); }
+    }
+
+    private static final class OrNode extends NAryNode {
+        OrNode(List<Node> kids) { super(Kind.OR, kids); }
     }
 
 
     private NLGReadability() {
         // utility class
+    }
+
+    private static void setParent(Node child, Node parent) {
+        if (child != null) child.parent = parent;
+    }
+
+    private static Node parseTree(String body) {
+        Node root = parseNode(body);
+        root.parent = null;
+        return root;
     }
 
 
@@ -146,7 +176,7 @@ public final class NLGReadability {
         }
 
         // NEW: marker-driven parse of IF/AND/OR/SEG into a Node tree.
-        Node tree = parseNode(body);
+        Node tree = parseTree(body);
 
         // Apply readability rewrites recursively (SEG factoring happens inside Atom nodes, not globally).
         tree = rewriteNode(tree, andKw, orKw, mode);
@@ -1111,7 +1141,8 @@ public final class NLGReadability {
         if (s == null) return null;
 
         // Do not treat SEG blocks as a single list if IF structure exists.
-        if (s.contains(IF_A_O) || s.contains(IF_C_O)) return null;
+        if (s.contains(IF_A_O) || s.contains(IF_C_O) || s.contains(AND_O) || s.contains(OR_O))
+            return null;
 
         if (s.indexOf(SEG_O) < 0) return null;
 
@@ -1174,48 +1205,12 @@ public final class NLGReadability {
         return a.equals(",") || a.equals(".") || a.equals(";");
     }
 
-    private static Node parseIfTree(String s, String language) {
-        if (s == null) return new Atom("");
-
-        int aPos = s.indexOf(IF_A_O);
-        int cPos = s.indexOf(IF_C_O);
-
-        if (aPos < 0 || cPos < 0) return new Atom(s);
-        if (aPos > cPos) return new Atom(s);
-
-        BlockSpan aBlock = extractMarkedBlock(s, aPos, IF_A_O, IF_A_C);
-        if (aBlock == null) return new Atom(s);
-
-        int cStart = s.indexOf(IF_C_O, aBlock.nextIndex);
-        if (cStart < 0) return new Atom(s);
-
-        BlockSpan cBlock = extractMarkedBlock(s, cStart, IF_C_O, IF_C_C);
-        if (cBlock == null) return new Atom(s);
-
-        String aInner = innerOf(aBlock.text, IF_A_O, IF_A_C).trim();
-        String cInner = innerOf(cBlock.text, IF_C_O, IF_C_C).trim();
-
-        Node antecedent = parseNode(aInner);
-        Node consequent = parseNode(cInner);
-
-        String before = s.substring(0, aPos);
-        String after  = s.substring(cBlock.nextIndex);
-
-        // NEW: allow the canonical wrapper tokens outside the marker blocks
-        if (!isIgnorableIfPrefix(before, language) || !isIgnorableTrailing(after)) {
-            return new Atom(s);
-        }
-
-        return new IfNode(antecedent, consequent);
-    }
-
-
     private static Node rewriteNode(Node n,
                                     String andKw, String orKw,
                                     LanguageFormatter.RenderMode mode
                                     ) {
-        if (n instanceof Atom) {
-            String t = ((Atom) n).text;
+        if (n instanceof AtomNode) {
+            String t = ((AtomNode) n).text;
 
             // Important: by this stage AND/OR are structured, so Atom should be "small".
             // Keep your conservative cleanup:
@@ -1223,29 +1218,46 @@ public final class NLGReadability {
                     : rewriteBySegments(t, andKw, orKw, mode, language);
 
             t = applyReadabilityToSafeSegment(t, andKw, orKw, mode, language);
-            return new Atom(t.trim());
+            return new AtomNode(t.trim());
         }
 
         if (n instanceof IfNode) {
+
             IfNode in = (IfNode) n;
-            return new IfNode(
-                    rewriteNode(in.antecedent, andKw, orKw, mode),
-                    rewriteNode(in.consequent, andKw, orKw, mode)
-            );
+
+            Node a2 = rewriteNode(in.antecedent, andKw, orKw, mode);
+            Node c2 = rewriteNode(in.consequent,  andKw, orKw, mode);
+
+            IfNode out =  new IfNode(a2,c2);
+            setParent(a2, out);
+            setParent(c2, out);
+
+            return out;
         }
 
         if (n instanceof AndNode) {
             AndNode an = (AndNode) n;
             List<Node> ops = new ArrayList<>();
-            for (Node c : an.ops) ops.add(rewriteNode(c, andKw, orKw, mode));
-            return new AndNode(ops);
+            for (Node c : an.children) {
+                Node kid = rewriteNode(c, andKw, orKw, mode);
+                ops.add(kid);
+            }
+            AndNode out = new AndNode(ops);
+            for (Node kid: ops){
+                setParent(kid,out);
+            }
+            return out;
         }
 
         if (n instanceof OrNode) {
             OrNode on = (OrNode) n;
             List<Node> ops = new ArrayList<>();
-            for (Node c : on.ops) ops.add(rewriteNode(c, andKw, orKw, mode));
-            return new OrNode(ops);
+            for (Node c : on.children) ops.add(rewriteNode(c, andKw, orKw, mode));
+            OrNode out = new OrNode(ops);
+            for (Node kid: ops){
+                setParent(kid,out);
+            }
+            return out;
         }
 
         return n;
@@ -1254,7 +1266,7 @@ public final class NLGReadability {
 
 
     private static String renderText(Node n, String language, String andKw, String orKw) {
-        if (n instanceof Atom) return ((Atom) n).text;
+        if (n instanceof AtomNode) return ((AtomNode) n).text;
 
         LanguageFormatter.Keywords k = new LanguageFormatter.Keywords(language);
 
@@ -1267,20 +1279,20 @@ public final class NLGReadability {
         if (n instanceof AndNode) {
             AndNode an = (AndNode) n;
             List<String> items = new ArrayList<>();
-            for (Node op : an.ops) items.add(renderText(op, language, andKw, orKw));
+            for (Node op : an.children) items.add(renderText(op, language, andKw, orKw));
             return joinWithConnector(items, andKw);
         }
         if (n instanceof OrNode) {
             OrNode on = (OrNode) n;
             List<String> items = new ArrayList<>();
-            for (Node op : on.ops) items.add(renderText(op, language, andKw, orKw));
+            for (Node op : on.children) items.add(renderText(op, language, andKw, orKw));
             return joinWithConnector(items, orKw);
         }
         return "";
     }
 
     private static String renderHtml(Node n, String language, String andKw, String orKw) {
-        if (n instanceof Atom) return escapeHtmlMinimal(((Atom) n).text);
+        if (n instanceof AtomNode) return escapeHtmlMinimal(((AtomNode) n).text);
 
         LanguageFormatter.Keywords k = new LanguageFormatter.Keywords(language);
 
@@ -1296,14 +1308,14 @@ public final class NLGReadability {
         if (n instanceof AndNode) {
             AndNode an = (AndNode) n;
             List<String> items = new ArrayList<>();
-            for (Node op : an.ops) items.add(renderHtml(op, language, andKw, orKw));
+            for (Node op : an.children) items.add(renderHtml(op, language, andKw, orKw));
             // Inline is OK for small lists; chunking policy can evolve later.
             return joinWithConnector(items, escapeHtmlMinimal(andKw));
         }
         if (n instanceof OrNode) {
             OrNode on = (OrNode) n;
             List<String> items = new ArrayList<>();
-            for (Node op : on.ops) items.add(renderHtml(op, language, andKw, orKw));
+            for (Node op : on.children) items.add(renderHtml(op, language, andKw, orKw));
             return joinWithConnector(items, escapeHtmlMinimal(orKw));
         }
         return "";
@@ -1318,71 +1330,106 @@ public final class NLGReadability {
     }
 
     private static Node parseNode(String s) {
-        if (s == null) return new Atom("");
+        if (s == null) return new AtomNode("");
         String t = s.trim();
-        if (t.isEmpty()) return new Atom("");
+        if (t.isEmpty()) return new AtomNode("");
 
-        // Prefer IF if present (top-level only; parseIfTree is conservative)
+        // IF (tolerant: allow "if" text before [IF_A], and ",then" between blocks)
         if (t.contains(IF_A_O) && t.contains(IF_C_O)) {
-            Node ifTree = parseIfTree(t, language);
-            if (!(ifTree instanceof Atom)) return ifTree;
-            // else fall through (non-canonical IF shape)
+            Node n = parseIfNode(t);
+            if (n != null) return n;
         }
 
-        Node andTree = parseAndOrBlock(t, AND_O, AND_C, true);
-        if (!(andTree instanceof Atom)) return andTree;
+        // AND / OR blocks
+        Node andN = parseAndOrBlock(t, AND_O, AND_C, true);
+        if (andN != null) return andN;
 
-        Node orTree  = parseAndOrBlock(t, OR_O, OR_C, false);
-        if (!(orTree instanceof Atom)) return orTree;
+        Node orN  = parseAndOrBlock(t, OR_O, OR_C, false);
+        if (orN != null) return orN;
 
-        return new Atom(t);
+        return new AtomNode(t);
     }
 
 
-    private static Node parseAndOrBlock(String s, String open, String close, boolean isAnd) {
-        if (s == null) return new Atom("");
+    private static Node parseAndOrBlock(String s,
+                                        String open, String close,
+                                        boolean isAnd) {
         String t = s.trim();
+        if (!t.startsWith(open)) return null;
 
-        if (!t.startsWith(open)) return new Atom(s);
         BlockSpan b = extractMarkedBlock(t, 0, open, close);
-        if (b == null) return new Atom(s);
+        if (b == null) return null;
 
-        // Must consume entire string (only whitespace allowed after)
-        String after = t.substring(b.nextIndex).trim();
-        if (!after.isEmpty()) return new Atom(s);
+        // Must consume entire string (allow trailing whitespace only)
+        if (!t.substring(b.nextIndex).trim().isEmpty()) return null;
 
         String inner = innerOf(b.text, open, close).trim();
-        List<Node> ops = extractSegOperands(inner);
-        if (ops == null || ops.isEmpty()) return new Atom(s);
 
-        return isAnd ? new AndNode(ops) : new OrNode(ops);
+        // Extract only top-level [SEG]...[/SEG] blocks using balanced extraction
+        List<String> opTexts = extractTopLevelSegOperandTexts(inner);
+        if (opTexts == null || opTexts.isEmpty()) return null;
+
+        List<Node> kids = new ArrayList<>(opTexts.size());
+        for (String op : opTexts) kids.add(parseNode(op));
+        Node parent = isAnd ? new AndNode(kids) : new OrNode(kids);
+        for (Node kid : kids) setParent(kid, parent);
+        return parent;
     }
 
-    private static List<Node> extractSegOperands(String inner) {
+    private static List<String> extractTopLevelSegOperandTexts(String inner) {
         if (inner == null) return null;
-        List<Node> ops = new ArrayList<>();
 
+        List<String> ops = new ArrayList<>();
         int i = 0;
-        while (i < inner.length()) {
-            // skip whitespace / commas / connector words if they still appear
-            while (i < inner.length() && Character.isWhitespace(inner.charAt(i))) i++;
-            if (i >= inner.length()) break;
 
+        while (i < inner.length()) {
             int segStart = inner.indexOf(SEG_O, i);
             if (segStart < 0) break;
 
-            // Any non-whitespace between i and segStart -> conservative: ignore and jump
-            // (You can tighten later if you want strict structure.)
             BlockSpan seg = extractMarkedBlock(inner, segStart, SEG_O, SEG_C);
-            if (seg == null) break;
+            if (seg == null) break; // malformed -> conservative stop
 
             String opText = innerOf(seg.text, SEG_O, SEG_C).trim();
-            ops.add(parseNode(opText)); // recursive parse of operand
+            if (!opText.isEmpty()) ops.add(opText);
 
             i = seg.nextIndex;
         }
 
         return ops;
+    }
+
+    private static Node parseIfNode(String s) {
+        int aPos = s.indexOf(IF_A_O);
+        if (aPos < 0) return null;
+
+        BlockSpan aBlock = extractMarkedBlock(s, aPos, IF_A_O, IF_A_C);
+        if (aBlock == null) return null;
+
+        int cStart = s.indexOf(IF_C_O, aBlock.nextIndex);
+        if (cStart < 0) return null;
+
+        BlockSpan cBlock = extractMarkedBlock(s, cStart, IF_C_O, IF_C_C);
+        if (cBlock == null) return null;
+
+        String before = s.substring(0, aPos).trim();
+        String after  = s.substring(cBlock.nextIndex).trim();
+
+        if (!isIgnorableIfPrefix(before, language)) return null;
+        if (!isIgnorableTrailing(after)) return null;
+
+        String aInner = innerOf(aBlock.text, IF_A_O, IF_A_C).trim();
+        String cInner = innerOf(cBlock.text, IF_C_O, IF_C_C).trim();
+
+        Node ifNode = new IfNode(null, null);
+        Node antecedent = parseNode(aInner);
+        Node consequent = parseNode(cInner);
+
+        ((IfNode) ifNode).antecedent = antecedent;
+        ((IfNode) ifNode).consequent = consequent;
+        setParent(antecedent, ifNode);
+        setParent(consequent, ifNode);
+
+        return ifNode;
     }
 
 
