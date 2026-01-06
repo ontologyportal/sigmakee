@@ -71,6 +71,14 @@ public class LanguageFormatter {
 
     private static final String SEG_S = "[SEG]";
     private static final String SEG_E = "[/SEG]";
+    private static final String AND_S = "[AND]";
+    private static final String AND_E = "[/AND]";
+    private static final String OR_S = "[OR]";
+    private static final String OR_E = "[/OR]";
+    private static final String IF_A_O = "[IF_A]";
+    private static final String IF_A_C = "[/IF_A]";
+    private static final String IF_C_O = "[IF_C]";
+    private static final String IF_C_C = "[/IF_C]";
 
     private RenderMode renderMode = RenderMode.HTML;
 
@@ -147,7 +155,7 @@ public class LanguageFormatter {
         }
     }
 
-    private static final class Keywords {
+    public static final class Keywords {
         final String COMMA;
         final String IF;
         final String THEN;
@@ -1114,17 +1122,17 @@ public class LanguageFormatter {
                     StringBuilder sb = new StringBuilder();
 //                    sb.append("<ul><li>");
                     if (isArabic) sb.append("<span dir=\"rtl\">");
-                    sb.append(k.IF).append(Formula.SPACE).append(tArgs.get(0)).append(k.COMMA);
+                    sb.append(k.IF).append(Formula.SPACE).append(seg_if_a(tArgs.get(0))).append(k.COMMA);
                     if (isArabic) sb.append("</span>");
 //                    sb.append("</li><li>");
                     if (isArabic) sb.append("<span dir=\"rtl\">");
-                    sb.append(k.THEN).append(Formula.SPACE).append(tArgs.get(1));
+                    sb.append(k.THEN).append(Formula.SPACE).append(seg_if_c(tArgs.get(1)));
                     if (isArabic) sb.append("</span>");
 //                    sb.append("</li></ul>");
                     return sb.toString();
                 }
                 // TEXT
-                return k.IF + Formula.SPACE + tArgs.get(0) + k.COMMA + Formula.SPACE + k.THEN + Formula.SPACE + tArgs.get(1);
+                return k.IF + Formula.SPACE + seg_if_a(tArgs.get(0)) + k.COMMA + Formula.SPACE + k.THEN + Formula.SPACE + seg_if_c(tArgs.get(1));
             }
         }
 
@@ -1136,7 +1144,7 @@ public class LanguageFormatter {
                     // Wrap each negated operand as a segment boundary to preserve structure.
                     negated.add(seg(negateClause(tArgs.get(i))));
                 }
-                return join(negated, k.OR);
+                return seg_or(join(negated, k.OR));
             }
 
             // Normal AND: wrap each operand so downstream readability can isolate clauses reliably.
@@ -1144,7 +1152,7 @@ public class LanguageFormatter {
             for (int i = 0; i < tArgs.size(); i++) {
                 marked.add(seg(tArgs.get(i)));
             }
-            return join(marked, k.AND);
+            return seg_and(join(marked, k.AND));
         }
 
         if (pred.equalsIgnoreCase("holds")) {
@@ -1172,7 +1180,7 @@ public class LanguageFormatter {
                     // Wrap each negated operand as a segment boundary.
                     negated.add(seg(negateClause(tArgs.get(i))));
                 }
-                return join(negated, k.AND);
+                return seg_and(join(negated, k.AND));
             }
 
             // Normal OR: wrap each operand so downstream readability can isolate clauses reliably.
@@ -1180,7 +1188,7 @@ public class LanguageFormatter {
             for (int i = 0; i < tArgs.size(); i++) {
                 marked.add(seg(tArgs.get(i)));
             }
-            return join(marked, k.OR);
+            return seg_or(join(marked, k.OR));
         }
 
 
@@ -1240,6 +1248,12 @@ public class LanguageFormatter {
     }
 
     private String seg(String s) { return SEG_S + s + SEG_E; }
+    private String seg_if_a(String s) { return IF_A_O + s + IF_A_C; }
+    private String seg_if_c(String s) { return IF_C_O + s + IF_C_C; }
+    private String seg_and(String s) { return AND_S + s + AND_E; }
+    private String seg_or(String s) { return OR_S + s + OR_E; }
+
+
 
     private String negateClause(String s) {
         return "~{ " + s + " }";
@@ -1287,10 +1301,10 @@ public class LanguageFormatter {
                     String lit = parts.get(i);
                     conj.add(isTrue ? lit : negateClause(lit));
                 }
-                disjuncts.add(join(conj, k.AND));
+                disjuncts.add(seg_and(join(conj, k.AND)));
             }
         }
-        return join(disjuncts, k.OR);
+        return seg_or(join(disjuncts, k.OR));
     }
 
     /** Args reaching generateFormalNaturalLanguage() are usually already paraphrased.

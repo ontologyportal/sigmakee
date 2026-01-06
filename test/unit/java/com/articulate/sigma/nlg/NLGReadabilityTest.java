@@ -313,8 +313,30 @@ public class NLGReadabilityTest extends UnitTestBase {
         assertEquals(t, out);
     }
 
+    @Test
+    public void nestedIf_rendersAsNestedHtmlLists() {
 
+        String template =
+                "if [IF_A][AND][SEG]A[/SEG] and [SEG]B[/SEG][/AND][/IF_A], then " +
+                        "[IF_C]if [IF_A][AND][SEG]C[/SEG][/AND][/IF_A], then [IF_C]D[/IF_C][/IF_C]";
 
+        String out = NLGReadability.improveTemplate(
+                template, LanguageFormatter.RenderMode.HTML, "EnglishLanguage"
+        );
+
+        assertTrue(out.contains("<ul>"));
+        assertTrue(out.contains("<li>"));
+
+        int firstUl = out.indexOf("<ul>");
+        int secondUl = out.indexOf("<ul>", firstUl + 1);
+        assertTrue("Expected nested <ul> for nested IF", secondUl > firstUl);
+
+        assertFalse(out.contains("[IF_A]"));
+        assertFalse(out.contains("[IF_C]"));
+        assertFalse(out.contains("[AND]"));
+        assertFalse(out.contains("[OR]"));
+        assertFalse(out.contains("[SEG]"));
+    }
 
 
 }

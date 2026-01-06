@@ -8,8 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.articulate.sigma.nlg.LanguageFormatter;
 
 public final class NLGReadability {
+
+    private static String language;
 
     // Segment markers emitted by LanguageFormatter. Used only internally.
     // Markers are stripped before user-visible output.
@@ -21,6 +24,12 @@ public final class NLGReadability {
     private static final String IF_A_C = "[/IF_A]";
     private static final String IF_C_O = "[IF_C]";
     private static final String IF_C_C = "[/IF_C]";
+
+    private static final String AND_O = "[AND]";
+    private static final String AND_C = "[/AND]";
+
+    private static final String OR_O  = "[OR]";
+    private static final String OR_C  = "[/OR]";
 
 
     private static final class Protection {
@@ -64,6 +73,28 @@ public final class NLGReadability {
         }
     }
 
+    private interface Node {}
+
+    private static final class Atom implements Node {
+        final String text;
+        Atom(String text) { this.text = text; }
+    }
+
+    private static final class IfNode implements Node {
+        final Node antecedent;
+        final Node consequent;
+        IfNode(Node a, Node c) { this.antecedent = a; this.consequent = c; }
+    }
+
+    private static final class AndNode implements Node {
+        final List<Node> ops;
+        AndNode(List<Node> ops) { this.ops = ops; }
+    }
+    private static final class OrNode implements Node {
+        final List<Node> ops;
+        OrNode(List<Node> ops) { this.ops = ops; }
+    }
+
 
     private NLGReadability() {
         // utility class
@@ -74,19 +105,20 @@ public final class NLGReadability {
         if (s == null) return null;
         return s.replace(SEG_O, "").replace(SEG_C, "")
                 .replace(IF_A_O, "").replace(IF_A_C, "")
-                .replace(IF_C_O, "").replace(IF_C_C, "");
+                .replace(IF_C_O, "").replace(IF_C_C, "")
+                .replace(AND_O, "").replace(AND_C, "")
+                .replace(OR_O, "").replace(OR_C, "");
     }
 
 
     public static String improveTemplate(String template, LanguageFormatter.RenderMode mode, String language) {
 
+        NLGReadability.language = language;
+
         if (template == null || template.isEmpty())
             return template;
 
-        // If the string already contains HTML tags, assume we already processed it
-        // (or it came from somewhere else). Avoid double-rewriting and breaking markup.
-        // Note: we *do* generate <ul>/<li> ourselves, but improveTemplate() should be called once
-        // per final paraphrase template in the pipeline.
+        // Avoid double-processing already-rendered HTML.
         if (template.indexOf('<') >= 0 || template.indexOf('>') >= 0)
             return template;
 
@@ -96,19 +128,16 @@ public final class NLGReadability {
         if ((andKw == null || andKw.isEmpty()) && (orKw == null || orKw.isEmpty()))
             return template;
 
-        // Protect Sigma annotated terms (&%TERM$"label" + optional trailing digits),
-        // using *deduplicated* placeholders so repeated terms become the same placeholder.
-        // This is critical for prefix factoring.
+        // Protect Sigma annotated terms so factoring doesn’t break them.
         Protection prot = protectAnnotatedTerms(template);
         String work = prot.protectedText;
 
-        // Split leading quantifier header from body (if present).
+        // Split leading quantifier header from body.
         QuantifierSplit qs = splitLeadingQuantifierHeader(work, andKw);
         String prefix = qs.prefix;
         String body   = qs.body;
 
-        // Special case for quantified flat OR bodies (3+ disjuncts),
-        // rendered as a list. If it matches, return early.
+        // Preserve your special-case quantified flat OR list rendering.
         if (!prefix.isEmpty() && orKw != null && !orKw.isEmpty()) {
             String listed = renderQuantifiedFlatOrAsList(prefix, body, orKw, mode);
             if (listed != null) {
@@ -116,28 +145,29 @@ public final class NLGReadability {
             }
         }
 
-        // Segment-aware rewriting.
-        // Instead of requiring the entire body to be a flat chain, we rewrite only safe segments
-        // inside the body, leaving negation blocks (~{...}) and scoped structures untouched.
-        if (hasSegMarkers(body))
-            body = rewriteUsingSegMarkers(body, andKw, orKw, mode, language);
-        else
-            body = rewriteBySegments(body, andKw, orKw, mode, language);
+        // NEW: marker-driven parse of IF/AND/OR/SEG into a Node tree.
+        Node tree = parseNode(body);
 
+        // Apply readability rewrites recursively (SEG factoring happens inside Atom nodes, not globally).
+        tree = rewriteNode(tree, andKw, orKw, mode);
 
+        // Render from the tree.
+        String rendered = (mode == LanguageFormatter.RenderMode.HTML)
+                ? renderHtml(tree, language, andKw, orKw)
+                : renderText(tree, language, andKw, orKw);
 
-        // Reassemble (quantifier header preserved as-is).
-        work = prefix + body;
+        // Reassemble.
+        work = prefix + rendered;
 
+        // Strip markers (include AND/OR markers too).
         work = work.replace(SEG_O, "").replace(SEG_C, "")
                 .replace(IF_A_O, "").replace(IF_A_C, "")
-                .replace(IF_C_O, "").replace(IF_C_C, "");
+                .replace(IF_C_O, "").replace(IF_C_C, "")
+                .replace(AND_O, "").replace(AND_C, "")
+                .replace(OR_O, "").replace(OR_C, "");
 
-        // Restore protected annotated terms.
         return restoreAnnotatedTerms(work, prot.placeholderToOriginal);
     }
-
-
 
     // =========================
     // Protection: annotated terms
@@ -1079,6 +1109,10 @@ public final class NLGReadability {
 
     private static List<String> extractSegItems(String s) {
         if (s == null) return null;
+
+        // Do not treat SEG blocks as a single list if IF structure exists.
+        if (s.contains(IF_A_O) || s.contains(IF_C_O)) return null;
+
         if (s.indexOf(SEG_O) < 0) return null;
 
         List<String> items = new ArrayList<>();
@@ -1089,5 +1123,267 @@ public final class NLGReadability {
         }
         return items.isEmpty() ? null : items;
     }
+
+
+    private static BlockSpan extractMarkedBlock(String s, int start, String open, String close) {
+        if (s == null || start < 0 || !s.startsWith(open, start)) return null;
+
+        int i = start;
+        int depth = 0;
+        while (i < s.length()) {
+            if (s.startsWith(open, i)) { depth++; i += open.length(); continue; }
+            if (s.startsWith(close, i)) {
+                depth--;
+                i += close.length();
+                if (depth == 0) {
+                    // full block from start..i
+                    String full = s.substring(start, i);
+                    return new BlockSpan(full, i);
+                }
+                continue;
+            }
+            i++;
+        }
+        return null;
+    }
+
+    private static String innerOf(String full, String open, String close) {
+        return full.substring(open.length(), full.length() - close.length());
+    }
+
+
+    private static boolean isIgnorableIfPrefix(String before, String language) {
+        if (before == null) return true;
+        String b = before.trim();
+        if (b.isEmpty()) return true;
+
+        LanguageFormatter.Keywords k = new LanguageFormatter.Keywords(language);
+        String ifKw = k.IF == null ? "if" : k.IF;
+
+        // Allow: "if", "if,", "if:" (and whitespace around)
+        b = b.replace(",", "").replace(":", "").trim();
+        return b.equalsIgnoreCase(ifKw);
+    }
+
+    private static boolean isIgnorableTrailing(String after) {
+        if (after == null) return true;
+        String a = after.trim();
+        if (a.isEmpty()) return true;
+
+        // Allow only punctuation that sometimes leaks (be conservative)
+        return a.equals(",") || a.equals(".") || a.equals(";");
+    }
+
+    private static Node parseIfTree(String s, String language) {
+        if (s == null) return new Atom("");
+
+        int aPos = s.indexOf(IF_A_O);
+        int cPos = s.indexOf(IF_C_O);
+
+        if (aPos < 0 || cPos < 0) return new Atom(s);
+        if (aPos > cPos) return new Atom(s);
+
+        BlockSpan aBlock = extractMarkedBlock(s, aPos, IF_A_O, IF_A_C);
+        if (aBlock == null) return new Atom(s);
+
+        int cStart = s.indexOf(IF_C_O, aBlock.nextIndex);
+        if (cStart < 0) return new Atom(s);
+
+        BlockSpan cBlock = extractMarkedBlock(s, cStart, IF_C_O, IF_C_C);
+        if (cBlock == null) return new Atom(s);
+
+        String aInner = innerOf(aBlock.text, IF_A_O, IF_A_C).trim();
+        String cInner = innerOf(cBlock.text, IF_C_O, IF_C_C).trim();
+
+        Node antecedent = parseNode(aInner);
+        Node consequent = parseNode(cInner);
+
+        String before = s.substring(0, aPos);
+        String after  = s.substring(cBlock.nextIndex);
+
+        // NEW: allow the canonical wrapper tokens outside the marker blocks
+        if (!isIgnorableIfPrefix(before, language) || !isIgnorableTrailing(after)) {
+            return new Atom(s);
+        }
+
+        return new IfNode(antecedent, consequent);
+    }
+
+
+    private static Node rewriteNode(Node n,
+                                    String andKw, String orKw,
+                                    LanguageFormatter.RenderMode mode
+                                    ) {
+        if (n instanceof Atom) {
+            String t = ((Atom) n).text;
+
+            // Important: by this stage AND/OR are structured, so Atom should be "small".
+            // Keep your conservative cleanup:
+            t = hasSegMarkers(t) ? rewriteUsingSegMarkers(t, andKw, orKw, mode, language)
+                    : rewriteBySegments(t, andKw, orKw, mode, language);
+
+            t = applyReadabilityToSafeSegment(t, andKw, orKw, mode, language);
+            return new Atom(t.trim());
+        }
+
+        if (n instanceof IfNode) {
+            IfNode in = (IfNode) n;
+            return new IfNode(
+                    rewriteNode(in.antecedent, andKw, orKw, mode),
+                    rewriteNode(in.consequent, andKw, orKw, mode)
+            );
+        }
+
+        if (n instanceof AndNode) {
+            AndNode an = (AndNode) n;
+            List<Node> ops = new ArrayList<>();
+            for (Node c : an.ops) ops.add(rewriteNode(c, andKw, orKw, mode));
+            return new AndNode(ops);
+        }
+
+        if (n instanceof OrNode) {
+            OrNode on = (OrNode) n;
+            List<Node> ops = new ArrayList<>();
+            for (Node c : on.ops) ops.add(rewriteNode(c, andKw, orKw, mode));
+            return new OrNode(ops);
+        }
+
+        return n;
+    }
+
+
+
+    private static String renderText(Node n, String language, String andKw, String orKw) {
+        if (n instanceof Atom) return ((Atom) n).text;
+
+        LanguageFormatter.Keywords k = new LanguageFormatter.Keywords(language);
+
+        if (n instanceof IfNode) {
+            IfNode in = (IfNode) n;
+            String a = renderText(in.antecedent, language, andKw, orKw);
+            String c = renderText(in.consequent, language, andKw, orKw);
+            return k.IF + " " + a + k.COMMA + " " + k.THEN + " " + c;
+        }
+        if (n instanceof AndNode) {
+            AndNode an = (AndNode) n;
+            List<String> items = new ArrayList<>();
+            for (Node op : an.ops) items.add(renderText(op, language, andKw, orKw));
+            return joinWithConnector(items, andKw);
+        }
+        if (n instanceof OrNode) {
+            OrNode on = (OrNode) n;
+            List<String> items = new ArrayList<>();
+            for (Node op : on.ops) items.add(renderText(op, language, andKw, orKw));
+            return joinWithConnector(items, orKw);
+        }
+        return "";
+    }
+
+    private static String renderHtml(Node n, String language, String andKw, String orKw) {
+        if (n instanceof Atom) return escapeHtmlMinimal(((Atom) n).text);
+
+        LanguageFormatter.Keywords k = new LanguageFormatter.Keywords(language);
+
+        if (n instanceof IfNode) {
+            IfNode in = (IfNode) n;
+            String a = renderHtml(in.antecedent, language, andKw, orKw);
+            String c = renderHtml(in.consequent, language, andKw, orKw);
+            return "<ul>"
+                    + "<li>" + escapeHtmlMinimal(k.IF) + " " + a + "</li>"
+                    + "<li>" + escapeHtmlMinimal(k.THEN) + " " + c + "</li>"
+                    + "</ul>";
+        }
+        if (n instanceof AndNode) {
+            AndNode an = (AndNode) n;
+            List<String> items = new ArrayList<>();
+            for (Node op : an.ops) items.add(renderHtml(op, language, andKw, orKw));
+            // Inline is OK for small lists; chunking policy can evolve later.
+            return joinWithConnector(items, escapeHtmlMinimal(andKw));
+        }
+        if (n instanceof OrNode) {
+            OrNode on = (OrNode) n;
+            List<String> items = new ArrayList<>();
+            for (Node op : on.ops) items.add(renderHtml(op, language, andKw, orKw));
+            return joinWithConnector(items, escapeHtmlMinimal(orKw));
+        }
+        return "";
+    }
+
+
+    private static String escapeHtmlMinimal(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
+
+    private static Node parseNode(String s) {
+        if (s == null) return new Atom("");
+        String t = s.trim();
+        if (t.isEmpty()) return new Atom("");
+
+        // Prefer IF if present (top-level only; parseIfTree is conservative)
+        if (t.contains(IF_A_O) && t.contains(IF_C_O)) {
+            Node ifTree = parseIfTree(t, language);
+            if (!(ifTree instanceof Atom)) return ifTree;
+            // else fall through (non-canonical IF shape)
+        }
+
+        Node andTree = parseAndOrBlock(t, AND_O, AND_C, true);
+        if (!(andTree instanceof Atom)) return andTree;
+
+        Node orTree  = parseAndOrBlock(t, OR_O, OR_C, false);
+        if (!(orTree instanceof Atom)) return orTree;
+
+        return new Atom(t);
+    }
+
+
+    private static Node parseAndOrBlock(String s, String open, String close, boolean isAnd) {
+        if (s == null) return new Atom("");
+        String t = s.trim();
+
+        if (!t.startsWith(open)) return new Atom(s);
+        BlockSpan b = extractMarkedBlock(t, 0, open, close);
+        if (b == null) return new Atom(s);
+
+        // Must consume entire string (only whitespace allowed after)
+        String after = t.substring(b.nextIndex).trim();
+        if (!after.isEmpty()) return new Atom(s);
+
+        String inner = innerOf(b.text, open, close).trim();
+        List<Node> ops = extractSegOperands(inner);
+        if (ops == null || ops.isEmpty()) return new Atom(s);
+
+        return isAnd ? new AndNode(ops) : new OrNode(ops);
+    }
+
+    private static List<Node> extractSegOperands(String inner) {
+        if (inner == null) return null;
+        List<Node> ops = new ArrayList<>();
+
+        int i = 0;
+        while (i < inner.length()) {
+            // skip whitespace / commas / connector words if they still appear
+            while (i < inner.length() && Character.isWhitespace(inner.charAt(i))) i++;
+            if (i >= inner.length()) break;
+
+            int segStart = inner.indexOf(SEG_O, i);
+            if (segStart < 0) break;
+
+            // Any non-whitespace between i and segStart -> conservative: ignore and jump
+            // (You can tighten later if you want strict structure.)
+            BlockSpan seg = extractMarkedBlock(inner, segStart, SEG_O, SEG_C);
+            if (seg == null) break;
+
+            String opText = innerOf(seg.text, SEG_O, SEG_C).trim();
+            ops.add(parseNode(opText)); // recursive parse of operand
+
+            i = seg.nextIndex;
+        }
+
+        return ops;
+    }
+
 
 }
