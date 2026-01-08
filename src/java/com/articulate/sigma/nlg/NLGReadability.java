@@ -39,7 +39,12 @@ public final class NLGReadability {
 
     private enum Kind { ATOM, IF, AND, OR, FORALL, EXISTS }
 
+    private static final Pattern ANNOT_TERM =
+            Pattern.compile("^&%([^$]+)\\$\"(.*?)\"\\d*$");
 
+    // captures the final standalone symbol token (X, Y, Z, X12, etc.)
+    private static final Pattern TRAILING_LABEL =
+            Pattern.compile(".*\\b([A-Z](?:\\d+)?)\\s*$");
 
     private static final class Protection {
         final String protectedText;
@@ -156,13 +161,17 @@ public final class NLGReadability {
         return tok == null ? "" : tok.replaceAll("[,;:]+$", "");
     }
 
-    private static String stripKnownMarkers(String s) {
+
+    public static String stripKnownMarkers(String s) {
         if (s == null) return null;
         return s.replace(SEG_O, "").replace(SEG_C, "")
                 .replace(IF_A_O, "").replace(IF_A_C, "")
                 .replace(IF_C_O, "").replace(IF_C_C, "")
                 .replace(AND_O, "").replace(AND_C, "")
-                .replace(OR_O, "").replace(OR_C, "");
+                .replace(OR_O, "").replace(OR_C, "")
+                .replace(FORALL_O, "").replace(FORALL_C, "")
+                .replace(EXISTS_O, "").replace(EXISTS_C, "")
+                .replace(VARS_O, "").replace(VARS_C, "");
     }
 
 
@@ -206,21 +215,18 @@ public final class NLGReadability {
 
         // Render from the tree.
         String rendered = (mode == LanguageFormatter.RenderMode.HTML)
-                ? renderHtml(tree, language, andKw, orKw)
-                : renderText(tree, language, andKw, orKw);
+                ? renderHtml(tree, language, andKw, orKw, prot.placeholderToOriginal)
+                : renderText(tree, language, andKw, orKw, prot.placeholderToOriginal);
 
         // Reassemble.
         work = prefix + rendered;
 
         // Strip markers (include AND/OR markers too).
-        work = work.replace(SEG_O, "").replace(SEG_C, "")
-                .replace(IF_A_O, "").replace(IF_A_C, "")
-                .replace(IF_C_O, "").replace(IF_C_C, "")
-                .replace(AND_O, "").replace(AND_C, "")
-                .replace(OR_O, "").replace(OR_C, "");
+        work = stripKnownMarkers(work);
 
         return restoreAnnotatedTerms(work, prot.placeholderToOriginal);
     }
+
 
     // =========================
     // Protection: annotated terms
@@ -266,11 +272,50 @@ public final class NLGReadability {
         if (placeholderToOriginal.isEmpty())
             return s;
 
+        Map<String,String> symbolAware = buildSymbolAwarePlaceholderMap(placeholderToOriginal);
+        if (symbolAware.isEmpty())
+            return s;
+
         String out = s;
-        for (Map.Entry<String,String> e : placeholderToOriginal.entrySet()) {
+        for (Map.Entry<String,String> e : symbolAware.entrySet()) {
             out = out.replace(e.getKey(), e.getValue());
         }
         return out;
+    }
+
+
+    private static Map<String,String> buildSymbolAwarePlaceholderMap(
+            Map<String,String> placeholderToOriginal) {
+
+        Map<String,String> out = new LinkedHashMap<>();
+
+        for (Map.Entry<String,String> e : placeholderToOriginal.entrySet()) {
+            String placeholder = e.getKey();
+            String original = e.getValue();
+
+            String replacement = extractSymbolIfPresent(original);
+            out.put(placeholder, replacement);
+        }
+        return out;
+    }
+
+
+    private static String extractSymbolIfPresent(String original) {
+
+        Matcher m = ANNOT_TERM.matcher(original);
+        if (!m.matches())
+            return original;   // not an annotated term
+
+        String type = m.group(1);    // e.g. Organism
+        String phrase = m.group(2);  // text inside quotes
+
+        Matcher sym = TRAILING_LABEL.matcher(phrase);
+        if (!sym.matches())
+            return original;   // no symbol → keep original
+
+        String symbol = sym.group(1); // X / Y / Z / X3 ...
+
+        return "&%" + type + "$\"" + symbol + "\"";
     }
 
 
@@ -1225,6 +1270,28 @@ public final class NLGReadability {
         return a.equals(",") || a.equals(".") || a.equals(";");
     }
 
+    /**
+     * Recursively normalizes the logical AST prior to rendering.
+     *
+     * <p>This method performs a tree-to-tree rewrite that prepares nodes for
+     * final textual or HTML rendering. It does <b>not</b> perform rendering
+     * itself.</p>
+     *
+     * <p>Responsibilities:</p>
+     * <ul>
+     *   <li>Clean and normalize {@link AtomNode} text by removing segmentation
+     *       markers and applying conservative, local readability rewrites.</li>
+     *   <li>Ensure that AND/OR structure is represented only by {@link AndNode}
+     *       and {@link OrNode}, not embedded inside atom text.</li>
+     *   <li>Recursively rebuild the tree so all child nodes satisfy the same
+     *       invariants.</li>
+     *   <li>Reattach parent pointers to preserve tree integrity.</li>
+     * </ul>
+     *
+     * <p>After this pass, all {@link AtomNode} instances contain presentation-ready,
+     * marker-free text, allowing {@code renderText()} and {@code renderHTML()} to
+     * focus solely on high-level rhetorical realization.</p>
+     */
     private static Node rewriteNode(Node n,
                                     String andKw, String orKw,
                                     LanguageFormatter.RenderMode mode,
@@ -1304,45 +1371,32 @@ public final class NLGReadability {
 
 
 
-    private static String renderText(Node n, String language, String andKw, String orKw) {
+    private static String renderText(Node n, String language, String andKw, String orKw, Map<String,String> placeholderToOriginal) {
 
         if (n instanceof AtomNode) return ((AtomNode) n).text;
 
-        LanguageFormatter.Keywords k = new LanguageFormatter.Keywords(language);
-
-
         if (n instanceof IfNode) {
             IfNode in = (IfNode) n;
-            String a = renderText(in.antecedent, language, andKw, orKw);
-            String c = renderText(in.consequent, language, andKw, orKw);
-            return k.IF + " " + a + k.COMMA + " " + k.THEN + " " + c;
+            return renderIfNodeText(in, language, andKw, orKw, placeholderToOriginal);
         }
 
         if (n instanceof AndNode) {
             AndNode an = (AndNode) n;
             List<String> items = new ArrayList<>();
-            for (Node op : an.children) items.add(renderText(op, language, andKw, orKw));
+            for (Node op : an.children) items.add(renderText(op, language, andKw, orKw, placeholderToOriginal));
             return joinAsNaturalList(items, andKw);
         }
 
         if (n instanceof OrNode) {
             OrNode on = (OrNode) n;
             List<String> items = new ArrayList<>();
-            for (Node op : on.children) items.add(renderText(op, language, andKw, orKw));
+            for (Node op : on.children) items.add(renderText(op, language, andKw, orKw, placeholderToOriginal));
             return joinAsNaturalList(items, orKw);
         }
 
         if (n instanceof ForAllNode) {
             ForAllNode q = (ForAllNode) n;
-            String vars = joinAsNaturalList(q.vars, andKw);
-            List<String> items = new ArrayList<>();
-            for (Node op : q.children) {
-                items.add(renderText(op, language, andKw, orKw));
-            }
-            // If you only ever store one child, this will just be that child.
-            // If later you allow multiple children, they will be joined as a natural AND-list.
-            String body = joinAsNaturalList(items, andKw);
-            return "for all " + vars + " " + body;
+            return renderForAllNodeText(q, language, andKw, orKw, placeholderToOriginal);
         }
 
         if (n instanceof ExistsNode) {
@@ -1350,7 +1404,7 @@ public final class NLGReadability {
             String vars = joinAsNaturalList(q.vars, andKw);
             List<String> items = new ArrayList<>();
             for (Node op : q.children) {
-                items.add(renderText(op, language, andKw, orKw));
+                items.add(renderText(op, language, andKw, orKw, placeholderToOriginal));
             }
             String body = joinAsNaturalList(items, andKw);
             return "there exists " + vars + " " + body;
@@ -1359,7 +1413,51 @@ public final class NLGReadability {
         return "";
     }
 
-    private static String renderHtml(Node n, String language, String andKw, String orKw) {
+    private static String renderIfNodeText(IfNode in, String language, String andKw, String orKw, Map<String,String> placeholderToOriginal) {
+
+        LanguageFormatter.Keywords k = new LanguageFormatter.Keywords(language);
+
+        String a = renderText(in.antecedent, language, andKw, orKw, placeholderToOriginal);
+        String c = renderText(in.consequent, language, andKw, orKw, placeholderToOriginal);
+
+        // Case: (A ⇒ (B ⇒ C))
+        if (in.consequent instanceof IfNode) {
+            // Optional: add parentheses around complex antecedents
+            if (in.antecedent instanceof AndNode || in.antecedent instanceof OrNode || in.antecedent instanceof IfNode) {
+                a = "(" + a + ")";
+            }
+            // If you have language keywords for these, use them instead of literals
+            return "Assuming " + a + k.COMMA + " it follows that: " + c;
+        }
+
+        return k.IF + " " + a + k.COMMA + " " + k.THEN + " " + c;
+    }
+
+    private static String renderForAllNodeText(ForAllNode in, String language, String andKw, String orKw, Map<String,String> placeholderToOriginal) {
+
+        // Default case
+
+        // Replace Vars with original text (e.g  §T0§ -> &%Organism$"an organism X"1)
+        List <String> originalVars = new ArrayList<>();
+        for (String var : in.vars) {
+            originalVars.add(placeholderToOriginal.get(var));
+            System.out.println(var + " -> " + placeholderToOriginal.get(var));
+        }
+
+        String vars = joinAsNaturalList(originalVars, andKw);
+        List<String> items = new ArrayList<>();
+        for (Node op : in.children) {
+            items.add(renderText(op, language, andKw, orKw, placeholderToOriginal));
+        }
+
+        String body = joinAsNaturalList(items, andKw);
+        return "for all " + vars + " " + body;
+
+    }
+
+
+
+        private static String renderHtml(Node n, String language, String andKw, String orKw, Map<String,String> placeholderToOriginal) {
 
         if (n instanceof AtomNode) return ((AtomNode) n).text;
 
@@ -1367,8 +1465,8 @@ public final class NLGReadability {
 
         if (n instanceof IfNode) {
             IfNode in = (IfNode) n;
-            String a = renderHtml(in.antecedent, language, andKw, orKw);
-            String c = renderHtml(in.consequent, language, andKw, orKw);
+            String a = renderHtml(in.antecedent, language, andKw, orKw, placeholderToOriginal);
+            String c = renderHtml(in.consequent, language, andKw, orKw, placeholderToOriginal);
             return "<ul>"
                     + "<li>" + escapeHtmlMinimal(k.IF) + " " + a + "</li>"
                     + "<li>" + escapeHtmlMinimal(k.THEN) + " " + c + "</li>"
@@ -1377,14 +1475,14 @@ public final class NLGReadability {
         if (n instanceof AndNode) {
             AndNode an = (AndNode) n;
             List<String> items = new ArrayList<>();
-            for (Node op : an.children) items.add(renderHtml(op, language, andKw, orKw));
+            for (Node op : an.children) items.add(renderHtml(op, language, andKw, orKw, placeholderToOriginal));
             // Inline is OK for small lists; chunking policy can evolve later.
             return joinWithConnector(items, escapeHtmlMinimal(andKw));
         }
         if (n instanceof OrNode) {
             OrNode on = (OrNode) n;
             List<String> items = new ArrayList<>();
-            for (Node op : on.children) items.add(renderHtml(op, language, andKw, orKw));
+            for (Node op : on.children) items.add(renderHtml(op, language, andKw, orKw, placeholderToOriginal));
             return joinWithConnector(items, escapeHtmlMinimal(orKw));
         }
         if (n instanceof ForAllNode) {
@@ -1392,7 +1490,7 @@ public final class NLGReadability {
             String vars = joinAsNaturalList(q.vars, andKw);
             List<String> items = new ArrayList<>();
             for (Node op : q.children) {
-                items.add(renderHtml(op, language, andKw, orKw));
+                items.add(renderHtml(op, language, andKw, orKw, placeholderToOriginal));
             }
             // If you only ever store one child, this will just be that child.
             // If later you allow multiple children, they will be joined as a natural AND-list.
@@ -1404,7 +1502,7 @@ public final class NLGReadability {
             String vars = joinAsNaturalList(q.vars, andKw);
             List<String> items = new ArrayList<>();
             for (Node op : q.children) {
-                items.add(renderHtml(op, language, andKw, orKw));
+                items.add(renderHtml(op, language, andKw, orKw, placeholderToOriginal));
             }
             String body = joinWithConnector(items, andKw);
             return "there exists " + vars + " " + body;

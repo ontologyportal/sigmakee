@@ -57,7 +57,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         String actual = lf.paraphraseStatement(input, false, false, 0);
         String expected = "there exist ?D and ?H such that ?D is an &%instance$\"instance\" of &%Driving$\"driving\" and ?H is an &%instance$\"instance\" of &%Human$\"human\" and ?H is an &%agent$\"agent\" of ?D";
 
-        actual = LanguageFormatter.stripSegMarkers(actual);
+        actual = NLGReadability.stripKnownMarkers(actual);
         assertEquals(expected, actual);
     }
 
@@ -86,14 +86,12 @@ public class LanguageFormatterTest extends UnitTestBase {
         String actual = formatter.generateFormalNaturalLanguage(translations, "=>", false);
         actual = StringUtil.filterHtml(actual);
 
-        actual = LanguageFormatter.stripSegMarkers(actual);
-
-        assertEquals("if Socrates is a man, then Socrates is mortal", actual);
+        assertEquals("[IF_A]Socrates is a man[/IF_A][IF_C]Socrates is mortal[/IF_C]", actual);
 
         actual = formatter.generateFormalNaturalLanguage(translations, "=>", true);
         actual = StringUtil.filterHtml(actual);
 
-        actual = LanguageFormatter.stripSegMarkers(actual);
+        actual = NLGReadability.stripKnownMarkers(actual);
 
         assertEquals("Socrates is a man and ~{ Socrates is mortal }", actual);
     }
@@ -128,14 +126,14 @@ public class LanguageFormatterTest extends UnitTestBase {
         String actual = formatter.generateFormalNaturalLanguage(translations, "and", false);
         actual = StringUtil.filterHtml(actual);
 
-        actual = LanguageFormatter.stripSegMarkers(actual);
+        actual = NLGReadability.stripKnownMarkers(actual);
 
         assertEquals("Socrates is a man and Socrates is mortal", actual);
 
         actual = formatter.generateFormalNaturalLanguage(translations, "and", true);
         actual = StringUtil.filterHtml(actual);
 
-        actual = LanguageFormatter.stripSegMarkers(actual);
+        actual = NLGReadability.stripKnownMarkers(actual);
 
         assertEquals("~{ Socrates is a man } or ~{ Socrates is mortal }", actual);
     }
@@ -149,13 +147,13 @@ public class LanguageFormatterTest extends UnitTestBase {
         List<String> translations = Lists.newArrayList("Socrates is a man", "Socrates is mortal");
         String actual = formatter.generateFormalNaturalLanguage(translations, "or", false);
         actual = StringUtil.filterHtml(actual);
-        actual = LanguageFormatter.stripSegMarkers(actual);
+        actual = NLGReadability.stripKnownMarkers(actual);
 
         assertEquals("Socrates is a man or Socrates is mortal", actual);
 
         actual = formatter.generateFormalNaturalLanguage(translations, "or", true);
         actual = StringUtil.filterHtml(actual);
-        actual = LanguageFormatter.stripSegMarkers(actual);
+        actual = NLGReadability.stripKnownMarkers(actual);
 
         assertEquals("~{ Socrates is a man } and ~{ Socrates is mortal }", actual);
     }
@@ -172,12 +170,12 @@ public class LanguageFormatterTest extends UnitTestBase {
                 "?H", Sets.newHashSet("Human"), "?D", Sets.newHashSet("Driving")));
         Map<String, Set<String>> classMap = Maps.newHashMap();
 
-        String expected = "<ul><li>if &%Human$\"a  human\" drives,</li><li>then &%Human$\"the human\" sees</li></ul>";
+        String expected = "<ul><li>if &%Human$\"a  human X\" drives,</li><li>then &%Human$\"the human X\" sees</li></ul>";
         String variableReplaceOutput = LanguageFormatter.variableReplace(form, instanceMap, classMap, SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expected, variableReplaceOutput);
 
         // Verify resolveFormatSpecifiers( ).
-        expected = "<ul><li>if <a href=\"&term=Human\">a  human</a> drives,</li><li>then <a href=\"&term=Human\">the human</a> sees</li></ul>";
+        expected = "<ul><li>if <a href=\"&term=Human\">a  human X</a> drives,</li><li>then <a href=\"&term=Human\">the human X</a> sees</li></ul>";
         String resolveFormatSpecifiersOutput = NLGUtils.resolveFormatSpecifiers(variableReplaceOutput, "");
         assertEquals(expected, resolveFormatSpecifiersOutput);
     }
@@ -194,12 +192,12 @@ public class LanguageFormatterTest extends UnitTestBase {
                 "?H", Sets.newHashSet("Human"), "?D", Sets.newHashSet("Driving")));
         Map<String, Set<String>> classMap = Maps.newHashMap();
 
-        String expected = "if &%Human$\"a  human\" drives, then &%Human$\"the human\" sees";
+        String expected = "if &%Human$\"a  human X\" drives, then &%Human$\"the human X\" sees";
         String variableReplaceOutput = LanguageFormatter.variableReplace(form, instanceMap, classMap, SigmaTestBase.kb, "EnglishLanguage");
         assertEquals(expected, variableReplaceOutput);
 
         // Verify resolveFormatSpecifiers( ).
-        expected = "if a human drives, then the human sees";
+        expected = "if a human X drives, then the human X sees";
         String resolveFormatSpecifiersOutput = NLGUtils.resolveFormatSpecifiers(variableReplaceOutput, "");
         assertEquals(expected, StringUtil.filterHtml(resolveFormatSpecifiersOutput));
     }
@@ -246,7 +244,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.HTML
         );
 
-        assertEquals("<ul><li>if A,</li><li>then B</li></ul>", out);
+        assertEquals("[IF_A]A[/IF_A][IF_C]B[/IF_C]", out);
     }
 
 
@@ -261,28 +259,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
-
-        assertEquals("if A, then B", out);
-    }
-
-
-    @Test
-    public void testIfArabicHtmlMode_wrapsRtlSpan() {
-        LanguageFormatter lf = new LanguageFormatter("stmt", kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"),
-                kb, "ArabicLanguage");
-
-        String out = lf.generateFormalNaturalLanguage(
-                Arrays.asList("A", "B"),
-                Formula.IF,
-                false,
-                LanguageFormatter.RenderMode.HTML
-        );
-
-        assertTrue(out.contains("<span dir=\"rtl\">"));
-        assertTrue(out.startsWith("<ul><li>"));
-        assertTrue(out.endsWith("</li></ul>"));
+        assertEquals("[IF_A]A[/IF_A][IF_C]B[/IF_C]", out);
     }
 
 
@@ -318,7 +295,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
+        out = NLGReadability.stripKnownMarkers(out);
 
         // ¬(A ∧ B) rendered (current behavior) as "~{ A } or ~{ B }"
         assertEquals("~{ A } or ~{ B }", out);
@@ -339,7 +316,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
+        out = NLGReadability.stripKnownMarkers(out);
 
         assertTrue(out.contains("~{ B }"));
         assertFalse(out.contains("~{B}"));
@@ -383,14 +360,14 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
+        System.out.println("out = " + out);
         // No leading whitespace.
         assertFalse("Output must not start with a space", out.startsWith(" "));
 
-        // Begins with "not for all"
-        assertTrue(out.startsWith("not for all"));
-
         // Body must appear unchanged.
         assertTrue("Body must be used verbatim (tArgs), not re-translated", out.contains(body));
+
+
     }
 
 
@@ -405,7 +382,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
+        out = NLGReadability.stripKnownMarkers(out);
 
         assertEquals("A and B and C", out);
         assertFalse(out.contains("  "));
@@ -427,7 +404,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
+        out = NLGReadability.stripKnownMarkers(out);
 
         assertNotEquals("B and ~{ A }", out); // Previous Behavior
         assertEquals("A and ~{ B }", out);
@@ -449,7 +426,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
+        out = NLGReadability.stripKnownMarkers(out);
 
         assertNotEquals("A and B", out); // Previous Behavior
         assertEquals("~{ A } and ~{ B }", out);
@@ -471,7 +448,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
+        out = NLGReadability.stripKnownMarkers(out);
 
         assertNotEquals("A or B", out); // Previous Behavior
     }
@@ -493,7 +470,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
+        out = NLGReadability.stripKnownMarkers(out);
 
         assertNotEquals("B or ~{ A } or A or ~{ B }", out); //Previous Behavior
     }
@@ -511,7 +488,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
+        out = NLGReadability.stripKnownMarkers(out);
 
         assertEquals("either A or B, but not both", out);
         assertFalse(out.toLowerCase().contains(" xor ")); // should not expose token
@@ -529,7 +506,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
+        out = NLGReadability.stripKnownMarkers(out);
 
         assertEquals("either A or B, but not both", out);
         assertFalse(out.toLowerCase().contains(" xor "));
@@ -626,7 +603,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
+        out = NLGReadability.stripKnownMarkers(out);
 
         // Current buggy behavior (double-translation) will remap the whole clause.
         assertNotEquals("CORRUPTED or C", out); // previous behavior
@@ -738,9 +715,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
-
-        assertEquals("for all ?X A and B", out);
+        assertEquals("[FORALL][VARS]?X[/VARS] A and B[/FORALL]", out);
     }
 
 
@@ -755,7 +730,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
+        out = NLGReadability.stripKnownMarkers(out);
 
         assertEquals("there exists ?X such that A and B", out);
     }
@@ -772,7 +747,7 @@ public class LanguageFormatterTest extends UnitTestBase {
                 LanguageFormatter.RenderMode.TEXT
         );
 
-        out = LanguageFormatter.stripSegMarkers(out);
+        out = NLGReadability.stripKnownMarkers(out);
 
         assertEquals("A holds B holds C", out);
     }

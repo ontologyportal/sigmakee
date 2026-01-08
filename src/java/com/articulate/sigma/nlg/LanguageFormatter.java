@@ -337,6 +337,7 @@ public class LanguageFormatter {
                         }
                     }
                 }
+
                 if (!instanceMap.isEmpty() || !classMap.isEmpty() ) {
                     //if ((instanceMap != null && !instanceMap.isEmpty()) || (classMap != null && !classMap.isEmpty()))
                     template = variableReplace(template, instanceMap, classMap, kb, language);
@@ -347,13 +348,10 @@ public class LanguageFormatter {
                 System.out.println("--[template]: "+template+"\n");
 
                 // Readability layer (pre-linkification).
-                template = NLGReadability.improveTemplate(template, RenderMode.HTML, language);
+                template = NLGReadability.improveTemplate(template, RenderMode.TEXT, language);
 
                 System.out.println("--[NLG Template]: "+template+"\n");
                 System.out.println("---------------------------------------");
-
-                // Remove [SEG] markers from the template.
-                template = LanguageFormatter.stripSegMarkers(template);
 
                 // Get rid of the percentage signs.
                 nlFormat = NLGUtils.resolveFormatSpecifiers(template, href);
@@ -512,17 +510,6 @@ public class LanguageFormatter {
         }
         ans = result.toString();
         return ans;
-    }
-
-    /**
-     * Remove internal segmentation markers before returning user-visible output.
-     * SEG markers are used only for internal readability processing and must never
-     * appear in final HTML or TEXT output.
-     */
-    public static String stripSegMarkers(String s) {
-        if (s == null || s.isEmpty())
-            return s;
-        return s.replace("[SEG]", "").replace("[/SEG]", "");
     }
 
 
@@ -1701,7 +1688,8 @@ public class LanguageFormatter {
      */
     private static String incrementalVarReplace(String form, String varString, String varType,
                                                 String varPretty, String language,
-                                                boolean isClass, Map<String, Integer> typeMap) {
+                                                boolean isClass, Map<String, Integer> typeMap,
+                                                Map<String, String> varLabelMap) {
 
         String argNumStr = "";
         if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): form " + form);
@@ -1760,8 +1748,11 @@ public class LanguageFormatter {
             if (result.contains(varString) && count < 20) {
                 if (isClass) {
                     article = NLGUtils.getArticle("kind", count, occurrenceCounter, language);
+                    String lbl = getOrCreateVarLabel(varString, varLabelMap);
+//                    replacement = (article + Formula.SPACE + NLGUtils.getKeyword("kind of", language)
+//                            + Formula.SPACE + varPretty);
                     replacement = (article + Formula.SPACE + NLGUtils.getKeyword("kind of", language)
-                            + Formula.SPACE + varPretty);
+                            + Formula.SPACE + varPretty + Formula.SPACE + lbl);
                     if (isArabic)
                         replacement = (NLGUtils.getKeyword("kind of", language) + Formula.SPACE + varPretty);
 
@@ -1772,7 +1763,9 @@ public class LanguageFormatter {
                 }
                 else {
                     article = NLGUtils.getArticle(varPretty, count, occurrenceCounter, language);
-                    replacement = (article + Formula.SPACE + varPretty);
+                    String lbl = getOrCreateVarLabel(varString, varLabelMap);
+//                    replacement = (article + Formula.SPACE + varPretty);
+                    replacement = (article + Formula.SPACE + varPretty + Formula.SPACE + lbl);
                     if (isArabic) {
                         defArt = NLGUtils.getKeyword("the", language);
                         if (article.startsWith(defArt) && !varPretty.startsWith(defArt)) {
@@ -1797,6 +1790,17 @@ public class LanguageFormatter {
         return result;
     }
 
+    private static String getOrCreateVarLabel(String varString, Map<String,String> varLabelMap) {
+        String lbl = varLabelMap.get(varString);
+        if (lbl != null) return lbl;
+
+        int idx = varLabelMap.size();
+        String[] base = {"X","Y","Z","W","V","U","T","S","R","Q","P","O","N","M","L","K","J","I","H","G","F","E","D","C","B","A"};
+        lbl = (idx < base.length) ? base[idx] : ("X" + (idx + 1));
+        varLabelMap.put(varString, lbl);
+        return lbl;
+    }
+
     /** **************************************************************
      * Replace variables in a formula with paraphrases expressing their
      * type.
@@ -1806,6 +1810,10 @@ public class LanguageFormatter {
 
         String result = form;
         Map<String,Integer> typeMap = new HashMap<>();
+
+        // NEW: stable variable labels per formula
+        Map<String,String> varLabelMap = new LinkedHashMap<>();
+
         List<String> varList = NLGUtils.collectOrderedVariables(form);
         Iterator<String> it = varList.iterator();
         String varString;
@@ -1822,19 +1830,19 @@ public class LanguageFormatter {
                 if (subclassArray != null && !subclassArray.isEmpty()) {
                     varType = (String) subclassArray.toArray()[0];
                     varPretty = kb.getTermFormatMap(language).get(varType);
-                    result = incrementalVarReplace(result, varString, varType, varPretty, language, true, typeMap);
+                    result = incrementalVarReplace(result, varString, varType, varPretty, language, true, typeMap, varLabelMap);
                 }
                 else {
                     if (instanceArray != null && !instanceArray.isEmpty()) {
                         varType = (String) instanceArray.toArray()[0];
                         varPretty = kb.getTermFormatMap(language).get(varType);
-                        result = incrementalVarReplace(result, varString, varType, varPretty, language, false, typeMap);
+                        result = incrementalVarReplace(result, varString, varType, varPretty, language, false, typeMap, varLabelMap);
                     }
                     else {
                         varPretty = kb.getTermFormatMap(language).get("Entity");
                         if (StringUtil.emptyString(varPretty))
                             varPretty = "entity";
-                        result = incrementalVarReplace(result, varString, "Entity", varPretty, language, false, typeMap);
+                        result = incrementalVarReplace(result, varString, "Entity", varPretty, language, false, typeMap, varLabelMap);
                     }
                 }
             }
