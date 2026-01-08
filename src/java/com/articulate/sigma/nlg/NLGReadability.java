@@ -8,11 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import com.articulate.sigma.nlg.LanguageFormatter;
 
 public final class NLGReadability {
-
-    private static String language;
 
     // Segment markers emitted by LanguageFormatter. Used only internally.
     // Markers are stripped before user-visible output.
@@ -31,7 +28,16 @@ public final class NLGReadability {
     private static final String OR_O  = "[OR]";
     private static final String OR_C  = "[/OR]";
 
-    private enum Kind { ATOM, IF, AND, OR }
+    private static final String FORALL_O = "[FORALL]";
+    private static final String FORALL_C = "[/FORALL]";
+
+    private static final String EXISTS_O = "[EXISTS]";
+    private static final String EXISTS_C = "[/EXISTS]";
+
+    private static final String VARS_O   = "[VARS]";
+    private static final String VARS_C   = "[/VARS]";
+
+    private enum Kind { ATOM, IF, AND, OR, FORALL, EXISTS }
 
 
 
@@ -115,6 +121,22 @@ public final class NLGReadability {
         OrNode(List<Node> kids) { super(Kind.OR, kids); }
     }
 
+    private static final class ForAllNode extends NAryNode {
+        List<String> vars;
+        ForAllNode(List<Node> kids, List<String> vars) {
+            super(Kind.FORALL, kids);
+            this.vars = vars;
+        }
+    }
+
+    private static final class ExistsNode extends NAryNode {
+        List<String> vars;
+        ExistsNode(List<Node> kids, List<String> vars) {
+            super(Kind.EXISTS, kids);
+            this.vars = vars;
+        }
+    }
+
 
     private NLGReadability() {
         // utility class
@@ -124,12 +146,15 @@ public final class NLGReadability {
         if (child != null) child.parent = parent;
     }
 
-    private static Node parseTree(String body) {
-        Node root = parseNode(body);
+    private static Node parseTree(String body, String language) {
+        Node root = parseNode(body, language);
         root.parent = null;
         return root;
     }
 
+    private static String stripTrailingPunct(String tok) {
+        return tok == null ? "" : tok.replaceAll("[,;:]+$", "");
+    }
 
     private static String stripKnownMarkers(String s) {
         if (s == null) return null;
@@ -142,8 +167,6 @@ public final class NLGReadability {
 
 
     public static String improveTemplate(String template, LanguageFormatter.RenderMode mode, String language) {
-
-        NLGReadability.language = language;
 
         if (template == null || template.isEmpty())
             return template;
@@ -176,10 +199,10 @@ public final class NLGReadability {
         }
 
         // NEW: marker-driven parse of IF/AND/OR/SEG into a Node tree.
-        Node tree = parseTree(body);
+        Node tree = parseTree(body, language);
 
         // Apply readability rewrites recursively (SEG factoring happens inside Atom nodes, not globally).
-        tree = rewriteNode(tree, andKw, orKw, mode);
+        tree = rewriteNode(tree, andKw, orKw, mode, language);
 
         // Render from the tree.
         String rendered = (mode == LanguageFormatter.RenderMode.HTML)
@@ -320,13 +343,10 @@ public final class NLGReadability {
 
     /**
      * Chunk long flat connector chains into lists for readability.
-     *
      * Trigger only for 7..25 items to avoid surprising rewrites and to avoid
      * interfering with the 3..6 comma-list smoothing from Commit 2.
-     *
      * HTML mode:
      *   "All of the following hold:<ul><li>...</li>...</ul>"
-     *
      * TEXT mode:
      *   "All of the following hold: (1) ... (2) ... (3) ..."
      */
@@ -467,7 +487,7 @@ public final class NLGReadability {
         int i = 0;
 
         // First var must be a placeholder.
-        if (i >= toks.length || !isPlaceholderToken(toks[i]))
+        if (i >= toks.length || !isPlaceholderToken(stripTrailingPunct(toks[i])))
             return new QuantifierSplit("", s);
 
         i++; // consume first var
@@ -476,7 +496,7 @@ public final class NLGReadability {
         while (i + 1 < toks.length) {
             if (!toks[i].equals(andKw))
                 break;
-            if (!isPlaceholderToken(toks[i + 1]))
+            if (!isPlaceholderToken(stripTrailingPunct(toks[i + 1])))
                 break;
             i += 2;
         }
@@ -1156,6 +1176,7 @@ public final class NLGReadability {
     }
 
 
+    // Returns the full block including the markers
     private static BlockSpan extractMarkedBlock(String s, int start, String open, String close) {
         if (s == null || start < 0 || !s.startsWith(open, start)) return null;
 
@@ -1182,7 +1203,6 @@ public final class NLGReadability {
         return full.substring(open.length(), full.length() - close.length());
     }
 
-
     private static boolean isIgnorableIfPrefix(String before, String language) {
         if (before == null) return true;
         String b = before.trim();
@@ -1207,7 +1227,8 @@ public final class NLGReadability {
 
     private static Node rewriteNode(Node n,
                                     String andKw, String orKw,
-                                    LanguageFormatter.RenderMode mode
+                                    LanguageFormatter.RenderMode mode,
+                                    String language
                                     ) {
         if (n instanceof AtomNode) {
             String t = ((AtomNode) n).text;
@@ -1225,8 +1246,8 @@ public final class NLGReadability {
 
             IfNode in = (IfNode) n;
 
-            Node a2 = rewriteNode(in.antecedent, andKw, orKw, mode);
-            Node c2 = rewriteNode(in.consequent,  andKw, orKw, mode);
+            Node a2 = rewriteNode(in.antecedent, andKw, orKw, mode, language);
+            Node c2 = rewriteNode(in.consequent,  andKw, orKw, mode, language);
 
             IfNode out =  new IfNode(a2,c2);
             setParent(a2, out);
@@ -1239,7 +1260,7 @@ public final class NLGReadability {
             AndNode an = (AndNode) n;
             List<Node> ops = new ArrayList<>();
             for (Node c : an.children) {
-                Node kid = rewriteNode(c, andKw, orKw, mode);
+                Node kid = rewriteNode(c, andKw, orKw, mode, language);
                 ops.add(kid);
             }
             AndNode out = new AndNode(ops);
@@ -1252,11 +1273,29 @@ public final class NLGReadability {
         if (n instanceof OrNode) {
             OrNode on = (OrNode) n;
             List<Node> ops = new ArrayList<>();
-            for (Node c : on.children) ops.add(rewriteNode(c, andKw, orKw, mode));
+            for (Node c : on.children) ops.add(rewriteNode(c, andKw, orKw, mode, language));
             OrNode out = new OrNode(ops);
             for (Node kid: ops){
                 setParent(kid,out);
             }
+            return out;
+        }
+
+        if (n instanceof ForAllNode) {
+            ForAllNode q = (ForAllNode) n;
+            List<Node> kids = new ArrayList<>();
+            for (Node c : q.children) kids.add(rewriteNode(c, andKw, orKw, mode, language));
+            ForAllNode out = new ForAllNode(kids, q.vars);
+            for (Node kid : kids) setParent(kid, out);
+            return out;
+        }
+
+        if (n instanceof ExistsNode) {
+            ExistsNode q = (ExistsNode) n;
+            List<Node> kids = new ArrayList<>();
+            for (Node c : q.children) kids.add(rewriteNode(c, andKw, orKw, mode, language));
+            ExistsNode out = new ExistsNode(kids, q.vars);
+            for (Node kid : kids) setParent(kid, out);
             return out;
         }
 
@@ -1266,9 +1305,11 @@ public final class NLGReadability {
 
 
     private static String renderText(Node n, String language, String andKw, String orKw) {
+
         if (n instanceof AtomNode) return ((AtomNode) n).text;
 
         LanguageFormatter.Keywords k = new LanguageFormatter.Keywords(language);
+
 
         if (n instanceof IfNode) {
             IfNode in = (IfNode) n;
@@ -1276,23 +1317,51 @@ public final class NLGReadability {
             String c = renderText(in.consequent, language, andKw, orKw);
             return k.IF + " " + a + k.COMMA + " " + k.THEN + " " + c;
         }
+
         if (n instanceof AndNode) {
             AndNode an = (AndNode) n;
             List<String> items = new ArrayList<>();
             for (Node op : an.children) items.add(renderText(op, language, andKw, orKw));
-            return joinWithConnector(items, andKw);
+            return joinAsNaturalList(items, andKw);
         }
+
         if (n instanceof OrNode) {
             OrNode on = (OrNode) n;
             List<String> items = new ArrayList<>();
             for (Node op : on.children) items.add(renderText(op, language, andKw, orKw));
-            return joinWithConnector(items, orKw);
+            return joinAsNaturalList(items, orKw);
         }
+
+        if (n instanceof ForAllNode) {
+            ForAllNode q = (ForAllNode) n;
+            String vars = joinAsNaturalList(q.vars, andKw);
+            List<String> items = new ArrayList<>();
+            for (Node op : q.children) {
+                items.add(renderText(op, language, andKw, orKw));
+            }
+            // If you only ever store one child, this will just be that child.
+            // If later you allow multiple children, they will be joined as a natural AND-list.
+            String body = joinAsNaturalList(items, andKw);
+            return "for all " + vars + " " + body;
+        }
+
+        if (n instanceof ExistsNode) {
+            ExistsNode q = (ExistsNode) n;
+            String vars = joinAsNaturalList(q.vars, andKw);
+            List<String> items = new ArrayList<>();
+            for (Node op : q.children) {
+                items.add(renderText(op, language, andKw, orKw));
+            }
+            String body = joinAsNaturalList(items, andKw);
+            return "there exists " + vars + " " + body;
+        }
+
         return "";
     }
 
     private static String renderHtml(Node n, String language, String andKw, String orKw) {
-        if (n instanceof AtomNode) return escapeHtmlMinimal(((AtomNode) n).text);
+
+        if (n instanceof AtomNode) return ((AtomNode) n).text;
 
         LanguageFormatter.Keywords k = new LanguageFormatter.Keywords(language);
 
@@ -1318,6 +1387,28 @@ public final class NLGReadability {
             for (Node op : on.children) items.add(renderHtml(op, language, andKw, orKw));
             return joinWithConnector(items, escapeHtmlMinimal(orKw));
         }
+        if (n instanceof ForAllNode) {
+            ForAllNode q = (ForAllNode) n;
+            String vars = joinAsNaturalList(q.vars, andKw);
+            List<String> items = new ArrayList<>();
+            for (Node op : q.children) {
+                items.add(renderHtml(op, language, andKw, orKw));
+            }
+            // If you only ever store one child, this will just be that child.
+            // If later you allow multiple children, they will be joined as a natural AND-list.
+            String body = joinWithConnector(items, andKw);
+            return "for all " + vars + " " + body;
+        }
+        if (n instanceof ExistsNode) {
+            ExistsNode q = (ExistsNode) n;
+            String vars = joinAsNaturalList(q.vars, andKw);
+            List<String> items = new ArrayList<>();
+            for (Node op : q.children) {
+                items.add(renderHtml(op, language, andKw, orKw));
+            }
+            String body = joinWithConnector(items, andKw);
+            return "there exists " + vars + " " + body;
+        }
         return "";
     }
 
@@ -1329,31 +1420,47 @@ public final class NLGReadability {
                 .replace(">", "&gt;");
     }
 
-    private static Node parseNode(String s) {
+    private static Node parseNode(String s, String language) {
+
         if (s == null) return new AtomNode("");
+
         String t = s.trim();
+
         if (t.isEmpty()) return new AtomNode("");
 
+        if (t.startsWith(FORALL_O)) {
+            Node q = parseForallNode(t, language);
+            if (q != null) return q;
+        }
+
+        if (t.startsWith(EXISTS_O)) {
+            Node q = parseExistsNode(t, language);
+            if (q != null) return q;
+        }
+
         // IF (tolerant: allow "if" text before [IF_A], and ",then" between blocks)
-        if (t.contains(IF_A_O) && t.contains(IF_C_O)) {
-            Node n = parseIfNode(t);
+        if (t.startsWith(IF_A_O) && t.contains(IF_C_O)) {
+            Node n = parseIfNode(t, language);
             if (n != null) return n;
         }
 
-        // AND / OR blocks
-        Node andN = parseAndOrBlock(t, AND_O, AND_C, true);
-        if (andN != null) return andN;
+        if (t.startsWith(AND_O)) {
+            Node n = parseAndOrBlock(t, AND_O, AND_C, true, language);
+            if (n != null) return n;
+        }
 
-        Node orN  = parseAndOrBlock(t, OR_O, OR_C, false);
-        if (orN != null) return orN;
+        if (t.startsWith(OR_O)) {
+            Node n = parseAndOrBlock(t, OR_O, OR_C, false, language);
+            if (n != null) return n;
+        }
 
         return new AtomNode(t);
     }
 
-
     private static Node parseAndOrBlock(String s,
                                         String open, String close,
-                                        boolean isAnd) {
+                                        boolean isAnd,
+                                        String language) {
         String t = s.trim();
         if (!t.startsWith(open)) return null;
 
@@ -1370,7 +1477,7 @@ public final class NLGReadability {
         if (opTexts == null || opTexts.isEmpty()) return null;
 
         List<Node> kids = new ArrayList<>(opTexts.size());
-        for (String op : opTexts) kids.add(parseNode(op));
+        for (String op : opTexts) kids.add(parseNode(op, language));
         Node parent = isAnd ? new AndNode(kids) : new OrNode(kids);
         for (Node kid : kids) setParent(kid, parent);
         return parent;
@@ -1398,7 +1505,7 @@ public final class NLGReadability {
         return ops;
     }
 
-    private static Node parseIfNode(String s) {
+    private static Node parseIfNode(String s, String language) {
         int aPos = s.indexOf(IF_A_O);
         if (aPos < 0) return null;
 
@@ -1421,8 +1528,8 @@ public final class NLGReadability {
         String cInner = innerOf(cBlock.text, IF_C_O, IF_C_C).trim();
 
         Node ifNode = new IfNode(null, null);
-        Node antecedent = parseNode(aInner);
-        Node consequent = parseNode(cInner);
+        Node antecedent = parseNode(aInner, language);
+        Node consequent = parseNode(cInner, language);
 
         ((IfNode) ifNode).antecedent = antecedent;
         ((IfNode) ifNode).consequent = consequent;
@@ -1432,5 +1539,215 @@ public final class NLGReadability {
         return ifNode;
     }
 
+    private static Node parseForallNode(String s, String language) {
+
+        String t = s.trim();
+        if (!t.startsWith(FORALL_O))
+            return null;
+
+        // [FORALL] ... [/FORALL]
+        BlockSpan fb = extractMarkedBlock(t, 0, FORALL_O, FORALL_C);
+        if (fb == null)
+            return null;
+
+        String inside = innerOf(fb.text, FORALL_O, FORALL_C).trim();
+        if (!inside.startsWith(VARS_O))
+            return null;
+
+        // [VARS] ... [/VARS]
+        BlockSpan vb = extractMarkedBlock(inside, 0, VARS_O, VARS_C);
+        if (vb == null)
+            return null;
+
+        String varsInner = innerOf(vb.text, VARS_O, VARS_C).trim();     // NOT vb.text
+        List<String> vars = parseVars(varsInner);
+
+        // Body = everything after [/VARS]
+        String bodyText = inside.substring(vb.nextIndex).trim();
+        if (bodyText.isEmpty())
+            return null;
+
+        Node body = parseNode(bodyText, language);
+        if (body == null)
+            return null;
+
+        List<Node> kids = new ArrayList<>();
+        kids.add(body);
+
+        return new ForAllNode(kids, vars);
+    }
+
+    private static Node parseExistsNode(String s, String language) {
+
+        String t = s.trim();
+        if (!t.startsWith(EXISTS_O))
+            return null;
+
+        // [EXISTS] ... [/EXISTS]
+        BlockSpan eb = extractMarkedBlock(t,0, EXISTS_O, EXISTS_C );
+        if (eb == null)
+            return null;
+
+        String inside = eb.text.trim();
+        if (!inside.startsWith(VARS_O))
+            return null;
+
+        // [VARS] ... [/VARS]
+        BlockSpan vb = extractMarkedBlock(inside,0, VARS_O, VARS_C);
+        if (vb == null)
+            return null;
+
+        List<String> vars = parseVars(vb.text.trim());
+
+        // Body = everything after [/VARS]
+        String bodyText = inside.substring(vb.nextIndex).trim();
+        if (bodyText.isEmpty())
+            return null;
+
+        Node body = parseNode(bodyText, language);
+        if (body == null)
+            return null;
+
+        List<Node> kids = new ArrayList<>();
+        kids.add(body);
+
+        return new ExistsNode(kids, vars);
+    }
+
+    private static List<String> parseVars(String varsText) {
+
+        List<String> vars = new ArrayList<>();
+        if (varsText == null || varsText.isEmpty())
+            return vars;
+
+        // varsText example: "§T0§, §T1§ and §T2§"
+        String normalized = varsText
+                .replace(",", " ")
+                .replace(" and ", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+
+        for (String tok : normalized.split(" ")) {
+            if (!tok.isEmpty())
+                vars.add(tok);
+        }
+        return vars;
+    }
+
+    // X and Y and Z becomes X, Y and Z
+    // X or Y or Z becomes X, Y or Z
+    private static String joinAsNaturalList(List<String> items, String connectorKw) {
+        if (items == null || items.isEmpty()) return "";
+        if (items.size() == 1) return items.get(0);
+        if (items.size() == 2) return items.get(0) + " " + connectorKw + " " + items.get(1);
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < items.size(); i++) {
+            if (i > 0) {
+                if (i == items.size() - 1) sb.append(", ").append(connectorKw).append(" ");
+                else sb.append(", ");
+            }
+            sb.append(items.get(i));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * DEBUG utility.
+     *
+     * Parses the given template into the internal IF/AND/OR tree
+     * and prints a human-readable structural representation.
+     *
+     * This method performs parsing ONLY:
+     *  - no rewriting
+     *  - no rendering
+     *  - no marker stripping
+     *
+     * Intended for developer inspection and debugging.
+     */
+    public static void debugPrintTree(String template, String language) {
+
+        System.out.println("=== NLG TREE DEBUG ===");
+        System.out.println("INPUT:");
+        System.out.println(template);
+        System.out.println();
+
+        if (template == null || template.isEmpty()) {
+            System.out.println("<empty template>");
+            return;
+        }
+
+        Protection prot = protectAnnotatedTerms(template);
+        String work = prot.protectedText;
+
+        Node tree = parseNode(work, language);
+
+        System.out.println("PARSED TREE:");
+        dumpNode(tree, 0);
+        System.out.println("======================");
+    }
+
+    private static void dumpNode(Node n, int depth) {
+
+        String indent = "  ".repeat(depth);
+
+        if (n == null) {
+            System.out.println(indent + "<null>");
+            return;
+        }
+
+        switch (n.kind) {
+
+            case FORALL:
+                ForAllNode fo = (ForAllNode) n;
+                System.out.println(indent + "FORALL (" + fo.vars.size() + " Variables)");
+                for (Node c : fo.children) {
+                    dumpNode(c, depth + 1);
+                }
+                break;
+
+            case EXISTS:
+                ExistsNode ex = (ExistsNode) n;
+                System.out.println(indent + "FORALL (" + ex.vars.size() + " Variables)");
+                for (Node c : ex.children) {
+                    dumpNode(c, depth + 1);
+                }
+                break;
+
+            case ATOM:
+                AtomNode a = (AtomNode) n;
+                System.out.println(indent + "ATOM:");
+                System.out.println(indent + "  \"" + a.text + "\"");
+                break;
+
+            case IF:
+                IfNode in = (IfNode) n;
+                System.out.println(indent + "IF");
+                System.out.println(indent + "  ANTECEDENT:");
+                dumpNode(in.antecedent, depth + 2);
+                System.out.println(indent + "  CONSEQUENT:");
+                dumpNode(in.consequent, depth + 2);
+                break;
+
+            case AND:
+                AndNode an = (AndNode) n;
+                System.out.println(indent + "AND (" + an.children.size() + " operands)");
+                for (Node c : an.children) {
+                    dumpNode(c, depth + 1);
+                }
+                break;
+
+            case OR:
+                OrNode on = (OrNode) n;
+                System.out.println(indent + "OR (" + on.children.size() + " operands)");
+                for (Node c : on.children) {
+                    dumpNode(c, depth + 1);
+                }
+                break;
+
+            default:
+                System.out.println(indent + "UNKNOWN NODE: " + n.getClass());
+        }
+    }
 
 }

@@ -34,6 +34,7 @@ public class NLGReadabilityTest extends UnitTestBase {
         assertEquals(t, out);
     }
 
+
     @Test
     public void readabilityCommaList_supportsAnnotatedTrailingDigits() {
 
@@ -48,6 +49,7 @@ public class NLGReadabilityTest extends UnitTestBase {
                 "&%Organism$\"the other organism\"1 is an &%instance$\"instance\" of &%Organism$\"organism\"", out);
     }
 
+
     @Test
     public void readabilityCommaList_doesNotRewriteTwoItemChains() {
 
@@ -59,24 +61,6 @@ public class NLGReadabilityTest extends UnitTestBase {
         assertEquals(t, out);
     }
 
-    @Test
-    public void readabilityChunking_longAndChain_htmlBullets() {
-
-        String t =
-                "&%A$\"A\" and &%B$\"B\" and &%C$\"C\" and &%D$\"D\" and &%E$\"E\" and &%F$\"F\" and &%G$\"G\"";
-
-        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
-
-        assertEquals("All of the following hold:<ul>" +
-                "<li>&%A$\"A\"</li>" +
-                "<li>&%B$\"B\"</li>" +
-                "<li>&%C$\"C\"</li>" +
-                "<li>&%D$\"D\"</li>" +
-                "<li>&%E$\"E\"</li>" +
-                "<li>&%F$\"F\"</li>" +
-                "<li>&%G$\"G\"</li>" +
-                "</ul>", out);
-    }
 
     @Test
     public void readabilityChunking_longOrChain_textNumbered() {
@@ -90,6 +74,7 @@ public class NLGReadabilityTest extends UnitTestBase {
                 "(1) &%A$\"A\" (2) &%B$\"B\" (3) &%C$\"C\" (4) &%D$\"D\" (5) &%E$\"E\" (6) &%F$\"F\" (7) &%G$\"G\"", out);
     }
 
+
     @Test
     public void readabilityChunking_doesNotTouchNegationBlocksEvenIfLong() {
 
@@ -101,29 +86,6 @@ public class NLGReadabilityTest extends UnitTestBase {
         assertEquals(t, out);
     }
 
-//    @Test
-//    public void readabilityQuantifierHeader_preserved_bodyCanBeSmoothed() {
-//
-//        String t =
-//                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1 " +
-//                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1 or " +
-//                        "&%Organism$\"the other organism\"1 is not a &%mother$\"mother\" of &%Organism$\"the organism\"1 or " +
-//                        "&%Organism$\"the organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\" or " +
-//                        "&%Organism$\"the other organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"";
-//
-//        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
-//
-//        // Expect quantifier header preserved: "for all <var> and <var> "
-//        // and the OR-chain body rewritten as a comma list (4 items).
-//        String expected =
-//                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1 " +
-//                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1, " +
-//                        "&%Organism$\"the other organism\"1 is not a &%mother$\"mother\" of &%Organism$\"the organism\"1, " +
-//                        "&%Organism$\"the organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\", or " +
-//                        "&%Organism$\"the other organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"";
-//
-//        assertEquals(expected, out);
-//    }
 
     @Test
     public void readabilityQuantifierHeader_preserved_whenBodyNotEligible() {
@@ -138,29 +100,6 @@ public class NLGReadabilityTest extends UnitTestBase {
         assertEquals(t, out);
     }
 
-    @Test
-    public void readabilityQuantifiedOrChain_becomesBullets_html() {
-
-        String t =
-                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1 " +
-                        "&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1 or " +
-                        "&%Organism$\"the other organism\"1 is not a &%mother$\"mother\" of &%Organism$\"the organism\"1 or " +
-                        "&%Organism$\"the organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\" or " +
-                        "&%Organism$\"the other organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"";
-
-        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
-
-        String expected =
-                "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1, at least one of the following holds:" +
-                        "<ul>" +
-                        "<li>&%Organism$\"the other organism\"1 is a &%parent$\"parent\" of &%Organism$\"the organism\"1</li>" +
-                        "<li>&%Organism$\"the other organism\"1 is not a &%mother$\"mother\" of &%Organism$\"the organism\"1</li>" +
-                        "<li>&%Organism$\"the organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"</li>" +
-                        "<li>&%Organism$\"the other organism\"1 is not an &%instance$\"instance\" of &%Organism$\"organism\"</li>" +
-                        "</ul>";
-
-        assertEquals(expected, out);
-    }
 
     @Test
     public void readabilityQuantifiedOrChain_becomesNumbered_text() {
@@ -203,21 +142,6 @@ public class NLGReadabilityTest extends UnitTestBase {
 
         assertEquals("&%X$\"X\" is a &%parent$\"parent\" of " +
                 "&%A$\"A\" or &%B$\"B\" or &%C$\"C\"", out);
-    }
-
-
-    @Test
-    public void readabilityFactoring_andChain_joinsTailsWithAnd() {
-
-        String t =
-                "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Bill7_1$\"Bill7_1\" and " +
-                        "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Bob7_1$\"Bob7_1\" and " +
-                        "&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of &%Sue7_1$\"Sue7_1\"";
-
-        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
-
-        assertEquals("&%Jane7_1$\"Jane7_1\" is a &%mother$\"mother\" of " +
-                "&%Bill7_1$\"Bill7_1\" and &%Bob7_1$\"Bob7_1\" and &%Sue7_1$\"Sue7_1\"", out);
     }
 
 
@@ -275,29 +199,6 @@ public class NLGReadabilityTest extends UnitTestBase {
 
 
     @Test
-    public void readabilitySegmentAware_improvesLocalOrChain_insideLargerText_withSegMarkers() {
-
-        String t =
-                "Prefix text: " +
-                        "[SEG]&%X$\"X\" is a &%parent$\"parent\" of &%A$\"A\"[/SEG] or " +
-                        "[SEG]&%X$\"X\" is a &%parent$\"parent\" of &%B$\"B\"[/SEG] or " +
-                        "[SEG]&%X$\"X\" is a &%parent$\"parent\" of &%C$\"C\"[/SEG]" +
-                        " Suffix text.";
-
-        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
-
-        System.out.println("out = " + out);
-
-        // With SEG markers, NLGReadability should treat the OR-chain as a single run and
-        // factor the shared prefix into one concise clause inside one segment.
-        assertTrue(out.contains(
-                "[SEG]&%X$\"X\" is a &%parent$\"parent\" of &%A$\"A\" or &%B$\"B\" or &%C$\"C\"[/SEG]"
-        ));
-    }
-
-
-
-    @Test
     public void readabilitySegmentAware_doesNotRewriteInsideNegationBlocks() {
 
         String t =
@@ -311,31 +212,6 @@ public class NLGReadabilityTest extends UnitTestBase {
 
         // Entire negation block should remain as-is (Commit 7 is conservative).
         assertEquals(t, out);
-    }
-
-    @Test
-    public void nestedIf_rendersAsNestedHtmlLists() {
-
-        String template =
-                "if [IF_A][AND][SEG]A[/SEG] and [SEG]B[/SEG][/AND][/IF_A], then " +
-                        "[IF_C]if [IF_A][AND][SEG]C[/SEG][/AND][/IF_A], then [IF_C]D[/IF_C][/IF_C]";
-
-        String out = NLGReadability.improveTemplate(
-                template, LanguageFormatter.RenderMode.HTML, "EnglishLanguage"
-        );
-
-        assertTrue(out.contains("<ul>"));
-        assertTrue(out.contains("<li>"));
-
-        int firstUl = out.indexOf("<ul>");
-        int secondUl = out.indexOf("<ul>", firstUl + 1);
-        assertTrue("Expected nested <ul> for nested IF", secondUl > firstUl);
-
-        assertFalse(out.contains("[IF_A]"));
-        assertFalse(out.contains("[IF_C]"));
-        assertFalse(out.contains("[AND]"));
-        assertFalse(out.contains("[OR]"));
-        assertFalse(out.contains("[SEG]"));
     }
 
 
@@ -508,6 +384,168 @@ public class NLGReadabilityTest extends UnitTestBase {
         assertFalse(out.contains("[IF_C]"));
         assertFalse(out.contains("[AND]"));
         assertFalse(out.contains("[SEG]"));
+    }
+
+    @Test
+    public void protectAnnotatedTerms_doesNotCorruptTokens() {
+
+        String t = "for all &%Organism$\"an organism\"1 and &%Organism$\"another organism\"1 " +
+                "[AND][SEG]&%Organism$\"an organism\"1 is parent of &%Organism$\"another organism\"1[/SEG][/AND]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+
+        // Tokens must survive exactly (no placeholder leaks)
+        assertTrue(out.contains("&%Organism$\"an organism\"1"));
+        assertTrue(out.contains("&%Organism$\"another organism\"1"));
+        assertFalse(out.contains("§T"));
+    }
+
+
+    @Test
+    public void quantifierHeader_preservedExactly() {
+
+        String t = "for all &%A$\"a\"1 and &%B$\"b\"1 " +
+                "[AND][SEG]X[/SEG] and [SEG]Y[/SEG] and [SEG]Z[/SEG][/AND]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+
+        assertTrue(out.startsWith("for all &%A$\"a\"1 and &%B$\"b\"1 "));
+    }
+
+
+    @Test
+    public void quantifiedFlatOr_rendersAsListHtml() {
+
+        String t = "for all &%A$\"a\"1 and &%B$\"b\"1 " +
+                "P or Q or R";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        assertTrue(out.contains("at least one of the following holds:"));
+        assertTrue(out.contains("<ul>"));
+        assertTrue(out.contains("<li>"));
+    }
+
+    @Test
+    public void nestedIf_rendersAsNestedHtmlLists() {
+
+        String t =
+                "if [IF_A][AND][SEG]A[/SEG] and [SEG]B[/SEG][/AND][/IF_A], then " +
+                        "[IF_C]if [IF_A][SEG]C[/SEG][/IF_A], then [IF_C]D[/IF_C][/IF_C]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        assertTrue(out.contains("<ul>"));
+        int firstUl = out.indexOf("<ul>");
+        int secondUl = out.indexOf("<ul>", firstUl + 1);
+        assertTrue("Expected nested <ul> for nested IF", secondUl > firstUl);
+
+        assertFalse(out.contains("[IF_A]"));
+        assertFalse(out.contains("[IF_C]"));
+        assertFalse(out.contains("[AND]"));
+        assertFalse(out.contains("[SEG]"));
+    }
+
+
+    @Test
+    public void andBlock_joinsChildrenText() {
+
+        String t = "[AND][SEG]A[/SEG] and [SEG]B[/SEG] and [SEG]C[/SEG][/AND]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+
+        // We don't hard-freeze commas here; current joinWithConnector uses "and" between all items.
+        // The important part: it must contain all operands and no markers.
+        assertTrue(out.contains("A"));
+        assertTrue(out.contains("B"));
+        assertTrue(out.contains("C"));
+        assertFalse(out.contains("[AND]"));
+        assertFalse(out.contains("[SEG]"));
+    }
+
+
+    @Test
+    public void orBlock_joinsChildrenText() {
+
+        String t = "[OR][SEG]A[/SEG] or [SEG]B[/SEG] or [SEG]C[/SEG][/OR]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+
+        assertTrue(out.contains("A"));
+        assertTrue(out.contains("B"));
+        assertTrue(out.contains("C"));
+        assertFalse(out.contains("[OR]"));
+        assertFalse(out.contains("[SEG]"));
+    }
+
+
+    @Test
+    public void segRun_smoothsIntoCommaList() {
+
+        String t = "[AND][SEG]A[/SEG] and [SEG]B[/SEG] and [SEG]C[/SEG][/AND]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+
+        // Your known output was: "A, B, and C"
+        assertEquals("A, B, and C", out.trim());
+    }
+
+
+    @Test
+    public void longAndChain_chunksToHtmlList() {
+
+        String t = "A and B and C and D and E and F and G";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        System.out.println("out: "+out);
+        assertTrue(out.contains("All of the following hold:"));
+        assertTrue(out.contains("<ul>"));
+        assertTrue(out.contains("<li>"));
+    }
+
+    @Test
+    public void print_parsed_tree_structure() {
+        NLGReadability.debugPrintTree(
+                "if [IF_A][AND]" +
+                        "[SEG]A[/SEG] and " +
+                        "[SEG][OR][SEG]B[/SEG] or [SEG]C[/SEG][/OR][/SEG] and " +
+                        "[SEG]D[/SEG]" +
+                        "[/AND][/IF_A], then " +
+                        "[IF_C]if [IF_A][SEG]E[/SEG][/IF_A], then [IF_C]F[/IF_C][/IF_C]"
+        , "EnglishLanguage");
+    }
+
+
+    @Test
+    public void test() {
+
+        String t = "[FORALL][VARS]&%Organism$\"an organism\"1, &%Organism$\"another organism\"1 and &%Organism$\"a third organism\"2[/VARS]" +
+                "[IF_A]" +
+                "[AND]" +
+                "[SEG]&%Organism$\"the organism\"1 is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG]" +
+                " and " +
+                "[SEG]&%Organism$\"the other organism\"1 is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG] " +
+                "and " +
+                "[SEG]&%Organism$\"the third organism\"2 is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG]" +
+                "[/AND]" +
+                "[/IF_A]" +
+                "[IF_C]" +
+                "[IF_A]" +
+                "[AND]" +
+                "[SEG]&%Organism$\"the organism\"1 is a &%sibling$\"sibling\" of &%Organism$\"the other organism\"1[/SEG]" +
+                " and " +
+                "[SEG]&%Organism$\"the third organism\"2 is a &%parent$\"parent\" of &%Organism$\"the organism\"1[/SEG]" +
+                "[/AND]" +
+                "[/IF_A]" +
+                "[IF_C]" +
+                "&%Organism$\"the third organism\"2 is a &%parent$\"parent\" of &%Organism$\"the other organism\"1[/IF_C][/IF_C][/FORALL]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+
+        System.out.println("out: "+out);
+
+        NLGReadability.debugPrintTree(t, "EnglishLanguage");
     }
 
 

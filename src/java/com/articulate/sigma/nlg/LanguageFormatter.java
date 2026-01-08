@@ -79,6 +79,12 @@ public class LanguageFormatter {
     private static final String IF_A_C = "[/IF_A]";
     private static final String IF_C_O = "[IF_C]";
     private static final String IF_C_C = "[/IF_C]";
+    private static final String FORALL_O = "[FORALL]";
+    private static final String FORALL_C = "[/FORALL]";
+    private static final String EXISTS_O = "[EXISTS]";
+    private static final String EXISTS_C = "[/EXISTS]";
+    private static final String VARS_O   = "[VARS]";
+    private static final String VARS_C   = "[/VARS]";
 
     private RenderMode renderMode = RenderMode.HTML;
 
@@ -1122,17 +1128,18 @@ public class LanguageFormatter {
                     StringBuilder sb = new StringBuilder();
 //                    sb.append("<ul><li>");
                     if (isArabic) sb.append("<span dir=\"rtl\">");
-                    sb.append(k.IF).append(Formula.SPACE).append(seg_if_a(tArgs.get(0))).append(k.COMMA);
+//                    sb.append(k.IF).append(Formula.SPACE).append(seg_if_a(tArgs.get(0))).append(k.COMMA);
+                    sb.append(seg_if_a(tArgs.get(0)));
                     if (isArabic) sb.append("</span>");
 //                    sb.append("</li><li>");
                     if (isArabic) sb.append("<span dir=\"rtl\">");
-                    sb.append(k.THEN).append(Formula.SPACE).append(seg_if_c(tArgs.get(1)));
+                    sb.append(seg_if_c(tArgs.get(1)));
                     if (isArabic) sb.append("</span>");
 //                    sb.append("</li></ul>");
                     return sb.toString();
                 }
                 // TEXT
-                return k.IF + Formula.SPACE + seg_if_a(tArgs.get(0)) + k.COMMA + Formula.SPACE + k.THEN + Formula.SPACE + seg_if_c(tArgs.get(1));
+                return seg_if_a(tArgs.get(0)) + seg_if_c(tArgs.get(1));
             }
         }
 
@@ -1209,17 +1216,17 @@ public class LanguageFormatter {
             if (isNegMode) {
                 sb.append(k.NOT).append(Formula.SPACE);
             }
-            sb.append(k.FORALL).append(Formula.SPACE);
+//            sb.append(k.FORALL).append(Formula.SPACE);
 
             String vars = args.get(0);
             if (vars.contains(Formula.SPACE)) {
-                sb.append(translateWord(termMap, NLGUtils.formatList(vars, language)));
+                sb.append(seg_vars(translateWord(termMap, NLGUtils.formatList(vars, language))));
             } else {
-                sb.append(translateWord(termMap, vars));
+                sb.append(seg_vars(translateWord(termMap, vars)));
             }
 
             sb.append(Formula.SPACE).append(tArgs.get(1));
-            return sb.toString();
+            return seg_forall(sb.toString());
         }
 
 
@@ -1252,6 +1259,8 @@ public class LanguageFormatter {
     private String seg_if_c(String s) { return IF_C_O + s + IF_C_C; }
     private String seg_and(String s) { return AND_S + s + AND_E; }
     private String seg_or(String s) { return OR_S + s + OR_E; }
+    private String seg_forall(String s) { return FORALL_O + s + FORALL_C; }
+    private String seg_vars(String s) { return VARS_O + s + VARS_C; }
 
 
 
