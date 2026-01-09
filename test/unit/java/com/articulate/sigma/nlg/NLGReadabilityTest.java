@@ -490,6 +490,34 @@ public class NLGReadabilityTest extends UnitTestBase {
         , "EnglishLanguage");
     }
 
+    @Test
+    public void readabilityForAllHeader_factorsMultipleTypesAndVars_asTypedSymbols() {
+
+        // 3 Organism vars + 1 Human var; body is a simple atom to avoid other rewrites.
+        String t =
+                "[FORALL][VARS]" +
+                        "&%Organism$\"an organism X\"1, " +
+                        "&%Organism$\"another organism Y\"1, " +
+                        "&%Organism$\"a third organism Z\"2, and " +
+                        "&%Human$\"a human W\"1 [/VARS]" +
+                        "A[/FORALL]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+
+        // Expect: factored multi-type header where BOTH the type and each symbol are annotated
+        String expected =
+                "For all " +
+                        "&%Organism$\"Organisms\" " +
+                        "&%Organism$\"X\", &%Organism$\"Y\", and &%Organism$\"Z\" " +
+                        "and " +
+                        "&%Human$\"Human\" " +
+                        "&%Human$\"W\"" +
+                        ": A";
+
+        assertEquals(expected, out);
+    }
+
+
 
     @Test
     public void test() {

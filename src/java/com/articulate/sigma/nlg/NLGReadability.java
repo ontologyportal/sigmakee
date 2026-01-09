@@ -475,9 +475,6 @@ public final class NLGReadability {
         return out.toString();
     }
 
-    // =========================
-    // Utilities
-    // =========================
 
     private static boolean containsAny(String s, String... needles) {
         for (String n : needles) {
@@ -1137,138 +1134,6 @@ public final class NLGReadability {
         return new RunParse(kw, items, i);
     }
 
-    /** Extract exactly one [SEG]...[/SEG] block starting at start. */
-    private static BlockSpan extractSingleSegBlock(String s, int start) {
-        if (s == null || start < 0 || !s.startsWith(SEG_O, start))
-            return null;
-
-        int end = s.indexOf(SEG_C, start + SEG_O.length());
-        if (end < 0)
-            return null;
-
-        int next = end + SEG_C.length();
-        return new BlockSpan(s.substring(start, next), next);
-    }
-
-    /** Look ahead after index i to determine if the next connector is AND or OR. */
-    private static String readConnectorFollowing(String s, int i, String andKw, String orKw) {
-
-        // Skip spaces
-        int j = i;
-        while (j < s.length() && Character.isWhitespace(s.charAt(j))) j++;
-
-        // Prefer AND/OR keywords with whitespace boundaries.
-        if (andKw != null && !andKw.isEmpty()) {
-            if (startsWithWord(s, j, andKw)) return andKw;
-        }
-        if (orKw != null && !orKw.isEmpty()) {
-            if (startsWithWord(s, j, orKw)) return orKw;
-        }
-
-        return null;
-    }
-
-    /** Consume " <kw> " starting at i; return index after kw+whitespace, else -1. */
-    private static int consumeConnector(String s, int i, String kw) {
-        int j = i;
-        while (j < s.length() && Character.isWhitespace(s.charAt(j))) j++;
-
-        if (!startsWithWord(s, j, kw))
-            return -1;
-
-        j += kw.length();
-        if (j >= s.length() || !Character.isWhitespace(s.charAt(j)))
-            return -1;
-
-        while (j < s.length() && Character.isWhitespace(s.charAt(j))) j++;
-        return j;
-    }
-
-    /** True if s starts with word kw at pos and the next char is whitespace or '[' or end. */
-    private static boolean startsWithWord(String s, int pos, String kw) {
-        if (s == null || kw == null) return false;
-        if (pos < 0 || pos + kw.length() > s.length()) return false;
-        if (!s.regionMatches(pos, kw, 0, kw.length())) return false;
-
-        int after = pos + kw.length();
-        if (after == s.length()) return true;
-        char c = s.charAt(after);
-        return Character.isWhitespace(c) || c == '[';
-    }
-
-
-    private static boolean hasSegMarkers(String s) {
-        return s != null && s.contains(SEG_O) && s.contains(SEG_C);
-    }
-
-
-    private static List<String> extractSegItems(String s) {
-        if (s == null) return null;
-
-        // Do not treat SEG blocks as a single list if IF structure exists.
-        if (s.contains(IF_A_O) || s.contains(IF_C_O) || s.contains(AND_O) || s.contains(OR_O))
-            return null;
-
-        if (s.indexOf(SEG_O) < 0) return null;
-
-        List<String> items = new ArrayList<>();
-        Matcher m = Pattern.compile("\\[SEG\\](.*?)\\[/SEG\\]", Pattern.DOTALL).matcher(s);
-        while (m.find()) {
-            String item = m.group(1).trim();
-            if (!item.isEmpty()) items.add(item);
-        }
-        return items.isEmpty() ? null : items;
-    }
-
-
-    // Returns the full block including the markers
-    private static BlockSpan extractMarkedBlock(String s, int start, String open, String close) {
-        if (s == null || start < 0 || !s.startsWith(open, start)) return null;
-
-        int i = start;
-        int depth = 0;
-        while (i < s.length()) {
-            if (s.startsWith(open, i)) { depth++; i += open.length(); continue; }
-            if (s.startsWith(close, i)) {
-                depth--;
-                i += close.length();
-                if (depth == 0) {
-                    // full block from start..i
-                    String full = s.substring(start, i);
-                    return new BlockSpan(full, i);
-                }
-                continue;
-            }
-            i++;
-        }
-        return null;
-    }
-
-    private static String innerOf(String full, String open, String close) {
-        return full.substring(open.length(), full.length() - close.length());
-    }
-
-    private static boolean isIgnorableIfPrefix(String before, String language) {
-        if (before == null) return true;
-        String b = before.trim();
-        if (b.isEmpty()) return true;
-
-        LanguageFormatter.Keywords k = new LanguageFormatter.Keywords(language);
-        String ifKw = k.IF == null ? "if" : k.IF;
-
-        // Allow: "if", "if,", "if:" (and whitespace around)
-        b = b.replace(",", "").replace(":", "").trim();
-        return b.equalsIgnoreCase(ifKw);
-    }
-
-    private static boolean isIgnorableTrailing(String after) {
-        if (after == null) return true;
-        String a = after.trim();
-        if (a.isEmpty()) return true;
-
-        // Allow only punctuation that sometimes leaks (be conservative)
-        return a.equals(",") || a.equals(".") || a.equals(";");
-    }
 
     /**
      * Recursively normalizes the logical AST prior to rendering.
@@ -1369,8 +1234,6 @@ public final class NLGReadability {
         return n;
     }
 
-
-
     private static String renderText(Node n, String language, String andKw, String orKw, Map<String,String> placeholderToOriginal) {
 
         if (n instanceof AtomNode) return ((AtomNode) n).text;
@@ -1433,31 +1296,93 @@ public final class NLGReadability {
         return k.IF + " " + a + k.COMMA + " " + k.THEN + " " + c;
     }
 
-    private static String renderForAllNodeText(ForAllNode in, String language, String andKw, String orKw, Map<String,String> placeholderToOriginal) {
+    private static String renderForAllNodeText(ForAllNode in,
+                                               String language,
+                                               String andKw,
+                                               String orKw,
+                                               Map<String,String> placeholderToOriginal) {
 
-        // Default case
-
-        // Replace Vars with original text (e.g  §T0§ -> &%Organism$"an organism X"1)
-        List <String> originalVars = new ArrayList<>();
+        // Replace VAR placeholders with originals (e.g., §T0§ -> &%Organism$"an organism X"1)
+        List<String> originalVars = new ArrayList<>();
         for (String var : in.vars) {
-            originalVars.add(placeholderToOriginal.get(var));
-            System.out.println(var + " -> " + placeholderToOriginal.get(var));
+            String orig = placeholderToOriginal.get(var);
+            if (orig != null) originalVars.add(orig);
         }
 
-        String vars = joinAsNaturalList(originalVars, andKw);
+        // Render body (unchanged)
         List<String> items = new ArrayList<>();
         for (Node op : in.children) {
             items.add(renderText(op, language, andKw, orKw, placeholderToOriginal));
         }
-
         String body = joinAsNaturalList(items, andKw);
-        return "for all " + vars + " " + body;
 
+        // Prefer factored header (single-type or multi-type)
+        String header = renderFactoredForAllHeaderMultiType(originalVars, language, andKw);
+
+        // Fallback to the original verbose header if factoring is not possible
+        if (header == null) {
+            String vars = joinAsNaturalList(originalVars, andKw);
+            header = "for all " + vars;
+        }
+
+        return header + ": " + body;
     }
 
 
+    private static String renderFactoredForAllHeaderMultiType(List<String> originalVars,
+                                                              String language,
+                                                              String andKw) {
 
-        private static String renderHtml(Node n, String language, String andKw, String orKw, Map<String,String> placeholderToOriginal) {
+        // type -> labels (preserve first-seen order)
+        Map<String, List<String>> typeToLabels = new LinkedHashMap<>();
+
+        for (String v : originalVars) {
+            String t = extractType(v);       // e.g. "Organism"
+            String lbl = extractLabel(v);    // e.g. "X"
+            if (t == null || lbl == null) return null;
+            typeToLabels.computeIfAbsent(t, k -> new ArrayList<>()).add(lbl);
+        }
+
+        if (typeToLabels.isEmpty()) return null;
+
+        List<String> groups = new ArrayList<>();
+
+        for (Map.Entry<String, List<String>> e : typeToLabels.entrySet()) {
+            String type = e.getKey();
+            List<String> labels = e.getValue();
+
+            // Build surface type (pluralize only when >1 vars of that type)
+            String typeSurface = type;
+            if ("EnglishLanguage".equalsIgnoreCase(language) && labels.size() > 1) {
+                typeSurface = pluralizeEnglishType(type);
+            }
+
+            // Wrap the type surface in an annotated token
+            String typeTok = annotatedToken(type, typeSurface);
+
+            // Wrap each label in an annotated token of the same type
+            List<String> labelToks = new ArrayList<>();
+            for (String lbl : labels) {
+                labelToks.add(annotatedToken(type, lbl));
+            }
+
+            String joinedLabels = joinAsNaturalList(labelToks, andKw); // &%T$"X", &%T$"Y", and &%T$"Z"
+            groups.add(typeTok + " " + joinedLabels);
+        }
+
+        String groupsJoined = joinAsNaturalList(groups, andKw);
+
+        // Capitalize the leading "For" as requested
+        return "For all " + groupsJoined;
+    }
+
+    private static String annotatedToken(String type, String surface) {
+        // digits are optional; omit for header tokens
+        return "&%" + type + "$\"" + surface + "\"";
+    }
+
+
+    private static String renderHtml(Node n, String language, String andKw, String orKw, Map<String,String> placeholderToOriginal) {
 
         if (n instanceof AtomNode) return ((AtomNode) n).text;
 
@@ -1508,14 +1433,6 @@ public final class NLGReadability {
             return "there exists " + vars + " " + body;
         }
         return "";
-    }
-
-
-    private static String escapeHtmlMinimal(String s) {
-        if (s == null || s.isEmpty()) return s;
-        return s.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");
     }
 
     private static Node parseNode(String s, String language) {
@@ -1749,6 +1666,186 @@ public final class NLGReadability {
         }
         return sb.toString();
     }
+
+
+
+
+    // =========================
+    // Utilities
+    // =========================
+
+
+    private static String pluralizeEnglishType(String t) {
+        if (t == null || t.isEmpty()) return t;
+        String s = t;
+        String lower = s.toLowerCase();
+        // very conservative
+        if (lower.endsWith("ch") || lower.endsWith("sh") || lower.endsWith("s") || lower.endsWith("x") || lower.endsWith("z"))
+            return s + "es";
+        if (lower.endsWith("y") && s.length() > 1) {
+            char prev = lower.charAt(lower.length() - 2);
+            if ("aeiou".indexOf(prev) == -1)
+                return s.substring(0, s.length() - 1) + "ies";
+        }
+        return s + "s";
+    }
+
+    private static String escapeHtmlMinimal(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+    }
+
+    private static boolean isIgnorableTrailing(String after) {
+        if (after == null) return true;
+        String a = after.trim();
+        if (a.isEmpty()) return true;
+
+        // Allow only punctuation that sometimes leaks (be conservative)
+        return a.equals(",") || a.equals(".") || a.equals(";");
+    }
+
+    private static boolean isIgnorableIfPrefix(String before, String language) {
+        if (before == null) return true;
+        String b = before.trim();
+        if (b.isEmpty()) return true;
+
+        LanguageFormatter.Keywords k = new LanguageFormatter.Keywords(language);
+        String ifKw = k.IF == null ? "if" : k.IF;
+
+        // Allow: "if", "if,", "if:" (and whitespace around)
+        b = b.replace(",", "").replace(":", "").trim();
+        return b.equalsIgnoreCase(ifKw);
+    }
+
+    private static String innerOf(String full, String open, String close) {
+        return full.substring(open.length(), full.length() - close.length());
+    }
+
+    private static boolean hasSegMarkers(String s) {
+        return s != null && s.contains(SEG_O) && s.contains(SEG_C);
+    }
+
+    private static List<String> extractSegItems(String s) {
+        if (s == null) return null;
+
+        // Do not treat SEG blocks as a single list if IF structure exists.
+        if (s.contains(IF_A_O) || s.contains(IF_C_O) || s.contains(AND_O) || s.contains(OR_O))
+            return null;
+
+        if (s.indexOf(SEG_O) < 0) return null;
+
+        List<String> items = new ArrayList<>();
+        Matcher m = Pattern.compile("\\[SEG\\](.*?)\\[/SEG\\]", Pattern.DOTALL).matcher(s);
+        while (m.find()) {
+            String item = m.group(1).trim();
+            if (!item.isEmpty()) items.add(item);
+        }
+        return items.isEmpty() ? null : items;
+    }
+
+    // Returns the full block including the markers
+    private static BlockSpan extractMarkedBlock(String s, int start, String open, String close) {
+        if (s == null || start < 0 || !s.startsWith(open, start)) return null;
+
+        int i = start;
+        int depth = 0;
+        while (i < s.length()) {
+            if (s.startsWith(open, i)) { depth++; i += open.length(); continue; }
+            if (s.startsWith(close, i)) {
+                depth--;
+                i += close.length();
+                if (depth == 0) {
+                    // full block from start..i
+                    String full = s.substring(start, i);
+                    return new BlockSpan(full, i);
+                }
+                continue;
+            }
+            i++;
+        }
+        return null;
+    }
+
+    /** True if s starts with word kw at pos and the next char is whitespace or '[' or end. */
+    private static boolean startsWithWord(String s, int pos, String kw) {
+        if (s == null || kw == null) return false;
+        if (pos < 0 || pos + kw.length() > s.length()) return false;
+        if (!s.regionMatches(pos, kw, 0, kw.length())) return false;
+
+        int after = pos + kw.length();
+        if (after == s.length()) return true;
+        char c = s.charAt(after);
+        return Character.isWhitespace(c) || c == '[';
+    }
+
+    /** Consume " <kw> " starting at i; return index after kw+whitespace, else -1. */
+    private static int consumeConnector(String s, int i, String kw) {
+        int j = i;
+        while (j < s.length() && Character.isWhitespace(s.charAt(j))) j++;
+
+        if (!startsWithWord(s, j, kw))
+            return -1;
+
+        j += kw.length();
+        if (j >= s.length() || !Character.isWhitespace(s.charAt(j)))
+            return -1;
+
+        while (j < s.length() && Character.isWhitespace(s.charAt(j))) j++;
+        return j;
+    }
+
+    /** Look ahead after index i to determine if the next connector is AND or OR. */
+    private static String readConnectorFollowing(String s, int i, String andKw, String orKw) {
+
+        // Skip spaces
+        int j = i;
+        while (j < s.length() && Character.isWhitespace(s.charAt(j))) j++;
+
+        // Prefer AND/OR keywords with whitespace boundaries.
+        if (andKw != null && !andKw.isEmpty()) {
+            if (startsWithWord(s, j, andKw)) return andKw;
+        }
+        if (orKw != null && !orKw.isEmpty()) {
+            if (startsWithWord(s, j, orKw)) return orKw;
+        }
+
+        return null;
+    }
+
+    /** Extract exactly one [SEG]...[/SEG] block starting at start. */
+    private static BlockSpan extractSingleSegBlock(String s, int start) {
+        if (s == null || start < 0 || !s.startsWith(SEG_O, start))
+            return null;
+
+        int end = s.indexOf(SEG_C, start + SEG_O.length());
+        if (end < 0)
+            return null;
+
+        int next = end + SEG_C.length();
+        return new BlockSpan(s.substring(start, next), next);
+    }
+
+    private static String extractType(String annotated) {
+        if (annotated == null) return null;
+        Matcher m = ANNOT_TERM.matcher(annotated);
+        return m.matches() ? m.group(1) : null;
+    }
+
+    private static String extractLabel(String annotated) {
+        if (annotated == null) return null;
+        Matcher m = ANNOT_TERM.matcher(annotated);
+        if (!m.matches()) return null;
+        String phrase = m.group(2);
+        Matcher mm = TRAILING_LABEL.matcher(phrase);
+        return mm.matches() ? mm.group(1) : null;
+    }
+
+
+    // =========================
+    // Debugging Utilities
+    // =========================
 
     /**
      * DEBUG utility.
