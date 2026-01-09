@@ -590,7 +590,74 @@ public class NLGReadabilityTest extends UnitTestBase {
         assertTrue(out.contains("&%Organism$\"W\" is an &%instance$\"instance\""));
     }
 
+    @Test
+    public void andNodeText_shortList_rendersInlineNaturalList() {
 
+        String t =
+                "[AND]" +
+                        "[SEG]A[/SEG] and " +
+                        "[SEG]B[/SEG] and " +
+                        "[SEG]C[/SEG]" +
+                        "[/AND]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+
+        assertEquals("A, B, and C", out);
+        assertFalse(out.contains("All of the following hold:"));
+    }
+
+    @Test
+    public void andNodeText_longList_rendersNumberedChunk() {
+
+        String t =
+                "[AND]" +
+                        "[SEG]A[/SEG] and [SEG]B[/SEG] and [SEG]C[/SEG] and [SEG]D[/SEG] and [SEG]E[/SEG] and [SEG]F[/SEG]" +
+                        "[/AND]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+
+        assertTrue(out.startsWith("All of the following hold:"));
+        assertTrue(out.contains("(1) A"));
+        assertTrue(out.contains("(6) F"));
+        assertFalse(out.contains("<ul>"));
+    }
+
+    @Test
+    public void orNodeText_shortList_rendersInlineNaturalList() {
+
+        String t =
+                "[OR]" +
+                        "[SEG]A[/SEG] or " +
+                        "[SEG]B[/SEG] or " +
+                        "[SEG]C[/SEG]" +
+                        "[/OR]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+
+        assertEquals("A, B, or C", out);
+        assertFalse(out.contains("At least one of the following holds:"));
+    }
+
+    @Test
+    public void orNodeText_longList_rendersNumberedChunk() {
+
+        String t =
+                "[OR]" +
+                        "[SEG]A[/SEG] or [SEG]B[/SEG] or [SEG]C[/SEG] or [SEG]D[/SEG] or [SEG]E[/SEG] or [SEG]F[/SEG]" +
+                        "[/OR]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+
+        assertTrue(out.startsWith("At least one of the following holds:"));
+        assertTrue(out.contains("(1) A"));
+        assertTrue(out.contains("(6) F"));
+        assertFalse(out.contains("<ul>"));
+    }
+
+
+
+
+    // DEBUGGING with a real example
     @Test
     public void test() {
 

@@ -489,15 +489,6 @@ public final class NLGReadability {
     }
 
 
-    private static boolean containsAny(String s, String... needles) {
-        for (String n : needles) {
-            if (n != null && !n.isEmpty() && s.indexOf(n) >= 0)
-                return true;
-        }
-        return false;
-    }
-
-
     /**
      * If s begins with a quantifier header ("for all"/"there exists"), split it into:
      * - prefix: the quantifier + declared variables + trailing space
@@ -1176,15 +1167,15 @@ public final class NLGReadability {
                                     String language,Map<String,String> placeholderToOriginal,
                                     Map<String,String> symToTypeCtx
                                     ) {
+
         if (n instanceof AtomNode) {
             String t = ((AtomNode) n).text;
 
-            // Important: by this stage AND/OR are structured, so Atom should be "small".
-            // Keep your conservative cleanup:
-            t = hasSegMarkers(t) ? rewriteUsingSegMarkers(t, andKw, orKw, mode, language)
-                    : rewriteBySegments(t, andKw, orKw, mode, language);
+            // Normalization only: remove/normalize SEG markers, do not chunk/smooth here.
+            t = hasSegMarkers(t)
+                    ? stripSegMarkersConservatively(t, andKw, orKw)
+                    : stripKnownMarkers(t);
 
-            t = applyReadabilityToSafeSegment(t, andKw, orKw, mode, language);
             return new AtomNode(t.trim());
         }
 
@@ -1282,6 +1273,53 @@ public final class NLGReadability {
     }
 
     /**
+     * Normalization-only: remove [SEG]...[/SEG] markers while preserving the inner text.
+     *
+     * This method intentionally does NOT:
+     * - smooth connector chains
+     * - chunk lists
+     * - factor shared prefixes
+     *
+     * It is conservative: if any [SEG] lacks a matching closing marker, it returns the
+     * original input unchanged to avoid corrupting the template.
+     */
+    private static String stripSegMarkersConservatively(String s, String andKw, String orKw) {
+
+        if (s == null || s.isEmpty() || !hasSegMarkers(s))
+            return s;
+
+        StringBuilder out = new StringBuilder(s.length());
+        int i = 0;
+
+        while (i < s.length()) {
+
+            int segStart = s.indexOf(SEG_O, i);
+            if (segStart < 0) {
+                // no more segments
+                out.append(s.substring(i));
+                break;
+            }
+
+            // copy text before [SEG]
+            out.append(s, i, segStart);
+
+            int innerStart = segStart + SEG_O.length();
+            int segEnd = s.indexOf(SEG_C, innerStart);
+            if (segEnd < 0) {
+                // unmatched [SEG] -> fail closed (do nothing)
+                return s;
+            }
+
+            // append the segment content without markers
+            out.append(s, innerStart, segEnd);
+
+            i = segEnd + SEG_C.length();
+        }
+
+        return out.toString();
+    }
+
+    /**
      * Returns true iff this AtomNode is a redundant type constraint of the form:
      *   X is an instance of Organism
      * and X is already typed as Organism in the current quantifier context.
@@ -1337,7 +1375,14 @@ public final class NLGReadability {
 
     private static String renderText(Node n, String language, String andKw, String orKw, Map<String,String> placeholderToOriginal) {
 
-        if (n instanceof AtomNode) return ((AtomNode) n).text;
+        if (n instanceof AtomNode){
+            String t = ((AtomNode)n).text;
+            if (t == null) return "";
+            t = t.trim();
+            if (t.isEmpty()) return "";
+            t = applyReadabilityToSafeSegment(t, andKw, orKw, LanguageFormatter.RenderMode.TEXT, language);
+            return t;
+        }
 
         if (n instanceof IfNode) {
             IfNode in = (IfNode) n;
@@ -1346,16 +1391,12 @@ public final class NLGReadability {
 
         if (n instanceof AndNode) {
             AndNode an = (AndNode) n;
-            List<String> items = new ArrayList<>();
-            for (Node op : an.children) items.add(renderText(op, language, andKw, orKw, placeholderToOriginal));
-            return joinAsNaturalList(items, andKw);
+            return renderAndNodeText(an, language, andKw, orKw, placeholderToOriginal);
         }
 
         if (n instanceof OrNode) {
             OrNode on = (OrNode) n;
-            List<String> items = new ArrayList<>();
-            for (Node op : on.children) items.add(renderText(op, language, andKw, orKw, placeholderToOriginal));
-            return joinAsNaturalList(items, orKw);
+            return renderOrNodeText(on, language, andKw, orKw, placeholderToOriginal);
         }
 
         if (n instanceof ForAllNode) {
@@ -1375,6 +1416,78 @@ public final class NLGReadability {
         }
 
         return "";
+    }
+
+    private static String renderAndNodeText(AndNode an,
+                                            String language,
+                                            String andKw,
+                                            String orKw,
+                                            Map<String, String> placeholderToOriginal) {
+
+        // Render children
+        List<String> items = new ArrayList<>();
+        for (Node op : an.children) {
+            String s = renderText(op, language, andKw, orKw, placeholderToOriginal);
+            if (s != null) {
+                s = s.trim();
+                if (!s.isEmpty()) items.add(s);
+            }
+        }
+
+        if (items.isEmpty()) return "";
+        if (items.size() == 1) return items.get(0);
+
+        // Inline for small lists
+        if (items.size() < 6) {
+            return joinAsNaturalList(items, andKw);
+        }
+
+        // Structured for long lists
+        final String leadIn = "All of the following hold:";
+        StringBuilder out = new StringBuilder(leadIn.length() + items.size() * 32);
+
+        out.append(leadIn).append(" ");
+        for (int i = 0; i < items.size(); i++) {
+            out.append("(").append(i + 1).append(") ").append(items.get(i));
+            if (i < items.size() - 1) out.append(" ");
+        }
+        return out.toString();
+    }
+
+    private static String renderOrNodeText(OrNode on,
+                                           String language,
+                                           String andKw,
+                                           String orKw,
+                                           Map<String, String> placeholderToOriginal) {
+
+        // Render children
+        List<String> items = new ArrayList<>();
+        for (Node op : on.children) {
+            String s = renderText(op, language, andKw, orKw, placeholderToOriginal);
+            if (s != null) {
+                s = s.trim();
+                if (!s.isEmpty()) items.add(s);
+            }
+        }
+
+        if (items.isEmpty()) return "";
+        if (items.size() == 1) return items.get(0);
+
+        // Inline for small lists
+        if (items.size() < 6) {
+            return joinAsNaturalList(items, orKw);
+        }
+
+        // Structured for long lists
+        final String leadIn = "At least one of the following holds:";
+        StringBuilder out = new StringBuilder(leadIn.length() + items.size() * 32);
+
+        out.append(leadIn).append(" ");
+        for (int i = 0; i < items.size(); i++) {
+            out.append("(").append(i + 1).append(") ").append(items.get(i));
+            if (i < items.size() - 1) out.append(" ");
+        }
+        return out.toString();
     }
 
     private static String renderIfNodeText(IfNode in, String language, String andKw, String orKw, Map<String,String> placeholderToOriginal) {
@@ -1942,6 +2055,14 @@ public final class NLGReadability {
         String phrase = m.group(2);
         Matcher mm = TRAILING_LABEL.matcher(phrase);
         return mm.matches() ? mm.group(1) : null;
+    }
+
+    private static boolean containsAny(String s, String... needles) {
+        for (String n : needles) {
+            if (n != null && !n.isEmpty() && s.indexOf(n) >= 0)
+                return true;
+        }
+        return false;
     }
 
 
