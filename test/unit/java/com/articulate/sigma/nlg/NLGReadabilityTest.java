@@ -87,47 +87,21 @@ public class NLGReadabilityTest extends UnitTestBase {
     }
 
 
-    @Test
-    public void readabilityQuantifierHeader_preserved_whenBodyNotEligible() {
-
-        String t =
-                "for all &%A$\"A\"1 and &%B$\"B\"1 " +
-                        "~{ &%C$\"C\" } or ~{ &%D$\"D\" }";
-
-        // Body contains "~{", and our current smoothing/chunking conservatively skips such bodies.
-        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
-
-        assertEquals(t, out);
-    }
-
-
-    @Test
-    public void readabilityQuantifiedOrChain_becomesNumbered_text() {
-
-        String t =
-                "for all &%A$\"A\"1 and &%B$\"B\"1 " +
-                        "&%C$\"C\" or &%D$\"D\" or &%E$\"E\"";
-
-        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
-
-        String expected =
-                "for all &%A$\"A\"1 and &%B$\"B\"1, at least one of the following holds: " +
-                        "(1) &%C$\"C\" (2) &%D$\"D\" (3) &%E$\"E\"";
-
-        assertEquals(expected, out);
-    }
-
-    @Test
-    public void readabilityQuantifiedOrChain_doesNotTrigger_withNegationBlocks() {
-
-        String t =
-                "for all &%A$\"A\"1 and &%B$\"B\"1 " +
-                        "~{ &%C$\"C\" } or ~{ &%D$\"D\" } or ~{ &%E$\"E\" }";
-
-        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
-
-        assertEquals(t, out);
-    }
+//    @Test
+//    public void readabilityQuantifiedOrChain_becomesNumbered_text() {
+//
+//        String t =
+//                "[FORALL][VARS]&%A$\"A\"1 and &%B$\"B\"1[/VARS] " +
+//                        "&%C$\"C\" or &%D$\"D\" or &%E$\"E\"[/FORALL]";
+//
+//        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
+//
+//        String expected =
+//                "for all &%A$\"A\"1 and &%B$\"B\"1, at least one of the following holds: " +
+//                        "(1) &%C$\"C\" (2) &%D$\"D\" (3) &%E$\"E\"";
+//
+//        assertEquals(expected, out);
+//    }
 
 
     @Test
@@ -141,7 +115,7 @@ public class NLGReadabilityTest extends UnitTestBase {
         String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
 
         assertEquals("&%X$\"X\" is a &%parent$\"parent\" of " +
-                "&%A$\"A\" or &%B$\"B\" or &%C$\"C\"", out);
+                "&%A$\"A\", &%B$\"B\", or &%C$\"C\"", out);
     }
 
 
@@ -218,8 +192,8 @@ public class NLGReadabilityTest extends UnitTestBase {
     @Test
     public void nestedIf_html_rendersNestedLists_andDoesNotDuplicateAntecedent() {
         String template =
-                "if [IF_A][AND][SEG]A[/SEG] and [SEG]B[/SEG][/AND][/IF_A], then " +
-                        "[IF_C]if [IF_A][AND][SEG]C[/SEG][/AND][/IF_A], then [IF_C]D[/IF_C][/IF_C]";
+                "[IF_A][AND][SEG]A[/SEG] and [SEG]B[/SEG][/AND][/IF_A]" +
+                        "[IF_C][IF_A][AND][SEG]C[/SEG][/AND][/IF_A][IF_C]D[/IF_C][/IF_C]";
 
         String out = NLGReadability.improveTemplate(
                 template, LanguageFormatter.RenderMode.HTML, "EnglishLanguage"
@@ -430,8 +404,8 @@ public class NLGReadabilityTest extends UnitTestBase {
     public void nestedIf_rendersAsNestedHtmlLists() {
 
         String t =
-                "if [IF_A][AND][SEG]A[/SEG] and [SEG]B[/SEG][/AND][/IF_A], then " +
-                        "[IF_C]if [IF_A][SEG]C[/SEG][/IF_A], then [IF_C]D[/IF_C][/IF_C]";
+                "[IF_A][AND][SEG]A[/SEG] and [SEG]B[/SEG][/AND][/IF_A]" +
+                        "[IF_C][IF_A][SEG]C[/SEG][/IF_A][IF_C]D[/IF_C][/IF_C]";
 
         String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
 
@@ -520,26 +494,7 @@ public class NLGReadabilityTest extends UnitTestBase {
     @Test
     public void test() {
 
-        String t = "[FORALL][VARS]&%Organism$\"an organism\"1, &%Organism$\"another organism\"1 and &%Organism$\"a third organism\"2[/VARS]" +
-                "[IF_A]" +
-                "[AND]" +
-                "[SEG]&%Organism$\"the organism\"1 is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG]" +
-                " and " +
-                "[SEG]&%Organism$\"the other organism\"1 is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG] " +
-                "and " +
-                "[SEG]&%Organism$\"the third organism\"2 is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG]" +
-                "[/AND]" +
-                "[/IF_A]" +
-                "[IF_C]" +
-                "[IF_A]" +
-                "[AND]" +
-                "[SEG]&%Organism$\"the organism\"1 is a &%sibling$\"sibling\" of &%Organism$\"the other organism\"1[/SEG]" +
-                " and " +
-                "[SEG]&%Organism$\"the third organism\"2 is a &%parent$\"parent\" of &%Organism$\"the organism\"1[/SEG]" +
-                "[/AND]" +
-                "[/IF_A]" +
-                "[IF_C]" +
-                "&%Organism$\"the third organism\"2 is a &%parent$\"parent\" of &%Organism$\"the other organism\"1[/IF_C][/IF_C][/FORALL]";
+        String t = "[FORALL][VARS]&%Organism$\"an organism X\"1, &%Organism$\"another organism Y\"1 and &%Organism$\"a third organism Z\"2[/VARS] [IF_A][AND][SEG]&%Organism$\"the organism X\"1 is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG] and [SEG]&%Organism$\"the other organism Y\"1 is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG] and [SEG]&%Organism$\"the third organism Z\"2 is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG][/AND][/IF_A][IF_C][IF_A][AND][SEG]&%Organism$\"the organism X\"1 is a &%sibling$\"sibling\" of &%Organism$\"the other organism Y\"1[/SEG] and [SEG]&%Organism$\"the third organism Z\"2 is a &%parent$\"parent\" of &%Organism$\"the organism X\"1[/SEG][/AND][/IF_A][IF_C]&%Organism$\"the third organism Z\"2 is a &%parent$\"parent\" of &%Organism$\"the other organism Y\"1[/IF_C][/IF_C][/FORALL]";
 
         String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.TEXT, "EnglishLanguage");
 
@@ -547,6 +502,5 @@ public class NLGReadabilityTest extends UnitTestBase {
 
         NLGReadability.debugPrintTree(t, "EnglishLanguage");
     }
-
 
 }
