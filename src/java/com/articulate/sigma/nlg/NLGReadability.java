@@ -46,6 +46,11 @@ public final class NLGReadability {
     private static final Pattern TRAILING_LABEL =
             Pattern.compile(".*\\b([A-Z](?:\\d+)?)\\s*$");
 
+    // Matches: §T3§ is an §T4§ of §T5§  (whitespace-flexible)
+    private static final Pattern PH_INSTANCE_OF =
+            Pattern.compile("^\\s*(§T\\d+§)\\s+is\\s+an\\s+(§T\\d+§)\\s+of\\s+(§T\\d+§)\\s*$");
+
+
     private static final class Protection {
         final String protectedText;
         final Map<String,String> placeholderToOriginal;
@@ -174,7 +179,6 @@ public final class NLGReadability {
                 .replace(VARS_O, "").replace(VARS_C, "");
     }
 
-
     public static String improveTemplate(String template, LanguageFormatter.RenderMode mode, String language) {
 
         if (template == null || template.isEmpty())
@@ -210,8 +214,17 @@ public final class NLGReadability {
         // NEW: marker-driven parse of IF/AND/OR/SEG into a Node tree.
         Node tree = parseTree(body, language);
 
+        // DEBUG
+        System.out.println("== ORIGINAL TREE\n");
+        printTree(tree);
+
+
         // Apply readability rewrites recursively (SEG factoring happens inside Atom nodes, not globally).
-        tree = rewriteNode(tree, andKw, orKw, mode, language);
+        LinkedHashMap symToTypeCtx = new LinkedHashMap<>();
+        tree = rewriteNode(tree, andKw, orKw, mode, language, prot.placeholderToOriginal,symToTypeCtx);
+
+        System.out.println("== AFTER REWRITE TREE\n");
+        printTree(tree);
 
         // Render from the tree.
         String rendered = (mode == LanguageFormatter.RenderMode.HTML)
@@ -1160,7 +1173,8 @@ public final class NLGReadability {
     private static Node rewriteNode(Node n,
                                     String andKw, String orKw,
                                     LanguageFormatter.RenderMode mode,
-                                    String language
+                                    String language,Map<String,String> placeholderToOriginal,
+                                    Map<String,String> symToTypeCtx
                                     ) {
         if (n instanceof AtomNode) {
             String t = ((AtomNode) n).text;
@@ -1178,8 +1192,13 @@ public final class NLGReadability {
 
             IfNode in = (IfNode) n;
 
-            Node a2 = rewriteNode(in.antecedent, andKw, orKw, mode, language);
-            Node c2 = rewriteNode(in.consequent,  andKw, orKw, mode, language);
+            Node a2 = rewriteNode(in.antecedent, andKw, orKw, mode, language, placeholderToOriginal, symToTypeCtx);
+            Node c2 = rewriteNode(in.consequent,  andKw, orKw, mode, language, placeholderToOriginal, symToTypeCtx);
+
+            // If antecedent is empty then return consequent
+            if (a2 instanceof AndNode && ((AndNode) a2).children.isEmpty()) {
+                return c2; // True => C
+            }
 
             IfNode out =  new IfNode(a2,c2);
             setParent(a2, out);
@@ -1192,11 +1211,23 @@ public final class NLGReadability {
             AndNode an = (AndNode) n;
             List<Node> ops = new ArrayList<>();
             for (Node c : an.children) {
-                Node kid = rewriteNode(c, andKw, orKw, mode, language);
+                Node kid = rewriteNode(c, andKw, orKw, mode, language, placeholderToOriginal, symToTypeCtx);
                 ops.add(kid);
             }
-            AndNode out = new AndNode(ops);
-            for (Node kid: ops){
+
+            List<Node> filtered = new ArrayList<>();
+            for (Node kid : ops) {
+                if (kid instanceof AtomNode &&
+                        isRedundantInstanceOf((AtomNode) kid, placeholderToOriginal, symToTypeCtx)) {
+                    continue; // DROP IT HERE
+                }
+                filtered.add(kid);
+            }
+
+            if (filtered.size() == 1) return filtered.get(0);
+            AndNode out = new AndNode(filtered);
+
+            for (Node kid: filtered){
                 setParent(kid,out);
             }
             return out;
@@ -1205,7 +1236,7 @@ public final class NLGReadability {
         if (n instanceof OrNode) {
             OrNode on = (OrNode) n;
             List<Node> ops = new ArrayList<>();
-            for (Node c : on.children) ops.add(rewriteNode(c, andKw, orKw, mode, language));
+            for (Node c : on.children) ops.add(rewriteNode(c, andKw, orKw, mode, language, placeholderToOriginal, symToTypeCtx));
             OrNode out = new OrNode(ops);
             for (Node kid: ops){
                 setParent(kid,out);
@@ -1215,23 +1246,93 @@ public final class NLGReadability {
 
         if (n instanceof ForAllNode) {
             ForAllNode q = (ForAllNode) n;
+            Map<String,String> ctx2 = new LinkedHashMap<>(symToTypeCtx);
+            for (String vph : q.vars) {
+                String orig = placeholderToOriginal.get(vph);
+                // extract type + symbol from orig (helpers)
+                String type = extractType(orig);   // "Organism"
+                String sym  = extractLabel(orig);      // "X"
+                if (type != null && sym != null) ctx2.put(sym, type);
+            }
             List<Node> kids = new ArrayList<>();
-            for (Node c : q.children) kids.add(rewriteNode(c, andKw, orKw, mode, language));
+            for (Node c : q.children) kids.add(rewriteNode(c, andKw, orKw, mode, language,placeholderToOriginal,ctx2));
             ForAllNode out = new ForAllNode(kids, q.vars);
             for (Node kid : kids) setParent(kid, out);
             return out;
-        }
+        }                                                                 
 
         if (n instanceof ExistsNode) {
             ExistsNode q = (ExistsNode) n;
+            Map<String,String> ctx2 = new LinkedHashMap<>(symToTypeCtx);
+            for (String vph : q.vars) {
+                String orig = placeholderToOriginal.get(vph);
+                // extract type + symbol from orig (helpers)
+                String type = extractType(orig);   // "Organism"
+                String sym  = extractLabel(orig);      // "X"
+                if (type != null && sym != null) ctx2.put(sym, type);
+            }
             List<Node> kids = new ArrayList<>();
-            for (Node c : q.children) kids.add(rewriteNode(c, andKw, orKw, mode, language));
+            for (Node c : q.children) kids.add(rewriteNode(c, andKw, orKw, mode, language, placeholderToOriginal, ctx2));
             ExistsNode out = new ExistsNode(kids, q.vars);
             for (Node kid : kids) setParent(kid, out);
             return out;
         }
 
         return n;
+    }
+
+    /**
+     * Returns true iff this AtomNode is a redundant type constraint of the form:
+     *   X is an instance of Organism
+     * and X is already typed as Organism in the current quantifier context.
+     *
+     * AtomNode.text is placeholderized at rewrite time (e.g., "§T3§ is an §T4§ of §T5§").
+     */
+    private static boolean isRedundantInstanceOf(AtomNode atom,
+                                                 Map<String,String> placeholderToOriginal,
+                                                 Map<String,String> symToTypeCtx) {
+
+        if (atom == null || placeholderToOriginal == null || symToTypeCtx == null) return false;
+
+        String t = atom.text;
+        if (t == null) return false;
+
+        Matcher m = PH_INSTANCE_OF.matcher(t);
+        if (!m.matches()) return false;
+
+        String subjPh = m.group(1);
+        String predPh = m.group(2);
+        String objPh  = m.group(3);
+
+        String subjOrig = placeholderToOriginal.get(subjPh);
+        String predOrig = placeholderToOriginal.get(predPh);
+        String objOrig  = placeholderToOriginal.get(objPh);
+
+        if (subjOrig == null || predOrig == null || objOrig == null) return false;
+
+        // Predicate must be instance
+        if (!isInstancePredicate(predOrig)) return false;
+
+        // Extract symbol X from subject
+        String sym = extractLabel(subjOrig);
+        if (sym == null) return false;
+
+        // Extract asserted type from object
+        String assertedType = extractType(objOrig);
+        if (assertedType == null) return false;
+
+        // Redundant iff quantifier already typed X as assertedType
+        String declaredType = symToTypeCtx.get(sym);
+        return declaredType != null && declaredType.equals(assertedType);
+    }
+
+
+    private static boolean isInstancePredicate(String predOrig) {
+        // predOrig like: &%instance$"instance"
+        Matcher m = ANNOT_TERM.matcher(predOrig);
+        if (!m.matches()) return false;
+        String type = m.group(1); // "instance"
+        return "instance".equals(type);
     }
 
     private static String renderText(Node n, String language, String andKw, String orKw, Map<String,String> placeholderToOriginal) {
@@ -1667,13 +1768,9 @@ public final class NLGReadability {
         return sb.toString();
     }
 
-
-
-
     // =========================
     // Utilities
     // =========================
-
 
     private static String pluralizeEnglishType(String t) {
         if (t == null || t.isEmpty()) return t;
@@ -1828,12 +1925,17 @@ public final class NLGReadability {
     }
 
     private static String extractType(String annotated) {
+        // &%Organism$"organism"  -> "Organism"
         if (annotated == null) return null;
         Matcher m = ANNOT_TERM.matcher(annotated);
         return m.matches() ? m.group(1) : null;
     }
 
     private static String extractLabel(String annotated) {
+        // Accept:
+        // &%Organism$"X"
+        // &%Organism$"the organism X"1
+        // &%Human$"a human W"1
         if (annotated == null) return null;
         Matcher m = ANNOT_TERM.matcher(annotated);
         if (!m.matches()) return null;
@@ -1942,6 +2044,79 @@ public final class NLGReadability {
 
             default:
                 System.out.println(indent + "UNKNOWN NODE: " + n.getClass());
+        }
+    }
+
+    public static void printTree(Node root) {
+        printTree(root, 0);
+    }
+
+    private static void printTree(Node n, int indent) {
+        if (n == null) {
+            indent(indent);
+            System.out.println("null");
+            return;
+        }
+
+        indent(indent);
+
+        if (n instanceof AtomNode) {
+            System.out.println("Atom: \"" + ((AtomNode) n).text + "\"");
+            return;
+        }
+
+        if (n instanceof AndNode) {
+            System.out.println("And");
+            for (Node c : ((AndNode) n).children) {
+                printTree(c, indent + 1);
+            }
+            return;
+        }
+
+        if (n instanceof OrNode) {
+            System.out.println("Or");
+            for (Node c : ((OrNode) n).children) {
+                printTree(c, indent + 1);
+            }
+            return;
+        }
+
+        if (n instanceof IfNode) {
+            System.out.println("If");
+            indent(indent + 1);
+            System.out.println("Antecedent:");
+            printTree(((IfNode) n).antecedent, indent + 2);
+            indent(indent + 1);
+            System.out.println("Consequent:");
+            printTree(((IfNode) n).consequent, indent + 2);
+            return;
+        }
+
+        if (n instanceof ForAllNode) {
+            ForAllNode q = (ForAllNode) n;
+            System.out.println("ForAll vars=" + q.vars);
+            for (Node c : q.children) {
+                printTree(c, indent + 1);
+            }
+            return;
+        }
+
+        if (n instanceof ExistsNode) {
+            ExistsNode q = (ExistsNode) n;
+            System.out.println("Exists vars=" + q.vars);
+            for (Node c : q.children) {
+                printTree(c, indent + 1);
+            }
+            return;
+        }
+
+        // Fallback
+        System.out.println(n.getClass().getSimpleName());
+    }
+
+    private static void indent(int n) {
+        for (int i = 0; i < n; i++) {
+            System.out.print("  ");
         }
     }
 

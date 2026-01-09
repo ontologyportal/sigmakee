@@ -518,6 +518,78 @@ public class NLGReadabilityTest extends UnitTestBase {
     }
 
 
+    @Test
+    public void readabilityDropRedundantInstanceOf_collapsesOuterIf_whenOnlyTypeConstraints() {
+
+        String t =
+                " [FORALL][VARS]&%Organism$\"an organism X\"1, &%Organism$\"another organism Y\"1, and &%Organism$\"a third organism Z\"2[/VARS] " +
+                        "[IF_A][AND][SEG]&%Organism$\"X\" is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG] and " +
+                        "[SEG]&%Organism$\"Y\" is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG] and " +
+                        "[SEG]&%Organism$\"Z\" is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG][/AND][/IF_A] " +
+                        "[IF_C]&%Organism$\"Z\" is a &%parent$\"parent\" of &%Organism$\"Y\"[/IF_C][/FORALL]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        System.out.println("out: "+out);
+        // Type constraints should be removed
+        assertFalse(out.contains("&%instance$\"instance\""));
+
+        // No "Assuming (...)" wrapper should remain if the outer antecedent vanished
+        assertFalse(out.contains("Assuming"));
+
+        // Consequent should remain
+        assertTrue(out.contains("&%parent$\"parent\""));
+        assertTrue(out.contains("&%Organism$\"Z\""));
+        assertTrue(out.contains("&%Organism$\"Y\""));
+    }
+
+    @Test
+    public void dropRedundantInstanceOf_keepsNonTypeConjuncts_inAntecedent() {
+
+        String t =
+                " [FORALL][VARS]&%Organism$\"an organism X\"1 and &%Organism$\"another organism Y\"1[/VARS] " +
+                        "[IF_A][AND][SEG]&%Organism$\"X\" is an &%instance$\"instance\" of &%Organism$\"organism\"[/SEG] and " +
+                        "[SEG]&%Organism$\"X\" is a &%sibling$\"sibling\" of &%Organism$\"Y\"[/SEG][/AND][/IF_A] " +
+                        "[IF_C]&%Organism$\"Y\" is a &%parent$\"parent\" of &%Organism$\"X\"[/IF_C][/FORALL]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        // Type constraint dropped
+        assertFalse(out.contains("&%Organism$\"X\" is an &%instance$\"instance\""));
+
+        // Non-type fact kept
+        assertTrue(out.contains("&%sibling$\"sibling\""));
+    }
+
+    @Test
+    public void dropRedundantInstanceOf_doesNotDrop_whenTypeMismatch() {
+
+        String t =
+                " [FORALL][VARS]&%Organism$\"an organism X\"1[/VARS] " +
+                        "[IF_A]&%Organism$\"X\" is an &%instance$\"instance\" of &%Human$\"human\"[/IF_A] " +
+                        "[IF_C]&%Human$\"W\" is a &%parent$\"parent\" of &%HumanT0$\"T0\"[/IF_C][/FORALL]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        // Must keep mismatching type assertion
+        assertTrue(out.contains("&%instance$\"instance\""));
+        assertTrue(out.contains("&%Human$\"human\""));
+    }
+
+    @Test
+    public void dropRedundantInstanceOf_doesNotDrop_whenSymbolNotQuantified() {
+
+        String t =
+                " [FORALL][VARS]&%Organism$\"an organism X\"1[/VARS] " +
+                        "[IF_A]&%Organism$\"W\" is an &%instance$\"instance\" of &%Organism$\"organism\"[/IF_A] " +
+                        "[IF_C]A[/IF_C][/FORALL]";
+
+        String out = NLGReadability.improveTemplate(t, LanguageFormatter.RenderMode.HTML, "EnglishLanguage");
+
+        // W not declared, so keep it
+        assertTrue(out.contains("&%Organism$\"W\" is an &%instance$\"instance\""));
+    }
+
 
     @Test
     public void test() {
@@ -528,7 +600,6 @@ public class NLGReadabilityTest extends UnitTestBase {
 
         System.out.println("out: "+out);
 
-        NLGReadability.debugPrintTree(t, "EnglishLanguage");
     }
 
 }
