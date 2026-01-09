@@ -14,7 +14,7 @@ public class THFnew {
     public static int axNum = 0;
     public static Set<Formula> badUsageSymbols = new HashSet<>();
     public static Set<String> predicateTerms = new HashSet<>(); //Terms that return $o instead of $i
-
+    public static boolean isModal = false; 
 
     /** *************************************************************
      */
@@ -1573,6 +1573,7 @@ public class THFnew {
             test(kb);
         }
         else if ("-m".equals(args[0])) {
+            isModal = true;
             System.out.println("THFnew.main(): translate to THF with modals");
             transModalTHF(kb);
         }

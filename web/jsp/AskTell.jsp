@@ -285,6 +285,7 @@
     // ---- Statement + basics ----
     String stmt = request.getParameter("stmt");
     String cwa = request.getParameter("CWA");
+    String isModal = request.getParameter("isModal");
 
     // ---- Modens Ponens (persist) ----
     Boolean modensPonens = (Boolean) session.getAttribute("ModensPonens");
@@ -327,7 +328,11 @@
     // ---- CWA ----
     if (StringUtil.emptyString(cwa)) cwa = "no";
     SUMOKBtoTPTPKB.CWA = "yes".equals(cwa);
-
+    
+    // ---- Modal ---- 
+    if (StringUtil.emptyString(isModal)) isModal = "no";
+    THFnew.isModal = "yes".equals(isModal);
+    
     // ---- Engine / modes / language ----
     String inferenceEngine = request.getParameter("inferenceEngine");
     String vampireMode = request.getParameter("vampireMode");
@@ -571,6 +576,11 @@
                 <label class="inline" style="margin-left:14px;">
                     <input type="checkbox" name="CWA" id="CWA" value="yes" <% if ("yes".equals(cwa)) {%>checked<%}%> >
                     Closed World Assumption
+                </label>
+                
+                <label class="inline" style="margin-left:14px;">
+                    <input type="checkbox" name="Modal" id="Modal" value="yes" <% if ("yes".equals(isModal)) {%>checked<%}%> >
+                    Modal
                 </label>
             </div>
         </div>
