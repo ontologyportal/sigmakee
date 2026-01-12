@@ -192,8 +192,14 @@ public class Modals {
         List<Formula> flist = f.complexArgumentsToArrayList(1);
         worldNum = worldNum + 1;
         fstring.append("(=> (accreln3 ").append(f.car()).append(Formula.SPACE).
-                append(flist.get(0)).append(Formula.SPACE).append(flist.get(1)).
-                append(" ?W").append(worldNum - 1).append(" ?W").append(worldNum).append(") ");
+                append(flist.get(0)).append(Formula.SPACE).append(flist.get(1));
+        // Accounts for Constant World (world 0)
+        if (worldNum - 1 == 0) { 
+            fstring.append(" CW");
+        } else {
+            fstring.append(" ?W").append(worldNum - 1);
+        }
+        fstring.append(" ?W").append(worldNum).append(") ");
         fstring.append(Formula.SPACE).append(processRecurse(flist.get(1),kb,worldNum));
         fstring.append(Formula.RP);
         Formula result = new Formula();
@@ -225,9 +231,14 @@ public class Modals {
         fstring.append("(=> (accreln ")
                 .append(f.car())          // modal operator
                 .append(Formula.SPACE)
-                .append(param.toString()) // now world-annotated
-                .append(" ?W").append(worldNum - 1)
-                .append(" ?W").append(worldNum)
+                .append(param.toString()); // now world-annotated
+        // Accounts for Constant World (world 0)
+        if (worldNum - 1 == 0) { 
+            fstring.append(" CW");
+        } else {
+            fstring.append(" ?W").append(worldNum - 1);
+        }
+        fstring.append(" ?W").append(worldNum)
                 .append(") ")
                 .append(embedded.toString())
                 .append(Formula.RP);
@@ -255,12 +266,57 @@ public class Modals {
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1); // [F, M]
         worldNum = worldNum + 1;
+        
+        // TODO: CF: Test this  
+        // a normal or dyadic deontic 
+        if (flist.size() == 2) {
+        // Monadic case: (modalAttribute F M)
+        fstring.append("(=> (accrelnP ")
+                .append(flist.get(1)); // modality
+        // Accounts for Constant World (world 0)
+        if (worldNum - 1 == 0) { 
+            fstring.append(" CW");
+        } else {
+            fstring.append(" ?W").append(worldNum - 1);
+        }
+        fstring.append(" ?W").append(worldNum)
+                .append(") ")
+                .append(processRecurse(flist.get(0), kb, worldNum))
+                .append(")");
+        /* } else if (flist.size() == 3) {
+        // Dyadic case: (modalAttribute F C M)
+            Formula formula = flist.get(0);
+            Formula condition = flist.get(1);
+            Formula modality = flist.get(2);
+
+            fstring.append("(=> (and (accrelnP ")
+                    .append(modality);
+            // Accounts for Constant World (world 0)
+            if (worldNum - 1 == 0) { 
+                fstring.append(" CW");
+            } else {
+                fstring.append(" ?W").append(worldNum - 1);
+            }
+            fstring.append(" ?W").append(worldNum)
+                    .append(") ")
+                    .append(processRecurse(condition, kb, worldNum))
+                    .append(") ")
+                    .append(processRecurse(formula, kb, worldNum))
+                    .append(")"); */
+        } else {
+            throw new IllegalArgumentException("modalAttribute requires 2 or 3 arguments");
+    }
 
         // Build antecedent: (accrelnP M ?W_{n-1} ?W_n)
         fstring.append("(=> (accrelnP ")
-                .append(flist.get(1))           // the modal attribute constant, e.g. Necessity, Legal
-                .append(" ?W").append(worldNum - 1)
-                .append(" ?W").append(worldNum)
+                .append(flist.get(1));           // the modal attribute constant, e.g. Necessity, Legal
+        // Accounts for Constant World (world 0)
+        if (worldNum - 1 == 0) { 
+            fstring.append(" CW");
+        } else {
+            fstring.append(" ?W").append(worldNum - 1);
+        }
+        fstring.append(" ?W").append(worldNum)
                 .append(") ");
 
         // Consequent: recursively process the embedded formula at the new world.
@@ -329,8 +385,12 @@ public class Modals {
                         && !RIGID_RELATIONS.contains(baseHead)
                         && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)
                         && !modalAttributes.contains(baseHead)) {
-
-                    fstring.append(" ?W").append(worldNum);
+                            // Account for Constant-world (world 0)
+                            if (worldNum == 0) {
+                                fstring.append(" CW");
+                            } else {
+                                fstring.append(" ?W").append(worldNum);
+                            }
                 }
 
                 fstring.append(Formula.RP);
@@ -394,11 +454,13 @@ public class Modals {
 
     /***************************************************************
      */
+    // TODO: CF: I think this is where I would work on the world-chaining 
     public static Formula processModals(Formula f, KB kb) {
 
         addAccrelnDef(kb);
         addAccrelnDefP(kb);
-        int worldNum = 1;
+        // Start at index 0 for constant world (W0 = CW) 
+        int worldNum = 0;
         //if (!f.isHigherOrder(kb))
         //    return f;
         Formula result = processRecurse(f,kb,worldNum);
@@ -406,8 +468,9 @@ public class Modals {
         result.read(fstring);
         Set<String> types = new HashSet<>();
         types.add("World");
-        for (int i = 1; i <= worldNum; i++)
+        for (int i = 0; i <= worldNum; i++) {
             result.varTypeCache.put("?W" + i,types);
+        } 
         return result;
     }
 
@@ -424,7 +487,14 @@ public class Modals {
      */
     public static String getTHFHeader() {
 
-        return "thf(worlds_tp,type,(w : $tType)).\n" +
+        return 
+                // CF: add these lines into getTHFHeader() result string
+                "thf(obligation_tp,type,(s__Obligation : m)).\n" +
+                "thf(permission_tp,type,(s__Permission : m)).\n" +
+                "thf(prohibition_tp,type,(s__Prohibition : m)).\n" +
+                "thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +
+                
+                "thf(worlds_tp,type,(w : $tType)).\n" +
                 "thf(s__worlds_tp,type,(s__World : w)).\n" +
                 "thf(modals_tp,type,(m : $tType)).\n" +
                 "thf(accreln_tp,type,(s__accreln : (m > $i > w > w > $o))).\n" +
@@ -453,6 +523,33 @@ public class Modals {
                 "        (modalAttribute ?FORMULA Permission)))";
         Formula f = new Formula(fstr);
         System.out.println(processModals(f,kb) + "\n\n");
+   
+        // CF: multi-layer modals test
+        fstr = 
+        "(holdsDuring ?T " +
+        "   (knows John " + 
+        "       (believes Mary " + 
+        "           (knows Bill " +
+        "               (believes Sue " +
+        "                   (=> " +
+        "                       (acquaintance Bill Sue) " +
+        "                       (acquaintance Bill Jane)))))))";
+        /* Target: 
+        (=> 
+          (accreln holdsDuring CW ?W1)
+          (=> 
+            (accreln knows John ?W1 ?W2)
+            (=> 
+              (accreln believes Mary ?W2 ?W3)
+              (=> 
+                (accreln knows Bill ?W3 ?W4)
+                (=> 
+                  (accreln believes Sue ?W4 ?W5)
+                  (=> 
+                    (accreln Bill Sue ?W5 ?W6)
+                    (acquaintance Bill Jane ?W6)))))))*/
+        f = new Formula(fstr);
+        System.out.println(processModals(f,kb) + "\n\n");
 
         fstr = "(=>\n" +
                 "    (and\n" +
@@ -474,6 +571,20 @@ public class Modals {
                 "      (and " +
                 "        (equal (PremisesFn ?ARGUMENT ?W1) ?PREMISES) " +
                 "        (conclusion ?CONCLUSION ?ARGUMENT ?W1)))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f,kb)+ "\n\n");
+
+        // this one is wrong due to the two relations not conforming to argument order
+        fstr = "(=>\n" +
+                "    (confersRight ?FORMULA ?AGENT1 ?AGENT2)\n" +
+                "    (holdsRight ?FORMULA ?AGENT2))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f,kb)+ "\n\n");
+
+        fstr = "(holdsDuring (YearFn 2025)\n" +
+                "  (knows John \n" +
+                "    (believes Sue \n" +
+                "      (acquaintance Bill Jane))))";
         f = new Formula(fstr);
         System.out.println(processModals(f,kb)+ "\n\n");
     }

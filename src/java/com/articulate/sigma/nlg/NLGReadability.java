@@ -1474,7 +1474,7 @@ public final class NLGReadability {
         if (items.size() == 1) return items.get(0);
 
         // Inline for small lists
-        if (items.size() < 6) {
+        if (items.size() < 3) {
             return joinAsNaturalList(items, orKw);
         }
 

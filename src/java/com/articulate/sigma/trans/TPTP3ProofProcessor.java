@@ -1141,7 +1141,6 @@ public class TPTP3ProofProcessor {
         cmd.add("-O");
         cmd.add(filename);
         try {
-
             // Build a proof image from an input file
             // From: https://graphviz.org/doc/info/command.html#-O
             ProcessBuilder pb = new ProcessBuilder(cmd);
@@ -1158,10 +1157,8 @@ public class TPTP3ProofProcessor {
             String err = "Error writing file " + file + "\n" + e.getMessage();
             throw new IOException(err);
         }
-        if (exitCode == 0) {
-            System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): write image file: " + file);
-            retVal = file.getAbsolutePath();
-        }
+        System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): write image file: " + file);
+        retVal = file.getAbsolutePath();
         return retVal;
     }
 

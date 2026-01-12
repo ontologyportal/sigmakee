@@ -942,7 +942,6 @@
                     }
                     if (!StringUtil.emptyString(tpp.status)) out.println("Status: " + tpp.status);
                 } else if ("Vampire".equals(inferenceEngine)) {
-
                     Formula f = new Formula();
                     f.read(stmt);
                     setVampMode(vampireMode);
@@ -1022,18 +1021,24 @@
 
 
                 } else if ("LEO".equals(inferenceEngine)) {
-                    kb.leo = kb.askLeo(stmt,timeout,maxAnswers);
-                    if (kb.leo == null || kb.leo.output == null) out.println("<font color='red'>Error. No response from LEO-III.</font>");
+                    com.articulate.sigma.tp.LEO leo = kb.askLeo(stmt,timeout,maxAnswers);
+                    if (leo == null || leo.output == null) out.println("<font color='red'>Error. No response from LEO-III.</font>");
                     else {
                         com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
-                        tpp.parseProofOutput(kb.leo.output, stmt, kb, kb.leo.qlist);
+                        tpp.parseProofOutput(leo.output, stmt, kb, leo.qlist);
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-                        tpp.processAnswersFromProof(kb.leo.qlist,stmt);
+                        tpp.processAnswersFromProof(leo.qlist,stmt);
 
                         printAnswersBlock(tpp, kbName, language, out);
                         /* Prevent duplicate answers inside HTMLformatter */
                         if (tpp.bindingMap != null) tpp.bindingMap.clear();
                         if (tpp.bindings   != null) tpp.bindings.clear();
+
+                        System.out.println("========== PROOF LEO ===========");
+                        for(String s : leo.output){
+                            System.out.println(s);
+                        }
+
 
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                         // Generate proof summary if requested

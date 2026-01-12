@@ -110,6 +110,14 @@ if (StringUtil.emptyString(kbName)) {
         kbName = mgr.getPref("sumokbname");
 }
 
+boolean awsMode = "yes".equalsIgnoreCase(mgr.getPref("aws"));
+request.setAttribute("awsMode", awsMode);
+if (awsMode && "Editor.jsp".equalsIgnoreCase(pageURLString)) {
+    mgr.setError("Editor is disabled on this node.");
+    response.sendRedirect("KBs.jsp");
+    return;
+}
+
 KB kb = mgr.getKB(kbName);
 if (kb != null)
     TaxoModel.kbName = kbName;
