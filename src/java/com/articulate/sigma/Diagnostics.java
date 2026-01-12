@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
+
 /** *****************************************************************
  * A class that finds problems in a knowledge base.  It is not meant
  * to be instantiated.
@@ -1132,8 +1133,8 @@ public class Diagnostics {
             System.out.println();
         }
     }
-    
-    /**
+
+    /** *****************************************************************
      * Collects all variables from a list of formula arguments.
      * Gets direct variable arguments plus ALL variables nested inside functions.
      * 
@@ -1141,6 +1142,7 @@ public class Diagnostics {
      * @return set of all variables found at any depth
      */
     private static HashSet<String> collectVars(List<Formula> args) {
+
         HashSet<String> vars = new HashSet<>();
         for (Formula arg : args) {
             collectAllVarsFromArg(arg, vars);
@@ -1148,7 +1150,7 @@ public class Diagnostics {
         return vars;
     }
 
-    /**
+    /** *****************************************************************
      * Recursively extracts all variables from a formula argument.
      * Stops at logical operators and quantifiers to avoid crossing formula boundaries.
      * 
@@ -1156,6 +1158,7 @@ public class Diagnostics {
      * @param vars the set to add found variables to
      */
     private static void collectAllVarsFromArg(Formula f, HashSet<String> vars) {
+
         if (f == null || f.empty()) {
             return;
         }
@@ -1183,17 +1186,18 @@ public class Diagnostics {
         }
     }
 
-     /**
+    /** *****************************************************************
      * Builds a map of variable co-occurrences in a formula
      * @param f the formula to analyze
      * @return map from each variable to the set of variables it co-occurs with
      */
     public static HashMap<String,HashSet<String>> findOrphanVars(Formula f) {
+
         HashSet<String> parents = new HashSet<>();
         return findOrphanVarsRecurse(f,parents);
     }
-    
-    /**
+
+    /** *****************************************************************
      * Recursively traverses a formula to find variable co-occurrences.
      * @param f the formula to traverse
      * @param parents variables from the outer level that should link to variables found here.
@@ -1202,6 +1206,7 @@ public class Diagnostics {
      * @return map of variable co-occurrences found in this formula and its subformulas
      */
     private static HashMap<String,HashSet<String>> findOrphanVarsRecurse(Formula f, HashSet<String> parents) {
+
         HashMap<String,HashSet<String>> result = new HashMap<>();
         // ==== BASE CASES ====
         // base case 1: empty or null formula
@@ -1268,7 +1273,7 @@ public class Diagnostics {
         return addAllLinks(coVars, result);
     }
 
-    /**
+    /** *****************************************************************
      * Creates bidirectional links between a variable and all parent variables.
      * Example: if parents = {?A, ?B} and f = ?C, creates edges ?C<->?A and ?C<->?B
      * 
@@ -1277,6 +1282,7 @@ public class Diagnostics {
      * @return map containing the new bidirectional edges (no self-links)
      */
     private static HashMap<String, HashSet<String>> addLinks(HashSet<String> parents, Formula f) {
+
         HashMap<String,HashSet<String>> out = new HashMap<>();
         String var = f.getFormula(); // extracts variable name
         
@@ -1300,7 +1306,7 @@ public class Diagnostics {
         return out;
     }
 
-   /**
+    /** *****************************************************************
      * Connects parent variables to all child variables discovered in subformulas.
      * Creates bidirectional edges between each parent and each child variable.
      * Example: if parentVars = {?A, ?B} and childrenMap contains {?C, ?D}, 
@@ -1311,6 +1317,7 @@ public class Diagnostics {
      * @return merged map with parent↔child edges added (no self-links)
      */
     private static HashMap<String, HashSet<String>> addAllLinks(HashSet<String> parentVars, HashMap<String, HashSet<String>> childrenMap) {
+
         // a copy of the children's co-occurrence map
         HashMap<String, HashSet<String>> out = new HashMap<>();
         mergeResults(out, childrenMap);
@@ -1348,7 +1355,7 @@ public class Diagnostics {
         return out;
     }
 
-    /**
+    /** *****************************************************************
      * Merges co-occurrence maps by combining neighbor sets for each variable.
      * If a variable exists in both maps, their neighbor sets are unioned.
      * If a variable only exists in source, it's added to target with its neighbors.
@@ -1357,6 +1364,7 @@ public class Diagnostics {
      * @param source the source map to merge from (not modified)
     */
     private static void mergeResults (HashMap<String,HashSet<String>> target, HashMap<String,HashSet<String>> source) {
+
         // process each variable and its neighbors from the source map
         for (String variable : source.keySet()) {
             HashSet<String> neighbors = source.get(variable);
@@ -1371,13 +1379,14 @@ public class Diagnostics {
         }
     }
 
-    /**
+    /** *****************************************************************
      * Finds all disconnected variable groups in the graph.
      * 
      * @param links the variable co-occurrence map
      * @return list of disconnected groups, where each group is a set of connected variables
      */
     public static ArrayList<HashSet<String>> findDisconnectedGroups(HashMap<String, HashSet<String>> links) {
+
         ArrayList<HashSet<String>> groups = new ArrayList<>();
         HashSet<String> allVisited = new HashSet<>();
         
@@ -1407,22 +1416,24 @@ public class Diagnostics {
         return groups;
     }
 
-    /**
+    /** *****************************************************************
      * Checks if all variables in the co-occurrence graph are connected.
      * @param links the variable co-occurrence map
      * @return true if all variables form a single connected component
      */
     private static boolean isFullyConnected(HashMap<String, HashSet<String>> links) {
+
         return findDisconnectedGroups(links).size() <= 1;
     }
 
-    /**
+    /** *****************************************************************
      * Parses a KIF file and finds all variables that appear together
      * 
      * @param fKif the KIF file to parse
      * @return a map where each variable is linked to others it co-occurs with
      */
     private static HashMap<String, HashSet<String>> parseFormulaFile(File fKif) {
+
         HashMap<String, HashSet<String>> links = new HashMap<>();
         if (!fKif.exists())
             return links;
@@ -1475,7 +1486,7 @@ public class Diagnostics {
         return links;
     }
 
-    /**
+    /** *****************************************************************
      * Counts how many times a substring appears in a string.
      * 
      * @param text the string to search in
@@ -1483,6 +1494,7 @@ public class Diagnostics {
      * @return the number of occurrences
      */
     public static int countOccurrences(String text, String substring) {
+
         int count = 0;
         int index = 0;
         while (true) {
