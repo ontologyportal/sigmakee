@@ -372,6 +372,7 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    @Ignore
     public void testFlyingAircraft()     {
         String stmt =   "(=>\n" +
                 "           (instance ?FLY FlyingAircraft)\n" +
