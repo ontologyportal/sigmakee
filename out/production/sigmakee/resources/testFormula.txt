@@ -1,0 +1,15 @@
+(=>
+  (and
+    (instance ?REL Predicate)
+    (instance ?ARG PositiveInteger)
+    (instance ?N Quantity)
+    (instance ?VAL Quantity))
+  (=>
+    (and
+      (maxValue subclass ?ARG ?N)
+      (subclass @ARGS)
+      (equal ?VAL
+        (ListOrderFn
+          (ListFn @ARGS)
+          ?ARG)))
+    (greaterThan ?N ?VAL)))

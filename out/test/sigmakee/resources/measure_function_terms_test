@@ -1,0 +1,92 @@
+[
+{
+"text":"John weighs 60 kgs.",
+"measureTerms":
+"[measure(John-1, measure1), unit(measure1, Kilogram), value(measure1, 60)]"
+},
+{
+"text":"As of 2012, sweet oranges accounted for approximately 70 percent of citrus production.",
+"measureTerms":
+"[measure(oranges-6, measure1), unit(measure1, PositiveRealNumber), value(measure1, 70)]"
+},
+{
+"text":"The standard goal of sigma is to achieve precision to 4.5 standard deviations above or below the mean.",
+"measureTerms":
+"[measure(goal-3, measure1), unit(measure1, DirectionChange), value(measure1, 4.5)]"
+},
+{
+"text":"Taj Mahal attracts some 3000000 people a year for visit.",
+"measureTerms":
+"[measure(Mahal-2, measure1), unit(measure1, GroupOfPeople), value(measure1, 3000000)]"
+},
+{
+"text":"Fiat acquired 50% of Ferrari in 1969 and expanded its stake to 85% in 2008.",
+"measureTerms":
+"[measure(Fiat-1, measure1), unit(measure1, %/NN), value(measure1, 50), measure(Fiat-1, measure2), unit(measure2, %/NN), value(measure2, 85)]"
+},
+{
+"text":"In 2014, Fiat owned 90% of Ferrari.",
+"measureTerms":
+"[measure(Fiat-4, measure1), unit(measure1, %/NN), value(measure1, 90)]"
+},
+{
+"text":"The 6 or 7 extra dimensions are so small as to be undetectable by present-day experiments.",
+"measureTerms":
+""
+},
+{
+"text":"Another possibility is that we are "stuck" in a 3+1 dimensional subspace of the full universe.",
+"measureTerms":
+""
+},
+{
+"text":"Most viruses that have been studied have a diameter between 20 and 300 nanometres.",
+"measureTerms":
+""
+},
+{
+"text":"The 9th lCTV Report defines the concept of the virus species as the lowest taxon in a branching hierarchy of viral taxa.",
+"measureTerms":
+""
+},
+{
+"text":"The influenza A virus killed as many as 100 million people, or 5% of the world's population in 1918.",
+"measureTerms":
+""
+},
+{
+"text":"It is estimated that viruses kill approximately 20% of the biomass each day and that there are 15 times as many viruses in the oceans as there are bacteria and archaea.",
+"measureTerms":
+""
+},
+{
+"text":"As of March 2014, the full-length genome sequences of 3843 different viruses, including smallpox, are publicly available in an online database",
+"measureTerms":
+""
+},
+{
+"text":" In the 20th and 21st centuries, mathematicians and computer scientists discovered new approaches that, when combined with increasing computational power, extended the decimal representation of π to, as of late 2013, over 13.3 trillion digits.",
+"measureTerms":
+""
+},
+{
+"text":"Adventure mode was added to Minecraft in version 1.3.",
+"measureTerms":
+""
+},
+{
+"text":"The map of Minecraft 4K itself is finite—composed of 64×64×64 blocks—and the same world is generated every time.",
+"measureTerms":
+""
+},
+{
+"text":"The car's wheelbase is 2,710 mm. Overall length is 4,462 mm which gives 1,752.6 mm of overhang. ",
+"measureTerms":
+""
+},
+{
+"text":"The cilia beating together allow the Paramecium to propel through the water at speeds of 500 micrometers per second.",
+"measureTerms":
+""
+}
+]

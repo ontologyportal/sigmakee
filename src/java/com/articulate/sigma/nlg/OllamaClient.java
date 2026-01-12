@@ -5,6 +5,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Map;
 
 public class OllamaClient {
 
@@ -12,8 +13,14 @@ public class OllamaClient {
     private final int connectTimeoutMs;
     private final int readTimeoutMs;
 
+    // This persistent client will reuse TCP connections automatically
+    private static final java.net.http.HttpClient HTTP_CLIENT = java.net.http.HttpClient.newBuilder()
+            .version(java.net.http.HttpClient.Version.HTTP_2)
+            .connectTimeout(java.time.Duration.ofSeconds(10))
+            .build();
+
     public OllamaClient(String baseUrl) {
-        this(baseUrl, 5000, 30000); // tighter defaults to avoid hangs
+        this(baseUrl, 10000, 40000); // tighter defaults to avoid hangs
     }
 
     public OllamaClient(String baseUrl, int connectTimeoutMs, int readTimeoutMs) {
@@ -23,6 +30,11 @@ public class OllamaClient {
         this.readTimeoutMs = readTimeoutMs;
     }
 
+    /** Backwards-compatible convenience wrapper. */
+    public String generate(String model, String prompt) throws IOException {
+        return generate(model, prompt, null, false);
+    }
+
     /**
      * One-shot text generation via /api/generate (no conversation state).
      * @param model  e.g., "llama3.2"
@@ -30,48 +42,157 @@ public class OllamaClient {
      * @return generated text (response field) or raw JSON if parsing fails
      * @throws IOException on network errors
      */
-    public String generate(String model, String prompt) throws IOException {
+    /**
+     * One-shot text generation via /api/generate (no conversation state).
+     *
+     * @param model     e.g., "llama3.2"
+     * @param prompt    prompt
+     * @param options   Ollama options (e.g., temperature, top_p, num_predict, seed)
+     * @param requestJsonFormat  if true, requests JSON-mode output when supported by Ollama/model
+     */
+    public String generate(String model, String prompt, Map<String, Object> options, boolean requestJsonFormat) throws IOException {
         String endpoint = baseUrl + "/api/generate";
-        String body = "{"
-                + "\"model\":\"" + escapeJson(model) + "\","
-                + "\"prompt\":\"" + escapeJson(prompt) + "\","
-                + "\"stream\":false"
-                + "}";
 
-        HttpURLConnection conn = (HttpURLConnection) new URL(endpoint).openConnection();
-        conn.setRequestMethod("POST");
-        conn.setDoOutput(true);
-        conn.setConnectTimeout(connectTimeoutMs);
-        conn.setReadTimeout(readTimeoutMs);
-        conn.setRequestProperty("Content-Type", "application/json");
-        conn.setRequestProperty("Connection", "close");              // avoid keep-alive edge cases
-        System.setProperty("java.net.useSystemProxies", "false");    // bypass OS proxies
+        // Build JSON body
+        StringBuilder body = new StringBuilder();
+        body.append("{")
+                .append("\"model\":\"").append(escapeJson(model)).append("\",")
+                .append("\"prompt\":\"").append(escapeJson(prompt)).append("\",")
+                .append("\"stream\":false");
 
-        byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
-        conn.setFixedLengthStreamingMode(bodyBytes.length);          // prevent indefinite buffering
+        if (requestJsonFormat) body.append(",\"format\":\"json\"");
 
-        try (OutputStream os = conn.getOutputStream()) {
-            os.write(bodyBytes);
-            os.flush();
-        }
-
-        int code = conn.getResponseCode();
-        InputStream is = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
-        String json = readAll(is);
-
-        // Minimal extraction of "response" field from Ollama JSON
-        String marker = "\"response\":\"";
-        int i = json.indexOf(marker);
-        if (i >= 0) {
-            int start = i + marker.length();
-            int end = findJsonStringEnd(json, start);
-            if (end > start) {
-                String raw = json.substring(start, end);
-                return unescapeJsonString(raw);
+        if (options != null && !options.isEmpty()) {
+            body.append(",\"options\":{");
+            boolean first = true;
+            for (Map.Entry<String, Object> e : options.entrySet()) {
+                if (!first) body.append(",");
+                first = false;
+                body.append("\"").append(escapeJson(e.getKey())).append("\":");
+                Object v = e.getValue();
+                if (v == null) body.append("null");
+                else if (v instanceof Number || v instanceof Boolean) body.append(v.toString());
+                else body.append("\"").append(escapeJson(String.valueOf(v))).append("\"");
             }
+            body.append("}");
         }
-        return json; // fallback: return raw JSON if structure changes
+        body.append("}");
+
+        // Create Request (HttpClient handles 'Connection: keep-alive' automatically)
+        java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                .uri(java.net.URI.create(endpoint))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(java.net.http.HttpRequest.BodyPublishers.ofString(body.toString(), StandardCharsets.UTF_8))
+                .build();
+
+        try {
+            // Send request synchronously
+            java.net.http.HttpResponse<String> response = HTTP_CLIENT.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                String json = response.body();
+                // Extract "response" field
+                String marker = "\"response\":\"";
+                int i = json.indexOf(marker);
+                if (i >= 0) {
+                    int start = i + marker.length();
+                    int end = findJsonStringEnd(json, start);
+                    if (end > start) {
+                        return unescapeJsonString(json.substring(start, end));
+                    }
+                }
+                return json;
+            } else {
+                throw new IOException("Ollama error: HTTP " + response.statusCode() + " - " + response.body());
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Request interrupted", e);
+        }
     }
+
+    public String chat(String model, String prompt, Map<String, Object> options, boolean requestJsonFormat) throws IOException {
+        String endpoint = baseUrl + "/api/chat";
+
+        // Build JSON body
+        StringBuilder body = new StringBuilder();
+        body.append("{")
+                .append("\"model\":\"").append(escapeJson(model)).append("\",")
+                .append("\"messages\":[")
+                .append("{\"role\":\"user\",\"content\":\"").append(escapeJson(prompt)).append("\"}")
+                .append("],")
+                .append("\"stream\":false");
+
+        if (requestJsonFormat) body.append(",\"format\":\"json\"");
+
+        if (options != null && !options.isEmpty()) {
+            body.append(",\"options\":{");
+            boolean first = true;
+            for (Map.Entry<String, Object> e : options.entrySet()) {
+                if (!first) body.append(",");
+                first = false;
+                body.append("\"").append(escapeJson(e.getKey())).append("\":");
+                Object v = e.getValue();
+                if (v == null) body.append("null");
+                else if (v instanceof Number || v instanceof Boolean) body.append(v.toString());
+                else body.append("\"").append(escapeJson(String.valueOf(v))).append("\"");
+            }
+            body.append("}");
+        }
+
+        body.append("}");
+
+        java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                .uri(java.net.URI.create(endpoint))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(java.net.http.HttpRequest.BodyPublishers.ofString(body.toString(), StandardCharsets.UTF_8))
+                .build();
+
+        try {
+            java.net.http.HttpResponse<String> response =
+                    HTTP_CLIENT.send(request, java.net.http.HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                String json = response.body();
+
+                // Extract assistant message.content from chat response
+                // Ollama chat response shape: {"message":{"role":"assistant","content":"..."} ...}
+                String marker = "\"message\":{";
+                int m = json.indexOf(marker);
+                if (m >= 0) {
+                    int contentKey = json.indexOf("\"content\":\"", m);
+                    if (contentKey >= 0) {
+                        int start = contentKey + "\"content\":\"".length();
+                        int end = findJsonStringEnd(json, start);
+                        if (end > start) {
+                            return unescapeJsonString(json.substring(start, end));
+                        }
+                    }
+                }
+
+                // Fallback: try first occurrence of "content":"..."
+                String fallbackMarker = "\"content\":\"";
+                int i = json.indexOf(fallbackMarker);
+                if (i >= 0) {
+                    int start = i + fallbackMarker.length();
+                    int end = findJsonStringEnd(json, start);
+                    if (end > start) {
+                        return unescapeJsonString(json.substring(start, end));
+                    }
+                }
+
+                return json;
+            } else {
+                throw new IOException("Ollama error: HTTP " + response.statusCode() + " - " + response.body());
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Request interrupted", e);
+        }
+    }
+
 
     // ===== Helpers =====
 
