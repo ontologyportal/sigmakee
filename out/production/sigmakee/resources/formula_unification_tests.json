@@ -1,0 +1,19 @@
+[
+  {
+    "f1": "(=>
+          (instance ?C WalkingCane)
+            (hasPurpose ?C
+               (exists (?W)
+                  (and
+                        (instance ?W Walking)
+                        (instrument ?W ?C)))))",
+  ,
+    "f2": "(=>
+        (instance ?C WalkingCane)
+          (hasPurpose ?C
+          (exists (?W)
+            (and
+            (instance ?W Walking)
+            (instrument ?W ?C)))))"
+  }
+]

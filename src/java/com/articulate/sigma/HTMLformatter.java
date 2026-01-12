@@ -13,6 +13,7 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
  */
 
+import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.TPTP2SUMO;
@@ -253,6 +254,7 @@ public class HTMLformatter {
         result.append("</td><td width=\"40%\" valign=\"top\">");
         // if proof paraphrase in English is checked in AskTell.jsp page return the paraphrased version of the proof
         if (StringUtil.isNonEmptyString(language) && (proofParaphraseInEnglish)) {
+            LanguageFormatter.tptpStep = step;
             String pph = NLGUtils.htmlParaphrase(kbHref,
                     f.getFormula(),
                     KBmanager.getMgr().getKB(kbName).getFormatMap(language),
@@ -1068,6 +1070,7 @@ public class HTMLformatter {
         html.append("<p><table width=\"95%\">" + "\n");
 
         TPTPFormula ps;
+        long start = System.nanoTime();
         for (int l = 0; l < tpp.proof.size(); l++) {
             ps = tpp.proof.get(l);
             //System.out.println("HTMLformatter.formatTPTP3ProofResult(): role: " + ps.role);
@@ -1083,6 +1086,9 @@ public class HTMLformatter {
             html.append(HTMLformatter.proofTableFormat(stmt, tpp.proof.get(l), kbName, language)).append("\n");
             html.append("</tr>\n\n");
         }
+        long end = System.nanoTime();
+        double seconds = (end - start) / 1_000_000_000.0;
+        System.out.printf("\n====== TOTAL Ollama call took %.3f seconds%n%n =======", seconds);
         html.append("</table>\n");
         return html.toString();
     }

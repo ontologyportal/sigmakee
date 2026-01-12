@@ -25,6 +25,7 @@ import edu.stanford.nlp.ling.CoreAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import tptp_parser.TPTPFormula;
 
 import java.io.IOException;
 import java.util.*;
@@ -42,6 +43,7 @@ public class LanguageFormatter {
 
     // a list of format parameters or words and the sentence words they match with
     public static Map<String,CoreLabel> outputMap = new HashMap<>();
+    public static TPTPFormula tptpStep;
     private final String statement;
 
     private final Map<String, String> phraseMap;
@@ -65,6 +67,34 @@ public class LanguageFormatter {
 
     private static final String OLLAMA_HOST = "http://127.0.0.1:11434";
 
+    private static OllamaClient ollamaClient = null;
+
+    private static final String SEG_S = "[SEG]";
+    private static final String SEG_E = "[/SEG]";
+    private static final String AND_S = "[AND]";
+    private static final String AND_E = "[/AND]";
+    private static final String OR_S = "[OR]";
+    private static final String OR_E = "[/OR]";
+    private static final String IF_A_O = "[IF_A]";
+    private static final String IF_A_C = "[/IF_A]";
+    private static final String IF_C_O = "[IF_C]";
+    private static final String IF_C_C = "[/IF_C]";
+    private static final String FORALL_O = "[FORALL]";
+    private static final String FORALL_C = "[/FORALL]";
+    private static final String EXISTS_O = "[EXISTS]";
+    private static final String EXISTS_C = "[/EXISTS]";
+    private static final String VARS_O   = "[VARS]";
+    private static final String VARS_C   = "[/VARS]";
+
+    private RenderMode renderMode = RenderMode.HTML;
+
+    enum RenderMode {
+        HTML,
+        TEXT
+    }
+
+    private enum Dir { P, N, QP, QN }
+
     /**
      * "Informal" NLG refers to natural language generation in which the formal logic terms are expressions are
      * eliminated--e.g. "a man drives" instead of "there exist a process and an agent such that the process is an instance of driving and
@@ -76,6 +106,33 @@ public class LanguageFormatter {
 
     public void setDoInformalNLG(boolean doIt) {
         doInformalNLG = doIt;
+    }
+
+    private static final Map<String,String> LOGIC_DOCS;
+
+    static {
+        Map<String,String> m = new LinkedHashMap<>();
+
+        m.put("=>",
+                "Implication. (=> A B) means: if A is true, then B must be true. It does not assert A; it constrains cases where A holds.");
+        m.put("and",
+                "Conjunction. (and A B ...) means all listed subformulas are true.");
+        m.put("or",
+                "Disjunction. (or A B ...) means at least one listed subformula is true.");
+        m.put("xor",
+                "Exclusive-or. (xor A B) means exactly one of A or B is true, but not both.");
+        m.put("<=>",
+                "Biconditional (equivalence). (<=> A B) means A is true if and only if B is true.");
+        m.put("not",
+                "Negation. (not A) means A is false.");
+        m.put("forall",
+                "Universal quantification. (forall (?X ...) A) means A holds for all values of the variables.");
+        m.put("exists",
+                "Existential quantification. (exists (?X ...) A) means there exists at least one assignment of the variables making A true.");
+        m.put("holds",
+                "Temporal holding. (holds T P) means predicate/formula P holds at time/interval T. In SUMO this is commonly expressed as holdsDuring/holdsAt, but 'holds' is treated here as a temporal wrapper.");
+
+        LOGIC_DOCS = Collections.unmodifiableMap(m);
     }
 
     /**
@@ -101,6 +158,49 @@ public class LanguageFormatter {
         @Override
         public Class<Integer> getType() {
             return Integer.class;
+        }
+    }
+
+    public static final class Keywords {
+        final String COMMA;
+        final String IF;
+        final String THEN;
+        final String AND;
+        final String OR;
+        final String XOR;
+        final String IFF;
+        final String NOT;
+        final String FORALL;
+        final String EXISTS;
+        final String EXIST;
+        final String NOTEXIST;
+        final String NOTEXISTS;
+        final String HOLDS;
+        final String SOTHAT;
+        final String SUCHTHAT;
+
+        Keywords(String language) {
+            this.COMMA = NLGUtils.getKeyword(",", language);
+            this.IF = NLGUtils.getKeyword("if", language);
+            this.THEN = NLGUtils.getKeyword("then", language);
+            this.AND = NLGUtils.getKeyword(Formula.AND, language);
+            this.OR = NLGUtils.getKeyword(Formula.OR, language);
+
+            // Formula.XOR may be empty; use same fallback you used elsewhere.
+            String xorKey = StringUtil.isNonEmptyString(Formula.XOR) ? Formula.XOR : "xor";
+            this.XOR = NLGUtils.getKeyword(xorKey, language);
+            this.IFF = NLGUtils.getKeyword("if and only if", language);
+            this.NOT = NLGUtils.getKeyword(Formula.NOT, language);
+            this.FORALL = NLGUtils.getKeyword("for all", language);
+            this.EXISTS = NLGUtils.getKeyword("there exists", language);
+            this.EXIST = NLGUtils.getKeyword("there exist", language);
+            this.NOTEXIST = NLGUtils.getKeyword("there don't exist", language);
+            this.NOTEXISTS = NLGUtils.getKeyword("there doesn't exist", language);
+            this.HOLDS = NLGUtils.getKeyword("holds", language);
+            this.SOTHAT = NLGUtils.getKeyword("so that", language);
+
+            String such = NLGUtils.getKeyword("such that", language);
+            this.SUCHTHAT = StringUtil.emptyString(such) ? this.SOTHAT : such;
         }
     }
 
@@ -186,7 +286,6 @@ public class LanguageFormatter {
         try {
             theStack.pushNew();
             StackElement element = theStack.getCurrStackElement();
-
             String template = paraphraseStatement(statement, false, false, 1);
 
             // Check for successful informal NLG of the entire statement.
@@ -238,20 +337,32 @@ public class LanguageFormatter {
                         }
                     }
                 }
+
                 if (!instanceMap.isEmpty() || !classMap.isEmpty() ) {
                     //if ((instanceMap != null && !instanceMap.isEmpty()) || (classMap != null && !classMap.isEmpty()))
                     template = variableReplace(template, instanceMap, classMap, kb, language);
                     if (debug) System.out.println("LanguageFormatter.htmlParaphrase(): template: " + template);
                 }
+
+                System.out.println("---------------------------------------");
+                System.out.println("--[template]: "+template+"\n");
+
+                // Readability layer (pre-linkification).
+                template = NLGReadability.improveTemplate(template, RenderMode.TEXT, language);
+
+                System.out.println("--[NLG Template]: "+template+"\n");
+                System.out.println("---------------------------------------");
+
                 // Get rid of the percentage signs.
                 nlFormat = NLGUtils.resolveFormatSpecifiers(template, href);
                 if (debug) System.out.println("LanguageFormatter.htmlParaphrase(): nlFormat: " + nlFormat);
+
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        if (debug) System.out.println("htmlParaphrase() - outputMap: " + outputMap);
+
 
         // nlFormat = paraphrased with links!
         // e.g <a href="http://localhost:8080/sigma/Browse.jsp?lang=EnglishLanguage&kb=SUMO&term=instrument">instrument</a> is an <a href="http://localhost:8080/sigma/Browse.jsp?lang=EnglishLanguage&kb=SUMO&term=instance">instance</a> of <a href="http://localhost:8080/sigma/Browse.jsp?lang=EnglishLanguage&kb=SUMO&term=Relation">relation</a>
@@ -401,49 +512,277 @@ public class LanguageFormatter {
         return ans;
     }
 
-    private String paraphraseWithLLM (String initialText) {
 
-        String prompt =
-                "You are an expert at rewriting formal or structured English sentences (derived from SUMO logical statements) "
-                        + "into more natural English while keeping the logical meaning and terminology intact.\n"
-                        + "When rewriting, follow these rules:\n"
-                        + "Keep all SUMO-related terms or placeholders (e.g., entity, relation, process) unchanged.\n"
-                        + "Make the sentence grammatical, fluent, and natural for a human reader.\n"
-                        + "Preserve logical quantifiers or structure (e.g., “for all”, “if”, “then”, “not”, “is an instance of”).\n"
-                        + "Only add small grammatical adjustments (articles, pluralization, verb forms, etc.) to improve readability.\n"
-                        + "Do not simplify or paraphrase away the logical meaning.\n"
-                        + "Answer only with the rewrited sentence, nothing else!"
-                        + "Input sentence: ";
+    private String unescapeJson(String s) {
+        if (s == null) return "";
+        return s.replace("\\n", "\n")
+                .replace("\\t", "\t")
+                .replace("\\r", "\r")
+                .replace("\\\"", "\"")
+                .replace("\\\\", "\\");
+    }
 
 
-        String model = "llama3.2";
+    private String buildGlossaryFromMaps(Set<String> symbols) {
 
-        String cleanedText = removeLinks(initialText);
-        prompt = prompt + cleanedText;
+        StringBuilder sb = new StringBuilder();
+        for (String sym : symbols) {
+            String gloss = null;
 
-        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
-        if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
+            // termMap/phraseMap are already in the LanguageFormatter instance
+            if (termMap != null) gloss = termMap.get(sym);
+            if (gloss == null && phraseMap != null) gloss = phraseMap.get(sym);
 
-        OllamaClient ollama = new OllamaClient(ollamaHost);
+            if (StringUtil.isNonEmptyString(gloss)) {
+                sb.append(sym).append(" = ").append(gloss).append("\n");
+            }
+        }
+        return sb.toString();
+    }
 
-        String out = "";
-        try {
-            out = ollama.generate(model, prompt);
-        } catch (IOException e) {
-            System.out.println(" ERROR | LanguageFormatter | paraphraseWithLLM : " + e);
+    private Set<String> extractSymbolsFromKif(String kif) {
+
+        Set<String> logops = new HashSet<>(Arrays.asList(
+                "if","then","=>","and","or","xor","<=>","not","forall","exists","holds"
+        ));
+
+        if (StringUtil.emptyString(kif)) return Collections.singleton("");
+
+        Set<String> out = new LinkedHashSet<>();
+        // Space out punctuation/operators so they tokenize cleanly
+        String cleaned = kif
+                .replace("(", " ")
+                .replace(")", " ")
+                .replace("\n", " ")
+                .replace("\r", " ")
+                .replace("\t", " ")
+                .replace("=>", " => ")
+                .replace("<=>", " <=> ");
+
+        for (String tok : cleaned.split("\\s+")) {
+            if (tok.isEmpty()) continue;
+            if (tok.startsWith("?")) continue; // variables
+
+            // Accept logical operators explicitly
+            if (logops.contains(tok)) {
+                out.add(tok);
+                continue;
+            }
+
+            // Accept standard SUMO symbols
+            if (tok.matches("[A-Za-z][A-Za-z0-9_+\\-]*")) {
+                out.add(tok);
+            }
         }
         return out;
     }
 
-        public static boolean checkOllamaHealth(){
-            String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
-            if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
-            OllamaClient oc = new OllamaClient(ollamaHost, 1000, 1500); // short timeouts
-            return oc.isHealthy();
+    private String normalizeSigmaMarkup(String doc) {
+        if (StringUtil.emptyString(doc)) return doc;
+
+        // Remove Sigma markup like &%Term
+        return doc.replaceAll("&%([A-Za-z0-9_+-]+)", "$1");
+    }
+
+
+    private String callOllamaJson(String prompt) {
+
+        String model = "llama3.2";
+//        String model = "qwen2.5:14b-instruct";
+
+        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+        if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
+
+        if (ollamaClient == null) ollamaClient = new OllamaClient(ollamaHost);
+
+        Map<String,Object> opts = new HashMap<>();
+        opts.put("temperature", 0);
+        opts.put("top_p", 1);
+        opts.put("num_predict", 500);
+
+        boolean jsonMode = true;
+
+        try {
+            if (model != null && model.startsWith("gpt-oss")) {
+                return ollamaClient.chat(model, prompt, opts, jsonMode);
+            }
+            opts.put("seed", 0);
+            return ollamaClient.generate(model, prompt, opts, jsonMode);
+        } catch (IOException e) {
+            System.out.println("ERROR | callOllamaJson: " + e);
+            return "{}";
+        }
+    }
+
+
+    private String jsonExtractField(String json, String field) {
+        if (json == null) return "";
+        String key = "\"" + field + "\"";
+        int k = json.indexOf(key);
+        if (k < 0) return "";
+        int colon = json.indexOf(':', k);
+        if (colon < 0) return "";
+
+        int q1 = json.indexOf('"', colon + 1);
+        if (q1 < 0) return "";
+
+        boolean esc = false;
+        for (int i = q1 + 1; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (esc) { esc = false; continue; }
+            if (c == '\\') { esc = true; continue; }
+            if (c == '"') return unescapeJson(json.substring(q1 + 1, i));
+        }
+        return "";
+    }
+
+
+    private String paraphraseWithLLM(String currentHtmlOrTemplate) {
+
+        // We will ask the LLM to explain the *SUO-KIF* (this.statement),
+        // while still allowing it to produce fluent English.
+        final String stepKif = (this.statement != null) ? this.statement : "";
+        final String cleanedTemplate = removeLinks(currentHtmlOrTemplate);
+
+        Set<String> symbols = extractSymbolsFromKif(stepKif);
+
+        String documentationBlock = buildDocumentationFromMaps(symbols);
+
+        // Build a small glossary grounded in Sigma maps (termFormat/format equivalents).
+        String glossaryBlock = buildGlossaryFromMaps(symbols);
+
+        String prompt1 =
+                "### SYSTEM ROLE:\n"
+                        + "You are an English rewriter.\n"
+                        + "Your sole job is to rewrite the given TEMPLATE into clear, grammatical, natural English.\n"
+                        + "Do NOT use any external knowledge. Do NOT interpret SUMO. Do NOT infer new meaning.\n\n"
+
+                        + "### HARD CONSTRAINTS:\n"
+                        + "1. PRESERVE LOGICAL SKELETON: Keep the same logical connectives already present in the TEMPLATE.\n"
+                        + "   - Keep all occurrences of: \"if\", \"then\", \"and\", \"or\", \"either\", \"not\", \"for all\", \"there exists\".\n"
+                        + "   - Do NOT change \"and\" into \"or\" or vice versa.\n"
+                        + "   - Do NOT introduce \"either/or\" unless the TEMPLATE already contains \"or\".\n"
+                        + "2. NO NEW FACTS: Do not add information not stated in the TEMPLATE.\n"
+                        + "3. NO SYMBOLS: Do not use logical symbols (¬, ∨, →, =>). Use plain English words only.\n"
+                        + "4. ENTITY CONSISTENCY: Do not merge or split entities. If the TEMPLATE mentions X and Y, keep them distinct.\n\n"
+
+                        + "### OUTPUT FORMAT:\n"
+                        + "Return valid JSON ONLY. No preamble.\n"
+                        + "Schema: {\"paraphrase\":\"...\"}\n\n"
+
+                        + "### INPUT:\n"
+                        + "TEMPLATE:\n"
+                        + cleanedTemplate + "\n\n"
+
+                        + "### INSTRUCTION:\n"
+                        + "Rewrite the TEMPLATE now and output the JSON:";
+
+        long start = System.nanoTime();
+        String json1 = callOllamaJson(prompt1);
+        long end = System.nanoTime();
+        double seconds = (end - start) / 1_000_000_000.0;
+
+        String paraphrase1 = jsonExtractField(json1, "paraphrase");
+
+        System.out.println("===================== Ollama Call  ===================");
+        System.out.println("\nSUO-KIF: "+stepKif);
+        System.out.println("\nGlossary block: "+glossaryBlock);
+        System.out.println("\nDocumentation block: "+documentationBlock);
+        System.out.println("\nCleaned Template: "+cleanedTemplate);
+        System.out.println("\nParaphrase: "+paraphrase1);
+        System.out.printf("\nOllama call took %.3f seconds%n%n", seconds);
+
+        if (StringUtil.emptyString(paraphrase1)) {
+            // Fallback: if JSON failed, return whatever we got
+            return StringUtil.isNonEmptyString(json1) ? json1 : cleanedTemplate;
         }
 
 
-        private String removeLinks(String initialText){
+        // SKIP second pass for now, because it adds a lot of time to the execution.
+//        // Verifier pass: keep meaning tight
+//        String prompt2 =
+//                "You are a strict SUO-KIF paraphrase verifier.\n"
+//                        + "Compare STEP and PARAPHRASE for structural equivalence.\n"
+//                        + "For each check, output one of: PASS, FAIL, or NA (not applicable).\n"
+//                        + "A check is NA if STEP does not contain that construct.\n\n"
+//
+//                        + "CHECKS:\n"
+//                        + "Q: Quantifiers (forall/exists) variables and scopes preserved.\n"
+//                        + "N: Negation (not) scope preserved.\n"
+//                        + "I: Conditionals (=>) and nesting preserved.\n"
+//                        + "B: Boolean structure (and/or) groupings preserved.\n"
+//                        + "P: Predicates preserved: same predicate names and same argument order.\n"
+//                        + "X: No extra predicates/facts introduced.\n"
+//                        + "S: Symbols preserved exactly (variables/constants names unchanged).\n\n"
+//
+//                        + "OUTPUT VALID JSON ONLY with this schema:\n"
+//                        + "{"
+//                        + "\"verdict\":\"PASS|FAIL\","
+//                        + "\"checks\":{\"Q\":\"PASS|FAIL|NA\",\"N\":\"PASS|FAIL|NA\",\"I\":\"PASS|FAIL|NA\",\"B\":\"PASS|FAIL|NA\",\"P\":\"PASS|FAIL|NA\",\"X\":\"PASS|FAIL|NA\",\"S\":\"PASS|FAIL|NA\"},"
+//                        + "\"issues\":[\"...\"],"
+//                        + "\"corrected_paraphrase\":\"...\""
+//                        + "}\n\n"
+//
+//                        + "RULES:\n"
+//                        + "- verdict is FAIL if ANY check is FAIL.\n"
+//                        + "- If verdict is PASS: corrected_paraphrase MUST equal PARAPHRASE exactly.\n"
+//                        + "- If verdict is FAIL: corrected_paraphrase MUST be corrected.\n"
+//                        + "- Keep SUMO terms and symbols unchanged.\n"
+//                        + "- Do not add facts.\n\n"
+//
+//                        + "STEP (SUO-KIF):\n" + stepKif + "\n\n"
+//                        + "PARAPHRASE:\n" + paraphrase1;
+//
+//
+//        System.out.println("\n\n----------- PROMPT 2 ------------------");
+//        System.out.println(prompt2);
+//
+//        String json2 = callOllamaJson(prompt2);
+//        System.out.println("------Answer 2------");
+//        String verdict = jsonExtractField(json2, "verdict");
+//        String corrected = jsonExtractField(json2, "corrected_paraphrase");
+//        System.out.println(json2);
+//        System.out.println("----------------------------------------\n\n");
+//        if ("FAIL".equalsIgnoreCase(verdict) && StringUtil.isNonEmptyString(corrected)) {
+//            return corrected;
+//        }
+        return paraphrase1;
+    }
+
+    private String buildDocumentationFromMaps(Set<String> symbols) {
+        StringBuilder sb = new StringBuilder();
+
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+
+        for (String sym : symbols) {
+
+            // 1) Built-in docs for logical operators / keywords
+            String doc = LOGIC_DOCS.get(sym);
+
+            // 2) Fallback to SUMO KB docs for domain predicates/classes
+            if (doc == null) {
+                String gloss = KButilities.getDocumentation(kb, sym);
+                doc = normalizeSigmaMarkup(gloss);
+            }
+
+            if (StringUtil.isNonEmptyString(doc)) {
+                sb.append(sym).append(" = \"").append(doc.trim()).append("\"").append("\n");
+            }
+        }
+        return sb.toString();
+    }
+
+
+
+    public static boolean checkOllamaHealth(){
+        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+        if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
+        OllamaClient oc = new OllamaClient(ollamaHost, 1000, 1500); // short timeouts
+        return oc.isHealthy();
+    }
+
+
+    private String removeLinks(String initialText){
         if (initialText == null) return null;
         // Replace <a ...> and </a> tags with nothing, keeping only the inner text
         return initialText.replaceAll("<a[^>]*>", "")   // remove opening <a ...>
@@ -742,203 +1081,250 @@ public class LanguageFormatter {
         return "";
     }
 
+
+    // Overload for backward compatibility
+    public String generateFormalNaturalLanguage(List<String> args,
+                                                String pred,
+                                                boolean isNegMode) {
+        return generateFormalNaturalLanguage(args, pred, isNegMode, renderMode);
+    }
+
     /** ***************************************************************
      */
-    public String generateFormalNaturalLanguage(List<String> args, String pred, boolean isNegMode) {
+    public String generateFormalNaturalLanguage(List<String> args, String pred, boolean isNegMode, RenderMode mode) {
 
-        if (args.isEmpty())
-            return "";
-        String COMMA = NLGUtils.getKeyword(",", language);
-        //String QUESTION = getKeyword(Formula.V_PREF,language);
-        String IF = NLGUtils.getKeyword("if", language);
-        String THEN = NLGUtils.getKeyword("then", language);
-        String AND = NLGUtils.getKeyword(Formula.AND, language);
-        String OR = NLGUtils.getKeyword(Formula.OR, language);
-        String XOR = NLGUtils.getKeyword(Formula.XOR, language);
-        String IFANDONLYIF = NLGUtils.getKeyword("if and only if", language);
-        String NOT = NLGUtils.getKeyword(Formula.NOT, language);
-        String FORALL = NLGUtils.getKeyword("for all", language);
-        String EXISTS = NLGUtils.getKeyword("there exists", language);
-        String EXIST = NLGUtils.getKeyword("there exist", language);
-        String NOTEXIST = NLGUtils.getKeyword("there don't exist", language);
-        String NOTEXISTS = NLGUtils.getKeyword("there doesn't exist", language);
-        String HOLDS = NLGUtils.getKeyword("holds", language);
-        String SOTHAT = NLGUtils.getKeyword("so that", language);
-        String SUCHTHAT = NLGUtils.getKeyword("such that", language);
-        if (StringUtil.emptyString(SUCHTHAT)) { SUCHTHAT = SOTHAT; }
+        if (args.isEmpty()) return "";
 
-        StringBuilder sb = new StringBuilder();
+        if (mode == null) mode = RenderMode.HTML;
+
+        Keywords k = new Keywords(language);
+
+        // Local helper to avoid repeating translateWord(...) everywhere.
+        List<String> tArgs = new ArrayList<>(args.size());
+        for (int i = 0; i < args.size(); i++) {
+            tArgs.add(maybeTranslateArg(args.get(i)));
+        }
 
         if (pred.equals(Formula.IF)) {
             if (isNegMode) {
-                sb.append(args.get(1));
-                sb.append(Formula.SPACE);
-                sb.append(AND);
-                sb.append(Formula.SPACE);
-                sb.append("~{");
-                sb.append(args.get(0));
-                sb.append("}");
+                return tArgs.get(0) + Formula.SPACE + k.AND + Formula.SPACE + negateClause(tArgs.get(1));
+            } else {
+                if (mode == RenderMode.HTML) {
+                    // Special handling for Arabic.
+                    boolean isArabic = isArabicLanguage(language);
+                    StringBuilder sb = new StringBuilder();
+//                    sb.append("<ul><li>");
+                    if (isArabic) sb.append("<span dir=\"rtl\">");
+//                    sb.append(k.IF).append(Formula.SPACE).append(seg_if_a(tArgs.get(0))).append(k.COMMA);
+                    sb.append(seg_if_a(tArgs.get(0)));
+                    if (isArabic) sb.append("</span>");
+//                    sb.append("</li><li>");
+                    if (isArabic) sb.append("<span dir=\"rtl\">");
+                    sb.append(seg_if_c(tArgs.get(1)));
+                    if (isArabic) sb.append("</span>");
+//                    sb.append("</li></ul>");
+                    return sb.toString();
+                }
+                // TEXT
+                return seg_if_a(tArgs.get(0)) + seg_if_c(tArgs.get(1));
             }
-            else {
-                // Special handling for Arabic.
-                boolean isArabic = (language.matches(".*(?i)arabic.*")
-                        || language.equalsIgnoreCase("ar"));
-                sb.append("<ul><li>");
-                sb.append(isArabic ? "<span dir=\"rtl\">" : "");
-                sb.append(IF);
-                sb.append(Formula.SPACE);
-                sb.append(args.get(0));
-                sb.append(COMMA);
-                sb.append(isArabic ? "</span>" : "");
-                sb.append("</li><li>");
-                sb.append(isArabic ? "<span dir=\"rtl\">" : "");
-                sb.append(THEN);
-                sb.append(Formula.SPACE);
-                sb.append(args.get(1));
-                sb.append(isArabic ? "</span>" : "");
-                sb.append("</li></ul>");
-            }
-
-            return sb.toString();
         }
+
         if (pred.equalsIgnoreCase(Formula.AND)) {
             if (isNegMode) {
-                for (int i = 0; i < args.size(); i++) {
-                    if (i > 0) {
-                        sb.append(Formula.SPACE);
-                        sb.append(OR);
-                        sb.append(Formula.SPACE);
-                    }
-                    sb.append("~{ ");
-                    sb.append(translateWord(termMap, args.get(i)));
-                    sb.append(" }");
+                // ¬(A ∧ B ∧ ...) => ¬A ∨ ¬B ∨ ...
+                List<String> negated = new ArrayList<>(tArgs.size());
+                for (int i = 0; i < tArgs.size(); i++) {
+                    // Wrap each negated operand as a segment boundary to preserve structure.
+                    negated.add(seg(negateClause(tArgs.get(i))));
                 }
-            }
-            else {
-                for (int i = 0; i < args.size(); i++) {
-                    if (i > 0) {
-                        sb.append(Formula.SPACE);
-                        sb.append(AND);
-                        sb.append(Formula.SPACE);
-                    }
-                    sb.append(translateWord(termMap, args.get(i)));
-                }
+                return seg_or(join(negated, k.OR));
             }
 
-            return sb.toString();
+            // Normal AND: wrap each operand so downstream readability can isolate clauses reliably.
+            List<String> marked = new ArrayList<>(tArgs.size());
+            for (int i = 0; i < tArgs.size(); i++) {
+                marked.add(seg(tArgs.get(i)));
+            }
+            return seg_and(join(marked, k.AND));
         }
+
         if (pred.equalsIgnoreCase("holds")) {
-            for (int i = 0; i < args.size(); i++) {
+            // Keep existing behavior (odd chaining preserved).
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < tArgs.size(); i++) {
                 if (i > 0) {
                     if (isNegMode) {
-                        sb.append(Formula.SPACE);
-                        sb.append(NOT);
+                        sb.append(Formula.SPACE).append(k.NOT);
                     }
-                    sb.append(Formula.SPACE);
-                    sb.append(HOLDS);
-                    sb.append(Formula.SPACE);
+                    sb.append(Formula.SPACE).append(k.HOLDS).append(Formula.SPACE);
                 }
-                sb.append(translateWord(termMap, args.get(i)));
+                sb.append(tArgs.get(i));
             }
-
             return sb.toString();
         }
+
+
         if (pred.equalsIgnoreCase(Formula.OR)) {
-            for (int i = 0; i < args.size(); i++) {
-                if (i > 0) {
-                    sb.append(Formula.SPACE);
-                    sb.append(isNegMode ? AND : OR);
-                    sb.append(Formula.SPACE);
+            // ¬(A ∨ B ∨ ...) => ¬A ∧ ¬B ∧ ...
+            // (Note: existing behavior negates operands and flips the joiner.)
+            if (isNegMode) {
+                List<String> negated = new ArrayList<>(tArgs.size());
+                for (int i = 0; i < tArgs.size(); i++) {
+                    // Wrap each negated operand as a segment boundary.
+                    negated.add(seg(negateClause(tArgs.get(i))));
                 }
-                sb.append(translateWord(termMap, args.get(i)));
+                return seg_and(join(negated, k.AND));
             }
 
-            return sb.toString();
+            // Normal OR: wrap each operand so downstream readability can isolate clauses reliably.
+            List<String> marked = new ArrayList<>(tArgs.size());
+            for (int i = 0; i < tArgs.size(); i++) {
+                marked.add(seg(tArgs.get(i)));
+            }
+            return seg_or(join(marked, k.OR));
         }
+
+
         if (pred.equalsIgnoreCase(Formula.XOR)) {
-            for (int i = 0; i < args.size(); i++) {
-                if (i > 0) {
-                    sb.append(Formula.SPACE);
-                    sb.append(OR); // TODO: determine if this is correct for XOR
-                    sb.append(Formula.SPACE);
-                }
-                sb.append(translateWord(termMap, args.get(i)));
-            }
-
-            return sb.toString();
+            // Keep existing behavior (joins with XOR);
+            return renderXor(tArgs);
         }
+
         if (pred.equals(Formula.IFF)) {
             if (isNegMode) {
-                sb.append(translateWord(termMap, args.get(1)));
-                sb.append(Formula.SPACE);
-                sb.append(OR);
-                sb.append(Formula.SPACE);
-                sb.append("~{ ");
-                sb.append(translateWord(termMap, args.get(0)));
-                sb.append(" }");
-                sb.append(Formula.SPACE);
-                sb.append(OR);
-                sb.append(Formula.SPACE);
-                sb.append(translateWord(termMap, args.get(0)));
-                sb.append(Formula.SPACE);
-                sb.append(OR);
-                sb.append(Formula.SPACE);
-                sb.append("~{ ");
-                sb.append(translateWord(termMap, args.get(1)));
-                sb.append(" }");
+                return renderXor(tArgs);
             }
-            else {
-                sb.append(translateWord(termMap, args.get(0)));
-                sb.append(Formula.SPACE);
-                sb.append(IFANDONLYIF);
-                sb.append(Formula.SPACE);
-                sb.append(translateWord(termMap, args.get(1)));
-            }
-
-            return sb.toString();
+            return tArgs.get(0) + Formula.SPACE + k.IFF + Formula.SPACE + tArgs.get(1);
         }
+
         if (pred.equalsIgnoreCase(Formula.UQUANT)) {
+            StringBuilder sb = new StringBuilder();
             if (isNegMode) {
-                sb.append(Formula.SPACE);
-                sb.append(NOT);
-                sb.append(Formula.SPACE);
+                sb.append(k.NOT).append(Formula.SPACE);
             }
-            sb.append(FORALL);
-            sb.append(Formula.SPACE);
-            if (args.get(0).contains(Formula.SPACE)) {
-                // If more than one variable ...
-                sb.append(translateWord(termMap, NLGUtils.formatList(args.get(0), language)));
-            }
-            else {
-                // If just one variable ...
-                sb.append(translateWord(termMap, args.get(0)));
-            }
-            sb.append(Formula.SPACE);
-            sb.append(translateWord(termMap, args.get(1)));
+//            sb.append(k.FORALL).append(Formula.SPACE);
 
-            return sb.toString();
+            String vars = args.get(0);
+            if (vars.contains(Formula.SPACE)) {
+                sb.append(seg_vars(translateWord(termMap, NLGUtils.formatList(vars, language))));
+            } else {
+                sb.append(seg_vars(translateWord(termMap, vars)));
+            }
+
+            sb.append(Formula.SPACE).append(tArgs.get(1));
+            return seg_forall(sb.toString());
         }
+
+
         if (pred.equalsIgnoreCase(Formula.EQUANT)) {
-            if (args.get(0).contains(Formula.SPACE)) {
-                // If more than one variable ...
-                sb.append(isNegMode ? NOTEXIST : EXIST);
-                sb.append(Formula.SPACE);
-                sb.append(translateWord(termMap, NLGUtils.formatList(args.get(0), language)));
+            StringBuilder sb = new StringBuilder();
+            String vars = args.get(0);
+
+            if (vars.contains(Formula.SPACE)) {
+                sb.append(isNegMode ? k.NOTEXIST : k.EXIST)
+                        .append(Formula.SPACE)
+                        .append(translateWord(termMap, NLGUtils.formatList(vars, language)));
+            } else {
+                sb.append(isNegMode ? k.NOTEXISTS : k.EXISTS)
+                        .append(Formula.SPACE)
+                        .append(translateWord(termMap, vars));
             }
-            else {
-                // If just one variable ...
-                sb.append(isNegMode ? NOTEXISTS : EXISTS);
-                sb.append(Formula.SPACE);
-                sb.append(translateWord(termMap, args.get(0)));
-            }
-            sb.append(Formula.SPACE);
-            sb.append(SUCHTHAT);
-            sb.append(Formula.SPACE);
-            sb.append(translateWord(termMap, args.get(1)));
+
+            sb.append(Formula.SPACE)
+                    .append(k.SUCHTHAT)
+                    .append(Formula.SPACE)
+                    .append(tArgs.get(1));
 
             return sb.toString();
         }
         return "";
+    }
+
+    private String seg(String s) { return SEG_S + s + SEG_E; }
+    private String seg_if_a(String s) { return IF_A_O + s + IF_A_C; }
+    private String seg_if_c(String s) { return IF_C_O + s + IF_C_C; }
+    private String seg_and(String s) { return AND_S + s + AND_E; }
+    private String seg_or(String s) { return OR_S + s + OR_E; }
+    private String seg_forall(String s) { return FORALL_O + s + FORALL_C; }
+    private String seg_vars(String s) { return VARS_O + s + VARS_C; }
+
+
+
+    private String negateClause(String s) {
+        return "~{ " + s + " }";
+    }
+
+    private boolean isArabicLanguage(String lang) {
+        return lang != null &&
+                (lang.matches(".*(?i)arabic.*") || lang.equalsIgnoreCase("ar"));
+    }
+
+    private String join(List<String> parts, String op) {
+        return String.join(Formula.SPACE + op + Formula.SPACE, parts);
+    }
+
+    /** User-friendly XOR for 2 args; fallback to AND/OR expansion for others. */
+    private String renderXor(List<String> parts) {
+
+        Keywords k = new Keywords(language);
+
+        if (parts == null || parts.isEmpty()) return "";
+        if (parts.size() == 1) return parts.get(0);
+
+        if (parts.size() == 2) {
+            String either = NLGUtils.getKeyword("either", language);
+            String butNotBoth = NLGUtils.getKeyword("but not both", language);
+            if (StringUtil.emptyString(either)) either = "either";
+            if (StringUtil.emptyString(butNotBoth)) butNotBoth = "but not both";
+
+            return either + Formula.SPACE + parts.get(0)
+                    + Formula.SPACE + k.OR + Formula.SPACE + parts.get(1)
+                    + k.COMMA + Formula.SPACE + butNotBoth;
+        }
+
+        // n-ary: parity (odd number true) in DNF.
+        // Complexity: O(n * 2^(n-1)) clauses. Fine for small n (typical here).
+        List<String> disjuncts = new ArrayList<>();
+
+        int n = parts.size();
+        int maskMax = 1 << n;
+        for (int mask = 0; mask < maskMax; mask++) {
+            if ((Integer.bitCount(mask) % 2) == 1) { // odd parity
+                List<String> conj = new ArrayList<>(n);
+                for (int i = 0; i < n; i++) {
+                    boolean isTrue = ((mask >> i) & 1) == 1;
+                    String lit = parts.get(i);
+                    conj.add(isTrue ? lit : negateClause(lit));
+                }
+                disjuncts.add(seg_and(join(conj, k.AND)));
+            }
+        }
+        return seg_or(join(disjuncts, k.OR));
+    }
+
+    /** Args reaching generateFormalNaturalLanguage() are usually already paraphrased.
+     * Only translate when the arg looks like a raw atomic token.
+     */
+    private String maybeTranslateArg(String s) {
+        if (StringUtil.emptyString(s)) return s;
+
+        // If it looks like a composed clause or already-rendered markup, do NOT translate.
+        if (s.indexOf(' ') >= 0) return s;          // multiword / composed
+        if (s.contains("&%")) return s;             // Sigma hyperlink marker
+        if (s.contains("~{")) return s;             // negation wrapper
+        if (s.contains("<")) return s;              // HTML fragment
+        if (s.startsWith("\"") && s.endsWith("\"")) return s; // quoted string
+
+        // Otherwise it's plausibly a raw atom; translate once.
+        return translateWord(termMap, s);
+    }
+
+    /** True if s already looks like Sigma's annotated term placeholder: &%TERM$"label" */
+    private static boolean isAnnotatedTerm(String s) {
+        if (StringUtil.emptyString(s)) return false;
+        // Minimal and fast check (no regex): must start with &% and contain $" and end with "
+        return s.startsWith("&%") && s.contains("$\"") && s.endsWith("\"");
     }
 
     /** ***************************************************************
@@ -952,84 +1338,17 @@ public class LanguageFormatter {
     private String paraphraseWithFormat(String stmt, boolean isNegMode, boolean isQuestionMode) {
 
         if (debug) System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + stmt);
-        //System.out.println("neg mode: " + isNegMode);
+
         Formula f = new Formula();
         f.read(stmt);
         String pred = f.car();
         String strFormat = phraseMap.get(pred);
-        //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 1 format: " + strFormat);
-        // System.out.println("str format: " + strFormat);
-        //int index;
 
         if (strFormat.contains("&%"))                    // setup the term hyperlink
             strFormat = strFormat.replaceAll("&%(\\w+)","&%" + pred + "\\$\"$1\"");
 
-        //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 2 format: " + strFormat);
-        if (isNegMode) {                                  // handle negation
-            if (isQuestionMode) {
-                if (strFormat.contains("%qn{")) {
-                    int start = strFormat.indexOf("%qn{") + 4;
-                    int end = strFormat.indexOf("}", start);
-                    strFormat = (strFormat.substring(0, start - 4)
-                            + strFormat.substring(start, end)
-                            + strFormat.substring(end + 1, strFormat.length()));
-                }
-            } else {
-                if (!strFormat.contains("%n")) {
-                    strFormat = NLGUtils.getKeyword(Formula.NOT, language) + Formula.SPACE + strFormat;
-                } else {
-                    if (!strFormat.contains("%n{")) {
-                        strFormat = strFormat.replace("%n", NLGUtils.getKeyword(Formula.NOT, language));
-                    } else {
-                        int start = strFormat.indexOf("%n{") + 3;
-                        int end = strFormat.indexOf("}", start);
-                        strFormat = (strFormat.substring(0, start - 3)
-                                + strFormat.substring(start, end)
-                                + strFormat.substring(end + 1, strFormat.length()));
-                    }
-                }
-            }
-            // delete all the unused positive commands
-            isNegMode = false;
-        }
-        else {
-            if (isQuestionMode) {
-                if (strFormat.contains("%qp{")) {
-                    int start = strFormat.indexOf("%qp{") + 4;
-                    int end = strFormat.indexOf("}", start);
-                    strFormat = (strFormat.substring(0, start - 4)
-                            + strFormat.substring(start, end)
-                            + strFormat.substring(end + 1, strFormat.length()));
-                }
-            } else {
-                if (strFormat.contains("%p{")) {
-                    int start = strFormat.indexOf("%p{") + 3;
-                    int end = strFormat.indexOf("}", start);
-                    strFormat = (strFormat.substring(0, start - 3)
-                            + strFormat.substring(start, end)
-                            + strFormat.substring(end + 1, strFormat.length()));
-                }
-            }
-        }
-        // delete all the unused negative commands
-        strFormat = strFormat.replaceAll(" %n\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%n\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%n\\{.+?\\}","");
-        strFormat = strFormat.replace(" %n ",Formula.SPACE);
-        strFormat = strFormat.replace("%n ",Formula.SPACE);
-        strFormat = strFormat.replace("%n","");
-        // delete all unused positive commands
-        strFormat = strFormat.replaceAll(" %p\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%p\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%p\\{.+?\\}","");
-        // delete all unused positive question commands
-        strFormat = strFormat.replaceAll(" %qp\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%qp\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%qp\\{.+?\\}","");
-        // delete all unused negative question commands
-        strFormat = strFormat.replaceAll(" %qn\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%qn\\{.+?\\} ",Formula.SPACE);
-        strFormat = strFormat.replaceAll("%qn\\{.+?\\}","");
+        // Apply directive selection/cleanup deterministically
+        strFormat = applyDirectives(strFormat, isNegMode, isQuestionMode);
 
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 3 format: " + strFormat);
         if (strFormat.contains("%*"))
@@ -1088,50 +1407,146 @@ public class LanguageFormatter {
         return strFormat;
     }
 
+    private Dir chooseDir(boolean isNegMode, boolean isQuestionMode) {
+        if (isQuestionMode) return isNegMode ? Dir.QN : Dir.QP;
+        return isNegMode ? Dir.N : Dir.P;
+    }
+
+    private static Dir parseDir(String tag) {
+        if ("p".equals(tag)) return Dir.P;
+        if ("n".equals(tag)) return Dir.N;
+        if ("qp".equals(tag)) return Dir.QP;
+        if ("qn".equals(tag)) return Dir.QN;
+        return null;
+    }
+
+    /** Selects the active directive blocks (%p/%n/%qp/%qn) and removes the rest deterministically. */
+    private String applyDirectives(String fmt, boolean isNegMode, boolean isQuestionMode) {
+
+        if (StringUtil.emptyString(fmt)) return fmt;
+
+        Dir keep = chooseDir(isNegMode, isQuestionMode);
+        StringBuilder out = new StringBuilder(fmt.length());
+
+        int i = 0;
+        while (i < fmt.length()) {
+
+            int pct = fmt.indexOf('%', i);
+            if (pct < 0) {
+                out.append(fmt.substring(i));
+                break;
+            }
+
+            // copy everything before %
+            out.append(fmt.substring(i, pct));
+            i = pct;
+
+            // Try to parse directive token: %p{...} / %n{...} / %qp{...} / %qn{...}
+            int j = i + 1;
+            if (j >= fmt.length()) {
+                out.append('%');
+                break;
+            }
+
+            // Read tag (letters only)
+            int tagStart = j;
+            while (j < fmt.length() && Character.isLetter(fmt.charAt(j))) j++;
+            String tag = fmt.substring(tagStart, j);
+            Dir dir = parseDir(tag);
+
+            // Not a known directive -> keep '%' and continue
+            if (dir == null) {
+                out.append('%');
+                i = i + 1;
+                continue;
+            }
+
+            // If next char is '{', we have a braced directive block
+            if (j < fmt.length() && fmt.charAt(j) == '{') {
+                int bodyStart = j + 1;
+                int bodyEnd = fmt.indexOf('}', bodyStart);
+
+                // If no closing brace, treat as literal text (preserve old behavior best-effort)
+                if (bodyEnd < 0) {
+                    out.append(fmt.substring(i, j + 1)); // includes "%tag{"
+                    i = j + 1;
+                    continue;
+                }
+
+                String body = fmt.substring(bodyStart, bodyEnd);
+
+                // Keep only the chosen directive content; drop others
+                if (dir == keep) {
+                    out.append(body);
+                }
+
+                i = bodyEnd + 1;
+                continue;
+            }
+
+            // Unbraced directives (%n / %p) were previously used as NOT keyword insertion.
+            // Preserve existing behavior: only %n is meaningful (negation keyword injection),
+            // and only when neg-mode and not question-mode.
+            if ("n".equals(tag)) {
+                if (isNegMode && !isQuestionMode) {
+                    out.append(NLGUtils.getKeyword(Formula.NOT, language));
+                }
+            }
+            // %p without braces is a no-op historically; drop it.
+
+            i = j;
+        }
+
+        // Normalize whitespace a bit (keep conservative to avoid behavior drift)
+        return out.toString().replaceAll("\\s+", Formula.SPACE).trim();
+    }
+
+
     /** ***************************************************************
      * Process an atom into an appropriate NL string.  If a URL, add
      * spaces for readability.  Return variable unaltered.  Add
      * term format string to all other atoms.
      */
-    private static String processAtom(String atom, Map<String, String> termMap) {
+     static String processAtom(String atom, Map<String, String> termMap) {
 
-        String result = atom;
+        if (StringUtil.emptyString(atom))
+            return atom;
+
+        // If already annotated, do nothing (idempotent).
+        if (isAnnotatedTerm(atom))
+            return atom;
+
         String unquoted = StringUtil.removeEnclosingQuotes(atom);
+
+        // Numbers: keep raw
         boolean isNumber;
         try {
             Double dbl = Double.valueOf(unquoted);
             isNumber = !dbl.isNaN();
-        }
-        catch (NumberFormatException nex) {
+        }catch (NumberFormatException nex) {
             isNumber = false;
         }
-        if (isNumber)
-            ; // do nothing
-        else if (StringUtil.isQuotedString(atom)) {
-            if (unquoted.startsWith("http")) {
-                StringBuilder formatted = new StringBuilder(atom);
-                if (formatted.length() > 50) {
-                    for (int i = 50; i < formatted.length(); i++) {
-                        if (i > 50 && formatted.charAt(i) == '/')
-                            // add spaces to long URL strings
-                            formatted = formatted.insert(i+1,' ');
-                    }
-                    result = formatted.toString();
-                }
-            }
+        if (isNumber) return atom;
+
+        if (StringUtil.isQuotedString(atom)) {
+            return NLGUtils.formatLongUrl(atom);
         }
-        else if (Formula.isVariable(atom))
-            ; // do nothing
-        else if (StringUtil.isDigitString(unquoted))
-            ; // do nothing
-        else if (termMap.containsKey(atom)) {
-            String formattedString = termMap.get(atom);
-            result = ("&%" + atom + "$\"" + formattedString + "\"");
+
+        // Variables and digit strings: keep raw
+        if (Formula.isVariable(atom)) return atom;
+
+        if (StringUtil.isDigitString(unquoted)) return atom;
+
+        // Otherwise: ontology term (or constant) -> annotated consistently
+        String label = atom;
+        if (termMap != null) {
+            String mapped = termMap.get(atom);
+            if (StringUtil.isNonEmptyString(mapped))
+                label = mapped;
         }
-        else
-            result = ("&%" + atom + "$\"" + atom + "\"");
-        return result;
+        return "&%" + atom + "$\"" + label + "\"";
     }
+
 
     /** ***************************************************************
      * Return the NL format of an individual word.
@@ -1273,7 +1688,8 @@ public class LanguageFormatter {
      */
     private static String incrementalVarReplace(String form, String varString, String varType,
                                                 String varPretty, String language,
-                                                boolean isClass, Map<String, Integer> typeMap) {
+                                                boolean isClass, Map<String, Integer> typeMap,
+                                                Map<String, String> varLabelMap) {
 
         String argNumStr = "";
         if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): form " + form);
@@ -1332,8 +1748,11 @@ public class LanguageFormatter {
             if (result.contains(varString) && count < 20) {
                 if (isClass) {
                     article = NLGUtils.getArticle("kind", count, occurrenceCounter, language);
+                    String lbl = getOrCreateVarLabel(varString, varLabelMap);
+//                    replacement = (article + Formula.SPACE + NLGUtils.getKeyword("kind of", language)
+//                            + Formula.SPACE + varPretty);
                     replacement = (article + Formula.SPACE + NLGUtils.getKeyword("kind of", language)
-                            + Formula.SPACE + varPretty);
+                            + Formula.SPACE + varPretty + Formula.SPACE + lbl);
                     if (isArabic)
                         replacement = (NLGUtils.getKeyword("kind of", language) + Formula.SPACE + varPretty);
 
@@ -1344,7 +1763,9 @@ public class LanguageFormatter {
                 }
                 else {
                     article = NLGUtils.getArticle(varPretty, count, occurrenceCounter, language);
-                    replacement = (article + Formula.SPACE + varPretty);
+                    String lbl = getOrCreateVarLabel(varString, varLabelMap);
+//                    replacement = (article + Formula.SPACE + varPretty);
+                    replacement = (article + Formula.SPACE + varPretty + Formula.SPACE + lbl);
                     if (isArabic) {
                         defArt = NLGUtils.getKeyword("the", language);
                         if (article.startsWith(defArt) && !varPretty.startsWith(defArt)) {
@@ -1369,6 +1790,17 @@ public class LanguageFormatter {
         return result;
     }
 
+    private static String getOrCreateVarLabel(String varString, Map<String,String> varLabelMap) {
+        String lbl = varLabelMap.get(varString);
+        if (lbl != null) return lbl;
+
+        int idx = varLabelMap.size();
+        String[] base = {"X","Y","Z","W","V","U","T","S","R","Q","P","O","N","M","L","K","J","I","H","G","F","E","D","C","B","A"};
+        lbl = (idx < base.length) ? base[idx] : ("X" + (idx + 1));
+        varLabelMap.put(varString, lbl);
+        return lbl;
+    }
+
     /** **************************************************************
      * Replace variables in a formula with paraphrases expressing their
      * type.
@@ -1378,6 +1810,10 @@ public class LanguageFormatter {
 
         String result = form;
         Map<String,Integer> typeMap = new HashMap<>();
+
+        // NEW: stable variable labels per formula
+        Map<String,String> varLabelMap = new LinkedHashMap<>();
+
         List<String> varList = NLGUtils.collectOrderedVariables(form);
         Iterator<String> it = varList.iterator();
         String varString;
@@ -1394,19 +1830,19 @@ public class LanguageFormatter {
                 if (subclassArray != null && !subclassArray.isEmpty()) {
                     varType = (String) subclassArray.toArray()[0];
                     varPretty = kb.getTermFormatMap(language).get(varType);
-                    result = incrementalVarReplace(result, varString, varType, varPretty, language, true, typeMap);
+                    result = incrementalVarReplace(result, varString, varType, varPretty, language, true, typeMap, varLabelMap);
                 }
                 else {
                     if (instanceArray != null && !instanceArray.isEmpty()) {
                         varType = (String) instanceArray.toArray()[0];
                         varPretty = kb.getTermFormatMap(language).get(varType);
-                        result = incrementalVarReplace(result, varString, varType, varPretty, language, false, typeMap);
+                        result = incrementalVarReplace(result, varString, varType, varPretty, language, false, typeMap, varLabelMap);
                     }
                     else {
                         varPretty = kb.getTermFormatMap(language).get("Entity");
                         if (StringUtil.emptyString(varPretty))
                             varPretty = "entity";
-                        result = incrementalVarReplace(result, varString, "Entity", varPretty, language, false, typeMap);
+                        result = incrementalVarReplace(result, varString, "Entity", varPretty, language, false, typeMap, varLabelMap);
                     }
                 }
             }

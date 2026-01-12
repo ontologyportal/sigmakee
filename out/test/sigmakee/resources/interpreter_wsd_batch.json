@@ -1,0 +1,77 @@
+[{
+  "input": "Amelia Mary Earhart (July 24, 1897 – July 2, 1937) was an American aviator",
+  "test": [
+    "names(Amelia_Mary_Earhart-1,\"Amelia Mary Earhart\")",
+    "sumo(Human,Amelia_Mary_Earhart-1)",
+    "attribute(Amelia_Mary_Earhart-1,Female)",
+    "sumo(UnitedStates,American-17)",
+    "sumo(Pilot,aviator-18)"
+  ]
+},{
+  "input": "Amelia Earhart (July 24, 1897 – July 2, 1937) was an American aviator",
+  "test": [
+    "names(Amelia_Earhart-1,\"Amelia Earhart\")",
+    "sumo(Woman,Amelia_Earhart-1)",
+    "sumo(UnitedStates,American-16)",
+    "sumo(Pilot,aviator-17)"
+  ]
+},{
+  "input": "John kicks the cart.",
+  "test": [
+    "names(John-1,\"John\")",
+    "sumo(Human,John-1)",
+    "attribute(John-1,Male)",
+    "sumo(Kicking,kicks-2)",
+    "sumo(Wagon,cart-4)"
+  ]
+},{
+  "input": "Amelia Earhart flies the plane.",
+  "test": [
+    "names(Amelia_Earhart-1,\"Amelia Earhart\")",
+    "sumo(Woman,Amelia_Earhart-1)",
+    "sumo(Flying,flies-3)",
+    "sumo(Airplane,plane-5)"
+  ]
+},{
+  "input": "Earhart and Noonan found Gardner Island.",
+  "test": [
+    "names(Earhart-1,\"Earhart\")",
+    "names(Noonan-3,\"Noonan\")",
+    "sumo(Human,Earhart-1)",
+    "sumo(Human,Noonan-3)",
+    "sumo(Island,Gardner_Island-5)"
+  ]
+},{
+  "input": "John Smith flies the plane",
+  "test": [
+    "names(John_Smith-1,\"John Smith\")",
+    "sumo(Man,John_Smith-1)",
+    "sumo(Flying,flies-3)",
+    "sumo(Airplane,plane-5)"
+  ]
+},{
+  "input": "George Washington Carver flies the plane.",
+  "test": [
+    "names(George_Washington_Carver-1,\"George Washington Carver\")",
+    "sumo(Man,George_Washington_Carver-1)",
+    "sumo(Flying,flies-4)",
+    "sumo(Airplane,plane-6)"
+  ]
+},{
+  "input": "Mary smells sweet. John runs fast.",
+  "test": [
+    "names(John-1,\"John\")",
+    "sumo(SubjectiveWeakNegativeAttribute,fast-3)",
+    "attribute(John-1,Male)",
+    "sumo(Human,John-1)",
+    "sumo(Running,runs-2)"
+  ]
+},{
+  "input": "Earhart vanished over the South Pacific Ocean.",
+  "test": [
+    "sumo(Human,Earhart-1)",
+    "sumo(SouthPacificOcean,South_Pacific_Ocean-5)",
+    "names(Earhart-1,\"Earhart\")",
+    "sumo(Disappearing,vanished-2)"
+  ]
+}]

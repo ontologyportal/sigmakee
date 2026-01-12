@@ -28,6 +28,24 @@ public class NLGUtils implements Serializable {
     public static Map<String, CoreLabel> outputMap = new HashMap<>();
     public static boolean debug = false;
 
+    static final Set<String> LOGICAL_OPERATORS;
+
+    static {
+        Set<String> ops = new HashSet<>();
+        ops.add("if");
+        ops.add("then");
+        ops.add("=>");
+        ops.add("and");
+        ops.add("or");
+        ops.add("xor");
+        ops.add("<=>");
+        ops.add("not");
+        ops.add("forall");
+        ops.add("exists");
+        ops.add("holds");
+        LOGICAL_OPERATORS = Collections.unmodifiableSet(ops);
+    }
+
     /** *************************************************************
      */
     public static void init(String kbDir) {
@@ -288,9 +306,9 @@ public class NLGUtils implements Serializable {
     /** ***************************************************************
      */
     static boolean logicalOperator(String word) {
-
-        String logops = "if,then,=>,and,or,xor,<=>,not,forall,exists,holds";
-        return logops.contains(word);
+        if (word == null) return false;
+        String w = word.trim();
+        return LOGICAL_OPERATORS.contains(w);
     }
 
     /** ***************************************************************
@@ -821,4 +839,26 @@ public class NLGUtils implements Serializable {
         }
         return false;
     }
+
+    /** Insert spaces into long URLs to improve readability in NL output. */
+    public static String formatLongUrl(String quotedUrl) {
+
+        if (StringUtil.emptyString(quotedUrl))
+            return quotedUrl;
+
+        String unquoted = StringUtil.removeEnclosingQuotes(quotedUrl);
+        if (!unquoted.startsWith("http"))
+            return quotedUrl;
+
+        StringBuilder formatted = new StringBuilder(quotedUrl);
+        if (formatted.length() <= 50)
+            return quotedUrl;
+
+        for (int i = 50; i < formatted.length(); i++) {
+            if (i > 50 && formatted.charAt(i) == '/')
+                formatted.insert(i + 1, ' ');
+        }
+        return formatted.toString();
+    }
+
 }
