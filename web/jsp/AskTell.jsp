@@ -167,9 +167,11 @@
             const test = document.getElementById('testName');
             const lblC = document.getElementById('lblCustom');
             const lblT = document.getElementById('lblTest');
+            const step2 = document.getElementById('step2Fieldset');
             const isTest = (src === 'test');
             ta.disabled   = isTest;
             test.disabled = !isTest;
+            if (step2) step2.disabled = isTest;
             lblC.style.opacity = isTest ? .5 : 1;
             lblT.style.opacity = isTest ? 1 : .5;
         }
@@ -196,11 +198,54 @@
                 [leo, epr].forEach(el => { if (el) { el.dataset.prevDisabled = String(el.disabled); el.disabled = true; } });
             } else {
                 // Restore engine availability (server may still disable missing binaries)
-                [leo, epr].forEach(el => { if (el) { const prev = el.dataset.prevDisabled; if (prev !== undefined) el.disabled = (prev === "true"); } });
+                [leo, epr].forEach(el => {
+                    if (el) {
+                        const prev = el.dataset.prevDisabled;
+                        if (prev !== undefined) el.disabled = (prev === "true");
+                    }
+                });
             }
+
+            enforceCwaAvailability();
 
             // Re-apply dependent enabling/disabling
             toggleVampireOptions();
+        }
+
+
+        function enforceCwaAvailability() {
+            const hol = document.getElementById('modeHOL');
+            const tff = document.getElementById('langTff');
+            const cwa = document.getElementById('CWA');
+
+            if (!cwa) return;
+
+            const isHol = hol && hol.checked;
+            const isTff = tff && tff.checked;
+
+            const allowCwa = (!isHol) && isTff;
+
+            cwa.disabled = !allowCwa;
+            if (!allowCwa) cwa.checked = false;
+        }
+
+
+        function toggleTranslationModeForRunSource() {
+            const src = document.querySelector('input[name="runSource"]:checked')?.value || 'custom';
+            const isTest = (src === 'test');
+
+            // Option 1 (recommended): disable everything inside a Step-2 container
+            const block = document.getElementById('translationModeBlock');
+            if (block) {
+                const controls = block.querySelectorAll('input, select, textarea, button');
+                controls.forEach(el => {
+                    // If you have any "always enabled" control, exclude it here with a condition.
+                    el.disabled = isTest;
+                    if (isTest && (el.type === 'checkbox' || el.type === 'radio')) el.checked = false;
+                });
+                block.style.opacity = isTest ? "0.6" : "1";
+                return;
+            }
         }
 
         function filterTestsByExtension(ext) {
@@ -247,6 +292,9 @@
 
             document.querySelectorAll('input[name="translationMode"]')
                 .forEach(el => el.addEventListener('change', toggleTranslationMode));
+
+            document.querySelectorAll('input[name="TPTPlang"]')
+                .forEach(el => el.addEventListener('change', enforceCwaAvailability));
         };
     </script>
 
@@ -328,11 +376,7 @@
     // ---- CWA ----
     if (StringUtil.emptyString(cwa)) cwa = "no";
     SUMOKBtoTPTPKB.CWA = "yes".equals(cwa);
-    
-    // ---- Modal ---- 
-    if (StringUtil.emptyString(isModal)) isModal = "no";
-    THFnew.isModal = "yes".equals(isModal);
-    
+
     // ---- Engine / modes / language ----
     String inferenceEngine = request.getParameter("inferenceEngine");
     String vampireMode = request.getParameter("vampireMode");
@@ -551,10 +595,10 @@
     </fieldset>
 
     <!-- ===== STEP 2: TRANSLATION MODE ===== -->
-    <fieldset class="step">
+    <fieldset class="step" id="step2Fieldset">
         <legend>Step 2 - Translation mode</legend>
 
-        <div class="row inline">
+        <div class="row inline" >
             <label><input type="radio" id="modeFOL" name="translationMode" value="FOL"
                 <%= "HOL".equalsIgnoreCase((String)session.getAttribute("translationMode")) ? "" : "checked" %> >
                 FOL (TPTP / TFF)</label>
@@ -572,17 +616,19 @@
 
                 <label><input type="radio" id="langTff" name="TPTPlang" value="tff" <%= "tff".equals(TPTPlang)?"checked":"" %> >
                     tff</label>
-
-                <label class="inline" style="margin-left:14px;">
-                    <input type="checkbox" name="CWA" id="CWA" value="yes" <% if ("yes".equals(cwa)) {%>checked<%}%> >
-                    Closed World Assumption
-                </label>
-                
-                <label class="inline" style="margin-left:14px;">
-                    <input type="checkbox" name="Modal" id="Modal" value="yes" <% if ("yes".equals(isModal)) {%>checked<%}%> >
-                    Modal
-                </label>
             </div>
+
+            <details class="advanced">
+                <summary>Advanced Options</summary>
+                <div class="row">
+                    <label class="inline" style="margin-left:14px;">
+                        <input type="checkbox" name="CWA" id="CWA" value="yes" <% if ("yes".equals(cwa)) {%>checked<%}%> >
+                        Closed World Assumption
+                    </label>
+                    <span title="Runs only in TFF mode">&#9432;</span>
+                </div>
+            </details>
+
         </div>
 
         <div id="holOptions" class="row" style="display:none;">

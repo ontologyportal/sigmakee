@@ -214,17 +214,9 @@ public final class NLGReadability {
         // NEW: marker-driven parse of IF/AND/OR/SEG into a Node tree.
         Node tree = parseTree(body, language);
 
-        // DEBUG
-        System.out.println("== ORIGINAL TREE\n");
-        printTree(tree);
-
-
         // Apply readability rewrites recursively (SEG factoring happens inside Atom nodes, not globally).
         LinkedHashMap symToTypeCtx = new LinkedHashMap<>();
         tree = rewriteNode(tree, andKw, orKw, mode, language, prot.placeholderToOriginal,symToTypeCtx);
-
-        System.out.println("== AFTER REWRITE TREE\n");
-        printTree(tree);
 
         // Render from the tree.
         String rendered = (mode == LanguageFormatter.RenderMode.HTML)
