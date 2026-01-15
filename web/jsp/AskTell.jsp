@@ -198,12 +198,37 @@
                 [leo, epr].forEach(el => { if (el) { el.dataset.prevDisabled = String(el.disabled); el.disabled = true; } });
             } else {
                 // Restore engine availability (server may still disable missing binaries)
-                [leo, epr].forEach(el => { if (el) { const prev = el.dataset.prevDisabled; if (prev !== undefined) el.disabled = (prev === "true"); } });
+                [leo, epr].forEach(el => {
+                    if (el) {
+                        const prev = el.dataset.prevDisabled;
+                        if (prev !== undefined) el.disabled = (prev === "true");
+                    }
+                });
             }
+
+            enforceCwaAvailability();
 
             // Re-apply dependent enabling/disabling
             toggleVampireOptions();
         }
+
+
+        function enforceCwaAvailability() {
+            const hol = document.getElementById('modeHOL');
+            const tff = document.getElementById('langTff');
+            const cwa = document.getElementById('CWA');
+
+            if (!cwa) return;
+
+            const isHol = hol && hol.checked;
+            const isTff = tff && tff.checked;
+
+            const allowCwa = (!isHol) && isTff;
+
+            cwa.disabled = !allowCwa;
+            if (!allowCwa) cwa.checked = false;
+        }
+
 
         function toggleTranslationModeForRunSource() {
             const src = document.querySelector('input[name="runSource"]:checked')?.value || 'custom';
@@ -267,6 +292,9 @@
 
             document.querySelectorAll('input[name="translationMode"]')
                 .forEach(el => el.addEventListener('change', toggleTranslationMode));
+
+            document.querySelectorAll('input[name="TPTPlang"]')
+                .forEach(el => el.addEventListener('change', enforceCwaAvailability));
         };
     </script>
 
@@ -588,12 +616,19 @@
 
                 <label><input type="radio" id="langTff" name="TPTPlang" value="tff" <%= "tff".equals(TPTPlang)?"checked":"" %> >
                     tff</label>
-
-                <label class="inline" style="margin-left:14px;">
-                    <input type="checkbox" name="CWA" id="CWA" value="yes" <% if ("yes".equals(cwa)) {%>checked<%}%> >
-                    Closed World Assumption
-                </label>
             </div>
+
+            <details class="advanced">
+                <summary>Advanced Options</summary>
+                <div class="row">
+                    <label class="inline" style="margin-left:14px;">
+                        <input type="checkbox" name="CWA" id="CWA" value="yes" <% if ("yes".equals(cwa)) {%>checked<%}%> >
+                        Closed World Assumption
+                    </label>
+                    <span title="Runs only in TFF mode">&#9432;</span>
+                </div>
+            </details>
+
         </div>
 
         <div id="holOptions" class="row" style="display:none;">
