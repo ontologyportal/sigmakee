@@ -167,9 +167,11 @@
             const test = document.getElementById('testName');
             const lblC = document.getElementById('lblCustom');
             const lblT = document.getElementById('lblTest');
+            const step2 = document.getElementById('step2Fieldset');
             const isTest = (src === 'test');
             ta.disabled   = isTest;
             test.disabled = !isTest;
+            if (step2) step2.disabled = isTest;
             lblC.style.opacity = isTest ? .5 : 1;
             lblT.style.opacity = isTest ? 1 : .5;
         }
@@ -201,6 +203,24 @@
 
             // Re-apply dependent enabling/disabling
             toggleVampireOptions();
+        }
+
+        function toggleTranslationModeForRunSource() {
+            const src = document.querySelector('input[name="runSource"]:checked')?.value || 'custom';
+            const isTest = (src === 'test');
+
+            // Option 1 (recommended): disable everything inside a Step-2 container
+            const block = document.getElementById('translationModeBlock');
+            if (block) {
+                const controls = block.querySelectorAll('input, select, textarea, button');
+                controls.forEach(el => {
+                    // If you have any "always enabled" control, exclude it here with a condition.
+                    el.disabled = isTest;
+                    if (isTest && (el.type === 'checkbox' || el.type === 'radio')) el.checked = false;
+                });
+                block.style.opacity = isTest ? "0.6" : "1";
+                return;
+            }
         }
 
         function filterTestsByExtension(ext) {
@@ -551,10 +571,10 @@
     </fieldset>
 
     <!-- ===== STEP 2: TRANSLATION MODE ===== -->
-    <fieldset class="step">
+    <fieldset class="step" id="step2Fieldset">
         <legend>Step 2 - Translation mode</legend>
 
-        <div class="row inline">
+        <div class="row inline" >
             <label><input type="radio" id="modeFOL" name="translationMode" value="FOL"
                 <%= "HOL".equalsIgnoreCase((String)session.getAttribute("translationMode")) ? "" : "checked" %> >
                 FOL (TPTP / TFF)</label>

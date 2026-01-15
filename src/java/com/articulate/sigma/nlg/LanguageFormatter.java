@@ -344,14 +344,8 @@ public class LanguageFormatter {
                     if (debug) System.out.println("LanguageFormatter.htmlParaphrase(): template: " + template);
                 }
 
-                System.out.println("---------------------------------------");
-                System.out.println("--[template]: "+template+"\n");
-
                 // Readability layer (pre-linkification).
                 template = NLGReadability.improveTemplate(template, RenderMode.TEXT, language);
-
-                System.out.println("--[NLG Template]: "+template+"\n");
-                System.out.println("---------------------------------------");
 
                 // Get rid of the percentage signs.
                 nlFormat = NLGUtils.resolveFormatSpecifiers(template, href);
