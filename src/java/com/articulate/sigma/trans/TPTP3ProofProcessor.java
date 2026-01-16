@@ -49,7 +49,9 @@ public class TPTP3ProofProcessor {
     public Map<String, String> bindingMap = new HashMap<>();
     public Map<String, String> skolemTypes = new HashMap<>();
     public List<TPTPFormula> proof = new ArrayList<>();
-    public static boolean tptpProof = false;
+
+    public enum GraphFormulaFormat { SUO_KIF, TPTP }
+    private GraphFormulaFormat graphFormulaFormat = GraphFormulaFormat.SUO_KIF;
 
     // a map of original ID keys and renumbered key values
     public Map<String, Integer> idTable = new HashMap<>();
@@ -1058,7 +1060,7 @@ public class TPTP3ProofProcessor {
         StringBuilder sb;
         Formula f;
         for (TPTPFormula ps : proof) {
-            if (tptpProof) {
+            if ((GraphFormulaFormat.TPTP).equals(graphFormulaFormat)) {
                 if (StringUtil.emptyString(ps.name)) {
                     continue;
                 }
@@ -1144,7 +1146,6 @@ public class TPTP3ProofProcessor {
             // Build a proof image from an input file
             // From: https://graphviz.org/doc/info/command.html#-O
             ProcessBuilder pb = new ProcessBuilder(cmd);
-            System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): exec command: " + pb.command());
             pb.directory(file.getParentFile());
             File log = new File(file.getParentFile(),"log");
             if (log.exists())
@@ -1157,7 +1158,6 @@ public class TPTP3ProofProcessor {
             String err = "Error writing file " + file + "\n" + e.getMessage();
             throw new IOException(err);
         }
-        System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): write image file: " + file);
         retVal = file.getAbsolutePath();
         return retVal;
     }
@@ -1179,8 +1179,6 @@ public class TPTP3ProofProcessor {
         String filename = dirfile.getPath() + sep + "proof.dot";
         Path path = Paths.get(filename);
         try (Writer bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8); PrintWriter pw = new PrintWriter(bw, true)) {
-            System.out.println("TPTP3ProofProcessor.createProofDotGraph(): creating file: " + path);
-
             Set<String> result = new HashSet<>();
             result.addAll(createProofDotGraphBody());
             pw.println("digraph G {");
@@ -1195,6 +1193,10 @@ public class TPTP3ProofProcessor {
             throw new IOException(err);
         }
         return createProofDotGraphImage(path.toString());
+    }
+
+    public void setGraphFormulaFormat(GraphFormulaFormat fmt) {
+        this.graphFormulaFormat = (fmt == null) ? GraphFormulaFormat.SUO_KIF : fmt;
     }
 
     /**
