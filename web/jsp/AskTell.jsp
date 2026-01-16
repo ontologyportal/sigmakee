@@ -101,6 +101,59 @@
             color:#666;
             font-size: 0.9em;
         }
+
+        /* Graph format segmented toggle */
+        .graph-format-toggle {
+            align-items: center;
+            gap: 10px;
+        }
+
+        .graph-format-toggle .opt-label {
+            min-width: 120px;
+            opacity: 0.9;
+        }
+
+        .segmented {
+            display: inline-flex;
+            border: 1px solid rgba(0,0,0,0.18);
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.03);
+        }
+
+        .segmented input[type="radio"] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .segmented label {
+            padding: 6px 12px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            border-right: 1px solid rgba(0,0,0,0.14);
+            background: transparent;
+        }
+
+        .segmented label:last-child {
+            border-right: none;
+        }
+
+        .segmented input[type="radio"]:checked + label {
+            background: rgba(0,0,0,0.10);
+        }
+
+        .segmented input[type="radio"]:focus-visible + label {
+            outline: 2px solid rgba(0,0,0,0.35);
+            outline-offset: -2px;
+        }
+
+        .graph-format-toggle .hint {
+            opacity: 0.75;
+            cursor: help;
+        }
+
     </style>
 
     <style>
@@ -421,6 +474,14 @@
         session.setAttribute("showProofSummary", showProofSummary);
     }
     if (showProofSummary == null) showProofSummary = false;
+
+    String graphFormulaFormat = request.getParameter("graphFormulaFormat"); // "SUO_KIF" or "TPTP"
+    if (StringUtil.emptyString(graphFormulaFormat) || graphFormulaFormat.equals("SUO_KIF")) {
+        graphFormulaFormat = "SUO_KIF";
+    }else{
+        graphFormulaFormat = "TPTP";
+    }
+    session.setAttribute("graphFormulaFormat", graphFormulaFormat);
 
 
     String eproverExec = KBmanager.getMgr().getPref("eprover");
@@ -749,10 +810,25 @@
                 Show LLM proof summary
             </label>
         </div>
+
+        <!-- Graph label format toggle -->
+        <div class="row graph-format-toggle">
+            <span class="opt-label">Graph formulas:</span>
+
+            <div class="segmented" role="group" aria-label="Graph formula format">
+                <input type="radio" id="gfmt-kif" name="graphFormulaFormat" value="SUO_KIF"
+                    <%= (graphFormulaFormat == null || "SUO_KIF".equals(graphFormulaFormat)) ? "checked" : "" %> >
+                <label for="gfmt-kif" title="Render graph node labels using SUO-KIF">SUO-KIF</label>
+
+                <input type="radio" id="gfmt-tptp" name="graphFormulaFormat" value="TPTP"
+                    <%= "TPTP".equals(graphFormulaFormat) ? "checked" : "" %> >
+                <label for="gfmt-tptp" title="Render graph node labels using TPTP">TPTP</label>
+            </div>
+
+            <span class="hint" title="Controls only the graph labels; it does not change the prover output.">&#9432;</span>
+        </div>
+
     </fieldset>
-
-
-
 
     <div class="row">
         <input type="submit" name="request" value="Run">
@@ -821,6 +897,8 @@
                                 tpp.parseProofOutput(leoRun.output, qstr, kb, leoRun.qlist);
                             }
                         }
+
+                        setGraphFormat(graphFormulaFormat,tpp);
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                         tpp.processAnswersFromProof(new StringBuilder(), itd.query);
 
@@ -874,6 +952,7 @@
                         String pseudoQuery = "TPTP file: " + new File(testPath).getName();
                         // Parse + render just like the other flows
                         tpp.parseProofOutput(vRun.output, pseudoQuery, kb, vRun.qlist);
+                        setGraphFormat(graphFormulaFormat,tpp);
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                         tpp.processAnswersFromProof(vRun.qlist, pseudoQuery);
 
@@ -936,6 +1015,7 @@
 
                         tpp.parseProofOutput(normalized, pseudoQuery, kb, vRun.qlist);
 
+                        setGraphFormat(graphFormulaFormat,tpp);
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
 //                        tpp.processAnswersFromProof(vRun.qlist, pseudoQuery);
 
@@ -956,6 +1036,7 @@
                     eProver = kb.askEProver(stmt, timeout, maxAnswers);
                     com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                     tpp.parseProofOutput(eProver.output, stmt, kb, eProver.qlist);
+                    setGraphFormat(graphFormulaFormat,tpp);
                     publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
 
                     printAnswersBlock(tpp, kbName, language, out);
@@ -1032,6 +1113,7 @@
                     } else {
                         com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                         tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
+                        setGraphFormat(graphFormulaFormat,tpp);
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                         tpp.processAnswersFromProof(vampire.qlist,stmt);
 
@@ -1082,6 +1164,7 @@
                     else {
                         com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                         tpp.parseProofOutput(leo.output, stmt, kb, leo.qlist);
+                        setGraphFormat(graphFormulaFormat,tpp);
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                         tpp.processAnswersFromProof(leo.qlist,stmt);
 
@@ -1149,12 +1232,21 @@
         else if ("Custom".equals(mode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
     }
 
+    void setGraphFormat(String format, com.articulate.sigma.trans.TPTP3ProofProcessor tpp){
+        if ("TPTP".equalsIgnoreCase(format))
+            tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.TPTP);
+        else
+            tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.SUO_KIF);
+    }
+
+
     /** 2) Publish the proof graph (the big repeated block) */
     void publishGraph(com.articulate.sigma.trans.TPTP3ProofProcessor tpp,
                       String inferenceEngine, String vampireMode,
                       javax.servlet.http.HttpServletRequest request,
                       javax.servlet.ServletContext application,
                       javax.servlet.jsp.JspWriter out) throws java.io.IOException {
+
         String imgPath=null; try { imgPath = tpp.createProofDotGraph(); } catch (Exception ignore) {}
         if (imgPath==null || tpp.proof.size()==0) return;
         String webGraphDir = application.getRealPath("/graph"); if (webGraphDir==null) return;

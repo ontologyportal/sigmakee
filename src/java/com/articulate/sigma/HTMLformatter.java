@@ -1070,7 +1070,6 @@ public class HTMLformatter {
         html.append("<p><table width=\"95%\">" + "\n");
 
         TPTPFormula ps;
-        long start = System.nanoTime();
         for (int l = 0; l < tpp.proof.size(); l++) {
             ps = tpp.proof.get(l);
             //System.out.println("HTMLformatter.formatTPTP3ProofResult(): role: " + ps.role);
@@ -1086,9 +1085,6 @@ public class HTMLformatter {
             html.append(HTMLformatter.proofTableFormat(stmt, tpp.proof.get(l), kbName, language)).append("\n");
             html.append("</tr>\n\n");
         }
-        long end = System.nanoTime();
-        double seconds = (end - start) / 1_000_000_000.0;
-        System.out.printf("\n====== TOTAL Ollama call took %.3f seconds%n%n =======", seconds);
         html.append("</table>\n");
         return html.toString();
     }

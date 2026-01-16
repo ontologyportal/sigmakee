@@ -684,11 +684,11 @@ public class TPTPutil {
             }
             else if (args != null && args.length > 2 && args[0].contains("i")) {
                 int timeout = 30;
+                tpp = new TPTP3ProofProcessor();
                 if (args[0].contains("p"))
-                    TPTP3ProofProcessor.tptpProof = true;
+                    tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.TPTP);
                 Vampire vamp = kb.askVampire(args[1], timeout, 1);
                 System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
-                tpp = new TPTP3ProofProcessor();
                 tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);
                 ArrayList<String> out = new ArrayList<>();
                 for (TPTPFormula ps : tpp.proof)

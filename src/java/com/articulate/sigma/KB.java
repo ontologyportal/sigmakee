@@ -4594,7 +4594,7 @@ public class KB implements Serializable {
                 if (args != null && args.length > 1 && args[0].contains("a")) {
                     TPTP3ProofProcessor tpp = null;
                     if (args[0].contains("p"))
-                        TPTP3ProofProcessor.tptpProof = true;
+                        tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.TPTP);
                     if (args[0].contains("x")) {
                         contradictionHelp(kb,args,timeout);
                     }
