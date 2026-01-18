@@ -2148,8 +2148,8 @@ public class KBcache implements Serializable {
         System.out.println("  -a - show All cache contents");
         System.out.println("  -f - show statistics");
         System.out.println("  -s - show size of cache elements");
-        System.out.println("  -c term - show children of term");
-        System.out.println("  -v term - show arity (valence) of relation");
+        System.out.println("  --children term - show children of term");
+        System.out.println("  --valence term - show arity (valence) of relation");
         System.out.println("  -t - show complete state of cache");
     }
 
@@ -2174,22 +2174,23 @@ public class KBcache implements Serializable {
             System.out.println("**** Finished loading KB ***");
 
             KBcache nkbc = kb.kbCache;
-            if (args.length > 0 && args[0].equals("-a")) {
+            Map<String, List<String>> argMap = CLIMapParser.parse(args);
+            if (argMap.containsKey("a")) {
                 showAll(nkbc);
             }
-            else if (args.length > 0 && args[0].equals("-s")) {
+            else if (argMap.containsKey("s")) {
                 showSizes(nkbc);
             }
-            else if (args.length > 0 && args[0].equals("-f")) {
+            else if (argMap.containsKey("f")) {
                 System.out.println(HTMLformatter.showStatistics(kb));
             }
-            else if (args.length > 0 && args[0].equals("-v")) {
+            else if (argMap.containsKey("valence") && argMap.get("valence").size() == 1) {
                 System.out.println("The arity of " + args[1] + " is " + nkbc.valences.get(args[1]));
             }
-            else if (args.length > 1 && args[0].equals("-c")) {
+            else if (argMap.containsKey("children") && argMap.get("children").size() == 1) {
                 showChildrenOf(nkbc,args[1]);
             }
-            else if (args.length > 0 && args[0].equals("-t")) {
+            else if (argMap.containsKey("t")) {
                 showState(nkbc);
             }
             else {
