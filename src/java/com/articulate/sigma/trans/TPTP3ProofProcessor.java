@@ -1595,6 +1595,84 @@ public class TPTP3ProofProcessor {
         return "fof(" + name + "," + role + ", " + body + ", " + source + ").";
     }
 
+
+    /**
+     * Drop Vampire answer-extraction scaffolding (ans*, answer(...)) after simplifyProof().
+     * Also removes any downstream steps whose supports include a removed step.
+     *
+     * Intended for readability (not for proof checking).
+     */
+    public List<TPTPFormula> dropAnswerSteps(List<TPTPFormula> steps) {
+
+        if (steps == null || steps.isEmpty())
+            return steps;
+
+        Map<String, TPTPFormula> ftable = new HashMap<>();
+        for (TPTPFormula ps : steps)
+            ftable.put(ps.name, ps);
+
+        Set<String> drop = new HashSet<>();
+
+        // 1) Mark direct answer-scaffold steps for removal
+        for (TPTPFormula ps : steps) {
+            if (isAnswerScaffold(ps))
+                drop.add(ps.name);
+        }
+
+        // 2) Remove any step that depends on a dropped step (support-closure)
+        boolean changed;
+        do {
+            changed = false;
+            for (TPTPFormula ps : steps) {
+                if (drop.contains(ps.name))
+                    continue;
+
+                if (ps.supports != null) {
+                    for (String sup : ps.supports) {
+                        if (drop.contains(sup) || !ftable.containsKey(sup)) {
+                            drop.add(ps.name);
+                            changed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        } while (changed);
+
+        // 3) Emit filtered list preserving original order
+        List<TPTPFormula> result = new ArrayList<>();
+        for (TPTPFormula ps : steps) {
+            if (!drop.contains(ps.name))
+                result.add(ps);
+        }
+        return result;
+    }
+
+    // Put this as a field, not inside the method
+    private static final Pattern ANSWER_PRED_PATTERN =
+            Pattern.compile("\\b(ans\\d*|answer)\\s*\\(");
+
+    private boolean isAnswerScaffold(TPTPFormula ps) {
+
+        if (ps == null) return false;
+
+        String f = (ps.formula == null) ? "" : ps.formula;
+
+        // If it contains ans/answer, we drop it regardless of how it was sourced
+        if (ANSWER_PRED_PATTERN.matcher(f).find()) {
+            String role = (ps.role == null) ? "" : ps.role.trim();
+            // Keep only the top-level conjecture headers if you want them preserved
+            if ("negated_conjecture".equals(role) || "conjecture".equals(role))
+                return false;
+            return true;
+        }
+
+        // Otherwise, keep KB source axioms and everything else as normal
+        if (TPTPutil.sourceAxiom(ps)) return false;
+
+        return false;
+    }
+
     /* ---------- tiny helpers (no new deps) ---------- */
     private static String collapseWs(String s) {
         return (s == null) ? "" : s.replaceAll("\\s+", " ").trim();

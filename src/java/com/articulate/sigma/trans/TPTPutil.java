@@ -433,6 +433,7 @@ public class TPTPutil {
 
         tpp.parseProofOutput(cleaned_proofLines, "", kb, new StringBuilder());  // builds tpp.proof (List<TPTPFormula>)
         List<TPTPFormula> keep = tpp.simplifyProof(1); // drop 1-premise,
+        keep = tpp.dropAnswerSteps(keep);
         List<TPTPFormula> renumberProof = tpp.renumberProof(keep); // rewire+renumber
 
         List<String> firstComments = new ArrayList<>();
