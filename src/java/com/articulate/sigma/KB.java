@@ -1235,7 +1235,8 @@ public class KB implements Serializable {
         }
         if (term.length() > 1 && term.charAt(0) == '"' && term.charAt(term.length() - 1) == '"') {
             msg = ("Error in KB.ask(), Strings are not indexed.  No results for " + term);
-            errors.add(msg);
+            // Strings are not indexed; do not pollute kb.errors
+//            errors.add(msg);
         }
         List<Formula> tmp;
         String key;

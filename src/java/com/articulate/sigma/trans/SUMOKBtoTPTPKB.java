@@ -7,10 +7,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SUMOKBtoTPTPKB {
@@ -310,7 +306,12 @@ public class SUMOKBtoTPTPKB {
                 /* Experimental threading of main loop writes big SUMO in half
                  * the time as the sequential method. 2/17/25 tdn
                  */
+                System.out.println("SUMO File generation begins");
+                long t0 = System.nanoTime();
                 retVal = _tWriteFile(fileName, conjecture, isQuestion, pw);
+                double seconds = (System.nanoTime() - t0) / 1_000_000_000.0;
+                System.out.printf("SUMO File generation ends. Time took:  s=%.6f%n", seconds);
+
         }
         catch (Exception ex) {
             System.err.println("Error in SUMOKBtoTPTPKB.writeFile(): " + ex.getMessage());
@@ -447,8 +448,8 @@ public class SUMOKBtoTPTPKB {
                     if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : finished writing " + theTPTPFormula + " with name " + name);
                     alreadyWrittenTPTPs.add(theTPTPFormula);
                 }
-                else
-                    pw.println("% empty, already written or filtered formula, skipping : " + theTPTPFormula);
+//                else
+//                    pw.println("% empty, already written or filtered formula, skipping : " + theTPTPFormula);
             }
         } // end outer (main) for loop
         if (debug) System.out.println();
@@ -572,9 +573,6 @@ public class SUMOKBtoTPTPKB {
                                 String src = f3.sourceFile + ":" + f3.startLine;
                                 String preview = f3.getFormula().replace('\n', ' ');
                                 if (preview.length() > 180) preview = preview.substring(0, 180);
-//                                System.out.println("TFF_BEGIN " + src + " " + preview);
-                                long t0 = System.nanoTime();
-                                // ------------------------------------------------------
 
                                 fileContents.add("% tff input: " + f3.format("", "", Formula.SPACE));
                                 if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: "
@@ -584,13 +582,6 @@ public class SUMOKBtoTPTPKB {
                                     f3.tffSorts.addAll(stfa.sorts);
 
                                 result = SUMOtoTFAform.process(f3.getFormula(), false);
-
-                                // ---- Phase 2 logging (end/timing) ----
-                                long ms = (System.nanoTime() - t0) / 1_000_000;
-//                                System.out.println("TFF_END   " + src + " ms=" + ms);
-                                if (ms > 2000) System.out.println("TFF_SLOW  " + src + " ms=" + ms);
-                                // --------------------------------------
-
                                 printTFFNumericConstants(fileContents);
                                 SUMOtoTFAform.initNumericConstantTypes();
                                 if (!StringUtil.emptyString(result))
