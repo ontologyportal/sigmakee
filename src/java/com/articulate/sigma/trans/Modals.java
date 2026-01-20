@@ -267,11 +267,10 @@ public class Modals {
         List<Formula> flist = f.complexArgumentsToArrayList(1); // [F, M]
         worldNum = worldNum + 1;
         
-        // TODO: CF: Test this  
         // a normal or dyadic deontic 
         if (flist.size() == 2) {
         // Monadic case: (modalAttribute F M)
-        fstring.append("(=> (accrelnP ")
+        fstring.append("(=> (accreln ")
                 .append(flist.get(1)); // modality
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
@@ -308,7 +307,7 @@ public class Modals {
     }
 
         // Build antecedent: (accrelnP M ?W_{n-1} ?W_n)
-        fstring.append("(=> (accrelnP ")
+        fstring.append("(=> (accreln ")
                 .append(flist.get(1));           // the modal attribute constant, e.g. Necessity, Legal
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
@@ -492,13 +491,14 @@ public class Modals {
                 "thf(obligation_tp,type,(s__Obligation : m)).\n" +
                 "thf(permission_tp,type,(s__Permission : m)).\n" +
                 "thf(prohibition_tp,type,(s__Prohibition : m)).\n" +
-                "thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +
                 
                 "thf(worlds_tp,type,(w : $tType)).\n" +
                 "thf(s__worlds_tp,type,(s__World : w)).\n" +
                 "thf(modals_tp,type,(m : $tType)).\n" +
                 "thf(accreln_tp,type,(s__accreln : (m > $i > w > w > $o))).\n" +
-                "thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +
+                "thf(accreln_tp,type, accreln1: m > $i > w > w > $o )." +
+                "thf(accreln_tp,type, accreln2: m > $i > $i > w > w > $o )." + 
+                //"thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +     // CF: This is no longer needed, we are using accreln[ |2|3] 
 //                "thf(knows_tp,type,(s__knows : m)).\n" +
 //                "thf(believes_tp,type,(s__believes : m)).\n" +
 //                "thf(desires_tp,type,(s__desires : m)).\n" +
@@ -548,6 +548,29 @@ public class Modals {
                   (=> 
                     (accreln Bill Sue ?W5 ?W6)
                     (acquaintance Bill Jane ?W6)))))))*/
+        f = new Formula(fstr);
+        System.out.println(processModals(f,kb) + "\n\n");
+        
+        // TODO: CF 
+        fstr = 
+        "(exists (?E)" +
+        "  (and" +
+        "    (instance ?E Entering)" +
+        "    (agent ?E AgentSmith)" +
+        "    (destination ?E Area51)" +
+        "    (during " +
+        "      (WhenFn ?E)" +
+        "      (DayFn 1 (MonthFn April (YearFn 2025))))))";
+        /* Target: 
+        thf(smithEnters,axiom,
+          (![E:$i,W:w]:(
+            ((instance @ E @ entering) &
+             (agent @ E @ agentSmith @ W) &
+             (destination @ E @ area51 @ W) &
+             (during @
+               (whenFn @ E @ W) @
+               (dayFn @ n1 @ (monthFn @ april @ (yearFn @ n2025)))))))).
+        */
         f = new Formula(fstr);
         System.out.println(processModals(f,kb) + "\n\n");
 
