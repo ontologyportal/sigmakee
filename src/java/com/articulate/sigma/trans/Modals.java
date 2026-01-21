@@ -153,7 +153,6 @@ public class Modals {
     public static final Set<String> RESERVED_MODAL_SYMBOLS =
             new HashSet<>(Arrays.asList(
                     "accreln",
-                    "accrelnP",
 //                    "knows",
 //                    "believes",
 //                    "desires",
@@ -438,22 +437,10 @@ public class Modals {
         sig.add("World");
         kb.kbCache.signatures.put("accreln",sig);
     }
-    /***************************************************************
-     * Add the signature for the Kripke accessibility relation
-     */
-    public static void addAccrelnDefP(KB kb) {
 
-        List<String> sig = new ArrayList<>();
-        sig.add(""); // empty 0th argument for relations
-        sig.add("Modal");
-        sig.add("World");
-        sig.add("World");
-        kb.kbCache.signatures.put("accrelnP",sig);
-    }
 
     /***************************************************************
      */
-    // TODO: CF: I think this is where I would work on the world-chaining 
     public static Formula processModals(Formula f, KB kb) {
 
         addAccrelnDef(kb);
@@ -509,11 +496,63 @@ public class Modals {
                 "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n";
 
     }
+    
+    /************************************************************************************
+     * Tests based on ~/workspace/sumo/tests/TQM10.kif
+     * Uses same KB instance as main method 
+     */
+    public static void doTQM10Tests(KB kb) {
+        // "The US government obliges Agent Smith not to enter Area 51." 
+        String fstr = 
+        "(confersObligation " +
+        "  (not " +
+        "    (exists (?E)" +
+        "      (and" +
+        "        (instance ?E Entering)" +
+        "        (agent ?E AgentSmith)" +
+        "        (destination ?E Area51)))) " +
+        "  USGovernment AgentSmith)";
+        Formula f = new Formula(fstr);
+        System.out.println(processModals(f,kb) + "\n\n");
+
+        // "Agents that violate their obligations have a US government disciplinary hearing."
+        fstr = 
+        "(=>" +
+        "  (and" +
+        "    (confersObligation ?F USGovernment ?A)" +
+        "    (not ?F))" +
+        "  (exists (?H)" +
+        "    (and" +
+        "      (instance ?H LegalAction)" +
+        "      (plaintiff ?H USGovernment)" +
+        "      (defendant ?H ?A))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f,kb) + "\n\n");
+        
+        // "Agents that violate their obligations are fired after a US government disciplinary hearing."
+        fstr = 
+        "(=>" +
+        "  (and" +
+        "    (confersObligation ?F USGovernment ?A)" +
+        "    (not ?F)" +
+        "    (instance ?H LegalAction)" +
+        "    (plaintiff ?H USGovernment)" +
+        "    (defendant ?H ?A))" +
+        "  (exists (?FIRE)" +
+        "    (and" +
+        "      (instance ?FIRE TerminatingEmployment)" +
+        "      (earlier " +
+        "        (WhenFn ?H) " +
+        "        (WhenFn ?FIRE))" +
+        "      (patient ?FIRE ?A))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f,kb) + "\n\n");
+    }
 
     /***************************************************************
      */
     public static void main(String[] args) {
-
+    
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("HOL.main(): completed init");
@@ -523,57 +562,7 @@ public class Modals {
                 "        (modalAttribute ?FORMULA Permission)))";
         Formula f = new Formula(fstr);
         System.out.println(processModals(f,kb) + "\n\n");
-   
-        // CF: multi-layer modals test
-        fstr = 
-        "(holdsDuring ?T " +
-        "   (knows John " + 
-        "       (believes Mary " + 
-        "           (knows Bill " +
-        "               (believes Sue " +
-        "                   (=> " +
-        "                       (acquaintance Bill Sue) " +
-        "                       (acquaintance Bill Jane)))))))";
-        /* Target: 
-        (=> 
-          (accreln holdsDuring CW ?W1)
-          (=> 
-            (accreln knows John ?W1 ?W2)
-            (=> 
-              (accreln believes Mary ?W2 ?W3)
-              (=> 
-                (accreln knows Bill ?W3 ?W4)
-                (=> 
-                  (accreln believes Sue ?W4 ?W5)
-                  (=> 
-                    (accreln Bill Sue ?W5 ?W6)
-                    (acquaintance Bill Jane ?W6)))))))*/
-        f = new Formula(fstr);
-        System.out.println(processModals(f,kb) + "\n\n");
-        
-        // TODO: CF 
-        fstr = 
-        "(exists (?E)" +
-        "  (and" +
-        "    (instance ?E Entering)" +
-        "    (agent ?E AgentSmith)" +
-        "    (destination ?E Area51)" +
-        "    (during " +
-        "      (WhenFn ?E)" +
-        "      (DayFn 1 (MonthFn April (YearFn 2025))))))";
-        /* Target: 
-        thf(smithEnters,axiom,
-          (![E:$i,W:w]:(
-            ((instance @ E @ entering) &
-             (agent @ E @ agentSmith @ W) &
-             (destination @ E @ area51 @ W) &
-             (during @
-               (whenFn @ E @ W) @
-               (dayFn @ n1 @ (monthFn @ april @ (yearFn @ n2025)))))))).
-        */
-        f = new Formula(fstr);
-        System.out.println(processModals(f,kb) + "\n\n");
-
+  
         fstr = "(=>\n" +
                 "    (and\n" +
                 "        (instance ?EXPRESS ExpressingApproval)\n" +
@@ -610,5 +599,21 @@ public class Modals {
                 "      (acquaintance Bill Jane))))";
         f = new Formula(fstr);
         System.out.println(processModals(f,kb)+ "\n\n");
+
+        fstr = 
+        "(holdsDuring ?T " +
+        "   (knows John " + 
+        "       (believes Mary " + 
+        "           (knows Bill " +
+        "               (believes Sue " +
+        "                   (=> " +
+        "                       (acquaintance Bill Sue) " +
+        "                       (acquaintance Bill Jane)))))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f,kb) + "\n\n");
+        
+        // More tests: 
+        doTQM10Tests(kb);
+   
     }
 }

@@ -23,9 +23,17 @@ public class ModalsTest extends UnitTestBase {
         String result = out.getFormula();
         System.out.println("\nDuality Test:\n" + result);
 
-        assertTrue(result.contains("accrelnP"));
-        assertTrue(result.contains("Prohibition"));
-        assertTrue(result.contains("Permission"));
+        assertTrue(result.contains(
+        "(<=>" +
+        "  (=>" +
+        "    (accreln Prohibition CW ?W1) ?FORMULA)" +
+        "  (=>" +
+        "    (accreln Prohibition CW ?W1) ?FORMULA)" +
+        "  (not" +
+        "    (=>" +
+        "      (accreln Permission CW ?W1) ?FORMULA)" +
+        "    (=>" +
+        "      (accreln Permission CW ?W1) ?FORMULA)))"));
     }
 
     @Test
@@ -51,7 +59,7 @@ public class ModalsTest extends UnitTestBase {
         assertTrue(result.contains("?W3"));
         assertTrue(result.contains("?W4"));
         assertTrue(result.contains("?W5"));
-        assertTrue(result.contains("accrelnP"));
+        assertTrue(result.contains("accreln"));
     }
 
     @Test
@@ -72,7 +80,7 @@ public class ModalsTest extends UnitTestBase {
         String result = out.getFormula();
         System.out.println("\nPure FOL Test:\n" + result);
 
-        assertFalse(result.contains("accrelnP"));
+        assertFalse(result.contains("accreln"));
         assertTrue(result.contains("wants"));
         assertTrue(result.contains("desires"));
     }
@@ -96,7 +104,7 @@ public class ModalsTest extends UnitTestBase {
         String result = out.getFormula();
         System.out.println("\nMixed World-Sensitive Test:\n" + result);
 
-        assertFalse(result.contains("accrelnP"));
+        assertFalse(result.contains("accreln"));
         assertTrue(result.contains("?W1"));
     }
 }
