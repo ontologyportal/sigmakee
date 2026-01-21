@@ -444,7 +444,7 @@ public class Modals {
     public static Formula processModals(Formula f, KB kb) {
 
         addAccrelnDef(kb);
-        addAccrelnDefP(kb);
+        //addAccrelnDefP(kb);
         // Start at index 0 for constant world (W0 = CW) 
         int worldNum = 0;
         //if (!f.isHigherOrder(kb))
