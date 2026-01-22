@@ -170,6 +170,7 @@ public class Formula implements Comparable, Serializable {
     public boolean comment = false;
     public boolean isFunctional = false;
     public boolean isGround = true; // assume true unless a variable is found during parsing
+    public boolean isTFF = false; // CF: flag for TFF, else THF default 
     public String relation = null;
 
     public List<String> stringArgs = new ArrayList<>(); // cached - only in the case of a simpleClause
@@ -2700,6 +2701,13 @@ public class Formula implements Comparable, Serializable {
         return (this.isHigherOrder(kb) && !this.isTemporal(kb) &&
                 !this.isEpistemic(kb) && !this.isModal(kb));
     }
+    
+    public boolean isTFF (KB kb) {
+        isTFF = true;
+        return (this.isHigherOrder(kb) && this.isModal(kb) && 
+                this.isEpistemic(kb) && this.isTemporal(kb));
+    }
+                
 
     /** ***************************************************************
      * Returns true if formula is a valid formula with no variables,
