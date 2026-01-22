@@ -2204,13 +2204,18 @@ public class KB implements Serializable {
             String kbThfPath = kbDir + sep + kbThfFile;
             File thfAxioms = new File(kbThfPath);
             if (!thfAxioms.exists()) {
-                System.out.println("KB.askVampireHOL(): no such file: " + kbThfPath + ". Creating it.");
-                // Generate SUMO.thf
+                System.out.println("KB.askVampireHOL(): no such file: " + kbThfPath + ". Waiting for background generation or creating it.");
+                // Wait for background THF generation if in progress, otherwise generate synchronously
                 if (useModals) {
-                    // using the modal THF exporter
-                    THFnew.transModalTHF(this);
-                }else{
-                    THFnew.transPlainTHF(this);
+                    if (!TPTPGenerationManager.waitForTHFModal(600)) {
+                        System.out.println("KB.askVampireHOL(): Background generation not ready, generating THF Modal synchronously");
+                        THFnew.transModalTHF(this);
+                    }
+                } else {
+                    if (!TPTPGenerationManager.waitForTHFPlain(600)) {
+                        System.out.println("KB.askVampireHOL(): Background generation not ready, generating THF Plain synchronously");
+                        THFnew.transPlainTHF(this);
+                    }
                 }
             }
 
@@ -4053,6 +4058,16 @@ public class KB implements Serializable {
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
+
+        // Wait for background generation if in progress
+        if (lang.equals("tptp") && !TPTPGenerationManager.isFOFReady()) {
+            System.out.println("INFO in KB.loadVampire(): Waiting for FOF background generation...");
+            TPTPGenerationManager.waitForFOF(600);
+        } else if (lang.equals("tff") && !TPTPGenerationManager.isTFFReady()) {
+            System.out.println("INFO in KB.loadVampire(): Waiting for TFF background generation...");
+            TPTPGenerationManager.waitForTFF(600);
+        }
+
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
         String fileWritten = null;
         if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld() || force) {
@@ -4140,6 +4155,16 @@ public class KB implements Serializable {
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
+
+        // Wait for background generation if in progress
+        if (lang.equals("tptp") && !TPTPGenerationManager.isFOFReady()) {
+            System.out.println("INFO in KB.loadEProver(): Waiting for FOF background generation...");
+            TPTPGenerationManager.waitForFOF(600);
+        } else if (lang.equals("tff") && !TPTPGenerationManager.isTFFReady()) {
+            System.out.println("INFO in KB.loadEProver(): Waiting for TFF background generation...");
+            TPTPGenerationManager.waitForTFF(600);
+        }
+
         String infFilename = mgr.getPref("kbDir") + File.separator + this.name + "." + lang;
         try {
             if (!formulaMap.isEmpty()) {

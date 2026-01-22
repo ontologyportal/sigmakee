@@ -21,6 +21,7 @@ import com.articulate.sigma.CCheckManager.CCheckStatus;
 import com.articulate.sigma.VerbNet.VerbNet;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
+import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
@@ -877,6 +878,8 @@ public class KBmanager implements Serializable {
                 serialize();
                 initializing = false;
                 initialized = true;
+                // Start background TPTP generation for all formats (FOF, TFF, THF)
+                TPTPGenerationManager.startBackgroundGeneration();
                 for (KB kb : kbs.values())  // transform to TPTP only once all other initialization complete
                     loadKBforInference(kb);
             }

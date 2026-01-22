@@ -1,6 +1,7 @@
 <%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
 <%@ page import="com.articulate.sigma.utils.StringUtil" %>
 <%@ page import="com.articulate.sigma.InferenceTestSuite" %>
+<%@ page import="com.articulate.sigma.trans.TPTPGenerationManager" %>
 <%@ page import="java.io.File, java.util.Arrays, java.util.ArrayList, java.util.Comparator, java.util.List, java.util.Set" %>
 <%@include file="Prelude.jsp" %>
 <%
@@ -848,6 +849,42 @@
 <%
     // ===== Server-side execution for single "Run" button =====
     if ("Run".equalsIgnoreCase(req) && !syntaxError) {
+        // Check if required TPTP format is ready (background generation may still be in progress)
+        boolean isHOL = "HOL".equalsIgnoreCase(translationMode);
+        boolean needsFOF = !isHOL && "fof".equals(TPTPlang);
+        boolean needsTFF = !isHOL && "tff".equals(TPTPlang);
+        boolean needsTHF = isHOL;
+
+        boolean generationInProgress = false;
+        String waitingFor = "";
+
+        if (needsFOF && !TPTPGenerationManager.isFOFReady()) {
+            generationInProgress = true;
+            waitingFor = "FOF (SUMO.tptp)";
+        } else if (needsTFF && !TPTPGenerationManager.isTFFReady()) {
+            generationInProgress = true;
+            waitingFor = "TFF (SUMO.tff)";
+        } else if (needsTHF) {
+            boolean useModals = Boolean.TRUE.equals(holUseModals);
+            if (useModals && !TPTPGenerationManager.isTHFModalReady()) {
+                generationInProgress = true;
+                waitingFor = "THF Modal (SUMO_modals.thf)";
+            } else if (!useModals && !TPTPGenerationManager.isTHFPlainReady()) {
+                generationInProgress = true;
+                waitingFor = "THF Plain (SUMO_plain.thf)";
+            }
+        }
+
+        if (generationInProgress) {
+%>
+<div style="border:1px solid #ff9900; background:#fff8f0; padding:16px; margin:10px 0; border-radius:6px;">
+    <strong style="color:#b35900;">KB Translation In Progress</strong><br><br>
+    The <code><%= waitingFor %></code> translation file is still being generated in the background.<br>
+    Please wait a moment and try your query again.<br><br>
+    <em style="color:#666;">This happens once after startup while the knowledge base is being prepared for inference.</em>
+</div>
+<%
+        } else {
         // Always retrieve the proof answers
         Vampire.askQuestion = true;
         try {
@@ -1085,7 +1122,7 @@
 //                    boolean isHOL = f.isHigherOrder(kb);
                     // Use explicit UI toggle (Translation Mode) rather than auto-detection.
                     // This makes behavior predictable for users and avoids accidental HOL attempts.
-                    boolean isHOL = "HOL".equalsIgnoreCase(translationMode);
+//                    isHOL = "HOL".equalsIgnoreCase(translationMode);
                     if (isHOL){ // Higher-Order Formula
                         System.out.println(" -- Higher Order Formula Detected - Attempring to run Vampire HOL ");
                         vampire = kb.askVampireHOL(stmt, timeout, maxAnswers, holUseModals);
@@ -1218,6 +1255,7 @@
         } catch (IOException ioe) {
             out.println("<font color='red'>" + ioe.getMessage() + "</font>");
         }
+        } // end else (generation not in progress)
     }
 
     if (status != null && status.toString().length() > 0) { out.println("Status: "); out.println(status.toString()); }
