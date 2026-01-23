@@ -136,6 +136,9 @@ public class Formula implements Comparable, Serializable {
                                                                      "subrelation"
     );
 
+    /** The Formula's Question List*/
+    public StringBuilder qlist;
+
     /** The source file in which the formula appears. */
     public String sourceFile;
 

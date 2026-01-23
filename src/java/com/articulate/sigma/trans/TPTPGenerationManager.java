@@ -77,6 +77,7 @@ public class TPTPGenerationManager {
                 // Serialize once after both complete
                 System.out.println("TPTPGenerationManager: FOF+TFF complete, serializing...");
                 KBmanager.serialize();
+                System.out.println("TPTPGenerationManager: Serialization completed!");
             });
 
             // THF can run in parallel (different code path, no shared lang field)
