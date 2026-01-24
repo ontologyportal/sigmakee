@@ -33,7 +33,7 @@ import javax.servlet.annotation.WebListener;
 @WebListener
 public final class PasswordService implements ServletContextListener {
     
-    Boolean debug = true;
+    Boolean debug = false;
     private static PasswordService instance;
 
     // open the password DB as a server so both Sigma and SigmaNLP can access at once
@@ -49,11 +49,11 @@ public final class PasswordService implements ServletContextListener {
      */
     public PasswordService() {
 
-        System.out.println("PasswordService()");
+        if (debug) System.out.println("=== PasswordService ");
         try {
             Class.forName(H2_DRIVER); // <- redundant for local invocation, but the JSPs need this
             conn = DriverManager.getConnection(JDBC_ACCESS_DB, INITIAL_ADMIN_USER, "");
-            System.out.println("init(): Opened PASSWD DB via: " + JDBC_ACCESS_DB);
+            if (debug) System.out.println("init(): Opened PASSWD DB via: " + JDBC_ACCESS_DB);
         }
         catch (ClassNotFoundException | SQLException e) {
             System.err.println("Error in PasswordService(): " + e.getMessage());

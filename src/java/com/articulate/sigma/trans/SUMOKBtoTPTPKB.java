@@ -315,7 +315,7 @@ public class SUMOKBtoTPTPKB {
             // (orig) sequential processing
             if (!rapidParsing)
                 retVal = _writeFile(fileName, conjecture, isQuestion, pw);
-            else
+            else {
                 /* Experimental threading of main loop writes big SUMO in half
                  * the time as the sequential method. 2/17/25 tdn
                  */
@@ -324,6 +324,7 @@ public class SUMOKBtoTPTPKB {
                 retVal = _tWriteFile(fileName, conjecture, isQuestion, pw);
                 double seconds = (System.nanoTime() - t0) / 1_000_000_000.0;
                 System.out.printf("SUMO File generation ends. Time took:  s=%.6f%n", seconds);
+            }
 
         }
         catch (Exception ex) {
@@ -334,9 +335,10 @@ public class SUMOKBtoTPTPKB {
 
         KB.axiomKey = axiomKey;
         // Skip serialization during background generation - TPTPGenerationManager handles it
-        if (!TPTPGenerationManager.isBackgroundGenerating()) {
-            KBmanager.serialize();
-        }
+//        if (!TPTPGenerationManager.isBackgroundGenerating()) {
+//            System.out.println("SUMOKBtoTPTPKB.writeFile(): serializing KB after writing");
+//            KBmanager.serialize();
+//        }
         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile(): axiomKey: " + axiomKey.size());
         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
 

@@ -26,6 +26,8 @@ import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
 
+import java.io.IOException;
+import java.nio.file.*;
 import com.esotericsoftware.kryo.io.*;
 
 import py4j.GatewayServer;
@@ -125,6 +127,9 @@ public class KBmanager implements Serializable {
                     "tptpHomeDir",
                     "vampire"
             );
+
+    private static final java.util.concurrent.locks.ReentrantLock SER_LOCK =
+            new java.util.concurrent.locks.ReentrantLock();
 
     protected static final String CONFIG_FILE = "config.xml";
     protected static final String KB_MANAGER_SER = "kbmanager.ser";
@@ -265,6 +270,7 @@ public class KBmanager implements Serializable {
             // Method for deserialization of object
             //KBmanager temp = (KBmanager) in.readObject();
             manager = decoder();
+            if (manager == null) return false;
             //in.close();
             //file.close();
             if (debug) System.out.println("KBmanager.loadSerialized(): KBmanager has been deserialized ");
@@ -315,7 +321,7 @@ public class KBmanager implements Serializable {
      *  save serialized version.
      */
     public static void serialize() {
-
+        SER_LOCK.lock();
         try {
             encoder(manager);
             if (debug) System.out.println("KBmanager.serialize(): KBmanager has been serialized");
@@ -323,6 +329,8 @@ public class KBmanager implements Serializable {
         catch (Exception ex) {
             System.err.println("Error in KBmanager.serialize(): IOException is caught");
             ex.printStackTrace();
+        } finally {
+            SER_LOCK.unlock();
         }
     }
 

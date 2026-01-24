@@ -4101,13 +4101,13 @@ public class KB implements Serializable {
             lang = "tptp";
 
         // Wait for background generation if in progress
-        if (lang.equals("tptp") && !TPTPGenerationManager.isFOFReady()) {
-            System.out.println("INFO in KB.loadVampire(): Waiting for FOF background generation...");
-            TPTPGenerationManager.waitForFOF(600);
-        } else if (lang.equals("tff") && !TPTPGenerationManager.isTFFReady()) {
-            System.out.println("INFO in KB.loadVampire(): Waiting for TFF background generation...");
-            TPTPGenerationManager.waitForTFF(600);
-        }
+//        if (lang.equals("tptp") && !TPTPGenerationManager.isFOFReady()) {
+//            System.out.println("INFO in KB.loadVampire(): Waiting for FOF background generation...");
+//            TPTPGenerationManager.waitForFOF(600);
+//        } else if (lang.equals("tff") && !TPTPGenerationManager.isTFFReady()) {
+//            System.out.println("INFO in KB.loadVampire(): Waiting for TFF background generation...");
+//            TPTPGenerationManager.waitForTFF(600);
+//        }
 
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
         String fileWritten = null;
