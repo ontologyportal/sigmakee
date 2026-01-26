@@ -651,15 +651,18 @@ public class SUMOformulaToTPTPformula {
     public static void main(String[] args) {
 
         System.out.println("INFO in SUMOformulaToTPTPformula.main()");
-        if (args != null && args.length > 1 && args[0].equals("-h")) {
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.containsKey("t")) {
+            testTptpParse4();
+        }
+        else if (argMap.containsKey("h") || argMap.isEmpty()) {
             showHelp();
-        } else if (args.length > 1 && args[0].equals("-g")) {
+        }
+        else if (argMap.containsKey("g") && argMap.get("g").size() == 1) {
             KBmanager.getMgr().initializeOnce();
 //            Formula f = new Formula(args[1]);
             String actual = StringUtil.removeEnclosingQuotes(args[1]);
             System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(actual, false));
-        } else {
-            testTptpParse4();
         }
     }
 }
