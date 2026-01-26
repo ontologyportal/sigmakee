@@ -684,7 +684,7 @@ public class SUMOformulaToTPTPformula {
         else if (argMap.containsKey("g") && argMap.get("g").size() == 1) {
             KBmanager.getMgr().initializeOnce();
 //            Formula f = new Formula(args[1]);
-            String actual = StringUtil.removeEnclosingQuotes(args[1]);
+            String actual = StringUtil.removeEnclosingQuotes(argMap.get("g").get(0));
             System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(actual, false));
         }
     }

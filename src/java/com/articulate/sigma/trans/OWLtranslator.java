@@ -5,16 +5,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.io.Reader;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.io.Writer;
 
 import com.articulate.sigma.*;
@@ -1499,7 +1491,8 @@ public class OWLtranslator {
      */
     public static void main(String args[]) {
 
-        if (args != null && args.length > 0 && args[0].equals("-h")) {
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.containsKey("h") || argMap.isEmpty()) {
             showHelp();
         }
         else {
@@ -1508,16 +1501,16 @@ public class OWLtranslator {
             String kbName = KBmanager.getMgr().getPref("sumokbname");
             KB kb = KBmanager.getMgr().getKB(kbName);
             System.out.println("OWL.main(): completed initialization");
-            if (args != null && args.length > 1 && args[0].equals("-t")) {
+            if (argMap.get("t").size() > 0 && argMap.containsKey("t")) {
                 try {
-                    OWLtranslator.read(args[1]);
+                    OWLtranslator.read(argMap.get("t").get(0));
                 }
                 catch (IOException e) {
                     System.err.println(e.getMessage());
                     e.printStackTrace();
                 }
             }
-            else if (args != null && args.length > 0 && args[0].equals("-s")) {
+            else if (argMap.containsKey("s")) {
                 OWLtranslator ot = new OWLtranslator();
                 try {
                     System.out.println("OWL.main(): starting translation");
@@ -1532,7 +1525,7 @@ public class OWLtranslator {
                     e.printStackTrace();
                 }
             }
-            else if (args != null && args.length > 0 && args[0].equals("-y")) {
+            else if (argMap.containsKey("y")) {
                 OWLtranslator ot = new OWLtranslator();
                 try {
                     ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));

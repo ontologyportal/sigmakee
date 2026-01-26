@@ -1537,6 +1537,7 @@ public class THFnew {
         System.out.println("THFnew");
         System.out.println("  options (with a leading '-'):");
         System.out.println("  m - THF translation with modals");
+        System.out.println("  r - THF tRanslation without modals");
         System.out.println("  t - test");
         System.out.println("  h - show this help");
         System.out.println("  (no option) - plain THF (no modals, only $i and $o)");
@@ -1550,33 +1551,34 @@ public class THFnew {
         System.out.println("INFO in THFnew.main()");
         System.out.println("args:" + (args == null ? 0 : args.length) + " : " +
                 Arrays.toString(args));
-
-        KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        System.out.println("THFnew.main(): KB loaded");
-        if (!kb.errors.isEmpty()) {
-            System.err.println("Errors: " + kb.errors);
-            return;
-        }
-
-        if (args == null || args.length == 0) {
-            // DEFAULT: plain (non-modal) THF
-            System.out.println("THFnew.main(): translate to plain THF (no modals)");
-            transPlainTHF(kb);
-        }
-        else if ("-h".equals(args[0])) {
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.containsKey("h") || argMap.isEmpty()) {
             showHelp();
-        }
-        else if ("-t".equals(args[0])) {
-            System.out.println("THFnew.main(): test");
-            test(kb);
-        }
-        else if ("-m".equals(args[0])) {
-            System.out.println("THFnew.main(): translate to THF with modals");
-            transModalTHF(kb);
         }
         else {
-            showHelp();
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            System.out.println("THFnew.main(): KB loaded");
+            if (!kb.errors.isEmpty()) {
+                System.err.println("Errors: " + kb.errors);
+                return;
+            }
+            if (argMap.containsKey("r")) {
+                // DEFAULT: plain (non-modal) THF
+                System.out.println("THFnew.main(): translate to plain THF (no modals)");
+                transPlainTHF(kb);
+            }
+            else if (argMap.containsKey("t")) {
+                System.out.println("THFnew.main(): test");
+                test(kb);
+            }
+            else if (argMap.containsKey("m")) {
+                System.out.println("THFnew.main(): translate to THF with modals");
+                transModalTHF(kb);
+            }
+            else {
+                showHelp();
+            }
         }
     }
 
