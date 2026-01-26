@@ -91,10 +91,19 @@ public class TPTPGenerationManager {
         executor.shutdown();
     }
 
+    public static void generateProperFile(KB kb, String lang){
+        if ("fof".equals(lang) || ("tptp".equals(lang))){
+            generateFOF(kb);
+        } else if ("tff".equals(lang) ) {
+            generateTFF(kb);
+        }
+
+    }
+
     /**
      * Generate FOF (First-Order Form) TPTP file for a KB.
      */
-    private static void generateFOF(KB kb) {
+    public static void generateFOF(KB kb) {
         if (!fofGenerating.compareAndSet(false, true)) {
             return; // Already generating
         }

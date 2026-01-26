@@ -4094,45 +4094,15 @@ public class KB implements Serializable {
         }
         // Use the passed requestedLang parameter instead of reading from static field
         // This prevents race conditions with background TPTP generation
-//        String lang = "tff";
-//        if ("fof".equals(requestedLang))
-//            lang = "tptp";
+        String lang = "tff";
+        if ("fof".equals(requestedLang))
+            lang = "tptp";
 
-//        String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-//        String fileWritten = null;
-//        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld() || force) {
-//            System.out.println("INFO in KB.loadVampire(): generating " + lang + " file " + infFilename);
-//            try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(infFilename)))) {
-//                if (!formulaMap.isEmpty()) {
-//                    long millis = System.currentTimeMillis();
-//                    if (lang.equals("tptp")) {
-//                        SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-//                        skb.kb = this;
-//                        fileWritten = skb.writeFile(infFilename, null, false, pw);
-//                    }
-//                    else {
-//                        SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();
-//                        stff.kb = this;
-//                        SUMOtoTFAform.initOnce();
-//                        stff.writeSorts(pw);
-//                        fileWritten = stff.writeFile(infFilename,null,false, pw);
-//                        System.out.println("INFO in KB.loadVampire(): CWA: " + SUMOKBtoTPTPKB.CWA);
-//                        if (SUMOKBtoTPTPKB.CWA)
-//                            pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(this)));
-//                        stff.printTFFNumericConstants(pw);
-//                    }
-//                    System.out.println("INFO in KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
-//                }
-//            }
-//            catch (Exception e) {
-//                System.err.println(e.getMessage());
-//                e.printStackTrace();
-//            }
-//            if (StringUtil.isNonEmptyString(fileWritten))
-//                System.out.println("File written: " + infFilename);
-//            else
-//                System.err.println("Could not write: " + infFilename);
-//        }
+        String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
+        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld() || force) {
+            System.out.println("INFO in KB.loadVampire(): generating " + lang + " file " + infFilename);
+            TPTPGenerationManager.generateProperFile(this, lang);
+        }
     }
 
     /***************************************************************
