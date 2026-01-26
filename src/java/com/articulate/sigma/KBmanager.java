@@ -843,6 +843,7 @@ public class KBmanager implements Serializable {
                     preferences.keySet().size());
             if (configuration == null)
                 throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
+
             if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists() && !serializedOld(configuration)) {
                 if (debug) System.out.println("KBmanager.initializeOnce(): serialized exists and is not old");
                 loaded = loadSerialized();
@@ -868,6 +869,8 @@ public class KBmanager implements Serializable {
                     if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
                     initializing = false;
                     initialized = true;
+                    // Start background TPTP generation for all needed formats (FOF, TFF, THF)
+                    TPTPGenerationManager.startBackgroundGeneration();
                 }
             }
             if (!loaded) { // if there was an error loading the serialized file, or there is none,
@@ -886,7 +889,7 @@ public class KBmanager implements Serializable {
                 serialize();
                 initializing = false;
                 initialized = true;
-                // Start background TPTP generation for all formats (FOF, TFF, THF)
+                // Start background TPTP generation for all needed formats (FOF, TFF, THF)
                 TPTPGenerationManager.startBackgroundGeneration();
                 for (KB kb : kbs.values())  // transform to TPTP only once all other initialization complete
                     loadKBforInference(kb);

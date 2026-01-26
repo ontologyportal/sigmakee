@@ -72,13 +72,15 @@ public class TPTPGenerationManager {
         for (KB kb : KBmanager.getMgr().kbs.values()) {
             // FOF and TFF run SEQUENTIALLY on same thread to avoid lang field race condition
             executor.submit(() -> {
+                System.out.println("TPTPGenerationManager: FOF Generating...");
                 generateFOF(kb);   // FOF first
+                System.out.println("TPTPGenerationManager: FOF Finished...");
 //                KBmanager.serialize();
+                System.out.println("TPTPGenerationManager: TFF Generating...");
                 generateTFF(kb);   // TFF after FOF completes
                 // Serialize once after both complete
-//                System.out.println("TPTPGenerationManager: FOF+TFF complete, serializing...");
+                System.out.println("TPTPGenerationManager: TFF complete...");
 //                KBmanager.serialize();
-//                System.out.println("TPTPGenerationManager: Serialization completed!");
             });
 
             // THF can run in parallel (different code path, no shared lang field)

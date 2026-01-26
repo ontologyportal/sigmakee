@@ -548,9 +548,7 @@
             "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
 
     // ---- Global flags for paraphrasing ----
-    System.out.println("AskTell.jsp / showProofInEnglish = "+showEnglish);
     HTMLformatter.proofParaphraseInEnglish = showEnglish;
-    System.out.println("AskTell.jsp / showProofFromLLM = "+llmProof);
     LanguageFormatter.paraphraseLLM = llmProof;
 
     boolean busy = "Run".equalsIgnoreCase(req);
