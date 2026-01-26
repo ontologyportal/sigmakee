@@ -66,15 +66,17 @@ public class KBTest extends UnitTestBase {
         System.out.println("============== testDeleteUserAssertionsAndReloadWithVampire =====================");
         SigmaTestBase.kb.tell("(instance JohnJacob Human)");
         String query = "(instance JohnJacob Human)";
+
         Vampire vamp = SigmaTestBase.kb.askVampire(query,10,1);
         if (vamp != null)
             System.out.println("testDeleteUserAssertionsAndReloadWithVampire(): results: " + vamp.output);
         else
             System.out.println("testDeleteUserAssertionsAndReloadWithVampire(): results: " + null);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-        if (vamp != null)
+        if (vamp != null) {
             vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
-            tpp.parseProofOutput(vamp.output,query,kb,new StringBuilder());
+            tpp.parseProofOutput(vamp.output, query, kb, new StringBuilder());
+        }
         if (tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")))
             System.out.println("testDeleteUserAssertionsAndReloadWithVampire(1): success");
         else
@@ -83,14 +85,15 @@ public class KBTest extends UnitTestBase {
         SigmaTestBase.kb.deleteUserAssertionsAndReload();
         vamp = SigmaTestBase.kb.askVampire(query,10,1);
         vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
-        tpp.parseProofOutput(vamp.output, query, kb, new StringBuilder());
+        TPTP3ProofProcessor tpp1 = new TPTP3ProofProcessor();
+        tpp1.parseProofOutput(vamp.output, query, kb, new StringBuilder());
         System.out.println("User assertions deleted");
         System.out.println("testDeleteUserAssertionsAndReloadWithVampire(): results after delete: " + vamp);
-        if (tpp.proof == null || tpp.status.equals("Timeout"))
+        if (tpp1.proof == null || tpp1.status.equals("Timeout"))
             System.out.println("testDeleteUserAssertionsAndReloadWithVampire(2): success");
         else
-            System.err.println("testDeleteUserAssertionsAndReloadWithVampire(2): fail, proof size: " + tpp.proof.size() + " '" + tpp.status + "'");
-        assertTrue(tpp.proof == null || tpp.status.equals("Timeout"));
+            System.err.println("testDeleteUserAssertionsAndReloadWithVampire(2): fail, proof size: " + tpp1.proof.size() + " '" + tpp1.status + "'");
+        assertTrue(tpp1.proof == null || tpp1.status.equals("Timeout"));
     }
 
     /** ***************************************************************

@@ -1781,9 +1781,14 @@ public class KB implements Serializable {
      */
     public EProver askEProver(String suoKifFormula, int timeout, int maxAnswers) {
 
+        // Capture the user's selected lang IMMEDIATELY at the start of this method
+        // to avoid race conditions with background TPTP generation threads
+        final String requestedLang = SUMOKBtoTPTPKB.lang;
+        System.out.println("KB.askEProver(): captured requestedLang=" + requestedLang);
+
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             if (this.eprover == null)
-                loadEProver();
+                loadEProver(requestedLang);
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -1812,6 +1817,11 @@ public class KB implements Serializable {
     public LEO askLeo(String suoKifFormula, int timeout, int maxAnswers) {
 
         System.out.println("KB.askLeo(): query: " + suoKifFormula);
+        // Capture the user's selected lang IMMEDIATELY at the start of this method
+        // to avoid race conditions with background TPTP generation threads
+        final String requestedLang = SUMOKBtoTPTPKB.lang;
+        System.out.println("KB.askLeo(): captured requestedLang=" + requestedLang);
+
         try {
             if (leo == null) {
                 leo = new LEO();
@@ -1824,7 +1834,7 @@ public class KB implements Serializable {
         }
 //        THF thf = new THF();
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            loadLeo();
+            loadLeo(requestedLang);
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -1833,8 +1843,9 @@ public class KB implements Serializable {
                 int axiomIndex = 0;
                 String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
                 String kbName = name;
+                // Use the captured requestedLang instead of reading from static field again
                 String lang = "tff";
-                if (SUMOKBtoTPTPKB.lang.equals("fof"))
+                if ("fof".equals(requestedLang))
                     lang = "tptp";
                 else
                     SUMOtoTFAform.initOnce();
@@ -1853,16 +1864,18 @@ public class KB implements Serializable {
                         combined.append(p.getFormula()).append(Formula.SPACE);
                     }
                     combined.append(Formula.RP);
-                    String theTPTPstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
+                    // Use captured requestedLang to avoid race conditions with background TPTP generation
+                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
                             ",conjecture,(" +
-                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true) // true - it's a query
+                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
                             + ")).";
                     tptpquery.add(theTPTPstatement);
                 }
                 else {
-                    String theTPTPstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
+                    // Use captured requestedLang to avoid race conditions with background TPTP generation
+                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
                             ",conjecture,(" +
-                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().getFormula(), true) // true - it's a query
+                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().getFormula(), true, requestedLang)
                             + ")).";
                     tptpquery.add(theTPTPstatement);
                 }
@@ -1899,8 +1912,13 @@ public class KB implements Serializable {
     public Vampire askVampire(String suoKifFormula, int timeout, int maxAnswers) {
 
         System.out.println("============ Noraml Vampire Run =============");
+        // Capture the user's selected lang IMMEDIATELY at the start of this method
+        // to avoid race conditions with background TPTP generation threads
+        final String requestedLang = SUMOKBtoTPTPKB.lang;
+        System.out.println("KB.askVampire(): captured requestedLang=" + requestedLang);
+
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            loadVampire();
+            loadVampire(requestedLang);
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -1910,8 +1928,9 @@ public class KB implements Serializable {
                 int axiomIndex = 0;
                 String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
                 String kbName = name;
+                // Use the captured requestedLang instead of reading from static field again
                 String lang = "tff";
-                if (SUMOKBtoTPTPKB.lang.equals("fof"))
+                if ("fof".equals(requestedLang))
                     lang = "tptp";
                 else
                     SUMOtoTFAform.initOnce();
@@ -1931,16 +1950,18 @@ public class KB implements Serializable {
                             combined.append(p.getFormula()).append(Formula.SPACE);
                         }
                         combined.append(Formula.RP);
-                        String theTPTPstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
+                        // Use captured requestedLang to avoid race conditions with background TPTP generation
+                        String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
                                 ",conjecture,(" +
-                                SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true) // true - it's a query
+                                SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
                                 + ")).";
                         tptpquery.add(theTPTPstatement);
                     }
                     else {
-                        String theTPTPstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
+                        // Use captured requestedLang to avoid race conditions with background TPTP generation
+                        String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
                                 ",conjecture,(" +
-                                SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedStmts.iterator().next().getFormula(), true) // true - it's a query
+                                SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedStmts.iterator().next().getFormula(), true, requestedLang)
                                 + ")).";
                         tptpquery.add(theTPTPstatement);
                     }
@@ -1958,8 +1979,7 @@ public class KB implements Serializable {
                         }
                         System.out.println("KB.askVampire(): mode: " + Vampire.mode);
                         vampire.run(this, s, timeout, tptpquery);
-                        System.out.println("============ Noraml Vampire Run Finished =============");
-                        vampire.qlist = SUMOformulaToTPTPformula.qlist;
+                        System.out.println("============ Normal Vampire Run Finished =============");
 //                        System.out.println("DEBUG: vampire.output: "+vampire.output);
                         return vampire;
                     }
@@ -2204,13 +2224,18 @@ public class KB implements Serializable {
             String kbThfPath = kbDir + sep + kbThfFile;
             File thfAxioms = new File(kbThfPath);
             if (!thfAxioms.exists()) {
-                System.out.println("KB.askVampireHOL(): no such file: " + kbThfPath + ". Creating it.");
-                // Generate SUMO.thf
+                System.out.println("KB.askVampireHOL(): no such file: " + kbThfPath + ". Waiting for background generation or creating it.");
+                // Wait for background THF generation if in progress, otherwise generate synchronously
                 if (useModals) {
-                    // using the modal THF exporter
-                    THFnew.transModalTHF(this);
-                }else{
-                    THFnew.transPlainTHF(this);
+                    if (!TPTPGenerationManager.waitForTHFModal(600)) {
+                        System.out.println("KB.askVampireHOL(): Background generation not ready, generating THF Modal synchronously");
+                        THFnew.transModalTHF(this);
+                    }
+                } else {
+                    if (!TPTPGenerationManager.waitForTHFPlain(600)) {
+                        System.out.println("KB.askVampireHOL(): Background generation not ready, generating THF Plain synchronously");
+                        THFnew.transPlainTHF(this);
+                    }
                 }
             }
 
@@ -4034,11 +4059,28 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Checks for a Vampire executable, preprocesses all of the constituents
+     * Checks for a Vampire executable, preprocesses all of the constituents.
+     * This no-arg version reads from the static SUMOKBtoTPTPKB.lang field.
+     * For thread-safe operation during background TPTP generation, use
+     * loadVampire(String requestedLang) instead.
      */
     public void loadVampire() {
+        // Capture lang immediately to minimize race window with background generation
+        String requestedLang = SUMOKBtoTPTPKB.lang;
+        loadVampire(requestedLang);
+    }
 
-        System.out.println("INFO in KB.loadVampire()");
+    /***************************************************************
+     * Checks for a Vampire executable, preprocesses all of the constituents.
+     * This version takes the requested language as a parameter to avoid
+     * race conditions with background TPTP generation threads that modify
+     * the static SUMOKBtoTPTPKB.lang field.
+     *
+     * @param requestedLang The TPTP language format requested by the user ("fof" or "tff")
+     */
+    public void loadVampire(String requestedLang) {
+
+        System.out.println("INFO in KB.loadVampire(): requestedLang=" + requestedLang);
         String vampex = KBmanager.getMgr().getPref("vampire");
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         if (StringUtil.emptyString(vampex)) {
@@ -4050,52 +4092,39 @@ public class KB implements Serializable {
             System.err.println("Error in KB.loadVampire(): no executable " + vampex);
             return;
         }
+        // Use the passed requestedLang parameter instead of reading from static field
+        // This prevents race conditions with background TPTP generation
         String lang = "tff";
-        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+        if ("fof".equals(requestedLang))
             lang = "tptp";
+
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-        String fileWritten = null;
         if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld() || force) {
             System.out.println("INFO in KB.loadVampire(): generating " + lang + " file " + infFilename);
-            try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(infFilename)))) {
-                if (!formulaMap.isEmpty()) {
-                    long millis = System.currentTimeMillis();
-                    if (lang.equals("tptp")) {
-                        SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-                        skb.kb = this;
-                        fileWritten = skb.writeFile(infFilename, null, false, pw);
-                    }
-                    else {
-                        SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();
-                        stff.kb = this;
-                        SUMOtoTFAform.initOnce();
-                        stff.writeSorts(pw);
-                        fileWritten = stff.writeFile(infFilename,null,false, pw);
-                        System.out.println("INFO in KB.loadVampire(): CWA: " + SUMOKBtoTPTPKB.CWA);
-                        if (SUMOKBtoTPTPKB.CWA)
-                            pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(this)));
-                        stff.printTFFNumericConstants(pw);
-                    }
-                    System.out.println("INFO in KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
-                }
-            }
-            catch (Exception e) {
-                System.err.println(e.getMessage());
-                e.printStackTrace();
-            }
-            if (StringUtil.isNonEmptyString(fileWritten))
-                System.out.println("File written: " + infFilename);
-            else
-                System.err.println("Could not write: " + infFilename);
+            TPTPGenerationManager.generateProperFile(this, lang);
         }
     }
 
     /***************************************************************
-     * Checks for a Leo executable, preprocesses all of the constituents
+     * Checks for a Leo executable, preprocesses all of the constituents.
+     * This no-arg version reads from the static SUMOKBtoTPTPKB.lang field.
      */
     public void loadLeo() {
+        // Capture lang immediately to minimize race window with background generation
+        String requestedLang = SUMOKBtoTPTPKB.lang;
+        loadLeo(requestedLang);
+    }
 
-        System.out.println("INFO in KB.loadLeo()");
+    /***************************************************************
+     * Checks for a Leo executable, preprocesses all of the constituents.
+     * This version takes the requested language as a parameter to avoid
+     * race conditions with background TPTP generation threads.
+     *
+     * @param requestedLang The TPTP language format requested by the user ("fof" or "tff")
+     */
+    public void loadLeo(String requestedLang) {
+
+        System.out.println("INFO in KB.loadLeo(): requestedLang=" + requestedLang);
         String leoex = KBmanager.getMgr().getPref("leoExecutable");
         KBmanager.getMgr().prover = KBmanager.Prover.LEO;
         if (StringUtil.emptyString(leoex)) {
@@ -4107,24 +4136,41 @@ public class KB implements Serializable {
             System.err.println("Error in loadLeo(): no executable " + leoex);
             return;
         }
+        // Use the passed requestedLang parameter instead of reading from static field
         String lang = "tff";
-        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+        if ("fof".equals(requestedLang))
             lang = "tptp";
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
 
         if (new File(infFilename).exists() && !KBmanager.getMgr().infFileOld())
-            System.out.println("INFO in KB.loadLeo(): no need to generate " + lang + "file " + infFilename);
+            System.out.println("INFO in KB.loadLeo(): no need to generate " + lang + " file " + infFilename);
         else
-            loadVampire(); // if SUMO.tptp is missing, this will generate it
+            loadVampire(requestedLang); // if SUMO.tptp is missing, this will generate it
     }
 
     /***************************************************************
      * Starts EProver and collects, preprocesses and loads all of the constituents into
-     * it.
+     * it. This no-arg version reads from the static SUMOKBtoTPTPKB.lang field.
+     * For thread-safe operation during background TPTP generation, use
+     * loadEProver(String requestedLang) instead.
      */
     public void loadEProver() {
+        // Capture lang immediately to minimize race window with background generation
+        String requestedLang = SUMOKBtoTPTPKB.lang;
+        loadEProver(requestedLang);
+    }
 
-        System.out.println("INFO in KB.loadEProver(): Creating new process");
+    /***************************************************************
+     * Starts EProver and collects, preprocesses and loads all of the constituents into
+     * it. This version takes the requested language as a parameter to avoid
+     * race conditions with background TPTP generation threads that modify
+     * the static SUMOKBtoTPTPKB.lang field.
+     *
+     * @param requestedLang The TPTP language format requested by the user ("fof" or "tff")
+     */
+    public void loadEProver(String requestedLang) {
+
+        System.out.println("INFO in KB.loadEProver(): Creating new process, requestedLang=" + requestedLang);
         KBmanager mgr = KBmanager.getMgr();
         String e_prover_x = mgr.getPref("eprover");
         if (StringUtil.emptyString(e_prover_x)) {
@@ -4137,9 +4183,21 @@ public class KB implements Serializable {
             return;
         }
         mgr.prover = KBmanager.Prover.EPROVER;
+        // Use the passed requestedLang parameter instead of reading from static field
+        // This prevents race conditions with background TPTP generation
         String lang = "tff";
-        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+        if ("fof".equals(requestedLang))
             lang = "tptp";
+
+        // Wait for background generation if in progress
+        if (lang.equals("tptp") && !TPTPGenerationManager.isFOFReady()) {
+            System.out.println("INFO in KB.loadEProver(): Waiting for FOF background generation...");
+            TPTPGenerationManager.waitForFOF(600);
+        } else if (lang.equals("tff") && !TPTPGenerationManager.isTFFReady()) {
+            System.out.println("INFO in KB.loadEProver(): Waiting for TFF background generation...");
+            TPTPGenerationManager.waitForTFF(600);
+        }
+
         String infFilename = mgr.getPref("kbDir") + File.separator + this.name + "." + lang;
         try {
             if (!formulaMap.isEmpty()) {
@@ -4148,10 +4206,10 @@ public class KB implements Serializable {
                     eprover.terminate();
                     eprover = null;
                 }
-                if (!(new File(infFilename).exists()) || mgr.infFileOld()) {
-                    System.out.println("INFO in KB.loadEProver(): generating TPTP file");
-                    loadVampire(); // if SUMO.tptp is missing, this will generate it
-                }
+//                if (!(new File(infFilename).exists()) || mgr.infFileOld()) {
+//                    System.out.println("INFO in KB.loadEProver(): generating TPTP file");
+//                    loadVampire(requestedLang); // if SUMO.tptp is missing, this will generate it
+//                }
                 if (StringUtil.isNonEmptyString(mgr.getPref("eprover")))
                     eprover = new EProver(mgr.getPref("eprover"), infFilename);
             }

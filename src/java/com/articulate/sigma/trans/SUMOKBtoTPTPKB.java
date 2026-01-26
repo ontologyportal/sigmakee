@@ -315,7 +315,7 @@ public class SUMOKBtoTPTPKB {
             // (orig) sequential processing
             if (!rapidParsing)
                 retVal = _writeFile(fileName, conjecture, isQuestion, pw);
-            else
+            else {
                 /* Experimental threading of main loop writes big SUMO in half
                  * the time as the sequential method. 2/17/25 tdn
                  */
@@ -324,6 +324,7 @@ public class SUMOKBtoTPTPKB {
                 retVal = _tWriteFile(fileName, conjecture, isQuestion, pw);
                 double seconds = (System.nanoTime() - t0) / 1_000_000_000.0;
                 System.out.printf("SUMO File generation ends. Time took:  s=%.6f%n", seconds);
+            }
 
         }
         catch (Exception ex) {
@@ -333,7 +334,11 @@ public class SUMOKBtoTPTPKB {
         }
 
         KB.axiomKey = axiomKey;
-        KBmanager.serialize();
+        // Skip serialization during background generation - TPTPGenerationManager handles it
+//        if (!TPTPGenerationManager.isBackgroundGenerating()) {
+//            System.out.println("SUMOKBtoTPTPKB.writeFile(): serializing KB after writing");
+//            KBmanager.serialize();
+//        }
         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile(): axiomKey: " + axiomKey.size());
         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
 
@@ -371,7 +376,13 @@ public class SUMOKBtoTPTPKB {
             // Skip Formulas that start with "documentation, termFormat, format""
             if (isNonReasoningForATP(f.getFormula())) continue;
 
-            f.theTptpFormulas.clear();
+            // Format-specific cache clearing to prevent FOF/TFF overwrites
+            if (lang.equals("fof")) {
+                f.theFofFormulas.clear();
+            } else if (lang.equals("tff")) {
+                f.theTffFormulas.clear();
+            }
+            f.theTptpFormulas.clear(); // Legacy compatibility
             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : source line: " + f.startLine);
             if (!f.getFormula().startsWith("(documentation")) {
                 pw.println("% f: " + f.format("", "", Formula.SPACE));
@@ -414,7 +425,8 @@ public class SUMOKBtoTPTPKB {
                             result = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
                             if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
                             if (result != null) {
-                                f.theTptpFormulas.add(result);
+                                f.theFofFormulas.add(result);
+                                f.theTptpFormulas.add(result); // Legacy compatibility
                             }
                             break;
                         case "tff":
@@ -430,7 +442,8 @@ public class SUMOKBtoTPTPKB {
                             printTFFNumericConstants(pw);
                             SUMOtoTFAform.initNumericConstantTypes();
                             if (!StringUtil.emptyString(result)) {
-                                f.theTptpFormulas.add(result);
+                                f.theTffFormulas.add(result);
+                                f.theTptpFormulas.add(result); // Legacy compatibility
                             } else if (!StringUtil.emptyString(SUMOtoTFAform.filterMessage)) {
                                 pw.println("% " + SUMOtoTFAform.filterMessage);
                             }
@@ -454,7 +467,9 @@ public class SUMOKBtoTPTPKB {
                     alreadyWrittenTPTPs.add(sort);
                 }
             }
-            for (String theTPTPFormula : f.theTptpFormulas) {
+            // Use format-specific field for file writing
+            Set<String> formulasToWrite = lang.equals("fof") ? f.theFofFormulas : f.theTffFormulas;
+            for (String theTPTPFormula : formulasToWrite) {
                 if (!StringUtil.emptyString(theTPTPFormula) &&
                         !alreadyWrittenTPTPs.contains(theTPTPFormula) &&
                         !filterAxiom(f,theTPTPFormula,pw)) {
@@ -534,7 +549,13 @@ public class SUMOKBtoTPTPKB {
 
             if (prof != null) prof.nFormulas++;
 
-            f.theTptpFormulas.clear();
+            // Format-specific cache clearing to prevent FOF/TFF overwrites
+            if (localLang.equals("fof")) {
+                f.theFofFormulas.clear();
+            } else if (localLang.equals("tff")) {
+                f.theTffFormulas.clear();
+            }
+            f.theTptpFormulas.clear(); // Legacy compatibility
 
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processed = null, withRelnRenames;
@@ -610,8 +631,10 @@ public class SUMOKBtoTPTPKB {
                                         + f3.format("", "", " "));
                                 result = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
                                 if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
-                                if (result != null)
-                                    f.theTptpFormulas.add(result);
+                                if (result != null) {
+                                    f.theFofFormulas.add(result);
+                                    f.theTptpFormulas.add(result); // Legacy compatibility
+                                }
                                 break;
 
                             case "tff":
@@ -646,9 +669,10 @@ public class SUMOKBtoTPTPKB {
                                 printTFFNumericConstants(fileContents);
                                 SUMOtoTFAform.initNumericConstantTypes();
 
-                                if (!StringUtil.emptyString(result))
-                                    f.theTptpFormulas.add(result);
-                                else if (!StringUtil.emptyString(SUMOtoTFAform.filterMessage))
+                                if (!StringUtil.emptyString(result)) {
+                                    f.theTffFormulas.add(result);
+                                    f.theTptpFormulas.add(result); // Legacy compatibility
+                                } else if (!StringUtil.emptyString(SUMOtoTFAform.filterMessage))
                                     fileContents.add("% " + SUMOtoTFAform.filterMessage);
                                 break;
 
@@ -672,7 +696,9 @@ public class SUMOKBtoTPTPKB {
                     }
                 }
 
-                for (String theTPTPFormula : f.theTptpFormulas) {
+                // Use format-specific field for file writing
+                Set<String> formulasToWrite = localLang.equals("fof") ? f.theFofFormulas : f.theTffFormulas;
+                for (String theTPTPFormula : formulasToWrite) {
                     if (!StringUtil.emptyString(theTPTPFormula) &&
                             !alreadyWrittenTPTPs.contains(theTPTPFormula)) {
 

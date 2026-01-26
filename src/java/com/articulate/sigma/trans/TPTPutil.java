@@ -79,8 +79,9 @@ public class TPTPutil {
 //        String eolChars = "\n";
 
         //System.out.println("INFO in Formula.htmlTPTPFormat(): " + f.toString());
-        //System.out.println("INFO in Formula.htmlTPTPFormat(): theTptpFormulas.size()" + f.theTptpFormulas.size());
-        if (f.theTptpFormulas == null || f.theTptpFormulas.size() < 1){
+        //System.out.println("INFO in Formula.htmlTPTPFormat(): getTheTptpFormulas().size()" + f.getTheTptpFormulas().size());
+        Set<String> tptpFormulas = f.getTheTptpFormulas();
+        if (tptpFormulas == null || tptpFormulas.size() < 1){
             String tff = SUMOtoTFAform.process(f, false);
             if (tff != null)
                 return htmlizeSUMOTFA(tff, hyperlink);
@@ -92,7 +93,7 @@ public class TPTPutil {
         int level, tokenNum, flen;
         char ch;
         String tokenNoSuffix;
-        for (String formString : f.theTptpFormulas) {
+        for (String formString : tptpFormulas) {
             if (!StringUtil.emptyString(formString)) {
                 //System.out.println("INFO in Formula.htmlTPTPFormat(): TPTP formula: " + formString);
                 formString = formString.trim();
