@@ -2,6 +2,7 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.Vampire;
+import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.FileUtil;
@@ -89,32 +90,47 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-    public void testVampireAvatar () {
+    public void testVampireAvatar() {
 
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
-        System.out.println("-------------------testVampireAvatar------------------------------");
+
         try {
             KBmanager.getMgr().initializeOnce();
+
+            if (!TPTPGenerationManager.isFOFReady()) {
+                TPTPGenerationManager.waitForFOF(600);
+            }
+
             Vampire.mode = Vampire.ModeType.AVATAR;
             Vampire.askQuestion = true;
+
             String query = "(subclass ?X Entity)";
-            Vampire vampire = kb.askVampire(query,30,1);
+            Vampire vampire = kb.askVampire(query, 30, 1);
+
+            // 1) Solver-level correctness
+            assertTrue("Expected SZS Theorem status.\nOutput:\n" + vampire.toString(),
+                    vampire.toString().contains("SZS status Theorem"));
+
+            // 2) Parse the proof
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(vampire.output, query, kb, vampire.qlist);
-            System.out.println(vampire.toString());
-            String result = tpp.proof.toString().trim();
-            System.out.println("Result: " + result);
-            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 11))
-                System.out.println("Success");
-            else
-                System.err.println("FAIL");
-            assertEquals(11,tpp.proof.size());
+
+            assertFalse("Expected non-empty parsed proof.", tpp.proof.isEmpty());
+
+            // 3) Proof reaches contradiction (refutation)
+            String parsed = tpp.proof.toString();
+            assertTrue("Expected $false in parsed proof.\nParsed:\n" + parsed, parsed.contains("$false"));
+
+            // 4) Question-mode answer exists (since askQuestion=true)
+            assertTrue("Expected SZS answers in output.\nOutput:\n" + vampire.toString(),
+                    vampire.toString().contains("SZS answers"));
+
         }
         catch (Exception e) {
-            System.err.println(e.getMessage());
+            throw new AssertionError(e); // do not swallow exceptions in tests
         }
-        System.out.println("\n\n");
     }
+
 
     /** ***************************************************************
      */

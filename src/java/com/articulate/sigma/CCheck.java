@@ -364,7 +364,7 @@ public class CCheck implements Runnable {
             Collection<Formula> allFormulas = kb.formulaMap.values();
             Collection<String> allTPTP = new ArrayList<>();
             for (Formula f : allFormulas) {
-                allTPTP.addAll(f.theTptpFormulas);
+                allTPTP.addAll(f.getTheTptpFormulas());
             }
             Iterator<String> it = allTPTP.iterator();
             pw.println("  <entries>");
