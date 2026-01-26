@@ -680,6 +680,16 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         pw.println("% SUMOKBtoTFAKB.writeSorts(): finished\n");
     }
 
+    /** ***************************************************************
+     */
+    public static void printHelp() {
+
+        System.out.println("Sigma Knowledge Engineering Environment: KBcache");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -t - translate KB to THF");
+    }
+
     /** *************************************************************
      * Will first write out SUMO.tptp if the KB had not yet been
      * serialized, or serialized files are older than the sources,
@@ -690,29 +700,37 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     public static void main(String[] args) {
 
         System.out.println("SUMOKBtoTFAKB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
-        SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
-        skbtfakb.initOnce();
-        System.out.println("SUMOKBtoTFAKB.main(): completed init");
-        SUMOformulaToTPTPformula.lang = "tff"; // this setting has to be *after* initialization, otherwise init
-        // tries to write a TPTP file and then sees that tff is set and tries to write tff, but then sorts etc
-        // haven't been set
-        SUMOKBtoTPTPKB.lang = "tff";
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.lang;
-        System.out.println("SUMOKBtoTFAKB.main(): " + skbtfakb.kb.kbCache.getSignature("ListOrderFn"));
-        String fileWritten = null;
-        try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(filename)))) {
-            skbtfakb.writeSorts(pw);
-            System.out.println("---------------------------");
-            System.out.println("SUMOKBtoTFAKB.main(): completed writing sorts");
-            fileWritten = skbtfakb.writeFile(filename, null, false, pw);
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.containsKey("t")) {
+            SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
+            skbtfakb.initOnce();
+            System.out.println("SUMOKBtoTFAKB.main(): completed init");
+
+            SUMOformulaToTPTPformula.lang = "tff"; // this setting has to be *after* initialization, otherwise init
+            // tries to write a TPTP file and then sees that tff is set and tries to write tff, but then sorts etc
+            // haven't been set
+            SUMOKBtoTPTPKB.lang = "tff";
+            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.lang;
+            System.out.println("SUMOKBtoTFAKB.main(): " + skbtfakb.kb.kbCache.getSignature("ListOrderFn"));
+            String fileWritten = null;
+            try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(filename)))) {
+                skbtfakb.writeSorts(pw);
+                System.out.println("---------------------------");
+                System.out.println("SUMOKBtoTFAKB.main(): completed writing sorts");
+                fileWritten = skbtfakb.writeFile(filename, null, false, pw);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (StringUtil.isNonEmptyString(fileWritten)) {
+                System.out.println("File written: " + filename);
+            }
+            else
+                System.err.println("Could not write: " + filename);
         }
-        catch (IOException e) {
-            e.printStackTrace();
+        else {
+            printHelp();
         }
-        if (StringUtil.isNonEmptyString(fileWritten)) {
-            System.out.println("File written: " + filename);
-        } else
-            System.err.println("Could not write: " + filename);
     }
 }
