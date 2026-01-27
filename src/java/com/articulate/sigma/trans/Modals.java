@@ -115,7 +115,14 @@ public class Modals {
                     "trichotomizingOn",
                     "totalOrderingOn",
                     "disjointDecomposition", // New Entry (Angelos)
+                    // CF: TODO: Include all temporals other than the SEVEN: 
+                    // weddingAnniversary, typicallyContainsTemporalPart, typicalTemporalPart
+                    // time, cooccur, anniversary, WhenFn 
+                    "AfternoonFn",
+                    "MorningFn",
+                    "EveningFn", 
                     // Arithmetic Op
+                    "AbsoluteValueFn", 
                     "AdditionFn",
                     "MultiplicationFn",
                     "ArcCosineFn",
@@ -192,9 +199,8 @@ public class Modals {
         Formula entity   = flist.get(flist.size() - 2);
         Formula cogAgent  = flist.get(flist.size() - 1);
         worldNum = worldNum + 1;
-        fstring.append("(=> (accreln3 ").append(f.car()).append(Formula.SPACE);
+        fstring.append("(=> (accreln2 ").append(f.car()).append(Formula.SPACE);
         fstring.append(entity).append(Formula.SPACE).append(cogAgent).append(Formula.SPACE);
-        //        append(flist.get(0)).append(Formula.SPACE).append(flist.get(1));
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
             fstring.append(" CW");
@@ -202,9 +208,6 @@ public class Modals {
             fstring.append(" ?W").append(worldNum - 1);
         }
         fstring.append(" ?W").append(worldNum).append(") ");
-        /*for (int i = 1; i < flist.size() - 2; i++) {
-            fstring.append(flist.get(i)).append(Formula.SPACE);
-        }*/
         fstring.append(Formula.SPACE).append(processRecurse(flist.get(0),kb,worldNum));
         fstring.append(Formula.RP);
         Formula result = new Formula();
@@ -233,7 +236,7 @@ public class Modals {
         Formula embedded = processRecurse(flist.get(1), kb, worldNum);
 
         StringBuilder fstring = new StringBuilder();
-        fstring.append("(=> (accreln ")
+        fstring.append("(=> (accreln1 ")
                 .append(f.car())          // modal operator
                 .append(Formula.SPACE)
                 .append(param.toString()); // now world-annotated
@@ -523,7 +526,7 @@ public class Modals {
 
         // "Agents that violate their obligations have a US government disciplinary hearing."
         // CF: Is this example correct? 
-        /*fstr = 
+        fstr = 
         "(=>" +
         "  (and" +
         "    (confersObligation ?F USGovernment ?A)" +
@@ -534,7 +537,7 @@ public class Modals {
         "      (plaintiff ?H USGovernment)" +
         "      (defendant ?H ?A))))";
         f = new Formula(fstr);
-        System.out.println(processModals(f,kb) + "\n\n");*/
+        System.out.println(processModals(f,kb) + "\n\n");
         
         // "Agents that violate their obligations are fired after a US government disciplinary hearing."
         // CF: Is this example correct? 
