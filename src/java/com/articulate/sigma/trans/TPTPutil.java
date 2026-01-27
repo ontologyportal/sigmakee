@@ -428,14 +428,10 @@ public class TPTPutil {
         KBmanager.getMgr().initializeOnce();
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         KB kb = KBmanager.getMgr().getKB(kbName);
-
         List<String> cleaned_proofLines = clearProofFile(proofLines);
-
         tpp.parseProofOutput(cleaned_proofLines, "", kb, new StringBuilder());  // builds tpp.proof (List<TPTPFormula>)
         List<TPTPFormula> keep = tpp.simplifyProof(1); // drop 1-premise,
-        keep = tpp.dropAnswerSteps(keep);
         List<TPTPFormula> renumberProof = tpp.renumberProof(keep); // rewire+renumber
-
         List<String> firstComments = new ArrayList<>();
         List<String> lastComments = new ArrayList<>();
         boolean beforeFOF = true;
