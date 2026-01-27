@@ -2012,7 +2012,7 @@ public class KB implements Serializable {
      */
     public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers){
 
-        System.out.println("============ Vampire w/ModensPomens  =============");
+        if (debug) System.out.println("============ Vampire w/ModensPomens  =============");
         // STEP 1
         Vampire vampire_initial = askVampire(suoKifFormula, timeout, maxAnswers);
 
@@ -2036,7 +2036,7 @@ public class KB implements Serializable {
 
         try{
             vampire_pomens.runCustom(kb, timeout, cmds);
-            System.out.println("============ Vampire w/ModensPomens run =============");
+            if (debug) System.out.println("============ Vampire w/ModensPomens run =============");
             vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
         } catch (Exception e){
             System.out.println("-- ERROR KB.askVampireModusPonens: "+e.getMessage());
@@ -2044,14 +2044,14 @@ public class KB implements Serializable {
 
         // STEP 4
         if (dropOnePremiseFormulas) {
-            System.out.println("============ Vampire Attempt to Drop One Premise Formulas  =============");
+            if (debug) System.out.println("============ Vampire Attempt to Drop One Premise Formulas  =============");
             vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
-            System.out.println("============ Vampire Drop One Premise Formulas Finished =============");
+            if (debug) System.out.println("============ Vampire Drop One Premise Formulas Finished =============");
         }
 
         // STEP 5
         vampire_pomens.output = TPTPutil.replaceFOFinfRule(vampire_pomens.output, authored_lines);
-        System.out.println("============ Vampire replace FOF infRules Finished =============");
+        if (debug) System.out.println("============ Vampire replace FOF infRules Finished =============");
 
         // STEP 6
         return vampire_pomens;
