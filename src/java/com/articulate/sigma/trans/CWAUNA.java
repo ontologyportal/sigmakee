@@ -3,16 +3,14 @@ package com.articulate.sigma.trans;
 /* A start at adding the (conservative) closed world assumption and unique names assumption to SUMO/Sigma.
  */
 
+import com.articulate.sigma.CLIMapParser;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class CWAUNA {
 
@@ -148,7 +146,8 @@ public class CWAUNA {
     public static void main(String[] args) throws IOException {
 
         System.out.println("INFO in CWAUNA.main()");
-        if (args != null && args.length > 0 && args[0].equals("-h"))
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.isEmpty() || argMap.containsKey("h"))
             showHelp();
         else {
             KBmanager.getMgr().initializeOnce();

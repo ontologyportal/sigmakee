@@ -136,6 +136,9 @@ public class Formula implements Comparable, Serializable {
                                                                      "subrelation"
     );
 
+    /** The Formula's Question List*/
+    public StringBuilder qlist;
+
     /** The source file in which the formula appears. */
     public String sourceFile;
 
@@ -217,8 +220,24 @@ public class Formula implements Comparable, Serializable {
      */
     public Set<String> theTptpFormulas = new HashSet<>();
 
+    /** FOF (First-Order Form) translation cache - separate from TFF to prevent overwrites */
+    public Set<String> theFofFormulas = new HashSet<>();
+
+    /** TFF (Typed First-order Form) translation cache - separate from FOF to prevent overwrites */
+    public Set<String> theTffFormulas = new HashSet<>();
+
     //any extra sort signatures not computed in advance
     public Set<String> tffSorts = new HashSet<>();
+
+    /** ***************************************************************
+     * Accessor method for backward compatibility. Returns the most recently
+     * populated TPTP cache: prefers TFF, then FOF, then legacy theTptpFormulas.
+     */
+    public Set<String> getTheTptpFormulas() {
+        if (!theTffFormulas.isEmpty()) return theTffFormulas;
+        if (!theFofFormulas.isEmpty()) return theFofFormulas;
+        return theTptpFormulas; // Legacy fallback
+    }
 
     /** *****************************************************************
      * A list of clausal (resolution) forms generated from this
@@ -257,6 +276,10 @@ public class Formula implements Comparable, Serializable {
         }
         this.varTypeCache.putAll(f.varTypeCache);
         this.isGround = f.isGround;
+        this.theFofFormulas.addAll(f.theFofFormulas);
+        this.theTffFormulas.addAll(f.theTffFormulas);
+        this.theTptpFormulas.addAll(f.theTptpFormulas);
+        this.tffSorts.addAll(f.tffSorts);
     }
 
     /** *****************************************************************

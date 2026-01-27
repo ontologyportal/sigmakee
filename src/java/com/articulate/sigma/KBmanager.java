@@ -21,10 +21,13 @@ import com.articulate.sigma.CCheckManager.CCheckStatus;
 import com.articulate.sigma.VerbNet.VerbNet;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
+import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
 
+import java.io.IOException;
+import java.nio.file.*;
 import com.esotericsoftware.kryo.io.*;
 
 import py4j.GatewayServer;
@@ -124,6 +127,9 @@ public class KBmanager implements Serializable {
                     "tptpHomeDir",
                     "vampire"
             );
+
+    private static final java.util.concurrent.locks.ReentrantLock SER_LOCK =
+            new java.util.concurrent.locks.ReentrantLock();
 
     protected static final String CONFIG_FILE = "config.xml";
     protected static final String KB_MANAGER_SER = "kbmanager.ser";
@@ -264,6 +270,7 @@ public class KBmanager implements Serializable {
             // Method for deserialization of object
             //KBmanager temp = (KBmanager) in.readObject();
             manager = decoder();
+            if (manager == null) return false;
             //in.close();
             //file.close();
             if (debug) System.out.println("KBmanager.loadSerialized(): KBmanager has been deserialized ");
@@ -314,7 +321,7 @@ public class KBmanager implements Serializable {
      *  save serialized version.
      */
     public static void serialize() {
-
+        SER_LOCK.lock();
         try {
             encoder(manager);
             if (debug) System.out.println("KBmanager.serialize(): KBmanager has been serialized");
@@ -322,6 +329,8 @@ public class KBmanager implements Serializable {
         catch (Exception ex) {
             System.err.println("Error in KBmanager.serialize(): IOException is caught");
             ex.printStackTrace();
+        } finally {
+            SER_LOCK.unlock();
         }
     }
 
@@ -834,6 +843,7 @@ public class KBmanager implements Serializable {
                     preferences.keySet().size());
             if (configuration == null)
                 throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
+
             if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists() && !serializedOld(configuration)) {
                 if (debug) System.out.println("KBmanager.initializeOnce(): serialized exists and is not old");
                 loaded = loadSerialized();
@@ -859,6 +869,8 @@ public class KBmanager implements Serializable {
                     if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
                     initializing = false;
                     initialized = true;
+                    // Start background TPTP generation for all needed formats (FOF, TFF, THF)
+                    TPTPGenerationManager.startBackgroundGeneration();
                 }
             }
             if (!loaded) { // if there was an error loading the serialized file, or there is none,
@@ -877,6 +889,8 @@ public class KBmanager implements Serializable {
                 serialize();
                 initializing = false;
                 initialized = true;
+                // Start background TPTP generation for all needed formats (FOF, TFF, THF)
+                TPTPGenerationManager.startBackgroundGeneration();
                 for (KB kb : kbs.values())  // transform to TPTP only once all other initialization complete
                     loadKBforInference(kb);
             }

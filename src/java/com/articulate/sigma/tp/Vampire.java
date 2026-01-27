@@ -309,7 +309,7 @@ public class Vampire {
      */
     public void concatFiles(String f1, String f2, String fout) throws IOException {
 
-        System.out.println("concatFiles(): " + f1 + " and " + f2 + " to " + fout);
+        if (debug) System.out.println("concatFiles(): " + f1 + " and " + f2 + " to " + fout);
         File f1file = new File(f1);
         File f2file = new File(f2);
         if (!f1file.exists())
