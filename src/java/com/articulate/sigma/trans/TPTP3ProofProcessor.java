@@ -1231,28 +1231,53 @@ public class TPTP3ProofProcessor {
      * with more than one premise.
      */
     private String renumberOneSupport(Map<String,TPTPFormula> ftable, String sup) {
+
         if (debug) System.out.println("renumberOneSupport(): get formula for: " + sup);
+
         TPTPFormula f = ftable.get(sup);
-        if (f == null) return sup;                                // unknown id → leave as-is
+        if (f == null) return sup;
+
         if (debug) System.out.println("renumberOneSupport(): formula: " + f);
 
-        // Don’t lift: axioms or multi-premise (or no supports)
-        if (f.supports == null || f.supports.size() != 1 || TPTPutil.sourceAxiom(f)) return sup;
+        // Don’t lift through: headers, axioms, multi-premise, or no supports
+        if (isHeaderRole(f) || f.supports == null || f.supports.size() != 1 || TPTPutil.sourceAxiom(f))
+            return sup;
 
         String newsup = sup;
-        Set<String> seen = new HashSet<>();                       // cycle guard
-        while (f != null && f.supports != null && f.supports.size() == 1 && !TPTPutil.sourceAxiom(f) && seen.add(f.name)) {
-            newsup = f.supports.get(0);                           // climb first parent
-            if (debug) System.out.println("renumberOneSupport(): first support: " + newsup);
-            f = ftable.get(newsup);
-            if (f == null) {                                      // broken link → stop at last known
-                if (debug) System.out.println("renumberOneSupport(): Error no formula: " + newsup);
+        Set<String> seen = new HashSet<>();
+
+        while (f != null
+                && f.supports != null
+                && f.supports.size() == 1
+                && !TPTPutil.sourceAxiom(f)
+                && !isHeaderRole(f)
+                && seen.add(f.name)) {
+
+            String parent = f.supports.get(0);
+            TPTPFormula pf = ftable.get(parent);
+
+            // If the next parent is a header, stop THERE (don’t climb past it)
+            if (pf != null && isHeaderRole(pf)) {
+                newsup = parent;
                 break;
             }
-            if (f.supports == null || f.supports.size() != 1 || TPTPutil.sourceAxiom(f)) break;
+
+            newsup = parent;
+            if (debug) System.out.println("renumberOneSupport(): climb to: " + newsup);
+
+            f = pf;
+            if (f == null) break;
         }
+
         if (debug) System.out.println("renumberOneSupport(): returning: " + newsup);
         return newsup;
+    }
+
+
+    private boolean isHeaderRole(TPTPFormula x) {
+        if (x == null || x.role == null) return false;
+        String r = x.role.trim();
+        return "negated_conjecture".equals(r) || "conjecture".equals(r);
     }
 
     /**
@@ -1278,8 +1303,8 @@ public class TPTP3ProofProcessor {
 
     /**
      * ***************************************************************
-     * Simplify proof to remove steps with single support other than axioms from
-     * the KB
+     * Simplify proof to remove steps with single support other than axioms from the KB
+     * (plus optional readability filtering for ans*).
      */
     public List<TPTPFormula> simplifyProof(int level) {
 
@@ -1287,17 +1312,92 @@ public class TPTP3ProofProcessor {
         for (TPTPFormula ps : proof) {
             ftable.put(ps.name, ps);
         }
+
+        // Renumber supports (lift single-premise chains)
         for (TPTPFormula ps : proof) {
             renumberSupport(ftable, ps);
         }
+
+        // 1) First pass: decide which nodes to keep
         List<TPTPFormula> result = new ArrayList<>();
+        Set<String> keepNames = new HashSet<>();
+
         for (TPTPFormula ps : proof) {
-            if ((ps.supports.size() != 1) || TPTPutil.sourceAxiom(ps) || ps.role.equals("negated_conjecture")) {
+
+            String role = (ps.role == null) ? "" : ps.role.trim();
+            boolean isHeader = "negated_conjecture".equals(role) || "conjecture".equals(role);
+
+            String f = (ps.formula == null) ? "" : ps.formula;
+
+            boolean isAns = ANSWER_PRED_PATTERN.matcher(f).find();
+
+            boolean keepByOnePremiseRule =
+                    (ps.supports.size() != 1) || TPTPutil.sourceAxiom(ps) || "negated_conjecture".equals(role);
+
+            boolean keep = keepByOnePremiseRule;
+
+            // Drop ans-scaffolding for readability, but keep headers
+            if (!isHeader && isAns) keep = false;
+
+            // OPTIONAL: always keep $false as an end-marker for the UI
+            boolean isFalse = "$false".equals(f.trim());
+            if (isFalse) keep = true;
+
+            if (keep) {
                 result.add(ps);
+                keepNames.add(ps.name);
             }
         }
+
+        // 2) Second pass: rewire supports to kept nodes (splice out dropped nodes)
+        for (TPTPFormula ps : result) {
+            if (ps.supports == null || ps.supports.isEmpty()) continue;
+
+            List<String> oldSup = new ArrayList<>(ps.supports);
+            LinkedHashSet<String> rewired = new LinkedHashSet<>();
+
+            for (String s : oldSup) {
+                if (keepNames.contains(s)) {
+                    rewired.add(s);
+                } else {
+                    // splice: replace missing support with its kept ancestors
+                    List<String> expanded = expandToKeptSupports(s, ftable, keepNames, new HashSet<>());
+                    rewired.addAll(expanded);
+                }
+            }
+            ps.supports = new ArrayList<>(rewired);
+
+        }
+
         return result;
     }
+
+
+    private static final Pattern ANSWER_PRED_PATTERN =
+            Pattern.compile("\\b(ans\\d*|answer)\\s*\\(");
+
+
+    // Helper: expand a missing support into kept ancestors (flatten), with cycle guard.
+    private List<String> expandToKeptSupports(String sup,
+                                              Map<String,TPTPFormula> ftable,
+                                              Set<String> keepNames,
+                                              Set<String> seen) {
+
+        if (sup == null) return Collections.emptyList();
+        if (keepNames.contains(sup)) return Collections.singletonList(sup);
+        if (!seen.add(sup)) return Collections.emptyList(); // cycle guard
+
+        TPTPFormula f = ftable.get(sup);
+        if (f == null || f.supports == null || f.supports.isEmpty())
+            return Collections.emptyList();
+
+        List<String> out = new ArrayList<>();
+        for (String parent : f.supports) {
+            out.addAll(expandToKeptSupports(parent, ftable, keepNames, seen));
+        }
+        return out;
+    }
+
 
     /**
      * ***************************************************************
@@ -1307,25 +1407,36 @@ public class TPTP3ProofProcessor {
 
         List<TPTPFormula> result = new ArrayList<>();
         Map<String, String> table = new HashMap<>();
+
         int num = 1;
         for (TPTPFormula ps : proof) {
             table.put(ps.name, Integer.toString(num++));
         }
-        if (debug) {
-            System.out.println("renumberProof(): table: " + table);
-        }
-        List<String> newSupports;
+
+        if (debug) System.out.println("renumberProof(): table: " + table);
+
         for (TPTPFormula ps : proof) {
-            ps.name = table.get(ps.name);
-            newSupports = new ArrayList<>();
+            String newName = table.get(ps.name);
+            ps.name = newName; // should never be null
+
+            List<String> newSupports = new ArrayList<>();
             for (String s : ps.supports) {
-                newSupports.add(table.get(s));
+                String mapped = table.get(s);
+                if (mapped != null) {
+                    newSupports.add(mapped);
+                } else if (debug) {
+                    System.out.println("renumberProof(): WARNING missing support '" + s
+                            + "' for step " + newName + " (dropping support)");
+                    // Alternative: throw to catch logic errors early:
+                    // throw new IllegalStateException("Missing support '" + s + "' for step " + newName);
+                }
             }
             ps.supports = newSupports;
             result.add(ps);
         }
         return result;
     }
+
 
     public static List<String> reorderVampire4_8 (List<String> cleaned){
 
@@ -1596,93 +1707,16 @@ public class TPTP3ProofProcessor {
     }
 
 
-    /**
-     * Drop Vampire answer-extraction scaffolding (ans*, answer(...)) after simplifyProof().
-     * Also removes any downstream steps whose supports include a removed step.
-     *
-     * Intended for readability (not for proof checking).
-     */
-    public List<TPTPFormula> dropAnswerSteps(List<TPTPFormula> steps) {
-
-        if (steps == null || steps.isEmpty())
-            return steps;
-
-        Map<String, TPTPFormula> ftable = new HashMap<>();
-        for (TPTPFormula ps : steps)
-            ftable.put(ps.name, ps);
-
-        Set<String> drop = new HashSet<>();
-
-        // 1) Mark direct answer-scaffold steps for removal
-        for (TPTPFormula ps : steps) {
-            if (isAnswerScaffold(ps))
-                drop.add(ps.name);
-        }
-
-        // 2) Remove any step that depends on a dropped step (support-closure)
-        boolean changed;
-        do {
-            changed = false;
-            for (TPTPFormula ps : steps) {
-                if (drop.contains(ps.name))
-                    continue;
-
-                if (ps.supports != null) {
-                    for (String sup : ps.supports) {
-                        if (drop.contains(sup) || !ftable.containsKey(sup)) {
-                            drop.add(ps.name);
-                            changed = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        } while (changed);
-
-        // 3) Emit filtered list preserving original order
-        List<TPTPFormula> result = new ArrayList<>();
-        for (TPTPFormula ps : steps) {
-            if (!drop.contains(ps.name))
-                result.add(ps);
-        }
-        return result;
-    }
-
-    // Put this as a field, not inside the method
-    private static final Pattern ANSWER_PRED_PATTERN =
-            Pattern.compile("\\b(ans\\d*|answer)\\s*\\(");
-
-    private boolean isAnswerScaffold(TPTPFormula ps) {
-
-        if (ps == null) return false;
-
-        String f = (ps.formula == null) ? "" : ps.formula;
-
-        // If it contains ans/answer, we drop it regardless of how it was sourced
-        if (ANSWER_PRED_PATTERN.matcher(f).find()) {
-            String role = (ps.role == null) ? "" : ps.role.trim();
-            // Keep only the top-level conjecture headers if you want them preserved
-            if ("negated_conjecture".equals(role) || "conjecture".equals(role))
-                return false;
-            return true;
-        }
-
-        // Otherwise, keep KB source axioms and everything else as normal
-        if (TPTPutil.sourceAxiom(ps)) return false;
-
-        return false;
-    }
 
     /* ---------- tiny helpers (no new deps) ---------- */
+
     private static String collapseWs(String s) {
         return (s == null) ? "" : s.replaceAll("\\s+", " ").trim();
     }
+
     private static String ensureParenWrapped(String s) {
         if (s.isEmpty()) return "( )";
         return (s.startsWith("(") && s.endsWith(")")) ? s : "( " + s + " )";
-    }
-    private static String escapeSingleQuotes(String s) {
-        return s.replace("'", "\\'");
     }
 
     /**
