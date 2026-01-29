@@ -19,10 +19,12 @@ import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
-import com.esotericsoftware.minlog.Log;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Class for invoking the latest research version of Vampire from Java
@@ -48,6 +50,9 @@ public class Vampire {
     public static boolean debug = false;
     public static boolean askQuestion = true;
 
+    // === NEW: Full result structure for error handling ===
+    private ATPResult result;
+
     @Override
     public String toString() {
 
@@ -55,6 +60,34 @@ public class Vampire {
         for (String s : output)
             sb.append(s).append("\n");
         return sb.toString();
+    }
+
+    /** *************************************************************
+     * Get the full ATPResult for this run.
+     * This provides detailed execution metadata, SZS status, and error info.
+     *
+     * @return The ATPResult, or null if run() hasn't been called
+     */
+    public ATPResult getResult() {
+        return result;
+    }
+
+    /** *************************************************************
+     * Check if there was an error during execution.
+     *
+     * @return true if the result indicates an error
+     */
+    public boolean hasError() {
+        return result != null && result.hasErrors();
+    }
+
+    /** *************************************************************
+     * Get the SZS status from the last run.
+     *
+     * @return The SZSStatus, or SZSStatus.NOT_RUN if not run
+     */
+    public SZSStatus getSzsStatus() {
+        return result != null ? result.getSzsStatus() : SZSStatus.NOT_RUN;
     }
 
     /** *************************************************************
@@ -191,39 +224,129 @@ public class Vampire {
      * to be loaded by the Vampire executable.
      * @param timeout the time given for Vampire to finish execution
      *
-     * @throws Exception should not normally be thrown unless either
-     *         Vampire executable or database file name are incorrect
+     * @throws ExecutableNotFoundException if the Vampire executable is not found
+     * @throws ProverCrashedException if Vampire crashes with a non-zero exit code
+     * @throws ProverTimeoutException if Vampire times out
+     * @throws Exception for other errors
      */
     public void run(File kbFile, int timeout) throws Exception {
 
+        long startTime = System.currentTimeMillis();
+        long timeoutMs = timeout * 1000L;
+
+        // Initialize result structure
+        result = new ATPResult.Builder()
+                .engineName("Vampire")
+                .engineMode(mode != null ? mode.name() : "CASC")
+                .inputLanguage(SUMOKBtoTPTPKB.lang.toUpperCase())
+                .inputSource(kbFile != null ? kbFile.getName() : "unknown")
+                .timeoutMs(timeoutMs)
+                .build();
+
         String vampex = KBmanager.getMgr().getPref("vampire");
         if (StringUtil.emptyString(vampex)) {
-            System.err.println("Error in Vampire.run(): no executable string in preferences");
-            return;
+            String msg = "Error in Vampire.run(): no executable string in preferences";
+            System.err.println(msg);
+            result.setSzsStatus(SZSStatus.OS_ERROR);
+            result.setPrimaryError(msg);
+            throw new ExecutableNotFoundException("Vampire", vampex, "vampire");
         }
+
         File executable = new File(vampex);
         if (!executable.exists()) {
-            System.err.println("Error in Vampire.run(): no executable " + vampex);
-            return;
+            String msg = "Error in Vampire.run(): no executable " + vampex;
+            System.err.println(msg);
+            result.setSzsStatus(SZSStatus.OS_ERROR);
+            result.setPrimaryError(msg);
+            throw new ExecutableNotFoundException("Vampire", vampex, "vampire");
         }
+
         String[] cmds = createCommandList(executable, timeout, kbFile);
+        result.setCommandLine(cmds);
         System.out.println("Vampire.run(): Initializing Vampire with:\n" + Arrays.toString(cmds));
 
         ProcessBuilder _builder = new ProcessBuilder(cmds);
-        _builder.redirectErrorStream(true);
+        _builder.redirectErrorStream(false);  // Keep stderr separate for better error capture
 
         Process _vampire = _builder.start();
-        //System.out.println("Vampire.run(): process: " + _vampire);
 
+        // Read stdout and stderr in parallel to avoid deadlock
+        List<String> stdoutLines = new ArrayList<>();
+        List<String> stderrLines = new ArrayList<>();
+
+        // Start stderr reader thread
+        Thread stderrReader = new Thread(() -> {
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(_vampire.getErrorStream()))) {
+                String line;
+                while ((line = r.readLine()) != null) {
+                    stderrLines.add(line);
+                }
+            } catch (IOException e) {
+                // Ignore - stream may close on process termination
+            }
+        });
+        stderrReader.start();
+
+        // Read stdout in main thread
         try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_vampire.getInputStream()))) {
             String line;
-            while ((line = _reader.readLine()) != null)
-                output.add(line);
+            while ((line = _reader.readLine()) != null) {
+                stdoutLines.add(line);
+                output.add(line);  // Maintain backward compatibility
+            }
         }
+
+        // Wait for stderr thread to finish
+        stderrReader.join(5000);
+
         int exitValue = _vampire.waitFor();
+        long elapsed = System.currentTimeMillis() - startTime;
+
+        // Populate result
+        result.setStdout(stdoutLines);
+        result.setStderr(stderrLines);
+        result.finalize(exitValue, elapsed, elapsed >= timeoutMs);
+
+        System.out.println("===== STDOUT LINES ====");
+        for (String line : stdoutLines) {
+            System.out.println(line);
+        }
+
         if (exitValue != 0) {
-            System.err.println("Error in Vampire.run(): Abnormal process termination");
-            System.err.println(output);
+            System.err.println("Error in Vampire.runCustom(): Abnormal process termination (exit code " + exitValue + ")");
+            if (!stderrLines.isEmpty()) {
+                System.err.println("Stderr: " + stderrLines);
+            }
+
+            // Throw appropriate exception
+            if (result.isTimedOut() || result.getSzsStatus() == SZSStatus.TIMEOUT) {
+                throw new ProverTimeoutException("Vampire", timeoutMs, elapsed, true, stdoutLines, stderrLines, result);
+            } else if (exitValue > 128 && exitValue < 160) {
+                throw new ProverCrashedException("Vampire", exitValue, stdoutLines, stderrLines, result);
+            } else if (result != null
+                    && result.getStderr() != null
+                    && !result.getStderr().isEmpty()
+                    && result.getStderr().get(0) != null
+                    && (result.getStderr().get(0).contains("% Exception at proof search level") || (result.getStderr().get(0).contains("Parser exception")))
+                    && result.getStderr().size() > 1)
+            {
+
+                int lineNo = -1;
+
+                // stderr[1] example: "Parsing Error on line 65289"
+                if (result.getStderr().size() > 1 && result.getStderr().get(1) != null) {
+                    Matcher m = Pattern.compile("Parsing Error on line\\s+(\\d+)").matcher(result.getStderr().get(1));
+                    if (m.find()) {
+                        lineNo = Integer.parseInt(m.group(1));
+                    }
+                }
+
+                String msg = "Vampire: exception at proof search level"
+                        + (lineNo > 0 ? " (Parsing Error on line " + lineNo + ")" : "");
+
+                // Best: use an overload that accepts the line number (see below)
+                throw new FormulaTranslationException(msg, result.getInputLanguage(), lineNo, stdoutLines, stderrLines);
+            }
         }
         System.out.println("Vampire.run() done executing");
     }
@@ -235,33 +358,60 @@ public class Vampire {
      * @param kbFile A File object denoting the initial knowledge base
      * to be loaded by the Vampire executable.
      *
-     * @throws IOException should not normally be thrown unless either
-     *         Vampire executable or database file name are incorrect
+     * @throws ExecutableNotFoundException if the Vampire executable is not found
+     * @throws ProverCrashedException if Vampire crashes with a non-zero exit code
+     * @throws ProverTimeoutException if Vampire times out
+     * @throws Exception for other errors
      */
     public void runCustom(File kbFile, int timeout, Collection<String> commands) throws Exception {
 
+        long startTime = System.currentTimeMillis();
+        long timeoutMs = timeout * 1000L;
+
         output = new ArrayList<>();
+
+        // Determine which executable to use
         String vampex = "";
+        String configKey = "vampire";
         if (logic == Logic.HOL) {
             vampex = KBmanager.getMgr().getPref("vampire_hol");
-        }else{
+            configKey = "vampire_hol";
+        } else {
             vampex = KBmanager.getMgr().getPref("vampire");
         }
 
+        // Initialize result structure
+        result = new ATPResult.Builder()
+                .engineName("Vampire")
+                .engineMode(logic == Logic.HOL ? "HOL" : (mode != null ? mode.name() : "CUSTOM"))
+                .inputLanguage(logic == Logic.HOL ? "THF" : SUMOKBtoTPTPKB.lang.toUpperCase())
+                .inputSource(kbFile != null ? kbFile.getName() : "unknown")
+                .timeoutMs(timeoutMs)
+                .build();
+
         if (StringUtil.emptyString(vampex)) {
-            System.err.println("Error in Vampire.runCustom(): no executable string in preferences");
+            String msg = "Error in Vampire.runCustom(): no executable string in preferences";
+            System.err.println(msg);
+            result.setSzsStatus(SZSStatus.OS_ERROR);
+            result.setPrimaryError(msg);
+            throw new ExecutableNotFoundException("Vampire", vampex, configKey);
         }
         File executable = new File(vampex);
         if (!executable.exists()) {
-            System.err.println("Error in Vampire.runCustom(): no executable " + vampex);
+            String msg = "Error in Vampire.runCustom(): no executable " + vampex;
+            System.err.println(msg);
+            result.setSzsStatus(SZSStatus.OS_ERROR);
+            result.setPrimaryError(msg);
+            throw new ExecutableNotFoundException("Vampire", vampex, configKey);
         }
-        else
-            System.out.println("Vampire.runCustom(): vampire executable: " + vampex);
+        System.out.println("Vampire.runCustom(): vampire executable: " + vampex);
+
         String[] cmds = createCustomCommandList(executable, timeout, kbFile.getAbsoluteFile(), commands);
+        result.setCommandLine(cmds);
         System.out.println("Vampire.runCustom(): Custom command list:\n" + Arrays.toString(cmds));
 
         ProcessBuilder _builder = new ProcessBuilder(cmds);
-        _builder.redirectErrorStream(true);
+        _builder.redirectErrorStream(false);  // Keep stderr separate
 
         if (kbFile != null && kbFile.getParentFile() != null) {
             _builder.directory(kbFile.getParentFile());
@@ -269,19 +419,78 @@ public class Vampire {
         }
 
         Process _vampire = _builder.start();
-        //System.out.println("Vampire.run(): process: " + _vampire);
+
+        // Read stdout and stderr in parallel
+        List<String> stdoutLines = new ArrayList<>();
+        List<String> stderrLines = new ArrayList<>();
+
+        Thread stderrReader = new Thread(() -> {
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(_vampire.getErrorStream()))) {
+                String line;
+                while ((line = r.readLine()) != null) {
+                    stderrLines.add(line);
+                }
+            } catch (IOException e) {
+                // Ignore
+            }
+        });
+        stderrReader.start();
 
         try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_vampire.getInputStream()))) {
             String line;
             while ((line = _reader.readLine()) != null) {
-                output.add(line);
+                stdoutLines.add(line);
+                output.add(line);  // Maintain backward compatibility
             }
         }
+
+        stderrReader.join(5000);
+
         int exitValue = _vampire.waitFor();
+        long elapsed = System.currentTimeMillis() - startTime;
+
+        // Populate result
+        result.setStdout(stdoutLines);
+        result.setStderr(stderrLines);
+        result.finalize(exitValue, elapsed, elapsed >= timeoutMs);
+
         if (exitValue != 0) {
-            System.err.println("Error in Vampire.run(): Abnormal process termination");
+            System.err.println("Error in Vampire.runCustom(): Abnormal process termination (exit code " + exitValue + ")");
+            if (!stderrLines.isEmpty()) {
+                System.err.println("Stderr: " + stderrLines);
+            }
+
+            // Throw appropriate exception
+            if (result.isTimedOut() || result.getSzsStatus() == SZSStatus.TIMEOUT) {
+                throw new ProverTimeoutException("Vampire", timeoutMs, elapsed, true, stdoutLines, stderrLines, result);
+            } else if (exitValue > 128 && exitValue < 160) {
+                throw new ProverCrashedException("Vampire", exitValue, stdoutLines, stderrLines, result);
+            } else if (result != null
+                    && result.getStderr() != null
+                    && !result.getStderr().isEmpty()
+                    && result.getStderr().get(0) != null
+                    && (result.getStderr().get(0).contains("% Exception at proof search level") || (result.getStderr().get(0).contains("Parser exception")))
+                    && result.getStderr().size() > 1)
+            {
+
+                int lineNo = -1;
+
+                // stderr[1] example: "Parsing Error on line 65289"
+                if (result.getStderr().size() > 1 && result.getStderr().get(1) != null) {
+                    Matcher m = Pattern.compile("Parsing Error on line\\s+(\\d+)").matcher(result.getStderr().get(1));
+                    if (m.find()) {
+                        lineNo = Integer.parseInt(m.group(1));
+                    }
+                }
+
+                String msg = "Vampire: exception at proof search level"
+                        + (lineNo > 0 ? " (Parsing Error on line " + lineNo + ")" : "");
+
+                // Best: use an overload that accepts the line number (see below)
+                throw new FormulaTranslationException(msg, result.getInputLanguage(), lineNo, stdoutLines, stderrLines);
+            }
         }
-        System.out.println("Vampire.run() done executing");
+        System.out.println("Vampire.runCustom() done executing");
     }
 
     /** ***************************************************************

@@ -56,6 +56,7 @@ MA  02111-1307 USA
 
 */
 
+import com.articulate.sigma.tp.ATPException;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
@@ -1980,11 +1981,11 @@ public class KB implements Serializable {
                         System.out.println("KB.askVampire(): mode: " + Vampire.mode);
                         vampire.run(this, s, timeout, tptpquery);
                         System.out.println("============ Normal Vampire Run Finished =============");
-//                        System.out.println("DEBUG: vampire.output: "+vampire.output);
                         return vampire;
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
+                    } catch (ATPException e) {
+                        throw e; // preserve type + payload
+                    } catch (Exception e) {
+                        throw new ATPException("Vampire execution failed", e.getMessage());
                     }
                     //vampire.terminate();
                 }
@@ -2038,8 +2039,10 @@ public class KB implements Serializable {
             vampire_pomens.runCustom(kb, timeout, cmds);
             if (debug) System.out.println("============ Vampire w/ModensPomens run =============");
             vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
+        } catch (ATPException e){
+            throw e; // Preserve type + payload for proper error handling in UI
         } catch (Exception e){
-            System.out.println("-- ERROR KB.askVampireModusPonens: "+e.getMessage());
+            throw new ATPException("Vampire ModensPonens execution failed: " + e.getMessage(), "Vampire");
         }
 
         // STEP 4
@@ -2104,8 +2107,10 @@ public class KB implements Serializable {
 
         try{
             vampire.runCustom(test, timeout, cmds);
+        } catch (ATPException e){
+            throw e; // Preserve type + payload for proper error handling in UI
         } catch (Exception e){
-            System.out.println("-- ERROR KB.askVampireTPTP runCustom: "+e.getMessage());
+            throw new ATPException("Vampire TPTP execution failed: " + e.getMessage(), "Vampire");
         }
 
         // Second TPTP pass (modus Ponens)
@@ -2124,8 +2129,10 @@ public class KB implements Serializable {
             try{
                 vampire_pomens.runCustom(kb, timeout, cmds_modus_ponens);
                 vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
+            } catch (ATPException e){
+                throw e; // Preserve type + payload for proper error handling in UI
             } catch (Exception e){
-                System.out.println("-- ERROR KB.askVampireModusPonens: "+e.getMessage());
+                throw new ATPException("Vampire ModusPonens in TPTP execution failed: " + e.getMessage(), "Vampire");
             }
 
             // Drop One Premise Formulas
@@ -2182,8 +2189,10 @@ public class KB implements Serializable {
         vampire.logic = Vampire.Logic.HOL;
         try{
             vampire.runCustom(test, timeout, cmds);
+        } catch (ATPException e){
+            throw e; // Preserve type + payload for proper error handling in UI
         } catch (Exception e){
-            System.out.println("-- ERROR KB.askVampireTHF runCustom: "+e.getMessage());
+            throw new ATPException("Vampire THF execution failed: " + e.getMessage(), "Vampire");
         }
         return vampire;
     }
@@ -2361,10 +2370,12 @@ public class KB implements Serializable {
             if (debug)
                 System.out.println("------ KB.askVampireHOL(): Vampire Finished");
             return v;
-        }catch (Exception e) {
+        } catch (ATPException e) {
+            throw e; // Preserve type + payload for proper error handling in UI
+        } catch (Exception e) {
             System.out.println("KB.askVampireHOL(): Exception: " + e.getMessage());
             e.printStackTrace();
-            return null;
+            throw new ATPException("Vampire HOL execution failed: " + e.getMessage(), "Vampire");
         }
     }
 
@@ -4100,7 +4111,9 @@ public class KB implements Serializable {
 
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
         if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld() || force) {
-            System.out.println("INFO in KB.loadVampire(): generating " + lang + " file " + infFilename);
+            System.out.println("INFO in KB.loadVampire(): infFilename=" + !(new File(infFilename).exists()));
+            System.out.println("INFO in KB.loadVampire(): managerInfFileOld " + KBmanager.getMgr().infFileOld());
+            System.out.println("INFO in KB.loadVampire(): force=" + force);
             TPTPGenerationManager.generateProperFile(this, lang);
         }
     }
