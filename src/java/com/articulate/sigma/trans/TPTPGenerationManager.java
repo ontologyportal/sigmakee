@@ -73,14 +73,35 @@ public class TPTPGenerationManager {
             // FOF and TFF run SEQUENTIALLY on same thread to avoid lang field race condition
             executor.submit(() -> {
                 System.out.println("TPTPGenerationManager: FOF Generating...");
-                generateFOF(kb);   // FOF first
+
+                String kbDir = KBmanager.getMgr().getPref("kbDir");
+                String infFilename = kbDir + File.separator + kb.name + ".tptp";
+                File infFile = new File(infFilename);
+                // Check if file already exists and is not stale
+                if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
+                    System.out.println("TPTPGenerationManager: FOF file already exists and is current: " + infFilename);
+                    fofReady.set(true);
+                }else{
+                    generateFOF(kb);   // FOF first
+                }
                 System.out.println("TPTPGenerationManager: FOF Finished...");
+
 //                KBmanager.serialize();
+
                 System.out.println("TPTPGenerationManager: TFF Generating...");
-                generateTFF(kb);   // TFF after FOF completes
-                // Serialize once after both complete
+                infFilename = kbDir + File.separator + kb.name + ".tff";
+                infFile = new File(infFilename);
+                // Check if file already exists and is not stale
+                if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
+                    System.out.println("TPTPGenerationManager: TFF file already exists and is current: " + infFilename);
+                    tffReady.set(true);
+                }else{
+                    generateTFF(kb);   // TFF after FOF completes
+                }
                 System.out.println("TPTPGenerationManager: TFF complete...");
+
 //                KBmanager.serialize();
+
             });
 
             // THF can run in parallel (different code path, no shared lang field)
@@ -113,16 +134,9 @@ public class TPTPGenerationManager {
         String originalLang2 = SUMOformulaToTPTPformula.lang;
 
         try {
+
             String kbDir = KBmanager.getMgr().getPref("kbDir");
             String infFilename = kbDir + File.separator + kb.name + ".tptp";
-            File infFile = new File(infFilename);
-
-            // Check if file already exists and is not stale
-            if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                System.out.println("TPTPGenerationManager: FOF file already exists and is current: " + infFilename);
-                fofReady.set(true);
-                return;
-            }
 
             System.out.println("===== TPTPGenerationManager: Generating FOF file: " + infFilename);
             long startTime = System.currentTimeMillis();
@@ -169,14 +183,6 @@ public class TPTPGenerationManager {
         try {
             String kbDir = KBmanager.getMgr().getPref("kbDir");
             String infFilename = kbDir + File.separator + kb.name + ".tff";
-            File infFile = new File(infFilename);
-
-            // Check if file already exists and is not stale
-            if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                System.out.println("TPTPGenerationManager: TFF file already exists and is current: " + infFilename);
-                tffReady.set(true);
-                return;
-            }
 
             System.out.println("==== TPTPGenerationManager: Generating TFF file: " + infFilename);
             long startTime = System.currentTimeMillis();

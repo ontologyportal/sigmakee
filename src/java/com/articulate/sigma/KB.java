@@ -1997,6 +1997,121 @@ public class KB implements Serializable {
         return null;
     }
 
+
+    public Vampire askVampireForTQ(String suoKifFormula, int timeout, int maxAnswers, boolean modensPonens) {
+
+        // capture per-request to avoid races
+        final String requestedLang = SUMOKBtoTPTPKB.lang;          // typically "fof" or "tff"
+        final String lang = "fof".equals(requestedLang) ? "tptp" : "tff";
+
+        // A) enforce atomicity in-memory (+ deletes stale UA translation on disk)
+        RemoveUAResult r = removeUserAssertions();
+        boolean mustFullRetranslate = (r == null) || (r.status != RemoveUAResult.RemoveUAStatus.OK);
+
+        // B) ensure base exists / is fresh, ignoring UserAssertions as a trigger
+        if (!mustFullRetranslate && KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(lang)) {
+            mustFullRetranslate = true;
+        }
+
+        // C) If required, rebuild base (safe fallback)
+        //    If not required, do nothing here (no-op). askVampire() will proceed using existing base file.
+        if (mustFullRetranslate) {
+            TPTPGenerationManager.generateProperFile(this,lang);
+        }
+
+        // Run prover
+        return modensPonens
+                ? askVampireModensPonens(suoKifFormula, timeout, maxAnswers)
+                : askVampire(suoKifFormula, timeout, maxAnswers);
+    }
+
+
+
+    public RemoveUAResult removeUserAssertions() {
+
+        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        File uaKif = new File(dir, this.name + "_UserAssertions.kif");
+        if (!uaKif.exists())
+            return RemoveUAResult.ok();
+
+        KIF ua = readConstituent(uaKif.getAbsolutePath());
+
+        // Fail-safe: if we can't check transitivity, force rebuild upstream
+        if (kbCache == null) {
+            return RemoveUAResult.fail(RemoveUAResult.RemoveUAStatus.FAIL_NO_CACHE, null, null);
+        }
+
+        final String uaSourcePath = uaKif.getAbsolutePath();
+        final String uaSourceName = uaKif.getName(); // fallback if sourceFile stores only basename
+
+        // 1) detect ground + atomic + transitive predicate in UA
+        for (Formula f : ua.formulaMap.values()) {
+
+            if (f == null || !f.isGround())
+                continue;
+
+            String pred = f.car();
+            if (pred == null)
+                continue;
+
+            pred = pred.trim();
+            if (pred.startsWith("("))
+                continue; // not a symbol head
+
+            if (Formula.isLogicalOperator(pred))
+                continue; // and/or/not/=>/<=>/forall/exists, etc.
+
+            if (kbCache.isTransitivePredicate(pred)) {
+                return RemoveUAResult.fail(
+                        RemoveUAResult.RemoveUAStatus.FAIL_TRANSITIVE_GROUND,
+                        pred,
+                        f.getFormula()
+                );
+            }
+        }
+
+        // 2) remove UA formulas from KB indexes, but ONLY if the Formula currently in KB came from UA
+        for (Map.Entry<String, List<String>> e : ua.formulas.entrySet()) {
+
+            String key = e.getKey();
+            List<String> uaList = e.getValue();
+            List<String> existing = formulas.get(key);
+
+            if (existing == null || uaList == null)
+                continue;
+
+            for (String fs : uaList) {
+                if (fs == null) continue;
+
+                Formula inKb = formulaMap.get(fs); // keys are f.getFormula() (interned in KIF.parse)
+                if (inKb == null) continue;
+
+                String src = inKb.sourceFile;
+
+                boolean isFromUA =
+                        (src != null) &&
+                                (src.equals(uaSourcePath) || src.endsWith(File.separator + uaSourceName) || src.endsWith(uaSourceName));
+
+                if (!isFromUA)
+                    continue;
+
+                existing.remove(fs);     // remove one occurrence from the inverted index list
+                formulaMap.remove(fs);   // remove the Formula itself
+            }
+
+            if (existing.isEmpty())
+                formulas.remove(key);
+        }
+
+        // 3) prevent stale UA translation from being appended
+        deleteUserAssertionsForInference();
+
+        return RemoveUAResult.ok();
+    }
+
+
+
+
     /**
      * STEPS:
      * 1 - AskVampire to get the first output

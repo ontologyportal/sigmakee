@@ -268,4 +268,255 @@ public class KBTest extends UnitTestBase {
         assertFalse(motherFormats.isEmpty());
     }
 
+
+    /** ***************************************************************
+     * removeUserAssertions(): should remove non-transitive ground UA formulas
+     * from the in-memory KB and delete stale *_UserAssertions.tptp/tff overlay.
+     */
+    @Test
+    public void testRemoveUserAssertionsRemovesAssertionAndDeletesInferenceFile() throws Exception {
+
+        final String ind = "UA_TestHuman_" + System.nanoTime();
+        final String stmt = "(instance " + ind + " Human)";
+        final String kbDir = KBmanager.getMgr().getPref("kbDir");
+
+        try {
+            // Add UA assertion
+            SigmaTestBase.kb.tell(stmt);
+
+            List<Formula> before = SigmaTestBase.kb.ask("arg", 1, ind);
+            assertEquals(1, before.size());
+
+            // Create a fake/stale translated UA overlay file (should be deleted by removeUserAssertions())
+            String uaInfSuffix = "tff".equals(com.articulate.sigma.trans.SUMOKBtoTPTPKB.lang)
+                    ? KB._userAssertionsTFF
+                    : KB._userAssertionsTPTP;
+
+            java.io.File uaInf = new java.io.File(kbDir + java.io.File.separator + SigmaTestBase.kb.name + uaInfSuffix);
+            java.nio.file.Files.write(
+                    uaInf.toPath(),
+                    ("% stale overlay for test " + System.nanoTime() + "\n").getBytes(java.nio.charset.StandardCharsets.UTF_8)
+            );
+            assertTrue(uaInf.exists());
+
+            // Remove UA assertions
+            RemoveUAResult res = SigmaTestBase.kb.removeUserAssertions();
+            assertEquals(RemoveUAResult.RemoveUAStatus.OK, res.status);
+
+            // Assertion should be gone from KB
+            List<Formula> after = SigmaTestBase.kb.ask("arg", 1, ind);
+            assertEquals(0, after.size());
+
+            // Stale overlay should be deleted so it can't be appended later
+            assertFalse("Expected UA inference overlay to be deleted: " + uaInf, uaInf.exists());
+        }
+        finally {
+            // Leave KB clean for the rest of the test suite
+            SigmaTestBase.kb.deleteUserAssertionsAndReload();
+        }
+    }
+
+    /** ***************************************************************
+     * removeUserAssertions(): should FAIL (force rebuild) when UA contains a
+     * ground assertion whose predicate is transitive (e.g., subclass).
+     */
+    @Test
+    public void testRemoveUserAssertionsFailsOnGroundTransitivePredicate() throws Exception {
+
+        final String c1 = "UA_TestClassA_" + System.nanoTime();
+        final String c2 = "UA_TestClassB_" + System.nanoTime();
+        final String stmt = "(subclass " + c1 + " " + c2 + ")";
+
+        try {
+            SigmaTestBase.kb.tell(stmt);
+
+            RemoveUAResult res = SigmaTestBase.kb.removeUserAssertions();
+            assertEquals(RemoveUAResult.RemoveUAStatus.FAIL_TRANSITIVE_GROUND, res.status);
+            assertEquals("subclass", res.predicate);
+
+            // removeUserAssertions() should exit early on failure (no removals performed)
+            assertTrue(SigmaTestBase.kb.formulaMap.containsKey(stmt));
+        }
+        finally {
+            SigmaTestBase.kb.deleteUserAssertionsAndReload();
+        }
+    }
+
+    /** ***************************************************************
+     * infBaseFileOldIgnoringUserAssertions(lang): missing base file => true
+     */
+    @Test
+    public void testInfBaseFileOldIgnoringUserAssertionsMissingBaseReturnsTrue() throws Exception {
+
+        final KBmanager mgr = KBmanager.getMgr();
+        final java.util.Map<String, KB> oldKbs = getKBsMapReflect(mgr);
+
+        final java.io.File kbDir = new java.io.File(KButilities.SIGMA_HOME + java.io.File.separator + "KBs");
+        assertTrue("KBs dir not found: " + kbDir, kbDir.exists() && kbDir.isDirectory());
+
+        String kbName = "TESTKB_INFOLD_" + System.nanoTime();
+        java.io.File baseTptp = new java.io.File(kbDir, kbName + ".tptp");
+        if (baseTptp.exists())
+            //noinspection ResultOfMethodCallIgnored
+            baseTptp.delete();
+
+        java.io.File tmp = java.nio.file.Files.createTempDirectory("infOld-missing").toFile();
+        java.io.File nonUa = new java.io.File(tmp, kbName + "_Base.kif");
+        writeAndTouch(nonUa, 1500L);
+        java.io.File ua = new java.io.File(tmp, kbName + "_UserAssertions.kif");
+        writeAndTouch(ua, 2500L);
+
+        KB testKb = new KB(kbName);
+        testKb.constituents.add(nonUa.getAbsolutePath());
+        testKb.constituents.add(ua.getAbsolutePath());
+
+        try {
+            setKBsMapReflect(mgr, new java.util.HashMap<>());
+            getKBsMapReflect(mgr).put(kbName, testKb);
+
+            assertTrue(mgr.infBaseFileOldIgnoringUserAssertions("tptp"));
+        }
+        finally {
+            setKBsMapReflect(mgr, oldKbs);
+            deleteRecursively(tmp);
+            if (baseTptp.exists())
+                //noinspection ResultOfMethodCallIgnored
+                baseTptp.delete();
+        }
+    }
+
+    /** ***************************************************************
+     * infBaseFileOldIgnoringUserAssertions(lang): UA newer than base is ignored => false
+     */
+    @Test
+    public void testInfBaseFileOldIgnoringUserAssertionsUANewerIgnoredReturnsFalse() throws Exception {
+
+        final KBmanager mgr = KBmanager.getMgr();
+        final java.util.Map<String, KB> oldKbs = getKBsMapReflect(mgr);
+
+        final java.io.File kbDir = new java.io.File(KButilities.SIGMA_HOME + java.io.File.separator + "KBs");
+        assertTrue("KBs dir not found: " + kbDir, kbDir.exists() && kbDir.isDirectory());
+
+        String kbName = "TESTKB_INFOLD_" + System.nanoTime();
+
+        // Create base translation file in SIGMA_HOME/KBs with a future timestamp (guaranteed newer than config.xml)
+        long baseTs = System.currentTimeMillis() + 60_000L;
+        java.io.File baseTptp = new java.io.File(kbDir, kbName + ".tptp");
+        writeAndTouch(baseTptp, baseTs);
+
+        java.io.File tmp = java.nio.file.Files.createTempDirectory("infOld-uaIgnored").toFile();
+
+        // non-UA constituent older than base
+        java.io.File nonUa = new java.io.File(tmp, kbName + "_Base.kif");
+        writeAndTouch(nonUa, baseTs - 10_000L);
+
+        // UA newer than base, but should be ignored
+        java.io.File ua = new java.io.File(tmp, kbName + "_UserAssertions.kif");
+        writeAndTouch(ua, baseTs + 10_000L);
+
+        KB testKb = new KB(kbName);
+        testKb.constituents.add(nonUa.getAbsolutePath());
+        testKb.constituents.add(ua.getAbsolutePath());
+
+        try {
+            setKBsMapReflect(mgr, new java.util.HashMap<>());
+            getKBsMapReflect(mgr).put(kbName, testKb);
+
+            assertFalse(mgr.infBaseFileOldIgnoringUserAssertions("tptp"));
+        }
+        finally {
+            setKBsMapReflect(mgr, oldKbs);
+            deleteRecursively(tmp);
+            if (baseTptp.exists())
+                //noinspection ResultOfMethodCallIgnored
+                baseTptp.delete();
+        }
+    }
+
+    /** ***************************************************************
+     * infBaseFileOldIgnoringUserAssertions(lang): non-UA constituent newer than base => true
+     */
+    @Test
+    public void testInfBaseFileOldIgnoringUserAssertionsNonUaConstituentNewerReturnsTrue() throws Exception {
+
+        final KBmanager mgr = KBmanager.getMgr();
+        final java.util.Map<String, KB> oldKbs = getKBsMapReflect(mgr);
+
+        final java.io.File kbDir = new java.io.File(KButilities.SIGMA_HOME + java.io.File.separator + "KBs");
+        assertTrue("KBs dir not found: " + kbDir, kbDir.exists() && kbDir.isDirectory());
+
+        String kbName = "TESTKB_INFOLD_" + System.nanoTime();
+
+        long baseTs = System.currentTimeMillis() + 60_000L;
+        java.io.File baseTptp = new java.io.File(kbDir, kbName + ".tptp");
+        writeAndTouch(baseTptp, baseTs);
+
+        java.io.File tmp = java.nio.file.Files.createTempDirectory("infOld-nonUaNewer").toFile();
+
+        // non-UA newer than base => must return true
+        java.io.File nonUa = new java.io.File(tmp, kbName + "_Base.kif");
+        writeAndTouch(nonUa, baseTs + 10_000L);
+
+        // UA present, but irrelevant
+        java.io.File ua = new java.io.File(tmp, kbName + "_UserAssertions.kif");
+        writeAndTouch(ua, baseTs - 10_000L);
+
+        KB testKb = new KB(kbName);
+        testKb.constituents.add(nonUa.getAbsolutePath());
+        testKb.constituents.add(ua.getAbsolutePath());
+
+        try {
+            setKBsMapReflect(mgr, new java.util.HashMap<>());
+            getKBsMapReflect(mgr).put(kbName, testKb);
+
+            assertTrue(mgr.infBaseFileOldIgnoringUserAssertions("tptp"));
+        }
+        finally {
+            setKBsMapReflect(mgr, oldKbs);
+            deleteRecursively(tmp);
+            if (baseTptp.exists())
+                //noinspection ResultOfMethodCallIgnored
+                baseTptp.delete();
+        }
+    }
+
+    // ===================== helpers (local to KBTest) =====================
+
+    @SuppressWarnings("unchecked")
+    private static java.util.Map<String, KB> getKBsMapReflect(KBmanager mgr) throws Exception {
+        java.lang.reflect.Field f = mgr.getClass().getDeclaredField("kbs");
+        f.setAccessible(true);
+        return (java.util.Map<String, KB>) f.get(mgr);
+    }
+
+    private static void setKBsMapReflect(KBmanager mgr, java.util.Map<String, KB> map) throws Exception {
+        java.lang.reflect.Field f = mgr.getClass().getDeclaredField("kbs");
+        f.setAccessible(true);
+        f.set(mgr, map);
+    }
+
+    private static void writeAndTouch(java.io.File f, long ts) throws Exception {
+        if (!f.exists()) {
+            java.nio.file.Files.write(
+                    f.toPath(),
+                    ("x\n").getBytes(java.nio.charset.StandardCharsets.UTF_8)
+            );
+        }
+        assertTrue("setLastModified failed for " + f, f.setLastModified(ts));
+    }
+
+    private static void deleteRecursively(java.io.File f) {
+        if (f == null || !f.exists()) return;
+        if (f.isDirectory()) {
+            java.io.File[] kids = f.listFiles();
+            if (kids != null) for (java.io.File k : kids) deleteRecursively(k);
+        }
+        //noinspection ResultOfMethodCallIgnored
+        f.delete();
+    }
+
+
+
+
+
 }

@@ -1041,9 +1041,12 @@
                                     tpp.parseProofOutput(eRun.output, qstr, kb, eRun.qlist);
                                 } else if ("Vampire".equals(inferenceEngine)) {
                                     setVampMode(vampireMode);
-                                    com.articulate.sigma.tp.Vampire vRun = Boolean.TRUE.equals(modensPonens)
-                                            ? kb.askVampireModensPonens(qstr, tmo, maxAns)
-                                            : kb.askVampire(qstr, tmo, maxAns);
+
+                                    com.articulate.sigma.tp.Vampire vRun = kb.askVampireForTQ(qstr, tmo, maxAns, modensPonens);
+
+//                                    com.articulate.sigma.tp.Vampire vRun = Boolean.TRUE.equals(modensPonens)
+//                                            ? kb.askVampireModensPonens(qstr, tmo, maxAns)
+//                                            : kb.askVampire(qstr, tmo, maxAns);
                                     if (vRun != null && vRun.getResult() != null) {
                                         renderATPResultPanel(vRun.getResult(), out);
                                     }
