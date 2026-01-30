@@ -439,5 +439,4 @@ public class CCheck implements Runnable {
     public void run() {
         runConsistencyCheck();
     }
-
 }
