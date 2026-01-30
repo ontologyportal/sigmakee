@@ -186,6 +186,8 @@ public class Formula implements Comparable, Serializable {
 
     public void setSourceFile(String filename) { this.sourceFile = filename; }
 
+    public int getLineNumber() {return startLine; }
+
     public Set<String> getErrors() {
         return this.errors;
     }

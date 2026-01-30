@@ -793,7 +793,8 @@ public class HTMLformatter {
         if (forms != null && !KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes"))
             forms = TaxoModel.removeCached(forms);
         if (forms != null && !forms.isEmpty()) {
-            Collections.sort(forms);
+            //Collections.sort(forms);
+            FormulaUtil.sortBySourceFile(forms);
             show.append(htmlDivider(header));
             show.append("<table width=\"95%\">");
             if (forms.size() < localLimit || localLimit == 0)
