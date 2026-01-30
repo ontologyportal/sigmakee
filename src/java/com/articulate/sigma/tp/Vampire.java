@@ -111,10 +111,10 @@ public class Vampire {
             opts.append("-t").append(space);
         }
         if (mode == ModeType.CUSTOM) {
-            opts.append(System.getenv("VAMPIRE_OPTS"));
             if (askQuestion) {
                 opts.append("-qa").append(space).append("plain").append(space);
             }
+            opts.append(System.getenv("VAMPIRE_OPTS")).append(space);
         }
         String[] optar = opts.toString().split(Formula.SPACE);
         String[] cmds = new String[optar.length + 3];
@@ -315,7 +315,7 @@ public class Vampire {
 
             // Throw appropriate exception
             if (result.isTimedOut() || result.getSzsStatus() == SZSStatus.TIMEOUT) {
-                throw new ProverTimeoutException("Vampire", timeoutMs, elapsed, true, stdoutLines, stderrLines, result);
+                throw new ProverTimeoutException("Vampire", timeoutMs, elapsed, false, stdoutLines, stderrLines, result);
             } else if (exitValue > 128 && exitValue < 160) {
                 throw new ProverCrashedException("Vampire", exitValue, stdoutLines, stderrLines, result);
             } else if (result != null
@@ -457,7 +457,7 @@ public class Vampire {
 
             // Throw appropriate exception
             if (result.isTimedOut() || result.getSzsStatus() == SZSStatus.TIMEOUT) {
-                throw new ProverTimeoutException("Vampire", timeoutMs, elapsed, true, stdoutLines, stderrLines, result);
+                throw new ProverTimeoutException("Vampire", timeoutMs, elapsed, false, stdoutLines, stderrLines, result);
             } else if (exitValue > 128 && exitValue < 160) {
                 throw new ProverCrashedException("Vampire", exitValue, stdoutLines, stderrLines, result);
             } else if (result != null
@@ -601,8 +601,8 @@ public class Vampire {
         System.out.println("Vampire class");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
-        System.out.println("  -p - run Vampire on the default generated KB (tptp) and output a proof");
-        System.out.println("  with no arguments, show this help screen and execute a test");
+        System.out.println("  -p - run a test and process the proof");
+        System.out.println("  -t - execute a test");
         System.out.println();
     }
 
@@ -610,17 +610,12 @@ public class Vampire {
      */
     public static void main (String[] args) throws Exception {
 
-        /*
-        String initialDatabase = "SUMO-v.kif";
-        Vampire vampire = Vampire.getNewInstance(initialDatabase);
-        System.out.print(vampire.submitQuery("(holds instance ?X Relation)",5,2));
-
-        // System.out.print(vampire.assertFormula("(human Socrates)"));
-        // System.out.print(vampire.assertFormula("(holds instance Adam Human)"));
-        // System.out.print(vampire.submitQuery("(human ?X)", 1, 2));
-        // System.out.print(vampire.submitQuery("(holds instance ?X Human)", 5, 2));
-        */
         System.out.println("INFO in Vampire.main()");
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.isEmpty() || argMap.containsKey("h")) {
+            printHelp();
+            return;
+        }
         KBmanager.getMgr().initializeOnce();
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         KB kb = KBmanager.getMgr().getKB(kbName);
@@ -638,9 +633,7 @@ public class Vampire {
         Vampire.mode = Vampire.ModeType.CASC; // default
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 
-        if (args == null || args.length == 0) {
-            printHelp();
-
+        if (argMap.containsKey("t")) {
             String outfile = dir + "temp-comb." + lang;
             String stmtFile = dir + "temp-stmt." + lang;
             File f1 = new File(outfile);
@@ -669,26 +662,22 @@ public class Vampire {
 
             System.out.println("Vampire.main(): second test");
             System.out.println(kb.askVampire("(subclass ?X Entity)",30,1));
-        } else {
-            if (args.length > 0 && args[0].equals("-h"))
-                printHelp();
-            else if (args.length > 0 && args[0].equals("-p")) {
-                vampire.run(kbFile, 60);
+        }
+        if (argMap.containsKey("p")) {
+            vampire.run(kbFile, 60);
 
-                String query = "(maximumPayloadCapacity ?X (MeasureFn ?Y ?Z))";
-                StringBuilder answerVars = new StringBuilder("?X ?Y ?Z");
-                System.out.println("input: " + vampire.output + "\n");
-                tpp.parseProofOutput(vampire.output, query, kb, answerVars);
-                tpp.createProofDotGraph();
+            String query = "(maximumPayloadCapacity ?X (MeasureFn ?Y ?Z))";
+            StringBuilder answerVars = new StringBuilder("?X ?Y ?Z");
+            System.out.println("input: " + vampire.output + "\n");
+            tpp.parseProofOutput(vampire.output, query, kb, answerVars);
+            tpp.createProofDotGraph();
 
-                System.out.println("Vampire.main(): " + tpp.proof.size() + " steps ");
-                System.out.println("Vampire.main() bindings: " + tpp.bindingMap);
-                System.out.println("Vampire.main() skolems: " + tpp.skolemTypes);
-                System.out.println("Vampire.main() proof[3]: {");
-                tpp.printProof(3);
-                System.out.println("}");
-            } else
-                System.err.println("Unknown option: " + args[0]);
+            System.out.println("Vampire.main(): " + tpp.proof.size() + " steps ");
+            System.out.println("Vampire.main() bindings: " + tpp.bindingMap);
+            System.out.println("Vampire.main() skolems: " + tpp.skolemTypes);
+            System.out.println("Vampire.main() proof[3]: {");
+            tpp.printProof(3);
+            System.out.println("}");
         }
     }
 }
