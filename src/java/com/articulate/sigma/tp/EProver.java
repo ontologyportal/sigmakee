@@ -33,6 +33,9 @@ public class EProver {
     public List<String> output = new ArrayList<>();
     public StringBuilder qlist = null;
 
+    // === NEW: Full result structure for error handling ===
+    private ATPResult result;
+
     @Override
     public String toString() {
 
@@ -40,6 +43,34 @@ public class EProver {
         for (String s : output)
             sb.append(s).append("\n");
         return sb.toString();
+    }
+
+    /** *************************************************************
+     * Get the full ATPResult for this run.
+     * This provides detailed execution metadata, SZS status, and error info.
+     *
+     * @return The ATPResult, or null if submitQuery hasn't been called
+     */
+    public ATPResult getResult() {
+        return result;
+    }
+
+    /** *************************************************************
+     * Check if there was an error during execution.
+     *
+     * @return true if the result indicates an error
+     */
+    public boolean hasError() {
+        return result != null && result.hasErrors();
+    }
+
+    /** *************************************************************
+     * Get the SZS status from the last run.
+     *
+     * @return The SZSStatus, or SZSStatus.NOT_RUN if not run
+     */
+    public SZSStatus getSzsStatus() {
+        return result != null ? result.getSzsStatus() : SZSStatus.NOT_RUN;
     }
 
     /** *************************************************************
@@ -329,8 +360,20 @@ public class EProver {
      */
     public String submitQuery(String formula, KB kb) {
 
+        long startTime = System.currentTimeMillis();
+
+        // Initialize result structure
+        result = new ATPResult.Builder()
+                .engineName("EProver")
+                .engineMode("interactive")
+                .inputLanguage("FOF")
+                .inputSource("custom")
+                .build();
+
         System.out.println("EProver.submitQuery(): process: " + _eprover);
-        String result = "";
+        String resultStr = "";
+        List<String> stdoutLines = new ArrayList<>();
+
         try {
             String query = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,true);
             this.qlist = SUMOformulaToTPTPformula.qlist;
@@ -347,25 +390,40 @@ public class EProver {
             boolean inProof = false;
             while (line != null) {
                 output.add(line);
+                stdoutLines.add(line);
                 if (line.contains("# SZS status"))
                     inProof = true;
                 if (inProof) {
                     if (line.contains("# Enter job"))
                         break;
-                    result += line + "\n";
+                    resultStr += line + "\n";
                 }
                 line = _reader.readLine();
                 System.out.println("INFO in EProver.submitQuery: line: " + line);
                 if (line != null && line.contains("Problem: "))
-                    result += line + "\n";
+                    resultStr += line + "\n";
             }
+
+            long elapsed = System.currentTimeMillis() - startTime;
+
+            // Populate result
+            result.setStdout(stdoutLines);
+            result.setElapsedTimeMs(elapsed);
+            result.setExitCode(0);  // Interactive mode - if we got here, it succeeded
+            result.extractSzsFromOutput();
+
         }
         catch (IOException ex) {
             System.err.println("Error in EProver.submitQuery(): " + ex.getMessage());
             System.err.println("Error might be from EProver constructor, please check your EBatchConfig.txt and TPTP files ...");
             ex.printStackTrace();
+
+            // Populate error in result
+            result.setSzsStatus(SZSStatus.OS_ERROR);
+            result.setPrimaryError(ex.getMessage());
+            result.setStdout(stdoutLines);
         }
-        return result;
+        return resultStr;
     }
 
     /** *************************************************************
@@ -409,45 +467,105 @@ public class EProver {
      * @param kbFile A File object denoting the initial knowledge base
      * to be loaded by the Eprover executable.
      *
-     * @throws IOException should not normally be thrown unless either
-     *         Eprover executable or database file name are incorrect
+     * @throws ExecutableNotFoundException if the EProver executable is not found
+     * @throws ProverCrashedException if EProver crashes with a non-zero exit code
+     * @throws ProverTimeoutException if EProver times out
+     * @throws Exception for other errors
      */
     public void runCustom(File kbFile, int timeout, Collection<String> commands) throws Exception {
 
+        long startTime = System.currentTimeMillis();
+        long timeoutMs = timeout * 1000L;
+
+        // Initialize result structure
+        result = new ATPResult.Builder()
+                .engineName("EProver")
+                .engineMode("custom")
+                .inputLanguage("FOF")
+                .inputSource(kbFile != null ? kbFile.getName() : "unknown")
+                .timeoutMs(timeoutMs)
+                .build();
+
         String eprover = KBmanager.getMgr().getPref("eprover");
         if (StringUtil.emptyString(eprover)) {
-            System.err.println("Error in Eprover.run(): no executable string in preferences");
+            String msg = "Error in Eprover.runCustom(): no executable string in preferences";
+            System.err.println(msg);
+            result.setSzsStatus(SZSStatus.OS_ERROR);
+            result.setPrimaryError(msg);
+            throw new ExecutableNotFoundException("EProver", eprover, "eprover");
         }
         File executable = new File(eprover);
         if (!executable.exists()) {
-            System.err.println("Error in Eprover.run(): no executable " + eprover);
+            String msg = "Error in Eprover.runCustom(): no executable " + eprover;
+            System.err.println(msg);
+            result.setSzsStatus(SZSStatus.OS_ERROR);
+            result.setPrimaryError(msg);
+            throw new ExecutableNotFoundException("EProver", eprover, "eprover");
         }
+
         String[] cmds = createCustomCommandList(executable, timeout, kbFile, commands);
         System.out.println("EProver.runCustom(): Custom command list:\n" + Arrays.toString(cmds));
         ArrayList<String> moreCommands = new ArrayList<>();
         moreCommands.addAll(Arrays.asList(cmds));
         moreCommands.addAll(commands);
-        cmds = moreCommands.toArray(cmds); // passes the type of the array to allow return of the right type
-        System.out.println("Eprover.run(): Initializing Eprover with:\n" + Arrays.toString(cmds));
+        cmds = moreCommands.toArray(cmds);
+        result.setCommandLine(cmds);
+        System.out.println("Eprover.runCustom(): Initializing Eprover with:\n" + Arrays.toString(cmds));
 
         ProcessBuilder _builder = new ProcessBuilder(cmds);
-        _builder.redirectErrorStream(true);
+        _builder.redirectErrorStream(false);  // Keep stderr separate
 
         Process _eprover = _builder.start();
-        //System.out.println("Eprover.run(): process: " + _eprover);
+
+        // Read stdout and stderr in parallel
+        List<String> stdoutLines = new ArrayList<>();
+        List<String> stderrLines = new ArrayList<>();
+
+        Thread stderrReader = new Thread(() -> {
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(_eprover.getErrorStream()))) {
+                String line;
+                while ((line = r.readLine()) != null) {
+                    stderrLines.add(line);
+                }
+            } catch (IOException e) {
+                // Ignore
+            }
+        });
+        stderrReader.start();
 
         try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()))) {
             String line;
             while ((line = _reader.readLine()) != null) {
-                output.add(line);
+                stdoutLines.add(line);
+                output.add(line);  // Maintain backward compatibility
             }
         }
+
+        stderrReader.join(5000);
+
         int exitValue = _eprover.waitFor();
+        long elapsed = System.currentTimeMillis() - startTime;
+
+        // Populate result
+        result.setStdout(stdoutLines);
+        result.setStderr(stderrLines);
+        result.finalize(exitValue, elapsed, elapsed >= timeoutMs);
+
         if (exitValue != 0) {
-            System.err.println("Error in Eprover.run(): Abnormal process termination");
+            System.err.println("Error in Eprover.runCustom(): Abnormal process termination (exit code " + exitValue + ")");
+            if (!stderrLines.isEmpty()) {
+                System.err.println("Stderr: " + stderrLines);
+            }
             System.err.println(output);
+
+            // Throw appropriate exception
+            if (result.isTimedOut() || result.getSzsStatus() == SZSStatus.TIMEOUT) {
+                throw new ProverTimeoutException("EProver", timeoutMs, elapsed, true, stdoutLines, stderrLines, result);
+            } else if (exitValue > 128 && exitValue < 160) {
+                throw new ProverCrashedException("EProver", exitValue, stdoutLines, stderrLines, result);
+            }
         }
-        System.out.println("Eprover.run() done executing");
+        System.out.println("Eprover.runCustom() done executing");
     }
 
     /** *************************************************************
