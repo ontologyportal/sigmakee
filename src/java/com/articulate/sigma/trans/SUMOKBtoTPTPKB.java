@@ -937,11 +937,6 @@ public class SUMOKBtoTPTPKB {
         }
     }
 
-
-
-
-
-
     /** *************************************************************
      * Will first write out SUMO.tptp if the KB had not yet been
      * serialized, or serialized files are older than the sources,
