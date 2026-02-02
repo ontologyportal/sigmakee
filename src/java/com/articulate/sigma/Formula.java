@@ -186,6 +186,8 @@ public class Formula implements Comparable, Serializable {
 
     public void setSourceFile(String filename) { this.sourceFile = filename; }
 
+    public int getLineNumber() {return startLine; }
+
     public Set<String> getErrors() {
         return this.errors;
     }
@@ -3301,11 +3303,10 @@ public class Formula implements Comparable, Serializable {
     public static void showHelp() {
 
         System.out.println("KB class");
-        System.out.println("  options (with a leading '-'):");
-        System.out.println("  h - show this help screen");
-        System.out.println("  t \"<formula\" - formula type");
-        System.out.println("  x \"<formula\" - format a formula");
-        System.out.println("  r \"<formula\" - remove temporal relations on formulas");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  --type \"<formula\" - formula type");
+        System.out.println("  --format \"<formula\" - format a formula");
+        System.out.println("  --remove \"<formula\" - remove temporal relations on formulas");
     }
 
     /** ***************************************************************
@@ -3313,26 +3314,24 @@ public class Formula implements Comparable, Serializable {
     public static void main(String[] args) throws IOException {
 
         System.out.println("INFO in Formula.main()");
-        if (args == null)
-            System.out.println("no command given");
-        else
-            System.out.println(args.length + " : " + Arrays.toString(args));
-        if (args != null && args.length > 0 && args[0].equals("-h"))
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+
+        if (argMap.isEmpty() || argMap.containsKey("h"))
             showHelp();
         else {
             KBmanager.getMgr().initializeOnce();
             String kbName = KBmanager.getMgr().getPref("sumokbname");
             KB kb = KBmanager.getMgr().getKB(kbName);
-            if (args != null && args.length > 1 && args[0].contains("t")) {
-                Formula f = new Formula(args[1]);
-                System.out.println("Formula.main() formula type of " + args[1] + " : " + f.findType(kb));
+            if (argMap.containsKey("type") && argMap.get("type").size() == 1) {
+                Formula f = new Formula(argMap.get("type").get(0) );
+                System.out.println("Formula.main() formula type of " + argMap.get("type").get(0) + " : " + f.findType(kb));
             }
-            else if (args != null && args.length > 1 && args[0].contains("x")) {
-                System.out.println(Formula.textFormat(args[1]));
+            else if (argMap.containsKey("format") && argMap.get("format").size() == 1) {
+                System.out.println(Formula.textFormat(argMap.get("format").get(0)));
             }
-            else if (args != null && args.length > 1 && args[0].contains("r")) {
+            else if (argMap.containsKey("remove") && argMap.get("remove").size() == 1) {
                 // The opening and closing parentheses are because it expects a lisp list.
-                System.out.println(Formula.removeTemporalRelations(LP+args[1]+RP, kb));
+                System.out.println(Formula.removeTemporalRelations(LP + argMap.get("remove").get(0) + RP, kb));
             }
             else
                 showHelp();

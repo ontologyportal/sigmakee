@@ -220,29 +220,50 @@ public class KBmanager implements Serializable {
         String kbDir = KButilities.SIGMA_HOME + File.separator + "KBs";
         File configFile = new File(kbDir + File.separator + "config.xml");
         Date configDate = new Date(configFile.lastModified());
+
         KB kb;
         File file, sfile;
         Date fileDate, sfileDate;
-        for (String kbname : kbs.keySet()) { // iterate through the kbs
+
+        for (String kbname : kbs.keySet()) {
             kb = getKB(kbname);
+
             file = new File(kbDir + File.separator + kbname + "." + lang);
             fileDate = new Date(file.lastModified());
-            if (debug) System.out.println("INFO in KBmanager.infFileOld(lang): file " + kbname + "." + lang + " was saved on " + fileDate);
+
             if (fileDate.compareTo(configDate) < 0) {
+                System.out.println("INFO infFileOld(" + lang + "): REGEN needed for "
+                        + file.getName() + " because config.xml is newer");
                 return true;
             }
-            for (String f : kb.constituents) { // iterate through the constituents
+
+            String userAssertionsKifName = kbname + "_UserAssertions.kif";
+
+            for (String f : kb.constituents) {
                 sfile = new File(f);
+
+                // Do NOT force regeneration of SUMO.tptp due to dynamic tells
+//                if (sfile.getName().equals(userAssertionsKifName)) {
+//                    if (debug) System.out.println("INFO infFileOld(" + lang + "): skipping " + sfile.getName()
+//                            + " for base freshness check (handled as overlay).");
+//                    continue;
+//                }
+
                 sfileDate = new Date(sfile.lastModified());
-                if (debug) System.out.println("INFO in KBmanager.infFileOld(lang): file " + sfile.getName() + " was saved on " + sfileDate);
+
                 if (fileDate.compareTo(sfileDate) < 0) {
+                    System.out.println("INFO infFileOld(" + lang + "): REGEN needed for "
+                            + file.getName()
+                            + " (generated=" + fileDate + ") because newer constituent is "
+                            + sfile.getAbsolutePath()
+                            + " (modified=" + sfileDate + ")");
                     return true;
                 }
             }
         }
-        if (debug) System.out.println("INFO in KBmanager.infFileOld(lang): returning false (config and constituents are not old)");
         return false;
     }
+
 
     /** ***************************************************************
      *  Check whether config file or any .kif constituent is newer than its

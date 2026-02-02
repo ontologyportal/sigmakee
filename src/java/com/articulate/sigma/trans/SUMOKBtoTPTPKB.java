@@ -319,11 +319,7 @@ public class SUMOKBtoTPTPKB {
                 /* Experimental threading of main loop writes big SUMO in half
                  * the time as the sequential method. 2/17/25 tdn
                  */
-                System.out.println("SUMO File generation begins");
-                long t0 = System.nanoTime();
                 retVal = _tWriteFile(fileName, conjecture, isQuestion, pw);
-                double seconds = (System.nanoTime() - t0) / 1_000_000_000.0;
-                System.out.printf("SUMO File generation ends. Time took:  s=%.6f%n", seconds);
             }
 
         }
@@ -940,11 +936,6 @@ public class SUMOKBtoTPTPKB {
             }
         }
     }
-
-
-
-
-
 
     /** *************************************************************
      * Will first write out SUMO.tptp if the KB had not yet been

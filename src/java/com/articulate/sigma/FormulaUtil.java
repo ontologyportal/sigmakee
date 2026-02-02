@@ -297,6 +297,29 @@ public class FormulaUtil {
 
     /** ***************************************************************
      */
+    private static final Map<String, Integer> FILE_PRIORITY = Map.of(
+            "Merge.kif", 0,
+            "Mid-level-ontology.kif", 1
+    );
+
+    private static int filePriority(String file) {
+        return FILE_PRIORITY.getOrDefault(file, Integer.MAX_VALUE);
+    }
+
+    public static void sortBySourceFile(List<Formula> forms) {
+        forms.sort(
+                Comparator
+                        // 1. priority files first
+                        .comparingInt((Formula f) -> filePriority(f.getSourceFile()))
+                        // 2. then by sourceFile name
+                        .thenComparing(Formula::getSourceFile)
+                        // 3. then by line number
+                        .thenComparingInt(Formula::getLineNumber)
+        );
+    }
+
+    /** ***************************************************************
+     */
     public static void showHelp() {
 
         System.out.println("Formulautil class");

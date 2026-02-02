@@ -46,6 +46,9 @@ public class LEO {
     public static int axiomIndex = 0;
     public static boolean debug = false;
 
+    // === NEW: Full result structure for error handling ===
+    private ATPResult result;
+
     /** *************************************************************
      */
     @Override
@@ -55,6 +58,34 @@ public class LEO {
         for (String s : output)
             sb.append(s).append("\n");
         return sb.toString();
+    }
+
+    /** *************************************************************
+     * Get the full ATPResult for this run.
+     * This provides detailed execution metadata, SZS status, and error info.
+     *
+     * @return The ATPResult, or null if run() hasn't been called
+     */
+    public ATPResult getResult() {
+        return result;
+    }
+
+    /** *************************************************************
+     * Check if there was an error during execution.
+     *
+     * @return true if the result indicates an error
+     */
+    public boolean hasError() {
+        return result != null && result.hasErrors();
+    }
+
+    /** *************************************************************
+     * Get the SZS status from the last run.
+     *
+     * @return The SZSStatus, or SZSStatus.NOT_RUN if not run
+     */
+    public SZSStatus getSzsStatus() {
+        return result != null ? result.getSzsStatus() : SZSStatus.NOT_RUN;
     }
 
     /** *************************************************************
@@ -125,38 +156,98 @@ public class LEO {
      * @param kbFile A File object denoting the initial knowledge base
      * to be loaded by the Leo executable.
      *
-     * @throws IOException should not normally be thrown unless either
-     *         Leo executable or database file name are incorrect
+     * @throws ExecutableNotFoundException if the LEO-III executable is not found
+     * @throws ProverCrashedException if LEO-III crashes with a non-zero exit code
+     * @throws ProverTimeoutException if LEO-III times out
+     * @throws Exception for other errors
      */
     private void run(File kbFile, int timeout) throws Exception {
 
+        long startTime = System.currentTimeMillis();
+        long timeoutMs = timeout * 1000L;
+
+        // Initialize result structure
+        result = new ATPResult.Builder()
+                .engineName("LEO-III")
+                .engineMode("default")
+                .inputLanguage("THF")
+                .inputSource(kbFile != null ? kbFile.getName() : "unknown")
+                .timeoutMs(timeoutMs)
+                .build();
+
         String leoex = KBmanager.getMgr().getPref("leoExecutable");
         if (StringUtil.emptyString(leoex)) {
-            System.out.println("Error in Leo.run(): no executable string in preferences");
+            String msg = "Error in Leo.run(): no executable string in preferences";
+            System.out.println(msg);
+            result.setSzsStatus(SZSStatus.OS_ERROR);
+            result.setPrimaryError(msg);
+            throw new ExecutableNotFoundException("LEO-III", leoex, "leoExecutable");
         }
         File executable = new File(leoex);
         if (!executable.exists()) {
-            System.err.println("Error in Leo.run(): no executable " + leoex);
+            String msg = "Error in Leo.run(): no executable " + leoex;
+            System.err.println(msg);
+            result.setSzsStatus(SZSStatus.OS_ERROR);
+            result.setPrimaryError(msg);
+            throw new ExecutableNotFoundException("LEO-III", leoex, "leoExecutable");
         }
+
         String[] cmds = createCommandList(executable, timeout, kbFile);
+        result.setCommandLine(cmds);
         System.out.println("Leo.run(): Initializing Leo with:\n" + Arrays.toString(cmds));
 
         ProcessBuilder _builder = new ProcessBuilder(cmds);
-        _builder.redirectErrorStream(true);
+        _builder.redirectErrorStream(false);  // Keep stderr separate
 
         Process _leo = _builder.start();
-        //System.out.println("Leo.run(): process: " + _vampire);
+
+        // Read stdout and stderr in parallel
+        List<String> stdoutLines = new ArrayList<>();
+        List<String> stderrLines = new ArrayList<>();
+
+        Thread stderrReader = new Thread(() -> {
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(_leo.getErrorStream()))) {
+                String line;
+                while ((line = r.readLine()) != null) {
+                    stderrLines.add(line);
+                }
+            } catch (IOException e) {
+                // Ignore
+            }
+        });
+        stderrReader.start();
 
         try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_leo.getInputStream()))) {
             String line;
             while ((line = _reader.readLine()) != null) {
-                output.add(line);
+                stdoutLines.add(line);
+                output.add(line);  // Maintain backward compatibility
             }
         }
+
+        stderrReader.join(5000);
+
         int exitValue = _leo.waitFor();
+        long elapsed = System.currentTimeMillis() - startTime;
+
+        // Populate result
+        result.setStdout(stdoutLines);
+        result.setStderr(stderrLines);
+        result.finalize(exitValue, elapsed, elapsed >= timeoutMs);
+
         if (exitValue != 0) {
-            System.err.println("Leo.run(): Abnormal process termination");
+            System.err.println("Leo.run(): Abnormal process termination (exit code " + exitValue + ")");
+            if (!stderrLines.isEmpty()) {
+                System.err.println("Stderr: " + stderrLines);
+            }
             System.err.println(output);
+
+            // Throw appropriate exception
+            if (result.isTimedOut() || result.getSzsStatus() == SZSStatus.TIMEOUT) {
+                throw new ProverTimeoutException("LEO-III", timeoutMs, elapsed, true, stdoutLines, stderrLines, result);
+            } else if (exitValue > 128 && exitValue < 160) {
+                throw new ProverCrashedException("LEO-III", exitValue, stdoutLines, stderrLines, result);
+            }
         }
         System.out.println("Leo.run() done executing");
     }
