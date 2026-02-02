@@ -981,22 +981,40 @@ public class InferenceTestSuite {
      */
     public static void resetAllForInference(KB kb) throws IOException {
 
-        System.out.println("in InferenceTestSuite.resetAllForInference(): delete user assertions: ");
+        System.out.println("in InferenceTestSuite.resetAllForInference(): delete user assertions");
+
+        // 1) Remove UA from constituents + delete UA.<lang> inference artifact (based on current lang)
         kb.deleteUserAssertions();
-        // Remove the assertions in the files.
-        File userAssertionsFile = new File(KBmanager.getMgr().getPref("kbDir") +
-                KBmanager.getMgr().getPref("sumokbname") + KB._userAssertionsString);
-        if (userAssertionsFile.exists())
-            userAssertionsFile.delete();
-        String tptpFileName = userAssertionsFile.getAbsolutePath().replace(".kif", ".tptp");
-        userAssertionsFile = new File(tptpFileName);
-        if (userAssertionsFile.exists())
-            userAssertionsFile.delete();
-        tptpFileName = userAssertionsFile.getAbsolutePath().replace(".tptp", ".tff");
-        userAssertionsFile = new File(tptpFileName);
-        if (userAssertionsFile.exists())
-            userAssertionsFile.delete();
+
+        // 2) Delete UA files on disk (KIF + translated variants)
+        final File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        final String kbName = KBmanager.getMgr().getPref("sumokbname"); // usually "SUMO"
+
+        final File uaKif  = new File(dir, kbName + KB._userAssertionsString); // *_UserAssertions.kif
+        final File uaTptp = new File(dir, kbName + KB._userAssertionsTPTP);   // *_UserAssertions.tptp
+        final File uaTff  = new File(dir, kbName + KB._userAssertionsTFF);    // *_UserAssertions.tff
+        final File uaThf  = new File(dir, kbName + KB._userAssertionsTHF);    // *_UserAssertions.thf
+
+        if (uaKif.exists())  uaKif.delete();
+        if (uaTptp.exists()) uaTptp.delete();
+        if (uaTff.exists())  uaTff.delete();
+        if (uaThf.exists())  uaThf.delete();
+
+        // 3) Purge UA formulas from in-memory KB indexes
+        int before = kb.countUserAssertionFormulasInMemory();
+        int purged = kb.purgeUserAssertionsFromMemory();
+        int after  = kb.countUserAssertionFormulasInMemory();
+
+        if (debug) System.out.println("resetAllForInference(): UA in-memory before=" + before
+                + ", purged=" + purged
+                + ", after=" + after);
+
+        // 4) Clear cheap caches that can be polluted by accumulating terms
+        if (kb.termDepthCache != null) {
+            kb.termDepthCache.clear();
+        }
     }
+
 
     /** ***************************************************************
      */

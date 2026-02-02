@@ -15,8 +15,7 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,6 +42,9 @@ public class TPTPGenerationManager {
     private static final AtomicBoolean thfPlainReady = new AtomicBoolean(false);
 
     private static ExecutorService executor = null;
+
+    private static final Object GEN_LOCK = new Object();
+
 
     /**
      * Start background generation of all TPTP formats for all KBs.
@@ -112,55 +114,77 @@ public class TPTPGenerationManager {
         executor.shutdown();
     }
 
-    public static void generateProperFile(KB kb, String lang){
-        if ("fof".equals(lang) || ("tptp".equals(lang))){
-            generateFOF(kb);
-        } else if ("tff".equals(lang) ) {
-            generateTFF(kb);
+    public static void generateProperFile(KB kb, String lang) {
+        synchronized (GEN_LOCK) {
+            if ("fof".equals(lang) || "tptp".equals(lang)) {
+                generateFOF(kb);
+            } else if ("tff".equals(lang)) {
+                generateTFF(kb);
+            }
         }
-
     }
 
     /**
      * Generate FOF (First-Order Form) TPTP file for a KB.
      */
     public static void generateFOF(KB kb) {
+
         if (!fofGenerating.compareAndSet(false, true)) {
             return; // Already generating
         }
 
-        // Save current lang settings
-        String originalLang = SUMOKBtoTPTPKB.lang;
+        String originalLang  = SUMOKBtoTPTPKB.lang;
         String originalLang2 = SUMOformulaToTPTPformula.lang;
 
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String infFilename = kbDir + File.separator + kb.name + ".tptp";
+
+        Path target = java.nio.file.Paths.get(infFilename);
+        Path tmp    = java.nio.file.Paths.get(infFilename + ".tmp");
+
         try {
-
-            String kbDir = KBmanager.getMgr().getPref("kbDir");
-            String infFilename = kbDir + File.separator + kb.name + ".tptp";
-
             System.out.println("===== TPTPGenerationManager: Generating FOF file: " + infFilename);
             long startTime = System.currentTimeMillis();
+
+            // Ensure we don't leave a stale tmp around
+            try { java.nio.file.Files.deleteIfExists(tmp); } catch (Exception ignore) {}
 
             // Set BOTH static language fields to FOF
             SUMOKBtoTPTPKB.lang = "fof";
             SUMOformulaToTPTPformula.lang = "fof";
+            SUMOformulaToTPTPformula.hideNumbers = true;
 
-            try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(infFilename)))) {
-                if (!kb.formulaMap.isEmpty()) {
-                    SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-                    skb.kb = kb;
-                    skb.writeFile(infFilename, null, false, pw);
-                }
+            // IMPORTANT: write to tmp, not to target
+            try (java.io.PrintWriter pw = new java.io.PrintWriter(
+                    java.nio.file.Files.newBufferedWriter(tmp, java.nio.charset.StandardCharsets.UTF_8))) {
+
+                SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                skb.kb = kb;
+
+                // Keep passing the "real" filename for stable file(...) metadata, but write into pw(tmp)
+                skb.writeFile(infFilename, null, false, pw);
+            }
+
+            // Atomic replace (or fallback)
+            try {
+                java.nio.file.Files.move(tmp, target,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                        java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            } catch (java.nio.file.AtomicMoveNotSupportedException e) {
+                java.nio.file.Files.move(tmp, target,
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
 
             long elapsed = System.currentTimeMillis() - startTime;
             System.out.println("==== TPTPGenerationManager: FOF generation complete in " + (elapsed / 1000.0) + "s");
             fofReady.set(true);
+
         } catch (Exception e) {
             System.err.println("TPTPGenerationManager: Error generating FOF: " + e.getMessage());
             e.printStackTrace();
+            // best effort cleanup
+            try { java.nio.file.Files.deleteIfExists(tmp); } catch (Exception ignore) {}
         } finally {
-            // Restore original lang settings
             SUMOKBtoTPTPKB.lang = originalLang;
             SUMOformulaToTPTPformula.lang = originalLang2;
             fofGenerating.set(false);
@@ -168,48 +192,76 @@ public class TPTPGenerationManager {
         }
     }
 
+
     /**
      * Generate TFF (Typed First-order Form) TPTP file for a KB.
      */
     private static void generateTFF(KB kb) {
+
         if (!tffGenerating.compareAndSet(false, true)) {
             return; // Already generating
         }
 
         // Save current lang settings
-        String originalLang = SUMOKBtoTPTPKB.lang;
+        String originalLang  = SUMOKBtoTPTPKB.lang;
         String originalLang2 = SUMOformulaToTPTPformula.lang;
 
-        try {
-            String kbDir = KBmanager.getMgr().getPref("kbDir");
-            String infFilename = kbDir + File.separator + kb.name + ".tff";
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String infFilename = kbDir + File.separator + kb.name + ".tff";
 
+        Path target = Paths.get(infFilename);
+        Path tmp    = Paths.get(infFilename + ".tmp");
+
+        try {
             System.out.println("==== TPTPGenerationManager: Generating TFF file: " + infFilename);
             long startTime = System.currentTimeMillis();
+
+            // Ensure we don't leave a stale tmp around
+            try { Files.deleteIfExists(tmp); } catch (Exception ignore) {}
 
             // Set BOTH static language fields to TFF
             SUMOKBtoTPTPKB.lang = "tff";
             SUMOformulaToTPTPformula.lang = "tff";
 
-            try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(infFilename)))) {
+            // IMPORTANT: write to tmp, not target
+            try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(tmp, java.nio.charset.StandardCharsets.UTF_8))) {
+
                 if (!kb.formulaMap.isEmpty()) {
                     SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();
                     stff.kb = kb;
+
                     SUMOtoTFAform.initOnce();
+
                     stff.writeSorts(pw);
+                    // Keep passing the "real" filename for metadata, but write into pw(tmp)
                     stff.writeFile(infFilename, null, false, pw);
+
                     if (SUMOKBtoTPTPKB.CWA)
                         pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
+
                     stff.printTFFNumericConstants(pw);
                 }
+            }
+
+            // Atomic replace (or fallback)
+            try {
+                Files.move(tmp, target,
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(tmp, target,
+                        StandardCopyOption.REPLACE_EXISTING);
             }
 
             long elapsed = System.currentTimeMillis() - startTime;
             System.out.println("==== TPTPGenerationManager: TFF generation complete in " + (elapsed / 1000.0) + "s");
             tffReady.set(true);
+
         } catch (Exception e) {
             System.err.println("TPTPGenerationManager: Error generating TFF: " + e.getMessage());
             e.printStackTrace();
+            // best-effort cleanup
+            try { Files.deleteIfExists(tmp); } catch (Exception ignore) {}
         } finally {
             // Restore original lang settings
             SUMOKBtoTPTPKB.lang = originalLang;
@@ -218,6 +270,7 @@ public class TPTPGenerationManager {
             tffLatch.countDown();
         }
     }
+
 
     /**
      * Generate THF Modal (Higher-order Form with modals) file for a KB.

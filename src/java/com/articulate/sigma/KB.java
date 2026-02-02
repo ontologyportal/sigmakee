@@ -2004,19 +2004,14 @@ public class KB implements Serializable {
         final String requestedLang = SUMOKBtoTPTPKB.lang;          // typically "fof" or "tff"
         final String lang = "fof".equals(requestedLang) ? "tptp" : "tff";
 
-        // A) enforce atomicity in-memory (+ deletes stale UA translation on disk)
-        RemoveUAResult r = removeUserAssertions();
-        boolean mustFullRetranslate = (r == null) || (r.status != RemoveUAResult.RemoveUAStatus.OK);
 
-        // B) ensure base exists / is fresh, ignoring UserAssertions as a trigger
-        if (!mustFullRetranslate && KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(lang)) {
-            mustFullRetranslate = true;
-        }
+        boolean mustRegenBase = tqRequiresBaseRegeneration();
 
-        // C) If required, rebuild base (safe fallback)
-        //    If not required, do nothing here (no-op). askVampire() will proceed using existing base file.
-        if (mustFullRetranslate) {
-            TPTPGenerationManager.generateProperFile(this,lang);
+        if (mustRegenBase) {
+            System.out.println("INFO askVampireForTQ(): FULL base regen required -> regenerating "
+                    + this.name + "." + lang
+                    + " (current TQ assertions require base retranslation)");
+            TPTPGenerationManager.generateProperFile(this, lang);  // rebuild SUMO.<lang>
         }
 
         // Run prover
@@ -2027,86 +2022,46 @@ public class KB implements Serializable {
 
 
 
-    public RemoveUAResult removeUserAssertions() {
+    /** ***************************************************************
+     * Return true if the current TQ user assertions require rebuilding the base SUMO.<lang>.
+     * Conservative v1: rebuild on schema changes or ground transitive facts.
+     */
+    public boolean tqRequiresBaseRegeneration() {
 
         File dir = new File(KBmanager.getMgr().getPref("kbDir"));
-        File uaKif = new File(dir, this.name + "_UserAssertions.kif");
-        if (!uaKif.exists())
-            return RemoveUAResult.ok();
+        File uaKif = new File(dir, this.name + KB._userAssertionsString); // "_UserAssertions.kif"
+        if (!uaKif.exists()) return false; // no tells => no impact
+
+        // If we cannot decide transitivity, fail-safe
+        if (kbCache == null) return true;
 
         KIF ua = readConstituent(uaKif.getAbsolutePath());
+        if (ua == null || ua.formulaMap == null || ua.formulaMap.isEmpty()) return false;
 
-        // Fail-safe: if we can't check transitivity, force rebuild upstream
-        if (kbCache == null) {
-            return RemoveUAResult.fail(RemoveUAResult.RemoveUAStatus.FAIL_NO_CACHE, null, null);
-        }
-
-        final String uaSourcePath = uaKif.getAbsolutePath();
-        final String uaSourceName = uaKif.getName(); // fallback if sourceFile stores only basename
-
-        // 1) detect ground + atomic + transitive predicate in UA
         for (Formula f : ua.formulaMap.values()) {
-
-            if (f == null || !f.isGround())
-                continue;
+            if (f == null) continue;
 
             String pred = f.car();
-            if (pred == null)
-                continue;
-
+            if (pred == null) continue;
             pred = pred.trim();
-            if (pred.startsWith("("))
-                continue; // not a symbol head
 
-            if (Formula.isLogicalOperator(pred))
-                continue; // and/or/not/=>/<=>/forall/exists, etc.
+            // skip non-atomic and logical operators
+            if (pred.startsWith("(")) continue;
+            if (Formula.isLogicalOperator(pred)) continue;
 
-            if (kbCache.isTransitivePredicate(pred)) {
-                return RemoveUAResult.fail(
-                        RemoveUAResult.RemoveUAStatus.FAIL_TRANSITIVE_GROUND,
-                        pred,
-                        f.getFormula()
-                );
-            }
-        }
-
-        // 2) remove UA formulas from KB indexes, but ONLY if the Formula currently in KB came from UA
-        for (Map.Entry<String, List<String>> e : ua.formulas.entrySet()) {
-
-            String key = e.getKey();
-            List<String> uaList = e.getValue();
-            List<String> existing = formulas.get(key);
-
-            if (existing == null || uaList == null)
-                continue;
-
-            for (String fs : uaList) {
-                if (fs == null) continue;
-
-                Formula inKb = formulaMap.get(fs); // keys are f.getFormula() (interned in KIF.parse)
-                if (inKb == null) continue;
-
-                String src = inKb.sourceFile;
-
-                boolean isFromUA =
-                        (src != null) &&
-                                (src.equals(uaSourcePath) || src.endsWith(File.separator + uaSourceName) || src.endsWith(uaSourceName));
-
-                if (!isFromUA)
-                    continue;
-
-                existing.remove(fs);     // remove one occurrence from the inverted index list
-                formulaMap.remove(fs);   // remove the Formula itself
+            // (A) schema / hierarchy changes => global
+            if ("subclass".equals(pred) || "subrelation".equals(pred) ||
+                    "domain".equals(pred)  || "range".equals(pred) ||
+                    "disjoint".equals(pred) || "partition".equals(pred)) {
+                return true;
             }
 
-            if (existing.isEmpty())
-                formulas.remove(key);
+            // (B) ground assertion on transitive predicate => closure cache impact
+            if (f.isGround() && kbCache.isTransitivePredicate(pred)) {
+                return true;
+            }
         }
-
-        // 3) prevent stale UA translation from being appended
-        deleteUserAssertionsForInference();
-
-        return RemoveUAResult.ok();
+        return false;
     }
 
 
@@ -4225,7 +4180,7 @@ public class KB implements Serializable {
             lang = "tptp";
 
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld() || force) {
+        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(lang) || force) {
             System.out.println("INFO in KB.loadVampire(): infFilename=" + !(new File(infFilename).exists()));
             System.out.println("INFO in KB.loadVampire(): managerInfFileOld " + KBmanager.getMgr().infFileOld());
             System.out.println("INFO in KB.loadVampire(): force=" + force);
@@ -4515,6 +4470,74 @@ public class KB implements Serializable {
         }
         return sourceAxioms;
     }
+
+    /** ***************************************************************
+     * Count how many Formula objects currently in memory came from the per-test
+     * user assertions file (e.g. SUMO_UserAssertions.kif).
+     */
+    public int countUserAssertionFormulasInMemory() {
+
+        final String uaFileName = this.name + _userAssertionsString; // "_UserAssertions.kif"
+        int count = 0;
+
+        for (Formula f : formulaMap.values()) {
+            if (f == null) continue;
+            if (f.sourceFile == null) continue;
+
+            // sourceFile is typically a full path; compare by basename
+            String srcBase = new java.io.File(f.sourceFile).getName();
+            if (uaFileName.equals(srcBase)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /** ***************************************************************
+     * Remove all formulas in memory whose sourceFile is <KBNAME>_UserAssertions.kif.
+     * Returns how many formulas were removed from formulaMap.
+     */
+    public int purgeUserAssertionsFromMemory() {
+
+        final String uaFileName = this.name + _userAssertionsString; // e.g. SUMO_UserAssertions.kif
+        java.util.Set<String> toRemove = new java.util.HashSet<>();
+
+        // Collect formula strings to remove (keys in formulaMap are f.getFormula())
+        for (java.util.Map.Entry<String, Formula> e : formulaMap.entrySet()) {
+            Formula f = e.getValue();
+            if (f == null || f.sourceFile == null) continue;
+            String srcBase = new java.io.File(f.sourceFile).getName();
+            if (uaFileName.equals(srcBase)) {
+                toRemove.add(e.getKey());
+            }
+        }
+
+        // Remove from formulaMap
+        for (String fs : toRemove) {
+            formulaMap.remove(fs);
+        }
+
+        // Remove from formulas index (key -> list of formula strings)
+        java.util.Iterator<java.util.Map.Entry<String, java.util.List<String>>> it = formulas.entrySet().iterator();
+        while (it.hasNext()) {
+            java.util.Map.Entry<String, java.util.List<String>> en = it.next();
+            java.util.List<String> lst = en.getValue();
+            if (lst == null) continue;
+
+            java.util.Iterator<String> lit = lst.iterator();
+            while (lit.hasNext()) {
+                String fs = lit.next();
+                if (toRemove.contains(fs)) {
+                    lit.remove();
+                }
+            }
+            if (lst.isEmpty()) it.remove();
+        }
+
+        return toRemove.size();
+    }
+
+
 
     /*****************************************************************
      */
