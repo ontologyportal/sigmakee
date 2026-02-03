@@ -677,7 +677,7 @@
         <div class="spin-row">
             <img src="pixmaps/sumo.gif" class="bounce-icon" alt="Loading...">
             <div>
-                <div class="spin-title">Running inference...</div>
+                <div id="spinTitle" class="spin-title">Processing...</div>
                 <div id="spinSub" class="spin-sub">Time limit: <span id="spinLimit">30</span>s</div>
             </div>
         </div>
@@ -1478,6 +1478,30 @@
         } // end else (generation not in progress)
     }
 
+    // ===== Server-side execution for "Tell" button =====
+    if ("Tell".equalsIgnoreCase(req) && !syntaxError) {
+        String tellResult = kb.tell(stmt);
+        boolean isError = tellResult.toLowerCase().contains("error")
+                       || tellResult.toLowerCase().contains("rejected")
+                       || tellResult.toLowerCase().contains("could not");
+%>
+<div class="atp-result-panel">
+    <div class="result-header">
+        <span class="szs-badge <%= isError ? "szs-error" : "szs-success" %>">
+            <%= isError ? "Error" : "Success" %>
+        </span>
+        <span class="engine-tag">Tell Assertion</span>
+    </div>
+    <div class="result-meta">
+        <span>Formula: <code><%= stmt.length() > 80 ? stmt.substring(0, 80) + "..." : stmt %></code></span>
+    </div>
+    <div style="margin-top: 10px; padding: 10px; background: #f6f8fa; border-radius: 4px;">
+        <%= tellResult %>
+    </div>
+</div>
+<%
+    }
+
     if (status != null && status.toString().length() > 0) { out.println("Status: "); out.println(status.toString()); }
 %>
 </div>
@@ -1753,6 +1777,7 @@
                 const pct   = document.getElementById('spinPct');
                 const eta   = document.getElementById('spinEta');
                 const limit = document.getElementById('spinLimit');
+                const spinTitle = document.getElementById('spinTitle');
 
                 let clicked = null;
                 let rafId = null;
@@ -1799,17 +1824,23 @@
                     b.addEventListener('click', e => clicked = e.target.value)
                 );
 
-                // Run submits into iframe so the page stays alive
+                // Run and Tell submit into iframe so the page stays alive
                 form.addEventListener('submit', function(){
-                    if (clicked !== 'Run') {
-                        form.removeAttribute('target'); // normal for Tell
+                    if (clicked !== 'Run' && clicked !== 'Tell') {
+                        form.removeAttribute('target');
                         return;
                     }
 
                     form.setAttribute('target', 'runFrame');
 
+                    // Tell is typically fast, use 10s; Run uses user-specified timeout
                     const timeoutField = form.querySelector('input[name="timeout"]');
-                    const tSec = clampInt(timeoutField ? timeoutField.value : null, 30);
+                    const tSec = (clicked === 'Tell') ? 10 : clampInt(timeoutField ? timeoutField.value : null, 30);
+
+                    // Update spinner title based on action
+                    if (spinTitle) {
+                        spinTitle.textContent = (clicked === 'Tell') ? 'Adding assertion...' : 'Running inference...';
+                    }
 
                     runInFlight = true;
                     overlay.style.display = 'block';
