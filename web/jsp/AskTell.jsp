@@ -1027,12 +1027,14 @@
                     if (itd == null) {
                         out.println("<font color='red'>Could not read test file.</font>");
                     } else {
-                        for (String s : itd.statements) if (!StringUtil.emptyString(s)) kb.tell(s);
-                        FormulaPreprocessor fp = new FormulaPreprocessor();
-                        Set<Formula> qs = fp.preProcess(new Formula(itd.query), true, kb);
-                        for (Formula q : qs) {
-                            String qstr = q.getFormula();
-                            try {
+                        try {
+                            for (String s : itd.statements) {
+                                if (!StringUtil.emptyString(s)) kb.tell(s);
+                            }
+                            FormulaPreprocessor fp = new FormulaPreprocessor();
+                            Set<Formula> qs = fp.preProcess(new Formula(itd.query), true, kb);
+                            for (Formula q : qs) {
+                                String qstr = q.getFormula();
                                 if ("EProver".equals(inferenceEngine)) {
                                     com.articulate.sigma.tp.EProver eRun = kb.askEProver(qstr, tmo, maxAns);
                                     if (eRun != null && eRun.getResult() != null) {
@@ -1058,59 +1060,59 @@
                                     }
                                     tpp.parseProofOutput(leoRun.output, qstr, kb, leoRun.qlist);
                                 }
-                            } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
-                                renderExceptionPanel(enfe, out);
-                            } catch (ProverTimeoutException | ProverCrashedException pte) {
-                                renderExceptionPanel(pte, out);
-                                if (pte.getResult() != null) {
-                                    renderATPResultPanel(pte.getResult(), out);
-                                }
-                            } catch (com.articulate.sigma.tp.ATPException ae) {
-                                renderExceptionPanel(ae, out);
                             }
-                        }
 
-                        setGraphFormat(graphFormulaFormat,tpp);
-                        publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-                        tpp.processAnswersFromProof(new StringBuilder(), itd.query);
+                            setGraphFormat(graphFormulaFormat,tpp);
+                            publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
+                            tpp.processAnswersFromProof(new StringBuilder(), itd.query);
 
-                        printAnswersBlock(tpp, kbName, language, out);
-                        /* Prevent duplicate answers inside HTMLformatter */
-                        if (tpp.bindingMap != null) tpp.bindingMap.clear();
-                        if (tpp.bindings   != null) tpp.bindings.clear();
+                            printAnswersBlock(tpp, kbName, language, out);
+                            /* Prevent duplicate answers inside HTMLformatter */
+                            if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                            if (tpp.bindings   != null) tpp.bindings.clear();
 
-                        out.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kbName, language));
-                        // Generate proof summary if requested
-                        if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
-                            // Extract proof steps as strings
-                            List<String> proofSteps = new ArrayList<>();
-                            for (Object formula : tpp.proof) {
-                                String stepText = "";
-                                if (formula != null) {
-                                    // Get the string representation of the formula
-                                    stepText = formula.toString();
-                                    // Try to convert to more readable format if it's in TPTP format
-                                    if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
-                                        // Extract just the formula part, skipping the TPTP wrapper
-                                        int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
-                                        int end = stepText.lastIndexOf(')');
-                                        if (start > 0 && end > start) {
-                                            stepText = stepText.substring(start, end).trim();
+                            out.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kbName, language));
+                            // Generate proof summary if requested
+                            if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
+                                // Extract proof steps as strings
+                                List<String> proofSteps = new ArrayList<>();
+                                for (Object formula : tpp.proof) {
+                                    String stepText = "";
+                                    if (formula != null) {
+                                        // Get the string representation of the formula
+                                        stepText = formula.toString();
+                                        // Try to convert to more readable format if it's in TPTP format
+                                        if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
+                                            // Extract just the formula part, skipping the TPTP wrapper
+                                            int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
+                                            int end = stepText.lastIndexOf(')');
+                                            if (start > 0 && end > start) {
+                                                stepText = stepText.substring(start, end).trim();
+                                            }
                                         }
+                                        // Clean up the text
+                                        stepText = stepText.replaceAll("\\s+", " ").trim();
                                     }
-                                    // Clean up the text
-                                    stepText = stepText.replaceAll("\\s+", " ").trim();
+                                    if (!stepText.isEmpty()) {
+                                        proofSteps.add(stepText);
+                                    }
                                 }
-                                if (!stepText.isEmpty()) {
-                                    proofSteps.add(stepText);
-                                }
-                            }
 
-                            // Generate and display the summary
-                            String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
-                            if (!proofSummary.isEmpty()) {
-                                out.println(proofSummary);
+                                // Generate and display the summary
+                                String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
+                                if (!proofSummary.isEmpty()) {
+                                    out.println(proofSummary);
+                                }
                             }
+                        } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
+                            renderExceptionPanel(enfe, out);
+                        } catch (ProverTimeoutException | ProverCrashedException pte) {
+                            renderExceptionPanel(pte, out);
+                            if (pte.getResult() != null) {
+                                renderATPResultPanel(pte.getResult(), out);
+                            }
+                        } catch (com.articulate.sigma.tp.ATPException ae) {
+                            renderExceptionPanel(ae, out);
                         }
                     }
                 } else if (ext.endsWith(".tptp") || ext.endsWith(".tff")) {
@@ -1480,16 +1482,12 @@
 
     // ===== Server-side execution for "Tell" button =====
     if ("Tell".equalsIgnoreCase(req) && !syntaxError) {
-        String tellResult = kb.tell(stmt);
-        boolean isError = tellResult.toLowerCase().contains("error")
-                       || tellResult.toLowerCase().contains("rejected")
-                       || tellResult.toLowerCase().contains("could not");
+        try {
+            String tellResult = kb.tell(stmt);
 %>
 <div class="atp-result-panel">
     <div class="result-header">
-        <span class="szs-badge <%= isError ? "szs-error" : "szs-success" %>">
-            <%= isError ? "Error" : "Success" %>
-        </span>
+        <span class="szs-badge szs-success">Success</span>
         <span class="engine-tag">Tell Assertion</span>
     </div>
     <div class="result-meta">
@@ -1500,6 +1498,13 @@
     </div>
 </div>
 <%
+        } catch (com.articulate.sigma.tp.FormulaTranslationException fte) {
+            renderExceptionPanel(fte, out);
+        } catch (com.articulate.sigma.tp.ArityException ae) {
+            renderExceptionPanel(ae, out);
+        } catch (com.articulate.sigma.tp.ATPException atpe) {
+            renderExceptionPanel(atpe, out);
+        }
     }
 
     if (status != null && status.toString().length() > 0) { out.println("Status: "); out.println(status.toString()); }

@@ -57,6 +57,8 @@ MA  02111-1307 USA
 */
 
 import com.articulate.sigma.tp.ATPException;
+import com.articulate.sigma.tp.ArityException;
+import com.articulate.sigma.tp.FormulaTranslationException;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
@@ -1679,12 +1681,10 @@ public class KB implements Serializable {
             KIF kif = new KIF(); // 1. Parse the input string.
             String msg = kif.parseStatement(input);
             if (msg != null) {
-                result = "Error parsing \"" + input + "\" " + msg;
-                return result;
+                throw new FormulaTranslationException("Error parsing \"" + input + "\": " + msg, "KIF");
             }
             if (kif.formulaMap.keySet().isEmpty()) {
-                result = "The input could not be parsed";
-                return result;
+                throw new FormulaTranslationException("The input could not be parsed", "KIF");
             }
             try { // Make the pathname of the user assertions file.
                 String userAssertionKIF = this.name + _userAssertionsString;
@@ -1718,11 +1718,9 @@ public class KB implements Serializable {
                         if (debug) System.out.println("KB.tell(): " + parsedF.toString());
                         term = PredVarInst.hasCorrectArity(parsedF, this);
                         if (!StringUtil.emptyString(term)) {
-                            result = result + "Formula in " + parsedF.sourceFile
-                                    + " rejected due to arity error of predicate " + term + " in formula: \n"
-                                    + parsedF.getFormula();
-                        } else
-                            parsedFormulas.add(parsedF);
+                            throw new ArityException(parsedF.getFormula(), term);
+                        }
+                        parsedFormulas.add(parsedF);
                     }
                     if (!parsedFormulas.isEmpty()) {
                         if (!constituents.contains(filename)) {
@@ -1772,6 +1770,8 @@ public class KB implements Serializable {
                             }
                     }
                 }
+            } catch (ATPException ae) {
+                throw ae;  // Re-throw to caller
             } catch (IOException ioe) {
                 ioe.printStackTrace();
                 System.err.println(ioe.getMessage());
