@@ -542,16 +542,19 @@ public class Vampire {
      */
     public List<String> getUserAssertions(KB kb) {
 
-        String userAssertionTPTP = kb.name + KB._userAssertionsTPTP;
-        if (SUMOKBtoTPTPKB.lang.equals("tff"))
-            userAssertionTPTP = kb.name + KB._userAssertionsTFF;
-        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
-        String fname = dir + File.separator + userAssertionTPTP;
-        File ufile = new File(fname);
-        if (ufile.exists())
-            return FileUtil.readLines(dir + File.separator + userAssertionTPTP,false);
-        else
-            return new ArrayList<>();
+        // Thread safe
+        return kb.withUserAssertionLock(() -> {
+            String userAssertionTPTP = kb.name + KB._userAssertionsTPTP;
+            if (SUMOKBtoTPTPKB.lang.equals("tff"))
+                userAssertionTPTP = kb.name + KB._userAssertionsTFF;
+            File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+            String fname = dir + File.separator + userAssertionTPTP;
+            File ufile = new File(fname);
+            if (ufile.exists())
+                return FileUtil.readLines(dir + File.separator + userAssertionTPTP, false);
+            else
+                return new ArrayList<>();
+        });
     }
 
     /** *************************************************************
