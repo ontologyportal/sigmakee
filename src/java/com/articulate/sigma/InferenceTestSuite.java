@@ -977,26 +977,59 @@ public class InferenceTestSuite {
 
     /****************************************************************
      * Undo all parts of the state that have anything to do with user assertions made during inference.
-     * @throws IOException
      */
     public static void resetAllForInference(KB kb) throws IOException {
 
-        System.out.println("in InferenceTestSuite.resetAllForInference(): delete user assertions: ");
-        kb.deleteUserAssertions();
-        // Remove the assertions in the files.
-        File userAssertionsFile = new File(KBmanager.getMgr().getPref("kbDir") +
-                KBmanager.getMgr().getPref("sumokbname") + KB._userAssertionsString);
-        if (userAssertionsFile.exists())
-            userAssertionsFile.delete();
-        String tptpFileName = userAssertionsFile.getAbsolutePath().replace(".kif", ".tptp");
-        userAssertionsFile = new File(tptpFileName);
-        if (userAssertionsFile.exists())
-            userAssertionsFile.delete();
-        tptpFileName = userAssertionsFile.getAbsolutePath().replace(".tptp", ".tff");
-        userAssertionsFile = new File(tptpFileName);
-        if (userAssertionsFile.exists())
-            userAssertionsFile.delete();
+        try {
+            kb.withUserAssertionLock(() -> {
+
+                System.out.println("in InferenceTestSuite.resetAllForInference(): delete user assertions");
+
+                // 1) Purge UA formulas from in-memory KB indexes
+                int before = kb.countUserAssertionFormulasInMemory();
+                int purged = kb.purgeUserAssertionsFromMemory();
+                int after  = kb.countUserAssertionFormulasInMemory();
+
+                if (KB.debug) {
+                    System.out.println("resetAllForInference(): UA in-memory before=" + before
+                            + ", purged=" + purged
+                            + ", after=" + after);
+                }
+
+                // 2) Remove UA from constituents + delete UA.<current-lang> inference artifact (if any)
+                kb.deleteUserAssertions();
+
+                // 3) Delete UA files on disk (KIF + translated variants)
+                final File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+                final String kbName = kb.name;
+
+                deleteIfExists(new File(dir, kbName + KB._userAssertionsString)); // *_UserAssertions.kif
+                deleteIfExists(new File(dir, kbName + KB._userAssertionsTPTP));   // *_UserAssertions.tptp
+                deleteIfExists(new File(dir, kbName + KB._userAssertionsTFF));    // *_UserAssertions.tff
+                deleteIfExists(new File(dir, kbName + KB._userAssertionsTHF));    // *_UserAssertions.thf
+
+                // 4) Clear cheap caches that can be polluted by accumulating terms
+                if (kb.termDepthCache != null) {
+                    kb.termDepthCache.clear();
+                }
+
+                return Boolean.TRUE;
+            });
+        }
+        catch (RuntimeException re) {
+            // Unwrap IOException thrown inside the lock
+            Throwable cause = re.getCause();
+            if (cause instanceof IOException) throw (IOException) cause;
+            throw re;
+        }
     }
+
+    private static void deleteIfExists(File f) {
+        if (f.exists() && !f.delete()) {
+            System.out.println("WARN resetAllForInference(): failed to delete " + f.getAbsolutePath());
+        }
+    }
+
 
     /** ***************************************************************
      */

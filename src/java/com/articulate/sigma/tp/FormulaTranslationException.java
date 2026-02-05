@@ -32,7 +32,7 @@ public class FormulaTranslationException extends ATPException {
      * @param targetLanguage The target language (FOF, TFF, THF)
      */
     public FormulaTranslationException(String message, String targetLanguage) {
-        super(buildMessage(message, targetLanguage), null);  // No engine involved yet
+        super(buildMessage(message, targetLanguage), targetLanguage + " Parser");
         this.targetLanguage = targetLanguage;
         this.errorLine = -1;
         this.errorColumn = -1;
@@ -49,7 +49,7 @@ public class FormulaTranslationException extends ATPException {
      */
     public FormulaTranslationException(String message, String targetLanguage,
                                         int line, int column) {
-        super(buildMessage(message, targetLanguage), null);
+        super(buildMessage(message, targetLanguage), targetLanguage + " Parser");
         this.targetLanguage = targetLanguage;
         this.errorLine = line;
         this.errorColumn = column;
@@ -60,7 +60,7 @@ public class FormulaTranslationException extends ATPException {
      * Create a new FormulaTranslationException with a cause
      */
     public FormulaTranslationException(String message, String targetLanguage, Throwable cause) {
-        super(buildMessage(message, targetLanguage), null, cause);
+        super(buildMessage(message, targetLanguage), targetLanguage + " Parser", cause);
         this.targetLanguage = targetLanguage;
         this.errorLine = -1;
         this.errorColumn = -1;
@@ -71,7 +71,7 @@ public class FormulaTranslationException extends ATPException {
      * Create a new FormulaTranslationException with a std errors
      */
     public FormulaTranslationException(String message, String targetLanguage, int line, List<String> stdout, List<String> stderr) {
-        super(buildMessage(message, targetLanguage), null, stdout, stderr);
+        super(buildMessage(message, targetLanguage), targetLanguage + " Parser", stdout, stderr);
         this.targetLanguage = targetLanguage;
         this.errorLine = line;
         this.errorColumn = -1;

@@ -304,15 +304,17 @@ public class LEO {
     /** *************************************************************
      */
     public List<String> getUserAssertions(KB kb) {
-
-        String userAssertionTPTP = kb.name + KB._userAssertionsTHF;
-        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
-        String fname = dir + File.separator + userAssertionTPTP;
-        File ufile = new File(fname);
-        if (ufile.exists())
-            return FileUtil.readLines(dir + File.separator + userAssertionTPTP,false);
-        else
-            return new ArrayList<>();
+        // thread lock safe
+        return kb.withUserAssertionLock(() -> {
+            String userAssertionTPTP = kb.name + KB._userAssertionsTHF;
+            File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+            String fname = dir + File.separator + userAssertionTPTP;
+            File ufile = new File(fname);
+            if (ufile.exists())
+                return FileUtil.readLines(dir + File.separator + userAssertionTPTP, false);
+            else
+                return new ArrayList<>();
+        });
     }
 
     /** *************************************************************

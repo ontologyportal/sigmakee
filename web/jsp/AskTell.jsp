@@ -677,7 +677,7 @@
         <div class="spin-row">
             <img src="pixmaps/sumo.gif" class="bounce-icon" alt="Loading...">
             <div>
-                <div class="spin-title">Running inference...</div>
+                <div id="spinTitle" class="spin-title">Processing...</div>
                 <div id="spinSub" class="spin-sub">Time limit: <span id="spinLimit">30</span>s</div>
             </div>
         </div>
@@ -1027,12 +1027,14 @@
                     if (itd == null) {
                         out.println("<font color='red'>Could not read test file.</font>");
                     } else {
-                        for (String s : itd.statements) if (!StringUtil.emptyString(s)) kb.tell(s);
-                        FormulaPreprocessor fp = new FormulaPreprocessor();
-                        Set<Formula> qs = fp.preProcess(new Formula(itd.query), true, kb);
-                        for (Formula q : qs) {
-                            String qstr = q.getFormula();
-                            try {
+                        try {
+                            for (String s : itd.statements) {
+                                if (!StringUtil.emptyString(s)) kb.tell(s);
+                            }
+                            FormulaPreprocessor fp = new FormulaPreprocessor();
+                            Set<Formula> qs = fp.preProcess(new Formula(itd.query), true, kb);
+                            for (Formula q : qs) {
+                                String qstr = q.getFormula();
                                 if ("EProver".equals(inferenceEngine)) {
                                     com.articulate.sigma.tp.EProver eRun = kb.askEProver(qstr, tmo, maxAns);
                                     if (eRun != null && eRun.getResult() != null) {
@@ -1041,9 +1043,12 @@
                                     tpp.parseProofOutput(eRun.output, qstr, kb, eRun.qlist);
                                 } else if ("Vampire".equals(inferenceEngine)) {
                                     setVampMode(vampireMode);
-                                    com.articulate.sigma.tp.Vampire vRun = Boolean.TRUE.equals(modensPonens)
-                                            ? kb.askVampireModensPonens(qstr, tmo, maxAns)
-                                            : kb.askVampire(qstr, tmo, maxAns);
+
+                                    com.articulate.sigma.tp.Vampire vRun = kb.askVampireForTQ(qstr, tmo, maxAns, modensPonens);
+
+//                                    com.articulate.sigma.tp.Vampire vRun = Boolean.TRUE.equals(modensPonens)
+//                                            ? kb.askVampireModensPonens(qstr, tmo, maxAns)
+//                                            : kb.askVampire(qstr, tmo, maxAns);
                                     if (vRun != null && vRun.getResult() != null) {
                                         renderATPResultPanel(vRun.getResult(), out);
                                     }
@@ -1055,59 +1060,59 @@
                                     }
                                     tpp.parseProofOutput(leoRun.output, qstr, kb, leoRun.qlist);
                                 }
-                            } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
-                                renderExceptionPanel(enfe, out);
-                            } catch (ProverTimeoutException | ProverCrashedException pte) {
-                                renderExceptionPanel(pte, out);
-                                if (pte.getResult() != null) {
-                                    renderATPResultPanel(pte.getResult(), out);
-                                }
-                            } catch (com.articulate.sigma.tp.ATPException ae) {
-                                renderExceptionPanel(ae, out);
                             }
-                        }
 
-                        setGraphFormat(graphFormulaFormat,tpp);
-                        publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-                        tpp.processAnswersFromProof(new StringBuilder(), itd.query);
+                            setGraphFormat(graphFormulaFormat,tpp);
+                            publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
+                            tpp.processAnswersFromProof(new StringBuilder(), itd.query);
 
-                        printAnswersBlock(tpp, kbName, language, out);
-                        /* Prevent duplicate answers inside HTMLformatter */
-                        if (tpp.bindingMap != null) tpp.bindingMap.clear();
-                        if (tpp.bindings   != null) tpp.bindings.clear();
+                            printAnswersBlock(tpp, kbName, language, out);
+                            /* Prevent duplicate answers inside HTMLformatter */
+                            if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                            if (tpp.bindings   != null) tpp.bindings.clear();
 
-                        out.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kbName, language));
-                        // Generate proof summary if requested
-                        if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
-                            // Extract proof steps as strings
-                            List<String> proofSteps = new ArrayList<>();
-                            for (Object formula : tpp.proof) {
-                                String stepText = "";
-                                if (formula != null) {
-                                    // Get the string representation of the formula
-                                    stepText = formula.toString();
-                                    // Try to convert to more readable format if it's in TPTP format
-                                    if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
-                                        // Extract just the formula part, skipping the TPTP wrapper
-                                        int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
-                                        int end = stepText.lastIndexOf(')');
-                                        if (start > 0 && end > start) {
-                                            stepText = stepText.substring(start, end).trim();
+                            out.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kbName, language));
+                            // Generate proof summary if requested
+                            if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
+                                // Extract proof steps as strings
+                                List<String> proofSteps = new ArrayList<>();
+                                for (Object formula : tpp.proof) {
+                                    String stepText = "";
+                                    if (formula != null) {
+                                        // Get the string representation of the formula
+                                        stepText = formula.toString();
+                                        // Try to convert to more readable format if it's in TPTP format
+                                        if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
+                                            // Extract just the formula part, skipping the TPTP wrapper
+                                            int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
+                                            int end = stepText.lastIndexOf(')');
+                                            if (start > 0 && end > start) {
+                                                stepText = stepText.substring(start, end).trim();
+                                            }
                                         }
+                                        // Clean up the text
+                                        stepText = stepText.replaceAll("\\s+", " ").trim();
                                     }
-                                    // Clean up the text
-                                    stepText = stepText.replaceAll("\\s+", " ").trim();
+                                    if (!stepText.isEmpty()) {
+                                        proofSteps.add(stepText);
+                                    }
                                 }
-                                if (!stepText.isEmpty()) {
-                                    proofSteps.add(stepText);
-                                }
-                            }
 
-                            // Generate and display the summary
-                            String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
-                            if (!proofSummary.isEmpty()) {
-                                out.println(proofSummary);
+                                // Generate and display the summary
+                                String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
+                                if (!proofSummary.isEmpty()) {
+                                    out.println(proofSummary);
+                                }
                             }
+                        } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
+                            renderExceptionPanel(enfe, out);
+                        } catch (ProverTimeoutException | ProverCrashedException pte) {
+                            renderExceptionPanel(pte, out);
+                            if (pte.getResult() != null) {
+                                renderATPResultPanel(pte.getResult(), out);
+                            }
+                        } catch (com.articulate.sigma.tp.ATPException ae) {
+                            renderExceptionPanel(ae, out);
                         }
                     }
                 } else if (ext.endsWith(".tptp") || ext.endsWith(".tff")) {
@@ -1475,8 +1480,95 @@
         } // end else (generation not in progress)
     }
 
-    if (status != null && status.toString().length() > 0) { out.println("Status: "); out.println(status.toString()); }
+    // ===== Server-side execution for "Tell" button =====
+    if ("Tell".equalsIgnoreCase(req) && !syntaxError) {
+        try {
+            final java.util.concurrent.atomic.AtomicBoolean mustRegenBaseRef =
+                    new java.util.concurrent.atomic.AtomicBoolean(false);
+            final java.util.concurrent.atomic.AtomicReference<String> tellResultRef =
+                    new java.util.concurrent.atomic.AtomicReference<>("");
+            final java.util.concurrent.atomic.AtomicReference<String> regenLangRef =
+                    new java.util.concurrent.atomic.AtomicReference<>("tptp");
+
+            final String tellStmt = stmt;
+            final JspWriter jspOut = out;  // Capture for use in lambda
+
+            // ONE atomic critical section
+            kb.withUserAssertionLock(() -> {
+
+                boolean mustRegen = kb.tellRequiresBaseRegeneration(tellStmt);
+                mustRegenBaseRef.set(mustRegen);
+
+                String tellResult = kb.tell(tellStmt);
+                tellResultRef.set(tellResult);
+
+                if (mustRegen) {
+                    final String requestedLang = SUMOKBtoTPTPKB.lang; // "fof" or "tff"
+                    final String lang = "fof".equals(requestedLang) ? "tptp" : "tff";
+                    regenLangRef.set(lang);
+
+                    // Update spinner message before slow regen (early flush to iframe)
+                    jspOut.println("<script>");
+                    jspOut.println("if(parent.document.getElementById('spinTitle'))");
+                    jspOut.println("  parent.document.getElementById('spinTitle').textContent='Regenerating KB...';");
+                    jspOut.println("if(parent.document.getElementById('spinSub'))");
+                    jspOut.println("  parent.document.getElementById('spinSub').textContent='Full TPTP regen required - please wait';");
+                    jspOut.println("</script>");
+                    jspOut.flush();
+
+                    System.out.println("INFO AskTell.jsp(Tell): FULL base regen required -> regenerating "
+                            + kb.name + "." + lang + " (Tell changed schema/transitive facts)");
+
+                    TPTPGenerationManager.generateProperFile(kb, lang);
+                }
+
+                return null;
+            });
+
+            final boolean mustRegenBase = mustRegenBaseRef.get();
+            final String tellResult = tellResultRef.get();
+            final String regenLang = regenLangRef.get();
+
+            final boolean ok =
+                    tellResult != null
+                            && !tellResult.toLowerCase().startsWith("error")
+                            && !tellResult.toLowerCase().contains("could not be added");
 %>
+    <div class="atp-result-panel">
+        <div class="result-header">
+            <span class="szs-badge <%= ok ? "szs-success" : "szs-error" %>"><%= ok ? "Success" : "Error" %></span>
+            <span class="engine-tag">Tell Assertion</span>
+        </div>
+
+        <div class="result-meta">
+        <span>Formula:
+            <code><%= htmlEncode(stmt.length() > 120 ? stmt.substring(0, 120) + "..." : stmt) %></code>
+        </span>
+            <% if (mustRegenBase) { %>
+            <span style="color:#b35900;">Triggered base regen: <code><%= kb.name %>.<%= regenLang %></code></span>
+            <% } %>
+        </div>
+
+        <% if (mustRegenBase) { %>
+        <div style="border:1px solid #ff9900; background:#fff8f0; padding:10px; border-radius:6px; margin-top:10px;">
+            <b>Warning:</b> This Tell changed schema/transitive facts, so a full base regeneration was required.
+        </div>
+        <% } %>
+
+        <div style="margin-top: 10px; padding: 10px; background: #f6f8fa; border-radius: 4px;">
+            <%= htmlEncode(tellResult) %>
+        </div>
+    </div>
+    <%
+            } catch (com.articulate.sigma.tp.FormulaTranslationException fte) {
+                renderExceptionPanel(fte, out);
+            } catch (com.articulate.sigma.tp.ArityException ae) {
+                renderExceptionPanel(ae, out);
+            } catch (com.articulate.sigma.tp.ATPException atpe) {
+                renderExceptionPanel(atpe, out);
+            }
+        }
+    %>
 </div>
 
 <%!
@@ -1750,6 +1842,7 @@
                 const pct   = document.getElementById('spinPct');
                 const eta   = document.getElementById('spinEta');
                 const limit = document.getElementById('spinLimit');
+                const spinTitle = document.getElementById('spinTitle');
 
                 let clicked = null;
                 let rafId = null;
@@ -1796,17 +1889,23 @@
                     b.addEventListener('click', e => clicked = e.target.value)
                 );
 
-                // Run submits into iframe so the page stays alive
+                // Run and Tell submit into iframe so the page stays alive
                 form.addEventListener('submit', function(){
-                    if (clicked !== 'Run') {
-                        form.removeAttribute('target'); // normal for Tell
+                    if (clicked !== 'Run' && clicked !== 'Tell') {
+                        form.removeAttribute('target');
                         return;
                     }
 
                     form.setAttribute('target', 'runFrame');
 
+                    // Tell is typically fast, use 10s; Run uses user-specified timeout
                     const timeoutField = form.querySelector('input[name="timeout"]');
-                    const tSec = clampInt(timeoutField ? timeoutField.value : null, 30);
+                    const tSec = (clicked === 'Tell') ? 10 : clampInt(timeoutField ? timeoutField.value : null, 30);
+
+                    // Update spinner title based on action
+                    if (spinTitle) {
+                        spinTitle.textContent = (clicked === 'Tell') ? 'Adding assertion...' : 'Running inference...';
+                    }
 
                     runInFlight = true;
                     overlay.style.display = 'block';

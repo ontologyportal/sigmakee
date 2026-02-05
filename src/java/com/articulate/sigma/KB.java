@@ -57,6 +57,8 @@ MA  02111-1307 USA
 */
 
 import com.articulate.sigma.tp.ATPException;
+import com.articulate.sigma.tp.ArityException;
+import com.articulate.sigma.tp.FormulaTranslationException;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
@@ -206,6 +208,23 @@ public class KB implements Serializable {
     public static boolean dropOnePremiseFormulas = false;
 
     public static boolean modensPonens = false;
+
+    // Serialize any mutation of UserAssertions state (memory + disk + UA translation)
+    private final Object uaLock = new Object();
+
+
+    // Helper method to expose uaLock to other classes.
+    public <T> T withUserAssertionLock(java.util.concurrent.Callable<T> c) {
+        synchronized (uaLock) {
+            try { return c.call(); }
+            catch (Exception e) { throw new RuntimeException(e); }
+        }
+    }
+
+    // Serialize base SUMO.<lang> regeneration decisions + generation trigger
+    // (You can also keep generation manager atomics, but this protects the policy boundary.)
+    private final Object baseGenLock = new Object();
+
     /***************************************************************
      */
     public KB() {
@@ -1655,119 +1674,111 @@ public class KB implements Serializable {
      */
     public String tell(String input) {
 
-        //System.out.println("KB.tell: eprover: " + eprover);
-        //if (eprover == null) {
-        //    System.err.println("Error in KB.tell: eprover not initialized");
-        //    return null;
-        //}
+        synchronized (uaLock) {
 
-        String result = "The formula could not be added";
-        KBmanager mgr = KBmanager.getMgr();
-        KIF kif = new KIF(); // 1. Parse the input string.
-        String msg = kif.parseStatement(input);
-        if (msg != null) {
-            result = "Error parsing \"" + input + "\" " + msg;
-            return result;
-        }
-        if (kif.formulaMap.keySet().isEmpty()) {
-            result = "The input could not be parsed";
-            return result;
-        }
-        try { // Make the pathname of the user assertions file.
-            String userAssertionKIF = this.name + _userAssertionsString;
-            String userAssertionTFF = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tff";
-            String userAssertionTPTP = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tptp";
-            String userAssertionTHF = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".thf";
-            File dir = new File(this.kbDir);
-            File kiffile = new File(dir, (userAssertionKIF)); // create kb.name_UserAssertions.kif
-            File tptpfile = null;  // kb.name_UserAssertions.tptp
-            if (SUMOKBtoTPTPKB.lang.equals("fof"))
-                tptpfile = new File(dir, (userAssertionTPTP));
-            if (SUMOKBtoTPTPKB.lang.equals("tff"))
-                tptpfile = new File(dir, (userAssertionTFF));
-            if (SUMOKBtoTPTPKB.lang.equals("thf"))
-                tptpfile = new File(dir, (userAssertionTHF));
-            String filename = kiffile.getCanonicalPath();
-            List<Formula> formulasAlreadyPresent = merge(kif, filename);
-            // only check formulasAlreadyPresent when filterSimpleOnly = false;
-            // otherwise, some user assertions/axioms will not be asserted for
-            // inference, since these axioms do exist in formulasAlreadyPresent but not in
-            // SUMO.tptp. In the future, when SUMO can completely run using whole KB, we
-            // can remove SUMOKBtoTPTPKB.fitlerSimpleOnly==false;
-            if (!SUMOKBtoTPTPKB.FILTER_SIMPLE_ONLY && !formulasAlreadyPresent.isEmpty()) {
-                String sf = formulasAlreadyPresent.get(0).sourceFile;
-                result = "The formula was already added from " + sf;
+            String result = "The formula could not be added";
+            KBmanager mgr = KBmanager.getMgr();
+            KIF kif = new KIF(); // 1. Parse the input string.
+            String msg = kif.parseStatement(input);
+            if (msg != null) {
+                throw new FormulaTranslationException("Error parsing \"" + input + "\": " + msg, "KIF");
             }
-            else {
-                List<Formula> parsedFormulas = new ArrayList();
-                String term;
-                for (Formula parsedF : kif.formulaMap.values()) { // 2. Confirm that the input has been
-                    // converted into at least one Formula object and stored in this.formulaMap.
-                    if (debug) System.out.println("KB.tell(): " + parsedF.toString());
-                    term = PredVarInst.hasCorrectArity(parsedF, this);
-                    if (!StringUtil.emptyString(term)) {
-                        result = result + "Formula in " + parsedF.sourceFile
-                                + " rejected due to arity error of predicate " + term + " in formula: \n"
-                                + parsedF.getFormula();
-                    }
-                    else
-                        parsedFormulas.add(parsedF);
-                }
-                if (!parsedFormulas.isEmpty()) {
-                    if (!constituents.contains(filename)) {
-                        if (kiffile.exists()) // 3. If the assertions file exists, delete it.
-                            kiffile.delete();
-                        if (tptpfile.exists())
-                            tptpfile.delete();
-                        constituents.add(filename);
-                    }
-                    for (Formula parsedF : parsedFormulas) { // 4. Write the formula to the user assertions file.
-                        parsedF.endFilePosition = writeUserAssertion(parsedF.getFormula(), filename);
-                        parsedF.sourceFile = filename;
-                    }
-                    result = "The formula has been added for browsing";
-                    // 5. Write the formula to the kb.name_UserAssertions.tptp/tff
-                    if (null == KBmanager.getMgr().prover) result += " but not for local inference";
-                    else
-                        switch (KBmanager.getMgr().prover) {
-                            case EPROVER:
-                                if (debug) System.out.println("KB.tell: using eprover: " + eprover);
-                                eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover, parsedFormulas,
-                                        !mgr.getPref("TPTP").equalsIgnoreCase("no"));
-                                EProver.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
-                                if (this.eprover == null)
-                                    eprover = new EProver(mgr.getPref("eprover")); // 7. Reload eprover
-                                result += " and inference";
-                                break;
-                            case VAMPIRE:
-                                if (debug) System.out.println("KB.tell: using vampire");
-                                Vampire.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
-                                        !mgr.getPref("TPTP").equalsIgnoreCase("no"));
-                                // nothing much to do since Vampire has to load it all at query time
-                                // just create a single file
-                                result += " and inference";
-                                break;
-                            case LEO:
-                                if (debug) System.out.println("KB.tell: using leo");
-                                LEO.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
-                                        !mgr.getPref("TPTP").equalsIgnoreCase("no"));
-                                // nothing much to do since LEO has to load it all at query time
-                                // just create a single file
-                                result += " and inference";
-                                break;
-                            default:
-                                result += " but not for local inference";
-                                break;
+            if (kif.formulaMap.keySet().isEmpty()) {
+                throw new FormulaTranslationException("The input could not be parsed", "KIF");
+            }
+            try { // Make the pathname of the user assertions file.
+                String userAssertionKIF = this.name + _userAssertionsString;
+                String userAssertionTFF = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tff";
+                String userAssertionTPTP = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tptp";
+                String userAssertionTHF = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".thf";
+                File dir = new File(this.kbDir);
+                File kiffile = new File(dir, (userAssertionKIF)); // create kb.name_UserAssertions.kif
+                File tptpfile = null;  // kb.name_UserAssertions.tptp
+                if (SUMOKBtoTPTPKB.lang.equals("fof"))
+                    tptpfile = new File(dir, (userAssertionTPTP));
+                if (SUMOKBtoTPTPKB.lang.equals("tff"))
+                    tptpfile = new File(dir, (userAssertionTFF));
+                if (SUMOKBtoTPTPKB.lang.equals("thf"))
+                    tptpfile = new File(dir, (userAssertionTHF));
+                String filename = kiffile.getCanonicalPath();
+                List<Formula> formulasAlreadyPresent = merge(kif, filename);
+                // only check formulasAlreadyPresent when filterSimpleOnly = false;
+                // otherwise, some user assertions/axioms will not be asserted for
+                // inference, since these axioms do exist in formulasAlreadyPresent but not in
+                // SUMO.tptp. In the future, when SUMO can completely run using whole KB, we
+                // can remove SUMOKBtoTPTPKB.fitlerSimpleOnly==false;
+                if (!SUMOKBtoTPTPKB.FILTER_SIMPLE_ONLY && !formulasAlreadyPresent.isEmpty()) {
+                    String sf = formulasAlreadyPresent.get(0).sourceFile;
+                    result = "The formula was already added from " + sf;
+                } else {
+                    List<Formula> parsedFormulas = new ArrayList();
+                    String term;
+                    for (Formula parsedF : kif.formulaMap.values()) { // 2. Confirm that the input has been
+                        // converted into at least one Formula object and stored in this.formulaMap.
+                        if (debug) System.out.println("KB.tell(): " + parsedF.toString());
+                        term = PredVarInst.hasCorrectArity(parsedF, this);
+                        if (!StringUtil.emptyString(term)) {
+                            throw new ArityException(parsedF.getFormula(), term);
                         }
+                        parsedFormulas.add(parsedF);
+                    }
+                    if (!parsedFormulas.isEmpty()) {
+                        if (!constituents.contains(filename)) {
+                            if (kiffile.exists()) // 3. If the assertions file exists, delete it.
+                                kiffile.delete();
+                            if (tptpfile.exists())
+                                tptpfile.delete();
+                            constituents.add(filename);
+                        }
+                        for (Formula parsedF : parsedFormulas) { // 4. Write the formula to the user assertions file.
+                            parsedF.endFilePosition = writeUserAssertion(parsedF.getFormula(), filename);
+                            parsedF.sourceFile = filename;
+                        }
+                        result = "The formula has been added for browsing";
+                        // 5. Write the formula to the kb.name_UserAssertions.tptp/tff
+                        if (null == KBmanager.getMgr().prover) result += " but not for local inference";
+                        else
+                            switch (KBmanager.getMgr().prover) {
+                                case EPROVER:
+                                    if (debug) System.out.println("KB.tell: using eprover: " + eprover);
+                                    eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover, parsedFormulas,
+                                            !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                                    EProver.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
+                                    if (this.eprover == null)
+                                        eprover = new EProver(mgr.getPref("eprover")); // 7. Reload eprover
+                                    result += " and inference";
+                                    break;
+                                case VAMPIRE:
+                                    if (debug) System.out.println("KB.tell: using vampire");
+                                    Vampire.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
+                                            !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                                    // nothing much to do since Vampire has to load it all at query time
+                                    // just create a single file
+                                    result += " and inference";
+                                    break;
+                                case LEO:
+                                    if (debug) System.out.println("KB.tell: using leo");
+                                    LEO.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
+                                            !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                                    // nothing much to do since LEO has to load it all at query time
+                                    // just create a single file
+                                    result += " and inference";
+                                    break;
+                                default:
+                                    result += " but not for local inference";
+                                    break;
+                            }
+                    }
                 }
+            } catch (ATPException ae) {
+                throw ae;  // Re-throw to caller
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+                System.err.println(ioe.getMessage());
+                result = ioe.getMessage();
             }
+            return result;
         }
-        catch (IOException ioe) {
-            ioe.printStackTrace();
-            System.err.println(ioe.getMessage());
-            result = ioe.getMessage();
-        }
-        return result;
     }
 
     /***************************************************************
@@ -1996,6 +2007,109 @@ public class KB implements Serializable {
 
         return null;
     }
+
+
+    public Vampire askVampireForTQ(String suoKifFormula, int timeout, int maxAnswers, boolean modensPonens) {
+
+        // capture per-request to avoid races
+        final String requestedLang = SUMOKBtoTPTPKB.lang;          // typically "fof" or "tff"
+        final String lang = "fof".equals(requestedLang) ? "tptp" : "tff";
+
+
+        boolean mustRegenBase = tqRequiresBaseRegeneration();
+
+        if (mustRegenBase) {
+            System.out.println("INFO askVampireForTQ(): FULL base regen required -> regenerating "
+                    + this.name + "." + lang
+                    + " (current TQ assertions require base retranslation)");
+            synchronized (baseGenLock) {
+                TPTPGenerationManager.generateProperFile(this, lang);  // rebuild SUMO.<lang>
+            }
+        }
+
+        // Run prover
+        return modensPonens
+                ? askVampireModensPonens(suoKifFormula, timeout, maxAnswers)
+                : askVampire(suoKifFormula, timeout, maxAnswers);
+    }
+
+
+    /** ***************************************************************
+     * Return true if THIS input (about to be told) requires base regen.
+     */
+    public boolean tellRequiresBaseRegeneration(String input) {
+
+        KIF kif = new KIF();
+        String msg = kif.parseStatement(input);
+
+        // If it doesn't parse, tell() will fail anyway → no regen decision needed here
+        if (msg != null) return false;
+
+        if (kif.formulaMap == null || kif.formulaMap.isEmpty()) return false;
+
+        return requiresBaseRegenForFormulas(kif.formulaMap.values());
+    }
+
+
+
+    /** ***************************************************************
+     * Decide if a set of formulas requires full base regen (SUMO.<lang>).
+     */
+    private boolean requiresBaseRegenForFormulas(java.util.Collection<Formula> fs) {
+
+        // Fail-safe: if we can’t decide transitivity, force regen
+        if (kbCache == null) return true;
+
+        for (Formula f : fs) {
+            if (f == null) continue;
+
+            String pred = f.car();
+            if (pred == null) continue;
+            pred = pred.trim();
+
+            // skip weird / logical cases
+            if (pred.startsWith("(")) continue;
+            if (Formula.isLogicalOperator(pred)) continue;
+
+            // (A) schema / hierarchy changes => global impact
+            if ("subclass".equals(pred) || "subrelation".equals(pred) ||
+                    "domain".equals(pred)  || "range".equals(pred) ||
+                    "disjoint".equals(pred) || "partition".equals(pred)) {
+                return true;
+            }
+
+            // (B) ground assertion on transitive predicate => cache/closure impact
+            if (f.isGround() && kbCache.isTransitivePredicate(pred)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
+
+    /** ***************************************************************
+     * Return true if the current TQ user assertions require rebuilding the base SUMO.<lang>.
+     * Conservative v1: rebuild on schema changes or ground transitive facts.
+     */
+    public boolean tqRequiresBaseRegeneration() {
+
+        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        File uaKif = new File(dir, this.name + KB._userAssertionsString); // "_UserAssertions.kif"
+        if (!uaKif.exists()) return false; // no tells => no impact
+
+        // If we cannot decide transitivity, fail-safe
+        if (kbCache == null) return true;
+
+        KIF ua = readConstituent(uaKif.getAbsolutePath());
+        if (ua == null || ua.formulaMap == null || ua.formulaMap.isEmpty()) return false;
+
+        return requiresBaseRegenForFormulas(ua.formulaMap.values());
+    }
+
+
+
 
     /**
      * STEPS:
@@ -4110,11 +4224,13 @@ public class KB implements Serializable {
             lang = "tptp";
 
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld() || force) {
+        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(lang) || force) {
             System.out.println("INFO in KB.loadVampire(): infFilename=" + !(new File(infFilename).exists()));
             System.out.println("INFO in KB.loadVampire(): managerInfFileOld " + KBmanager.getMgr().infFileOld());
             System.out.println("INFO in KB.loadVampire(): force=" + force);
-            TPTPGenerationManager.generateProperFile(this, lang);
+            synchronized (baseGenLock) {
+                TPTPGenerationManager.generateProperFile(this, lang);
+            }
         }
     }
 
@@ -4400,6 +4516,74 @@ public class KB implements Serializable {
         }
         return sourceAxioms;
     }
+
+    /** ***************************************************************
+     * Count how many Formula objects currently in memory came from the per-test
+     * user assertions file (e.g. SUMO_UserAssertions.kif).
+     */
+    public int countUserAssertionFormulasInMemory() {
+
+        final String uaFileName = this.name + _userAssertionsString; // "_UserAssertions.kif"
+        int count = 0;
+
+        for (Formula f : formulaMap.values()) {
+            if (f == null) continue;
+            if (f.sourceFile == null) continue;
+
+            // sourceFile is typically a full path; compare by basename
+            String srcBase = new java.io.File(f.sourceFile).getName();
+            if (uaFileName.equals(srcBase)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /** ***************************************************************
+     * Remove all formulas in memory whose sourceFile is <KBNAME>_UserAssertions.kif.
+     * Returns how many formulas were removed from formulaMap.
+     */
+    public int purgeUserAssertionsFromMemory() {
+
+        final String uaFileName = this.name + _userAssertionsString; // e.g. SUMO_UserAssertions.kif
+        java.util.Set<String> toRemove = new java.util.HashSet<>();
+
+        // Collect formula strings to remove (keys in formulaMap are f.getFormula())
+        for (java.util.Map.Entry<String, Formula> e : formulaMap.entrySet()) {
+            Formula f = e.getValue();
+            if (f == null || f.sourceFile == null) continue;
+            String srcBase = new java.io.File(f.sourceFile).getName();
+            if (uaFileName.equals(srcBase)) {
+                toRemove.add(e.getKey());
+            }
+        }
+
+        // Remove from formulaMap
+        for (String fs : toRemove) {
+            formulaMap.remove(fs);
+        }
+
+        // Remove from formulas index (key -> list of formula strings)
+        java.util.Iterator<java.util.Map.Entry<String, java.util.List<String>>> it = formulas.entrySet().iterator();
+        while (it.hasNext()) {
+            java.util.Map.Entry<String, java.util.List<String>> en = it.next();
+            java.util.List<String> lst = en.getValue();
+            if (lst == null) continue;
+
+            java.util.Iterator<String> lit = lst.iterator();
+            while (lit.hasNext()) {
+                String fs = lit.next();
+                if (toRemove.contains(fs)) {
+                    lit.remove();
+                }
+            }
+            if (lst.isEmpty()) it.remove();
+        }
+
+        return toRemove.size();
+    }
+
+
 
     /*****************************************************************
      */
