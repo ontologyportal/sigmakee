@@ -268,4 +268,184 @@ public class KBTest extends UnitTestBase {
         assertFalse(motherFormats.isEmpty());
     }
 
+
+
+
+    /** ***************************************************************
+     * infBaseFileOldIgnoringUserAssertions(lang): missing base file => true
+     */
+    @Test
+    public void testInfBaseFileOldIgnoringUserAssertionsMissingBaseReturnsTrue() throws Exception {
+
+        final KBmanager mgr = KBmanager.getMgr();
+        final java.util.Map<String, KB> oldKbs = getKBsMapReflect(mgr);
+
+        final java.io.File kbDir = new java.io.File(KButilities.SIGMA_HOME + java.io.File.separator + "KBs");
+        assertTrue("KBs dir not found: " + kbDir, kbDir.exists() && kbDir.isDirectory());
+
+        String kbName = "TESTKB_INFOLD_" + System.nanoTime();
+        java.io.File baseTptp = new java.io.File(kbDir, kbName + ".tptp");
+        if (baseTptp.exists())
+            //noinspection ResultOfMethodCallIgnored
+            baseTptp.delete();
+
+        java.io.File tmp = java.nio.file.Files.createTempDirectory("infOld-missing").toFile();
+        java.io.File nonUa = new java.io.File(tmp, kbName + "_Base.kif");
+        writeAndTouch(nonUa, 1500L);
+        java.io.File ua = new java.io.File(tmp, kbName + "_UserAssertions.kif");
+        writeAndTouch(ua, 2500L);
+
+        KB testKb = new KB(kbName);
+        testKb.constituents.add(nonUa.getAbsolutePath());
+        testKb.constituents.add(ua.getAbsolutePath());
+
+        try {
+            setKBsMapReflect(mgr, new java.util.HashMap<>());
+            getKBsMapReflect(mgr).put(kbName, testKb);
+
+            assertTrue(mgr.infBaseFileOldIgnoringUserAssertions("tptp"));
+        }
+        finally {
+            setKBsMapReflect(mgr, oldKbs);
+            deleteRecursively(tmp);
+            if (baseTptp.exists())
+                //noinspection ResultOfMethodCallIgnored
+                baseTptp.delete();
+        }
+    }
+
+    /** ***************************************************************
+     * infBaseFileOldIgnoringUserAssertions(lang): UA newer than base is ignored => false
+     */
+    @Test
+    public void testInfBaseFileOldIgnoringUserAssertionsUANewerIgnoredReturnsFalse() throws Exception {
+
+        final KBmanager mgr = KBmanager.getMgr();
+        final java.util.Map<String, KB> oldKbs = getKBsMapReflect(mgr);
+
+        final java.io.File kbDir = new java.io.File(KButilities.SIGMA_HOME + java.io.File.separator + "KBs");
+        assertTrue("KBs dir not found: " + kbDir, kbDir.exists() && kbDir.isDirectory());
+
+        String kbName = "TESTKB_INFOLD_" + System.nanoTime();
+
+        // Create base translation file in SIGMA_HOME/KBs with a future timestamp (guaranteed newer than config.xml)
+        long baseTs = System.currentTimeMillis() + 60_000L;
+        java.io.File baseTptp = new java.io.File(kbDir, kbName + ".tptp");
+        writeAndTouch(baseTptp, baseTs);
+
+        java.io.File tmp = java.nio.file.Files.createTempDirectory("infOld-uaIgnored").toFile();
+
+        // non-UA constituent older than base
+        java.io.File nonUa = new java.io.File(tmp, kbName + "_Base.kif");
+        writeAndTouch(nonUa, baseTs - 10_000L);
+
+        // UA newer than base, but should be ignored
+        java.io.File ua = new java.io.File(tmp, kbName + "_UserAssertions.kif");
+        writeAndTouch(ua, baseTs + 10_000L);
+
+        KB testKb = new KB(kbName);
+        testKb.constituents.add(nonUa.getAbsolutePath());
+        testKb.constituents.add(ua.getAbsolutePath());
+
+        try {
+            setKBsMapReflect(mgr, new java.util.HashMap<>());
+            getKBsMapReflect(mgr).put(kbName, testKb);
+
+            assertFalse(mgr.infBaseFileOldIgnoringUserAssertions("tptp"));
+        }
+        finally {
+            setKBsMapReflect(mgr, oldKbs);
+            deleteRecursively(tmp);
+            if (baseTptp.exists())
+                //noinspection ResultOfMethodCallIgnored
+                baseTptp.delete();
+        }
+    }
+
+    /** ***************************************************************
+     * infBaseFileOldIgnoringUserAssertions(lang): non-UA constituent newer than base => true
+     */
+    @Test
+    public void testInfBaseFileOldIgnoringUserAssertionsNonUaConstituentNewerReturnsTrue() throws Exception {
+
+        final KBmanager mgr = KBmanager.getMgr();
+        final java.util.Map<String, KB> oldKbs = getKBsMapReflect(mgr);
+
+        final java.io.File kbDir = new java.io.File(KButilities.SIGMA_HOME + java.io.File.separator + "KBs");
+        assertTrue("KBs dir not found: " + kbDir, kbDir.exists() && kbDir.isDirectory());
+
+        String kbName = "TESTKB_INFOLD_" + System.nanoTime();
+
+        long baseTs = System.currentTimeMillis() + 60_000L;
+        java.io.File baseTptp = new java.io.File(kbDir, kbName + ".tptp");
+        writeAndTouch(baseTptp, baseTs);
+
+        java.io.File tmp = java.nio.file.Files.createTempDirectory("infOld-nonUaNewer").toFile();
+
+        // non-UA newer than base => must return true
+        java.io.File nonUa = new java.io.File(tmp, kbName + "_Base.kif");
+        writeAndTouch(nonUa, baseTs + 10_000L);
+
+        // UA present, but irrelevant
+        java.io.File ua = new java.io.File(tmp, kbName + "_UserAssertions.kif");
+        writeAndTouch(ua, baseTs - 10_000L);
+
+        KB testKb = new KB(kbName);
+        testKb.constituents.add(nonUa.getAbsolutePath());
+        testKb.constituents.add(ua.getAbsolutePath());
+
+        try {
+            setKBsMapReflect(mgr, new java.util.HashMap<>());
+            getKBsMapReflect(mgr).put(kbName, testKb);
+
+            assertTrue(mgr.infBaseFileOldIgnoringUserAssertions("tptp"));
+        }
+        finally {
+            setKBsMapReflect(mgr, oldKbs);
+            deleteRecursively(tmp);
+            if (baseTptp.exists())
+                //noinspection ResultOfMethodCallIgnored
+                baseTptp.delete();
+        }
+    }
+
+    // ===================== helpers (local to KBTest) =====================
+
+    @SuppressWarnings("unchecked")
+    private static java.util.Map<String, KB> getKBsMapReflect(KBmanager mgr) throws Exception {
+        java.lang.reflect.Field f = mgr.getClass().getDeclaredField("kbs");
+        f.setAccessible(true);
+        return (java.util.Map<String, KB>) f.get(mgr);
+    }
+
+    private static void setKBsMapReflect(KBmanager mgr, java.util.Map<String, KB> map) throws Exception {
+        java.lang.reflect.Field f = mgr.getClass().getDeclaredField("kbs");
+        f.setAccessible(true);
+        f.set(mgr, map);
+    }
+
+    private static void writeAndTouch(java.io.File f, long ts) throws Exception {
+        if (!f.exists()) {
+            java.nio.file.Files.write(
+                    f.toPath(),
+                    ("x\n").getBytes(java.nio.charset.StandardCharsets.UTF_8)
+            );
+        }
+        assertTrue("setLastModified failed for " + f, f.setLastModified(ts));
+    }
+
+    private static void deleteRecursively(java.io.File f) {
+        if (f == null || !f.exists()) return;
+        if (f.isDirectory()) {
+            java.io.File[] kids = f.listFiles();
+            if (kids != null) for (java.io.File k : kids) deleteRecursively(k);
+        }
+        //noinspection ResultOfMethodCallIgnored
+        f.delete();
+    }
+
+
+
+
+
 }

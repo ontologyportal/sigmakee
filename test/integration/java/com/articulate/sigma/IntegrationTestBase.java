@@ -5,6 +5,7 @@ import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import java.io.File;
 import java.io.IOException;
 
+import com.articulate.sigma.trans.TPTPGenerationManager;
 import org.junit.BeforeClass;
 
 /** ***************************************************************
@@ -54,7 +55,13 @@ public class IntegrationTestBase extends SigmaTestBase {
         long startTime = System.currentTimeMillis();
 
         //SigmaTestBase.doSetUp(xmlReader);
+
         KBmanager.getMgr().initializeOnce();
+
+        while (!TPTPGenerationManager.isFOFReady()){
+            TPTPGenerationManager.waitForFOF(600);
+        }
+
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         kbBackup = new KB(kb);
         checkConfiguration();

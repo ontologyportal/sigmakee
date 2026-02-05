@@ -265,6 +265,36 @@ public class KBmanager implements Serializable {
     }
 
 
+    public boolean infBaseFileOldIgnoringUserAssertions(String lang) {
+
+        String kbDir = KButilities.SIGMA_HOME + File.separator + "KBs";
+        File configFile = new File(kbDir + File.separator + "config.xml");
+        long configTs = configFile.lastModified();
+
+        for (String kbname : kbs.keySet()) {
+            KB kb = getKB(kbname);
+
+            File base = new File(kbDir + File.separator + kbname + "." + lang);
+            long baseTs = base.lastModified();
+
+            if (baseTs == 0L) return true;           // missing
+            if (baseTs < configTs) return true;      // config newer
+
+            for (String f : kb.constituents) {
+                File sfile = new File(f);
+
+                // skip dynamic per-test file
+                if (sfile.getName().equals(kbname + "_UserAssertions.kif"))
+                    continue;
+
+                if (baseTs < sfile.lastModified())
+                    return true;
+            }
+        }
+        return false;
+    }
+
+
     /** ***************************************************************
      *  Check whether config file or any .kif constituent is newer than its
      *  corresponding TPTP/TFF/THF file

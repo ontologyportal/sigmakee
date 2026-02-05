@@ -1135,6 +1135,16 @@ public class KBcache implements Serializable {
         }
     }
 
+    public boolean isTransitivePredicate(String pred) {
+        if (StringUtil.emptyString(pred)) return false;
+
+        // ensure built
+        if (transRels == null || transRels.isEmpty()) {
+            buildTransitiveRelationsSet(); // or ensureCachesBuilt()
+        }
+        return transRels.contains(pred);
+    }
+
     /** ***************************************************************
      * Do a proper search for relations (including Functions), utilizing
      * the formal definitions, rather than the convention of initial
