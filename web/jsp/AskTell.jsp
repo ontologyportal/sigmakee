@@ -1483,32 +1483,82 @@
     // ===== Server-side execution for "Tell" button =====
     if ("Tell".equalsIgnoreCase(req) && !syntaxError) {
         try {
-            String tellResult = kb.tell(stmt);
-%>
-<div class="atp-result-panel">
-    <div class="result-header">
-        <span class="szs-badge szs-success">Success</span>
-        <span class="engine-tag">Tell Assertion</span>
-    </div>
-    <div class="result-meta">
-        <span>Formula: <code><%= stmt.length() > 80 ? stmt.substring(0, 80) + "..." : stmt %></code></span>
-    </div>
-    <div style="margin-top: 10px; padding: 10px; background: #f6f8fa; border-radius: 4px;">
-        <%= tellResult %>
-    </div>
-</div>
-<%
-        } catch (com.articulate.sigma.tp.FormulaTranslationException fte) {
-            renderExceptionPanel(fte, out);
-        } catch (com.articulate.sigma.tp.ArityException ae) {
-            renderExceptionPanel(ae, out);
-        } catch (com.articulate.sigma.tp.ATPException atpe) {
-            renderExceptionPanel(atpe, out);
-        }
-    }
+            final java.util.concurrent.atomic.AtomicBoolean mustRegenBaseRef =
+                    new java.util.concurrent.atomic.AtomicBoolean(false);
+            final java.util.concurrent.atomic.AtomicReference<String> tellResultRef =
+                    new java.util.concurrent.atomic.AtomicReference<>("");
+            final java.util.concurrent.atomic.AtomicReference<String> regenLangRef =
+                    new java.util.concurrent.atomic.AtomicReference<>("tptp");
 
-    if (status != null && status.toString().length() > 0) { out.println("Status: "); out.println(status.toString()); }
+            final String tellStmt = stmt;
+
+            // ONE atomic critical section
+            kb.withUserAssertionLock(() -> {
+
+                boolean mustRegen = kb.tellRequiresBaseRegeneration(tellStmt);
+                mustRegenBaseRef.set(mustRegen);
+
+                String tellResult = kb.tell(tellStmt);
+                tellResultRef.set(tellResult);
+
+                if (mustRegen) {
+                    final String requestedLang = SUMOKBtoTPTPKB.lang; // "fof" or "tff"
+                    final String lang = "fof".equals(requestedLang) ? "tptp" : "tff";
+                    regenLangRef.set(lang);
+
+                    System.out.println("INFO AskTell.jsp(Tell): FULL base regen required -> regenerating "
+                            + kb.name + "." + lang + " (Tell changed schema/transitive facts)");
+
+                    TPTPGenerationManager.generateProperFile(kb, lang);
+                }
+
+                return null;
+            });
+
+            final boolean mustRegenBase = mustRegenBaseRef.get();
+            final String tellResult = tellResultRef.get();
+            final String regenLang = regenLangRef.get();
+
+            final boolean ok =
+                    tellResult != null
+                            && !tellResult.toLowerCase().startsWith("error")
+                            && !tellResult.toLowerCase().contains("could not be added");
 %>
+    <div class="atp-result-panel">
+        <div class="result-header">
+            <span class="szs-badge <%= ok ? "szs-success" : "szs-error" %>"><%= ok ? "Success" : "Error" %></span>
+            <span class="engine-tag">Tell Assertion</span>
+        </div>
+
+        <div class="result-meta">
+        <span>Formula:
+            <code><%= htmlEncode(stmt.length() > 120 ? stmt.substring(0, 120) + "..." : stmt) %></code>
+        </span>
+            <% if (mustRegenBase) { %>
+            <span style="color:#b35900;">Triggered base regen: <code><%= kb.name %>.<%= regenLang %></code></span>
+            <% } %>
+        </div>
+
+        <% if (mustRegenBase) { %>
+        <div style="border:1px solid #ff9900; background:#fff8f0; padding:10px; border-radius:6px; margin-top:10px;">
+            <b>Warning:</b> This Tell changed schema/transitive facts, so a full base regeneration was required.
+        </div>
+        <% } %>
+
+        <div style="margin-top: 10px; padding: 10px; background: #f6f8fa; border-radius: 4px;">
+            <%= htmlEncode(tellResult) %>
+        </div>
+    </div>
+    <%
+            } catch (com.articulate.sigma.tp.FormulaTranslationException fte) {
+                renderExceptionPanel(fte, out);
+            } catch (com.articulate.sigma.tp.ArityException ae) {
+                renderExceptionPanel(ae, out);
+            } catch (com.articulate.sigma.tp.ATPException atpe) {
+                renderExceptionPanel(atpe, out);
+            }
+        }
+    %>
 </div>
 
 <%!

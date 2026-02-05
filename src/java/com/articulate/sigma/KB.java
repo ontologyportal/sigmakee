@@ -2034,6 +2034,60 @@ public class KB implements Serializable {
     }
 
 
+    /** ***************************************************************
+     * Return true if THIS input (about to be told) requires base regen.
+     */
+    public boolean tellRequiresBaseRegeneration(String input) {
+
+        KIF kif = new KIF();
+        String msg = kif.parseStatement(input);
+
+        // If it doesn't parse, tell() will fail anyway → no regen decision needed here
+        if (msg != null) return false;
+
+        if (kif.formulaMap == null || kif.formulaMap.isEmpty()) return false;
+
+        return requiresBaseRegenForFormulas(kif.formulaMap.values());
+    }
+
+
+
+    /** ***************************************************************
+     * Decide if a set of formulas requires full base regen (SUMO.<lang>).
+     */
+    private boolean requiresBaseRegenForFormulas(java.util.Collection<Formula> fs) {
+
+        // Fail-safe: if we can’t decide transitivity, force regen
+        if (kbCache == null) return true;
+
+        for (Formula f : fs) {
+            if (f == null) continue;
+
+            String pred = f.car();
+            if (pred == null) continue;
+            pred = pred.trim();
+
+            // skip weird / logical cases
+            if (pred.startsWith("(")) continue;
+            if (Formula.isLogicalOperator(pred)) continue;
+
+            // (A) schema / hierarchy changes => global impact
+            if ("subclass".equals(pred) || "subrelation".equals(pred) ||
+                    "domain".equals(pred)  || "range".equals(pred) ||
+                    "disjoint".equals(pred) || "partition".equals(pred)) {
+                return true;
+            }
+
+            // (B) ground assertion on transitive predicate => cache/closure impact
+            if (f.isGround() && kbCache.isTransitivePredicate(pred)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
 
     /** ***************************************************************
      * Return true if the current TQ user assertions require rebuilding the base SUMO.<lang>.
@@ -2051,30 +2105,7 @@ public class KB implements Serializable {
         KIF ua = readConstituent(uaKif.getAbsolutePath());
         if (ua == null || ua.formulaMap == null || ua.formulaMap.isEmpty()) return false;
 
-        for (Formula f : ua.formulaMap.values()) {
-            if (f == null) continue;
-
-            String pred = f.car();
-            if (pred == null) continue;
-            pred = pred.trim();
-
-            // skip non-atomic and logical operators
-            if (pred.startsWith("(")) continue;
-            if (Formula.isLogicalOperator(pred)) continue;
-
-            // (A) schema / hierarchy changes => global
-            if ("subclass".equals(pred) || "subrelation".equals(pred) ||
-                    "domain".equals(pred)  || "range".equals(pred) ||
-                    "disjoint".equals(pred) || "partition".equals(pred)) {
-                return true;
-            }
-
-            // (B) ground assertion on transitive predicate => closure cache impact
-            if (f.isGround() && kbCache.isTransitivePredicate(pred)) {
-                return true;
-            }
-        }
-        return false;
+        return requiresBaseRegenForFormulas(ua.formulaMap.values());
     }
 
 
