@@ -1491,6 +1491,7 @@
                     new java.util.concurrent.atomic.AtomicReference<>("tptp");
 
             final String tellStmt = stmt;
+            final JspWriter jspOut = out;  // Capture for use in lambda
 
             // ONE atomic critical section
             kb.withUserAssertionLock(() -> {
@@ -1505,6 +1506,15 @@
                     final String requestedLang = SUMOKBtoTPTPKB.lang; // "fof" or "tff"
                     final String lang = "fof".equals(requestedLang) ? "tptp" : "tff";
                     regenLangRef.set(lang);
+
+                    // Update spinner message before slow regen (early flush to iframe)
+                    jspOut.println("<script>");
+                    jspOut.println("if(parent.document.getElementById('spinTitle'))");
+                    jspOut.println("  parent.document.getElementById('spinTitle').textContent='Regenerating KB...';");
+                    jspOut.println("if(parent.document.getElementById('spinSub'))");
+                    jspOut.println("  parent.document.getElementById('spinSub').textContent='Full TPTP regen required - please wait';");
+                    jspOut.println("</script>");
+                    jspOut.flush();
 
                     System.out.println("INFO AskTell.jsp(Tell): FULL base regen required -> regenerating "
                             + kb.name + "." + lang + " (Tell changed schema/transitive facts)");
