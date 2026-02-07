@@ -511,6 +511,12 @@ public class THFnew {
                             process(new Formula(fmodal), typeMap, false) + ").\n");
                 }
             }
+        } else {    // Otherwise this is no modal 
+            try { 
+                oneTransNonModal(kb, f, bw);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -1539,6 +1545,7 @@ public class THFnew {
         System.out.println("  m - THF translation with modals");
         System.out.println("  r - THF tRanslation without modals");
         System.out.println("  t - test");
+        System.out.println("  g  \"<formula>\" - generate TPTP from formula");
         System.out.println("  h - show this help");
         System.out.println("  (no option) - plain THF (no modals, only $i and $o)");
     }
@@ -1567,16 +1574,25 @@ public class THFnew {
                 // DEFAULT: plain (non-modal) THF
                 System.out.println("THFnew.main(): translate to plain THF (no modals)");
                 transPlainTHF(kb);
-            }
-            else if (argMap.containsKey("t")) {
+            } else if (argMap.containsKey("t")) {
                 System.out.println("THFnew.main(): test");
                 test(kb);
-            }
-            else if (argMap.containsKey("m")) {
+            } else if (argMap.containsKey("m")) {
                 System.out.println("THFnew.main(): translate to THF with modals");
                 transModalTHF(kb);
-            }
-            else {
+            } else if (argMap.containsKey("g") && argMap.get("g").size() == 1) {
+                // TODO: Make result print to stdout 
+                String actual = StringUtil.removeEnclosingQuotes(argMap.get("g").get(0));
+                //System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(actual, false));
+                Formula f = new Formula(actual);
+                try {   // oneTrans requires catching IOException 
+                    Writer out = new BufferedWriter(new OutputStreamWriter(System.err));
+                    oneTrans(kb, f, out);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            } else {
                 showHelp();
             }
         }

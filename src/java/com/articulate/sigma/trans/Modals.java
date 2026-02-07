@@ -15,33 +15,33 @@ public class Modals {
                     Formula.KAPPAFN,
                     "believes",
                     "causesProposition",
-                    "conditionalProbability",
-                    "confersNorm",
+                    "conditionalProbability", 
+                    "confersNorm", 
                     "confersObligation",
-                    "confersRight",
+                    "confersRight", 
                     "considers",
                     "containsFormula",
-                    "decreasesLikelihood",
-                    "deprivesNorm",
+                    "decreasesLikelihood", 
+                    "deprivesNorm", 
                     "describes",
                     "desires",
                     "disapproves",
                     "doubts",
-                    "entails",
+                    "entails",  // Not modal 
                     "expects",
                     "hasPurpose",
-                    "hasPurposeForAgent",
+                    "hasPurposeForAgent", // Needs to switch formula with agent 
                     "holdsDuring",
                     "holdsObligation",
                     "holdsRight",
-                    "increasesLikelihood",
-                    "independentProbability",
+                    "increasesLikelihood",  // Not modal
+                    "independentProbability",   // Not modal
                     "knows",
                     "modalAttribute",
                     "permits",
                     "prefers",
                     "prohibits",
-                    "ProbabilityFn",
+                    "ProbabilityFn",    // Not modal 
                     "rateDetail",
                     "says",
                     "treatedPageDefinition",
@@ -65,8 +65,13 @@ public class Modals {
     // Modal operators that take an agent and a formula as arguments are
     // (<regHOLpred> ?AGENT ?FORMULA)
     public static final List<String> regHOL3pred = new ArrayList<>(
-            Arrays.asList("confersNorm","confersObligation", "confersRight",
-                    "deprivesNorm","hasPurposeForAgent"));
+            Arrays.asList(
+                    "confersNorm",          // TODO: Move Formula to 3rd 
+                    "confersObligation",    // TODO: Move Formula to 3rd 
+                    "confersRight",         // TODO: Move Formula to 3rd 
+                    "deprivesNorm",         // TODO: Move Formula to 3rd 
+                    "hasPurposeForAgent"    // TODO: Move Formula to 3rd 
+            ));
 
     public static final List<String> regHOLpred = new ArrayList<>(
             Arrays.asList("permits","prohibits","considers","sees","believes",
