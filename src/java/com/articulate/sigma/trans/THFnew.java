@@ -190,7 +190,8 @@ public class THFnew {
                         argStr.append(SUMOformulaToTPTPformula.translateWord(s, ttype, false));
                     else
                         argStr.append(processRecurse(new Formula(s), typeMap));
-                } else
+                }
+                else
                     argStr.append(processRecurse(new Formula(s), typeMap));
                 argStr.append(" @ ");
             }
@@ -213,18 +214,14 @@ public class THFnew {
                 // TODO: Fix the hard typed values
                 List<String> worldArgs = List.of("?W1", "?W2");
                 // Don't increase the term's ArityValue if it contains a World argument.
-                if (argCount > 0 && (worldArgs.contains(args.get(argCount - 1)))) {
+                if (argCount > 0 && (worldArgs.contains(args.get(argCount - 1))))
                     argCount--;
-                }
                 int oldN = Integer.parseInt(m.group(2));
-                if (argCount != oldN) {
+                if (argCount != oldN)
                     functor = m.group(1) + argCount;
-                }
             }
-
             String result = Formula.LP + functor + " @ " +
                     argStr.substring(0, argStr.length() - 1) + Formula.RP;
-
 //            String result = Formula.LP + SUMOformulaToTPTPformula.translateWord(car.getFormula(),
 //                    StreamTokenizer.TT_WORD,true) + " @ " + argStr.substring(0,argStr.length()-1) + Formula.RP;
             //if (debug) System.out.println("THFnew.processRecurse(): result: " + result);
@@ -243,38 +240,30 @@ public class THFnew {
 
         if (debug) System.out.println("THFnew.getTHFtype(): typeMap: "  + typeMap);
         if (debug) System.out.println("THFnew.getTHFtype(): typeMap(v): " + v + ":" + typeMap.get(v));
-
-
 //        if (v.startsWith("?W")) {
 //            System.out.println("V= "+v);
 //            System.out.println("typeMap(v)= "+typeMap.get(v));
 //        }
-
         // TODO: Implement a more generic solution for variable types
         // TODO: Identify why the typeMap.get(v) most of the times is Null
-        if (v.equals("?W1") || v.equals("?W2") ) {
+        if (v.equals("?W1") || v.equals("?W2") )
             return "w";
-        }
-
-        if (typeMap.get(v) == null) {
+        if (typeMap.get(v) == null)
             return "$i";
-        }
-
         if (typeMap.get(v).contains("Formula")) {
             // Treat "Formula" variables as functions from worlds to booleans,
             // as per Alex Steen / TQM10: F : w > $o, used as F @ W.
             return "(w > $o)";
         }
-
         if (typeMap.get(v).contains("World"))
             return "w";
-
         if (typeMap.get(v).contains("Modal"))
             return "m";
-
         return "$i";
     }
 
+    /** ***************************************************************
+     */
     private static String getTHFtypeNonModal(String v, Map<String, Set<String>> typeMap) {
         if (typeMap.get(v) == null)
             return "$i";
@@ -303,6 +292,8 @@ public class THFnew {
         return qlist.toString();
     }
 
+    /** ***************************************************************
+     */
     public static String generateQListNonModal(Formula f,
                                                Map<String, Set<String>> typeMap,
                                                Set<String> vars) {
@@ -354,6 +345,8 @@ public class THFnew {
         return (f.getFormula());
     }
 
+    /** ***************************************************************
+     */
     public static String processNonModal(Formula f,
                                          Map<String, Set<String>> typeMap,
                                          boolean query) {
@@ -378,7 +371,6 @@ public class THFnew {
         }
         return f.getFormula();
     }
-
 
     /** ***************************************************************
      */
@@ -428,14 +420,14 @@ public class THFnew {
         return "?W" + num;
     }
 
-    // ISSUE 4
-    // ISSUE 12
+    /** ***************************************************************
+     */
+    // ISSUE 4, ISSUE 12
     // Mark variables that occur as the first argument of modalAttribute as Formula-valued
     private static void markModalAttributeFormulaVars(Formula f, Map<String, Set<String>> typeMap) {
 
         if (f == null)
             return;
-
         // If this is directly a (modalAttribute X Y) form
         if ("modalAttribute".equals(f.car())) {
             List<Formula> args = f.complexArgumentsToArrayList(1);
@@ -462,8 +454,9 @@ public class THFnew {
         }
     }
 
-
-    public static void oneTrans(KB kb, Formula f, Writer bw) throws IOException {
+    /** ***************************************************************
+     */
+    public static void oneTrans(KB kb, Formula f, PrintWriter bw) throws IOException {
 
         bw.write("% original: " + f.getFormula() + "\n" +
                 "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
@@ -471,7 +464,6 @@ public class THFnew {
         // 1) Modal pass on the original f, for TYPE INFO ONLY
         Formula res = Modals.processModals(f, kb);
         if (res != null) {
-
             FormulaPreprocessor fp = new FormulaPreprocessor();
 
             // 2) IMPORTANT: preprocess ORIGINAL f, not res.
@@ -493,28 +485,27 @@ public class THFnew {
 
             // 4) For each processed formula, NOW apply Modals and then THFnew
             for (Formula fnew : processed) {
-
                 // Single, correct modal/world pass per processed formula
                 Formula fmodal = Modals.processModals(fnew, kb);
-                if (fmodal == null) {
+                if (fmodal == null)
                     continue;
-                }
-
-                if (exclude(fmodal, kb, bw)) {
+                if (exclude(fmodal, kb, bw))
                     continue;
-                }
-
                 if (bw == null) {
                     System.out.println(process(new Formula(fmodal), typeMap, false));
-                } else {
-                    bw.write("thf(ax" + axNum++ + ",axiom," +
-                            process(new Formula(fmodal), typeMap, false) + ").\n");
+                }
+                else {
+                    String s = "thf(ax" + axNum++ + ",axiom," +
+                            process(new Formula(fmodal), typeMap, false) + ").\n";
+                    //System.out.println(s);
+                    bw.println(s);
                 }
             }
         }
     }
 
-
+    /** ***************************************************************
+     */
     public static void oneTransNonModal(KB kb, Formula f, Writer bw)
             throws IOException {
 
@@ -556,7 +547,6 @@ public class THFnew {
         }
     }
 
-
     /** ***************************************************************
      */
     public static boolean protectedRelation(String s) {
@@ -564,7 +554,7 @@ public class THFnew {
         return s.equals("domain") || s.equals("instance") || s.equals("subAttribute") || s.equals("contraryAttribute");
     }
 
-    /**
+    /** ***************************************************************
      * Decide whether to exclude a formula from THF export.
      *
      * This filter:
@@ -610,9 +600,7 @@ public class THFnew {
             return true;
         }
 
-        // ISSUE 17
-        // ISSUE 21
-        // ISSUE 22
+        // ISSUE 17, ISSUE 21, ISSUE 22
         // Generic: modal operators must not appear as non-head arguments.
         // If the head itself is not a modal relation, any occurrence of a
         // modal relation name in argument position is rejected.
@@ -682,10 +670,6 @@ public class THFnew {
                 return true;
             }
         }
-
-
-
-        // ============================================================
         // META-LOGIC FILTER
         // Exclude any formula where a bare variable is used directly
         // in formula position:
@@ -693,7 +677,6 @@ public class THFnew {
         //   (not ?VAR)   or  (~ ?VAR)
         // Because variables are $i, not $o.
         // This catches the PROP / FORMULA / SITUATION issues in one shot.
-        // ============================================================
         if (f.listP()) {
             String op = f.car();
             // arguments starting at position 1 (operator is at 0)
@@ -729,8 +712,6 @@ public class THFnew {
                 }
             }
         }
-        // ============================================================
-
         // ALWAYS recurse into interior lists (this catches nested cases,
         // since exclude() is called on all sub-formulas)
         if (args != null) {
@@ -760,13 +741,10 @@ public class THFnew {
 
         // Additional checks only when ground
         if (f.isGround()) {
-
             if (debug) System.out.println("exclude(): is ground: " + f);
-
             // Reuse args (we already computed it above)
             if (args == null)
                 args = f.complexArgumentsToArrayListString(0);
-
             if (args != null && !args.isEmpty()) {
 
                 // ISSUE 11: modal protected relations
@@ -802,12 +780,9 @@ public class THFnew {
                 }
             }
         }
-
         // TOP-LEVEL predicate check (documentation, format, etc.)
         return excludePred(f.car(), out);
     }
-
-
 
     /** ***************************************************************
      * Predicates that denote formulas that shouldn't be included in
@@ -861,7 +836,7 @@ public class THFnew {
             return false;
     }
 
-    /**
+    /** ***************************************************************
      * Build a THF type string from a SUMO signature.
      *
      * @param functor  the predicate / function symbol whose type we build
@@ -880,19 +855,15 @@ public class THFnew {
     public static String sigString(String functor, List<String> sig, KB kb, boolean function) {
 
         if (debug) System.out.println("sigString(): functor: " + functor + " sig: " + sig);
-
         StringBuilder sb = new StringBuilder();
         boolean first = false;
         String range = "";
-
         if (function)
             first = true;
-
         // By default, modal/HOL predicates treat Formula args as (w > $o).
         boolean formulaAsWorldFunction =
                 (Modals.formulaPreds.contains(functor) ||
                         Modals.regHOLpred.contains(functor));
-
         // EXCEPTION: KappaFn – we override and treat its Formula argument as $o,
         // because in the current axioms (e.g. ax478) it is applied to a fully
         // evaluated sentence like (sideOfFigure S POL W1), not a function F: w>$o.
@@ -906,9 +877,8 @@ public class THFnew {
                         "containsFormula"
                 ));
 
-        if (exceptionFormulas.contains(functor)) {
+        if (exceptionFormulas.contains(functor))
             formulaAsWorldFunction = false;
-        }
 
         for (String t : sig) {
             if (t.equals(""))
@@ -932,14 +902,12 @@ public class THFnew {
                     sb.append("$o > ");
                 }
             }
-            else if (kb.isInstanceOf(t, "World") || t.equals("World")) {
+            else if (kb.isInstanceOf(t, "World") || t.equals("World"))
                 // World arguments are typed as w.
                 sb.append("w > ");
-            }
-            else {
+            else
                 // Everything else is an individual.
                 sb.append("$i > ");
-            }
         }
 
         // Result type: for functions we respect the range, for relations we return $o.
@@ -948,18 +916,17 @@ public class THFnew {
                 // Functions returning Formula yield (w > $o).
                 sb.append("(w > $o)");
             }
-            else {
+            else
                 sb.append("$i");
-            }
         }
         else {
             sb.append("$o");
         }
-
         return sb.toString();
     }
 
-
+    /** ***************************************************************
+     */
     // Non-modal version: only $i and $o.
     // - If pred has a __N suffix, use N as arity: all args $i, result $o / $i.
     // - Otherwise, reuse the old sigString logic, but map World -> $i (no 'w').
@@ -1021,7 +988,8 @@ public class THFnew {
             if (kb.isInstanceOf(range, "Formula") || range.equals("Formula")) {
                 sb.append("$o");
                 predicateTerms.add(pred);
-            }else
+            }
+            else
                 sb.append("$i");   // includes World-as-range => $i
         }
         else {
@@ -1032,8 +1000,6 @@ public class THFnew {
         return sb.toString();
     }
 
-
-
     /** ***************************************************************
      */
     public static void writeIntegerTypes(KB kb, Writer out) throws IOException {
@@ -1043,6 +1009,8 @@ public class THFnew {
         }
     }
 
+    /** ***************************************************************
+     */
     private static Integer getSuffixNumber(String functor) {
         // Match: anything, then "__", then digits at the end
         Matcher m = Pattern.compile("^.*__(\\d+)$").matcher(functor);
@@ -1052,40 +1020,33 @@ public class THFnew {
         return null;   // no suffix found
     }
 
-
     /** ***************************************************************
      */
     public static void writeTypes(KB kb, Writer out) throws IOException {
 
         writeIntegerTypes(kb,out);
         for (String t : kb.terms) {
-
             // ISSUE 2
             // 1. Skip modal helper symbols – they already have correct types in the header.
             if (Modals.RESERVED_MODAL_SYMBOLS.contains(t)) {
                 continue;
             }
-
             if (excludeForTypedef(t,out))
                 continue;
             if (kb.isInstanceOf(t,"Relation")) {
-
                 // Start Of first Signature
                 List<String> baseSig = kb.kbCache.signatures.get(t);
                 if (baseSig == null) {
                     System.err.println("Error in THFnew.writeTypes(): bad sig for " + t);
                     continue;
                 }
-
                 // Work on a local copy to build the THF type
                 List<String> sig = new ArrayList<>(baseSig);
 
                 // ISSUE 14
                 // Check that the sigStr alligns with the __NUM of the term:
                 Integer suffixNum = getSuffixNumber(t);
-
                 String baseHead = Modals.baseFunctor(t);
-
                 // For relations:
                 //  - skip logical operators and equality
                 //  - skip rigid relations (instance, subclass, etc.)
@@ -1096,8 +1057,7 @@ public class THFnew {
 
                     if (!Modals.RIGID_RELATIONS.contains(baseHead)
                             && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)
-                            && !Modals.regHOLpred.contains(baseHead)
-                    ) {
+                            && !Modals.regHOLpred.contains(baseHead)) {
                         sig.add("World");
                         if (suffixNum != null) suffixNum+=1;
                     }
@@ -1113,7 +1073,8 @@ public class THFnew {
                 if (kb.isInstanceOf(t,"Function")) {
                     out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : "); // write signature
                     isFunction = true;
-                }else
+                }
+                else
                     out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : "); // write signature
 
                 if (suffixNum != null && !sig.isEmpty() && sig.size() > (suffixNum+1)) {
@@ -1130,16 +1091,12 @@ public class THFnew {
                     sigStr = sigString(t, sig,kb,isFunction);
                     out.write("(" + sigStr + "))).\n");
                 }
-
-
                 // End Of first Signature
-
                 // Start of Second Signature
                 String typeStr = "$i";
                 if (Modals.MODAL_RELATIONS.contains(baseHead) && !Modals.regHOLpred.contains(baseHead)) {
                     typeStr = "m";
                 }
-
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : "+typeStr+")).\n"); // write relation constant
                 // End of Second Signature
@@ -1154,12 +1111,12 @@ public class THFnew {
         }
     }
 
+    /** ***************************************************************
+     */
     public static void writeTypesNonModal(KB kb, Writer out) throws IOException {
 
         writeIntegerTypes(kb, out);
-
         for (String pred : kb.kbCache.signatures.keySet()) {
-
             // Derive base predicate name (strip __N or __NFn if present)
             String base = pred;
             Matcher m = Pattern.compile("^(.+?)__(\\d+)(Fn)?$").matcher(pred);
@@ -1183,7 +1140,8 @@ public class THFnew {
         }
     }
 
-
+    /** ***************************************************************
+     */
     // Scans all KIF formulas once before THF translation to detect predicates whose
     // arguments are used inconsistently with their declared signatures. In particular,
     // if a predicate expects an $i argument but receives a formula (a list), it is
@@ -1195,6 +1153,8 @@ public class THFnew {
         }
     }
 
+    /** ***************************************************************
+     */
     // Recursively analyzes a single formula for typing mismatches: if a predicate's
     // argument position expects a non-Formula type (e.g., Entity/$i) but the argument
     // is itself a formula (list), the predicate is marked as badly used.
@@ -1245,7 +1205,6 @@ public class THFnew {
         }
     }
 
-
     /** ***************************************************************
      */
     public static void transModalTHF(KB kb) {
@@ -1259,8 +1218,7 @@ public class THFnew {
         if (debug) System.out.println("\n\nTHFnew.transModalTHF()");
         String filename = kbDir + sep + kb.name + "_modals.thf";
         try (Writer fstream = new FileWriter(filename);
-             Writer out = new BufferedWriter(fstream)) {
-
+             PrintWriter out = new PrintWriter(new BufferedWriter(fstream))) {
             // Warm Up
             FormulaPreprocessor fp = new FormulaPreprocessor();
             for (Formula f : kb.formulaMap.values()) {
@@ -1268,7 +1226,6 @@ public class THFnew {
                 // to run and call copyNewPredFromVariableArity(...)
                 fp.preProcess(f, false, kb);
             }
-
             writeTypes(kb,out);
 
             // Write at the end of the header the hard coded types because they use some from the auto-generated ones.
@@ -1294,6 +1251,8 @@ public class THFnew {
         }
     }
 
+    /** ***************************************************************
+     */
     public static void transPlainTHF(KB kb) {
 
         String kbDir = KBmanager.getMgr().getPref("kbDir");
@@ -1337,7 +1296,8 @@ public class THFnew {
         }
     }
 
-
+    /** ***************************************************************
+     */
     public static boolean excludeNonModal(Formula f, KB kb, Writer out) throws IOException {
 
         if (debug) System.out.println("exclude(): " + f);
@@ -1374,8 +1334,6 @@ public class THFnew {
             out.write("% exclude(): meta-logical axiom with Formula type\n");
             return true;
         }
-
-
         List<String> args = f.complexArgumentsToArrayListString(0);
 
         // TODO: Fix that in SUMO
@@ -1388,7 +1346,6 @@ public class THFnew {
             }
         }
 
-        // ============================================================
         // META-LOGIC FILTER
         // Exclude any formula where a bare variable is used directly
         // in formula position:
@@ -1396,7 +1353,6 @@ public class THFnew {
         //   (not ?VAR)   or  (~ ?VAR)
         // Because variables are $i, not $o.
         // This catches the PROP / FORMULA / SITUATION issues in one shot.
-        // ============================================================
         if (f.listP()) {
             String op = f.car();
             // arguments starting at position 1 (operator is at 0)
@@ -1448,8 +1404,6 @@ public class THFnew {
                 }
             }
         }
-        // ============================================================
-
         // ALWAYS recurse into interior lists (this catches nested cases,
         // since exclude() is called on all sub-formulas)
         if (args != null) {
@@ -1476,18 +1430,13 @@ public class THFnew {
                 }
             }
         }
-
         // Additional checks only when ground
         if (f.isGround()) {
-
             if (debug) System.out.println("exclude(): is ground: " + f);
-
             // Reuse args (we already computed it above)
             if (args == null)
                 args = f.complexArgumentsToArrayListString(0);
-
             if (args != null && !args.isEmpty()) {
-
                 // Ground numeric filtering
                 for (String s : args) {
                     if (StringUtil.isNumeric(s)) {
@@ -1501,13 +1450,9 @@ public class THFnew {
                 }
             }
         }
-
         // TOP-LEVEL predicate check (documentation, format, etc.)
         return excludePred(f.car(), out);
     }
-
-
-
 
     /** ***************************************************************
      */
@@ -1538,6 +1483,7 @@ public class THFnew {
         System.out.println("  options (with a leading '-'):");
         System.out.println("  m - THF translation with modals");
         System.out.println("  r - THF tRanslation without modals");
+        System.out.println("  --one \"formula\" - THF translate One statement");
         System.out.println("  t - test");
         System.out.println("  h - show this help");
         System.out.println("  (no option) - plain THF (no modals, only $i and $o)");
@@ -1549,9 +1495,8 @@ public class THFnew {
 
         System.out.println("========================================");
         System.out.println("INFO in THFnew.main()");
-        System.out.println("args:" + (args == null ? 0 : args.length) + " : " +
-                Arrays.toString(args));
         Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        System.out.println(argMap);
         if (argMap.containsKey("h") || argMap.isEmpty()) {
             showHelp();
         }
@@ -1563,7 +1508,20 @@ public class THFnew {
                 System.err.println("Errors: " + kb.errors);
                 return;
             }
-            if (argMap.containsKey("r")) {
+            System.out.println("contains one : " + argMap.containsKey("one"));
+            System.out.println("has one arg: " + (argMap.get("one").size() == 1));
+            if (argMap.containsKey("one") && argMap.get("one").size() == 1) {
+                // DEFAULT: plain (non-modal) THF
+                System.out.println("THFnew.main(): translate to THF (with modals)");
+                PrintWriter writer = new PrintWriter(System.out, true);
+                try {
+                    oneTrans(kb, new Formula(argMap.get("one").get(0)), writer);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            else if (argMap.containsKey("r")) {
                 // DEFAULT: plain (non-modal) THF
                 System.out.println("THFnew.main(): translate to plain THF (no modals)");
                 transPlainTHF(kb);
@@ -1581,6 +1539,4 @@ public class THFnew {
             }
         }
     }
-
-
 }
