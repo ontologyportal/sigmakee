@@ -199,7 +199,7 @@ public class Modals {
         Formula entity   = flist.get(flist.size() - 2);
         Formula cogAgent  = flist.get(flist.size() - 1);
         worldNum = worldNum + 1;
-        fstring.append("(=> (accreln2 ").append(f.car()).append(Formula.SPACE);
+        fstring.append("(=> (accreln3 ").append(f.car()).append(Formula.SPACE);
         fstring.append(entity).append(Formula.SPACE).append(cogAgent).append(Formula.SPACE);
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
@@ -236,7 +236,7 @@ public class Modals {
         Formula embedded = processRecurse(flist.get(1), kb, worldNum);
 
         StringBuilder fstring = new StringBuilder();
-        fstring.append("(=> (accreln1 ")
+        fstring.append("(=> (accreln2 ")
                 .append(f.car())          // modal operator
                 .append(Formula.SPACE)
                 .append(param.toString()); // now world-annotated
@@ -278,7 +278,7 @@ public class Modals {
         // a normal or dyadic deontic 
         if (flist.size() == 2) {
         // Monadic case: (modalAttribute F M)
-        fstring.append("(=> (accreln ")
+        fstring.append("(=> (accreln1 ")
                 .append(flist.get(1)); // modality
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
@@ -315,7 +315,7 @@ public class Modals {
     }
 
         // Build antecedent: (accrelnP M ?W_{n-1} ?W_n)
-        fstring.append("(=> (accreln ")
+        fstring.append("(=> (accreln1 ")
                 .append(flist.get(1));           // the modal attribute constant, e.g. Necessity, Legal
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
