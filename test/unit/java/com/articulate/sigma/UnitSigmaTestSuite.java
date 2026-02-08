@@ -29,7 +29,8 @@ import org.junit.runners.Suite;
     KButilitiesTest.class,
     KBmanagerInitTest.class,
     PredVarInstTest.class,
-    RowVarTest.class
+    RowVarTest.class,
+    SessionCleanupListenerTest.class
 })
 public class UnitSigmaTestSuite extends UnitTestBase {
 

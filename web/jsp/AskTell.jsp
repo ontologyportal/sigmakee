@@ -1044,7 +1044,7 @@
                                 } else if ("Vampire".equals(inferenceEngine)) {
                                     setVampMode(vampireMode);
 
-                                    com.articulate.sigma.tp.Vampire vRun = kb.askVampireForTQ(qstr, tmo, maxAns, modensPonens);
+                                    com.articulate.sigma.tp.Vampire vRun = kb.askVampireForTQ(qstr, tmo, maxAns, modensPonens, session.getId());
 
 //                                    com.articulate.sigma.tp.Vampire vRun = Boolean.TRUE.equals(modensPonens)
 //                                            ? kb.askVampireModensPonens(qstr, tmo, maxAns)

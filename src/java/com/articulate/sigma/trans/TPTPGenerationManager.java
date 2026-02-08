@@ -515,4 +515,107 @@ public class TPTPGenerationManager {
             }
         }
     }
+
+    /*********************************************************************************
+     * Generate FOF (First-Order Form) TPTP to a custom output path.
+     * This is used for session-specific TPTP generation.
+     *
+     * @param kb The knowledge base
+     * @param outputPath The path to write the TPTP file
+     * @throws IOException if file operations fail
+     */
+    public static void generateFOFToPath(KB kb, Path outputPath) throws IOException {
+
+        synchronized (GEN_LOCK) {
+            String originalLang = SUMOKBtoTPTPKB.lang;
+            String originalLang2 = SUMOformulaToTPTPformula.lang;
+
+            try {
+                System.out.println("TPTPGenerationManager: Generating FOF to custom path: " + outputPath);
+                long startTime = System.currentTimeMillis();
+
+                // Set BOTH static language fields to FOF
+                SUMOKBtoTPTPKB.lang = "fof";
+                SUMOformulaToTPTPformula.lang = "fof";
+                SUMOformulaToTPTPformula.hideNumbers = true;
+
+                try (PrintWriter pw = new PrintWriter(
+                        Files.newBufferedWriter(outputPath, java.nio.charset.StandardCharsets.UTF_8))) {
+
+                    SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                    skb.kb = kb;
+                    skb.writeFile(outputPath.toString(), null, false, pw);
+                }
+
+                long elapsed = System.currentTimeMillis() - startTime;
+                System.out.println("TPTPGenerationManager: FOF generation to custom path complete in " +
+                                   (elapsed / 1000.0) + "s");
+
+            } finally {
+                SUMOKBtoTPTPKB.lang = originalLang;
+                SUMOformulaToTPTPformula.lang = originalLang2;
+            }
+        }
+    }
+
+    /**
+     * Generate TFF (Typed First-order Form) TPTP to a custom output path.
+     * This is used for session-specific TPTP generation.
+     *
+     * @param kb The knowledge base
+     * @param outputPath The path to write the TPTP file
+     * @throws IOException if file operations fail
+     */
+    public static void generateTFFToPath(KB kb, Path outputPath) throws IOException {
+
+        synchronized (GEN_LOCK) {
+            String originalLang = SUMOKBtoTPTPKB.lang;
+            String originalLang2 = SUMOformulaToTPTPformula.lang;
+
+            try {
+                System.out.println("TPTPGenerationManager: Generating TFF to custom path: " + outputPath);
+                long startTime = System.currentTimeMillis();
+
+                // Set BOTH static language fields to TFF
+                SUMOKBtoTPTPKB.lang = "tff";
+                SUMOformulaToTPTPformula.lang = "tff";
+
+                try (PrintWriter pw = new PrintWriter(
+                        Files.newBufferedWriter(outputPath, java.nio.charset.StandardCharsets.UTF_8))) {
+
+                    if (!kb.formulaMap.isEmpty()) {
+                        SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();
+                        stff.kb = kb;
+
+                        SUMOtoTFAform.initOnce();
+
+                        stff.writeSorts(pw);
+                        stff.writeFile(outputPath.toString(), null, false, pw);
+
+                        if (SUMOKBtoTPTPKB.CWA) {
+                            pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
+                        }
+
+                        stff.printTFFNumericConstants(pw);
+                    }
+                }
+
+                long elapsed = System.currentTimeMillis() - startTime;
+                System.out.println("TPTPGenerationManager: TFF generation to custom path complete in " +
+                                   (elapsed / 1000.0) + "s");
+
+            } finally {
+                SUMOKBtoTPTPKB.lang = originalLang;
+                SUMOformulaToTPTPformula.lang = originalLang2;
+            }
+        }
+    }
+
+    /**
+     * Get the generation lock for external synchronization.
+     * Used by SessionTPTPManager to coordinate with background generation.
+     */
+    public static Object getGenerationLock() {
+        return GEN_LOCK;
+    }
 }

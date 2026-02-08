@@ -289,9 +289,6 @@ public class SUMOKBtoTPTPKB {
     public String writeFile(String fileName, Formula conjecture,
                             boolean isQuestion, PrintWriter pw) {
 
-        // DEBUG
-        System.out.println("sigma.tff.profile=" + System.getProperty("sigma.tff.profile"));
-
         PredVarInst.init();
         millis = System.currentTimeMillis();
         if (!KBmanager.initialized) {
