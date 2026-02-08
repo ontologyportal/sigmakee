@@ -1666,16 +1666,29 @@ public class KB implements Serializable {
         }
     }
 
+
     /***************************************************************
      * Adds a formula to the knowledge base.
+     * Defaults to shared user assertions file (backward compatible).
      *
      * @param input The String representation of a SUO-KIF Formula.
      * @return A String indicating the status of the tell operation.
      */
     public String tell(String input) {
+        return tell(input, null);
+    }
+
+    /***************************************************************
+     * Adds a formula to the knowledge base with session isolation.
+     *
+     * @param input The String representation of a SUO-KIF Formula.
+     * @param sessionId Optional HTTP session ID for session-specific assertions.
+     *                  If null or empty, uses shared user assertions file.
+     * @return A String indicating the status of the tell operation.
+     */
+    public String tell(String input, String sessionId) {
 
         synchronized (uaLock) {
-
             String result = "The formula could not be added";
             KBmanager mgr = KBmanager.getMgr();
             KIF kif = new KIF(); // 1. Parse the input string.
@@ -1691,7 +1704,20 @@ public class KB implements Serializable {
                 String userAssertionTFF = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tff";
                 String userAssertionTPTP = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tptp";
                 String userAssertionTHF = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".thf";
-                File dir = new File(this.kbDir);
+
+                // Determine directory based on sessionId
+                File dir;
+                if (sessionId != null && !sessionId.isEmpty()) {
+                    java.nio.file.Path sessionDir = com.articulate.sigma.trans.SessionTPTPManager.getSessionDir(sessionId);
+                    dir = sessionDir.toFile();
+                    // Create session directory if it doesn't exist
+                    if (!dir.exists()) {
+                        dir.mkdirs();
+                    }
+                } else {
+                    dir = new File(this.kbDir);
+                }
+
                 File kiffile = new File(dir, (userAssertionKIF)); // create kb.name_UserAssertions.kif
                 File tptpfile = null;  // kb.name_UserAssertions.tptp
                 if (SUMOKBtoTPTPKB.lang.equals("fof"))
@@ -1770,9 +1796,11 @@ public class KB implements Serializable {
                             }
                     }
                 }
-            } catch (ATPException ae) {
+            }
+            catch (ATPException ae) {
                 throw ae;  // Re-throw to caller
-            } catch (IOException ioe) {
+            }
+            catch (IOException ioe) {
                 ioe.printStackTrace();
                 System.err.println(ioe.getMessage());
                 result = ioe.getMessage();
@@ -2110,34 +2138,43 @@ public class KB implements Serializable {
         // capture per-request to avoid races
         final String requestedLang = SUMOKBtoTPTPKB.lang;          // typically "fof" or "tff"
         final String lang = "fof".equals(requestedLang) ? "tptp" : "tff";
-
-        boolean mustRegenBase = tqRequiresBaseRegeneration();
-
+        boolean mustRegenBase = tqRequiresBaseRegeneration(sessionId);
         File tptpFile = null;
 
-        if (mustRegenBase) {
-            if (sessionId != null && !sessionId.isEmpty()) {
-                // Generate session-specific TPTP file to avoid affecting other users
-                System.out.println("INFO askVampireForTQ(): Session-specific regen for session " + sessionId);
+        // For session-specific TQ tests, always check if we need session-specific files
+        if (sessionId != null && !sessionId.isEmpty()) {
+            // Check if session-specific UA files exist
+            Path sessionUAPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionUAPath(sessionId, this.name);
+            boolean hasSessionUA = java.nio.file.Files.exists(sessionUAPath);
+
+            if (mustRegenBase || hasSessionUA) {
                 try {
-                    Path sessionPath = SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
+                    Path sessionPath;
+                    if (mustRegenBase) {
+                        // Full base regeneration required (schema/transitive changes)
+                        System.out.println("INFO askVampireForTQ(): Session-specific base regen for session " + sessionId);
+                        sessionPath = com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
+                    } else {
+                        // Only UA files changed - fast merge instead of full regen
+                        System.out.println("INFO askVampireForTQ(): Merging shared base with session UA for session " + sessionId);
+                        sessionPath = com.articulate.sigma.trans.SessionTPTPManager.mergeBaseWithSessionUA(sessionId, this, lang);
+                    }
                     tptpFile = sessionPath.toFile();
                 }
                 catch (Exception e) {
-                    System.err.println("ERROR askVampireForTQ(): Failed to generate session TPTP: " + e.getMessage());
-                    // Fall back to base regeneration
+                    System.err.println("ERROR askVampireForTQ(): Failed to generate/merge session TPTP: " + e.getMessage());
+                    e.printStackTrace();
+                    // Fall back to shared base (will use session UA detection in Vampire.run)
                     tptpFile = null;
                 }
             }
-
-            if (tptpFile == null) {
-                // No session ID or session generation failed - modify shared base
-                System.out.println("INFO askVampireForTQ(): FULL base regen required -> regenerating "
-                        + this.name + "." + lang
-                        + " (current TQ assertions require base retranslation)");
-                synchronized (baseGenLock) {
-                    TPTPGenerationManager.generateProperFile(this, lang);  // rebuild SUMO.<lang>
-                }
+        } else if (mustRegenBase) {
+            // No session ID - modify shared base (old behavior)
+            System.out.println("INFO askVampireForTQ(): FULL base regen required -> regenerating "
+                    + this.name + "." + lang
+                    + " (current TQ assertions require base retranslation)");
+            synchronized (baseGenLock) {
+                TPTPGenerationManager.generateProperFile(this, lang);  // rebuild SUMO.<lang>
             }
         }
 
@@ -2212,11 +2249,32 @@ public class KB implements Serializable {
     /** ***************************************************************
      * Return true if the current TQ user assertions require rebuilding the base SUMO.<lang>.
      * Conservative v1: rebuild on schema changes or ground transitive facts.
+     * Defaults to checking shared UA file (backward compatible).
      */
     public boolean tqRequiresBaseRegeneration() {
+        return tqRequiresBaseRegeneration(null);
+    }
 
-        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
-        File uaKif = new File(dir, this.name + KB._userAssertionsString); // "_UserAssertions.kif"
+    /** ***************************************************************
+     * Return true if the current TQ user assertions require rebuilding the base SUMO.<lang>.
+     * Conservative v1: rebuild on schema changes or ground transitive facts.
+     *
+     * @param sessionId Optional HTTP session ID for session-specific UA files.
+     *                  If null or empty, checks shared UA file.
+     */
+    public boolean tqRequiresBaseRegeneration(String sessionId) {
+
+        File uaKif;
+        if (sessionId != null && !sessionId.isEmpty()) {
+            // Check session-specific UA file
+            java.nio.file.Path sessionUAPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionUAPath(sessionId, this.name);
+            uaKif = sessionUAPath.toFile();
+        } else {
+            // Check shared UA file (original behavior)
+            File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+            uaKif = new File(dir, this.name + KB._userAssertionsString);
+        }
+
         if (!uaKif.exists()) return false; // no tells => no impact
 
         // If we cannot decide transitivity, fail-safe

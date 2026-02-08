@@ -52,6 +52,54 @@ public class SessionTPTPManager {
     }
 
     /*********************************************************************************
+     * Get the path to a session-specific UserAssertions KIF file.
+     *
+     * @param sessionId The HTTP session ID
+     * @param kbName The knowledge base name (e.g., "SUMO")
+     * @return Path to the session-specific UserAssertions.kif file
+     */
+    public static Path getSessionUAPath(String sessionId, String kbName) {
+
+        return getSessionDir(sessionId).resolve(kbName + KB._userAssertionsString);
+    }
+
+    /*********************************************************************************
+     * Get the path to a session-specific UserAssertions TPTP file.
+     *
+     * @param sessionId The HTTP session ID
+     * @param kbName The knowledge base name (e.g., "SUMO")
+     * @return Path to the session-specific UserAssertions.tptp file
+     */
+    public static Path getSessionUATPTPPath(String sessionId, String kbName) {
+
+        return getSessionDir(sessionId).resolve(kbName + KB._userAssertionsTPTP);
+    }
+
+    /*********************************************************************************
+     * Get the path to a session-specific UserAssertions TFF file.
+     *
+     * @param sessionId The HTTP session ID
+     * @param kbName The knowledge base name (e.g., "SUMO")
+     * @return Path to the session-specific UserAssertions.tff file
+     */
+    public static Path getSessionUATFFPath(String sessionId, String kbName) {
+
+        return getSessionDir(sessionId).resolve(kbName + KB._userAssertionsTFF);
+    }
+
+    /*********************************************************************************
+     * Get the path to a session-specific UserAssertions THF file.
+     *
+     * @param sessionId The HTTP session ID
+     * @param kbName The knowledge base name (e.g., "SUMO")
+     * @return Path to the session-specific UserAssertions.thf file
+     */
+    public static Path getSessionUATHFPath(String sessionId, String kbName) {
+
+        return getSessionDir(sessionId).resolve(kbName + KB._userAssertionsTHF);
+    }
+
+    /*********************************************************************************
      * Get the session directory path.
      *
      * @param sessionId The HTTP session ID
@@ -78,18 +126,17 @@ public class SessionTPTPManager {
             return false;
         }
 
-        // Check if session file is newer than user assertions file
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
-        File uaKif = new File(kbDir, kb.name + KB._userAssertionsString);
+        // Check if session file is newer than SESSION-SPECIFIC user assertions file
+        Path sessionUAKif = getSessionUAPath(sessionId, kb.name);
 
-        if (!uaKif.exists()) {
-            // No user assertions, session file is valid
+        if (!Files.exists(sessionUAKif)) {
+            // No session-specific user assertions, session file is valid
             return true;
         }
 
         try {
             long sessionFileTime = Files.getLastModifiedTime(sessionFile).toMillis();
-            long uaFileTime = uaKif.lastModified();
+            long uaFileTime = Files.getLastModifiedTime(sessionUAKif).toMillis();
             return sessionFileTime >= uaFileTime;
         }
         catch (IOException e) {
@@ -238,5 +285,100 @@ public class SessionTPTPManager {
 
         Long timestamp = sessionGenerationTimestamps.get(sessionId);
         return timestamp != null ? timestamp : -1L;
+    }
+
+    /*********************************************************************************
+     * Merge shared base TPTP file with session-specific UserAssertions.
+     * This is faster than full regeneration when only UA files have changed.
+     *
+     * @param sessionId The HTTP session ID
+     * @param kb The knowledge base
+     * @param lang The TPTP language ("tptp" for FOF, "tff" for TFF)
+     * @return The path to the merged session-specific TPTP file
+     */
+    public static Path mergeBaseWithSessionUA(String sessionId, KB kb, String lang) {
+
+        Object lock = sessionLocks.computeIfAbsent(sessionId, k -> new Object());
+
+        synchronized (lock) {
+            Path sessionDir = getSessionDir(sessionId);
+            Path sessionFile = getSessionTPTPPath(sessionId, kb.name, lang);
+            Path tmpFile = sessionFile.resolveSibling(sessionFile.getFileName() + ".tmp");
+
+            try {
+                // Create session directory if needed
+                Files.createDirectories(sessionDir);
+
+                // Clean up any stale tmp file
+                Files.deleteIfExists(tmpFile);
+
+                System.out.println("SessionTPTPManager: Merging shared base with session UA for session " + sessionId);
+                long startTime = System.currentTimeMillis();
+
+                // Get paths
+                String kbDir = KBmanager.getMgr().getPref("kbDir");
+                Path sharedBase = Paths.get(kbDir, kb.name + "." + lang);
+                Path sessionUA = getSessionUATPTPPath(sessionId, kb.name);
+                if ("tff".equals(lang)) {
+                    sessionUA = getSessionUATFFPath(sessionId, kb.name);
+                }
+
+                // Check if shared base exists
+                if (!Files.exists(sharedBase)) {
+                    System.err.println("SessionTPTPManager: Shared base file not found: " + sharedBase);
+                    System.err.println("SessionTPTPManager: Falling back to full regeneration");
+                    return generateSessionTPTP(sessionId, kb, lang);
+                }
+
+                // Copy shared base to tmp file
+                Files.copy(sharedBase, tmpFile, StandardCopyOption.REPLACE_EXISTING);
+
+                // Append session UA if it exists
+                if (Files.exists(sessionUA)) {
+                    // Append UA content to the tmp file
+                    try (java.io.BufferedWriter writer = Files.newBufferedWriter(tmpFile,
+                            StandardCharsets.UTF_8,
+                            java.nio.file.StandardOpenOption.APPEND)) {
+                        writer.newLine();
+                        writer.write("% Session-specific User Assertions");
+                        writer.newLine();
+                        Files.lines(sessionUA, StandardCharsets.UTF_8).forEach(line -> {
+                            try {
+                                writer.write(line);
+                                writer.newLine();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    }
+                }
+
+                // Atomic move
+                try {
+                    Files.move(tmpFile, sessionFile,
+                            StandardCopyOption.REPLACE_EXISTING,
+                            StandardCopyOption.ATOMIC_MOVE);
+                }
+                catch (AtomicMoveNotSupportedException e) {
+                    Files.move(tmpFile, sessionFile, StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                long elapsed = System.currentTimeMillis() - startTime;
+                System.out.println("SessionTPTPManager: Merge complete in " + elapsed + "ms for " + sessionId);
+
+                // Track generation timestamp
+                sessionGenerationTimestamps.put(sessionId, System.currentTimeMillis());
+
+                return sessionFile;
+
+            }
+            catch (IOException e) {
+                System.err.println("SessionTPTPManager: Error merging base with UA: " + e.getMessage());
+                e.printStackTrace();
+                // Cleanup on failure
+                try { Files.deleteIfExists(tmpFile); } catch (IOException ignore) {}
+                throw new RuntimeException("Failed to merge base with session UA", e);
+            }
+        }
     }
 }

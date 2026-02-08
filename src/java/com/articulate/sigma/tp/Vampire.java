@@ -538,20 +538,38 @@ public class Vampire {
         }
     }
 
+
     /** *************************************************************
+     * Get user assertions with optional session isolation.
+     *
+     * @param kb The knowledge base
+     * @param sessionId Optional HTTP session ID for session-specific UA files.
+     *                  If null or empty, uses shared UA files.
+     * @return List of user assertion TPTP formulas
      */
-    public List<String> getUserAssertions(KB kb) {
+    public List<String> getUserAssertions(KB kb, String sessionId) {
 
         // Thread safe
         return kb.withUserAssertionLock(() -> {
             String userAssertionTPTP = kb.name + KB._userAssertionsTPTP;
             if (SUMOKBtoTPTPKB.lang.equals("tff"))
                 userAssertionTPTP = kb.name + KB._userAssertionsTFF;
-            File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+
+            // Determine directory based on sessionId
+            File dir;
+            if (sessionId != null && !sessionId.isEmpty()) {
+                // Use session-specific directory
+                java.nio.file.Path sessionDir = com.articulate.sigma.trans.SessionTPTPManager.getSessionDir(sessionId);
+                dir = sessionDir.toFile();
+            } else {
+                // Use shared directory (original behavior)
+                dir = new File(KBmanager.getMgr().getPref("kbDir"));
+            }
+
             String fname = dir + File.separator + userAssertionTPTP;
             File ufile = new File(fname);
             if (ufile.exists())
-                return FileUtil.readLines(dir + File.separator + userAssertionTPTP, false);
+                return FileUtil.readLines(fname, false);
             else
                 return new ArrayList<>();
         });
@@ -583,7 +601,25 @@ public class Vampire {
         File fstmt = new File(stmtFile);
         if (fstmt.exists())
             fstmt.delete();
-        List<String> userAsserts = getUserAssertions(kb);
+
+        // Detect if using session-specific file and extract sessionId
+        String sessionId = null;
+        String kbFilePath = kbFile.getAbsolutePath();
+        if (kbFilePath.contains(File.separator + "sessions" + File.separator)) {
+            // Extract sessionId from path: .../sessions/{sessionId}/...
+            String[] parts = kbFilePath.split(File.separator + "sessions" + File.separator);
+            if (parts.length > 1) {
+                String remainder = parts[1];
+                int nextSep = remainder.indexOf(File.separator);
+                if (nextSep > 0) {
+                    sessionId = remainder.substring(0, nextSep);
+                    System.out.println("INFO: Detected session-specific query, sessionId=" + sessionId);
+                }
+            }
+        }
+
+        // Load UA files from session directory if session-specific, otherwise from shared directory
+        List<String> userAsserts = getUserAssertions(kb, sessionId);
         if (userAsserts != null && stmts != null)
             stmts.addAll(userAsserts);
         else {

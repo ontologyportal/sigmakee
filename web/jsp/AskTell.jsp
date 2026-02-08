@@ -1004,7 +1004,7 @@
                 // ---- RUN SAVED TEST ----
 
                 // Clear All
-                try { InferenceTestSuite.resetAllForInference(kb); }
+                try { InferenceTestSuite.resetAllForInference(kb, session.getId()); }
                 catch (IOException ignore) { System.out.println("ERROR resetAllForInference: " + ignore.getMessage()); }
 
                 String testName = (String) session.getAttribute("selectedTest");
@@ -1029,7 +1029,7 @@
                     } else {
                         try {
                             for (String s : itd.statements) {
-                                if (!StringUtil.emptyString(s)) kb.tell(s);
+                                if (!StringUtil.emptyString(s)) kb.tell(s, session.getId());
                             }
                             FormulaPreprocessor fp = new FormulaPreprocessor();
                             Set<Formula> qs = fp.preProcess(new Formula(itd.query), true, kb);
@@ -1328,9 +1328,25 @@
 
                         }else { // First-Order Formula
                             System.out.println(" -- First Order Formula Detected - Attempring to run normal Vampire");
-                            vampire = Boolean.TRUE.equals(modensPonens)
-                                    ? kb.askVampireModensPonens(stmt, timeout, maxAnswers)
-                                    : kb.askVampire(stmt, timeout, maxAnswers);
+
+                            // Check if session-specific TPTP files exist (from session-specific tells)
+                            String sessId = session.getId();
+                            String lang = SUMOKBtoTPTPKB.lang;
+                            String tptpLang = "fof".equals(lang) ? "tptp" : "tff";
+                            java.nio.file.Path sessionTPTPPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionTPTPPath(sessId, kb.name, tptpLang);
+
+                            if (java.nio.file.Files.exists(sessionTPTPPath)) {
+                                // Use session-specific TPTP file
+                                System.out.println("INFO: Using session-specific TPTP file: " + sessionTPTPPath);
+                                vampire = Boolean.TRUE.equals(modensPonens)
+                                        ? kb.askVampireModensPonens(stmt, timeout, maxAnswers, sessionTPTPPath.toFile())
+                                        : kb.askVampire(stmt, timeout, maxAnswers, sessionTPTPPath.toFile());
+                            } else {
+                                // Use shared TPTP files (standard behavior)
+                                vampire = Boolean.TRUE.equals(modensPonens)
+                                        ? kb.askVampireModensPonens(stmt, timeout, maxAnswers)
+                                        : kb.askVampire(stmt, timeout, maxAnswers);
+                            }
                         }
 
                         // Show ATPResult panel with SZS status and diagnostics
@@ -1492,14 +1508,14 @@
 
             final String tellStmt = stmt;
             final JspWriter jspOut = out;  // Capture for use in lambda
+            final String sessionId = session.getId();  // Capture session ID for session-specific UA
 
             // ONE atomic critical section
             kb.withUserAssertionLock(() -> {
 
                 boolean mustRegen = kb.tellRequiresBaseRegeneration(tellStmt);
                 mustRegenBaseRef.set(mustRegen);
-
-                String tellResult = kb.tell(tellStmt);
+                String tellResult = kb.tell(tellStmt, sessionId);
                 tellResultRef.set(tellResult);
 
                 if (mustRegen) {
@@ -1516,10 +1532,16 @@
                     jspOut.println("</script>");
                     jspOut.flush();
 
-                    System.out.println("INFO AskTell.jsp(Tell): FULL base regen required -> regenerating "
-                            + kb.name + "." + lang + " (Tell changed schema/transitive facts)");
-
-                    TPTPGenerationManager.generateProperFile(kb, lang);
+                    // Use session-specific TPTP generation for session-isolated tells
+                    if (sessionId != null && !sessionId.isEmpty()) {
+                        System.out.println("INFO AskTell.jsp(Tell): Session-specific regen required for session " + sessionId +
+                                " -> regenerating session " + kb.name + "." + lang + " (Tell changed schema/transitive facts)");
+                        com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, kb, lang);
+                    } else {
+                        System.out.println("INFO AskTell.jsp(Tell): FULL base regen required -> regenerating "
+                                + kb.name + "." + lang + " (Tell changed schema/transitive facts)");
+                        TPTPGenerationManager.generateProperFile(kb, lang);
+                    }
                 }
 
                 return null;
