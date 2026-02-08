@@ -1238,6 +1238,15 @@
                 }
             } else {
                 // ---- RUN CUSTOM QUERY (Ask) ----
+                // Reset spinner message to default (clear any stale "Regenerating KB..." from previous Tell)
+                out.println("<script>");
+                out.println("if(parent.document.getElementById('spinTitle'))");
+                out.println("  parent.document.getElementById('spinTitle').textContent='Processing query...';");
+                out.println("if(parent.document.getElementById('spinSub'))");
+                out.println("  parent.document.getElementById('spinSub').textContent='';");
+                out.println("</script>");
+                out.flush();
+
                 if (stmt.indexOf('@') != -1) throw(new IOException("Row variables not allowed in query: " + stmt));
                 if ("EProver".equals(inferenceEngine)) {
                     try {
@@ -1542,6 +1551,15 @@
                                 + kb.name + "." + lang + " (Tell changed schema/transitive facts)");
                         TPTPGenerationManager.generateProperFile(kb, lang);
                     }
+                } else {
+                    // Reset spinner message when no regeneration needed (prevent stale message)
+                    jspOut.println("<script>");
+                    jspOut.println("if(parent.document.getElementById('spinTitle'))");
+                    jspOut.println("  parent.document.getElementById('spinTitle').textContent='Processing...';");
+                    jspOut.println("if(parent.document.getElementById('spinSub'))");
+                    jspOut.println("  parent.document.getElementById('spinSub').textContent='';");
+                    jspOut.println("</script>");
+                    jspOut.flush();
                 }
 
                 return null;
