@@ -17,10 +17,7 @@ import com.articulate.sigma.Formula;
 import com.articulate.sigma.FormulaPreprocessor;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
-import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
-import com.articulate.sigma.trans.THFnew;
-import com.articulate.sigma.trans.TPTP3ProofProcessor;
+import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import tptp_parser.TPTPFormula;
@@ -250,12 +247,32 @@ public class LEO {
         System.out.println("Leo.run() done executing");
     }
 
-    /** ***************************************************************
-     * Write the statements to the temp-stmt.<type></> file
-     */
-    public void writeStatements(Set<String> stmts, String type) {
 
-        String dir = KBmanager.getMgr().getPref("kbDir");
+    /** ***************************************************************
+     * Write the statements to the temp-stmt.<type> file.
+     * When sessionId is provided, writes to the session-specific directory,
+     * creating it first if it does not yet exist.
+     */
+    public void writeStatements(Set<String> stmts, String type, String sessionId) {
+
+        String dir;
+        if (sessionId != null && !sessionId.isEmpty()) {
+            java.nio.file.Path sessionDir = SessionTPTPManager.getSessionDir(sessionId);
+            if (!java.nio.file.Files.exists(sessionDir)) {
+                try {
+                    java.nio.file.Files.createDirectories(sessionDir);
+                    System.out.println("LEO.writeStatements(): created session dir " + sessionDir);
+                }
+                catch (IOException ex) {
+                    System.err.println("Error in Leo.writeStatements(): could not create session dir " + sessionDir);
+                    ex.printStackTrace();
+                }
+            }
+            dir = sessionDir.toString();
+        }
+        else {
+            dir = KBmanager.getMgr().getPref("kbDir");
+        }
         String fname = "temp-stmt." + type;
 
         try (FileWriter fw = new FileWriter(dir + File.separator + fname); PrintWriter pw = new PrintWriter(fw)) {
@@ -299,36 +316,86 @@ public class LEO {
         }
     }
 
+
     /** *************************************************************
+     * Get user assertions with optional session isolation.
+     *
+     * @param kb The knowledge base
+     * @param sessionId Optional HTTP session ID for session-specific UA files.
+     *                  If null or empty, uses shared UA files.
+     * @return List of user assertion THF formulas
      */
-    public List<String> getUserAssertions(KB kb) {
+    public List<String> getUserAssertions(KB kb, String sessionId) {
         // thread lock safe
         return kb.withUserAssertionLock(() -> {
             String userAssertionTPTP = kb.name + KB._userAssertionsTHF;
-            File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+            File dir;
+            if (sessionId != null && !sessionId.isEmpty()) {
+                dir = SessionTPTPManager.getSessionDir(sessionId).toFile();
+            }
+            else {
+                dir = new File(KBmanager.getMgr().getPref("kbDir"));
+            }
             String fname = dir + File.separator + userAssertionTPTP;
             File ufile = new File(fname);
             if (ufile.exists())
-                return FileUtil.readLines(dir + File.separator + userAssertionTPTP, false);
+                return FileUtil.readLines(fname, false);
             else
                 return new ArrayList<>();
         });
     }
 
     /** *************************************************************
+     * Backward-compatible overload — delegates with null sessionId.
+     * Session detection falls back to path extraction from kbFile.
+     */
+    public void run(KB kb, File kbFile, int timeout, Set<String> stmts) throws Exception {
+        run(kb, kbFile, timeout, stmts, null);
+    }
+
+    /** *************************************************************
      * Creates a running instance of LEO-III adding a set of statements
      * in THF language to a file and then calling LEO.
      * Note that any query must be given as a "conjecture"
+     *
      * @param stmts should be the query but the list gets expanded here with
      *              any other prior user assertions
+     * @param sessionId explicit HTTP session ID for temp file isolation;
+     *                  if null, falls back to extracting sessionId from kbFile path
      */
-    public void run(KB kb, File kbFile, int timeout, Set<String> stmts) throws Exception {
+    public void run(KB kb, File kbFile, int timeout, Set<String> stmts, String sessionId) throws Exception {
 
         System.out.println("Leo.run(): query : " + stmts);
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
-        String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+
+        // Use explicit sessionId if provided; otherwise try to extract from kbFile path
+        if (sessionId == null || sessionId.isEmpty()) {
+            String kbFilePath = kbFile.getAbsolutePath();
+            if (kbFilePath.contains(File.separator + "sessions" + File.separator)) {
+                String[] parts = kbFilePath.split(File.separator + "sessions" + File.separator);
+                if (parts.length > 1) {
+                    String remainder = parts[1];
+                    int nextSep = remainder.indexOf(File.separator);
+                    if (nextSep > 0) {
+                        sessionId = remainder.substring(0, nextSep);
+                    }
+                }
+            }
+        }
+        if (sessionId != null && !sessionId.isEmpty()) {
+            System.out.println("INFO Leo.run(): using session dir for temp files, sessionId=" + sessionId);
+        }
+
+        // Use session dir for temp files when session-specific, otherwise shared kbDir
+        String dir;
+        if (sessionId != null && !sessionId.isEmpty()) {
+            dir = SessionTPTPManager.getSessionDir(sessionId).toString() + File.separator;
+        }
+        else {
+            dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+        }
         String outfile = dir + "temp-comb." + lang;
         String stmtFile = dir + "temp-stmt." + lang;
         File fout = new File(outfile);
@@ -337,14 +404,14 @@ public class LEO {
         File fstmt = new File(stmtFile);
         if (fstmt.exists())
             fstmt.delete();
-        List<String> userAsserts = getUserAssertions(kb);
+        List<String> userAsserts = getUserAssertions(kb, sessionId);
         if (userAsserts != null && stmts != null)
             stmts.addAll(userAsserts);
         else {
             System.out.println("Error in Leo.run(): null query or user assertions set");
             return;
         }
-        writeStatements(stmts, lang);
+        writeStatements(stmts, lang, sessionId);
         catFiles(kbFile.toString(),stmtFile,outfile);
         File comb = new File(outfile);
         run(comb,timeout);

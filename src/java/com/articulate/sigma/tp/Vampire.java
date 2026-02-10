@@ -16,6 +16,7 @@ package com.articulate.sigma.tp;
 import com.articulate.sigma.*;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.trans.SessionTPTPManager;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
@@ -490,10 +491,29 @@ public class Vampire {
 
     /** ***************************************************************
      * Write all the strings in @param stmts to temp-stmt.[tptp|tff|thf]
+     * When sessionId is provided, writes to the session-specific directory,
+     * creating it first if it does not yet exist.
      */
-    public void writeStatements(Set<String> stmts, String type) {
+    public void writeStatements(Set<String> stmts, String type, String sessionId) {
 
-        String dir = KBmanager.getMgr().getPref("kbDir");
+        String dir;
+        if (sessionId != null && !sessionId.isEmpty()) {
+            java.nio.file.Path sessionDir = SessionTPTPManager.getSessionDir(sessionId);
+            if (!java.nio.file.Files.exists(sessionDir)) {
+                try {
+                    java.nio.file.Files.createDirectories(sessionDir);
+                    System.out.println("Vampire.writeStatements(): created session dir " + sessionDir);
+                }
+                catch (IOException ex) {
+                    System.err.println("Error in writeStatements(): could not create session dir " + sessionDir);
+                    ex.printStackTrace();
+                }
+            }
+            dir = sessionDir.toString();
+        }
+        else {
+            dir = KBmanager.getMgr().getPref("kbDir");
+        }
         String fname = "temp-stmt." + type;
 
         try (FileWriter fw = new FileWriter(dir + File.separator + fname);
@@ -576,6 +596,14 @@ public class Vampire {
     }
 
     /** *************************************************************
+     * Backward-compatible overload — delegates with null sessionId.
+     * Session detection falls back to path extraction from kbFile.
+     */
+    public void run(KB kb, File kbFile, int timeout, Set<String> stmts) throws Exception {
+        run(kb, kbFile, timeout, stmts, null);
+    }
+
+    /** *************************************************************
      * Creates a running instance of Vampire adding a set of statements
      * in TFF or TPTP language to a file and then calling Vampire.
      * Note that any query must be given as a "conjecture"
@@ -584,15 +612,43 @@ public class Vampire {
      * @param kbFile the current knowledge base TPTP file
      * @param timeout the timeout given to Vampire to find a proof
      * @param stmts a Set of user assertions
+     * @param sessionId explicit HTTP session ID for temp file isolation;
+     *                  if null, falls back to extracting sessionId from kbFile path
      *
      * @throws Exception of something goes south
      */
-    public void run(KB kb, File kbFile, int timeout, Set<String> stmts) throws Exception {
+    public void run(KB kb, File kbFile, int timeout, Set<String> stmts, String sessionId) throws Exception {
 
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
-        String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+
+        // Use explicit sessionId if provided; otherwise try to extract from kbFile path
+        if (sessionId == null || sessionId.isEmpty()) {
+            String kbFilePath = kbFile.getAbsolutePath();
+            if (kbFilePath.contains(File.separator + "sessions" + File.separator)) {
+                String[] parts = kbFilePath.split(File.separator + "sessions" + File.separator);
+                if (parts.length > 1) {
+                    String remainder = parts[1];
+                    int nextSep = remainder.indexOf(File.separator);
+                    if (nextSep > 0) {
+                        sessionId = remainder.substring(0, nextSep);
+                    }
+                }
+            }
+        }
+        if (sessionId != null && !sessionId.isEmpty()) {
+            System.out.println("INFO Vampire.run(): using session dir for temp files, sessionId=" + sessionId);
+        }
+
+        // Use session dir for temp files when session-specific, otherwise shared kbDir
+        String dir;
+        if (sessionId != null && !sessionId.isEmpty()) {
+            dir = SessionTPTPManager.getSessionDir(sessionId).toString() + File.separator;
+        }
+        else {
+            dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+        }
         String outfile = dir + "temp-comb." + lang;
         String stmtFile = dir + "temp-stmt." + lang;
         File fout = new File(outfile);
@@ -602,22 +658,6 @@ public class Vampire {
         if (fstmt.exists())
             fstmt.delete();
 
-        // Detect if using session-specific file and extract sessionId
-        String sessionId = null;
-        String kbFilePath = kbFile.getAbsolutePath();
-        if (kbFilePath.contains(File.separator + "sessions" + File.separator)) {
-            // Extract sessionId from path: .../sessions/{sessionId}/...
-            String[] parts = kbFilePath.split(File.separator + "sessions" + File.separator);
-            if (parts.length > 1) {
-                String remainder = parts[1];
-                int nextSep = remainder.indexOf(File.separator);
-                if (nextSep > 0) {
-                    sessionId = remainder.substring(0, nextSep);
-                    System.out.println("INFO: Detected session-specific query, sessionId=" + sessionId);
-                }
-            }
-        }
-
         // Load UA files from session directory if session-specific, otherwise from shared directory
         List<String> userAsserts = getUserAssertions(kb, sessionId);
         if (userAsserts != null && stmts != null)
@@ -626,7 +666,7 @@ public class Vampire {
             System.err.println("Error in Vampire.run(): null query or user assertions set");
             return;
         }
-        writeStatements(stmts, lang);
+        writeStatements(stmts, lang, sessionId);
         concatFiles(kbFile.toString(),stmtFile,outfile);
         File comb = new File(outfile);
         run(comb,timeout);

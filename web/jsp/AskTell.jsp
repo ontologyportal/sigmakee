@@ -1053,8 +1053,9 @@
                                         renderATPResultPanel(vRun.getResult(), out);
                                     }
                                     tpp.parseProofOutput(vRun.output, qstr, kb, vRun.qlist);
-                                } else if ("LEO".equals(inferenceEngine)) {
-                                    com.articulate.sigma.tp.LEO leoRun = kb.askLeo(qstr, tmo, maxAns);
+                                }
+                                else if ("LEO".equals(inferenceEngine)) {
+                                   LEO leoRun = kb.askLeo(qstr, tmo, maxAns, session.getId());
                                     if (leoRun != null && leoRun.getResult() != null) {
                                         renderATPResultPanel(leoRun.getResult(), out);
                                     }
@@ -1342,19 +1343,20 @@
                             String sessId = session.getId();
                             String lang = SUMOKBtoTPTPKB.lang;
                             String tptpLang = "fof".equals(lang) ? "tptp" : "tff";
-                            java.nio.file.Path sessionTPTPPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionTPTPPath(sessId, kb.name, tptpLang);
+                            java.nio.file.Path sessionTPTPPath = SessionTPTPManager.getSessionTPTPPath(sessId, kb.name, tptpLang);
 
                             if (java.nio.file.Files.exists(sessionTPTPPath)) {
-                                // Use session-specific TPTP file
+                                // Use session-specific TPTP file (from prior session-specific tells)
                                 System.out.println("INFO: Using session-specific TPTP file: " + sessionTPTPPath);
                                 vampire = Boolean.TRUE.equals(modensPonens)
                                         ? kb.askVampireModensPonens(stmt, timeout, maxAnswers, sessionTPTPPath.toFile())
                                         : kb.askVampire(stmt, timeout, maxAnswers, sessionTPTPPath.toFile());
-                            } else {
-                                // Use shared TPTP files (standard behavior)
+                            }
+                            else {
+                                // Use shared TPTP base file but isolate temp files per session
                                 vampire = Boolean.TRUE.equals(modensPonens)
-                                        ? kb.askVampireModensPonens(stmt, timeout, maxAnswers)
-                                        : kb.askVampire(stmt, timeout, maxAnswers);
+                                        ? kb.askVampireModensPonens(stmt, timeout, maxAnswers, sessId)
+                                        : kb.askVampire(stmt, timeout, maxAnswers, sessId);
                             }
                         }
 
@@ -1425,9 +1427,9 @@
 
 
                 } else if ("LEO".equals(inferenceEngine)) {
-                    com.articulate.sigma.tp.LEO leo = null;
+                    LEO leo = null;
                     try {
-                        leo = kb.askLeo(stmt,timeout,maxAnswers);
+                        leo = kb.askLeo(stmt,timeout,maxAnswers,session.getId());
 
                         // Show ATPResult panel with SZS status and diagnostics
                         if (leo != null && leo.getResult() != null) {

@@ -1938,6 +1938,90 @@ public class KB implements Serializable {
         return leo;
     }
 
+    /*********************************************************************************
+     * Submit a query to LEO-III with session-specific temp file isolation.
+     * Uses the shared THF base file but writes temp-comb/temp-stmt into
+     * the session directory so concurrent sessions don't collide.
+     *
+     * @param suoKifFormula The query in SUO-KIF format
+     * @param timeout Timeout in seconds
+     * @param maxAnswers Maximum number of answers
+     * @param sessionId HTTP session ID for temp file isolation (null for shared dir)
+     * @return LEO result object
+     */
+    public LEO askLeo(String suoKifFormula, int timeout, int maxAnswers, String sessionId) {
+
+        System.out.println("KB.askLeo(): query (session=" + sessionId + "): " + suoKifFormula);
+        final String requestedLang = SUMOKBtoTPTPKB.lang;
+
+        try {
+            if (leo == null) {
+                leo = new LEO();
+            }
+        }
+        catch (Exception e) {
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+        if (StringUtil.isNonEmptyString(suoKifFormula)) {
+            loadLeo(requestedLang);
+            Formula query = new Formula();
+            query.read(suoKifFormula);
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            Set<Formula> processedQuery = fp.preProcess(query, true, this);
+            if (!processedQuery.isEmpty() && this.leo != null) {
+                int axiomIndex = 0;
+                String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+                String kbName = name;
+                String lang = "tff";
+                if ("fof".equals(requestedLang))
+                    lang = "tptp";
+                else
+                    SUMOtoTFAform.initOnce();
+                File s = new File(dir + kbName + "." + lang);
+                if (!s.exists()) {
+                    System.out.println("KB.askLeo(): no such file: " + s + ". Creating it.");
+                    KB kb = KBmanager.getMgr().getKB(kbName);
+                    KBmanager.getMgr().loadKBforInference(kb);
+                }
+                Set<String> tptpquery = new HashSet<>();
+                StringBuilder combined = new StringBuilder();
+                if (processedQuery.size() > 1) {
+                    combined.append("(or ");
+                    for (Formula p : processedQuery) {
+                        combined.append(p.getFormula()).append(Formula.SPACE);
+                    }
+                    combined.append(Formula.RP);
+                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
+                            ",conjecture,(" +
+                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
+                            + ")).";
+                    tptpquery.add(theTPTPstatement);
+                }
+                else {
+                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
+                            ",conjecture,(" +
+                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().getFormula(), true, requestedLang)
+                            + ")).";
+                    tptpquery.add(theTPTPstatement);
+                }
+                try {
+                    tptpQuery = tptpquery;
+                    LEO leoInst = new LEO();
+                    leoInst.run(this, s, timeout, tptpQuery, sessionId);
+                    leoInst.qlist = SUMOformulaToTPTPformula.qlist;
+                    return leoInst;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            else
+                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
+        }
+        return leo;
+    }
+
     /***************************************************************
      * Submits a
      * query to the inference engine.
@@ -2027,6 +2111,90 @@ public class KB implements Serializable {
                         throw new ATPException("Vampire execution failed", e.getMessage());
                     }
                     //vampire.terminate();
+                }
+            }
+            else
+                System.err.println("Error in KB.askVampire(): no TPTP formula translation for query: " + query);
+        }
+
+        return null;
+    }
+
+    /*********************************************************************************
+     * Submit a query to Vampire with session-specific temp file isolation.
+     * Uses the shared TPTP base file but writes temp-comb/temp-stmt into
+     * the session directory so concurrent sessions don't collide.
+     *
+     * @param suoKifFormula The query in SUO-KIF format
+     * @param timeout Timeout in seconds
+     * @param maxAnswers Maximum number of answers
+     * @param sessionId HTTP session ID for temp file isolation (null for shared dir)
+     * @return Vampire result object
+     */
+    public Vampire askVampire(String suoKifFormula, int timeout, int maxAnswers, String sessionId) {
+
+        System.out.println("============ Vampire Run (session=" + sessionId + ") =============");
+        final String requestedLang = SUMOKBtoTPTPKB.lang;
+
+        if (StringUtil.isNonEmptyString(suoKifFormula)) {
+            loadVampire(requestedLang);
+            Formula query = new Formula();
+            query.read(suoKifFormula);
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            Set<Formula> processedStmts = fp.preProcess(query, true, this);
+            if (!processedStmts.isEmpty()) {
+                int axiomIndex = 0;
+                String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+                String kbName = name;
+                String lang = "tff";
+                if ("fof".equals(requestedLang))
+                    lang = "tptp";
+                else
+                    SUMOtoTFAform.initOnce();
+                File s = new File(dir + kbName + "." + lang);
+                if (!s.exists()) {
+                    System.out.println("KB.askVampire(): no such file: " + s + ". Creating it.");
+                    KB kb = KBmanager.getMgr().getKB(kbName);
+                    KBmanager.getMgr().loadKBforInference(kb);
+                }
+                else {
+                    Set<String> tptpquery = new HashSet<>();
+                    StringBuilder combined = new StringBuilder();
+                    if (processedStmts.size() > 1) {
+                        combined.append("(or ");
+                        for (Formula p : processedStmts) {
+                            combined.append(p.getFormula()).append(Formula.SPACE);
+                        }
+                        combined.append(Formula.RP);
+                        String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
+                                ",conjecture,(" +
+                                SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
+                                + ")).";
+                        tptpquery.add(theTPTPstatement);
+                    }
+                    else {
+                        String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
+                                ",conjecture,(" +
+                                SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedStmts.iterator().next().getFormula(), true, requestedLang)
+                                + ")).";
+                        tptpquery.add(theTPTPstatement);
+                    }
+                    try {
+                        tptpQuery = tptpquery;
+                        Vampire vampire = new Vampire();
+                        if (Vampire.mode == null) {
+                            if (!StringUtil.emptyString(System.getenv("VAMPIRE_OPTS")))
+                                Vampire.mode = Vampire.ModeType.CUSTOM;
+                            else
+                                Vampire.mode = Vampire.ModeType.CASC;
+                        }
+                        vampire.run(this, s, timeout, tptpquery, sessionId);
+                        return vampire;
+                    } catch (ATPException e) {
+                        throw e;
+                    } catch (Exception e) {
+                        throw new ATPException("Vampire execution failed", e.getMessage());
+                    }
                 }
             }
             else
@@ -2333,6 +2501,66 @@ public class KB implements Serializable {
             vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
         } catch (ATPException e){
             throw e; // Preserve type + payload for proper error handling in UI
+        } catch (Exception e){
+            throw new ATPException("Vampire ModensPonens execution failed: " + e.getMessage(), "Vampire");
+        }
+
+        // STEP 4
+        if (dropOnePremiseFormulas) {
+            if (debug) System.out.println("============ Vampire Attempt to Drop One Premise Formulas  =============");
+            vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
+            if (debug) System.out.println("============ Vampire Drop One Premise Formulas Finished =============");
+        }
+
+        // STEP 5
+        vampire_pomens.output = TPTPutil.replaceFOFinfRule(vampire_pomens.output, authored_lines);
+        if (debug) System.out.println("============ Vampire replace FOF infRules Finished =============");
+
+        // STEP 6
+        return vampire_pomens;
+    }
+
+    /*********************************************************************************
+     * Vampire Modus Ponens with session-specific temp file isolation.
+     * Uses the shared TPTP base file but writes temp-comb/temp-stmt into
+     * the session directory so concurrent sessions don't collide.
+     *
+     * @param suoKifFormula The query in SUO-KIF format
+     * @param timeout Timeout in seconds
+     * @param maxAnswers Maximum number of answers
+     * @param sessionId HTTP session ID for temp file isolation (null for shared dir)
+     * @return Vampire result object
+     */
+    public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers, String sessionId) {
+
+        if (debug) System.out.println("============ Vampire w/ModensPomens (session=" + sessionId + ") =============");
+        // STEP 1 - use session-aware askVampire
+        Vampire vampire_initial = askVampire(suoKifFormula, timeout, maxAnswers, sessionId);
+
+        // STEP 2
+        List<TPTPFormula> proof = TPTPutil.processProofLines(vampire_initial.output);
+        List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
+
+        // STEP 3
+        Vampire vampire_pomens = new Vampire();
+        File kb = new File("min-problem.tptp");
+        List<String> cmds = new ArrayList<>(Arrays.asList(
+                "--input_syntax","tptp",
+                "--proof","tptp",
+                "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
+                "-fde","none","-updr","off"
+        ));
+        if (Vampire.askQuestion){
+            cmds.add(" -qa");
+            cmds.add("plain");
+        }
+
+        try{
+            vampire_pomens.runCustom(kb, timeout, cmds);
+            if (debug) System.out.println("============ Vampire w/ModensPomens run =============");
+            vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
+        } catch (ATPException e){
+            throw e;
         } catch (Exception e){
             throw new ATPException("Vampire ModensPonens execution failed: " + e.getMessage(), "Vampire");
         }
@@ -4832,7 +5060,7 @@ public class KB implements Serializable {
         FileUtil.delete(filename);
         FileUtil.delete(prefix + "test.tptp");
         FileUtil.delete(prefix + "temp-comb.tptp");
-        FileUtil.delete(prefix + "tempt-stmt.tptp");
+        FileUtil.delete(prefix + "temp-stmt.tptp");
     }
 
     /*****************************************************************

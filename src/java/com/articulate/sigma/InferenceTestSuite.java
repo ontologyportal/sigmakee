@@ -635,21 +635,37 @@ public class InferenceTestSuite {
     }
 
     /** ***************************************************************
+     * Save TPTP translations using shared kbDir (backward-compatible).
      */
     public void saveTPTP(InfTestData itd) {
+        saveTPTP(itd, null);
+    }
+
+    /** ***************************************************************
+     * Save TPTP translations. When sessionId is provided, reads temp-stmt
+     * from the session-specific directory.
+     */
+    public void saveTPTP(InfTestData itd, String sessionId) {
 
         String name = FileUtil.noExt(FileUtil.noPath(itd.filename));
         String kbName = KBmanager.getMgr().getPref("sumokbname");
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir;
+        if (sessionId != null && !sessionId.isEmpty()) {
+            kbDir = com.articulate.sigma.trans.SessionTPTPManager.getSessionDir(sessionId).toString();
+        }
+        else {
+            kbDir = KBmanager.getMgr().getPref("kbDir");
+        }
+        String sharedKbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
         try {
             String langExt = SUMOformulaToTPTPformula.lang;
             if (langExt.equals("fof"))
                 langExt = "tptp";
-            Files.copy(Paths.get(kbDir + sep + kbName + "." + langExt),
-                    Paths.get(kbDir + sep + "KB.ax"), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(Paths.get(sharedKbDir + sep + kbName + "." + langExt),
+                    Paths.get(sharedKbDir + sep + "KB.ax"), StandardCopyOption.REPLACE_EXISTING);
             Files.copy(Paths.get(kbDir + sep + "temp-stmt." + langExt),
-                    Paths.get(kbDir + sep + name + ".p"), StandardCopyOption.REPLACE_EXISTING);
+                    Paths.get(sharedKbDir + sep + name + ".p"), StandardCopyOption.REPLACE_EXISTING);
         }
         catch (IOException e) {
             e.printStackTrace();
