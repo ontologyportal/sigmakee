@@ -1972,18 +1972,46 @@ public class KB implements Serializable {
             Set<Formula> processedQuery = fp.preProcess(query, true, this);
             if (!processedQuery.isEmpty() && this.leo != null) {
                 int axiomIndex = 0;
-                String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+                String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
                 String kbName = name;
                 String lang = "tff";
                 if ("fof".equals(requestedLang))
                     lang = "tptp";
                 else
                     SUMOtoTFAform.initOnce();
-                File s = new File(dir + kbName + "." + lang);
+
+                // Resolve base file: prefer session-specific TPTP if it exists
+                File s;
+                if (sessionId != null && !sessionId.isEmpty()) {
+                    Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionTPTPPath(sessionId, kbName, lang);
+                    if (Files.exists(sessionPath)) {
+                        System.out.println("KB.askLeo(): using session-specific TPTP: " + sessionPath);
+                        s = sessionPath.toFile();
+                    } else {
+                        s = new File(kbDir + kbName + "." + lang);
+                    }
+                } else {
+                    s = new File(kbDir + kbName + "." + lang);
+                }
+
                 if (!s.exists()) {
-                    System.out.println("KB.askLeo(): no such file: " + s + ". Creating it.");
-                    KB kb = KBmanager.getMgr().getKB(kbName);
-                    KBmanager.getMgr().loadKBforInference(kb);
+                    if (sessionId != null && !sessionId.isEmpty()) {
+                        // Generate to session dir instead of polluting shared folder
+                        // (in-memory KB may contain user assertions from tell())
+                        System.out.println("KB.askLeo(): shared base missing, generating session-specific TPTP for session " + sessionId);
+                        try {
+                            Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
+                            s = sessionPath.toFile();
+                        } catch (Exception e) {
+                            System.err.println("KB.askLeo(): failed to generate session TPTP: " + e.getMessage());
+                            e.printStackTrace();
+                            return null;
+                        }
+                    } else {
+                        System.out.println("KB.askLeo(): no such file: " + s + ". Creating it.");
+                        KB kb = KBmanager.getMgr().getKB(kbName);
+                        KBmanager.getMgr().loadKBforInference(kb);
+                    }
                 }
                 Set<String> tptpquery = new HashSet<>();
                 StringBuilder combined = new StringBuilder();
@@ -2144,20 +2172,48 @@ public class KB implements Serializable {
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
             if (!processedStmts.isEmpty()) {
                 int axiomIndex = 0;
-                String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+                String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
                 String kbName = name;
                 String lang = "tff";
                 if ("fof".equals(requestedLang))
                     lang = "tptp";
                 else
                     SUMOtoTFAform.initOnce();
-                File s = new File(dir + kbName + "." + lang);
-                if (!s.exists()) {
-                    System.out.println("KB.askVampire(): no such file: " + s + ". Creating it.");
-                    KB kb = KBmanager.getMgr().getKB(kbName);
-                    KBmanager.getMgr().loadKBforInference(kb);
+
+                // Resolve base file: prefer session-specific TPTP if it exists
+                File baseFile;
+                if (sessionId != null && !sessionId.isEmpty()) {
+                    Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionTPTPPath(sessionId, kbName, lang);
+                    if (Files.exists(sessionPath)) {
+                        System.out.println("KB.askVampire(): using session-specific TPTP: " + sessionPath);
+                        baseFile = sessionPath.toFile();
+                    } else {
+                        baseFile = new File(kbDir + kbName + "." + lang);
+                    }
+                } else {
+                    baseFile = new File(kbDir + kbName + "." + lang);
                 }
-                else {
+
+                if (!baseFile.exists()) {
+                    if (sessionId != null && !sessionId.isEmpty()) {
+                        // Generate to session dir instead of polluting shared folder
+                        // (in-memory KB may contain user assertions from tell())
+                        System.out.println("KB.askVampire(): shared base missing, generating session-specific TPTP for session " + sessionId);
+                        try {
+                            Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
+                            baseFile = sessionPath.toFile();
+                        } catch (Exception e) {
+                            System.err.println("KB.askVampire(): failed to generate session TPTP: " + e.getMessage());
+                            e.printStackTrace();
+                            return null;
+                        }
+                    } else {
+                        System.out.println("KB.askVampire(): no such file: " + baseFile + ". Creating it.");
+                        KB kb = KBmanager.getMgr().getKB(kbName);
+                        KBmanager.getMgr().loadKBforInference(kb);
+                    }
+                }
+                {
                     Set<String> tptpquery = new HashSet<>();
                     StringBuilder combined = new StringBuilder();
                     if (processedStmts.size() > 1) {
@@ -2188,7 +2244,7 @@ public class KB implements Serializable {
                             else
                                 Vampire.mode = Vampire.ModeType.CASC;
                         }
-                        vampire.run(this, s, timeout, tptpquery, sessionId);
+                        vampire.run(this, baseFile, timeout, tptpquery, sessionId);
                         return vampire;
                     } catch (ATPException e) {
                         throw e;
@@ -2201,86 +2257,6 @@ public class KB implements Serializable {
                 System.err.println("Error in KB.askVampire(): no TPTP formula translation for query: " + query);
         }
 
-        return null;
-    }
-
-    /*********************************************************************************
-     * Submit a query to Vampire using a specific TPTP file instead of the default.
-     * This is used for session-specific TPTP files to ensure isolation.
-     *
-     * @param suoKifFormula The query in SUO-KIF format
-     * @param timeout Timeout in seconds
-     * @param maxAnswers Maximum number of answers
-     * @param tptpFile The custom TPTP file to use
-     * @return Vampire result object
-     */
-    public Vampire askVampire(String suoKifFormula, int timeout, int maxAnswers, File tptpFile) {
-
-        System.out.println("============ Vampire Run with Custom TPTP =============");
-        final String requestedLang = SUMOKBtoTPTPKB.lang;
-        System.out.println("KB.askVampire(): captured requestedLang=" + requestedLang + ", tptpFile=" + tptpFile);
-
-        if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            loadVampire(requestedLang);
-            Formula query = new Formula();
-            query.read(suoKifFormula);
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = fp.preProcess(query, true, this);
-            System.out.println("KB.askVampire(): processed query: " + processedStmts);
-            if (!processedStmts.isEmpty()) {
-                int axiomIndex = 0;
-                if (!tptpFile.exists()) {
-                    System.err.println("KB.askVampire(): Custom TPTP file does not exist: " + tptpFile);
-                    return null;
-                }
-
-                Set<String> tptpquery = new HashSet<>();
-                StringBuilder combined = new StringBuilder();
-                if (processedStmts.size() > 1) {
-                    combined.append("(or ");
-                    for (Formula p : processedStmts) {
-                        combined.append(p.getFormula()).append(Formula.SPACE);
-                    }
-                    combined.append(Formula.RP);
-                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                            ",conjecture,(" +
-                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
-                            + ")).";
-                    tptpquery.add(theTPTPstatement);
-                } else {
-                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                            ",conjecture,(" +
-                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedStmts.iterator().next().getFormula(), true, requestedLang)
-                            + ")).";
-                    tptpquery.add(theTPTPstatement);
-                }
-                try {
-                    tptpQuery = tptpquery;
-                    System.out.println("KB.askVampire(): calling with: " + tptpFile + ", " + timeout + ", " + tptpquery);
-                    System.out.println("KB.askVampire(): qlist: " + SUMOformulaToTPTPformula.qlist);
-                    System.out.println("KB.askVampire(): mode before: " + Vampire.mode);
-                    Vampire vampire = new Vampire();
-                    if (Vampire.mode == null) {
-                        if (!StringUtil.emptyString(System.getenv("VAMPIRE_OPTS")))
-                            Vampire.mode = Vampire.ModeType.CUSTOM;
-                        else
-                            Vampire.mode = Vampire.ModeType.CASC;
-                    }
-                    System.out.println("KB.askVampire(): mode: " + Vampire.mode);
-                    vampire.run(this, tptpFile, timeout, tptpquery);
-                    System.out.println("============ Vampire Run with Custom TPTP Finished =============");
-                    return vampire;
-                }
-                catch (ATPException e) {
-                    throw e; // preserve type + payload
-                }
-                catch (Exception e) {
-                    throw new ATPException("Vampire execution failed", e.getMessage());
-                }
-            } else {
-                System.err.println("Error in KB.askVampire(): no TPTP formula translation for query: " + query);
-            }
-        }
         return null;
     }
 
@@ -2307,33 +2283,29 @@ public class KB implements Serializable {
         final String requestedLang = SUMOKBtoTPTPKB.lang;          // typically "fof" or "tff"
         final String lang = "fof".equals(requestedLang) ? "tptp" : "tff";
         boolean mustRegenBase = tqRequiresBaseRegeneration(sessionId);
-        File tptpFile = null;
 
         // For session-specific TQ tests, always check if we need session-specific files
         if (sessionId != null && !sessionId.isEmpty()) {
             // Check if session-specific UA files exist
-            Path sessionUAPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionUAPath(sessionId, this.name);
+            Path sessionUAPath = SessionTPTPManager.getSessionUAPath(sessionId, this.name);
             boolean hasSessionUA = java.nio.file.Files.exists(sessionUAPath);
 
             if (mustRegenBase || hasSessionUA) {
                 try {
-                    Path sessionPath;
                     if (mustRegenBase) {
                         // Full base regeneration required (schema/transitive changes)
                         System.out.println("INFO askVampireForTQ(): Session-specific base regen for session " + sessionId);
-                        sessionPath = com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
+                        SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
                     } else {
                         // Only UA files changed - fast merge instead of full regen
                         System.out.println("INFO askVampireForTQ(): Merging shared base with session UA for session " + sessionId);
-                        sessionPath = com.articulate.sigma.trans.SessionTPTPManager.mergeBaseWithSessionUA(sessionId, this, lang);
+                        SessionTPTPManager.mergeBaseWithSessionUA(sessionId, this, lang);
                     }
-                    tptpFile = sessionPath.toFile();
                 }
                 catch (Exception e) {
                     System.err.println("ERROR askVampireForTQ(): Failed to generate/merge session TPTP: " + e.getMessage());
                     e.printStackTrace();
-                    // Fall back to shared base (will use session UA detection in Vampire.run)
-                    tptpFile = null;
+                    // Fall back to shared base (askVampire will use shared TPTP)
                 }
             }
         } else if (mustRegenBase) {
@@ -2346,16 +2318,10 @@ public class KB implements Serializable {
             }
         }
 
-        // Run prover with session-specific or base file
-        if (tptpFile != null) {
-            return modensPonens
-                    ? askVampireModensPonens(suoKifFormula, timeout, maxAnswers, tptpFile)
-                    : askVampire(suoKifFormula, timeout, maxAnswers, tptpFile);
-        } else {
-            return modensPonens
-                    ? askVampireModensPonens(suoKifFormula, timeout, maxAnswers)
-                    : askVampire(suoKifFormula, timeout, maxAnswers);
-        }
+        // Run prover — askVampire internally resolves session-specific TPTP files
+        return modensPonens
+                ? askVampireModensPonens(suoKifFormula, timeout, maxAnswers, sessionId)
+                : askVampire(suoKifFormula, timeout, maxAnswers, sessionId);
     }
 
 
@@ -2458,6 +2424,15 @@ public class KB implements Serializable {
 
 
     /**
+     * Backward-compatible wrapper for askVampireModensPonens with no session isolation.
+     */
+    public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers) {
+        return askVampireModensPonens(suoKifFormula, timeout, maxAnswers, (String) null);
+    }
+
+    /*********************************************************************************
+     * Vampire Modus Ponens with session-specific isolation.
+     *
      * STEPS:
      * 1 - AskVampire to get the first output
      * 2 - Process the output to keep only the authored axioms
@@ -2465,65 +2440,6 @@ public class KB implements Serializable {
      * 4 - If wanted drop the one premise formulas.
      * 5 - Replace the new proof's infRules with the original ones.
      * 6 - Return Vampire object for further processing from AskTell.jsp
-     *
-     * @param suoKifFormula
-     * @param timeout
-     * @param maxAnswers
-     * @return
-     */
-    public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers){
-
-        if (debug) System.out.println("============ Vampire w/ModensPomens  =============");
-        // STEP 1
-        Vampire vampire_initial = askVampire(suoKifFormula, timeout, maxAnswers);
-
-        // STEP 2
-        List<TPTPFormula> proof = TPTPutil.processProofLines(vampire_initial.output);
-        List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
-
-        // STEP 3
-        Vampire vampire_pomens = new Vampire();
-        File kb = new File("min-problem.tptp");
-        List<String> cmds = new ArrayList<>(Arrays.asList(
-                "--input_syntax","tptp",
-                "--proof","tptp",                  // <-- TSTP-style proof lines
-                "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                "-fde","none","-updr","off"
-        ));
-        if (Vampire.askQuestion){
-            cmds.add(" -qa");
-            cmds.add("plain");
-        }
-
-        try{
-            vampire_pomens.runCustom(kb, timeout, cmds);
-            if (debug) System.out.println("============ Vampire w/ModensPomens run =============");
-            vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
-        } catch (ATPException e){
-            throw e; // Preserve type + payload for proper error handling in UI
-        } catch (Exception e){
-            throw new ATPException("Vampire ModensPonens execution failed: " + e.getMessage(), "Vampire");
-        }
-
-        // STEP 4
-        if (dropOnePremiseFormulas) {
-            if (debug) System.out.println("============ Vampire Attempt to Drop One Premise Formulas  =============");
-            vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
-            if (debug) System.out.println("============ Vampire Drop One Premise Formulas Finished =============");
-        }
-
-        // STEP 5
-        vampire_pomens.output = TPTPutil.replaceFOFinfRule(vampire_pomens.output, authored_lines);
-        if (debug) System.out.println("============ Vampire replace FOF infRules Finished =============");
-
-        // STEP 6
-        return vampire_pomens;
-    }
-
-    /*********************************************************************************
-     * Vampire Modus Ponens with session-specific temp file isolation.
-     * Uses the shared TPTP base file but writes temp-comb/temp-stmt into
-     * the session directory so concurrent sessions don't collide.
      *
      * @param suoKifFormula The query in SUO-KIF format
      * @param timeout Timeout in seconds
@@ -2536,9 +2452,19 @@ public class KB implements Serializable {
         if (debug) System.out.println("============ Vampire w/ModensPomens (session=" + sessionId + ") =============");
         // STEP 1 - use session-aware askVampire
         Vampire vampire_initial = askVampire(suoKifFormula, timeout, maxAnswers, sessionId);
+        // STEPS 2-6
+        return modensPonensPostProcess(vampire_initial, timeout);
+    }
+
+    /*********************************************************************************
+     * Post-process an initial Vampire result with Modus Ponens reasoning.
+     * Extracts authored axioms, re-runs Vampire with MP options, optionally drops
+     * one-premise formulas, and replaces inference rules.
+     */
+    private Vampire modensPonensPostProcess(Vampire vampireInitial, int timeout) {
 
         // STEP 2
-        List<TPTPFormula> proof = TPTPutil.processProofLines(vampire_initial.output);
+        List<TPTPFormula> proof = TPTPutil.processProofLines(vampireInitial.output);
         List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
 
         // STEP 3
@@ -2562,67 +2488,6 @@ public class KB implements Serializable {
         } catch (ATPException e){
             throw e;
         } catch (Exception e){
-            throw new ATPException("Vampire ModensPonens execution failed: " + e.getMessage(), "Vampire");
-        }
-
-        // STEP 4
-        if (dropOnePremiseFormulas) {
-            if (debug) System.out.println("============ Vampire Attempt to Drop One Premise Formulas  =============");
-            vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
-            if (debug) System.out.println("============ Vampire Drop One Premise Formulas Finished =============");
-        }
-
-        // STEP 5
-        vampire_pomens.output = TPTPutil.replaceFOFinfRule(vampire_pomens.output, authored_lines);
-        if (debug) System.out.println("============ Vampire replace FOF infRules Finished =============");
-
-        // STEP 6
-        return vampire_pomens;
-    }
-
-    /*********************************************************************************
-     * Vampire Modus Ponens with custom TPTP file.
-     * Same as askVampireModensPonens but uses a specific TPTP file for the initial query.
-     *
-     * @param suoKifFormula The query in SUO-KIF format
-     * @param timeout Timeout in seconds
-     * @param maxAnswers Maximum number of answers
-     * @param tptpFile Custom TPTP file to use
-     * @return Vampire result object
-     */
-    public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers, File tptpFile) {
-
-        if (debug) System.out.println("============ Vampire w/ModensPomens (custom TPTP) =============");
-        // STEP 1 - use custom TPTP file
-        Vampire vampire_initial = askVampire(suoKifFormula, timeout, maxAnswers, tptpFile);
-
-        // STEP 2
-        List<TPTPFormula> proof = TPTPutil.processProofLines(vampire_initial.output);
-        List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
-
-        // STEP 3
-        Vampire vampire_pomens = new Vampire();
-        File kb = new File("min-problem.tptp");
-        List<String> cmds = new ArrayList<>(Arrays.asList(
-                "--input_syntax", "tptp",
-                "--proof", "tptp",                  // <-- TSTP-style proof lines
-                "-av", "off", "-nm", "0", "-fsr", "off", "-fd", "off", "-bd", "off",
-                "-fde", "none", "-updr", "off"
-        ));
-        if (Vampire.askQuestion) {
-            cmds.add(" -qa");
-            cmds.add("plain");
-        }
-
-        try {
-            vampire_pomens.runCustom(kb, timeout, cmds);
-            if (debug) System.out.println("============ Vampire w/ModensPomens run =============");
-            vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
-        }
-        catch (ATPException e) {
-            throw e; // Preserve type + payload for proper error handling in UI
-        }
-        catch (Exception e) {
             throw new ATPException("Vampire ModensPonens execution failed: " + e.getMessage(), "Vampire");
         }
 

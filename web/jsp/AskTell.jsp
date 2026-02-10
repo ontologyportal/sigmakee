@@ -1338,26 +1338,10 @@
 
                         }else { // First-Order Formula
                             System.out.println(" -- First Order Formula Detected - Attempring to run normal Vampire");
-
-                            // Check if session-specific TPTP files exist (from session-specific tells)
                             String sessId = session.getId();
-                            String lang = SUMOKBtoTPTPKB.lang;
-                            String tptpLang = "fof".equals(lang) ? "tptp" : "tff";
-                            java.nio.file.Path sessionTPTPPath = SessionTPTPManager.getSessionTPTPPath(sessId, kb.name, tptpLang);
-
-                            if (java.nio.file.Files.exists(sessionTPTPPath)) {
-                                // Use session-specific TPTP file (from prior session-specific tells)
-                                System.out.println("INFO: Using session-specific TPTP file: " + sessionTPTPPath);
-                                vampire = Boolean.TRUE.equals(modensPonens)
-                                        ? kb.askVampireModensPonens(stmt, timeout, maxAnswers, sessionTPTPPath.toFile())
-                                        : kb.askVampire(stmt, timeout, maxAnswers, sessionTPTPPath.toFile());
-                            }
-                            else {
-                                // Use shared TPTP base file but isolate temp files per session
-                                vampire = Boolean.TRUE.equals(modensPonens)
-                                        ? kb.askVampireModensPonens(stmt, timeout, maxAnswers, sessId)
-                                        : kb.askVampire(stmt, timeout, maxAnswers, sessId);
-                            }
+                            vampire = Boolean.TRUE.equals(modensPonens)
+                                    ? kb.askVampireModensPonens(stmt, timeout, maxAnswers, sessId)
+                                    : kb.askVampire(stmt, timeout, maxAnswers, sessId);
                         }
 
                         // Show ATPResult panel with SZS status and diagnostics
