@@ -5,7 +5,6 @@
     "http://java.sun.com/dtd/web-app_2_3.dtd">
 
 <web-app>
-
     <display-name>SigmaKEE</display-name>
     <description>
         Sigma Knowledge Engineering Environment (SigmaKEE)
@@ -87,14 +86,18 @@
         <url-pattern>*.jsp</url-pattern>
     </filter-mapping>
 
-
-    <welcome-file-list>
-        <welcome-file>KBs.jsp</welcome-file>
-    </welcome-file-list>
+    <!-- Session cleanup listener for session-specific TPTP files -->
+    <listener>
+        <listener-class>com.articulate.sigma.SessionCleanupListener</listener-class>
+    </listener>
 
     <session-config>
         <!-- Timeout in minutes -->
         <session-timeout>60</session-timeout>
     </session-config>
+
+    <welcome-file-list>
+        <welcome-file>KBs.jsp</welcome-file>
+    </welcome-file-list>
 
 </web-app>

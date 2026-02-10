@@ -9,8 +9,9 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
     SUMOformulaToTPTPformulaTest.class,
 //    SUMOtoTFATest.class,
-    TPTP3ProofProcTest.class
-        ,TPTPUtilTest.class
+    TPTP3ProofProcTest.class,
+    TPTPUtilTest.class,
+    SessionTPTPManagerTest.class
 })
 public class UnitTransTestSuite extends UnitTestBase {
 

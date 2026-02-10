@@ -635,21 +635,37 @@ public class InferenceTestSuite {
     }
 
     /** ***************************************************************
+     * Save TPTP translations using shared kbDir (backward-compatible).
      */
     public void saveTPTP(InfTestData itd) {
+        saveTPTP(itd, null);
+    }
+
+    /** ***************************************************************
+     * Save TPTP translations. When sessionId is provided, reads temp-stmt
+     * from the session-specific directory.
+     */
+    public void saveTPTP(InfTestData itd, String sessionId) {
 
         String name = FileUtil.noExt(FileUtil.noPath(itd.filename));
         String kbName = KBmanager.getMgr().getPref("sumokbname");
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir;
+        if (sessionId != null && !sessionId.isEmpty()) {
+            kbDir = com.articulate.sigma.trans.SessionTPTPManager.getSessionDir(sessionId).toString();
+        }
+        else {
+            kbDir = KBmanager.getMgr().getPref("kbDir");
+        }
+        String sharedKbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
         try {
             String langExt = SUMOformulaToTPTPformula.lang;
             if (langExt.equals("fof"))
                 langExt = "tptp";
-            Files.copy(Paths.get(kbDir + sep + kbName + "." + langExt),
-                    Paths.get(kbDir + sep + "KB.ax"), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(Paths.get(sharedKbDir + sep + kbName + "." + langExt),
+                    Paths.get(sharedKbDir + sep + "KB.ax"), StandardCopyOption.REPLACE_EXISTING);
             Files.copy(Paths.get(kbDir + sep + "temp-stmt." + langExt),
-                    Paths.get(kbDir + sep + name + ".p"), StandardCopyOption.REPLACE_EXISTING);
+                    Paths.get(sharedKbDir + sep + name + ".p"), StandardCopyOption.REPLACE_EXISTING);
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -977,13 +993,27 @@ public class InferenceTestSuite {
 
     /****************************************************************
      * Undo all parts of the state that have anything to do with user assertions made during inference.
+     * Defaults to shared UA files (backward compatible).
      */
     public static void resetAllForInference(KB kb) throws IOException {
+        resetAllForInference(kb, null);
+    }
+
+    /****************************************************************
+     * Undo all parts of the state that have anything to do with user assertions made during inference.
+     * Session-aware version for isolated TQ test handling.
+     *
+     * @param kb The knowledge base
+     * @param sessionId Optional HTTP session ID for session-specific cleanup.
+     *                  If null or empty, uses shared UA files.
+     */
+    public static void resetAllForInference(KB kb, String sessionId) throws IOException {
 
         try {
             kb.withUserAssertionLock(() -> {
 
-                System.out.println("in InferenceTestSuite.resetAllForInference(): delete user assertions");
+                System.out.println("in InferenceTestSuite.resetAllForInference(): delete user assertions" +
+                        (sessionId != null && !sessionId.isEmpty() ? " (session: " + sessionId + ")" : " (shared)"));
 
                 // 1) Purge UA formulas from in-memory KB indexes
                 int before = kb.countUserAssertionFormulasInMemory();
@@ -1000,13 +1030,11 @@ public class InferenceTestSuite {
                 kb.deleteUserAssertions();
 
                 // 3) Delete UA files on disk (KIF + translated variants)
-                final File dir = new File(KBmanager.getMgr().getPref("kbDir"));
-                final String kbName = kb.name;
-
-                deleteIfExists(new File(dir, kbName + KB._userAssertionsString)); // *_UserAssertions.kif
-                deleteIfExists(new File(dir, kbName + KB._userAssertionsTPTP));   // *_UserAssertions.tptp
-                deleteIfExists(new File(dir, kbName + KB._userAssertionsTFF));    // *_UserAssertions.tff
-                deleteIfExists(new File(dir, kbName + KB._userAssertionsTHF));    // *_UserAssertions.thf
+                if (sessionId != null && !sessionId.isEmpty()) {
+                    deleteSessionUserAssertionFiles(kb, sessionId);
+                } else {
+                    deleteSharedUserAssertionFiles(kb);
+                }
 
                 // 4) Clear cheap caches that can be polluted by accumulating terms
                 if (kb.termDepthCache != null) {
@@ -1022,6 +1050,37 @@ public class InferenceTestSuite {
             if (cause instanceof IOException) throw (IOException) cause;
             throw re;
         }
+    }
+
+    /****************************************************************
+     * Delete session-specific user assertion files.
+     *
+     * @param kb The knowledge base
+     * @param sessionId The HTTP session ID
+     */
+    private static void deleteSessionUserAssertionFiles(KB kb, String sessionId) {
+        java.nio.file.Path sessionDir = com.articulate.sigma.trans.SessionTPTPManager.getSessionDir(sessionId);
+        final String kbName = kb.name;
+
+        deleteIfExists(sessionDir.resolve(kbName + KB._userAssertionsString).toFile()); // *_UserAssertions.kif
+        deleteIfExists(sessionDir.resolve(kbName + KB._userAssertionsTPTP).toFile());   // *_UserAssertions.tptp
+        deleteIfExists(sessionDir.resolve(kbName + KB._userAssertionsTFF).toFile());    // *_UserAssertions.tff
+        deleteIfExists(sessionDir.resolve(kbName + KB._userAssertionsTHF).toFile());    // *_UserAssertions.thf
+    }
+
+    /****************************************************************
+     * Delete shared user assertion files (original behavior).
+     *
+     * @param kb The knowledge base
+     */
+    private static void deleteSharedUserAssertionFiles(KB kb) {
+        final File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        final String kbName = kb.name;
+
+        deleteIfExists(new File(dir, kbName + KB._userAssertionsString)); // *_UserAssertions.kif
+        deleteIfExists(new File(dir, kbName + KB._userAssertionsTPTP));   // *_UserAssertions.tptp
+        deleteIfExists(new File(dir, kbName + KB._userAssertionsTFF));    // *_UserAssertions.tff
+        deleteIfExists(new File(dir, kbName + KB._userAssertionsTHF));    // *_UserAssertions.thf
     }
 
     private static void deleteIfExists(File f) {

@@ -205,7 +205,7 @@ public class THFnew {
 
             // FIX: ensure variable-arity predicates use the right numeric suffix
             // e.g. s__partition__4 with 5 args -> s__partition__5
-            java.util.regex.Matcher m = java.util.regex.Pattern
+            Matcher m = Pattern
                     .compile("^(s__[A-Za-z0-9]+__)(\\d+)$")
                     .matcher(functor);
             if (m.matches()) {
@@ -631,7 +631,7 @@ public class THFnew {
                             || Modals.formulaPreds.contains(a)) {
 
                         out.write("% exclude(): modal/HOL symbol used as individual " +
-                                "argument of non-modal head: " + a + "\n");
+                                "argument of non-modal head, Symbol " + a + " head: " + head+ "\n");
                         return true;
                     }
                 }
@@ -1490,6 +1490,24 @@ public class THFnew {
     }
 
     /** ***************************************************************
+     * Wait for background TPTP generation to complete.
+     * Only needed for full-KB export modes (-m, -r), not for
+     * single-formula translation (--one).
+     */
+    private static void waitForBackgroundGeneration() {
+
+        if (!TPTPGenerationManager.waitForTHFModal(600)) {
+            System.out.println("THFnew.main(): Background generation not ready, generating THF Modal synchronously");
+        }
+        if (!TPTPGenerationManager.waitForTHFPlain(600)) {
+            System.out.println("THFnew.main(): Background generation not ready, generating THF Plain synchronously");
+        }
+        if (!TPTPGenerationManager.waitForTFF(600)) {
+            System.out.println("THFnew.main(): Background generation not ready, generating TFF synchronously");
+        }
+    }
+
+    /** ***************************************************************
      */
     public static void main(String[] args) {
 
@@ -1509,9 +1527,9 @@ public class THFnew {
                 return;
             }
             System.out.println("contains one : " + argMap.containsKey("one"));
-            System.out.println("has one arg: " + (argMap.get("one").size() == 1));
+            System.out.println("has one arg: " + (argMap.containsKey("one") && argMap.get("one").size() == 1));
             if (argMap.containsKey("one") && argMap.get("one").size() == 1) {
-                // DEFAULT: plain (non-modal) THF
+                // Single formula translation - no need to wait for background TPTP generation
                 System.out.println("THFnew.main(): translate to THF (with modals)");
                 PrintWriter writer = new PrintWriter(System.out, true);
                 try {
@@ -1520,9 +1538,12 @@ public class THFnew {
                 catch (Exception e) {
                     e.printStackTrace();
                 }
+                finally {
+                    writer.flush();
+                }
             }
             else if (argMap.containsKey("r")) {
-                // DEFAULT: plain (non-modal) THF
+                waitForBackgroundGeneration();
                 System.out.println("THFnew.main(): translate to plain THF (no modals)");
                 transPlainTHF(kb);
             }
@@ -1531,6 +1552,7 @@ public class THFnew {
                 test(kb);
             }
             else if (argMap.containsKey("m")) {
+                waitForBackgroundGeneration();
                 System.out.println("THFnew.main(): translate to THF with modals");
                 transModalTHF(kb);
             }

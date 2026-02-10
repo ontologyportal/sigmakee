@@ -160,6 +160,8 @@ public class Modals {
     public static final Set<String> RESERVED_MODAL_SYMBOLS =
             new HashSet<>(Arrays.asList(
                     "accreln",
+                    "accreln1",
+                    "accreln2",
 //                    "knows",
 //                    "believes",
 //                    "desires",

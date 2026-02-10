@@ -18,6 +18,7 @@ import org.junit.runners.Suite;
     KBcacheTest.class,
     KBmanagerInitIntegrationTest.class,
     KbIntegrationTest.class,
+    KBSessionIsolationTest.class,
     PredVarInstIntegrationTest.class,
     SUMOformulaToTPTPformulaTest.class, // <- already tested in the UnitTestSuite
     TPTP3Test.class,
