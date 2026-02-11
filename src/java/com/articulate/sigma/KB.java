@@ -314,6 +314,26 @@ public class KB implements Serializable {
             this.celt = new CELT();
     }
 
+
+    private static final Set<String> TPTP_BASE_REGEN_PREDICATES = Set.of(
+            "subclass",
+            "domain",
+            "domainSubclass",
+            "range",
+            "rangeSubclass",
+            "immediateInstance",
+            "immediateSubclass",
+            "disjoint",
+            "partition",
+            "exhaustiveDecomposition",
+            "successorClass",
+            "partialOrderingOn",
+            "trichotomizingOn",
+            "totalOrderingOn",
+            "disjointDecomposition"
+    );
+
+
     /***************************************************************
      * Experimental: Utility method to perform a merge with the KB input
      *
@@ -2363,9 +2383,7 @@ public class KB implements Serializable {
             if (Formula.isLogicalOperator(pred)) continue;
 
             // (A) schema / hierarchy changes => global impact
-            if ("subclass".equals(pred) || "subrelation".equals(pred) ||
-                    "domain".equals(pred)  || "range".equals(pred) ||
-                    "disjoint".equals(pred) || "partition".equals(pred)) {
+            if (TPTP_BASE_REGEN_PREDICATES.contains(pred)) {
                 return true;
             }
 

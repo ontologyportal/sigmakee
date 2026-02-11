@@ -281,6 +281,11 @@
             font-size: 0.85em;
             margin-top: 8px;
         }
+
+        a.szs-link { text-decoration: none; }
+        a.szs-link:hover .szs-badge { text-decoration: underline; cursor: pointer; }
+
+
     </style>
 
     <script>
@@ -1706,7 +1711,12 @@
         out.println("<div class='result-header'>");
         String statusName = r.getSzsStatus() != null ? r.getSzsStatus().getTptpName() : "Unknown";
         String cssClass = r.getCssClass();
-        out.println("<span class='szs-badge " + cssClass + "'>" + htmlEncode(statusName) + "</span>");
+        String szsUrl = "https://tptp.org/UserDocs/SZSOntology/";
+
+//        out.println("<span class='szs-badge " + cssClass + "'>" + htmlEncode(statusName) + "</span>");
+        out.println("<a class='szs-link' href='" + szsUrl + "' target='_blank' rel='noopener noreferrer'>"
+                + "<span class='szs-badge " + cssClass + "'>" + htmlEncode(statusName) + "</span>"
+                + "</a>");
 
         String engineInfo = r.getEngineName() != null ? r.getEngineName() : "Prover";
         if (r.getEngineMode() != null && !r.getEngineMode().isEmpty()) {
