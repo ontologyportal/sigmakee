@@ -272,6 +272,28 @@ public class KBcache implements Serializable {
                 this.explicitDisjoint.put(key, newSet);
             }
         }
+        if (kbCacheIn.functions != null) {
+            this.functions = ConcurrentHashMap.newKeySet(kbCacheIn.functions.size());
+            this.functions.addAll(kbCacheIn.functions);
+        }
+        if (kbCacheIn.predicates != null) {
+            this.predicates = new HashSet<>(kbCacheIn.predicates);
+        }
+        if (kbCacheIn.instRels != null) {
+            this.instRels = Sets.newHashSet(kbCacheIn.instRels);
+        }
+        if (kbCacheIn.instances != null) {
+            for (Map.Entry<String, Set<String>> entry : kbCacheIn.instances.entrySet()) {
+                this.instances.put(entry.getKey(), Sets.newHashSet(entry.getValue()));
+            }
+        }
+        if (kbCacheIn.disjoint != null) {
+            this.disjoint = Sets.newHashSet(kbCacheIn.disjoint);
+        }
+        if (kbCacheIn.disjointRelations != null) {
+            this.disjointRelations = Sets.newHashSet(kbCacheIn.disjointRelations);
+        }
+        this.initialized = kbCacheIn.initialized;
     }
 
     /***************************************************************
@@ -336,6 +358,335 @@ public class KBcache implements Serializable {
         signatures.clear();
         transRels.clear();
         valences.clear();
+    }
+
+    // -----------------------------------------------------------------------
+    // Incremental KBcache update methods
+    //
+    // Each method updates only the cache entries affected by a single
+    // schema-level assertion (subclass, instance, domain, range, subrelation,
+    // disjoint).  They return the set of terms whose cache entries changed so
+    // that M3.3 can identify which TPTP formulas need retranslation.
+    //
+    // Cost per call: O(|descendants(child)| + |ancestors(parent)|), typically
+    // tens-to-hundreds of terms rather than the full 75K-formula rebuild.
+    // -----------------------------------------------------------------------
+
+    /**************************************************************
+     * Incrementally record (subclass child parent).
+     *
+     * Updates:
+     *   parents["subclass"]   — child and all its descendants gain parent's ancestors
+     *   children["subclass"]  — parent and all its ancestors gain child's descendants
+     *   instanceOf            — instances of child/descendants gain parent's ancestors
+     *   instances             — parent and ancestors gain instances of child/descendants
+     *
+     * @param child  the new subclass (e.g. "Robot")
+     * @param parent the existing superclass (e.g. "Agent")
+     * @return the set of terms whose cache entries changed
+     */
+    public Set<String> addSubclass(String child, String parent) {
+
+        Set<String> affected = new HashSet<>();
+        Map<String, Set<String>> subclassParents   = parents.computeIfAbsent("subclass",   k -> new HashMap<>());
+        Map<String, Set<String>> subclassChildren  = children.computeIfAbsent("subclass",  k -> new HashMap<>());
+
+        // 1. newParents = {parent} ∪ parents["subclass"][parent]
+        Set<String> newParents = new HashSet<>();
+        newParents.add(parent);
+        Set<String> parentAncestors = subclassParents.get(parent);
+        if (parentAncestors != null)
+            newParents.addAll(parentAncestors);
+
+        // 2. parents["subclass"][child] += newParents
+        subclassParents.computeIfAbsent(child, k -> new HashSet<>()).addAll(newParents);
+        affected.add(child);
+
+        // 3. For each descendant D of child: parents["subclass"][D] += newParents
+        Set<String> childDescendants = new HashSet<>(subclassChildren.getOrDefault(child, Collections.emptySet()));
+        for (String desc : childDescendants) {
+            subclassParents.computeIfAbsent(desc, k -> new HashSet<>()).addAll(newParents);
+            affected.add(desc);
+        }
+
+        // 4. allNewChildren = {child} ∪ descendants of child
+        Set<String> allNewChildren = new HashSet<>();
+        allNewChildren.add(child);
+        allNewChildren.addAll(childDescendants);
+
+        // 5. children["subclass"][A] += allNewChildren for parent and each ancestor A
+        Set<String> allAncestors = new HashSet<>();
+        allAncestors.add(parent);
+        if (parentAncestors != null)
+            allAncestors.addAll(parentAncestors);
+        for (String ancestor : allAncestors) {
+            subclassChildren.computeIfAbsent(ancestor, k -> new HashSet<>()).addAll(allNewChildren);
+            affected.add(ancestor);
+        }
+
+        // 6. For every instance whose instanceOf set contains child or any descendant,
+        //    add newParents (child is now a subclass of parent and its ancestors).
+        for (Map.Entry<String, Set<String>> entry : instanceOf.entrySet()) {
+            Set<String> classes = entry.getValue();
+            boolean found = classes.contains(child);
+            if (!found) {
+                for (String desc : childDescendants) {
+                    if (classes.contains(desc)) { found = true; break; }
+                }
+            }
+            if (found) {
+                classes.addAll(newParents);
+                affected.add(entry.getKey());
+            }
+        }
+
+        // 7. instances[A] += instances of child and its descendants, for all ancestors A.
+        //    Only update entries that already exist — consistent with how addTransitiveInstances()
+        //    works (it only augments classes already in instances.keySet()).
+        Set<String> instancesOfNewChildren = new HashSet<>();
+        for (String newChild : allNewChildren) {
+            Set<String> childInsts = instances.get(newChild);
+            if (childInsts != null)
+                instancesOfNewChildren.addAll(childInsts);
+        }
+        if (!instancesOfNewChildren.isEmpty()) {
+            for (String ancestor : allAncestors) {
+                Set<String> ancestorInsts = instances.get(ancestor);
+                if (ancestorInsts != null) {
+                    ancestorInsts.addAll(instancesOfNewChildren);
+                    affected.add(ancestor);
+                }
+            }
+        }
+
+        return affected;
+    }
+
+    /**************************************************************
+     * Incrementally record (instance inst className).
+     *
+     * Updates:
+     *   insts       — inst is added as a known instance term
+     *   instanceOf  — inst gains className and all its subclass ancestors
+     *   instances   — className and all ancestors gain inst
+     *
+     * @param inst      the new instance (e.g. "myRobot")
+     * @param className the class (e.g. "Robot")
+     * @return the set of terms whose cache entries changed
+     */
+    public Set<String> addInstance(String inst, String className) {
+
+        Set<String> affected = new HashSet<>();
+        insts.add(inst);
+
+        // Collect className + all subclass ancestors of className
+        Set<String> allClasses = new HashSet<>();
+        allClasses.add(className);
+        Map<String, Set<String>> subclassParents = parents.get("subclass");
+        if (subclassParents != null) {
+            Set<String> ancestors = subclassParents.get(className);
+            if (ancestors != null)
+                allClasses.addAll(ancestors);
+        }
+
+        // instanceOf[inst] += allClasses
+        instanceOf.computeIfAbsent(inst, k -> new HashSet<>()).addAll(allClasses);
+        affected.add(inst);
+
+        // instances[className] is always created (mirrors buildDirectInstances behaviour).
+        // For ancestor classes, only update existing entries (mirrors addTransitiveInstances
+        // which only augments classes already in instances.keySet()).
+        instances.computeIfAbsent(className, k -> new HashSet<>()).add(inst);
+        affected.add(className);
+        for (String cls : allClasses) {
+            if (cls.equals(className)) continue;
+            Set<String> existingInsts = instances.get(cls);
+            if (existingInsts != null) {
+                existingInsts.add(inst);
+                affected.add(cls);
+            }
+        }
+
+        return affected;
+    }
+
+    /**************************************************************
+     * Incrementally record (domain relation argNum type) or
+     * (domainSubclass relation argNum type+).
+     *
+     * Updates:
+     *   signatures — relation's argNum slot is set to type
+     *   valences   — updated if argNum exceeds current recorded arity
+     *   signatures — all child relations (via subrelation) that lack an
+     *                explicit argNum binding inherit type
+     *
+     * @param relation the relation (e.g. "loves")
+     * @param argNum   the argument position (1-based; 0 = range)
+     * @param type     the type string (append "+" for domainSubclass)
+     * @return the set of terms whose cache entries changed
+     */
+    public Set<String> addDomain(String relation, int argNum, String type) {
+
+        Set<String> affected = new HashSet<>();
+
+        // Ensure the signature list is long enough and set the slot
+        List<String> sig = signatures.computeIfAbsent(relation, k -> new ArrayList<>());
+        while (sig.size() <= argNum) sig.add("");
+        sig.set(argNum, type);
+        affected.add(relation);
+
+        // Extend valence if this is the highest arg seen so far
+        if (argNum > 0) {
+            int cur = valences.getOrDefault(relation, 0);
+            if (argNum > cur)
+                valences.put(relation, argNum);
+        }
+
+        // Propagate to sub-relations that do not have their own explicit binding
+        Set<String> subRels = getChildRelations(relation);
+        if (subRels != null) {
+            for (String sr : subRels) {
+                List<String> srSig = signatures.computeIfAbsent(sr, k -> new ArrayList<>());
+                while (srSig.size() <= argNum) srSig.add("");
+                if (srSig.get(argNum).isEmpty()) {
+                    srSig.set(argNum, type);
+                    affected.add(sr);
+                }
+            }
+        }
+
+        return affected;
+    }
+
+    /**************************************************************
+     * Incrementally record (range relation type).
+     * Range is stored at position 0 of the signatures list.
+     *
+     * @param relation the relation (e.g. "motherOf")
+     * @param type     the range type (e.g. "Woman")
+     * @return the set of terms whose cache entries changed
+     */
+    public Set<String> addRange(String relation, String type) {
+
+        return addDomain(relation, 0, type);
+    }
+
+    /**************************************************************
+     * Incrementally record (subrelation child parent).
+     *
+     * Updates:
+     *   parents["subrelation"]   — child and its sub-relations gain parent's ancestors
+     *   children["subrelation"]  — parent and its ancestors gain child's sub-relations
+     *   signatures / valences    — child inherits parent's domain declarations where
+     *                             the child has no explicit binding
+     *
+     * @param child  the new sub-relation (e.g. "biologicalMother")
+     * @param parent the existing parent relation (e.g. "mother")
+     * @return the set of terms whose cache entries changed
+     */
+    public Set<String> addSubrelation(String child, String parent) {
+
+        Set<String> affected = new HashSet<>();
+        Map<String, Set<String>> subrelParents  = parents.computeIfAbsent("subrelation",  k -> new HashMap<>());
+        Map<String, Set<String>> subrelChildren = children.computeIfAbsent("subrelation", k -> new HashMap<>());
+
+        // 1. newParents = {parent} ∪ parents["subrelation"][parent]
+        Set<String> newParents = new HashSet<>();
+        newParents.add(parent);
+        Set<String> parentAncestors = subrelParents.get(parent);
+        if (parentAncestors != null)
+            newParents.addAll(parentAncestors);
+
+        // 2. parents["subrelation"][child] += newParents
+        subrelParents.computeIfAbsent(child, k -> new HashSet<>()).addAll(newParents);
+        affected.add(child);
+
+        // 3. For each descendant D of child: parents["subrelation"][D] += newParents
+        Set<String> childDescendants = new HashSet<>(subrelChildren.getOrDefault(child, Collections.emptySet()));
+        for (String desc : childDescendants) {
+            subrelParents.computeIfAbsent(desc, k -> new HashSet<>()).addAll(newParents);
+            affected.add(desc);
+        }
+
+        // 4. allNewChildren = {child} ∪ descendants of child
+        Set<String> allNewChildren = new HashSet<>();
+        allNewChildren.add(child);
+        allNewChildren.addAll(childDescendants);
+
+        // 5. children["subrelation"][A] += allNewChildren for parent and each ancestor A
+        Set<String> allAncestors = new HashSet<>();
+        allAncestors.add(parent);
+        if (parentAncestors != null)
+            allAncestors.addAll(parentAncestors);
+        for (String ancestor : allAncestors) {
+            subrelChildren.computeIfAbsent(ancestor, k -> new HashSet<>()).addAll(allNewChildren);
+            affected.add(ancestor);
+        }
+
+        // 6. Inherit domain signatures: child gets parent's sig slots where child has none
+        List<String> parentSig = signatures.get(parent);
+        if (parentSig != null) {
+            int parentValence = valences.getOrDefault(parent, parentSig.size() - 1);
+            List<String> childSig = signatures.computeIfAbsent(child, k -> new ArrayList<>());
+            while (childSig.size() <= parentValence) childSig.add("");
+            for (int i = 0; i <= parentValence; i++) {
+                if (childSig.get(i).isEmpty() && i < parentSig.size())
+                    childSig.set(i, parentSig.get(i));
+            }
+            int childCurValence = valences.getOrDefault(child, 0);
+            if (parentValence > childCurValence)
+                valences.put(child, parentValence);
+            affected.add(child);
+        }
+
+        return affected;
+    }
+
+    /**************************************************************
+     * Incrementally record (disjoint class1 class2).
+     *
+     * Updates:
+     *   explicitDisjoint — symmetric entry added for class1↔class2
+     *   disjoint         — all pairs of (subclasses of class1) ×
+     *                      (subclasses of class2) are recorded as
+     *                      disjoint, in both orderings
+     *
+     * @param class1 first disjoint class
+     * @param class2 second disjoint class
+     * @return the set of terms whose cache entries changed
+     */
+    public Set<String> addDisjoint(String class1, String class2) {
+
+        Set<String> affected = new HashSet<>();
+
+        // Update explicitDisjoint symmetrically
+        explicitDisjoint.computeIfAbsent(class1, k -> new HashSet<>()).add(class2);
+        explicitDisjoint.computeIfAbsent(class2, k -> new HashSet<>()).add(class1);
+
+        // Compute full child sets for each class (including the class itself)
+        Set<String> group1 = new HashSet<>();
+        group1.add(class1);
+        Set<String> c1children = getChildClasses(class1);
+        if (c1children != null) group1.addAll(c1children);
+
+        Set<String> group2 = new HashSet<>();
+        group2.add(class2);
+        Set<String> c2children = getChildClasses(class2);
+        if (c2children != null) group2.addAll(c2children);
+
+        // Add all cross-product pairs to disjoint in both orderings
+        for (String c1 : group1) {
+            for (String c2 : group2) {
+                if (!c1.equals(c2)) {
+                    disjoint.add(c1 + "\t" + c2);
+                    disjoint.add(c2 + "\t" + c1);
+                    affected.add(c1);
+                    affected.add(c2);
+                }
+            }
+        }
+
+        return affected;
     }
 
     /**************************************************************
@@ -465,7 +816,7 @@ public class KBcache implements Serializable {
 
     /** ***************************************************************
      */
-    public void addInstance(String child, String parent) {
+    private void addDirectInstance(String child, String parent) {
 
         Set<String> is = instances.get(parent);
         if (is == null) {
@@ -560,7 +911,7 @@ public class KBcache implements Serializable {
             f = forms.get(i);
             child = f.getStringArgument(1);
             parent = f.getStringArgument(2);
-            addInstance(child,parent);
+            addDirectInstance(child,parent);
             superclasses = parents.get("subclass");
             iset = new HashSet<>();
             if (instanceOf.get(child) != null)

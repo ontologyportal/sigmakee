@@ -323,4 +323,125 @@ public class KBcacheUnitTest {
         System.out.println("INFO in KBcache.testCollectArgsFromFormulas(): expected: " + expected);
         assertEquals(expected,actual);
     }
+
+    // -----------------------------------------------------------------------
+    // KBcache copy constructor tests
+    // Each test creates a fresh deep copy and verifies a field that was
+    // previously missing from the copy constructor.
+    // -----------------------------------------------------------------------
+
+    /** ***************************************************************
+     * Copy constructor: functions set is present and equal to the original.
+     */
+    @Test
+    public void testCopyConstructorFunctions() {
+
+        System.out.println("Test testCopyConstructorFunctions");
+        KBcache copy = new KBcache(kb.kbCache, kb);
+        assertEquals(kb.kbCache.functions, copy.functions);
+    }
+
+    /** ***************************************************************
+     * Copy constructor: predicates set is present and equal to the original.
+     */
+    @Test
+    public void testCopyConstructorPredicates() {
+
+        System.out.println("Test testCopyConstructorPredicates");
+        KBcache copy = new KBcache(kb.kbCache, kb);
+        assertEquals(kb.kbCache.predicates, copy.predicates);
+    }
+
+    /** ***************************************************************
+     * Copy constructor: instRels set is present and equal to the original.
+     */
+    @Test
+    public void testCopyConstructorInstRels() {
+
+        System.out.println("Test testCopyConstructorInstRels");
+        KBcache copy = new KBcache(kb.kbCache, kb);
+        assertEquals(kb.kbCache.instRels, copy.instRels);
+    }
+
+    /** ***************************************************************
+     * Copy constructor: instances map values are present and equal.
+     * We check the "Relation" class bucket which is well-populated in setup.
+     */
+    @Test
+    public void testCopyConstructorInstances() {
+
+        System.out.println("Test testCopyConstructorInstances");
+        KBcache copy = new KBcache(kb.kbCache, kb);
+        // Verify every entry in the original is represented identically in the copy
+        for (Map.Entry<String, Set<String>> entry : kb.kbCache.instances.entrySet()) {
+            assertTrue("instances key missing in copy: " + entry.getKey(),
+                    copy.instances.containsKey(entry.getKey()));
+            assertEquals("instances value mismatch for key " + entry.getKey(),
+                    entry.getValue(), copy.instances.get(entry.getKey()));
+        }
+    }
+
+    /** ***************************************************************
+     * Copy constructor: disjoint set is present and equal to the original.
+     * The test KB has (partition Animal Vertebrate Invertebrate) which
+     * puts at least one pair into disjoint.
+     */
+    @Test
+    public void testCopyConstructorDisjoint() {
+
+        System.out.println("Test testCopyConstructorDisjoint");
+        KBcache copy = new KBcache(kb.kbCache, kb);
+        assertFalse("disjoint set should be non-empty after partition", copy.disjoint.isEmpty());
+        assertEquals(kb.kbCache.disjoint, copy.disjoint);
+    }
+
+    /** ***************************************************************
+     * Copy constructor: initialized flag is copied.
+     */
+    @Test
+    public void testCopyConstructorInitialized() {
+
+        System.out.println("Test testCopyConstructorInitialized");
+        KBcache copy = new KBcache(kb.kbCache, kb);
+        assertEquals(kb.kbCache.initialized, copy.initialized);
+        assertTrue("initialized should be true after buildCaches()", copy.initialized);
+    }
+
+    /** ***************************************************************
+     * Copy constructor independence: mutating a copied set must not alter
+     * the original (proves deep copy, not shallow reference sharing).
+     * We test functions, predicates, instances, and disjoint.
+     */
+    @Test
+    public void testCopyConstructorIndependence() {
+
+        System.out.println("Test testCopyConstructorIndependence");
+        KBcache copy = new KBcache(kb.kbCache, kb);
+
+        // Snapshot original sizes before mutation
+        int origFunctionsSize      = kb.kbCache.functions.size();
+        int origPredicatesSize     = kb.kbCache.predicates.size();
+        int origDisjointSize       = kb.kbCache.disjoint.size();
+        int origInstancesRelSize   = kb.kbCache.instances.containsKey("Relation")
+                ? kb.kbCache.instances.get("Relation").size() : 0;
+
+        // Mutate the copy
+        copy.functions.add("__testSentinel__");
+        copy.predicates.add("__testSentinel__");
+        copy.disjoint.add("__testSentinel__");
+        if (copy.instances.containsKey("Relation"))
+            copy.instances.get("Relation").add("__testSentinel__");
+
+        // Original must be unchanged
+        assertEquals("functions size changed in original after copy mutation",
+                origFunctionsSize, kb.kbCache.functions.size());
+        assertEquals("predicates size changed in original after copy mutation",
+                origPredicatesSize, kb.kbCache.predicates.size());
+        assertEquals("disjoint size changed in original after copy mutation",
+                origDisjointSize, kb.kbCache.disjoint.size());
+        if (kb.kbCache.instances.containsKey("Relation")) {
+            assertEquals("instances['Relation'] size changed in original after copy mutation",
+                    origInstancesRelSize, kb.kbCache.instances.get("Relation").size());
+        }
+    }
 }

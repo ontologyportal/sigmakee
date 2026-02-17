@@ -22,6 +22,7 @@ import org.junit.runners.Suite;
     GraphTest.class,
     KBTest.class,
     KBcacheUnitTest.class,
+    KBcacheIncrementalTest.class,
     KIFTest.class,
     KifFileCheckerTest.class,
     LeoExecutableConfigTest.class,

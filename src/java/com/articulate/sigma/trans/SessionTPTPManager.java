@@ -37,6 +37,48 @@ public class SessionTPTPManager {
     /** Track which sessions have generated files (avoids redundant regeneration) */
     private static final ConcurrentHashMap<String, Long> sessionGenerationTimestamps = new ConcurrentHashMap<>();
 
+    /**
+     * Per-session KBcache copies.
+     * Each session that performs a schema-level tell() gets its own deep copy of the
+     * shared KBcache.  This keeps session-specific incremental updates (M3.2) from
+     * mutating the shared base cache that all other sessions depend on.
+     */
+    private static final ConcurrentHashMap<String, KBcache> sessionCaches = new ConcurrentHashMap<>();
+
+    /*********************************************************************************
+     * Return the session-specific KBcache for {@code sessionId}, creating a deep
+     * copy of {@code kb.kbCache} on the first call.  Subsequent calls return the
+     * same (possibly incrementally-updated) copy.
+     *
+     * <p>The copy constructor used here correctly copies all fields
+     * including {@code functions}, {@code predicates}, {@code instRels},
+     * {@code instances}, {@code disjoint}, {@code disjointRelations}, and
+     * {@code initialized}.
+     *
+     * @param sessionId The HTTP session ID
+     * @param kb        The knowledge base whose shared cache is the copy source
+     * @return The session-specific KBcache (never null)
+     */
+    public static KBcache getOrCreateSessionCache(String sessionId, KB kb) {
+
+        return sessionCaches.computeIfAbsent(sessionId, id -> {
+            if (debug) System.out.println("SessionTPTPManager: Creating KBcache copy for session " + id);
+            return new KBcache(kb.kbCache, kb);
+        });
+    }
+
+    /*********************************************************************************
+     * Return the session-specific KBcache for {@code sessionId}, or {@code null}
+     * if no copy has been created yet.
+     *
+     * @param sessionId The HTTP session ID
+     * @return The session KBcache, or null
+     */
+    public static KBcache getSessionCache(String sessionId) {
+
+        return sessionCaches.get(sessionId);
+    }
+
     /*********************************************************************************
      * Get the path to a session-specific TPTP file.
      *
@@ -181,12 +223,24 @@ public class SessionTPTPManager {
                                    " for session " + sessionId);
                 long startTime = System.currentTimeMillis();
 
-                if ("tptp".equals(lang) || "fof".equals(lang)) {
-                    TPTPGenerationManager.generateFOFToPath(kb, tmpFile);
-                } else if ("tff".equals(lang)) {
-                    TPTPGenerationManager.generateTFFToPath(kb, tmpFile);
-                } else {
-                    throw new IllegalArgumentException("Unsupported TPTP language: " + lang);
+                // Use session-specific KBcache so schema changes from this session's tell()
+                // calls are reflected in the generated file, without affecting other sessions.
+                // We swap kb.kbCache temporarily.  The per-session lock above ensures no
+                // concurrent same-session swaps; the restoration in the finally block ensures
+                // the shared cache is always put back.
+                KBcache sessionCache = getOrCreateSessionCache(sessionId, kb);
+                KBcache sharedCache = kb.kbCache;
+                kb.kbCache = sessionCache;
+                try {
+                    if ("tptp".equals(lang) || "fof".equals(lang)) {
+                        TPTPGenerationManager.generateFOFToPath(kb, tmpFile);
+                    } else if ("tff".equals(lang)) {
+                        TPTPGenerationManager.generateTFFToPath(kb, tmpFile);
+                    } else {
+                        throw new IllegalArgumentException("Unsupported TPTP language: " + lang);
+                    }
+                } finally {
+                    kb.kbCache = sharedCache;
                 }
 
                 // Atomic move
@@ -232,9 +286,10 @@ public class SessionTPTPManager {
             return;
         }
 
-        // Remove locks and timestamps
+        // Remove locks, timestamps, and session-specific KBcache copy
         sessionLocks.remove(sessionId);
         sessionGenerationTimestamps.remove(sessionId);
+        sessionCaches.remove(sessionId);
 
         Path sessionDir = getSessionDir(sessionId);
 
