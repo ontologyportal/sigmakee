@@ -10,24 +10,22 @@ concrete optimizations as ordered, trackable milestones.
 
 ## Architecture Overview
 
-| File | Role |
-|------|------|
-| `TPTPGenerationManager.java` | Orchestrator — 4 threads: FOF, TFF, THF Modal, THF Plain (all parallel since M1) |
-| `SUMOKBtoTPTPKB.java` | FOF/TFF outer loop over ~40-50k formulas via `_tWriteFile()` |
-| `SUMOKBtoTFAKB.java` | TFF-specific: `writeSorts()`, `printTFFNumericConstants()` |
+| File                            | Role                                                                              |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| `TPTPGenerationManager.java`    | Orchestrator — 4 threads: FOF, TFF, THF Modal, THF Plain (all parallel since M1)  |
+| `SUMOKBtoTPTPKB.java`           | FOF/TFF outer loop over ~40-50k formulas via `_tWriteFile()`                      |
+| `SUMOKBtoTFAKB.java`            | TFF-specific: `writeSorts()`, `printTFFNumericConstants()`                        |
 | `SUMOformulaToTPTPformula.java` | Per-formula FOF translation (ThreadLocal `lang`, `hideNumbers`, `qlist` since M1) |
-| `SUMOtoTFAform.java` | Per-formula TFF conversion — slowest component (40-60% of time) |
-| `FormulaPreprocessor.java` | Per-formula preprocessing — O(n²) `winnowTypeList()` |
-| `THFnew.java` | 4 full passes over formulaMap per THF file |
-| `CWAUNA.java` | CWA axiom generation (only when CWA=true) |
+| `SUMOtoTFAform.java`            | Per-formula TFF conversion — slowest component (40-60% of time)                   |
+| `FormulaPreprocessor.java`      | Per-formula preprocessing — O(n²) `winnowTypeList()`                              |
+| `THFnew.java`                   | 4 full passes over formulaMap per THF file                                        |
+| `CWAUNA.java`                   | CWA axiom generation (only when CWA=true)                                         |
 
 ---
 
 ## Identified Bottlenecks
 
 ### Bottleneck 1 — FOF+TFF Forced Sequential (Root Cause: Shared Static State) [RESOLVED — M1]
-
-**Estimated contribution: ~50% of total time**
 
 `SUMOKBtoTPTPKB.lang` and `SUMOformulaToTPTPformula.lang` were shared static fields.
 `SUMOformulaToTPTPformula.qlist` (StringBuilder) was a shared static — not thread-safe.
@@ -41,6 +39,7 @@ registered for `ConcurrentHashMap.KeySetView`. FOF and TFF now run in parallel o
 threads. **Trade-off:** TFF `process()` ~20% slower due to `ConcurrentHashMap` volatile reads.
 
 Relevant locations:
+
 - `trans/SUMOKBtoTPTPKB.java:28`
 - `trans/SUMOformulaToTPTPformula.java:16-17`
 - `trans/SUMOtoTFAform.java:27-50`
@@ -54,6 +53,7 @@ preProcess → renameRelations → convert → filter → write. Despite a `rapi
 (line 319), the main loop remains sequential.
 
 Relevant location:
+
 - `trans/SUMOKBtoTPTPKB.java:536-728`
 
 ### Bottleneck 3 — `SUMOtoTFAform.process()` (40-60% of TFF time)
@@ -64,6 +64,7 @@ checks, creating new Formula objects each iteration. `findAllTypeRestrictions()`
 formula tree performing KB queries.
 
 Relevant locations:
+
 - `trans/SUMOtoTFAform.java:2347-2417`
 - Retry loops at lines 2372-2376, 2384-2388
 
@@ -73,6 +74,7 @@ Relevant locations:
 Called for EVERY formula in EVERY format (FOF and TFF both call it independently).
 
 Relevant location:
+
 - `FormulaPreprocessor.java:119-144`
 
 ### Bottleneck 5 — `writeSorts()` Cartesian Product Explosion (TFF setup)
@@ -81,6 +83,7 @@ Outer loop: ~50k terms; inner: Cartesian product of numeric type suffixes. For
 variable-arity numeric relations: up to 4^arity combinations generated.
 
 Relevant location:
+
 - `trans/SUMOKBtoTFAKB.java:619-681`
 
 ### Bottleneck 6 — 4 Full Passes Over formulaMap in THFnew
@@ -90,6 +93,7 @@ Relevant location:
 `analyzeBadUsages()` performs recursive signature checking on every formula.
 
 Relevant locations:
+
 - `trans/THFnew.java:1210-1252`
 - `trans/THFnew.java:1256-1297`
 - `trans/THFnew.java:1149-1154`
@@ -111,26 +115,26 @@ Measured with config.xml containing: `english_format.kif`, `domainEnglishFormat.
 
 Test class: `com.articulate.sigma.trans.TPTPGenerationTest`
 
-| File Type | Per-format time | File size | Lines | Notes |
-|-----------|-----------------|-----------|-------|-------|
-| FOF | **14.7s** | 12.4 MB | 188k | 38,222 axioms emitted, 46,104 skipped |
-| TFF | **146.7s** | 45.9 MB | 623k | Dominated by `SUMOtoTFAform.process()` |
-| THF Modal | **28.1s** | 27.6 MB | 371k | |
-| THF Plain | **23.6s** | 23.4 MB | 314k | |
-| **Total sequential** | **213.1s** | | | All 4 formats run back-to-back |
+| File Type            | Per-format time | File size | Lines | Notes                                  |
+| -------------------- | --------------- | --------- | ----- | -------------------------------------- |
+| FOF                  | **14.7s**       | 12.4 MB   | 188k  | 38,222 axioms emitted, 46,104 skipped  |
+| TFF                  | **146.7s**      | 45.9 MB   | 623k  | Dominated by `SUMOtoTFAform.process()` |
+| THF Modal            | **28.1s**       | 27.6 MB   | 371k  |                                        |
+| THF Plain            | **23.6s**       | 23.4 MB   | 314k  |                                        |
+| **Total sequential** | **213.1s**      |           |       | All 4 formats run back-to-back         |
 
 ### Full SUMO KB (estimated, ~40-50 KIF files)
 
 Estimated on a full SUMO KB before any optimizations. To be measured with
 `com.articulate.sigma.trans.TPTPGenerationFullKBTest`.
 
-| File Type | Per-format time | Wall-clock contribution | Notes |
-|-----------|-----------------|-------------------------|-------|
-| FOF | ?               | ?                    | Runs first, single thread |
-| TFF | ?               | ?                    | Runs after FOF completes |
-| THF Modal | ?               | ?                    | Parallel thread, completes within FOF+TFF window |
-| THF Plain | ?               | ?                    | Parallel thread, completes within FOF+TFF window |
-| **Total wall clock** | ?               | ?                       | FOF+TFF sequential is the bottleneck |
+| File Type            | Per-format time | Wall-clock contribution | Notes                                            |
+| -------------------- | --------------- | ----------------------- | ------------------------------------------------ |
+| FOF                  | ?               | ?                       | Runs first, single thread                        |
+| TFF                  | ?               | ?                       | Runs after FOF completes                         |
+| THF Modal            | ?               | ?                       | Parallel thread, completes within FOF+TFF window |
+| THF Plain            | ?               | ?                       | Parallel thread, completes within FOF+TFF window |
+| **Total wall clock** | ?               | ?                       | FOF+TFF sequential is the bottleneck             |
 
 ---
 
@@ -154,31 +158,35 @@ prevents optimizing the wrong bottleneck.
 - [x] Tabulate actual per-format wall-clock times
 - [x] Create test classes for reproducible benchmarking:
   - `TPTPGenerationTest.java` — uses current config.xml (lightweight)
-  - `TPTPGenerationFullKBTest.java` — requires full SUMO KB
 - [x] Tests emit SHA-256 checksums, axiom counts, line counts, and file sizes for each
-  generated file — enables byte-for-byte correctness verification across milestones
+      generated file — enables byte-for-byte correctness verification across milestones
 
 #### Measured Profiler Output (Current Config, 75,213 formulas)
 
 **FOF profile** (`lang=fof`, 14.7s total):
+
 ```
 formulas=35,339  skippedHOL=875  skippedCached=0
 processedSets=34,464  processedExpanded=84,326  renamedExpanded=84,326
 axioms=38,222  skippedAxioms=46,104
 Time(s): preprocess=6.70  rename=0.86  missingSorts=0.00  process=0.00  filter=0.56  print=0.09
 ```
+
 **Bottleneck**: `preprocess` = 46% of FOF time. `process` is zero (not used for FOF).
 
 **TFF profile** (`lang=tff`, 146.7s total):
+
 ```
 formulas=35,339  skippedHOL=875  skippedCached=0
 processedSets=34,464  processedExpanded=84,326  renamedExpanded=84,326
 axioms=38,202  skippedAxioms=46,104
 Time(s): preprocess=6.93  rename=0.88  missingSorts=0.06  process=134.94  filter=0.63  print=0.13
 ```
+
 **Bottleneck**: `SUMOtoTFAform.process()` = **93.5%** of TFF time (135s of 147s).
 
 Top-5 slowest `process()` calls (TFF):
+
 1. `(=> (and (instance ?X Object) ...PureSubstance...meltingPoint...)` — 0.055s
 2. `(=> (and (instance ?A TwoDimensionalAngle) ...CircleSector...)` — 0.038s
 3. `(=> (and (valence approves ?NUMBER) ...)` — 0.034s
@@ -189,13 +197,13 @@ Top-5 slowest `process()` calls (TFF):
 
 #### Generated File Details (reference for correctness verification)
 
-| File Type | Time | Bytes | Lines | Axioms (profiler) |
-|-----------|------|-------|-------|-------------------|
-| FOF | 14.7s | 12,975,124 | 187,980 | 38,222 |
-| TFF | 146.7s | 48,084,428 | 623,189 | 38,202 |
-| THF Modal | 28.1s | 28,976,343 | 370,528 | — |
-| THF Plain | 23.6s | 24,585,438 | 313,847 | — |
-| **Total** | **213.1s** | | | |
+| File Type | Time       | Bytes      | Lines   | Axioms (profiler) |
+| --------- | ---------- | ---------- | ------- | ----------------- |
+| FOF       | 14.7s      | 12,975,124 | 187,980 | 38,222            |
+| TFF       | 146.7s     | 48,084,428 | 623,189 | 38,202            |
+| THF Modal | 28.1s      | 28,976,343 | 370,528 | —                 |
+| THF Plain | 23.6s      | 24,585,438 | 313,847 | —                 |
+| **Total** | **213.1s** |            |         |                   |
 
 **Note:** "Axioms (profiler)" counts source formula axioms emitted (from the profiler's
 `axioms=` counter). The test's `countPattern("tff(")` returns a higher number (~133k) because
@@ -224,35 +232,35 @@ the data race and allows the `GEN_LOCK` in `TPTPGenerationManager` to be dropped
 #### Steps
 
 - [x] In `trans/SUMOformulaToTPTPformula.java`: convert static fields `lang`, `hideNumbers`,
-  `qlist` to `ThreadLocal` with getter/setter API and `clearThreadLocal()` cleanup
+      `qlist` to `ThreadLocal` with getter/setter API and `clearThreadLocal()` cleanup
 - [x] In `trans/SUMOKBtoTPTPKB.java`: convert static `lang` field to `ThreadLocal` with
-  getter/setter API and `clearThreadLocal()` cleanup
+      getter/setter API and `clearThreadLocal()` cleanup
 - [x] In `trans/SUMOtoTFAform.java`: convert `varmap`, `numericConstantTypes`, `filterMessage`
-  static fields to `ThreadLocal` equivalents with getter/setter API and `clearThreadLocal()`
+      static fields to `ThreadLocal` equivalents with getter/setter API and `clearThreadLocal()`
 - [x] Update all external call sites (13+ files): `KB.java`, `Vampire.java`, `LEO.java`,
-  `EProver.java`, `EditorServlet.java`, `InferenceTestSuite.java`, `KBmanager.java`,
-  `KButilities.java`, `PredVarInst.java`, `FormulaPreprocessor.java`, `SUMOKBtoTFAKB.java`,
-  `AskTell.jsp`, `TestStmnt.jsp`, and 4 test files
+      `EProver.java`, `EditorServlet.java`, `InferenceTestSuite.java`, `KBmanager.java`,
+      `KButilities.java`, `PredVarInst.java`, `FormulaPreprocessor.java`, `SUMOKBtoTFAKB.java`,
+      `AskTell.jsp`, `TestStmnt.jsp`, and 4 test files
 - [x] In `trans/TPTPGenerationManager.java`: split FOF+TFF from one sequential thread into
-  two parallel threads (4-thread pool: FOF, TFF, THF Modal, THF Plain); removed `GEN_LOCK`
-  from `generateFOFToPath()`/`generateTFFToPath()`; added `clearThreadLocal()` in all
-  finally blocks
+      two parallel threads (4-thread pool: FOF, TFF, THF Modal, THF Plain); removed `GEN_LOCK`
+      from `generateFOFToPath()`/`generateTFFToPath()`; added `clearThreadLocal()` in all
+      finally blocks
 - [x] In `KBcache.java`: convert 5 fields to concurrent collections — `relations`, `functions`
-  → `ConcurrentHashMap.newKeySet()`; `instanceOf`, `signatures`, `valences` →
-  `ConcurrentHashMap`. Added `synchronized` to `extendInstance()` and
-  `copyNewPredFromVariableArity()`. Added null guards for `ConcurrentHashMap` compatibility.
-  Updated constructor and copy constructor to use concurrent types.
+      → `ConcurrentHashMap.newKeySet()`; `instanceOf`, `signatures`, `valences` →
+      `ConcurrentHashMap`. Added `synchronized` to `extendInstance()` and
+      `copyNewPredFromVariableArity()`. Added null guards for `ConcurrentHashMap` compatibility.
+      Updated constructor and copy constructor to use concurrent types.
 - [x] In `KB.java`: convert `terms` → `ConcurrentSkipListSet`, `capterms` →
-  `ConcurrentHashMap` to prevent `HashMap` internal corruption during parallel FOF+TFF
+      `ConcurrentHashMap` to prevent `HashMap` internal corruption during parallel FOF+TFF
 - [x] In `trans/SUMOKBtoTFAKB.java`: snapshot copy in `writeSorts()` —
-  `new ArrayList<>(kb.getTerms())` to prevent `ConcurrentModificationException` during
-  iteration while FOF thread adds terms
+      `new ArrayList<>(kb.getTerms())` to prevent `ConcurrentModificationException` during
+      iteration while FOF thread adds terms
 - [x] In `KButilities.java`: register custom Kryo serializer for
-  `ConcurrentHashMap$KeySetView` (no no-arg constructor; Kryo cannot instantiate by default)
+      `ConcurrentHashMap$KeySetView` (no no-arg constructor; Kryo cannot instantiate by default)
 - [x] `ant test.unit` — 401 tests pass (7 skipped, pre-existing env failures only)
 - [x] `TPTPGenerationTest` with `-Dsigma.tff.profile=true` — all 5 tests pass, generation
-  produces valid output with correct content (FOF contains `fof()` not `tff()`, TFF contains
-  `tff()`, THF files contain `thf()`)
+      produces valid output with correct content (FOF contains `fof()` not `tff()`, TFF contains
+      `tff()`, THF files contain `thf()`)
 
 #### Measured Results (Current Config, 4 KIF files, 75,213 formulas)
 
@@ -265,28 +273,29 @@ Test class: `com.articulate.sigma.trans.TPTPGenerationTest`
 This is the common case — regenerating a single format (e.g., only FOF for EProver, or only
 TFF for Vampire). Each row is the time to generate **one** file in isolation.
 
-| File Type | M1 Time | Bytes | Lines | Axioms | M0 Time | Delta |
-|-----------|---------|-------|-------|--------|---------|-------|
-| FOF | 15.0s | 12,975,123 | 187,980 | 38,222 | 14.7s | +2% |
-| TFF | 175.1s | 48,084,427 | 623,187 | 133,395 | 146.7s | +19% |
-| THF Modal | 28.5s | 28,984,412 | 451,711 | 175,280 | 28.1s | +1% |
-| THF Plain | 23.9s | 24,586,749 | 313,847 | 109,067 | 23.6s | +1% |
+| File Type | M1 Time | Bytes      | Lines   | Axioms  | M0 Time | Delta |
+| --------- | ------- | ---------- | ------- | ------- | ------- | ----- |
+| FOF       | 15.0s   | 12,975,123 | 187,980 | 38,222  | 14.7s   | +2%   |
+| TFF       | 175.1s  | 48,084,427 | 623,187 | 133,395 | 146.7s  | +19%  |
+| THF Modal | 28.5s   | 28,984,412 | 451,711 | 175,280 | 28.1s   | +1%   |
+| THF Plain | 23.9s   | 24,586,749 | 313,847 | 109,067 | 23.6s   | +1%   |
 
 #### All Formats Together (login / startup scenario)
 
 On login, all 4 formats are generated. M0 runs FOF→TFF sequentially on one thread + THF on
 separate threads. M1 runs all 4 on separate threads in parallel.
 
-| Metric | M0 (FOF→TFF seq + THF parallel) | M1 (all 4 parallel) |
-|--------|----------------------------------|---------------------|
-| FOF | 14.7s | 15.0s |
-| TFF | 146.7s | 175.1s |
-| THF Modal | 28.1s | 28.5s |
-| THF Plain | 23.6s | 23.9s |
-| **Sequential total** | **213.1s** | **242.5s** (+14%) |
-| **Parallel wall clock** | **161.4s** | **175.1s** (+8%) |
+| Metric                  | M0 (FOF→TFF seq + THF parallel) | M1 (all 4 parallel) |
+| ----------------------- | ------------------------------- | ------------------- |
+| FOF                     | 14.7s                           | 15.0s               |
+| TFF                     | 146.7s                          | 175.1s              |
+| THF Modal               | 28.1s                           | 28.5s               |
+| THF Plain               | 23.6s                           | 23.9s               |
+| **Sequential total**    | **213.1s**                      | **242.5s** (+14%)   |
+| **Parallel wall clock** | **161.4s**                      | **175.1s** (+8%)    |
 
 **Parallel wall clock formula:**
+
 - M0: max(FOF+TFF, THF Modal, THF Plain) = max(161.4, 28.1, 23.6) = **161.4s**
 - M1: max(FOF, TFF, THF Modal, THF Plain) = max(15.0, 175.1, 28.5, 23.9) = **175.1s**
 
@@ -305,6 +314,7 @@ per-format TFF time.
 #### Profiler Output
 
 **FOF profile** (`lang=fof`, 15.0s total):
+
 ```
 formulas=35,339  skippedHOL=875  skippedCached=0
 processedSets=34,464  processedExpanded=84,326  renamedExpanded=84,326
@@ -313,12 +323,14 @@ Time(s): preprocess=6.88  rename=0.88  missingSorts=0.00  process=0.00  filter=0
 ```
 
 **TFF profile** (`lang=tff`, 175.1s total):
+
 ```
 formulas=35,339  skippedHOL=875  skippedCached=0
 processedSets=34,464  processedExpanded=84,326  renamedExpanded=84,326
 axioms=38,202  skippedAxioms=46,104
 Time(s): preprocess=7.32  rename=0.90  missingSorts=0.07  process=162.63  filter=0.68  print=0.14
 ```
+
 **Key observation**: `SUMOtoTFAform.process()` = **92.9%** of TFF time (162.6s of 175.1s) —
 still the dominant bottleneck, consistent with M0 (93.5%). The per-formula overhead is ~20%
 higher due to ConcurrentHashMap volatile reads in KBcache lookups.
@@ -328,12 +340,12 @@ higher due to ConcurrentHashMap volatile reads in KBcache lookups.
 - [x] `ant test.unit` passes (401 tests, 7 skipped, pre-existing env failures only)
 - [x] `TPTPGenerationTest` — all 5 tests pass including `testGenerateAllFormatsBaseline`
 - [x] No `synchronized` block or lock prevents FOF and TFF from starting concurrently
-  (GEN_LOCK removed from `generateFOFToPath`/`generateTFFToPath`; FOF and TFF submitted
-  to separate threads in `startBackgroundGeneration`)
+      (GEN_LOCK removed from `generateFOFToPath`/`generateTFFToPath`; FOF and TFF submitted
+      to separate threads in `startBackgroundGeneration`)
 - [x] No `ThreadLocal` leaks: all generation methods call `clearThreadLocal()` in finally
-  blocks for `SUMOformulaToTPTPformula`, `SUMOKBtoTPTPKB`, and `SUMOtoTFAform`
+      blocks for `SUMOformulaToTPTPformula`, `SUMOKBtoTPTPKB`, and `SUMOtoTFAform`
 - [x] Pre-existing errors unchanged: `SUMOtoTFAform.mixedQuotient()` warning and
-  `KBcache.isInstanceOf()` null results for `equal__*` (both pre-existing)
+      `KBcache.isInstanceOf()` null results for `equal__*` (both pre-existing)
 
 ---
 
@@ -352,7 +364,7 @@ or `ForkJoinPool` over `orderedFormulae` will distribute work across all availab
 Two-phase approach to preserve output order and dedup correctness:
 
 1. **Parallel translation phase** (`translateOneFormula()`): Each formula runs `preProcess →
-   renameVariableArityRelations → translate` on its own ForkJoinPool thread. Results collected
+renameVariableArityRelations → translate` on its own ForkJoinPool thread. Results collected
    into a `List<FormulaResult>` via `parallelStream().collect(toList())` — order preserved.
    All per-formula helper objects (`FormulaPreprocessor`, `SUMOtoTFAform`) instantiated inside
    the lambda. Per-formula variable-arity renames go into a local map. TFF numeric constants
@@ -368,22 +380,22 @@ throws. `pool.shutdown()` called in `finally` after all tasks complete.
 #### Steps
 
 - [x] In `trans/SUMOKBtoTPTPKB.java`: identify shared mutable state in the per-formula loop
-  (`alreadyWrittenTPTPs`, `axiomKey`, `relationMap` — all moved to sequential phase)
+      (`alreadyWrittenTPTPs`, `axiomKey`, `relationMap` — all moved to sequential phase)
 - [x] Add `FormulaResult` static inner class to carry per-formula translation output
 - [x] Add `translateOneFormula()` method (parallel-safe, no shared writes)
 - [x] Add `collectNumericConstants()` helper (inlines `printTFFNumericConstants` logic
-  without the `synchronized` keyword — each thread reads its own TL)
+      without the `synchronized` keyword — each thread reads its own TL)
 - [x] Replace sequential `for` loop with `ForkJoinPool + parallelStream().map().collect()`
 - [x] Sequential write phase iterates results in order, applies dedup, writes axioms
 - [x] Bound thread pool to `Runtime.getRuntime().availableProcessors()`
 - [x] All per-formula objects (`FormulaPreprocessor`, `SUMOtoTFAform`) instantiated inside
-  the lambda — not shared across threads
+      the lambda — not shared across threads
 - [x] In `KBcache.java`: add early-exit `if (signatures.containsKey(pred)) return;` before
-  `synchronized(this)` in `copyNewPredFromVariableArity()` (double-checked locking). The KB
-  contains only ~50–100 unique variable-arity `(pred,arity)` combinations, so the synchronized
-  block is entered at most ~50–100 times total across all ~75K formula calls regardless of
-  thread count. All subsequent calls hit the fast-path early-exit, eliminating the dominant
-  lock-contention bottleneck.
+      `synchronized(this)` in `copyNewPredFromVariableArity()` (double-checked locking). The KB
+      contains only ~50–100 unique variable-arity `(pred,arity)` combinations, so the synchronized
+      block is entered at most ~50–100 times total across all ~75K formula calls regardless of
+      thread count. All subsequent calls hit the fast-path early-exit, eliminating the dominant
+      lock-contention bottleneck.
 - [x] `ant test.unit` — 401 tests pass (7 skipped, pre-existing env failures only)
 - [x] `TPTPGenerationTest` — all 5 tests pass with profiler enabled
 
@@ -391,13 +403,13 @@ throws. `pool.shutdown()` called in `finally` after all tasks complete.
 
 Test class: `com.articulate.sigma.trans.TPTPGenerationTest`
 
-| File Type | M1 Time | M2 Time | Notes |
-|-----------|---------|---------|-------|
-| FOF | 15.0s | **7.5s** | ~2× speedup |
-| TFF | 175.1s | **133.8s** | −24% vs M1 |
-| THF Modal | 28.5s | 29.1s | Unchanged (different code path) |
-| THF Plain | 23.9s | 24.3s | Unchanged |
-| **Parallel wall clock** | **175.1s** | **133.8s** | −24% |
+| File Type               | M1 Time    | M2 Time    | Notes                           |
+| ----------------------- | ---------- | ---------- | ------------------------------- |
+| FOF                     | 15.0s      | **7.5s**   | ~2× speedup                     |
+| TFF                     | 175.1s     | **133.8s** | −24% vs M1                      |
+| THF Modal               | 28.5s      | 29.1s      | Unchanged (different code path) |
+| THF Plain               | 23.9s      | 24.3s      | Unchanged                       |
+| **Parallel wall clock** | **175.1s** | **133.8s** | −24%                            |
 
 ```
 FOF:      7.5s    13,238,244 bytes   190,605 lines   38,222 axioms
@@ -416,13 +428,14 @@ same monitor. The double-checked locking (early-exit + re-check inside `synchron
 lock acquisitions to at most ~50–100 total (one per unique variable-arity combination in the
 KB), regardless of formula count or how many threads run concurrently.
 
-| Metric | M1 (sequential) | M2 (10-thread parallel) |
-|--------|-----------------|------------------------|
-| `process=` CPU total | 162.63s | ~163s |
-| Wall clock (TFF total) | 175.1s | **133.8s** |
-| Per-call CPU cost | ~1.93ms/call | ~1.9ms/call |
+| Metric                 | M1 (sequential) | M2 (10-thread parallel) |
+| ---------------------- | --------------- | ----------------------- |
+| `process=` CPU total   | 162.63s         | ~163s                   |
+| Wall clock (TFF total) | 175.1s          | **133.8s**              |
+| Per-call CPU cost      | ~1.93ms/call    | ~1.9ms/call             |
 
 **FOF profile** (`lang=fof`, 7.5s total):
+
 ```
 formulas=35,339  skippedHOL=875  skippedCached=0
 processedSets=34,464  processedExpanded=84,326  renamedExpanded=84,326
@@ -453,30 +466,30 @@ the pipeline to skip formulas from unchanged files entirely.
 #### Steps
 
 - [ ] Extend the existing `infFileOld()` helper (or create a new `isSourceChanged()` utility)
-  to compute a SHA-256 hash of each constituent KIF file and compare it against a stored
-  manifest (`kbmanager.ser` or a separate `tptp_hash_manifest.json`)
+      to compute a SHA-256 hash of each constituent KIF file and compare it against a stored
+      manifest (`kbmanager.ser` or a separate `tptp_hash_manifest.json`)
 - [ ] At the start of `_tWriteFile()`: partition `orderedFormulae` into `changedFormulae`
-  (source file hash changed) and `cachedFormulae` (hash unchanged)
+      (source file hash changed) and `cachedFormulae` (hash unchanged)
 - [ ] For `cachedFormulae`: load the previously translated string directly from the cache
-  store; skip `preProcess`, `convert`, and `filter`
+      store; skip `preProcess`, `convert`, and `filter`
 - [ ] For `changedFormulae`: run the normal translation pipeline and update the cache entry
 - [ ] Persist the translated formula strings alongside the KB serialization; add a cache
-  invalidation step that clears all entries if the SUMO version string changes
+      invalidation step that clears all entries if the SUMO version string changes
 - [ ] Add a `--full-regen` CLI flag (or system property `sigma.tptp.fullRegen=true`) to
-  bypass the cache and force complete regeneration
+      bypass the cache and force complete regeneration
 - [ ] Run `mvn test -pl . -Dtest=*TPTP*,*TFF*,*THF*` — all tests must pass
 - [ ] Validate: generate once (cold), modify one `ua/` file, generate again, and confirm only
-  the affected formulas are retranslated (check via profiler formula count)
+      the affected formulas are retranslated (check via profiler formula count)
 
 #### Generation Times
 
-| File Type | Before (M2) | After M3 — full regen | After M3 — UA-only change |
-|-----------|-------------|----------------------|--------------------------|
-| FOF | ~10 min | ~10 min | ~1 min |
-| TFF | ~10 min | ~10 min | ~1 min |
-| THF Modal | ~30 min | ~30 min | ~3 min |
-| THF Plain | ~30 min | ~30 min | ~3 min |
-| **Wall clock** | **~30 min** | **~30 min** | **~3 min** |
+| File Type      | Before (M2) | After M3 — full regen | After M3 — UA-only change |
+| -------------- | ----------- | --------------------- | ------------------------- |
+| FOF            | ~10 min     | ~10 min               | ~1 min                    |
+| TFF            | ~10 min     | ~10 min               | ~1 min                    |
+| THF Modal      | ~30 min     | ~30 min               | ~3 min                    |
+| THF Plain      | ~30 min     | ~30 min               | ~3 min                    |
+| **Wall clock** | **~30 min** | **~30 min**           | **~3 min**                |
 
 Full regeneration time is unchanged. For the typical deploy scenario (UA-only change),
 wall clock drops from ~30 min to ~3 min (~90% reduction).
@@ -506,25 +519,25 @@ cuts preprocessing overhead by half.
 #### Steps
 
 - [ ] Add a `preprocessedFormulae` map (`Formula → List<Formula>`) as a field on
-  `SUMOKBtoTPTPKB` (or stored on the `Formula` object itself)
+      `SUMOKBtoTPTPKB` (or stored on the `Formula` object itself)
 - [ ] In the FOF pass of `_tWriteFile()`: after calling `preProcess()`, store the result in
-  `preprocessedFormulae` keyed by the original formula
+      `preprocessedFormulae` keyed by the original formula
 - [ ] In the TFF pass: before calling `preProcess()`, check `preprocessedFormulae`; if a
-  cached result exists, use it directly and skip the `preProcess()` call
+      cached result exists, use it directly and skip the `preProcess()` call
 - [ ] Ensure the cache is cleared between full regeneration runs (invalidated at the start of
-  each `generateProperFile()` invocation)
+      each `generateProperFile()` invocation)
 - [ ] Run `mvn test -pl . -Dtest=*TPTP*,*TFF*,*THF*` — all tests must pass
 - [ ] Diff TFF output against Milestone 3 reference — must be identical
 
 #### Generation Times
 
-| File Type | Before (M3) | After (M4) |
-|-----------|-------------|------------|
-| FOF | ~10 min | ~8 min (~20% preprocessing overhead eliminated) |
-| TFF | ~10 min | ~8 min (~20% preprocessing overhead eliminated) |
-| THF Modal | ~30 min | ~30 min (unaffected) |
-| THF Plain | ~30 min | ~30 min (unaffected) |
-| **Wall clock** | **~30 min** | **~30 min** |
+| File Type      | Before (M3) | After (M4)                                      |
+| -------------- | ----------- | ----------------------------------------------- |
+| FOF            | ~10 min     | ~8 min (~20% preprocessing overhead eliminated) |
+| TFF            | ~10 min     | ~8 min (~20% preprocessing overhead eliminated) |
+| THF Modal      | ~30 min     | ~30 min (unaffected)                            |
+| THF Plain      | ~30 min     | ~30 min (unaffected)                            |
+| **Wall clock** | **~30 min** | **~30 min**                                     |
 
 FOF and TFF each improve by ~2 min. Wall clock remains ~30 min because THF is still the
 bottleneck, but each format individually is faster.
@@ -551,26 +564,26 @@ bottleneck, but each format individually is faster.
 #### Steps
 
 - [ ] Read and understand `analyzeBadUsages()` at `trans/THFnew.java:1149-1206` — document
-  what it populates and which data structure downstream code reads
+      what it populates and which data structure downstream code reads
 - [ ] In `oneTransNonModal()` (called during the main translation loop): add the
-  bad-usage detection logic inline, writing to the same `badUsages` data structure
+      bad-usage detection logic inline, writing to the same `badUsages` data structure
 - [ ] Remove the standalone `analyzeBadUsages()` pre-pass call at `trans/THFnew.java:1277`
 - [ ] Verify that the `badUsages` set is fully populated before any formula that reads it is
-  translated (if ordering matters, collect in a first sub-pass within the main loop using a
-  two-phase approach within a single iteration)
+      translated (if ordering matters, collect in a first sub-pass within the main loop using a
+      two-phase approach within a single iteration)
 - [ ] Apply the same analysis to `transModalTHF()` if it has an equivalent pre-pass
 - [ ] Run `mvn test -pl . -Dtest=*TPTP*,*TFF*,*THF*` — all tests must pass
 - [ ] Diff THF Modal and THF Plain outputs against Milestone 4 reference — must be identical
 
 #### Generation Times
 
-| File Type | Before (M4) | After (M5) |
-|-----------|-------------|------------|
-| FOF | ~8 min | ~8 min (unaffected) |
-| TFF | ~8 min | ~8 min (unaffected) |
-| THF Modal | ~30 min | ~22 min (~25% reduction; one full pass eliminated) |
-| THF Plain | ~30 min | ~22 min (~25% reduction; one full pass eliminated) |
-| **Wall clock** | **~30 min** | **~22 min** |
+| File Type      | Before (M4) | After (M5)                                         |
+| -------------- | ----------- | -------------------------------------------------- |
+| FOF            | ~8 min      | ~8 min (unaffected)                                |
+| TFF            | ~8 min      | ~8 min (unaffected)                                |
+| THF Modal      | ~30 min     | ~22 min (~25% reduction; one full pass eliminated) |
+| THF Plain      | ~30 min     | ~22 min (~25% reduction; one full pass eliminated) |
+| **Wall clock** | **~30 min** | **~22 min**                                        |
 
 THF Modal and THF Plain each drop from ~30 min to ~22 min. Wall clock improves from ~30 min
 to ~22 min as THF is now no longer waiting on the extra pass.
@@ -591,6 +604,7 @@ to ~22 min as THF is now no longer waiting on the extra pass.
 **Implements: Opt-5 + Opt-7**
 
 Two separate algorithmic inefficiencies contribute measurable overhead:
+
 1. `winnowTypeList()` in `FormulaPreprocessor` runs O(v²) pairwise comparisons per formula
 2. `writeSorts()` in `SUMOKBtoTFAKB` recomputes Cartesian products over numeric type suffixes
    for every relation on every run
@@ -598,23 +612,23 @@ Two separate algorithmic inefficiencies contribute measurable overhead:
 #### Steps — Opt-5: Fix `winnowTypeList()`
 
 - [ ] Read `FormulaPreprocessor.java:119-144` and document the current pairwise comparison
-  logic
+      logic
 - [ ] Retrieve the type hierarchy from `kbCache` and sort candidate types topologically
 - [ ] Replace the O(v²) nested loop with a single-pass dominated-type elimination using the
-  sorted order: for each type, check only its ancestors (already seen in sorted order)
+      sorted order: for each type, check only its ancestors (already seen in sorted order)
 - [ ] Verify the output of `winnowTypeList()` is identical before and after the change using
-  a unit test that compares results on a known formula set
+      a unit test that compares results on a known formula set
 
 #### Steps — Opt-7: Cache `writeSorts()` Cartesian Products
 
 - [ ] Read `trans/SUMOKBtoTFAKB.java:619-681` and identify the signature of
-  `processRelationSort()`
+      `processRelationSort()`
 - [ ] Add a `HashMap<String, List<String>>` cache field (keyed on `relation + ":" + signature`
-  string) to `SUMOKBtoTFAKB`
+      string) to `SUMOKBtoTFAKB`
 - [ ] Wrap the existing `processRelationSort()` body: check the cache first; compute and store
-  on miss
+      on miss
 - [ ] Restrict computation to relations that actually appear in the translated formula set
-  (skip relations present in the KB but absent from any formula)
+      (skip relations present in the KB but absent from any formula)
 - [ ] Clear the cache at the start of each full regeneration run
 
 #### Steps — Integration
@@ -625,13 +639,13 @@ Two separate algorithmic inefficiencies contribute measurable overhead:
 
 #### Generation Times
 
-| File Type | Before (M5) | After (M6) |
-|-----------|-------------|------------|
-| FOF | ~8 min | ~7 min (winnowTypeList improvement applies) |
-| TFF | ~8 min | ~5 min (both winnowTypeList + writeSorts cache apply) |
-| THF Modal | ~22 min | ~22 min (unaffected) |
-| THF Plain | ~22 min | ~22 min (unaffected) |
-| **Wall clock** | **~22 min** | **~22 min** |
+| File Type      | Before (M5) | After (M6)                                            |
+| -------------- | ----------- | ----------------------------------------------------- |
+| FOF            | ~8 min      | ~7 min (winnowTypeList improvement applies)           |
+| TFF            | ~8 min      | ~5 min (both winnowTypeList + writeSorts cache apply) |
+| THF Modal      | ~22 min     | ~22 min (unaffected)                                  |
+| THF Plain      | ~22 min     | ~22 min (unaffected)                                  |
+| **Wall clock** | **~22 min** | **~22 min**                                           |
 
 TFF drops from ~8 min to ~5 min; the `writeSorts()` Cartesian product that previously took
 several minutes now completes in seconds on warm cache. FOF improves slightly from the
@@ -658,22 +672,22 @@ loops, and widening the `BufferedWriter` buffer to reduce system call frequency.
 #### Steps — Opt-8: Reduce Object Allocation in Retry Loops
 
 - [ ] In `trans/SUMOtoTFAform.java:2372-2376`: instrument the `elimUnitaryLogops` retry loop
-  to count how many iterations occur on average per formula (add a debug counter)
+      to count how many iterations occur on average per formula (add a debug counter)
 - [ ] Replace the string-equality convergence check (`formula.equals(prev)`) with a
-  structural/parse-tree equality check to avoid constructing intermediate `Formula` objects
-  when the formula has not changed
+      structural/parse-tree equality check to avoid constructing intermediate `Formula` objects
+      when the formula has not changed
 - [ ] If the loop always converges in ≤2 iterations in practice, replace the retry loop with
-  a fixed two-pass unroll to eliminate loop overhead entirely
+      a fixed two-pass unroll to eliminate loop overhead entirely
 - [ ] Apply the same analysis to the `constrainFunctVars` retry loop at lines 2384-2388
 
 #### Steps — Opt-9: Larger I/O Buffers
 
 - [ ] Locate the `BufferedWriter` instantiation(s) used to write the final output files in
-  `trans/SUMOKBtoTPTPKB.java` and `trans/THFnew.java`
+      `trans/SUMOKBtoTPTPKB.java` and `trans/THFnew.java`
 - [ ] Increase the buffer size argument from the default (8,192 bytes) to 4,194,304 bytes
-  (4 MB): `new BufferedWriter(new FileWriter(path), 4 * 1024 * 1024)`
+      (4 MB): `new BufferedWriter(new FileWriter(path), 4 * 1024 * 1024)`
 - [ ] Confirm no intermediate `flush()` calls interfere with the larger buffer (the existing
-  single-batch write pattern via `fileContents` is already optimal)
+      single-batch write pattern via `fileContents` is already optimal)
 
 #### Steps — Integration
 
@@ -683,13 +697,13 @@ loops, and widening the `BufferedWriter` buffer to reduce system call frequency.
 
 #### Generation Times
 
-| File Type | Before (M6) | After (M7) |
-|-----------|-------------|------------|
-| FOF | ~7 min | ~6.5 min (~7% improvement from allocation + I/O) |
-| TFF | ~5 min | ~4.5 min (~10% improvement) |
-| THF Modal | ~22 min | ~21 min (~5% I/O improvement) |
-| THF Plain | ~22 min | ~21 min (~5% I/O improvement) |
-| **Wall clock** | **~22 min** | **~21 min** |
+| File Type      | Before (M6) | After (M7)                                       |
+| -------------- | ----------- | ------------------------------------------------ |
+| FOF            | ~7 min      | ~6.5 min (~7% improvement from allocation + I/O) |
+| TFF            | ~5 min      | ~4.5 min (~10% improvement)                      |
+| THF Modal      | ~22 min     | ~21 min (~5% I/O improvement)                    |
+| THF Plain      | ~22 min     | ~21 min (~5% I/O improvement)                    |
+| **Wall clock** | **~22 min** | **~21 min**                                      |
 
 #### Acceptance Criteria
 
@@ -705,11 +719,11 @@ loops, and widening the `BufferedWriter` buffer to reduce system call frequency.
 
 ### Current Config (4 KIF files, 75,213 formulas)
 
-| Milestone | FOF | TFF | THF Modal | THF Plain | Sequential | Parallel wall clock | Key change |
-|-----------|-----|-----|-----------|-----------|------------|---------------------|------------|
-| M0 (measured) | 14.7s | 146.7s | 28.1s | 23.6s | **213.1s** | **161.4s** | — |
-| M1 (measured) | 15.0s | 175.1s | 28.5s | 23.9s | **242.5s** | **175.1s** | ThreadLocal + parallel FOF/TFF + concurrent collections |
-| **M2 (measured)** | **7.5s** | **133.8s** | **29.1s** | **24.3s** | **~195s** | **~134s** | Parallel formula loop + early-exit in `copyNewPredFromVariableArity()` |
+| Milestone         | FOF      | TFF        | THF Modal | THF Plain | Sequential | Parallel wall clock | Key change                                                             |
+| ----------------- | -------- | ---------- | --------- | --------- | ---------- | ------------------- | ---------------------------------------------------------------------- |
+| M0 (measured)     | 14.7s    | 146.7s     | 28.1s     | 23.6s     | **213.1s** | **161.4s**          | —                                                                      |
+| M1 (measured)     | 15.0s    | 175.1s     | 28.5s     | 23.9s     | **242.5s** | **175.1s**          | ThreadLocal + parallel FOF/TFF + concurrent collections                |
+| **M2 (measured)** | **7.5s** | **133.8s** | **29.1s** | **24.3s** | **~195s**  | **~134s**           | Parallel formula loop + early-exit in `copyNewPredFromVariableArity()` |
 
 **M2 notes:** Both FOF and TFF use `_tWriteFile()` (dispatched via `rapidParsing=true`), so
 both benefit from the parallel formula loop. FOF achieves ~2× speedup — its per-formula work
@@ -726,19 +740,19 @@ parallel architecture pays off in M2 where per-format TFF time drops dramaticall
 
 ### Full SUMO KB (estimated)
 
-| Milestone | FOF | TFF | THF Modal | THF Plain | Wall clock | Key change |
-|-----------|-----|-----|-----------|-----------|-----------|------------|
-| Baseline | 60 min | 60 min | 30 min | 30 min | **120 min** | — |
-| M0 — Profiling | 60 min | 60 min | 30 min | 30 min | **120 min** | Measurement only |
-| M1 — Thread safety | 60 min | 72 min | 30 min | 30 min | **72 min** | FOF+TFF parallel; TFF +19% from ConcurrentHashMap |
-| M2 — Parallel loop | 10 min | 10 min | 30 min | 30 min | **30 min** | ~6× per-format speedup |
-| M3 — Incremental | 1 min* | 1 min* | 3 min* | 3 min* | **3 min*** | *UA-only change |
-| M4 — Share preProcess | 8 min | 8 min | 30 min | 30 min | **30 min** | Duplicate preProcess gone |
-| M5 — Merge THF pass | 8 min | 8 min | 22 min | 22 min | **22 min** | One THF pass eliminated |
-| M6 — Algorithmic fixes | 7 min | 5 min | 22 min | 22 min | **22 min** | writeSorts + winnowTypeList |
-| M7 — Alloc + I/O | 6.5 min | 4.5 min | 21 min | 21 min | **21 min** | Final polish |
+| Milestone              | FOF     | TFF     | THF Modal | THF Plain | Wall clock  | Key change                                        |
+| ---------------------- | ------- | ------- | --------- | --------- | ----------- | ------------------------------------------------- |
+| Baseline               | 60 min  | 60 min  | 30 min    | 30 min    | **120 min** | —                                                 |
+| M0 — Profiling         | 60 min  | 60 min  | 30 min    | 30 min    | **120 min** | Measurement only                                  |
+| M1 — Thread safety     | 60 min  | 72 min  | 30 min    | 30 min    | **72 min**  | FOF+TFF parallel; TFF +19% from ConcurrentHashMap |
+| M2 — Parallel loop     | 10 min  | 10 min  | 30 min    | 30 min    | **30 min**  | ~6× per-format speedup                            |
+| M3 — Incremental       | 1 min\* | 1 min\* | 3 min\*   | 3 min\*   | **3 min\*** | \*UA-only change                                  |
+| M4 — Share preProcess  | 8 min   | 8 min   | 30 min    | 30 min    | **30 min**  | Duplicate preProcess gone                         |
+| M5 — Merge THF pass    | 8 min   | 8 min   | 22 min    | 22 min    | **22 min**  | One THF pass eliminated                           |
+| M6 — Algorithmic fixes | 7 min   | 5 min   | 22 min    | 22 min    | **22 min**  | writeSorts + winnowTypeList                       |
+| M7 — Alloc + I/O       | 6.5 min | 4.5 min | 21 min    | 21 min    | **21 min**  | Final polish                                      |
 
-*Incremental (UA-only) times. Full regeneration time follows the row above (M4 values).
+\*Incremental (UA-only) times. Full regeneration time follows the row above (M4 values).
 
 **Overall improvement (full regen): 120 min → 21 min (~82% reduction)**
 **Overall improvement (UA-only incremental): 120 min → ~3 min (~97.5% reduction)**
@@ -747,18 +761,18 @@ parallel architecture pays off in M2 where per-format TFF time drops dramaticall
 
 ## Critical Files to Modify
 
-| File | Change | Milestone |
-|------|--------|-----------|
-| `trans/SUMOformulaToTPTPformula.java` | `lang`, `hideNumbers`, `qlist` → ThreadLocal | M1 (done) |
-| `trans/SUMOKBtoTPTPKB.java` | `lang` → ThreadLocal; parallelize `_tWriteFile()` | M1 (done) / M2 (done) |
-| `trans/SUMOtoTFAform.java` | `varmap`, `numericConstantTypes`, `filterMessage` → ThreadLocal | M1 (done) |
-| `KBcache.java` | 5 fields → ConcurrentHashMap/KeySet; `synchronized` on mutators | M1 (done) |
-| `KB.java` | `terms` → ConcurrentSkipListSet; `capterms` → ConcurrentHashMap | M1 (done) |
-| `trans/SUMOKBtoTFAKB.java` | Snapshot copy in `writeSorts()`; cache Cartesian products | M1 (done) / M6 |
-| `KButilities.java` | Kryo serializer for `ConcurrentHashMap.KeySetView` | M1 (done) |
-| `trans/TPTPGenerationManager.java` | 4-thread parallel (FOF, TFF, THF Modal, THF Plain) | M1 (done) |
-| `trans/THFnew.java` | Merge `analyzeBadUsages()` into main translation loop | M5 |
-| `FormulaPreprocessor.java` | Fix `winnowTypeList()` O(n²) → O(n log n) | M6 |
+| File                                  | Change                                                          | Milestone             |
+| ------------------------------------- | --------------------------------------------------------------- | --------------------- |
+| `trans/SUMOformulaToTPTPformula.java` | `lang`, `hideNumbers`, `qlist` → ThreadLocal                    | M1 (done)             |
+| `trans/SUMOKBtoTPTPKB.java`           | `lang` → ThreadLocal; parallelize `_tWriteFile()`               | M1 (done) / M2 (done) |
+| `trans/SUMOtoTFAform.java`            | `varmap`, `numericConstantTypes`, `filterMessage` → ThreadLocal | M1 (done)             |
+| `KBcache.java`                        | 5 fields → ConcurrentHashMap/KeySet; `synchronized` on mutators | M1 (done)             |
+| `KB.java`                             | `terms` → ConcurrentSkipListSet; `capterms` → ConcurrentHashMap | M1 (done)             |
+| `trans/SUMOKBtoTFAKB.java`            | Snapshot copy in `writeSorts()`; cache Cartesian products       | M1 (done) / M6        |
+| `KButilities.java`                    | Kryo serializer for `ConcurrentHashMap.KeySetView`              | M1 (done)             |
+| `trans/TPTPGenerationManager.java`    | 4-thread parallel (FOF, TFF, THF Modal, THF Plain)              | M1 (done)             |
+| `trans/THFnew.java`                   | Merge `analyzeBadUsages()` into main translation loop           | M5                    |
+| `FormulaPreprocessor.java`            | Fix `winnowTypeList()` O(n²) → O(n log n)                       | M6                    |
 
 ---
 
