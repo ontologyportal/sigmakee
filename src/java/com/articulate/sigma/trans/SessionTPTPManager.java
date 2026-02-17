@@ -16,7 +16,9 @@ import com.articulate.sigma.utils.StringUtil;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Manages session-specific TPTP file lifecycle for isolated TQ test handling.
@@ -44,6 +46,44 @@ public class SessionTPTPManager {
      * mutating the shared base cache that all other sessions depend on.
      */
     private static final ConcurrentHashMap<String, KBcache> sessionCaches = new ConcurrentHashMap<>();
+
+    /**
+     * Per-session axiom key: axiom name → source Formula.
+     *
+     * <p>The global {@code SUMOKBtoTPTPKB.axiomKey} is treated as <em>read-only</em>
+     * after initial KB generation — it maps base-KB axiom names ({@code kb_SUMO_N})
+     * to their source formulas.  Every axiom name created by {@code patchSessionTPTP}
+     * (both retranslated base formulas and new {@code tell()} assertions) is recorded
+     * here instead, keeping sessions fully isolated.
+     *
+     * <p>Entries are removed in {@link #cleanupSession}.
+     */
+    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>>
+            sessionAxiomKeys = new ConcurrentHashMap<>();
+
+    /*********************************************************************************
+     * Return the session-specific axiom key for {@code sessionId}, creating an empty
+     * map on the first call.
+     *
+     * @param sessionId The HTTP session ID
+     * @return The session-specific axiom key (never null)
+     */
+    public static Map<String, Formula> getOrCreateSessionAxiomKey(String sessionId) {
+
+        return sessionAxiomKeys.computeIfAbsent(sessionId, id -> new ConcurrentHashMap<>());
+    }
+
+    /*********************************************************************************
+     * Return the session-specific axiom key for {@code sessionId}, or {@code null}
+     * if no patches have been applied to this session yet.
+     *
+     * @param sessionId The HTTP session ID
+     * @return The session axiom key, or null
+     */
+    public static Map<String, Formula> getSessionAxiomKey(String sessionId) {
+
+        return sessionAxiomKeys.get(sessionId);
+    }
 
     /*********************************************************************************
      * Return the session-specific KBcache for {@code sessionId}, creating a deep
@@ -275,6 +315,268 @@ public class SessionTPTPManager {
 
 
     /*********************************************************************************
+     * Incrementally patch the session-specific TPTP file.
+     *
+     * <p>Handles two categories of output in a single atomic write:
+     * <ol>
+     *   <li><b>Retranslated base axioms</b> ({@code affected}) — existing KB formulas
+     *       whose TPTP translation changes because the session KBcache was updated
+     *       (e.g., new type guards after {@code addSubclass}).  Their old axiom lines
+     *       are commented out and the new translations are appended.</li>
+     *   <li><b>New tell() assertion axioms</b> ({@code newFormulas}) — formulas that
+     *       were just added to the KB via {@code tell()} and have never been translated.
+     *       They are translated with the session KBcache and appended at the end.</li>
+     * </ol>
+     *
+     * <p>All new axiom names are recorded in the <em>session-specific</em> axiom key
+     * ({@link #getOrCreateSessionAxiomKey}) rather than in the global
+     * {@code SUMOKBtoTPTPKB.axiomKey}, keeping sessions fully isolated.
+     *
+     * <p>If the session already has a patched file it is used as the base (Option B),
+     * so previous patches are preserved across multiple {@code tell()} calls.
+     *
+     * <p>Falls back to {@link #generateSessionTPTP} when the shared base file is
+     * missing or the global {@code axiomKey} has not been populated yet.
+     *
+     * @param sessionId    the HTTP session ID
+     * @param kb           the knowledge base
+     * @param lang         TPTP language: "fof" / "tptp" for FOF, "tff" for TFF
+     * @param affected     existing KB formulas that need retranslation (may be empty)
+     * @param newFormulas  formulas just added via {@code tell()} (may be empty)
+     * @param sessionCache the session-specific KBcache (already updated by M3.2)
+     * @return the path to the session-specific TPTP file
+     */
+    public static Path patchSessionTPTP(
+            String sessionId, KB kb, String lang,
+            Set<Formula> affected, Set<Formula> newFormulas, KBcache sessionCache) {
+
+        // Normalize lang: accept "tptp" as a synonym for "fof"
+        final String normalizedLang = "tptp".equals(lang) ? "fof" : lang;
+
+        // Fallback: no axiomKey populated yet → full regeneration
+        if (SUMOKBtoTPTPKB.axiomKey == null || SUMOKBtoTPTPKB.axiomKey.isEmpty()) {
+            if (debug)
+                System.out.println("SessionTPTPManager.patchSessionTPTP: axiomKey empty, " +
+                        "falling back to full regen for session " + sessionId);
+            return generateSessionTPTP(sessionId, kb, lang);
+        }
+
+        // Trivial case: nothing at all to write → ensure session file exists
+        boolean hasAffected  = affected   != null && !affected.isEmpty();
+        boolean hasNewForms  = newFormulas != null && !newFormulas.isEmpty();
+        if (!hasAffected && !hasNewForms) {
+            if (debug)
+                System.out.println("SessionTPTPManager.patchSessionTPTP: nothing to patch for " + sessionId);
+            return mergeBaseWithSessionUA(sessionId, kb, lang);
+        }
+
+        Object lock = sessionLocks.computeIfAbsent(sessionId, k -> new Object());
+
+        synchronized (lock) {
+            String ext = "fof".equals(normalizedLang) ? "tptp" : normalizedLang;
+            String kbDir = KBmanager.getMgr().getPref("kbDir");
+            Path sharedBase  = Paths.get(kbDir, kb.name + "." + ext);
+            Path sessionDir  = getSessionDir(sessionId);
+            Path sessionFile = getSessionTPTPPath(sessionId, kb.name, lang);
+            Path tmpFile     = sessionFile.resolveSibling(sessionFile.getFileName() + ".tmp");
+
+            // Fallback: shared base file not found → full regeneration
+            if (!Files.exists(sharedBase)) {
+                System.err.println("SessionTPTPManager.patchSessionTPTP: base file not found: " +
+                        sharedBase + ", falling back to full regen");
+                return generateSessionTPTP(sessionId, kb, lang);
+            }
+
+            // Option B: patch from the existing session file when present, so previous
+            // patches survive successive tell() calls within the same session.
+            Path baseFile = Files.exists(sessionFile) ? sessionFile : sharedBase;
+
+            try {
+                Files.createDirectories(sessionDir);
+                Files.deleteIfExists(tmpFile);
+
+                int affectedCount = hasAffected  ? affected.size()   : 0;
+                int newCount      = hasNewForms  ? newFormulas.size() : 0;
+                System.out.println("SessionTPTPManager: Patching session " + normalizedLang +
+                        " for session " + sessionId +
+                        " (" + affectedCount + " retranslated, " + newCount + " new)");
+                long startTime = System.currentTimeMillis();
+
+                // 1. Build reverse index merging global axiomKey + this session's patch key
+                Map<Formula, Set<String>> reverseIndex = buildReverseIndex(sessionId);
+
+                // 2. Collect axiom names that must be commented out (retranslated formulas only)
+                Set<String> toSkip = new HashSet<>();
+                if (hasAffected) {
+                    for (Formula f : affected) {
+                        Set<String> names = reverseIndex.get(f);
+                        if (names != null)
+                            toSkip.addAll(names);
+                    }
+                }
+                if (debug)
+                    System.out.println("SessionTPTPManager.patchSessionTPTP: " +
+                            toSkip.size() + " axiom names to comment out");
+
+                // 3. Retranslate affected + new formulas against the session cache,
+                //    in a single kb.kbCache swap to minimise the swap window.
+                KBcache sharedCache = kb.kbCache;
+                kb.kbCache = sessionCache;
+                Map<Formula, List<String>> retranslated;
+                Map<Formula, List<String>> newTranslations;
+                try {
+                    retranslated    = hasAffected ? SUMOKBtoTPTPKB.retranslateFormulas(
+                            kb, affected,   normalizedLang) : Collections.emptyMap();
+                    newTranslations = hasNewForms ? SUMOKBtoTPTPKB.retranslateFormulas(
+                            kb, newFormulas, normalizedLang) : Collections.emptyMap();
+                } finally {
+                    kb.kbCache = sharedCache;
+                }
+
+                // 4. Write patched file
+                String sanitizedKBName = kb.name.replaceAll("\\W", "_");
+                // Session axiom key — isolated from the global axiomKey
+                Map<String, Formula> sessionAxiomKey = getOrCreateSessionAxiomKey(sessionId);
+                // Build a session-specific prefix so axiom names are globally unique
+                // even when two sessions patch concurrently.
+                // Use Math.abs(hashCode) of sessionId for a compact numeric discriminator;
+                // prefix with "s" so the name starts with a letter (TPTP requirement).
+                String sessionTag = "s" + Math.abs(sessionId.hashCode());
+                // Sequential index within this patch call (restarts from 1 each patch).
+                AtomicInteger patchIdx = new AtomicInteger(1);
+
+                try (BufferedReader reader = Files.newBufferedReader(baseFile, StandardCharsets.UTF_8);
+                     BufferedWriter writer = Files.newBufferedWriter(tmpFile,  StandardCharsets.UTF_8)) {
+
+                    // --- Copy base, commenting out stale axioms ---
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        String axiomName = extractAxiomName(line);
+                        if (axiomName != null && toSkip.contains(axiomName)) {
+                            writer.write("% [patched out] " + line);
+                        } else {
+                            writer.write(line);
+                        }
+                        writer.newLine();
+                    }
+
+                    // --- Append section header ---
+                    writer.newLine();
+                    writer.write("% --- Incremental patch: session " + sessionId + " ---");
+                    writer.newLine();
+
+                    // Helper: write one body string as a named axiom, recording in session key
+                    Set<String> patchWritten = new HashSet<>(); // session-level dedup
+
+                    // Retranslated base formulas
+                    for (Map.Entry<Formula, List<String>> entry : retranslated.entrySet()) {
+                        for (String body : entry.getValue()) {
+                            if (!patchWritten.add(body)) continue;
+                            String name = "kb_" + sanitizedKBName + "_" + sessionTag
+                                    + "_" + patchIdx.getAndIncrement();
+                            writer.write(normalizedLang + "(" + name + ",axiom,(" + body + ")).");
+                            writer.newLine();
+                            sessionAxiomKey.put(name, entry.getKey()); // session key only
+                        }
+                    }
+
+                    // New tell() assertion formulas
+                    for (Map.Entry<Formula, List<String>> entry : newTranslations.entrySet()) {
+                        for (String body : entry.getValue()) {
+                            if (!patchWritten.add(body)) continue;
+                            String name = "kb_" + sanitizedKBName + "_" + sessionTag
+                                    + "_" + patchIdx.getAndIncrement();
+                            writer.write(normalizedLang + "(" + name + ",axiom,(" + body + ")).");
+                            writer.newLine();
+                            sessionAxiomKey.put(name, entry.getKey()); // session key only
+                        }
+                    }
+                }
+
+                // 5. Atomic move to session file path
+                try {
+                    Files.move(tmpFile, sessionFile,
+                            StandardCopyOption.REPLACE_EXISTING,
+                            StandardCopyOption.ATOMIC_MOVE);
+                } catch (AtomicMoveNotSupportedException e) {
+                    Files.move(tmpFile, sessionFile, StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                long elapsed = System.currentTimeMillis() - startTime;
+                System.out.println("SessionTPTPManager: Patch complete in " + elapsed +
+                        "ms for session " + sessionId);
+
+                sessionGenerationTimestamps.put(sessionId, System.currentTimeMillis());
+                return sessionFile;
+
+            } catch (IOException e) {
+                System.err.println("SessionTPTPManager.patchSessionTPTP: error: " + e.getMessage());
+                e.printStackTrace();
+                try { Files.deleteIfExists(tmpFile); } catch (IOException ignore) {}
+                throw new RuntimeException("Failed to patch session TPTP file", e);
+            }
+        }
+    }
+
+    /*********************************************************************************
+     * Build a reverse index: Formula → Set of axiom names.
+     *
+     * <p>Merges two sources:
+     * <ol>
+     *   <li>The global {@code SUMOKBtoTPTPKB.axiomKey} — base KB axioms, read-only.</li>
+     *   <li>The session-specific axiom key for {@code sessionId} — patch axioms written
+     *       by previous {@code patchSessionTPTP} calls in this session.</li>
+     * </ol>
+     *
+     * @param sessionId the HTTP session ID
+     */
+    private static Map<Formula, Set<String>> buildReverseIndex(String sessionId) {
+
+        Map<Formula, Set<String>> rev = new HashMap<>();
+        // Global base axioms (read-only after initial generation)
+        for (Map.Entry<String, Formula> e : SUMOKBtoTPTPKB.axiomKey.entrySet()) {
+            rev.computeIfAbsent(e.getValue(), k -> new HashSet<>()).add(e.getKey());
+        }
+        // Session-specific patch axioms from previous patchSessionTPTP() calls
+        Map<String, Formula> sessionKey = sessionAxiomKeys.get(sessionId);
+        if (sessionKey != null) {
+            for (Map.Entry<String, Formula> e : sessionKey.entrySet()) {
+                rev.computeIfAbsent(e.getValue(), k -> new HashSet<>()).add(e.getKey());
+            }
+        }
+        return rev;
+    }
+
+    /*********************************************************************************
+     * Extract the axiom name from a TPTP formula line, or {@code null} if the
+     * line is not a {@code kb_*} axiom.
+     *
+     * <p>Handles lines of the form:
+     * <pre>fof(kb_SUMO_1234,axiom,(body)).</pre>
+     * <pre>tff(kb_SUMO_1234,axiom,(body)).</pre>
+     *
+     * @param line a raw line from a TPTP file
+     * @return the axiom name (e.g., {@code "kb_SUMO_1234"}), or {@code null}
+     */
+    private static String extractAxiomName(String line) {
+
+        String trimmed = line.trim();
+        // Must start with a known TPTP language keyword followed by '('
+        int parenIdx = trimmed.indexOf('(');
+        if (parenIdx < 0) return null;
+        String prefix = trimmed.substring(0, parenIdx);
+        if (!prefix.equals("fof") && !prefix.equals("tff") && !prefix.equals("thf"))
+            return null;
+        // Extract name: between '(' and the first ','
+        int commaIdx = trimmed.indexOf(',', parenIdx);
+        if (commaIdx < 0) return null;
+        String name = trimmed.substring(parenIdx + 1, commaIdx);
+        // Only match KB axiom names (kb_*), not conjecture/question lines
+        if (!name.startsWith("kb_")) return null;
+        return name;
+    }
+
+    /*********************************************************************************
      * Clean up all session-specific files for a given session.
      * Called when a session is destroyed.
      *
@@ -286,10 +588,11 @@ public class SessionTPTPManager {
             return;
         }
 
-        // Remove locks, timestamps, and session-specific KBcache copy
+        // Remove locks, timestamps, session KBcache, and session axiom key
         sessionLocks.remove(sessionId);
         sessionGenerationTimestamps.remove(sessionId);
         sessionCaches.remove(sessionId);
+        sessionAxiomKeys.remove(sessionId);
 
         Path sessionDir = getSessionDir(sessionId);
 

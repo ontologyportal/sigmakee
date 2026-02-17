@@ -21,6 +21,7 @@ import org.junit.runners.Suite;
     FormulaUtilTest.class,
     GraphTest.class,
     KBTest.class,
+    AffectedFormulasTest.class,
     KBcacheUnitTest.class,
     KBcacheIncrementalTest.class,
     KIFTest.class,
@@ -31,7 +32,8 @@ import org.junit.runners.Suite;
     KBmanagerInitTest.class,
     PredVarInstTest.class,
     RowVarTest.class,
-    SessionCleanupListenerTest.class
+    SessionCleanupListenerTest.class,
+    TPTPPatchTest.class
 })
 public class UnitSigmaTestSuite extends UnitTestBase {
 

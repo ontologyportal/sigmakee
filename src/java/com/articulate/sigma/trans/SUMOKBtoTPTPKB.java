@@ -73,6 +73,130 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
+     * Given the set of terms whose KBcache entries changed (returned by an
+     * incremental update method such as {@code addSubclass}), identify
+     * all formulas in the KB that need to be retranslated to TPTP.
+     *
+     * <p>A formula is <em>affected</em> if any of the following holds:
+     * <ol>
+     *   <li><b>Direct reference</b> — the formula mentions any changed term in
+     *       argument positions 0–5 (queried via the {@code KB.formulas} index).</li>
+     *   <li><b>Predicate variable</b> — the formula has predicate variables
+     *       ({@code predVarCache} is non-null and non-empty) <em>and</em> at least
+     *       one changed term is a relation.  Such formulas are re-expanded by
+     *       {@code PredVarInst} against the updated predicate set.</li>
+     * </ol>
+     *
+     * <p>All affected formulas have their {@code varTypeCache} cleared so that
+     * {@code computeVariableTypes()} recomputes fresh type-guards on the next
+     * {@code preProcess()} call.
+     *
+     * @param kb           the knowledge base
+     * @param changedTerms the terms returned by an incremental update
+     * @return formulas that require retranslation (never null, may be empty)
+     */
+    public static Set<Formula> findAffectedFormulas(KB kb, Set<String> changedTerms) {
+
+        Set<Formula> affected = new HashSet<>();
+        if (changedTerms == null || changedTerms.isEmpty() || kb == null)
+            return affected;
+
+        // Determine whether any changed term is a relation; if so, formulas
+        // with predicate variables may expand to include the new predicate.
+        boolean predicateChanged = false;
+        if (kb.kbCache != null) {
+            for (String term : changedTerms) {
+                if (kb.kbCache.relations.contains(term)) {
+                    predicateChanged = true;
+                    break;
+                }
+            }
+        }
+
+        // 1. Direct reference: every formula that mentions a changed term
+        //    in any argument position 0-5 (predicate slot + up to 5 args).
+        for (String term : changedTerms) {
+            for (int argnum = 0; argnum <= 5; argnum++) {
+                affected.addAll(kb.ask("arg", argnum, term));
+            }
+        }
+
+        // 2. Predicate variables: if a relation changed, all formulas whose
+        //    predVarCache is set and non-empty must be re-expanded because
+        //    PredVarInst enumerates predicates from the (now-updated) KBcache.
+        //    (predVarCache == null means the formula has not been processed yet
+        //    and will be fully processed on its first translation anyway.)
+        if (predicateChanged) {
+            for (Formula f : kb.formulaMap.values()) {
+                if (f.predVarCache != null && !f.predVarCache.isEmpty()) {
+                    affected.add(f);
+                }
+            }
+        }
+
+        // 3. Clear varTypeCache on every affected formula.  This forces
+        //    computeVariableTypes() to recompute type-guards using the updated
+        //    KBcache signatures on the next preProcess() call.
+        for (Formula f : affected) {
+            f.varTypeCache = new HashMap<>();
+        }
+
+        return affected;
+    }
+
+    /** *************************************************************
+     * Retranslate a set of formulas using the current {@code kb.kbCache}.
+     *
+     * <p>The caller is responsible for swapping {@code kb.kbCache} to the desired
+     * session-specific cache <em>before</em> calling this method and restoring it
+     * afterwards.  Each formula's {@code theFofFormulas} / {@code theTffFormulas}
+     * caches are cleared and repopulated as a side-effect.
+     *
+     * <p>The returned map preserves insertion order (LinkedHashMap) so that callers
+     * can append the new axiom lines in a deterministic order.
+     *
+     * @param kb       the knowledge base (kbCache should already be the session cache)
+     * @param formulas the formulas to retranslate
+     * @param lang     "fof" or "tff"
+     * @return map from each formula to its list of new TPTP body strings (sort decls
+     *         and formula axioms); if the formula produces no output the list is empty
+     */
+    public static Map<Formula, List<String>> retranslateFormulas(
+            KB kb, Set<Formula> formulas, String lang) {
+
+        if (formulas == null || formulas.isEmpty())
+            return Collections.emptyMap();
+
+        SUMOKBtoTPTPKB translator = new SUMOKBtoTPTPKB();
+        translator.kb = kb;
+        setLang(lang);
+        int total = formulas.size();
+
+        Map<Formula, List<String>> result = new LinkedHashMap<>();
+        for (Formula f : formulas) {
+            FormulaResult res = translator.translateOneFormula(f, lang, total);
+            List<String> bodies = new ArrayList<>();
+            if (!res.skipEverything && !res.skippedHOL && !res.skippedCached) {
+                // Sort declarations (TFF-specific, typically empty for FOF)
+                for (String sort : res.sortBodies) {
+                    if (!StringUtil.emptyString(sort) && !bodies.contains(sort))
+                        bodies.add(sort);
+                }
+                // TPTP body strings — apply content filters but not global dedup
+                // (dedup against the patched file is handled by the caller)
+                List<String> filterLog = new ArrayList<>();
+                for (String tptp : res.tptpBodies) {
+                    if (!StringUtil.emptyString(tptp) && !bodies.contains(tptp)
+                            && !translator.filterAxiom(f, tptp, filterLog))
+                        bodies.add(tptp);
+                }
+            }
+            result.put(f, bodies);
+        }
+        return result;
+    }
+
+    /** *************************************************************
      */
     public String getSanitizedKBname() {
 
