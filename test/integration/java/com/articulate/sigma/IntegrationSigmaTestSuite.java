@@ -19,6 +19,7 @@ import org.junit.runners.Suite;
     KBmanagerInitIntegrationTest.class,
     KbIntegrationTest.class,
     KBSessionIsolationTest.class,
+    IncrementalPipelineIntegrationTest.class,
     PredVarInstIntegrationTest.class,
     SUMOformulaToTPTPformulaTest.class, // <- already tested in the UnitTestSuite
     TPTP3Test.class,

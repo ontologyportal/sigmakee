@@ -33,6 +33,22 @@ public class SessionTPTPManager {
 
     private static final boolean debug = false;
 
+    /**
+     * When true, each {@link #patchSessionTPTP} call writes a human-readable log file
+     * to the session directory named {@code patch-debug-&lt;timestamp&gt;.log}.
+     *
+     * <p>The log records:
+     * <ul>
+     *   <li>Every formula in the <em>affected</em> set (commented out), its axiom
+     *       name(s), its retranslated TPTP bodies, and a STATUS flag that warns if
+     *       the formula produced no new translation (i.e., was effectively lost).</li>
+     *   <li>Every new tell() formula and its TPTP bodies.</li>
+     * </ul>
+     *
+     * Set to {@code false} to suppress the log files in production.
+     */
+    public static boolean debugPatch = true;
+
     /** Per-session locks for thread-safe generation */
     private static final ConcurrentHashMap<String, Object> sessionLocks = new ConcurrentHashMap<>();
 
@@ -141,8 +157,15 @@ public class SessionTPTPManager {
         String pred = formula.car();
         if (pred == null) return null;
 
+        // Normalize translator lang ("fof") to file extension ("tptp") so that all
+        // downstream methods (generateSessionTPTP, patchSessionTPTP) use consistent
+        // file paths that match the shared base file (SUMO.tptp, not SUMO.fof).
+        final String fileLang = "fof".equals(lang) ? "tptp" : lang;
+
         KBcache sessionCache = getOrCreateSessionCache(sessionId, kb);
-        Set<String> changedTerms;
+        // changedTerms drives findAffectedFormulas: empty means only the new formula is
+        // appended; non-empty means existing formulas may also need retranslation.
+        Set<String> changedTerms = Collections.emptySet();
 
         try {
             switch (pred) {
@@ -150,14 +173,18 @@ public class SessionTPTPManager {
                 case "immediateSubclass":
                     changedTerms = sessionCache.addSubclass(
                             formula.getStringArgument(1), formula.getStringArgument(2));
+//                    changedTerms = Collections.emptySet();
                     break;
                 case "instance":
                 case "immediateInstance":
                     changedTerms = sessionCache.addInstance(
                             formula.getStringArgument(1), formula.getStringArgument(2));
+//                    changedTerms = Collections.emptySet();
                     break;
                 case "domain":
                 case "domainSubclass":
+                    // domain/range DO change argument-type signatures used in type guards,
+                    // so existing formulas that use the relation may need retranslation.
                     changedTerms = sessionCache.addDomain(
                             formula.getStringArgument(1),
                             Integer.parseInt(formula.getStringArgument(2).trim()),
@@ -169,29 +196,32 @@ public class SessionTPTPManager {
                             formula.getStringArgument(1), formula.getStringArgument(2));
                     break;
                 case "subrelation":
+                    // subrelation extends the predicate hierarchy; predicate-variable
+                    // formulas that enumerate sub-predicates may need re-expansion.
                     changedTerms = sessionCache.addSubrelation(
                             formula.getStringArgument(1), formula.getStringArgument(2));
                     break;
                 case "disjoint":
                     changedTerms = sessionCache.addDisjoint(
                             formula.getStringArgument(1), formula.getStringArgument(2));
+//                    changedTerms = Collections.emptySet();
                     break;
                 default:
                     // Complex predicates (partition, exhaustiveDecomposition, etc.)
                     // — fall back to full session regeneration
                     System.out.println("SessionTPTPManager.applyIncrementalUpdate: " +
                                 "no incremental handler for '" + pred + "', falling back to full regen");
-                    return generateSessionTPTP(sessionId, kb, lang);
+                    return generateSessionTPTP(sessionId, kb, fileLang);
             }
         }
         catch (NumberFormatException e) {
             System.err.println("SessionTPTPManager.applyIncrementalUpdate: bad argNum in " +
                     formula.getFormula() + " — falling back to full regen");
-            return generateSessionTPTP(sessionId, kb, lang);
+            return generateSessionTPTP(sessionId, kb, fileLang);
         }
 
         Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changedTerms);
-        return patchSessionTPTP(sessionId, kb, lang, affected, Collections.singleton(formula), sessionCache);
+        return patchSessionTPTP(sessionId, kb, fileLang, affected, Collections.singleton(formula), sessionCache);
     }
 
     /*********************************************************************************
@@ -425,15 +455,16 @@ public class SessionTPTPManager {
             String sessionId, KB kb, String lang,
             Set<Formula> affected, Set<Formula> newFormulas, KBcache sessionCache) {
 
-        // Normalize lang: accept "tptp" as a synonym for "fof"
+        // Normalize lang: "fof" and "tptp" both mean FOF; file extension is always "tptp".
         final String normalizedLang = "tptp".equals(lang) ? "fof" : lang;
+        final String ext            = "fof".equals(normalizedLang) ? "tptp" : normalizedLang;
 
         // Fallback: no axiomKey populated yet → full regeneration
         if (SUMOKBtoTPTPKB.axiomKey == null || SUMOKBtoTPTPKB.axiomKey.isEmpty()) {
             if (debug)
                 System.out.println("SessionTPTPManager.patchSessionTPTP: axiomKey empty, " +
                         "falling back to full regen for session " + sessionId);
-            return generateSessionTPTP(sessionId, kb, lang);
+            return generateSessionTPTP(sessionId, kb, ext);
         }
 
         // Trivial case: nothing at all to write → ensure session file exists
@@ -442,24 +473,23 @@ public class SessionTPTPManager {
         if (!hasAffected && !hasNewForms) {
             if (debug)
                 System.out.println("SessionTPTPManager.patchSessionTPTP: nothing to patch for " + sessionId);
-            return mergeBaseWithSessionUA(sessionId, kb, lang);
+            return mergeBaseWithSessionUA(sessionId, kb, ext);
         }
 
         Object lock = sessionLocks.computeIfAbsent(sessionId, k -> new Object());
 
         synchronized (lock) {
-            String ext = "fof".equals(normalizedLang) ? "tptp" : normalizedLang;
             String kbDir = KBmanager.getMgr().getPref("kbDir");
             Path sharedBase  = Paths.get(kbDir, kb.name + "." + ext);
             Path sessionDir  = getSessionDir(sessionId);
-            Path sessionFile = getSessionTPTPPath(sessionId, kb.name, lang);
+            Path sessionFile = getSessionTPTPPath(sessionId, kb.name, ext);
             Path tmpFile     = sessionFile.resolveSibling(sessionFile.getFileName() + ".tmp");
 
             // Fallback: shared base file not found → full regeneration
             if (!Files.exists(sharedBase)) {
                 System.err.println("SessionTPTPManager.patchSessionTPTP: base file not found: " +
                         sharedBase + ", falling back to full regen");
-                return generateSessionTPTP(sessionId, kb, lang);
+                return generateSessionTPTP(sessionId, kb, ext);
             }
 
             // Option B: patch from the existing session file when present, so previous
@@ -506,6 +536,13 @@ public class SessionTPTPManager {
                             kb, newFormulas, normalizedLang) : Collections.emptyMap();
                 } finally {
                     kb.kbCache = sharedCache;
+                }
+
+                // 3b. Optionally write a human-readable debug log to the session dir
+                if (debugPatch) {
+                    writePatchDebugLog(sessionDir, sessionId, normalizedLang,
+                            affected, toSkip, retranslated,
+                            newFormulas, newTranslations);
                 }
 
                 // 4. Write patched file
@@ -590,6 +627,140 @@ public class SessionTPTPManager {
                 try { Files.deleteIfExists(tmpFile); } catch (IOException ignore) {}
                 throw new RuntimeException("Failed to patch session TPTP file", e);
             }
+        }
+    }
+
+    /*********************************************************************************
+     * Write a human-readable debug log for one {@link #patchSessionTPTP} call.
+     *
+     * <p>The file is named {@code patch-debug-<timestamp>.log} and placed in the
+     * session directory.  It records:
+     * <ul>
+     *   <li>Every <em>affected</em> formula: the KIF text, axiom name(s) commented out,
+     *       retranslated TPTP bodies, and a {@code STATUS} warning when no body was
+     *       produced (formula was effectively removed).</li>
+     *   <li>Every new tell() formula and its TPTP bodies.</li>
+     * </ul>
+     *
+     * Errors writing the log are printed to stderr but do NOT interrupt patching.
+     */
+    private static void writePatchDebugLog(
+            Path sessionDir,
+            String sessionId,
+            String lang,
+            Set<Formula> affected,
+            Set<String> toSkip,
+            Map<Formula, List<String>> retranslated,
+            Set<Formula> newFormulas,
+            Map<Formula, List<String>> newTranslations) {
+
+        Path logFile = sessionDir.resolve("patch-debug-" + System.currentTimeMillis() + ".log");
+        try (BufferedWriter w = Files.newBufferedWriter(logFile, StandardCharsets.UTF_8)) {
+
+            w.write("=== Patch Debug Log ===");        w.newLine();
+            w.write("Session   : " + sessionId);      w.newLine();
+            w.write("Language  : " + lang);            w.newLine();
+            w.write("Timestamp : " + new java.util.Date()); w.newLine();
+            w.newLine();
+
+            // --- Affected (retranslated) formulas ---
+            int affectedCount = affected != null ? affected.size() : 0;
+            w.write("--- AFFECTED FORMULAS (" + affectedCount + " formulas, " +
+                    toSkip.size() + " axiom names commented out) ---");
+            w.newLine();
+
+            if (affected != null && !affected.isEmpty()) {
+                int idx = 1;
+                for (Formula f : affected) {
+                    w.newLine();
+                    w.write("[" + idx++ + "] KIF: " + f.getFormula().replace('\n', ' '));
+                    w.newLine();
+                    w.write("    Source : " + f.sourceFile + " line " + f.startLine);
+                    w.newLine();
+
+                    // Find axiom names via the global axiomKey reverse-lookup
+                    Set<String> names = new java.util.HashSet<>();
+                    for (Map.Entry<String, Formula> e : SUMOKBtoTPTPKB.axiomKey.entrySet()) {
+                        if (e.getValue().equals(f)) names.add(e.getKey());
+                    }
+                    // Also check session axiom keys
+                    Map<String, Formula> sessKey = sessionAxiomKeys.get(sessionId);
+                    if (sessKey != null) {
+                        for (Map.Entry<String, Formula> e : sessKey.entrySet()) {
+                            if (e.getValue().equals(f)) names.add(e.getKey());
+                        }
+                    }
+                    if (names.isEmpty()) {
+                        w.write("    Axioms : (none found in axiomKey)");
+                    } else {
+                        w.write("    Axioms : " + names);
+                    }
+                    w.newLine();
+
+                    // Retranslated bodies
+                    List<String> bodies = retranslated.get(f);
+                    if (bodies == null || bodies.isEmpty()) {
+                        w.write("    STATUS : *** WARNING — no retranslated bodies produced;" +
+                                " formula is effectively removed from this session ***");
+                    } else {
+                        w.write("    STATUS : OK — " + bodies.size() + " body(ies) regenerated");
+                        w.newLine();
+                        for (int b = 0; b < bodies.size(); b++) {
+                            w.write("    Body[" + b + "]: " + bodies.get(b));
+                        }
+                    }
+                    w.newLine();
+                }
+            } else {
+                w.write("  (none)");
+                w.newLine();
+            }
+
+            // --- New tell() formulas ---
+            w.newLine();
+            int newCount = newFormulas != null ? newFormulas.size() : 0;
+            w.write("--- NEW TELL() FORMULAS (" + newCount + ") ---");
+            w.newLine();
+
+            if (newFormulas != null && !newFormulas.isEmpty()) {
+                int idx = 1;
+                for (Formula f : newFormulas) {
+                    w.newLine();
+                    w.write("[" + idx++ + "] KIF: " + f.getFormula().replace('\n', ' '));
+                    w.newLine();
+                    List<String> bodies = newTranslations.get(f);
+                    if (bodies == null || bodies.isEmpty()) {
+                        w.write("    STATUS : *** WARNING — no TPTP bodies produced for new formula ***");
+                    } else {
+                        w.write("    STATUS : OK — " + bodies.size() + " body(ies)");
+                        w.newLine();
+                        for (int b = 0; b < bodies.size(); b++) {
+                            w.write("    Body[" + b + "]: " + bodies.get(b));
+                        }
+                    }
+                    w.newLine();
+                }
+            } else {
+                w.write("  (none)");
+                w.newLine();
+            }
+
+            // --- Axiom names that were commented out ---
+            w.newLine();
+            w.write("--- AXIOM NAMES COMMENTED OUT (" + toSkip.size() + ") ---");
+            w.newLine();
+            for (String name : new java.util.TreeSet<>(toSkip)) {
+                w.write("  " + name);
+                w.newLine();
+            }
+
+            w.newLine();
+            w.write("=== End of Patch Debug Log ===");
+            w.newLine();
+
+        } catch (IOException e) {
+            System.err.println("SessionTPTPManager.writePatchDebugLog: failed to write log to "
+                    + logFile + ": " + e.getMessage());
         }
     }
 

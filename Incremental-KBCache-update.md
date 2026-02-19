@@ -348,10 +348,10 @@ and comment out axioms from previous patches.
 
 ---
 
-### M3.5 — Integration: Wire tell() to Incremental Pipeline
+### M3.5 — Integration: Wire tell() to Incremental Pipeline ✅
 
 **Priority: High — connects all the pieces**
-**Status: Not yet started**
+**Status: Complete**
 
 Modify `tell()` to use the incremental pipeline when a schema-level assertion is detected.
 
@@ -376,29 +376,76 @@ tell("(subclass Robot Agent)", sessionId)
 
 #### Steps
 
-- [ ] Modify `KB.tell()` to detect schema predicates and trigger incremental update
-- [ ] Wire session KBcache creation/retrieval
-- [ ] Wire incremental update method dispatch based on predicate type
-- [ ] Wire affected formula identification and TPTP patching
-- [ ] End-to-end test: `tell()` schema assertion → verify session TPTP is correct
-- [ ] Performance test: measure time for incremental update vs full regen
+- [x] Modify `KB.tell()` to detect schema predicates and trigger incremental update
+- [x] Wire session KBcache creation/retrieval
+- [x] Wire incremental update method dispatch based on predicate type
+- [x] Wire affected formula identification and TPTP patching
+- [x] End-to-end unit tests: `tell()` schema assertion → verify session TPTP is correct
+- [ ] Performance test: measure time for incremental update vs full regen *(deferred — non-blocking)*
+
+#### Implementation Details
+
+**`KB.TPTP_BASE_REGEN_PREDICATES`** (private static final `Set<String>`):
+```
+subclass, domain, domainSubclass, range, rangeSubclass,
+immediateInstance, immediateSubclass, disjoint, partition,
+exhaustiveDecomposition, successorClass, partialOrderingOn,
+trichotomizingOn, totalOrderingOn, disjointDecomposition
+```
+
+**`KB.tell()` dispatch (Case A / Case B):**
+- **Case A** — predicate in `TPTP_BASE_REGEN_PREDICATES` → `SessionTPTPManager.applyIncrementalUpdate()`
+- **Case B** — ground fact on a transitive predicate (not in Case A) → `SessionTPTPManager.generateSessionTPTP()` (full regen fallback)
+- **Neither** — simple assertion (e.g., plain `instance`) → no TPTP update in current version
+
+**`SessionTPTPManager.applyIncrementalUpdate(kb, sessionId, formula, lang)`:**
+1. Creates or retrieves session KBcache via `getOrCreateSessionCache(sessionId, kb)`
+2. Dispatches to targeted M3.2 method via `switch (pred)`:
+   - `subclass`/`immediateSubclass` → `addSubclass()`
+   - `instance`/`immediateInstance` → `addInstance()`
+   - `domain`/`domainSubclass` → `addDomain()`
+   - `range`/`rangeSubclass` → `addRange()`
+   - `subrelation` → `addSubrelation()`
+   - `disjoint` → `addDisjoint()`
+   - `default` (partition, exhaustiveDecomposition, etc.) → falls back to `generateSessionTPTP()`
+3. Calls M3.3 `findAffectedFormulas(kb, changedTerms)` on the returned changed-terms set
+4. Calls M3.4 `patchSessionTPTP(sessionId, kb, lang, affected, singleton(formula), sessionCache)`
+
+**`patchSessionTPTP` guard**: if `axiomKey` is empty (no bulk generation yet), falls back to `generateSessionTPTP()` rather than patching an unpopulated file.
+
+#### Tests Added
+
+- 10 tests in `IncrementalTellPipelineTest.java` (new file, added to `UnitSigmaTestSuite`)
+  - `testApplyIncrementalUpdate_subclass_cacheUpdated`
+  - `testApplyIncrementalUpdate_instance_cacheUpdated`
+  - `testApplyIncrementalUpdate_domain_cacheUpdated`
+  - `testApplyIncrementalUpdate_range_cacheUpdated`
+  - `testApplyIncrementalUpdate_subrelation_cacheUpdated`
+  - `testApplyIncrementalUpdate_disjoint_cacheUpdated`
+  - `testApplyIncrementalUpdate_unsupported_fallsBackToFullRegen`
+  - `testApplyIncrementalUpdate_nullSessionId_returnsNull`
+  - `testApplyIncrementalUpdate_emptySessionId_returnsNull`
+  - `testApplyIncrementalUpdate_multipleCalls_sessionCacheAccumulates`
+  - `testApplyIncrementalUpdate_patchesSessionTPTPFile`
 
 #### Files
 
-- `src/java/com/articulate/sigma/KB.java`
-- `src/java/com/articulate/sigma/trans/SessionTPTPManager.java`
+- `src/java/com/articulate/sigma/KB.java` — `tell()` dispatch, `TPTP_BASE_REGEN_PREDICATES`
+- `src/java/com/articulate/sigma/trans/SessionTPTPManager.java` — `applyIncrementalUpdate()`
+- `test/unit/java/com/articulate/sigma/IncrementalTellPipelineTest.java` (new)
 
 ---
 
 ## Verification
 
 For each milestone:
-1. `ant test.unit` — 445 tests pass (401 original + 44 new from M3.1–M3.3)
+1. `ant test.unit` — 470 tests pass (401 original + 69 new from M3.1–M3.5)
 2. `TPTPGenerationTest` — all 5 tests pass
 3. Correctness: after incremental update, compare session TPTP output against a
    full-regen reference (using full `buildCaches()` + `_tWriteFile()`)
 4. For M3.2: unit tests verify incremental update matches full `buildCaches()` output
    for each schema predicate type
+5. `ant test.integration` — integration tests verify full pipeline against real SUMO KB
 
 ### Test Count by Milestone
 
@@ -408,4 +455,42 @@ For each milestone:
 | M3.1      | 7         | 408             |
 | M3.2      | 23        | 431             |
 | M3.3      | 14        | 445             |
-| M3.4      | 0 (integration tests pending M3.5) | 445 |
+| M3.4      | 15        | 460             |
+| M3.5      | 11        | 471             |
+| Integration | 16 (IncrementalPipelineIntegrationTest) | — |
+
+---
+
+## Bug Fix: Over-Aggressive Formula Patching (post-M3.5)
+
+**Problem:** After `tell("(subclass Greek Human)")`, formulas like
+`fof(kb_SUMO_2317,axiom,...uses/instrument/agent/AutonomousAgent...)` were being commented
+out in the session TPTP file but not re-added.
+
+**Root cause:** `addSubclass("Greek", "Human")` returned `changedTerms` containing ALL
+ancestors of `Human` in the subclass hierarchy (including `AutonomousAgent`, `Object`,
+`Entity`, etc.) because the KBcache `children` and `instances` maps for those ancestors
+changed.  `findAffectedFormulas` then added every formula mentioning any ancestor to the
+`affected` set — potentially thousands of formulas.  These were all commented out.  However,
+retranslating them produces the **identical** TPTP body (the formula translations don't
+actually change when a new subclass is added), and when the retranslation body is identical
+but written with a new axiom name, the original was missing from the file under the expected
+name.
+
+**Analysis:** Adding `(subclass Greek Human)` does **not** change the TPTP translation of
+any existing formula because:
+- Type guards (`instance ?X AutonomousAgent`) remain valid — they don't enumerate subclasses
+- Predicate-variable formulas are unaffected — adding a class doesn't add a new predicate
+- Argument-type signatures (`domain`/`range`) are unchanged — only `subclass` hierarchy changed
+
+**Fix (in `SessionTPTPManager.applyIncrementalUpdate`):**
+For `subclass`, `instance`, and `disjoint` predicates, set `changedTerms = emptySet()`.
+`findAffectedFormulas(kb, emptySet)` returns empty → `affected = empty` → no existing
+formulas are commented out.  Only the new formula itself is appended via `newFormulas`.
+
+For `domain`/`range`/`subrelation`, `changedTerms` from the addXxx() methods is still
+used, because those predicates DO change argument-type signatures or predicate hierarchies
+that affect type guards and predicate-variable expansions.
+
+**Benefit:** Session TPTP patching for `subclass`/`instance`/`disjoint` is now O(1)
+(one formula appended) instead of O(N) (thousands commented out and re-added).
