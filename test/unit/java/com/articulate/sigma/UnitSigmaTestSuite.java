@@ -33,7 +33,8 @@ import org.junit.runners.Suite;
     PredVarInstTest.class,
     RowVarTest.class,
     SessionCleanupListenerTest.class,
-    TPTPPatchTest.class
+    TPTPPatchTest.class,
+    IncrementalTellPipelineTest.class
 })
 public class UnitSigmaTestSuite extends UnitTestBase {
 

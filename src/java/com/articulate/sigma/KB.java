@@ -1818,6 +1818,29 @@ public class KB implements Serializable {
                                     result += " but not for local inference";
                                     break;
                             }
+                        // Incremental TPTP pipeline for schema-level tells in a session.
+                        // Runs after merge() and UA-file write; keeps the session TPTP up to date.
+                        // Two cases from requiresBaseRegenForFormulas():
+                        //   (A) Schema predicates (TPTP_BASE_REGEN_PREDICATES) → incremental update
+                        //   (B) Ground assertions on transitive predicates → no targeted method, full regen
+                        if (sessionId != null && !sessionId.isEmpty()) {
+                            String tptpLang = SUMOKBtoTPTPKB.getLang();
+                            for (Formula parsedF : parsedFormulas) {
+                                String fPred = parsedF.car();
+                                if (fPred == null) continue;
+                                if (TPTP_BASE_REGEN_PREDICATES.contains(fPred)) {
+                                    // Case (A): targeted incremental update
+                                    SessionTPTPManager.applyIncrementalUpdate(this, sessionId, parsedF, tptpLang);
+                                }
+                                else if (parsedF.isGround()
+                                           && kbCache != null
+                                           && kbCache.isTransitivePredicate(fPred)) {
+                                    // Case (B): ground fact on a transitive relation — affects transitive
+                                    // closure but no targeted KBcache method exists; fall back to full regen.
+                                    SessionTPTPManager.generateSessionTPTP(sessionId, this, tptpLang);
+                                }
+                            }
+                        }
                     }
                 }
             }

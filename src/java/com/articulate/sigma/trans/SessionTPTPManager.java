@@ -120,6 +120,81 @@ public class SessionTPTPManager {
     }
 
     /*********************************************************************************
+     * Apply an incremental KBcache update and patch the session TPTP file for
+     * one schema-level formula just added via tell().
+     *
+     * Supported predicates are dispatched to targeted KBcache update methods.
+     * Unsupported predicates (partition, exhaustiveDecomposition, etc.) fall
+     * back to a full generateSessionTPTP() call.
+     *
+     * @param kb        the shared KB (formulaMap already updated by merge())
+     * @param sessionId the HTTP session
+     * @param formula   the just-asserted formula
+     * @param lang      TPTP language ("fof"/"tptp" or "tff")
+     * @return path to the (updated) session TPTP file, or null if sessionId is empty
+     */
+    public static Path applyIncrementalUpdate(KB kb, String sessionId, Formula formula, String lang) {
+
+        if (sessionId == null || sessionId.isEmpty() || formula == null)
+            return null;
+
+        String pred = formula.car();
+        if (pred == null) return null;
+
+        KBcache sessionCache = getOrCreateSessionCache(sessionId, kb);
+        Set<String> changedTerms;
+
+        try {
+            switch (pred) {
+                case "subclass":
+                case "immediateSubclass":
+                    changedTerms = sessionCache.addSubclass(
+                            formula.getStringArgument(1), formula.getStringArgument(2));
+                    break;
+                case "instance":
+                case "immediateInstance":
+                    changedTerms = sessionCache.addInstance(
+                            formula.getStringArgument(1), formula.getStringArgument(2));
+                    break;
+                case "domain":
+                case "domainSubclass":
+                    changedTerms = sessionCache.addDomain(
+                            formula.getStringArgument(1),
+                            Integer.parseInt(formula.getStringArgument(2).trim()),
+                            formula.getStringArgument(3));
+                    break;
+                case "range":
+                case "rangeSubclass":
+                    changedTerms = sessionCache.addRange(
+                            formula.getStringArgument(1), formula.getStringArgument(2));
+                    break;
+                case "subrelation":
+                    changedTerms = sessionCache.addSubrelation(
+                            formula.getStringArgument(1), formula.getStringArgument(2));
+                    break;
+                case "disjoint":
+                    changedTerms = sessionCache.addDisjoint(
+                            formula.getStringArgument(1), formula.getStringArgument(2));
+                    break;
+                default:
+                    // Complex predicates (partition, exhaustiveDecomposition, etc.)
+                    // — fall back to full session regeneration
+                    System.out.println("SessionTPTPManager.applyIncrementalUpdate: " +
+                                "no incremental handler for '" + pred + "', falling back to full regen");
+                    return generateSessionTPTP(sessionId, kb, lang);
+            }
+        }
+        catch (NumberFormatException e) {
+            System.err.println("SessionTPTPManager.applyIncrementalUpdate: bad argNum in " +
+                    formula.getFormula() + " — falling back to full regen");
+            return generateSessionTPTP(sessionId, kb, lang);
+        }
+
+        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changedTerms);
+        return patchSessionTPTP(sessionId, kb, lang, affected, Collections.singleton(formula), sessionCache);
+    }
+
+    /*********************************************************************************
      * Get the path to a session-specific TPTP file.
      *
      * @param sessionId The HTTP session ID
