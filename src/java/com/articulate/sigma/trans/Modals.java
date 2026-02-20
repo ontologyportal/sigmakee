@@ -7,6 +7,9 @@ import com.articulate.sigma.KBmanager;
 import java.util.*;
 
 public class Modals {
+    
+    public static boolean debug = true; // Mainly for deontic sentences 
+
 
     // these are predicates that take a formula as (one of) their arguments in SUMO/KIF
     // e.g. (holdsDuring ?T ?FORMULA)
@@ -641,8 +644,9 @@ public class Modals {
         /* This section is Easy problems (use modalAttribute)
          */
          
-        // EASY: Permission from Constitution -> modalAttribute Permission
-        System.out.println("EASY: Permission - Constitution grants permission pattern");
+        if (debug) {
+            System.out.println("EASY: Permission - Constitution grants permission pattern");
+        }
         String fstr =
             "(=>" +
             "    (instance ?CONST Constitution)" +
@@ -656,8 +660,9 @@ public class Modals {
         Formula f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
 
-        // EASY: Obligation Entering -> must enter on path (modalAttribute Obligation)
-        System.out.println("EASY: Obligation - If entering, must enter on path");
+        if (debug) {
+            System.out.println("EASY: Obligation - If entering, must enter on path");
+        }
         fstr =
             "(=>" +
             "  (and" +
@@ -672,7 +677,9 @@ public class Modals {
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
 
-        // EASY: Prohibition "It is prohibited for Bill to walk to the store"
+        if (debug) {
+            System.out.println("EASY: Prohibition, It is prohibited for Bill to walk to the store");
+        }
         fstr =
             "(modalAttribute\n" +
             "  (exists (?W ?B)\n" +
@@ -686,8 +693,9 @@ public class Modals {
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
 
-        // EASY: Law - ImmigrationAndNationalityAct_US -> modalAttribute Law
-        System.out.println("EASY: Law - Immigration and Nationality Act text is law");
+        if (debug) {
+            System.out.println("EASY: Law - Immigration and Nationality Act");
+        }
         fstr =
             "(exists (?FORMULA)"+
             "  (and"+
@@ -697,8 +705,9 @@ public class Modals {
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
         
-        // EASY: Legislative bill prior - law at TIME1 implies prior legislative bill
-        System.out.println("MEDIUM: LegislativeBill - law at TIME1 implies prior legislative bill");
+        if (debug) {
+            System.out.println("MEDIUM: LegislativeBill");
+        }
         fstr =
             "(=>" +
             "  (holdsDuring ?TIME1" +
@@ -712,7 +721,9 @@ public class Modals {
         System.out.println(processModals(f, kb) + "\n\n");
         
         // EASY: InternationalLaw -> Law
-        System.out.println("EASY: InternationalLaw is a subAttribute of Law");
+        if (debug) {
+            System.out.println("EASY: InternationalLaw");
+        }
         fstr =
             "(=>" +
             "  (and" +
@@ -730,8 +741,9 @@ public class Modals {
         /* This half is Medium examples (the "Confers" family) 
          */
         
-        // MEDIUM: confersNorm blocks prohibition
-        System.out.println("MEDIUM: confersNorm blocks prohibition");
+        if (debug) {
+            System.out.println("MEDIUM: confersNorm, permission vs prohibition");
+        }
         fstr =
             "(=>" +
             "  (and" +
@@ -742,8 +754,9 @@ public class Modals {
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
         
-        // MEDIUM: confersNorm - "Must enter restricted region through entrance"
-        //System.out.println("MEDIUM: confersNorm - Must enter restricted region through entrance");
+        if (debug) {
+            System.out.println("MEDIUM: confersNorm - Must enter restricted region through entrance");
+        }
         fstr =
             "(=>" +
             "  (and" +
@@ -760,8 +773,9 @@ public class Modals {
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
         
-        // MEDIUM: confersObligation - "USG obliges Bill to use the entrance to get in"
-        System.out.println("MEDIUM: confersObligation - USG obliges Bill to use the entrance to get in");
+        if (debug) {
+            System.out.println("MEDIUM: confersObligation - USG obliges Bill to use the entrance to get in");
+        }
         fstr =
             "(=>" +
             "  (and" +
@@ -779,8 +793,9 @@ public class Modals {
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
 
-        // MEDIUM: confersObligation example - "The US government obliges Agent Smith not to enter Area 51."
-        System.out.println("MEDIUM: confersObligation - The US government obliges Agent Smith not to enter Area 51");
+        if (debug) {
+            System.out.println("MEDIUM: confersObligation - The US government obliges Agent Smith not to enter Area 51");
+        }
         fstr =
             "(confersObligation" +
             "  (not" +
@@ -793,8 +808,9 @@ public class Modals {
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
 
-        // MEDIUM: "Agents that violate their obligations have a US government disciplinary hearing."
-        System.out.println("MEDIUM: Agents that violate their obligations have a US government disciplinary hearing");
+        if (debug) {
+            System.out.println("MEDIUM: Agents that violate their obligations have a US government disciplinary hearing");
+        }
         fstr =
             "(=>" +
             "  (and" +
@@ -808,8 +824,9 @@ public class Modals {
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
 
-        // MEDIUM: "Agents that violate their obligations are fired after a US government disciplinary hearing."
-        System.out.println("MEDIUM: Agents that violate their obligations are fired after a US government disciplinary hearing");
+        if (debug) {
+            System.out.println("MEDIUM: Agents that violate their obligations are fired after a US government disciplinary hearing");
+        }
         fstr =
             "(=>" +
             "  (and" +
@@ -829,7 +846,9 @@ public class Modals {
         System.out.println(processModals(f, kb) + "\n\n");
 
         // MEDIUM: deprivesNorm -> confersNorm
-        System.out.println("MEDIUM: deprivesNorm implies confersNorm (Prohibition -> Permission)");
+        if (debug) {
+            System.out.println("MEDIUM: deprivesNorm implies confersNorm (Prohibition -> Permission)");
+        }
         fstr =
             "(=>" +
             "  (deprivesNorm ?AGENT ?F Prohibition)" +
@@ -837,8 +856,10 @@ public class Modals {
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
         
-        // MEDIUM to HARD: confersRight (facility/customer/desires -> confersRight Possibility)
-        System.out.println("MEDIUM to HARD: confersRight - facility/customer/desires -> confersRight Possibility");
+        
+        if (debug) {
+            System.out.println("MEDIUM to HARD: confersRight");
+        }
         fstr =
             "(=>" +
             "    (and" +
@@ -857,7 +878,9 @@ public class Modals {
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n"); 
         
-        // MEDIUM: confers norm example 
+        if (debug) { 
+            System.out.println("MEDIUM: confers norm example");
+        }
         fstr =
             "(=>\n" +
             "  (and\n" +
@@ -873,7 +896,9 @@ public class Modals {
         System.out.println(processModals(f, kb) + "\n\n");
 
         // HARD (nested): holdsDuring / Sally example
-        /*System.out.println("EASY: holdsDuring - Sally is aware of the deadline (compact example)");
+        /*if (debug) { 
+            System.out.println("HARD: holdsDuring - Sally is aware of the deadline");
+        } 
         fstr =
             "(exists (?S)" +
             "  (and" +
