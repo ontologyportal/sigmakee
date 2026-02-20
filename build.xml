@@ -948,7 +948,7 @@ export SIGMA_CP=$SIGMA_SRC/build/${web.app.name}.jar:$SIGMA_SRC/lib/*
     <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${dist.javadoc.dir}.">
         <javadoc sourcepath="${src.dir}" destdir="${dist.javadoc.dir}" author="true" version="true" use="true"
                  windowtitle="Sigma API Specification" splitindex="true" packagenames="com.articulate.sigma.*">
-            <classpath refed="compile.classpath"/>
+            <classpath refid="compile.classpath"/>
             <doctitle>Sigma API Specification</doctitle>
             <header><![CDATA[<b>Sigma API Specification</b>]]></header>
             <group title="Sigma" packages="com.articulate.sigma.*"/>

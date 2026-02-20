@@ -281,6 +281,11 @@
             font-size: 0.85em;
             margin-top: 8px;
         }
+
+        a.szs-link { text-decoration: none; }
+        a.szs-link:hover .szs-badge { text-decoration: underline; cursor: pointer; }
+
+
     </style>
 
     <script>
@@ -1004,7 +1009,7 @@
                 // ---- RUN SAVED TEST ----
 
                 // Clear All
-                try { InferenceTestSuite.resetAllForInference(kb); }
+                try { InferenceTestSuite.resetAllForInference(kb, session.getId()); }
                 catch (IOException ignore) { System.out.println("ERROR resetAllForInference: " + ignore.getMessage()); }
 
                 String testName = (String) session.getAttribute("selectedTest");
@@ -1029,7 +1034,7 @@
                     } else {
                         try {
                             for (String s : itd.statements) {
-                                if (!StringUtil.emptyString(s)) kb.tell(s);
+                                if (!StringUtil.emptyString(s)) kb.tell(s, session.getId());
                             }
                             FormulaPreprocessor fp = new FormulaPreprocessor();
                             Set<Formula> qs = fp.preProcess(new Formula(itd.query), true, kb);
@@ -1044,7 +1049,7 @@
                                 } else if ("Vampire".equals(inferenceEngine)) {
                                     setVampMode(vampireMode);
 
-                                    com.articulate.sigma.tp.Vampire vRun = kb.askVampireForTQ(qstr, tmo, maxAns, modensPonens);
+                                    com.articulate.sigma.tp.Vampire vRun = kb.askVampireForTQ(qstr, tmo, maxAns, modensPonens, session.getId());
 
 //                                    com.articulate.sigma.tp.Vampire vRun = Boolean.TRUE.equals(modensPonens)
 //                                            ? kb.askVampireModensPonens(qstr, tmo, maxAns)
@@ -1053,8 +1058,9 @@
                                         renderATPResultPanel(vRun.getResult(), out);
                                     }
                                     tpp.parseProofOutput(vRun.output, qstr, kb, vRun.qlist);
-                                } else if ("LEO".equals(inferenceEngine)) {
-                                    com.articulate.sigma.tp.LEO leoRun = kb.askLeo(qstr, tmo, maxAns);
+                                }
+                                else if ("LEO".equals(inferenceEngine)) {
+                                   LEO leoRun = kb.askLeo(qstr, tmo, maxAns, session.getId());
                                     if (leoRun != null && leoRun.getResult() != null) {
                                         renderATPResultPanel(leoRun.getResult(), out);
                                     }
@@ -1238,6 +1244,15 @@
                 }
             } else {
                 // ---- RUN CUSTOM QUERY (Ask) ----
+                // Reset spinner message to default (clear any stale "Regenerating KB..." from previous Tell)
+                out.println("<script>");
+                out.println("if(parent.document.getElementById('spinTitle'))");
+                out.println("  parent.document.getElementById('spinTitle').textContent='Processing query...';");
+                out.println("if(parent.document.getElementById('spinSub'))");
+                out.println("  parent.document.getElementById('spinSub').textContent='';");
+                out.println("</script>");
+                out.flush();
+
                 if (stmt.indexOf('@') != -1) throw(new IOException("Row variables not allowed in query: " + stmt));
                 if ("EProver".equals(inferenceEngine)) {
                     try {
@@ -1328,9 +1343,10 @@
 
                         }else { // First-Order Formula
                             System.out.println(" -- First Order Formula Detected - Attempring to run normal Vampire");
+                            String sessId = session.getId();
                             vampire = Boolean.TRUE.equals(modensPonens)
-                                    ? kb.askVampireModensPonens(stmt, timeout, maxAnswers)
-                                    : kb.askVampire(stmt, timeout, maxAnswers);
+                                    ? kb.askVampireModensPonens(stmt, timeout, maxAnswers, sessId)
+                                    : kb.askVampire(stmt, timeout, maxAnswers, sessId);
                         }
 
                         // Show ATPResult panel with SZS status and diagnostics
@@ -1400,9 +1416,9 @@
 
 
                 } else if ("LEO".equals(inferenceEngine)) {
-                    com.articulate.sigma.tp.LEO leo = null;
+                    LEO leo = null;
                     try {
-                        leo = kb.askLeo(stmt,timeout,maxAnswers);
+                        leo = kb.askLeo(stmt,timeout,maxAnswers,session.getId());
 
                         // Show ATPResult panel with SZS status and diagnostics
                         if (leo != null && leo.getResult() != null) {
@@ -1492,14 +1508,14 @@
 
             final String tellStmt = stmt;
             final JspWriter jspOut = out;  // Capture for use in lambda
+            final String sessionId = session.getId();  // Capture session ID for session-specific UA
 
             // ONE atomic critical section
             kb.withUserAssertionLock(() -> {
 
                 boolean mustRegen = kb.tellRequiresBaseRegeneration(tellStmt);
                 mustRegenBaseRef.set(mustRegen);
-
-                String tellResult = kb.tell(tellStmt);
+                String tellResult = kb.tell(tellStmt, sessionId);
                 tellResultRef.set(tellResult);
 
                 if (mustRegen) {
@@ -1516,10 +1532,25 @@
                     jspOut.println("</script>");
                     jspOut.flush();
 
-                    System.out.println("INFO AskTell.jsp(Tell): FULL base regen required -> regenerating "
-                            + kb.name + "." + lang + " (Tell changed schema/transitive facts)");
-
-                    TPTPGenerationManager.generateProperFile(kb, lang);
+                    // Use session-specific TPTP generation for session-isolated tells
+                    if (sessionId != null && !sessionId.isEmpty()) {
+                        System.out.println("INFO AskTell.jsp(Tell): Session-specific regen required for session " + sessionId +
+                                " -> regenerating session " + kb.name + "." + lang + " (Tell changed schema/transitive facts)");
+                        com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, kb, lang);
+                    } else {
+                        System.out.println("INFO AskTell.jsp(Tell): FULL base regen required -> regenerating "
+                                + kb.name + "." + lang + " (Tell changed schema/transitive facts)");
+                        TPTPGenerationManager.generateProperFile(kb, lang);
+                    }
+                } else {
+                    // Reset spinner message when no regeneration needed (prevent stale message)
+                    jspOut.println("<script>");
+                    jspOut.println("if(parent.document.getElementById('spinTitle'))");
+                    jspOut.println("  parent.document.getElementById('spinTitle').textContent='Processing...';");
+                    jspOut.println("if(parent.document.getElementById('spinSub'))");
+                    jspOut.println("  parent.document.getElementById('spinSub').textContent='';");
+                    jspOut.println("</script>");
+                    jspOut.flush();
                 }
 
                 return null;
@@ -1680,7 +1711,12 @@
         out.println("<div class='result-header'>");
         String statusName = r.getSzsStatus() != null ? r.getSzsStatus().getTptpName() : "Unknown";
         String cssClass = r.getCssClass();
-        out.println("<span class='szs-badge " + cssClass + "'>" + htmlEncode(statusName) + "</span>");
+        String szsUrl = "https://tptp.org/UserDocs/SZSOntology/";
+
+//        out.println("<span class='szs-badge " + cssClass + "'>" + htmlEncode(statusName) + "</span>");
+        out.println("<a class='szs-link' href='" + szsUrl + "' target='_blank' rel='noopener noreferrer'>"
+                + "<span class='szs-badge " + cssClass + "'>" + htmlEncode(statusName) + "</span>"
+                + "</a>");
 
         String engineInfo = r.getEngineName() != null ? r.getEngineName() : "Prover";
         if (r.getEngineMode() != null && !r.getEngineMode().isEmpty()) {

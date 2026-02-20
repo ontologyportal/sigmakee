@@ -951,6 +951,10 @@ public class KBmanager implements Serializable {
             ex.printStackTrace();
             return;
         }
+
+        // Clean up orphaned session directories from previous runs
+        cleanupOrphanedSessionDirectories();
+
         if (debug) System.out.println("Info in KBmanager.initializeOnce(): initialized is " + initialized);
         if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
                 preferences.keySet().size());
@@ -1234,6 +1238,58 @@ public class KBmanager implements Serializable {
             return;
         }
         preferences.put(key,value);
+    }
+
+    /** ***************************************************************
+     * Clean up session directories older than the HTTP session timeout.
+     * Called at startup to remove orphaned directories from crashes/kills.
+     */
+    private static void cleanupOrphanedSessionDirectories() {
+
+        String kbDir = getMgr().getPref("kbDir");
+        Path sessionsDir = Paths.get(kbDir, "sessions");
+
+        if (!Files.exists(sessionsDir)) {
+            return;
+        }
+
+        System.out.println("KBmanager: Checking for orphaned session directories...");
+
+        // 60 minutes = default HTTP session timeout
+        long cutoffTime = System.currentTimeMillis() - (60 * 60 * 1000);
+
+        try {
+            java.util.concurrent.atomic.AtomicInteger removed = new java.util.concurrent.atomic.AtomicInteger(0);
+
+            Files.list(sessionsDir).forEach(sessionDir -> {
+                if (!Files.isDirectory(sessionDir)) {
+                    return;
+                }
+
+                try {
+                    // Check directory modification time
+                    long dirTime = Files.getLastModifiedTime(sessionDir).toMillis();
+
+                    if (dirTime < cutoffTime) {
+                        String sessionId = sessionDir.getFileName().toString();
+                        System.out.println("KBmanager: Removing orphaned session directory: " + sessionId);
+                        com.articulate.sigma.trans.SessionTPTPManager.cleanupSession(sessionId);
+                        removed.incrementAndGet();
+                    }
+                } catch (IOException e) {
+                    System.err.println("KBmanager: Error checking session directory: " + e.getMessage());
+                }
+            });
+
+            if (removed.get() > 0) {
+                System.out.println("KBmanager: Removed " + removed.get() + " orphaned session directories");
+            } else {
+                System.out.println("KBmanager: No orphaned session directories found");
+            }
+
+        } catch (IOException e) {
+            System.err.println("KBmanager: Error during orphaned session cleanup: " + e.getMessage());
+        }
     }
 
     /** ***************************************************************
