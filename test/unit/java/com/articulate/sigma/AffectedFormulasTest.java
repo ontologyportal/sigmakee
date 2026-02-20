@@ -364,4 +364,323 @@ public class AffectedFormulasTest {
         assertTrue("(instance myRobot Robot) must be in affected set",
                 affected.stream().anyMatch(f -> f.getFormula().contains("myRobot")));
     }
+
+    // ------------------------------------------------------------------
+    // findAffectedFormulasForSubclass
+    // ------------------------------------------------------------------
+
+    /**
+     * Direct mention of child must be in the affected set.
+     */
+    @Test
+    public void testSubclass_directMentionOfChild() {
+
+        String[] stmts = concat(CORE,
+                "(subclass Agent Entity)",
+                "(subclass Robot Entity)");
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+        sc.addSubclass("Robot", "Agent");
+
+        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
+                kb, sc, "Robot", "Agent");
+
+        assertTrue("formula mentioning Robot must be in affected set",
+                affected.stream().anyMatch(f -> f.getFormula().contains("Robot")));
+    }
+
+    /**
+     * Formula that mentions an ancestor (Entity) but has no signature dependency
+     * must NOT be included merely because Entity is an ancestor of the parent.
+     * (No domain/range declarations in this minimal KB → signatures is empty.)
+     */
+    @Test
+    public void testSubclass_unrelatedAncestorNotIncluded() {
+
+        String[] stmts = concat(CORE,
+                "(subclass Agent Entity)",
+                "(subclass Robot Entity)",
+                "(subclass Table Entity)");
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+        sc.addSubclass("Robot", "Agent");
+
+        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
+                kb, sc, "Robot", "Agent");
+
+        // (subclass Table Entity) does not mention Robot and shares no relation with
+        // Agent in signatures (no domain declarations here), so it must not be included.
+        assertFalse("(subclass Table Entity) must NOT be affected",
+                affected.stream().anyMatch(f -> f.getFormula().equals("(subclass Table Entity)")));
+    }
+
+    /**
+     * Signature-dependency path is intentionally omitted.
+     *
+     * Even when child already appears in some relation's signature, scanning for formulas
+     * via that relation sweeps in ground facts (instance/subclass declarations that mention
+     * the relation by name) which have no variables and therefore no type guards to change.
+     * In practice this produces hundreds of false-positive retranslations.
+     *
+     * Impact of omission: at worst, a formula retains a slightly redundant type guard
+     * (both child and parent/ancestor listed) instead of the winnowed form.  This is a
+     * harmless over-specification — provers still find the same answers.
+     *
+     * This test verifies that formulas mentioning only a relation (whose signature contains
+     * child) but NOT mentioning child directly are NOT included.
+     */
+    @Test
+    public void testSubclass_signatureScanOmitted_noFalsePositives() {
+
+        String[] stmts = concat(CORE,
+                "(subclass Human Entity)",
+                "(subclass BinaryRelation Relation)",
+                "(instance serveGreek BinaryRelation)",
+                "(domain serveGreek 1 Greek)",
+                "(instance serveGreek Abstract)",          // ground fact — mentions serveGreek
+                "(=> (serveGreek ?X) (instance ?X Human))"); // formula — mentions serveGreek
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+        sc.addSubclass("Greek", "Human");
+
+        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
+                kb, sc, "Greek", "Human");
+
+        // Signature path is removed: formulas that mention serveGreek but NOT "Greek"
+        // directly must NOT be included (Greek at arg-1 in domain decl is a different
+        // formula; the instance/implication formulas do not directly mention "Greek").
+        assertFalse("formula mentioning only serveGreek (not Greek directly) must NOT be affected",
+                affected.stream().anyMatch(f -> f.getFormula().contains("serveGreek") &&
+                        !f.getFormula().contains("Greek")));
+    }
+
+    /**
+     * When child is itself a relation, predVar formulas must be included.
+     */
+    @Test
+    public void testSubclass_predVarIncludedWhenChildIsRelation() {
+
+        String[] stmts = concat(CORE,
+                "(subclass Agent Entity)",
+                "(subclass BinaryRelation Relation)",
+                "(instance newRel BinaryRelation)");
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+        sc.addSubclass("newRel", "Agent");  // newRel is a relation in the session cache
+
+        Formula predVarF = new Formula("(=> (?REL ?X ?Y) (exists (?Z) (?REL ?Z ?X)))");
+        predVarF.predVarCache = new HashSet<>(Collections.singleton("?REL"));
+        predVarF.sourceFile = "test";
+        kb.formulaMap.put(predVarF.getFormula(), predVarF);
+
+        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
+                kb, sc, "newRel", "Agent");
+
+        assertTrue("predVar formula must be included when child is a relation",
+                affected.contains(predVarF));
+    }
+
+    /**
+     * When child is a class (not a relation), predVar formulas must NOT be included
+     * via criterion 3.
+     */
+    @Test
+    public void testSubclass_predVarNotIncludedWhenChildIsClass() {
+
+        String[] stmts = concat(CORE,
+                "(subclass Agent Entity)",
+                "(subclass Robot Entity)");
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+        sc.addSubclass("Robot", "Agent");
+
+        Formula predVarF = new Formula("(=> (?REL ?X ?Y) (exists (?Z) (?REL ?Z ?X)))");
+        predVarF.predVarCache = new HashSet<>(Collections.singleton("?REL"));
+        predVarF.sourceFile = "test";
+        kb.formulaMap.put(predVarF.getFormula(), predVarF);
+
+        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
+                kb, sc, "Robot", "Agent");
+
+        assertFalse("predVar formula must NOT be included when child is a class",
+                affected.contains(predVarF));
+    }
+
+    /**
+     * varTypeCache must be cleared on every formula returned by
+     * findAffectedFormulasForSubclass.
+     */
+    @Test
+    public void testSubclass_varTypeCacheCleared() {
+
+        String[] stmts = concat(CORE,
+                "(subclass Agent Entity)",
+                "(subclass Robot Entity)");
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+        sc.addSubclass("Robot", "Agent");
+
+        Formula robotF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
+        if (robotF == null) return;
+        robotF.varTypeCache = new HashMap<>();
+        robotF.varTypeCache.put("?X", new HashSet<>(Collections.singleton("Entity")));
+
+        SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(kb, sc, "Robot", "Agent");
+
+        assertTrue("varTypeCache must be cleared on affected formula",
+                robotF.varTypeCache.isEmpty());
+    }
+
+    /**
+     * Null kb or null sessionCache must return an empty set without throwing.
+     */
+    @Test
+    public void testSubclass_nullSafety() {
+
+        String[] stmts = concat(CORE, "(subclass Robot Entity)");
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+
+        assertTrue("null kb must return empty set",
+                SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(null, sc, "Robot", "Entity").isEmpty());
+        assertTrue("null sessionCache must return empty set",
+                SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(kb, null, "Robot", "Entity").isEmpty());
+    }
+
+    // ------------------------------------------------------------------
+    // findAffectedFormulasForInstance
+    // ------------------------------------------------------------------
+
+    /**
+     * Direct mention of inst must be in the affected set.
+     */
+    @Test
+    public void testInstance_directMentionIncluded() {
+
+        String[] stmts = concat(CORE,
+                "(subclass Robot Entity)",
+                "(instance myRobot Robot)");
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+        sc.addInstance("myRobot", "Robot");
+
+        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
+                kb, sc, "myRobot", "Robot");
+
+        assertTrue("formula mentioning myRobot must be in affected set",
+                affected.stream().anyMatch(f -> f.getFormula().contains("myRobot")));
+    }
+
+    /**
+     * Formula that does not mention inst must NOT be included.
+     */
+    @Test
+    public void testInstance_unrelatedNotIncluded() {
+
+        String[] stmts = concat(CORE,
+                "(subclass Robot Entity)",
+                "(subclass Table Entity)");
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+        sc.addInstance("myRobot", "Robot");
+
+        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
+                kb, sc, "myRobot", "Robot");
+
+        assertFalse("(subclass Table Entity) must NOT be affected",
+                affected.stream().anyMatch(f -> f.getFormula().equals("(subclass Table Entity)")));
+    }
+
+    /**
+     * When inst is a relation, predVar formulas must be included.
+     */
+    @Test
+    public void testInstance_predVarIncludedWhenInstIsRelation() {
+
+        String[] stmts = concat(CORE,
+                "(subclass BinaryRelation Relation)",
+                "(instance myRel BinaryRelation)");
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+        sc.addInstance("myRel", "BinaryRelation");
+
+        Formula predVarF = new Formula("(=> (?REL ?X ?Y) (foo ?X ?Y))");
+        predVarF.predVarCache = new HashSet<>(Collections.singleton("?REL"));
+        predVarF.sourceFile = "test";
+        kb.formulaMap.put(predVarF.getFormula(), predVarF);
+
+        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
+                kb, sc, "myRel", "BinaryRelation");
+
+        assertTrue("predVar formula must be included when inst is a relation",
+                affected.contains(predVarF));
+    }
+
+    /**
+     * When inst is not a relation, predVar formulas must NOT be included.
+     */
+    @Test
+    public void testInstance_predVarNotIncludedWhenInstIsNotRelation() {
+
+        String[] stmts = concat(CORE,
+                "(subclass Robot Entity)",
+                "(instance myRobot Robot)");
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+        sc.addInstance("myRobot", "Robot");
+
+        Formula predVarF = new Formula("(=> (?REL ?X ?Y) (bar ?X ?Y))");
+        predVarF.predVarCache = new HashSet<>(Collections.singleton("?REL"));
+        predVarF.sourceFile = "test";
+        kb.formulaMap.put(predVarF.getFormula(), predVarF);
+
+        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
+                kb, sc, "myRobot", "Robot");
+
+        assertFalse("predVar formula must NOT be included when inst is not a relation",
+                affected.contains(predVarF));
+    }
+
+    /**
+     * varTypeCache must be cleared on every formula returned by
+     * findAffectedFormulasForInstance.
+     */
+    @Test
+    public void testInstance_varTypeCacheCleared() {
+
+        String[] stmts = concat(CORE, "(subclass Robot Entity)");
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+
+        Formula instF = new Formula("(instance myRobot Robot)");
+        instF.sourceFile = "test";
+        instF.varTypeCache = new HashMap<>();
+        instF.varTypeCache.put("?X", new HashSet<>(Collections.singleton("Robot")));
+        kb.formulaMap.put(instF.getFormula(), instF);
+        kb.formulas.computeIfAbsent("arg-1-myRobot", k -> new ArrayList<>())
+                   .add(instF.getFormula());
+
+        sc.addInstance("myRobot", "Robot");
+
+        SUMOKBtoTPTPKB.findAffectedFormulasForInstance(kb, sc, "myRobot", "Robot");
+
+        assertTrue("varTypeCache must be cleared on affected formula",
+                instF.varTypeCache.isEmpty());
+    }
+
+    /**
+     * Null kb or null sessionCache must return an empty set without throwing.
+     */
+    @Test
+    public void testInstance_nullSafety() {
+
+        String[] stmts = concat(CORE, "(subclass Robot Entity)");
+        KB kb = buildKB(stmts);
+        KBcache sc = kb.kbCache;
+
+        assertTrue("null kb must return empty set",
+                SUMOKBtoTPTPKB.findAffectedFormulasForInstance(null, sc, "myRobot", "Robot").isEmpty());
+        assertTrue("null sessionCache must return empty set",
+                SUMOKBtoTPTPKB.findAffectedFormulasForInstance(kb, null, "myRobot", "Robot").isEmpty());
+    }
 }

@@ -163,48 +163,56 @@ public class SessionTPTPManager {
         final String fileLang = "fof".equals(lang) ? "tptp" : lang;
 
         KBcache sessionCache = getOrCreateSessionCache(sessionId, kb);
-        // changedTerms drives findAffectedFormulas: empty means only the new formula is
-        // appended; non-empty means existing formulas may also need retranslation.
-        Set<String> changedTerms = Collections.emptySet();
+        Set<Formula> affected = Collections.emptySet();
 
         try {
             switch (pred) {
                 case "subclass":
-                case "immediateSubclass":
-                    changedTerms = sessionCache.addSubclass(
-                            formula.getStringArgument(1), formula.getStringArgument(2));
-//                    changedTerms = Collections.emptySet();
+                case "immediateSubclass": {
+                    String child = formula.getStringArgument(1);
+                    String parent = formula.getStringArgument(2);
+                    sessionCache.addSubclass(child, parent);
+                    affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
+                            kb, sessionCache, child, parent);
                     break;
+                }
                 case "instance":
-                case "immediateInstance":
-                    changedTerms = sessionCache.addInstance(
-                            formula.getStringArgument(1), formula.getStringArgument(2));
-//                    changedTerms = Collections.emptySet();
+                case "immediateInstance": {
+                    String inst = formula.getStringArgument(1);
+                    String className = formula.getStringArgument(2);
+                    sessionCache.addInstance(inst, className);
+                    affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
+                            kb, sessionCache, inst, className);
                     break;
+                }
                 case "domain":
                 case "domainSubclass":
                     // domain/range DO change argument-type signatures used in type guards,
                     // so existing formulas that use the relation may need retranslation.
-                    changedTerms = sessionCache.addDomain(
-                            formula.getStringArgument(1),
-                            Integer.parseInt(formula.getStringArgument(2).trim()),
-                            formula.getStringArgument(3));
+                    affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb,
+                            sessionCache.addDomain(
+                                    formula.getStringArgument(1),
+                                    Integer.parseInt(formula.getStringArgument(2).trim()),
+                                    formula.getStringArgument(3)));
                     break;
                 case "range":
                 case "rangeSubclass":
-                    changedTerms = sessionCache.addRange(
-                            formula.getStringArgument(1), formula.getStringArgument(2));
+                    affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb,
+                            sessionCache.addRange(
+                                    formula.getStringArgument(1), formula.getStringArgument(2)));
                     break;
                 case "subrelation":
                     // subrelation extends the predicate hierarchy; predicate-variable
                     // formulas that enumerate sub-predicates may need re-expansion.
-                    changedTerms = sessionCache.addSubrelation(
-                            formula.getStringArgument(1), formula.getStringArgument(2));
+                    affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb,
+                            sessionCache.addSubrelation(
+                                    formula.getStringArgument(1), formula.getStringArgument(2)));
                     break;
                 case "disjoint":
-                    changedTerms = sessionCache.addDisjoint(
+                    // disjoint updates the disjoint set but does not change type guards
+                    // or predicate variable expansion; no formulas need retranslation.
+                    sessionCache.addDisjoint(
                             formula.getStringArgument(1), formula.getStringArgument(2));
-//                    changedTerms = Collections.emptySet();
                     break;
                 default:
                     // Complex predicates (partition, exhaustiveDecomposition, etc.)
@@ -220,7 +228,14 @@ public class SessionTPTPManager {
             return generateSessionTPTP(sessionId, kb, fileLang);
         }
 
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changedTerms);
+        // The new formula was already added to kb.formulaMap by KB.tell() before this
+        // method runs, so findAffectedFormulas* may include it in the affected set.
+        // Remove it here to avoid a double-append: it belongs only in newFormulas.
+        if (!affected.isEmpty() && affected.contains(formula)) {
+            affected = new HashSet<>(affected);
+            affected.remove(formula);
+        }
+
         return patchSessionTPTP(sessionId, kb, fileLang, affected, Collections.singleton(formula), sessionCache);
     }
 

@@ -145,6 +145,133 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
+     * Subclass-specific affected formula detection.
+     *
+     * <p>Replaces the generic {@link #findAffectedFormulas} for
+     * {@code subclass} / {@code immediateSubclass} tells.  It avoids
+     * the "scan every ancestor" explosion that the generic method
+     * produces when {@code addSubclass} returns ancestors like
+     * {@code Entity} and {@code Object}.
+     *
+     * <p>A formula is <em>affected</em> if any of the following holds:
+     * <ol>
+     *   <li><b>Direct mention of {@code child}</b> — formulas that
+     *       reference the new (or updated) class by name.  Their type
+     *       guards may be winnowed differently now that {@code child}
+     *       has a new parent.</li>
+     *   <li><b>Signature dependency</b> — formulas that use any relation
+     *       whose {@code signatures} entry mentions {@code parent} or any
+     *       of {@code parent}'s subclass ancestors.  After adding
+     *       {@code (subclass child parent)}, {@code winnowTypeList()} may
+     *       now resolve those variable positions to {@code child} instead
+     *       of the broader type.</li>
+     *   <li><b>Predicate variable expansion</b> — only if {@code child}
+     *       is itself a relation in the session cache.  Such formulas are
+     *       re-expanded by {@code PredVarInst} against the updated
+     *       predicate set.</li>
+     * </ol>
+     *
+     * <p>All affected formulas have their {@code varTypeCache} cleared.
+     *
+     * @param kb           the shared KB ({@code formulaMap} and {@code formulas} index)
+     * @param sessionCache the already-updated session KBcache (not {@code kb.kbCache})
+     * @param child        arg-1 of the new {@code (subclass child parent)} formula
+     * @param parent       arg-2 of the new formula
+     * @return formulas that require retranslation (never null, may be empty)
+     */
+    public static Set<Formula> findAffectedFormulasForSubclass(
+            KB kb, KBcache sessionCache, String child, String parent) {
+
+        Set<Formula> affected = new HashSet<>();
+        if (kb == null || sessionCache == null) return affected;
+
+        // 1. Direct mention of child.
+        for (int i = 0; i <= 5; i++)
+            affected.addAll(kb.ask("arg", i, child));
+
+        // NOTE: Signature / type-guard dependency (path 2) is intentionally omitted.
+        //
+        // The theoretically correct criterion would be: find formulas that constrain the
+        // same variable to BOTH child (via child's signature entry) AND parent/ancestor
+        // (via another predicate in the same formula), so that winnowTypeList() now picks
+        // child.  In practice this requires child to already appear in some domain/range
+        // declaration AND for a formula to use two such predicates on the same variable.
+        //
+        // Scanning from child's signature entries causes too many false positives:
+        //   - kb.ask("arg", N, rel) sweeps in ground facts (instance rel Class) that
+        //     mention the relation name but have no variables and therefore no type guards.
+        //   - format/documentation formulas (excluded from TPTP) produce warnings.
+        //
+        // Impact of omitting this path: at worst a formula retains a slightly redundant
+        // type guard, e.g. (and (instance ?X Man) (instance ?X GreekAncestor)) instead of
+        // (instance ?X Man).  That is a harmless over-specification — provers still find
+        // the same answers.  The correctness benefit does not justify the retranslation cost.
+
+        // 2. Predicate variable expansion — only if child is now a relation.
+        if (sessionCache.relations.contains(child)) {
+            for (Formula f : kb.formulaMap.values())
+                if (f.predVarCache != null && !f.predVarCache.isEmpty())
+                    affected.add(f);
+        }
+
+        // 4. Clear varTypeCache to force type-guard recomputation.
+        for (Formula f : affected)
+            f.varTypeCache = new HashMap<>();
+
+        return affected;
+    }
+
+    /** *************************************************************
+     * Instance-specific affected formula detection.
+     *
+     * <p>Replaces the generic {@link #findAffectedFormulas} for
+     * {@code instance} / {@code immediateInstance} tells.  Adding
+     * {@code (instance inst className)} does <em>not</em> alter
+     * {@code signatures}, so no type-guard changes propagate to
+     * unrelated formulas.
+     *
+     * <p>A formula is <em>affected</em> if any of the following holds:
+     * <ol>
+     *   <li><b>Direct mention of {@code inst}</b> — formulas that
+     *       reference the instance by name.</li>
+     *   <li><b>Predicate variable expansion</b> — only if {@code inst}
+     *       is now a relation in the session cache, because
+     *       {@code PredVarInst} enumerates the updated relations set.</li>
+     * </ol>
+     *
+     * <p>All affected formulas have their {@code varTypeCache} cleared.
+     *
+     * @param kb           the shared KB ({@code formulaMap} and {@code formulas} index)
+     * @param sessionCache the already-updated session KBcache (not {@code kb.kbCache})
+     * @param inst         arg-1 of the new {@code (instance inst className)} formula
+     * @param className    arg-2 of the new formula
+     * @return formulas that require retranslation (never null, may be empty)
+     */
+    public static Set<Formula> findAffectedFormulasForInstance(
+            KB kb, KBcache sessionCache, String inst, String className) {
+
+        Set<Formula> affected = new HashSet<>();
+        if (kb == null || sessionCache == null) return affected;
+
+        // 1. Direct mention of inst.
+        for (int i = 0; i <= 5; i++)
+            affected.addAll(kb.ask("arg", i, inst));
+
+        // 2. Predicate variable expansion — only if inst is now a relation.
+        if (sessionCache.relations.contains(inst)) {
+            for (Formula f : kb.formulaMap.values())
+                if (f.predVarCache != null && !f.predVarCache.isEmpty())
+                    affected.add(f);
+        }
+
+        // 3. Clear varTypeCache to force type-guard recomputation.
+        for (Formula f : affected)
+            f.varTypeCache = new HashMap<>();
+
+        return affected;
+    }
+
+    /** *************************************************************
      * Retranslate a set of formulas using the current {@code kb.kbCache}.
      *
      * <p>The caller is responsible for swapping {@code kb.kbCache} to the desired

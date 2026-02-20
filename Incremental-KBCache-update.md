@@ -244,41 +244,134 @@ Cost: O(|descendants(child)| + |ancestors(parent)|) — typically tens to hundre
 **Priority: High — determines which formulas need retranslation**
 **Status: Complete**
 
-Given the set of changed KBcache entries from M3.2, identify which formulas in the TPTP file
-are affected and need retranslation.
+Given the M3.2 cache update, identify which existing formulas in the TPTP file need
+retranslation.  The key insight is that **cache-level changed terms ≠ translation-level
+affected formulas**: `addSubclass` returns ancestors like `Entity` and `Object` as
+"changed" (because their `children` and `instances` maps grew), but those ancestors appear
+in thousands of SUMO formulas whose TPTP output does not actually change.  Scanning by
+ancestor terms therefore causes unnecessary patching of ~99% of the KB.
 
-#### Affected Formula Sources
+Three separate methods handle different predicate types.
 
-After `addSubclass(Robot, Agent)`, the changed terms are `{Robot, Agent}` plus their
-descendants and ancestors. A formula is affected if:
+---
 
-1. **Direct reference:** Formula mentions any changed term (uses `KB.formulas` index:
-   `ask("arg", N, term)` for N = 0–5)
-2. **Predicate variable:** Formula has predicate variables (`predVarCache` non-null and
-   non-empty) **and** at least one changed term is a relation — such formulas are re-expanded
-   by `PredVarInst` against the updated predicate set
-3. **Cached varTypeCache:** Formula has a non-empty `varTypeCache` — cleared on all affected
-   formulas to force recomputation by `computeVariableTypes()`
+#### `findAffectedFormulas(KB kb, Set<String> changedTerms)` — generic (domain/range/subrelation)
 
-*Note: "Signature dependency" criterion (criterion 2 from the original spec) is subsumed by
-direct reference — if a predicate's signature changed, formulas mentioning that predicate are
-found by criterion 1.*
+Used when the update genuinely alters `signatures` (type guards change).
+
+A formula is affected if:
+
+1. **Direct reference** — formula mentions any changed term at argument positions 0–5
+   (`kb.ask("arg", N, term)` for N = 0–5)
+2. **Predicate variable** — formula has predicate variables (`predVarCache` non-null and
+   non-empty) **and** at least one changed term is a relation in `kb.kbCache`
+3. **varTypeCache cleared** — on every affected formula, `f.varTypeCache` is reset to
+   force `computeVariableTypes()` to recompute on the next `preProcess()` call
+
+---
+
+#### `findAffectedFormulasForSubclass(KB kb, KBcache sessionCache, String child, String parent)`
+
+Used for `subclass` / `immediateSubclass` tells.  Does **not** scan ancestor terms.
+
+A formula is affected if any of the following holds:
+
+1. **Direct mention of `child`** — `kb.ask("arg", N, child)` for N = 0–5.
+   Formulas referencing the new (or repositioned) class may now have tighter type guards
+   due to `winnowTypeList()`.
+
+2. **Signature / type-guard dependency** — formulas that use any relation whose
+   `sessionCache.signatures` entry already mentions `child`.
+   `winnowTypeList()` removes constraint `t` when another constraint `t'` is a more specific
+   subclass of `t`.  After `(subclass child parent)` this fires only when a formula has BOTH
+   `child` (from a relation with `child` in its signature) AND `parent` or an ancestor (from
+   another relation in the same formula) as constraints on the same variable.
+   **`typeScope = {child}` only** — scanning from `parent`'s side is wrong:
+   `parent`'s ancestors (Entity, Object, …) appear in signatures of hundreds of relations,
+   flooding the search with nearly the entire KB.  If `child` is new and absent from all
+   signatures, `affectedRels = {}` and 0 existing formulas need retranslation.
+
+   Algorithm:
+   ```
+   typeScope    = {child}
+   typeToRels   = getTypeToRelationsIndex(sessionCache)   // type → {relations}
+   affectedRels = typeToRels.getOrDefault(child, {})
+   for each rel in affectedRels:
+       collect kb.ask("arg", N, rel) for N = 0–5
+   ```
+
+3. **Predicate variable expansion** — only if `sessionCache.relations.contains(child)`.
+   Adding a new relation triggers `PredVarInst` re-expansion of predVar formulas.
+
+4. **varTypeCache cleared** — on every formula in the affected set.
+
+Uses `sessionCache` (the already-updated session copy) for all cache lookups — never
+`kb.kbCache`.
+
+---
+
+#### `findAffectedFormulasForInstance(KB kb, KBcache sessionCache, String inst, String className)`
+
+Used for `instance` / `immediateInstance` tells.  Instance additions do **not** alter
+`signatures`, so no type-guard scan is needed.
+
+A formula is affected if:
+
+1. **Direct mention of `inst`** — `kb.ask("arg", N, inst)` for N = 0–5.
+
+2. **Predicate variable expansion** — only if `sessionCache.relations.contains(inst)`.
+   If `inst` is itself a relation (e.g., `(instance myRel BinaryRelation)`), predVar
+   formulas must be re-expanded against the updated relations set.
+
+3. **varTypeCache cleared** — on every formula in the affected set.
+
+---
+
+#### `getTypeToRelationsIndex(KBcache kc)` — private utility
+
+Builds the reverse index used by `findAffectedFormulasForSubclass` step 2:
+
+```
+index = {}
+for each (rel → sigList) in kc.signatures:
+    for each type in sigList (skip null/empty):
+        t = type.stripSuffix("+")   // remove domainSubclass marker
+        index[t].add(rel)
+return index
+```
+
+Not cached — called at most once per `tell()`.  Iterating `kc.signatures` (~10K entries
+for full SUMO) costs < 1 ms and avoids stale-cache bugs if `signatures` was mutated.
+
+---
 
 #### Steps
 
 - [x] Add `findAffectedFormulas(KB kb, Set<String> changedTerms)` to `SUMOKBtoTPTPKB`
-- [x] Use `KB.formulas` index for fast lookup of formulas by term
-- [x] Clear `varTypeCache` on affected formulas (so `computeVariableTypes()` recomputes)
-- [x] Return `Set<Formula>` of formulas requiring retranslation
+  (generic, used for domain/range/subrelation)
+- [x] Add `findAffectedFormulasForSubclass(KB kb, KBcache sessionCache, String child, String parent)`
+  — targeted subclass detection avoiding ancestor explosion
+- [x] Add `findAffectedFormulasForInstance(KB kb, KBcache sessionCache, String inst, String className)`
+  — targeted instance detection
+- [x] Add private `getTypeToRelationsIndex(KBcache kc)` — reverse-index builder
+- [x] All methods use `sessionCache` (not `kb.kbCache`) for cache lookups
+- [x] All methods clear `varTypeCache` on every formula in the returned set
 
 #### Tests Added
 
-- 14 tests in `AffectedFormulasTest.java` (new file, added to `UnitSigmaTestSuite`)
+- 27 tests in `AffectedFormulasTest.java` (added to `UnitSigmaTestSuite`):
+  - 12 tests for `findAffectedFormulas` (generic)
+  - 8 tests for `findAffectedFormulasForSubclass`
+    (direct mention, unrelated ancestor excluded, signature dependency, predVar
+    included/excluded based on whether child is a relation, varTypeCache cleared, null safety)
+  - 7 tests for `findAffectedFormulasForInstance`
+    (direct mention, unrelated excluded, predVar included/excluded, varTypeCache cleared,
+    null safety)
 
 #### Files
 
 - `src/java/com/articulate/sigma/trans/SUMOKBtoTPTPKB.java`
-- `test/unit/java/com/articulate/sigma/AffectedFormulasTest.java` (new)
+- `test/unit/java/com/articulate/sigma/AffectedFormulasTest.java`
 
 ---
 
@@ -363,14 +456,15 @@ tell("(subclass Robot Agent)", sessionId)
   ├── Write to session UA file (existing)
   ├── Detect schema predicate (existing: TPTP_BASE_REGEN_PREDICATES)
   ├── Get/create session KBcache: getOrCreateSessionCache(sessionId, kb)  [M3.1]
-  ├── Incremental update: sessionCache.addSubclass("Robot", "Agent")      [M3.2]
-  │     → returns changedTerms
-  ├── findAffectedFormulas(kb, changedTerms)                              [M3.3]
-  │     → returns affected (existing formulas needing retranslation)
-  ├── patchSessionTPTP(sessionId, kb, lang,
-  │       affected,           ← existing formulas to retranslate
-  │       Set.of(newFormula), ← the just-tell()'d formula
-  │       sessionCache)                                                   [M3.4]
+  ├── applyIncrementalUpdate(kb, sessionId, formula, lang):
+  │     ├── sessionCache.addSubclass("Robot", "Agent")                    [M3.2]
+  │     ├── findAffectedFormulasForSubclass(kb, sessionCache,             [M3.3]
+  │     │       "Robot", "Agent")
+  │     │     → affected (formulas whose TPTP output changes)
+  │     └── patchSessionTPTP(sessionId, kb, lang,                        [M3.4]
+  │             affected,           ← existing formulas to retranslate
+  │             Set.of(newFormula), ← the just-tell()'d formula
+  │             sessionCache)
   └── (done — session file is up to date)
 ```
 
@@ -399,17 +493,48 @@ trichotomizingOn, totalOrderingOn, disjointDecomposition
 - **Neither** — simple assertion (e.g., plain `instance`) → no TPTP update in current version
 
 **`SessionTPTPManager.applyIncrementalUpdate(kb, sessionId, formula, lang)`:**
-1. Creates or retrieves session KBcache via `getOrCreateSessionCache(sessionId, kb)`
-2. Dispatches to targeted M3.2 method via `switch (pred)`:
-   - `subclass`/`immediateSubclass` → `addSubclass()`
-   - `instance`/`immediateInstance` → `addInstance()`
-   - `domain`/`domainSubclass` → `addDomain()`
-   - `range`/`rangeSubclass` → `addRange()`
-   - `subrelation` → `addSubrelation()`
-   - `disjoint` → `addDisjoint()`
-   - `default` (partition, exhaustiveDecomposition, etc.) → falls back to `generateSessionTPTP()`
-3. Calls M3.3 `findAffectedFormulas(kb, changedTerms)` on the returned changed-terms set
-4. Calls M3.4 `patchSessionTPTP(sessionId, kb, lang, affected, singleton(formula), sessionCache)`
+
+Each switch case both updates the session cache **and** computes `affected` — there is no
+shared `changedTerms` variable.  The `affected` set is computed by the M3.3 targeted
+methods (not the generic `findAffectedFormulas`) for `subclass` and `instance`.
+
+```
+switch (pred):
+  "subclass" / "immediateSubclass":
+      child  = formula.arg(1);  parent = formula.arg(2)
+      sessionCache.addSubclass(child, parent)                    [M3.2]
+      affected = findAffectedFormulasForSubclass(                [M3.3]
+                     kb, sessionCache, child, parent)
+
+  "instance" / "immediateInstance":
+      inst  = formula.arg(1);  className = formula.arg(2)
+      sessionCache.addInstance(inst, className)                  [M3.2]
+      affected = findAffectedFormulasForInstance(                [M3.3]
+                     kb, sessionCache, inst, className)
+
+  "domain" / "domainSubclass":
+      changedTerms = sessionCache.addDomain(rel, argNum, type)   [M3.2]
+      affected = findAffectedFormulas(kb, changedTerms)          [M3.3 generic]
+
+  "range" / "rangeSubclass":
+      changedTerms = sessionCache.addRange(rel, type)            [M3.2]
+      affected = findAffectedFormulas(kb, changedTerms)          [M3.3 generic]
+
+  "subrelation":
+      changedTerms = sessionCache.addSubrelation(child, parent)  [M3.2]
+      affected = findAffectedFormulas(kb, changedTerms)          [M3.3 generic]
+
+  "disjoint":
+      sessionCache.addDisjoint(c1, c2)                           [M3.2]
+      // affected stays empty — disjoint does not change type guards
+      // or predicate variable expansion
+
+  default (partition, exhaustiveDecomposition, etc.):
+      → fall back to generateSessionTPTP()
+
+patchSessionTPTP(sessionId, kb, lang, affected,
+                 singleton(formula), sessionCache)               [M3.4]
+```
 
 **`patchSessionTPTP` guard**: if `axiomKey` is empty (no bulk generation yet), falls back to `generateSessionTPTP()` rather than patching an unpopulated file.
 
@@ -454,43 +579,89 @@ For each milestone:
 | Baseline  | —         | 401             |
 | M3.1      | 7         | 408             |
 | M3.2      | 23        | 431             |
-| M3.3      | 14        | 445             |
-| M3.4      | 15        | 460             |
-| M3.5      | 11        | 471             |
+| M3.3      | 27        | 458             |
+| M3.4      | 15        | 473             |
+| M3.5      | 11        | 484             |
 | Integration | 16 (IncrementalPipelineIntegrationTest) | — |
 
 ---
 
-## Bug Fix: Over-Aggressive Formula Patching (post-M3.5)
+## Post-M3.5 Fix: Targeted Affected Formula Detection for subclass/instance
 
-**Problem:** After `tell("(subclass Greek Human)")`, formulas like
+### Problem
+
+After `tell("(subclass Greek Human)")`, formulas like
 `fof(kb_SUMO_2317,axiom,...uses/instrument/agent/AutonomousAgent...)` were being commented
 out in the session TPTP file but not re-added.
 
-**Root cause:** `addSubclass("Greek", "Human")` returned `changedTerms` containing ALL
-ancestors of `Human` in the subclass hierarchy (including `AutonomousAgent`, `Object`,
-`Entity`, etc.) because the KBcache `children` and `instances` maps for those ancestors
-changed.  `findAffectedFormulas` then added every formula mentioning any ancestor to the
-`affected` set — potentially thousands of formulas.  These were all commented out.  However,
-retranslating them produces the **identical** TPTP body (the formula translations don't
-actually change when a new subclass is added), and when the retranslation body is identical
-but written with a new axiom name, the original was missing from the file under the expected
-name.
+### Root Cause
 
-**Analysis:** Adding `(subclass Greek Human)` does **not** change the TPTP translation of
-any existing formula because:
-- Type guards (`instance ?X AutonomousAgent`) remain valid — they don't enumerate subclasses
-- Predicate-variable formulas are unaffected — adding a class doesn't add a new predicate
-- Argument-type signatures (`domain`/`range`) are unchanged — only `subclass` hierarchy changed
+`addSubclass("Greek", "Human")` returns `changedTerms` containing ALL ancestors of `Human`
+(`AutonomousAgent`, `Object`, `Entity`, …) because the KBcache `children` and `instances`
+maps for those ancestors grew.  The generic `findAffectedFormulas(kb, changedTerms)` then
+scanned for every formula mentioning any of those ancestors — potentially thousands.
+Those formulas were commented out, retranslated (producing identical TPTP bodies), and
+re-appended under new axiom names.  This left the original axiom names missing from the
+file, breaking inference.
 
-**Fix (in `SessionTPTPManager.applyIncrementalUpdate`):**
-For `subclass`, `instance`, and `disjoint` predicates, set `changedTerms = emptySet()`.
-`findAffectedFormulas(kb, emptySet)` returns empty → `affected = empty` → no existing
-formulas are commented out.  Only the new formula itself is appended via `newFormulas`.
+The fundamental mismatch: **cache-level changed terms ≠ translation-level affected formulas**.
 
-For `domain`/`range`/`subrelation`, `changedTerms` from the addXxx() methods is still
-used, because those predicates DO change argument-type signatures or predicate hierarchies
-that affect type guards and predicate-variable expansions.
+### Analysis: what actually changes after `(subclass child parent)`
 
-**Benefit:** Session TPTP patching for `subclass`/`instance`/`disjoint` is now O(1)
-(one formula appended) instead of O(N) (thousands commented out and re-added).
+Adding a subclass link changes an existing formula's TPTP translation only in these cases:
+
+| Criterion | Why it matters | Scan target |
+|-----------|---------------|-------------|
+| Formula directly mentions `child` | `child` is the new (or repositioned) class | `kb.ask("arg", N, child)` |
+| Formula uses a relation with `child` in its `signatures` AND also a relation with `parent`/ancestor for the same variable | `winnowTypeList()` now picks `child` over `parent` for that variable | `typeToRels.get(child)` → relations → formulas |
+| `child` is itself a relation → predVar formulas must re-expand | `PredVarInst` enumerates the updated `relations` set | `predVarCache` scan, gated on `child ∈ relations` |
+
+**Key insight: scan from `child`, not `parent`.**
+`parent`'s ancestors (Entity, Object, …) appear in signatures of hundreds of relations.
+Scanning from `parent`'s side floods the search with nearly the entire KB.
+Scanning from `child` is precise: if `child` is new and appears in no signature,
+`affectedRels = {}` and 0 existing formulas need retranslation.
+
+### Resolution (post-M3.5 / M3.3 refinement)
+
+**Interim workaround** (now superseded): set `changedTerms = emptySet()` for `subclass`,
+`instance`, `disjoint` → `findAffectedFormulas` returned empty → no formulas patched, only
+the new formula appended.  Correct but overly conservative — missed the narrow set of
+formulas whose type guards genuinely do change (signature dependency).
+
+**First implementation** (superseded): introduced `findAffectedFormulasForSubclass` but set
+`typeScope = {parent} ∪ parent's ancestors`.  This still flooded the search — Entity in
+typeScope pulled in nearly the entire KB (51 K retranslated for `(subclass Greek Human)`).
+
+**Current implementation**: `typeScope = {child}` only.  For `(subclass Greek Human)`:
+- `Greek` is new → not in any signature → `affectedRels = {}` → 0 formulas retranslated
+- Only the new `(subclass Greek Human)` formula itself is appended via `newFormulas`
+
+`applyIncrementalUpdate` dispatches to the targeted methods for `subclass` and `instance`;
+the `changedTerms` variable is eliminated from those branches.  `domain`/`range`/`subrelation`
+still use the generic `findAffectedFormulas(kb, changedTerms)` because those predicates
+genuinely alter `signatures`.
+
+### Why the Targeted Methods Are Correct
+
+After `(subclass child parent)`:
+- **Type guards** (`instance ?X Agent`) are constraints on variables, not enumerations of
+  subclasses.  Adding `Robot` under `Agent` does not change any type guard unless `Robot`
+  already appears in some domain/range declaration (i.e., `Robot ∈ signatures[rel]`).
+  Only then can winnowing produce a different result.
+- **Predicate-variable expansion** iterates `kbCache.predicates`.  Only if `child` is a
+  relation does this set grow, triggering re-expansion.
+- **Row-variable expansion** and **variable-arity renaming** depend on `valences` /
+  `signatures`, not on `subclass` links.
+
+### Test Count Update
+
+| Milestone | New Tests | Cumulative Total |
+|-----------|-----------|-----------------|
+| Baseline  | —         | 401             |
+| M3.1      | 7         | 408             |
+| M3.2      | 23        | 431             |
+| M3.3      | 27        | 458             |
+| M3.4      | 15        | 473             |
+| M3.5      | 11        | 484             |
+| Integration | 16 (IncrementalPipelineIntegrationTest) | — |

@@ -366,10 +366,7 @@ public class KBcache implements Serializable {
     // Each method updates only the cache entries affected by a single
     // schema-level assertion (subclass, instance, domain, range, subrelation,
     // disjoint).  They return the set of terms whose cache entries changed so
-    // that M3.3 can identify which TPTP formulas need retranslation.
-    //
-    // Cost per call: O(|descendants(child)| + |ancestors(parent)|), typically
-    // tens-to-hundreds of terms rather than the full 75K-formula rebuild.
+    // that SIGMA can identify which TPTP formulas need retranslation.
     // -----------------------------------------------------------------------
 
     /**************************************************************
