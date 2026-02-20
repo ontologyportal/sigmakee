@@ -474,12 +474,15 @@ public class SessionTPTPManager {
         final String normalizedLang = "tptp".equals(lang) ? "fof" : lang;
         final String ext            = "fof".equals(normalizedLang) ? "tptp" : normalizedLang;
 
-        // Fallback: no axiomKey populated yet → full regeneration
-        if (SUMOKBtoTPTPKB.axiomKey == null || SUMOKBtoTPTPKB.axiomKey.isEmpty()) {
-            if (debug)
-                System.out.println("SessionTPTPManager.patchSessionTPTP: axiomKey empty, " +
-                        "falling back to full regen for session " + sessionId);
-            return generateSessionTPTP(sessionId, kb, ext);
+        // If axiomKey is not yet populated (warm start rebuild still in progress),
+        // proceed anyway: toSkip will be empty so stale axioms won't be commented out,
+        // but new tell() formulas are still appended correctly.  This is always correct
+        // for brand-new terms (affected set is empty) and produces harmless redundancy
+        // for existing terms (old + new translations both present until next regen).
+        if (SUMOKBtoTPTPKB.axiomKey.isEmpty()) {
+            System.out.println("SessionTPTPManager.patchSessionTPTP: axiomKey not yet populated " +
+                    "(warm-start rebuild in progress) for session " + sessionId +
+                    ". Stale axioms will not be commented out; new formulas will be appended.");
         }
 
         // Trivial case: nothing at all to write → ensure session file exists

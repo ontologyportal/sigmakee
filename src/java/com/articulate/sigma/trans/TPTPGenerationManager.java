@@ -17,6 +17,7 @@ import com.articulate.sigma.utils.StringUtil;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.HashMap;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -79,7 +80,12 @@ public class TPTPGenerationManager {
                 String infFilename = kbDir + File.separator + kb.name + ".tptp";
                 File infFile = new File(infFilename);
                 if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                    System.out.println("TPTPGenerationManager: FOF file already exists and is current: " + infFilename);
+                    System.out.println("TPTPGenerationManager: FOF file is current: " + infFilename +
+                            "; rebuilding axiomKey in background for incremental patching");
+                    // Mark FOF file ready immediately (file is current for prover use).
+                    // Rebuild axiomKey asynchronously — patchSessionTPTP degrades gracefully
+                    // (no stale-axiom commenting-out) if a tell() arrives before rebuild completes.
+                    new Thread(() -> rebuildAxiomKey(kb), "axiomKey-rebuild-" + kb.name).start();
                     fofReady.set(true);
                     fofLatch.countDown();
                 } else {
@@ -526,18 +532,71 @@ public class TPTPGenerationManager {
             SUMOformulaToTPTPformula.setLang("fof");
             SUMOformulaToTPTPformula.setHideNumbers(true);
 
-            try (PrintWriter pw = new PrintWriter(
-                    Files.newBufferedWriter(outputPath, java.nio.charset.StandardCharsets.UTF_8))) {
+            // Redirect axiomKey writes to a session-local map so this session-specific
+            // generation does not overwrite the global SUMOKBtoTPTPKB.axiomKey, which
+            // must only track shared base-KB axiom names.
+            SUMOKBtoTPTPKB.localAxiomKeyOverride.set(new HashMap<>());
+            try {
+                try (PrintWriter pw = new PrintWriter(
+                        Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8))) {
 
-                SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-                skb.kb = kb;
-                skb.writeFile(outputPath.toString(), null, false, pw);
+                    SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                    skb.kb = kb;
+                    skb.writeFile(outputPath.toString(), null, false, pw);
+                }
+            } finally {
+                SUMOKBtoTPTPKB.localAxiomKeyOverride.remove();
             }
 
             long elapsed = System.currentTimeMillis() - startTime;
             System.out.println("TPTPGenerationManager: FOF generation to custom path complete in " +
                                (elapsed / 1000.0) + "s");
 
+        } finally {
+            SUMOformulaToTPTPformula.clearThreadLocal();
+            SUMOKBtoTPTPKB.clearThreadLocal();
+            SUMOtoTFAform.clearThreadLocal();
+        }
+    }
+
+    /**
+     * Re-runs the FOF translation pipeline against the shared KB, writing to a
+     * null {@link java.io.PrintWriter} (no disk I/O), solely to populate
+     * {@link SUMOKBtoTPTPKB#axiomKey} in memory.
+     *
+     * <p>Called on warm starts when {@code SUMO.tptp} already exists and is current,
+     * so normal {@link #generateFOF} is skipped.  Without this, {@code axiomKey}
+     * would stay empty until the server is restarted with changed KIF files, causing
+     * every first {@code tell()} in a session to fall back to full TPTP regeneration.
+     *
+     * <p>Runs on a background thread; {@link #fofReady} is already {@code true} by
+     * the time this is launched.  {@link SessionTPTPManager#patchSessionTPTP} degrades
+     * gracefully (no stale-axiom commenting-out) if {@code tell()} arrives before
+     * this completes.
+     *
+     * @param kb the shared knowledge base (must contain only base formulas, no user assertions)
+     */
+    private static void rebuildAxiomKey(KB kb) {
+        try {
+            System.out.println("TPTPGenerationManager: Rebuilding axiomKey in background (warm start, no I/O)...");
+            long start = System.currentTimeMillis();
+            String kbDir = KBmanager.getMgr().getPref("kbDir");
+            String infFilename = kbDir + java.io.File.separator + kb.name + ".tptp";
+            SUMOKBtoTPTPKB.setLang("fof");
+            SUMOformulaToTPTPformula.setLang("fof");
+            SUMOformulaToTPTPformula.setHideNumbers(true);
+            // Null writer: we want the axiomKey side-effect only, not file output.
+            try (java.io.PrintWriter pw = new java.io.PrintWriter(java.io.Writer.nullWriter())) {
+                SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                skb.kb = kb;
+                skb.writeFile(infFilename, null, false, pw);
+            }
+            long elapsed = System.currentTimeMillis() - start;
+            System.out.println("TPTPGenerationManager: axiomKey rebuilt in " +
+                    (elapsed / 1000.0) + "s — " + SUMOKBtoTPTPKB.axiomKey.size() + " entries");
+        } catch (Exception e) {
+            System.err.println("TPTPGenerationManager: Failed to rebuild axiomKey: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             SUMOformulaToTPTPformula.clearThreadLocal();
             SUMOKBtoTPTPKB.clearThreadLocal();

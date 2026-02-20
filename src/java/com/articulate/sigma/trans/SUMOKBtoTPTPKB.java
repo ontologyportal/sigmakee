@@ -41,6 +41,26 @@ public class SUMOKBtoTPTPKB {
     // maps TPTP axiom IDs to SUMO formulas
     public static Map<String,Formula> axiomKey = new HashMap<>();
 
+    /**
+     * Thread-local redirect for {@link #axiomKey} writes.  When set (non-null),
+     * {@link #putAxiom} writes to this map instead of the global {@code axiomKey}.
+     * Used by session-specific TPTP generation (via
+     * {@link TPTPGenerationManager#generateFOFToPath}) to avoid overwriting the
+     * global map that tracks shared base-KB axiom names.
+     */
+    static final ThreadLocal<Map<String,Formula>> localAxiomKeyOverride = new ThreadLocal<>();
+
+    /**
+     * Records a TPTP axiom name → KIF Formula mapping.
+     * Writes to the thread-local override when one is active (session-specific generation),
+     * otherwise writes to the global {@link #axiomKey}.
+     */
+    private void putAxiom(String name, Formula f) {
+        Map<String,Formula> target = localAxiomKeyOverride.get();
+        if (target != null) target.put(name, f);
+        else axiomKey.put(name, f);
+    }
+
     public Set<String> alreadyWrittenTPTPs = new HashSet<>();
 
     /** Progress bar text capture */
@@ -735,7 +755,7 @@ public class SUMOKBtoTPTPKB {
                 if (!StringUtil.emptyString(sort) &&
                         !alreadyWrittenTPTPs.contains(sort)) {
                     name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
-                    axiomKey.put(name,f);
+                    putAxiom(name,f);
                     pw.println(getLang() + Formula.LP + name + ",axiom,(" + sort + ")).");
                     alreadyWrittenTPTPs.add(sort);
                 }
@@ -748,7 +768,7 @@ public class SUMOKBtoTPTPKB {
                         !filterAxiom(f,theTPTPFormula,pw)) {
                     if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : writing " + theTPTPFormula);
                     name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
-                    axiomKey.put(name,f);
+                    putAxiom(name,f);
                     pw.println(getLang() + Formula.LP + name + ",axiom,(" + theTPTPFormula + ")).");
                     if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : finished writing " + theTPTPFormula + " with name " + name);
                     alreadyWrittenTPTPs.add(theTPTPFormula);
@@ -1055,7 +1075,7 @@ public class SUMOKBtoTPTPKB {
             for (String sort : res.sortBodies) {
                 if (!alreadyWrittenTPTPs.contains(sort)) {
                     name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
-                    axiomKey.put(name, res.formula);
+                    putAxiom(name, res.formula);
                     linesBuf.add(localLang + Formula.LP + name + ",axiom,(" + sort + ")).");
                     alreadyWrittenTPTPs.add(sort);
                     if (prof != null) prof.nSortsEmitted++;
@@ -1069,7 +1089,7 @@ public class SUMOKBtoTPTPKB {
                     boolean filtered = filterAxiom(res.formula, tptp, linesBuf);
                     if (!filtered) {
                         name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
-                        axiomKey.put(name, res.formula);
+                        putAxiom(name, res.formula);
                         linesBuf.add(localLang + Formula.LP + name + ",axiom,(" + tptp + ")).");
                         alreadyWrittenTPTPs.add(tptp);
                         if (prof != null) prof.nAxiomsEmitted++;
