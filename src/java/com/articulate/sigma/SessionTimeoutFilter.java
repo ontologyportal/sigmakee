@@ -25,6 +25,7 @@ public class SessionTimeoutFilter implements Filter {
             uri.endsWith("login.html") ||
             uri.endsWith("Register.jsp");
 
-        chain.doFilter(req, res);
+        if (chain != null)
+            chain.doFilter(req, res);
     }
 }
