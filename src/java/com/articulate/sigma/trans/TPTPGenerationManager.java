@@ -47,6 +47,18 @@ public class TPTPGenerationManager {
 
     private static final Object GEN_LOCK = new Object();
 
+    /**
+     * When true, {@link #startBackgroundGeneration()} returns immediately without
+     * spawning any threads.  All latches are counted down so {@code waitFor*()} calls
+     * do not block.  Intended for tests that drive generation directly via
+     * {@link #generateFOFToPath} / {@link #generateTFFToPath}.
+     */
+    private static final AtomicBoolean skipBackgroundGeneration = new AtomicBoolean(false);
+
+    public static void setSkipBackgroundGeneration(boolean skip) {
+        skipBackgroundGeneration.set(skip);
+    }
+
 
     /**
      * Start background generation of all TPTP formats for all KBs.
@@ -69,6 +81,15 @@ public class TPTPGenerationManager {
         tffReady.set(false);
         thfModalReady.set(false);
         thfPlainReady.set(false);
+
+        if (skipBackgroundGeneration.get()) {
+            System.out.println("TPTPGenerationManager: Background generation suppressed (skipBackgroundGeneration=true)");
+            fofLatch.countDown();
+            tffLatch.countDown();
+            thfModalLatch.countDown();
+            thfPlainLatch.countDown();
+            return;
+        }
 
         // Use 4 threads: FOF, TFF, THF Modal, THF Plain all in parallel
         executor = Executors.newFixedThreadPool(4);
@@ -116,6 +137,7 @@ public class TPTPGenerationManager {
     }
 
     public static void generateProperFile(KB kb, String lang) {
+        if (skipBackgroundGeneration.get()) return;
         synchronized (GEN_LOCK) {
             if ("fof".equals(lang) || "tptp".equals(lang)) {
                 generateFOF(kb);

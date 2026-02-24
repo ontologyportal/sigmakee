@@ -37,6 +37,9 @@ public class TPTPGenerationTest {
 
         System.out.println("\n===== TPTPGenerationTest: Initializing from current config.xml =====");
         long startTime = System.currentTimeMillis();
+        // Suppress background SUMO.tptp/SUMO.tff generation: this test drives
+        // generation directly via generateFOFToPath/generateTFFToPath.
+        TPTPGenerationManager.setSkipBackgroundGeneration(true);
         KBmanager.getMgr().initializeOnce();
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         long elapsed = System.currentTimeMillis() - startTime;
