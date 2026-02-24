@@ -62,6 +62,7 @@ public class SUMOformulaToTPTPformula {
         String result = null;
         try {
             result = translateWord_1(st,type,hasArguments);
+            if (result == null) return "";
             if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
             if (result.equals("$true" + Formula.TERM_MENTION_SUFFIX) || result.equals("$false" + Formula.TERM_MENTION_SUFFIX))
                 result = "'" + result + "'";

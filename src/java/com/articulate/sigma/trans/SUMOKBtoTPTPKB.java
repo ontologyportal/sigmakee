@@ -8,12 +8,17 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
+import java.util.regex.Pattern;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class SUMOKBtoTPTPKB {
 
     public static final boolean FILTER_SIMPLE_ONLY = false;
+
+    private static final Pattern QUOTED_CALL_PATTERN =
+            Pattern.compile(".*'[a-z][a-zA-Z0-9_]*\\(.*");
 
     public KB kb;
 
@@ -320,8 +325,9 @@ public class SUMOKBtoTPTPKB {
         int total = formulas.size();
 
         Map<Formula, List<String>> result = new LinkedHashMap<>();
+        int formulaIndex = 0;
         for (Formula f : formulas) {
-            FormulaResult res = translator.translateOneFormula(f, lang, total);
+            FormulaResult res = translator.translateOneFormula(f, lang, total, formulaIndex++);
             List<String> bodies = new ArrayList<>();
             if (!res.skipEverything && !res.skippedHOL && !res.skippedCached) {
                 // Sort declarations (TFF-specific, typically empty for FOF)
@@ -693,8 +699,8 @@ public class SUMOKBtoTPTPKB {
             processed = fp.preProcess(f,false,kb);
             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : processed: " + processed);
             if (!processed.isEmpty()) {
-                withRelnRenames = new HashSet<>(); // somehow makes a diff. in tff doc. ordering
-                for (Formula f2 : processed)
+                withRelnRenames = new TreeSet<>(); // sorted for deterministic output
+                for (Formula f2 : new TreeSet<>(processed))
                     withRelnRenames.add(f2.renameVariableArityRelations(kb,relationMap));
                 for (Formula f3 : withRelnRenames) {
                     switch (getLang()) {
@@ -736,7 +742,7 @@ public class SUMOKBtoTPTPKB {
                 //System.out.println("SUMOKBtoTPTPKB.writeFile() : % empty result from preprocess on " + f.getFormula().replace("\\n"," "));
                 pw.println("% empty result from preprocess on " + f.getFormula().replace("\\n",Formula.SPACE));
             }
-            for (String sort : f.tffSorts) {
+            for (String sort : new TreeSet<>(f.tffSorts)) {
                 if (!StringUtil.emptyString(sort) &&
                         !alreadyWrittenTPTPs.contains(sort)) {
                     name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
@@ -747,7 +753,7 @@ public class SUMOKBtoTPTPKB {
             }
             // Use format-specific field for file writing
             Set<String> formulasToWrite = getLang().equals("fof") ? f.theFofFormulas : f.theTffFormulas;
-            for (String theTPTPFormula : formulasToWrite) {
+            for (String theTPTPFormula : new TreeSet<>(formulasToWrite)) {
                 if (!StringUtil.emptyString(theTPTPFormula) &&
                         !alreadyWrittenTPTPs.contains(theTPTPFormula) &&
                         !filterAxiom(f,theTPTPFormula,pw)) {
@@ -820,7 +826,7 @@ public class SUMOKBtoTPTPKB {
      * All operations here use only per-formula or ThreadLocal state; shared
      * fields (alreadyWrittenTPTPs, axiomKey, relationMap) are NOT touched.
      */
-    private FormulaResult translateOneFormula(Formula formula, String localLang, int total) {
+    private FormulaResult translateOneFormula(Formula formula, String localLang, int total, int formulaIndex) {
 
         FormulaResult res = new FormulaResult();
         res.formula = formula;
@@ -847,7 +853,7 @@ public class SUMOKBtoTPTPKB {
                 for (Formula derivF : f.derivation.parents)
                     res.prologueLines.add("% original f: " + derivF.format("", "", Formula.SPACE));
             }
-            res.prologueLines.add("% " + formCount.getAndIncrement() + " of " + total
+            res.prologueLines.add("% " + formulaIndex + " of " + total
                     + " from file " + f.sourceFile + " at line " + f.startLine);
         }
 
@@ -881,8 +887,8 @@ public class SUMOKBtoTPTPKB {
         if (processed != null && !processed.isEmpty()) {
 
             // ---- rename ----
-            Set<Formula> withRelnRenames = new HashSet<>();
-            for (Formula f2 : processed)
+            Set<Formula> withRelnRenames = new TreeSet<>();
+            for (Formula f2 : new TreeSet<>(processed))
                 withRelnRenames.add(f2.renameVariableArityRelations(kb, res.localRelationMap));
 
             for (Formula f3 : withRelnRenames) {
@@ -938,13 +944,13 @@ public class SUMOKBtoTPTPKB {
                     + f.getFormula().replace("\\n", Formula.SPACE));
         }
 
-        // Collect sort and TPTP bodies for sequential dedup+write phase
-        for (String sort : f.tffSorts) {
+        // Collect sort and TPTP bodies for sequential dedup+write phase (sorted for determinism)
+        for (String sort : new TreeSet<>(f.tffSorts)) {
             if (!StringUtil.emptyString(sort))
                 res.sortBodies.add(sort);
         }
         Set<String> formulasToWrite = localLang.equals("fof") ? f.theFofFormulas : f.theTffFormulas;
-        for (String tptp : formulasToWrite) {
+        for (String tptp : new TreeSet<>(formulasToWrite)) {
             if (!StringUtil.emptyString(tptp))
                 res.tptpBodies.add(tptp);
         }
@@ -986,16 +992,17 @@ public class SUMOKBtoTPTPKB {
         List<FormulaResult> results;
         try {
             results = pool.submit(() ->
-                    formulaList.parallelStream()
-                            .map(f -> translateOneFormula(f, localLang, total))
+                    IntStream.range(0, formulaList.size())
+                            .parallel()
+                            .mapToObj(i -> translateOneFormula(formulaList.get(i), localLang, total, i))
                             .collect(Collectors.toList())
             ).get();
         } catch (Exception ex) {
             System.err.println("SUMOKBtoTPTPKB._tWriteFile(): parallel translation failed, falling back to sequential: "
                     + ex.getMessage());
             ex.printStackTrace();
-            results = formulaList.stream()
-                    .map(f -> translateOneFormula(f, localLang, total))
+            results = IntStream.range(0, formulaList.size())
+                    .mapToObj(i -> translateOneFormula(formulaList.get(i), localLang, total, i))
                     .collect(Collectors.toList());
         } finally {
             pool.shutdown();
@@ -1085,7 +1092,7 @@ public class SUMOKBtoTPTPKB {
     public boolean filterAxiom(Formula form, String tptp, PrintWriter pw) {
 
         //----Don't output ""ed ''ed and numbers
-        if (tptp.matches(".*'[a-z][a-zA-Z0-9_]*\\(.*") &&
+        if (QUOTED_CALL_PATTERN.matcher(tptp).matches() &&
                 this.getClass().equals(SUMOKBtoTPTPKB.class)) { // only filter numbers in TPTP, not TFF
             pw.println("% number: " + tptp);
             return removeNum;
@@ -1118,7 +1125,7 @@ public class SUMOKBtoTPTPKB {
     public boolean filterAxiom(Formula form, String tptp, List<String> fileContents) {
 
         //----Don't output ""ed ''ed and numbers
-        if (tptp.matches(".*'[a-z][a-zA-Z0-9_]*\\(.*") &&
+        if (QUOTED_CALL_PATTERN.matcher(tptp).matches() &&
                 this.getClass().equals(SUMOKBtoTPTPKB.class)) { // only filter numbers in TPTP, not TFF
             fileContents.add("% number: " + tptp);
             return removeNum;

@@ -564,7 +564,7 @@ public class TPTPGenerationManager {
 
                     SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                     skb.kb = kb;
-                    skb.writeFile(outputPath.toString(), null, false, pw);
+                    skb.writeFile(kb.name, null, false, pw);
                 }
             } finally {
                 SUMOKBtoTPTPKB.localAxiomKeyOverride.remove();

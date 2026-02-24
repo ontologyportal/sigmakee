@@ -23,6 +23,9 @@ public class SUMOtoTFAform {
 
     public static boolean debug = false;
 
+    private static final Pattern VAR_ARITY_PATTERN = Pattern.compile(".*__\\d$");
+    private static final Pattern SIG_PART_PATTERN  = Pattern.compile("(\\d)(In|Re|Ra|En)");
+
     // a Set of types for each variable key — ThreadLocal for parallel FOF/TFF generation
     private static final ThreadLocal<Map<String,Set<String>>> varmapTL =
         ThreadLocal.withInitial(() -> null);
@@ -241,16 +244,14 @@ public class SUMOtoTFAform {
         if (StringUtil.emptyString(rel))
             return new ArrayList<>();
         List<String> sig = new ArrayList();
-        String patternString = "(\\d)(In|Re|Ra|En)";
 
         int under = rel.indexOf("__");
         if (under == -1)
             return sig;
-        if (rel.matches(".*__\\d$"))
+        if (VAR_ARITY_PATTERN.matcher(rel).matches())
             return relationExtractNonNumericSig(rel);
         String text = rel.substring(under + 2, rel.length());
-        Pattern pattern = Pattern.compile(patternString);
-        Matcher matcher = pattern.matcher(text);
+        Matcher matcher = SIG_PART_PATTERN.matcher(text);
         String type;
         while (matcher.find()) {
             type = matcher.group(2);

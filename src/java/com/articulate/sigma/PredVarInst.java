@@ -75,7 +75,7 @@ public class PredVarInst {
      */
     protected static Map<String,Set<String>> addExplicitTypes(KB kb, Formula input, Map<String,Set<String>> types) {
 
-        Map<String,Set<String>> result = new HashMap<>();
+        Map<String,Set<String>> result = new TreeMap<>();
         FormulaPreprocessor fp = new FormulaPreprocessor();
     	Map<String,Set<String>> explicit = fp.findExplicitTypesInAntecedent(kb,input);
         if (explicit == null || explicit.keySet() == null || explicit.keySet().isEmpty())
@@ -226,7 +226,7 @@ public class PredVarInst {
     public static Set<Formula> instantiatePredVars(Formula input, KB kb) {
 
         if (debug) System.out.println("instantiatePredVars(): input: " + input);
-        Set<Formula> result = new HashSet<>();
+        Set<Formula> result = new TreeSet<>();
         Set<String> predVars = gatherPredVars(kb,input);
         if (predVars.size() > 1) {
             if (rejectDoubles) {
@@ -268,9 +268,9 @@ public class PredVarInst {
                 if (debug) System.out.println("instantiatePredVars(): pred var arity null for: " + var +
                     " in " + input);
             // 3.1 check: predVarArity should match arity of substituted relation
-            rels = kb.kbCache.predicates;
+            rels = new TreeSet<>(kb.kbCache.predicates);
             if (varTypes.get(var).contains("Function"))
-                rels = kb.kbCache.functions;
+                rels = new TreeSet<>(kb.kbCache.functions);
             for (String rel : rels) {
                 //if (kb.isFunction(rel) || rel.endsWith(Formula.FN_SUFF)) { // can't substitute a function for where a relation is expected
                 //    if (debug) System.out.println("instantiatePredVars(): excluding function: " + rel);
@@ -484,7 +484,7 @@ public class PredVarInst {
         //Map<String,Set<String>> typeMap = fp.findTypeRestrictions(f, kb);  // <- won't get instance relations
         Map<String,Set<String>> typeMap = fp.findAllTypeRestrictions(f, kb);
         if (debug) System.out.println("findPredVarTypes(): typeMap: " + typeMap);
-        Map<String,Set<String>> result = new HashMap<>();
+        Map<String,Set<String>> result = new TreeMap<>();
         for (String var : predVars) {
             if (typeMap.containsKey(var))
                 result.put(var, typeMap.get(var));

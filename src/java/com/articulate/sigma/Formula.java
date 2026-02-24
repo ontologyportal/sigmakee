@@ -26,6 +26,7 @@ import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /** ************************************************************
  * Handle operations on an individual formula.  This includes
@@ -35,6 +36,9 @@ import java.util.*;
 public class Formula implements Comparable, Serializable {
 
     public static boolean debug = false;
+
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile(".*\\s.*");
+    private static final Pattern EMPTY_LIST_PATTERN = Pattern.compile("\\(\\s*\\)");
 
     public static final String AND    = "and";
     public static final String OR     = "or";
@@ -891,7 +895,7 @@ public class Formula implements Comparable, Serializable {
         if (!StringUtil.emptyString(s)) {
             String str = s.trim();
             ans = (StringUtil.isQuotedString(s) ||
-                  (!str.contains(RP) && !str.matches(".*\\s.*")) );
+                  (!str.contains(RP) && !WHITESPACE_PATTERN.matcher(str).matches()) );
         }
         return ans;
     }
@@ -918,7 +922,7 @@ public class Formula implements Comparable, Serializable {
      * parentheses with nothing or whitespace in the middle.
      */
     public static boolean empty(String s) {
-        return (listP(s) && s.matches("\\(\\s*\\)"));
+        return (listP(s) && EMPTY_LIST_PATTERN.matcher(s).matches());
     }
 
     /** ***************************************************************
