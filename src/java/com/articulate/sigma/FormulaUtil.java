@@ -293,6 +293,13 @@ public class FormulaUtil {
                 "  (not  \n" +
                 "    (ans0 sK2)) spl6_1)";
         System.out.println(removeAnswerClause(new Formula(s)));
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        System.out.println("KButilities.main(): completed init");
+        List<Formula> flist = kb.ask("ant",0,"Process");
+        sortBySourceFile(flist);
+        for (Formula f : flist)
+            System.out.println(f.getSourceFile());
     }
 
     /** ***************************************************************
@@ -310,7 +317,7 @@ public class FormulaUtil {
         forms.sort(
                 Comparator
                         // 1. priority files first
-                        .comparingInt((Formula f) -> filePriority(f.getSourceFile()))
+                        .comparingInt((Formula f) -> filePriority(FileUtil.noPath(f.getSourceFile())))
                         // 2. then by sourceFile name
                         .thenComparing(Formula::getSourceFile)
                         // 3. then by line number
