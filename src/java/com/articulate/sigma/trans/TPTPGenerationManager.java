@@ -220,7 +220,7 @@ public class TPTPGenerationManager {
             SUMOformulaToTPTPformula.setLang("tff");
 
             // IMPORTANT: write to tmp, not target
-            try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(tmp, java.nio.charset.StandardCharsets.UTF_8))) {
+            try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(tmp, StandardCharsets.UTF_8))) {
 
                 if (!kb.formulaMap.isEmpty()) {
                     SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();

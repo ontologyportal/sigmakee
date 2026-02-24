@@ -503,14 +503,17 @@ public class SessionTPTPManager {
             Path sessionFile = getSessionTPTPPath(sessionId, kb.name, ext);
             Path tmpFile     = sessionFile.resolveSibling(sessionFile.getFileName() + ".tmp");
 
-            // Fallback: shared base file not found → full regeneration
+            // Shared base not yet available (background generation still in progress).
+            // The tell() assertion is already persisted in kb.formulaMap and the session
+            // UA .kif file; the session TPTP file will be created on the next tell() or ask().
             if (!Files.exists(sharedBase)) {
-                System.err.println("SessionTPTPManager.patchSessionTPTP: base file not found: " +
-                        sharedBase + ", falling back to full regen");
-                return generateSessionTPTP(sessionId, kb, ext);
+                System.out.println("SessionTPTPManager.patchSessionTPTP: shared base not yet " +
+                        "available (" + sharedBase + "); deferring TPTP patch for session " +
+                        sessionId + " until generation completes.");
+                return null;
             }
 
-            // Option B: patch from the existing session file when present, so previous
+            // Patch from the existing session file when present, so previous
             // patches survive successive tell() calls within the same session.
             Path baseFile = Files.exists(sessionFile) ? sessionFile : sharedBase;
 
@@ -579,6 +582,8 @@ public class SessionTPTPManager {
                      BufferedWriter writer = Files.newBufferedWriter(tmpFile,  StandardCharsets.UTF_8)) {
 
                     // --- Copy base, commenting out stale axioms ---
+                    // Also build alreadyInBase to avoid re-appending bodies already present.
+                    Set<String> alreadyInBase = new HashSet<>();
                     String line;
                     while ((line = reader.readLine()) != null) {
                         String axiomName = extractAxiomName(line);
@@ -586,6 +591,8 @@ public class SessionTPTPManager {
                             writer.write("% [patched out] " + line);
                         } else {
                             writer.write(line);
+                            String existingBody = extractAxiomBody(line);
+                            if (existingBody != null) alreadyInBase.add(existingBody);
                         }
                         writer.newLine();
                     }
@@ -596,12 +603,13 @@ public class SessionTPTPManager {
                     writer.newLine();
 
                     // Helper: write one body string as a named axiom, recording in session key
-                    Set<String> patchWritten = new HashSet<>(); // session-level dedup
+                    Set<String> patchWritten = new HashSet<>(); // within-patch dedup
 
                     // Retranslated base formulas
                     for (Map.Entry<Formula, List<String>> entry : retranslated.entrySet()) {
                         for (String body : entry.getValue()) {
-                            if (!patchWritten.add(body)) continue;
+                            if (alreadyInBase.contains(body)) continue; // already in base file
+                            if (!patchWritten.add(body)) continue;      // already in this patch
                             String name = "kb_" + sanitizedKBName + "_" + sessionTag
                                     + "_" + patchIdx.getAndIncrement();
                             writer.write(normalizedLang + "(" + name + ",axiom,(" + body + ")).");
@@ -613,7 +621,8 @@ public class SessionTPTPManager {
                     // New tell() assertion formulas
                     for (Map.Entry<Formula, List<String>> entry : newTranslations.entrySet()) {
                         for (String body : entry.getValue()) {
-                            if (!patchWritten.add(body)) continue;
+                            if (alreadyInBase.contains(body)) continue; // already in base file
+                            if (!patchWritten.add(body)) continue;      // already in this patch
                             String name = "kb_" + sanitizedKBName + "_" + sessionTag
                                     + "_" + patchIdx.getAndIncrement();
                             writer.write(normalizedLang + "(" + name + ",axiom,(" + body + ")).");
@@ -838,6 +847,33 @@ public class SessionTPTPManager {
         // Only match KB axiom names (kb_*), not conjecture/question lines
         if (!name.startsWith("kb_")) return null;
         return name;
+    }
+
+    /*********************************************************************************
+     * Extract the formula body from a single-line TPTP axiom, or {@code null} if the
+     * line is not a single-line axiom or is a comment.
+     *
+     * <p>Handles the format written by {@code _tWriteFile} and {@code patchSessionTPTP}:
+     * <pre>fof(name,axiom,(body)).</pre>
+     * where {@code body} may itself contain parentheses.
+     *
+     * <p>Multi-line axioms (where the body contains newlines) are not recognised and
+     * return {@code null}; deduplication for those is silently skipped.
+     *
+     * @param line a raw line from a TPTP file
+     * @return the body string (e.g. {@code "![V1]: (subclass(V1,Entity))"}), or {@code null}
+     */
+    private static String extractAxiomBody(String line) {
+
+        String trimmed = line.trim();
+        if (trimmed.startsWith("%")) return null;
+        // Single-line axioms end with ")).": closing the (body) wrapper and the fof() call.
+        if (!trimmed.endsWith(")).")) return null;
+        int axiomIdx = trimmed.indexOf(",axiom,(");
+        if (axiomIdx < 0) return null;
+        int bodyStart = axiomIdx + ",axiom,(".length();
+        // Remove the trailing ")). " → last 3 chars
+        return trimmed.substring(bodyStart, trimmed.length() - 3);
     }
 
     /*********************************************************************************

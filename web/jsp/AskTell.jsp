@@ -1498,6 +1498,30 @@
 
     // ===== Server-side execution for "Tell" button =====
     if ("Tell".equalsIgnoreCase(req) && !syntaxError) {
+        // Check if required TPTP format is ready (background generation may still be in progress)
+        boolean tellNeedsFOF = "fof".equals(TPTPlang);
+        boolean tellNeedsTFF = "tff".equals(TPTPlang);
+        boolean tellGenerationInProgress = false;
+        String tellWaitingFor = "";
+
+        if (tellNeedsFOF && !TPTPGenerationManager.isFOFReady()) {
+            tellGenerationInProgress = true;
+            tellWaitingFor = "FOF (SUMO.tptp)";
+        } else if (tellNeedsTFF && !TPTPGenerationManager.isTFFReady()) {
+            tellGenerationInProgress = true;
+            tellWaitingFor = "TFF (SUMO.tff)";
+        }
+
+        if (tellGenerationInProgress) {
+%>
+<div style="border:1px solid #ff9900; background:#fff8f0; padding:16px; margin:10px 0; border-radius:6px;">
+    <strong style="color:#b35900;">KB Translation In Progress</strong><br><br>
+    The <code><%= tellWaitingFor %></code> translation file is still being generated in the background.<br>
+    Please wait a moment and try your assertion again.<br><br>
+    <em style="color:#666;">This happens once after startup while the knowledge base is being prepared for inference.</em>
+</div>
+<%
+        } else {
         try {
             final java.util.concurrent.atomic.AtomicBoolean mustRegenBaseRef =
                     new java.util.concurrent.atomic.AtomicBoolean(false);
@@ -1598,6 +1622,7 @@
             } catch (com.articulate.sigma.tp.ATPException atpe) {
                 renderExceptionPanel(atpe, out);
             }
+        } // end else (generation ready)
         }
     %>
 </div>
