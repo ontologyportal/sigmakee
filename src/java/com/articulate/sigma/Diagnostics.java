@@ -207,12 +207,14 @@ public class Diagnostics {
             List<String> subs = f.argumentsToArrayListString(2);
             List<Formula> foundSubs = kb.askWithRestriction(0,"subclass",2,parent);
             for (Formula subf : foundSubs) {
-                String newSub = subf.getStringArgument(1);
-                if (!subs.contains(newSub)) {
-                    String s = "Error in partitionViolation(): " + subf +
-                            " not part of " + f;
-                    System.out.println(s);
-                    result.add(s);
+                if (!subf.isCached()) {
+                    String newSub = subf.getStringArgument(1);
+                    if (!subs.contains(newSub)) {
+                        String s = "Error in partitionViolation(): " + subf +
+                                " not part of " + f;
+                        System.out.println(s);
+                        result.add(s);
+                    }
                 }
             }
         }
