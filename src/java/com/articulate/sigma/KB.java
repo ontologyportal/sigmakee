@@ -1828,6 +1828,7 @@ public class KB implements Serializable {
                         //   (B) Ground assertions on transitive predicates → no targeted method, full regen
                         if (sessionId != null && !sessionId.isEmpty()) {
                             String tptpLang = SUMOKBtoTPTPKB.getLang();
+                            tptpLang = "fof".equals(tptpLang) ? "tptp" : tptpLang;
                             for (Formula parsedF : parsedFormulas) {
                                 String fPred = parsedF.car();
                                 if (fPred == null) continue;

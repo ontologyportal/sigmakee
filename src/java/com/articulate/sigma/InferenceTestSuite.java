@@ -585,8 +585,9 @@ public class InferenceTestSuite {
                 KIF test = new KIF();
                 test.readFile(f.getCanonicalPath());
                 System.out.println("INFO in InferenceTestSuite.readTestFile(): num formulas: " +
-                        String.valueOf(test.formulaMap.keySet().size()));
-                for (String formula : test.formulaMap.keySet()) {
+                        String.valueOf(test.formulasOrdered.size()));
+                for (Formula orderedF : test.formulasOrdered.values()) {
+                    String formula = orderedF.getFormula();
                     if (formula.contains(";"))
                         formula = formula.substring(0, formula.indexOf(";"));
                     System.out.println("INFO in InferenceTestSuite.readTestFile(): Formula: " + formula);
