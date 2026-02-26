@@ -258,7 +258,7 @@ public class FormulaPreprocessor {
             //String unquantifiedV = unquantifiedVariables.get(i);
             types = varmap.get(unquantifiedV);
             if (types != null && !types.isEmpty()) {
-                for (String t : types) {
+                for (String t : new TreeSet<>(types)) {
                     if (StringUtil.emptyString(t))
                         continue;
                     if (begin) {
@@ -354,7 +354,7 @@ public class FormulaPreprocessor {
                     existentiallyQV = quantifiedVariables.get(i);
                     types = varmap.get(existentiallyQV);
                     if (types != null && !types.isEmpty()) {
-                        for (String t : types) {
+                        for (String t : new TreeSet<>(types)) {
                             if (StringUtil.emptyString(t))
                                 continue;
                             if (!t.endsWith("+")) {
@@ -1034,7 +1034,7 @@ public class FormulaPreprocessor {
             if (isQuery)
                 result.addAll(variableReplacements);
             else {
-                Set<Formula> formulae = new HashSet<>();
+                Set<Formula> formulae = new TreeSet<>();
                 String arg0, ioStr, arg;
                 Formula f, ioF;
                 int start, argslen;
@@ -1071,7 +1071,7 @@ public class FormulaPreprocessor {
                         }
                     }
                 }
-                result.addAll(formulae);
+                result.addAll(new TreeSet<>(formulae));
             }
         }
         return result;

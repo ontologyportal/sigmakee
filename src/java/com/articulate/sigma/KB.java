@@ -321,12 +321,14 @@ public class KB implements Serializable {
 
     private static final Set<String> TPTP_BASE_REGEN_PREDICATES = Set.of(
             "subclass",
+            "instance",
             "domain",
             "domainSubclass",
             "range",
             "rangeSubclass",
             "immediateInstance",
             "immediateSubclass",
+            "subrelation",
             "disjoint",
             "partition",
             "exhaustiveDecomposition",
@@ -1760,7 +1762,8 @@ public class KB implements Serializable {
                 if (!SUMOKBtoTPTPKB.FILTER_SIMPLE_ONLY && !formulasAlreadyPresent.isEmpty()) {
                     String sf = formulasAlreadyPresent.get(0).sourceFile;
                     result = "The formula was already added from " + sf;
-                } else {
+                }
+                else {
                     List<Formula> parsedFormulas = new ArrayList();
                     String term;
                     for (Formula parsedF : kif.formulaMap.values()) { // 2. Confirm that the input has been

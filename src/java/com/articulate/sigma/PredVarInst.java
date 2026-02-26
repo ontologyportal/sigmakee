@@ -201,7 +201,7 @@ public class PredVarInst {
      */
     protected static Set<Formula> handleDoubles(KB kb) {
 
-        Set<Formula> result = new HashSet<>();
+        Set<Formula> result = new TreeSet<>();
         Set<Formula> result1 = handleDouble1(kb);
         if (result1 != null)
             result.addAll(result1);

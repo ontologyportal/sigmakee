@@ -1750,12 +1750,12 @@ public class Formula implements Comparable, Serializable {
         if (!allVarsPairCache.isEmpty() && KBmanager.initialized)
             return allVarsPairCache;
         List<Set<String>> ans = new ArrayList<>();
-        ans.add(new HashSet());
-        ans.add(new HashSet());
-        allVarsPairCache.add(new HashSet());
-        allVarsPairCache.add(new HashSet());
-    	Set<String> quantified = new HashSet<>();
-    	Set<String> unquantified = new HashSet<>();
+        ans.add(new TreeSet<>());
+        ans.add(new TreeSet<>());
+        allVarsPairCache.add(new TreeSet<>());
+        allVarsPairCache.add(new TreeSet<>());
+    	Set<String> quantified = new TreeSet<>();
+    	Set<String> unquantified = new TreeSet<>();
         unquantified.addAll(collectAllVariables());
         quantified.addAll(collectQuantifiedVariables());
         unquantified.removeAll(quantified);
