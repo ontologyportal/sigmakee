@@ -207,11 +207,11 @@ public class Modals {
 
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1);
-        Formula entity   = flist.get(flist.size() - 2);
-        Formula cogAgent  = flist.get(flist.size() - 1);
+        Formula arg1   = flist.get(0);
+        Formula arg2  = flist.get(1);
         worldNum = worldNum + 1;
         fstring.append("(=> (accreln3 ").append(f.car()).append(Formula.SPACE);
-        fstring.append(entity).append(Formula.SPACE).append(cogAgent).append(Formula.SPACE);
+        fstring.append(arg1).append(Formula.SPACE).append(arg2).append(Formula.SPACE);
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
             fstring.append(" CW");
@@ -219,7 +219,7 @@ public class Modals {
             fstring.append(" ?W").append(worldNum - 1);
         }
         fstring.append(" ?W").append(worldNum).append(") ");
-        fstring.append(Formula.SPACE).append(processRecurse(flist.get(0),kb,worldNum));
+        fstring.append(Formula.SPACE).append(processRecurse(flist.get(2),kb,worldNum));
         fstring.append(Formula.RP);
         Formula result = new Formula();
         result.read(fstring.toString());
@@ -586,14 +586,13 @@ public class Modals {
     public static void doTQM10Tests(KB kb) {
         // "The US government obliges Agent Smith not to enter Area 51." 
         String fstr = 
-        "(confersObligation " +
+        "(confersObligation USGovernment AgentSmith" +
         "  (not " +
         "    (exists (?E)" +
         "      (and" +
         "        (instance ?E Entering)" +
         "        (agent ?E AgentSmith)" +
-        "        (destination ?E Area51)))) " +
-        "  USGovernment AgentSmith)";
+        "        (destination ?E Area51)))))";
         Formula f = new Formula(fstr);
         System.out.println(processModals(f,kb) + "\n\n");
 
@@ -602,7 +601,7 @@ public class Modals {
         fstr = 
         "(=>" +
         "  (and" +
-        "    (confersObligation ?F USGovernment ?A)" +
+        "    (confersObligation USGovernment ?A ?F) " +
         "    (not ?F))" +
         "  (exists (?H)" +
         "    (and" +
@@ -614,10 +613,10 @@ public class Modals {
         
         // "Agents that violate their obligations are fired after a US government disciplinary hearing."
         // CF: Is this example correct? 
-        /*fstr = 
+        fstr = 
         "(=>" +
         "  (and" +
-        "    (confersObligation ?F USGovernment ?A)" +
+        "    (confersObligation USGovernment ?A ?F)" +
         "    (not ?F)" +
         "    (instance ?H LegalAction)" +
         "    (plaintiff ?H USGovernment)" +
@@ -630,7 +629,7 @@ public class Modals {
         "        (WhenFn ?FIRE))" +
         "      (patient ?FIRE ?A))))";
         f = new Formula(fstr);
-        System.out.println(processModals(f,kb) + "\n\n");*/
+        System.out.println(processModals(f,kb) + "\n\n");
     }
 
     /* CFeener
@@ -748,9 +747,9 @@ public class Modals {
             "(=>" +
             "  (and" +
             "    (instance ?USG GovernmentOrganization)" +
-            "    (confersNorm ?USG ?FORMULA Permission))" +
+            "    (confersNorm ?USG Permission ?FORMULA))" +
             "  (not" +
-            "    (confersNorm ?USG ?F Prohibition)))";
+            "    (confersNorm ?USG Prohibition ?F)))";
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
         
@@ -765,11 +764,11 @@ public class Modals {
             "    (destination ?E ?F)" +
             "    (attribute ?F PhysicallyRestrictedRegion)" +
             "    (located ?G ?F))" +
-            "  (confersNorm ?G" +
+            "  (confersNorm ?G Obligation" +
             "    (exists (?R)" +
             "      (and" +
             "        (entrance ?R ?F)" +
-            "        (path ?E ?R))) Obligation))";
+            "        (path ?E ?R)))))";
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
         
@@ -785,11 +784,11 @@ public class Modals {
             "    (destination ?E ?F)" +
             "    (attribute ?F PhysicallyRestrictedRegion)" +
             "    (located ?G ?F))" +
-            "  (confersObligation" +
+            "  (confersObligation ?G ?BILL" +
             "    (exists (?R)" +
             "      (and" +
             "        (entrance ?R ?F)" +
-            "        (path ?E ?R))) ?G ?BILL))";
+            "        (path ?E ?R))) ))";
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
 
@@ -797,14 +796,13 @@ public class Modals {
             System.out.println("MEDIUM: confersObligation - The US government obliges Agent Smith not to enter Area 51");
         }
         fstr =
-            "(confersObligation" +
+            "(confersObligation USGovernment AgentSmith" +
             "  (not" +
             "    (exists (?E)" +
             "      (and" +
             "        (instance ?E Entering)" +
             "        (agent ?E AgentSmith)" +
-            "        (destination ?E Area51))))" +
-            "  USGovernment AgentSmith)";
+            "        (destination ?E Area51)))) )";
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
 
@@ -814,7 +812,7 @@ public class Modals {
         fstr =
             "(=>" +
             "  (and" +
-            "    (confersObligation ?F USGovernment ?A)" +
+            "    (confersObligation USGovernment ?A ?F)" +
             "    (not ?F))" +
             "  (exists (?H)" +
             "    (and" +
@@ -830,7 +828,7 @@ public class Modals {
         fstr =
             "(=>" +
             "  (and" +
-            "    (confersObligation ?F USGovernment ?A)" +
+            "    (confersObligation USGovernment ?A ?F)" +
             "    (not ?F)" +
             "    (instance ?H LegalAction)" +
             "    (plaintiff ?H USGovernment)" +
@@ -851,8 +849,8 @@ public class Modals {
         }
         fstr =
             "(=>" +
-            "  (deprivesNorm ?AGENT ?F Prohibition)" +
-            "  (confersNorm ?AGENT ?F Permission))";
+            "  (deprivesNorm ?AGENT Prohibition ?F)" +
+            "  (confersNorm ?AGENT Permission ?F))";
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
         
@@ -873,8 +871,8 @@ public class Modals {
             "                    (patient ?PROC ?X)" +
             "                    (agent ?PROC ?CUST)))))" +
             "    (modalAttribute" +
-            "        (confersRight" +
-            "            (uses ?X ?CUST) ?AGENT ?CUST) Possibility))";
+            "        (confersRight ?AGENT ?CUST" +
+            "            (uses ?X ?CUST)) Possibility))";
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n"); 
         
@@ -884,14 +882,14 @@ public class Modals {
         fstr =
             "(=>\n" +
             "  (and\n" +
-            "    (instance ?POLICY PetsAllowedPolicy)\n" +
-            "    (policyLocationCoverage ?POLICY ?LOC)\n" +
-            "    (policyOwner ?AGENT ?POLICY))\n" +
-            "  (confersNorm ?AGENT\n" +
-            "    (exists (?PET)\n" +
-            "      (and\n" +
-            "        (instance ?PET DomesticAnimal)\n" +
-            "        (located ?PET ?LOC))) Permission))";
+            "    (instance ?POLICY PetsAllowedPolicy)" +
+            "    (policyLocationCoverage ?POLICY ?LOC)" +
+            "    (policyOwner ?AGENT ?POLICY))" +
+            "  (confersNorm ?AGENT Permission" +
+            "    (exists (?PET)" +
+            "      (and" +
+            "        (instance ?PET DomesticAnimal)" +
+            "        (located ?PET ?LOC))) ))";
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
 
