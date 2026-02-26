@@ -28,6 +28,14 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Helper: create a minimal .kif file for add/remove tests
+create_test_kif() {
+    local name="${1:-TestDev.kif}"
+    local path="$TEST_DIR/$name"
+    echo "(instance TestTerm Entity)" > "$path"
+    echo "$path"
+}
+
 pass() {
     ((TESTS_PASSED++))
     echo -e "${GREEN}PASS${NC}: $1"
@@ -123,6 +131,114 @@ test_invalid_command() {
 }
 
 # ============================================================
+# add command tests
+# ============================================================
+
+test_add_kif_file() {
+    create_test_config
+    local kif_path
+    kif_path=$(create_test_kif "AddTest.kif")
+    "$SIGMA_CONFIG" add "$kif_path" >/dev/null 2>&1
+    grep -q "AddTest.kif" "$TEST_DIR/KBs/config.xml"
+}
+
+test_add_creates_symlink() {
+    create_test_config
+    local kif_path
+    kif_path=$(create_test_kif "SymlinkTest.kif")
+    "$SIGMA_CONFIG" add "$kif_path" >/dev/null 2>&1
+    [[ -L "$TEST_DIR/KBs/SymlinkTest.kif" ]]
+}
+
+test_add_idempotent() {
+    create_test_config
+    local kif_path
+    kif_path=$(create_test_kif "IdempotentTest.kif")
+    "$SIGMA_CONFIG" add "$kif_path" >/dev/null 2>&1
+    "$SIGMA_CONFIG" add "$kif_path" >/dev/null 2>&1
+    local count
+    count=$(grep -c "IdempotentTest.kif" "$TEST_DIR/KBs/config.xml")
+    [[ "$count" -eq 1 ]]
+}
+
+test_add_nonexistent_file() {
+    create_test_config
+    ! "$SIGMA_CONFIG" add "/tmp/no_such_file_ever.kif" >/dev/null 2>&1
+}
+
+test_add_non_kif_file() {
+    create_test_config
+    local txt_path="$TEST_DIR/notakif.txt"
+    echo "hello" > "$txt_path"
+    ! "$SIGMA_CONFIG" add "$txt_path" >/dev/null 2>&1
+}
+
+test_add_propagates_to_full_and_fast() {
+    create_test_config
+    "$SIGMA_CONFIG" init >/dev/null 2>&1
+    local kif_path
+    kif_path=$(create_test_kif "PropTest.kif")
+    "$SIGMA_CONFIG" add "$kif_path" >/dev/null 2>&1
+    grep -q "PropTest.kif" "$TEST_DIR/KBs/config-full.xml" &&
+    grep -q "PropTest.kif" "$TEST_DIR/KBs/config-fast.xml"
+}
+
+# ============================================================
+# remove command tests
+# ============================================================
+
+test_remove_file() {
+    create_test_config
+    local kif_path
+    kif_path=$(create_test_kif "RemoveMe.kif")
+    "$SIGMA_CONFIG" add "$kif_path" >/dev/null 2>&1
+    "$SIGMA_CONFIG" remove "RemoveMe.kif" >/dev/null 2>&1
+    ! grep -q "RemoveMe.kif" "$TEST_DIR/KBs/config.xml"
+}
+
+test_remove_cleans_symlink() {
+    create_test_config
+    local kif_path
+    kif_path=$(create_test_kif "RmLink.kif")
+    "$SIGMA_CONFIG" add "$kif_path" >/dev/null 2>&1
+    [[ -L "$TEST_DIR/KBs/RmLink.kif" ]]  # symlink exists after add
+    "$SIGMA_CONFIG" remove "RmLink.kif" >/dev/null 2>&1
+    [[ ! -L "$TEST_DIR/KBs/RmLink.kif" ]]
+}
+
+test_remove_core_file_blocked() {
+    create_test_config
+    ! "$SIGMA_CONFIG" remove "Merge.kif" >/dev/null 2>&1
+}
+
+test_remove_not_in_config() {
+    create_test_config
+    ! "$SIGMA_CONFIG" remove "NeverAdded.kif" >/dev/null 2>&1
+}
+
+# ============================================================
+# list command tests
+# ============================================================
+
+test_list_shows_constituents() {
+    create_test_config
+    "$SIGMA_CONFIG" list 2>&1 | grep -q "Merge.kif"
+}
+
+# ============================================================
+# round-trip test
+# ============================================================
+
+test_full_fast_full_preserves_constituents() {
+    create_test_config
+    "$SIGMA_CONFIG" init >/dev/null 2>&1
+    "$SIGMA_CONFIG" fast >/dev/null 2>&1
+    "$SIGMA_CONFIG" full >/dev/null 2>&1
+    grep -q "Merge.kif" "$TEST_DIR/KBs/config.xml" &&
+    grep -q "Mid-level-ontology.kif" "$TEST_DIR/KBs/config.xml"
+}
+
+# ============================================================
 # Run Tests
 # ============================================================
 
@@ -139,6 +255,30 @@ run_test "Switch to fast mode" test_switch_to_fast
 run_test "Switch to full mode" test_switch_to_full
 run_test "Fast mode still has Merge.kif" test_fast_has_merge_kif
 run_test "Invalid command returns error" test_invalid_command
+
+echo ""
+echo "--- add command ---"
+run_test "Add a .kif file to config" test_add_kif_file
+run_test "Add creates symlink in KBs dir" test_add_creates_symlink
+run_test "Add same file twice is idempotent" test_add_idempotent
+run_test "Add nonexistent file fails" test_add_nonexistent_file
+run_test "Add non-.kif file fails" test_add_non_kif_file
+run_test "Add propagates to full and fast configs" test_add_propagates_to_full_and_fast
+
+echo ""
+echo "--- remove command ---"
+run_test "Remove file from config" test_remove_file
+run_test "Remove cleans up symlink" test_remove_cleans_symlink
+run_test "Remove core file is blocked" test_remove_core_file_blocked
+run_test "Remove file not in config fails" test_remove_not_in_config
+
+echo ""
+echo "--- list command ---"
+run_test "List shows constituent files" test_list_shows_constituents
+
+echo ""
+echo "--- round-trip ---"
+run_test "Full->fast->full preserves constituents" test_full_fast_full_preserves_constituents
 
 echo ""
 echo "============================================================"
