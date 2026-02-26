@@ -19,6 +19,10 @@ import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.FileUtil;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.io.File;
 import java.io.Reader;
 import java.io.StringReader;
@@ -45,6 +49,8 @@ public class KifFileChecker {
         System.out.println("  -h              Show this help screen");
         System.out.println("  -o <file.kif>   Find Orphan Variables in the given KIF file");
         System.out.println("  -c <file.kif>   Check the given KIF file and print diagnostics");
+        System.out.println("  -l <file.kif> [out.txt]  Check the given KIF file line-by-line, printing diagnostics as each line is checked");
+        System.out.println("                           Optionally write output to the specified file instead of stdout");
         System.out.println("  -C <kifString>  Check the given KIF string and print diagnostics (filename = \"fileName\")");
     }
 
@@ -52,7 +58,11 @@ public class KifFileChecker {
      * Command-line entry point.
      * Usage examples:
      *   java com.articulate.sigma.KifFileChecker -h
+     *   java com.articulate.sigma.KifFileChecker -o myfile.kif
      *   java com.articulate.sigma.KifFileChecker -c myfile.kif
+     *   java -Xmx40g -cp $SIGMA_CP com.articulate.sigma.KifFileChecker -l myfile.kif
+     *   java -Xmx40g -cp $SIGMA_CP com.articulate.sigma.KifFileChecker -l myfile.kif output.txt
+     *   java com.articulate.sigma.KifFileChecker -C "(instance Foo Bar)"
      */
     public static void main(String[] args) {
 
@@ -75,6 +85,42 @@ public class KifFileChecker {
                 }
             } catch (Exception e) {
                 System.err.println("Failed to process " + fname);
+                e.printStackTrace();
+            }
+            return;
+        }
+        if ("-l".equals(args[0]) && args.length > 1) {
+            String fname = args[1];
+            String outFname = (args.length > 2) ? args[2] : null;
+            try (BufferedReader br = new BufferedReader(new FileReader(fname));
+                 PrintWriter out = (outFname != null)
+                         ? new PrintWriter(new FileWriter(outFname))
+                         : new PrintWriter(System.out, true)) {
+                String line;
+                int lineNum = 0;
+                while ((line = br.readLine()) != null) {
+                    lineNum++;
+                    List<ErrRec> errors;
+                    try {
+                        errors = KifFileChecker.check(line, fname);
+                    } catch (Exception checkEx) {
+                        System.err.println("Line " + lineNum + ": check failed: " + checkEx.getMessage());
+                        checkEx.printStackTrace();
+                        continue;
+                    }
+                    out.println("Line " + lineNum + ": " + line);
+                    if (errors.isEmpty()) {
+                        out.println("  No errors");
+                    } else {
+                        for (ErrRec e : errors) {
+                            int adjustedLine = lineNum + Math.max(0, e.line - 1);
+                            ErrRec adjusted = new ErrRec(e.type, e.file, adjustedLine, e.start, e.end, e.msg);
+                            out.println("  " + adjusted.toString());
+                        }
+                    }
+                }
+            } catch (java.io.IOException e) {
+                System.err.println("Failed to read file: " + fname);
                 e.printStackTrace();
             }
             return;
@@ -490,6 +536,7 @@ public class KifFileChecker {
                 } else {
                     absLine = f.startLine;
                 }
+                groupMsg.append(" in formula: ").append(formulaText.trim());
                 msgs.add(new ErrRec(0, fileName, absLine, 0, formulaText.length(), groupMsg.toString()));
             }
         }
@@ -759,7 +806,7 @@ public static void CheckIsValidFormula(String fileName,
                 int absCol = rel[1] >= 0 ? rel[1] : 0;
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
-                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + t.length(), "Term not below Entity: " + offendingLine));
+                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + t.length(), "Term <" + t + "> not below Entity: " + offendingLine));
             }
         }
     }
