@@ -19,6 +19,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 /**
  * Manages session-specific TPTP file lifecycle for isolated TQ test handling.
@@ -1036,6 +1037,40 @@ public class SessionTPTPManager {
                 // Cleanup on failure
                 try { Files.deleteIfExists(tmpFile); } catch (IOException ignore) {}
                 throw new RuntimeException("Failed to merge base with session UA", e);
+            }
+        }
+    }
+
+    /*********************************************************************************
+     * Runs {@code op} with {@code kb.kbCache} temporarily swapped to the session-specific
+     * KBcache for {@code sessionId}, if one exists.  If no session cache exists (no schema-
+     * level tell() has been made this session), {@code op} runs against the shared cache
+     * unchanged.
+     *
+     * <p>Acquires the per-session lock for the duration of the swap so that concurrent
+     * operations within the same session see a consistent kbCache state.
+     *
+     * @param <T>       the return type of the operation
+     * @param sessionId the HTTP session ID (null or empty ⟹ no swap)
+     * @param kb        the shared KB whose kbCache field is temporarily replaced
+     * @param op        the operation to run with the session cache active
+     * @return the value returned by {@code op}
+     */
+    public static <T> T withSessionCache(String sessionId, KB kb, Supplier<T> op) {
+
+        if (sessionId == null || sessionId.isEmpty()) return op.get();
+
+        KBcache sessionCache = getSessionCache(sessionId);  // null = no schema tells yet
+        if (sessionCache == null) return op.get();          // nothing to swap
+
+        Object lock = sessionLocks.computeIfAbsent(sessionId, k -> new Object());
+        synchronized (lock) {
+            KBcache shared = kb.kbCache;
+            kb.kbCache = sessionCache;
+            try {
+                return op.get();
+            } finally {
+                kb.kbCache = shared;
             }
         }
     }

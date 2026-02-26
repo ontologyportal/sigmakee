@@ -2219,7 +2219,9 @@ public class KB implements Serializable {
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = fp.preProcess(query, true, this);
+            Set<Formula> processedStmts =
+                    SessionTPTPManager.withSessionCache(
+                            sessionId, this, () -> fp.preProcess(query, true, this));
             if (!processedStmts.isEmpty()) {
                 int axiomIndex = 0;
                 String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;

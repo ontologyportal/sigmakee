@@ -1037,7 +1037,10 @@
                                 if (!StringUtil.emptyString(s)) kb.tell(s, session.getId());
                             }
                             FormulaPreprocessor fp = new FormulaPreprocessor();
-                            Set<Formula> qs = fp.preProcess(new Formula(itd.query), true, kb);
+                            final String sid = session.getId();
+                            Set<Formula> qs =
+                                    SessionTPTPManager.withSessionCache(
+                                            sid, kb, () -> fp.preProcess(new Formula(itd.query), true, kb));
                             for (Formula q : qs) {
                                 String qstr = q.getFormula();
                                 if ("EProver".equals(inferenceEngine)) {
