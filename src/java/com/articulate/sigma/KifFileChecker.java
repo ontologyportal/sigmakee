@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.io.File;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.*;
@@ -212,13 +213,54 @@ public class KifFileChecker {
             CheckTermsBelowEntity(fileName, f, formulaStartLine, formulaText, kb, localIndividuals, localSubclasses, msgs);
         }
         SortMessages(msgs);
+        // Check if file is not in KB config and has "no type information" errors.
+        // If so, prepend a single WARNING advising the user to add it.
+        if (fileName != null && !fileName.equals("(buffer)") && !fileName.equals("fileName")) {
+            if (!isFileInKB(fileName, kb)) {
+                long typeErrCount = msgs.stream()
+                    .filter(e -> e.type == ErrRec.ERROR && e.msg != null
+                            && e.msg.contains("no type information for arg"))
+                    .count();
+                if (typeErrCount > 1) {
+                    String basename = new File(fileName).getName();
+                    String suggestion = "sigma-config.sh add " + fileName;
+                    msgs.add(0, new ErrRec(
+                        ErrRec.WARNING, fileName, 1, 1, 2,
+                        "This file is not loaded into the KB. " + (int)typeErrCount
+                        + " type errors may be false positives. "
+                        + "To add permanently, run: " + suggestion));
+                }
+            }
+        }
         if (debug) for (ErrRec e : msgs) {
             System.out.println(e);
         }
         return msgs;
     }
 
-        /** ***************************************************************
+    /** ***************************************************************
+     * Check whether the given file is loaded in the KB as a constituent.
+     * Compares by basename since constituents may be stored as just
+     * filenames or as full paths depending on config.
+     *
+     * @param fileName  the file path being checked
+     * @param kb        the current KB (may be null)
+     * @return true if the file is a constituent of the KB
+     */
+    public static boolean isFileInKB(String fileName, KB kb) {
+
+        if (kb == null || fileName == null)
+            return false;
+        String basename = new File(fileName).getName();
+        for (String constituent : kb.constituents) {
+            String cBase = new File(constituent).getName();
+            if (cBase.equals(basename))
+                return true;
+        }
+        return false;
+    }
+
+    /** ***************************************************************
      * Pretty-print KIF contents using the KIF parser and Formula.toString().
      * Preserves top-level forms and tries to keep comments and blank lines
      * in roughly the same places.

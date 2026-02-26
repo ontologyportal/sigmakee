@@ -191,6 +191,37 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
+     * Check that partitioned classes don't have any direct subclasses
+     * For example, if we have (partition Physical Object Process)
+     * (subclass Collection Physical) then the exhaustiveDecomposition is
+     * violated
+     */
+    public static List<String> partitionViolation(KB kb) {
+
+        System.out.println("Partition violations:");
+        List<String> result = new ArrayList<>();
+        List<Formula> flist = kb.ask("arg",0,"partition");
+        for (Formula f : flist) {
+            //System.out.println(f);
+            String parent = f.getStringArgument(1);
+            List<String> subs = f.argumentsToArrayListString(2);
+            List<Formula> foundSubs = kb.askWithRestriction(0,"subclass",2,parent);
+            for (Formula subf : foundSubs) {
+                if (!subf.isCached()) {
+                    String newSub = subf.getStringArgument(1);
+                    if (!subs.contains(newSub)) {
+                        String s = "Error in partitionViolation(): " + subf +
+                                " not part of " + f;
+                        System.out.println(s);
+                        result.add(s);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    /** *****************************************************************
      * Return a list of terms that have parents which are disjoint.
      */
     public static List<String> childrenOfDisjointParents(KB kb) {
@@ -1516,14 +1547,15 @@ public class Diagnostics {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t - print term def by file");
-        System.out.println("  -l <fname> - add labels for a file of terms");
-        System.out.println("  -f <fname> - print term def by file");
+        System.out.println("  --labels <fname> - add labels for a file of terms");
+        System.out.println("  --file <fname> - print term def by file");
         System.out.println("  -p - print all terms in KB");
-        System.out.println("  -d <f1> <f2> - print all terms in f2 not in f1");
+        System.out.println("  -e - exhaustive decomposition violations");
+        System.out.println("  --diff <f1> <f2> - print all terms in f2 not in f1");
         System.out.println("  -o - terms not below Entity (Orphans)");
         System.out.println("  -c - terms without documentation");
         System.out.println("  -q - quantifier not in body");
-        System.out.println("  -v <fname> - extract variable co-occurrences from a kif file");
+        System.out.println("  --vars <fname> - extract variable co-occurrences from a kif file");
     }
 
     /** ***************************************************************
@@ -1531,52 +1563,52 @@ public class Diagnostics {
      */
     public static void main(String args[]) {
 
-        if (args != null && args.length > 0) {
-            for (int i = 0; i < args.length; i++) {
-                System.out.println("Arg[" + i + "]: '" + args[i] + "'");
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        System.out.println("argMap: " + argMap);
+        System.out.println("argMap keys: " + argMap.keySet());
+        System.out.println("argMap contains e: " + argMap.containsKey("e"));
+        if (argMap.isEmpty() || argMap.containsKey("h"))
+            showHelp();
+        else {
+            KBmanager.getMgr().initializeOnce();
+            //resultLimit = 0; // don't limit number of results on command line
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            System.out.println("Diagnostics: Completed init");
+            if (argMap.containsKey("t")) {
+                termDefsByFile(kb);
             }
-        } else
-            showHelp();
-
-        KBmanager.getMgr().initializeOnce();
-        //resultLimit = 0; // don't limit number of results on command line
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        if (args != null && args.length > 0 && args[0].equals("-t")) {
-            termDefsByFile(kb);
-        }
-        if (args != null && args.length > 1 && args[0].equals("-f")) {
-            Set<String> files = new HashSet<>();
-            List<String> lines = FileUtil.readLines(args[1],false);
-            files.addAll(lines);
-            termDefsByGivenFile(kb,files);
-        }
-        if (args != null && args.length > 1 && args[0].equals("-l")) {
-            Set<String> files = new HashSet<>();
-            List<String> lines = FileUtil.readLines(args[1],false);
-            files.addAll(lines);
-            addLabels(kb,files);
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-o")) {
-            System.out.println(termsNotBelowEntity(kb));
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-c")) {
-            System.out.println(termsWithoutDoc(kb));
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-q")) {
-            System.out.println(quantifierNotInBody(kb));
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-p")) {
-            printAllTerms(kb);
-        }
-        else if (args != null && args.length > 2 && args[0].equals("-d")) {
-            diffTerms(kb,args[1],args[2]);
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-h")) {
-            showHelp();
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-v")) {
-            if (args[1] != null && !args[1].isBlank()) {
-                String path = args[1];
+            else if (argMap.containsKey("file") && argMap.get("file").size() == 1) {
+                Set<String> files = new HashSet<>();
+                List<String> lines = FileUtil.readLines(argMap.get("file").get(0), false);
+                files.addAll(lines);
+                termDefsByGivenFile(kb, files);
+            }
+            else if (argMap.containsKey("labels") && argMap.get("labels").size() == 1) {
+                Set<String> files = new HashSet<>();
+                List<String> lines = FileUtil.readLines(argMap.get("labels").get(0), false);
+                files.addAll(lines);
+                addLabels(kb, files);
+            }
+            else if (argMap.containsKey("o")) {
+                System.out.println(termsNotBelowEntity(kb));
+            }
+            else if (argMap.containsKey("c")) {
+                System.out.println(termsWithoutDoc(kb));
+            }
+            else if (argMap.containsKey("q")) {
+                System.out.println(quantifierNotInBody(kb));
+            }
+            else if (argMap.containsKey("p")) {
+                printAllTerms(kb);
+            }
+            else if (argMap.containsKey("e")) {
+                partitionViolation(kb);
+            }
+            else if (argMap.containsKey("diff") && argMap.get("diff").size() == 2) {
+                diffTerms(kb, argMap.get("diff").get(0), argMap.get("diff").get(1));
+            }
+            else if (argMap.containsKey("vars") && argMap.get("vars").size() == 1) {
+                String path = argMap.get("vars").get(0);
                 Path inPath = Paths.get(path);
 
                 try (Stream<Path> paths = Files.walk(inPath)) {
@@ -1584,7 +1616,8 @@ public class Diagnostics {
                         HashMap<String, HashSet<String>> fileVarLinks = parseFormulaFile(f.toFile());
                         mergeResults(varLinksParentMap, fileVarLinks);
                     });
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     System.err.println("Error processing input: " + e);
                 }
             }

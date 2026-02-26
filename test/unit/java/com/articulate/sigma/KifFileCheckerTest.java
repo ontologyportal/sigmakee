@@ -471,4 +471,141 @@ public class KifFileCheckerTest extends UnitTestBase {
         }
         assertEquals(expected, actual);
     }
+
+    @Test
+    public void testIsFileInKB_constituentFound() {
+
+        boolean actual = KifFileChecker.isFileInKB("Merge.kif", kb);
+        if (debug) {
+            System.out.println(divider + "TEST = KifFileCheckerTest.testIsFileInKB_constituentFound()");
+            System.out.println("Expected: true");
+            System.out.println("Actual:   " + actual);
+            System.out.println("Test: " + (actual ? passed : failed));
+        }
+        assertTrue("Merge.kif should be found in KB constituents", actual);
+    }
+
+    @Test
+    public void testIsFileInKB_constituentNotFound() {
+
+        boolean actual = KifFileChecker.isFileInKB("NonExistentFile.kif", kb);
+        if (debug) {
+            System.out.println(divider + "TEST = KifFileCheckerTest.testIsFileInKB_constituentNotFound()");
+            System.out.println("Expected: false");
+            System.out.println("Actual:   " + actual);
+            System.out.println("Test: " + (!actual ? passed : failed));
+        }
+        assertFalse("NonExistentFile.kif should NOT be found in KB constituents", actual);
+    }
+
+    @Test
+    public void testIsFileInKB_nullInputs() {
+
+        assertFalse("null fileName should return false",
+            KifFileChecker.isFileInKB(null, kb));
+        assertFalse("null kb should return false",
+            KifFileChecker.isFileInKB("Merge.kif", null));
+        if (debug) {
+            System.out.println(divider + "TEST = KifFileCheckerTest.testIsFileInKB_nullInputs()");
+            System.out.println("Test: " + passed);
+        }
+    }
+
+    @Test
+    public void testIsFileInKB_fullPathMatchesBasename() {
+
+        boolean actual = KifFileChecker.isFileInKB("/some/path/to/Merge.kif", kb);
+        if (debug) {
+            System.out.println(divider + "TEST = KifFileCheckerTest.testIsFileInKB_fullPathMatchesBasename()");
+            System.out.println("Expected: true (full path should match by basename)");
+            System.out.println("Actual:   " + actual);
+            System.out.println("Test: " + (actual ? passed : failed));
+        }
+        assertTrue("Full path /some/path/to/Merge.kif should match constituent Merge.kif by basename", actual);
+    }
+
+    @Test
+    public void testCheckNotInKB_warningEmitted() {
+
+        // KIF content with custom relations that will trigger "no type information" errors
+        String kifString =
+            "(=>\n" +
+            "  (myCustomRelation ?X ?Y)\n" +
+            "  (myOtherCustomRelation ?Y ?Z))\n" +
+            "(=>\n" +
+            "  (anotherFakeRelation ?A ?B)\n" +
+            "  (yetAnotherFake ?B ?C))";
+        List<ErrRec> msgs = KifFileChecker.check(kifString, "NotInKB.kif");
+        // Count warnings about file not being in KB
+        long notInKBWarnings = msgs.stream()
+            .filter(e -> e.type == ErrRec.WARNING && e.msg != null
+                    && e.msg.startsWith("This file is not loaded into the KB"))
+            .count();
+        if (debug) {
+            System.out.println(divider + "TEST = KifFileCheckerTest.testCheckNotInKB_warningEmitted()");
+            System.out.println("Total messages: " + msgs.size());
+            System.out.println("'Not in KB' warnings: " + notInKBWarnings);
+            for (ErrRec e : msgs)
+                System.out.println("  " + e);
+        }
+        // Should have exactly one "not in KB" warning if there are type errors
+        long typeErrs = msgs.stream()
+            .filter(e -> e.type == ErrRec.ERROR && e.msg != null
+                    && e.msg.contains("no type information for arg"))
+            .count();
+        if (typeErrs > 1) {
+            assertEquals("Should have exactly 1 'not in KB' warning when type errors > 1",
+                1, notInKBWarnings);
+            // Verify it's the first message
+            assertTrue("Warning should be first in the list",
+                msgs.get(0).type == ErrRec.WARNING
+                && msgs.get(0).msg.startsWith("This file is not loaded into the KB"));
+            if (debug) System.out.println("Test: " + passed);
+        }
+        else {
+            assertEquals("Should have no 'not in KB' warning when type errors <= 1",
+                0, notInKBWarnings);
+            if (debug) System.out.println("Test: " + passed + " (not enough type errors to trigger warning)");
+        }
+    }
+
+    @Test
+    public void testCheckInKB_noWarning() {
+
+        // Use a file name that IS in the KB
+        String kifString = "(instance Shaun Human)";
+        List<ErrRec> msgs = KifFileChecker.check(kifString, "Merge.kif");
+        long notInKBWarnings = msgs.stream()
+            .filter(e -> e.type == ErrRec.WARNING && e.msg != null
+                    && e.msg.startsWith("This file is not loaded into the KB"))
+            .count();
+        if (debug) {
+            System.out.println(divider + "TEST = KifFileCheckerTest.testCheckInKB_noWarning()");
+            System.out.println("Messages: " + msgs.size());
+            System.out.println("'Not in KB' warnings: " + notInKBWarnings);
+            System.out.println("Test: " + (notInKBWarnings == 0 ? passed : failed));
+        }
+        assertEquals("File in KB should produce no 'not in KB' warning", 0, notInKBWarnings);
+    }
+
+    @Test
+    public void testCheckBuffer_noWarning() {
+
+        // The (buffer) sentinel should never trigger the warning
+        String kifString =
+            "(=>\n" +
+            "  (myCustomRelation ?X ?Y)\n" +
+            "  (myOtherCustomRelation ?Y ?Z))";
+        List<ErrRec> msgs = KifFileChecker.check(kifString, "(buffer)");
+        long notInKBWarnings = msgs.stream()
+            .filter(e -> e.type == ErrRec.WARNING && e.msg != null
+                    && e.msg.startsWith("This file is not loaded into the KB"))
+            .count();
+        if (debug) {
+            System.out.println(divider + "TEST = KifFileCheckerTest.testCheckBuffer_noWarning()");
+            System.out.println("'Not in KB' warnings: " + notInKBWarnings);
+            System.out.println("Test: " + (notInKBWarnings == 0 ? passed : failed));
+        }
+        assertEquals("(buffer) sentinel should not trigger 'not in KB' warning", 0, notInKBWarnings);
+    }
 }
