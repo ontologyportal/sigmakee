@@ -78,6 +78,18 @@ public class SessionTPTPManager {
     private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>>
             sessionAxiomKeys = new ConcurrentHashMap<>();
 
+    /** Sessions currently in batch-tell mode (Case B/default TPTP regens suppressed). */
+    private static final Set<String> batchModeActive = ConcurrentHashMap.newKeySet();
+
+    /**
+     * Per-session lazy flag for askVampireForTQ().
+     *   null  → session not in batch context
+     *   false → batch active/done; no Case B/default tells hit (Case A patches applied)
+     *   true  → batch active/done; at least one Case B/default tell was deferred
+     */
+    private static final ConcurrentHashMap<String, Boolean> precomputedRegenRequired =
+            new ConcurrentHashMap<>();
+
     /*********************************************************************************
      * Return the session-specific axiom key for {@code sessionId}, creating an empty
      * map on the first call.
@@ -100,6 +112,61 @@ public class SessionTPTPManager {
     public static Map<String, Formula> getSessionAxiomKey(String sessionId) {
 
         return sessionAxiomKeys.get(sessionId);
+    }
+
+    /*********************************************************************************
+     * Start batch-tell mode for a session.  Suppresses expensive Case B and default
+     * full regenerations during the tell loop; the deferred decision is recorded in
+     * {@code precomputedRegenRequired} for {@code askVampireForTQ()} to consume.
+     *
+     * @param sessionId The HTTP session ID
+     */
+    public static void beginBatchTells(String sessionId) {
+        if (sessionId == null || sessionId.isEmpty()) return;
+        batchModeActive.add(sessionId);
+        precomputedRegenRequired.put(sessionId, Boolean.FALSE);  // initialise flag
+    }
+
+    /*********************************************************************************
+     * End batch-tell mode for a session.  The {@code precomputedRegenRequired} flag
+     * is preserved so that the immediately following {@code askVampireForTQ()} call
+     * can consume it via {@link #consumeBatchFlag}.
+     *
+     * @param sessionId The HTTP session ID
+     */
+    public static void endBatchTells(String sessionId) {
+        batchModeActive.remove(sessionId);
+        // precomputedRegenRequired preserved for askVampireForTQ()
+    }
+
+    /*********************************************************************************
+     * @return true if {@code sessionId} is currently in batch-tell mode
+     */
+    public static boolean isBatchMode(String sessionId) {
+        return sessionId != null && batchModeActive.contains(sessionId);
+    }
+
+    /*********************************************************************************
+     * Record that at least one Case B or default-case tell was deferred during
+     * batch mode (so {@code askVampireForTQ()} must do a full regen).
+     *
+     * @param sessionId The HTTP session ID
+     */
+    public static void setForceGeneration(String sessionId) {
+        if (sessionId != null)
+            precomputedRegenRequired.put(sessionId, Boolean.TRUE);
+    }
+
+    /*********************************************************************************
+     * Read and clear the batch flag (one-shot).
+     *
+     * @param sessionId The HTTP session ID
+     * @return {@code null} if session was not in batch context;
+     *         {@code Boolean.TRUE} if a Case B/default tell was deferred;
+     *         {@code Boolean.FALSE} if only Case A patches were applied (no full regen needed)
+     */
+    public static Boolean consumeBatchFlag(String sessionId) {
+        return precomputedRegenRequired.remove(sessionId);
     }
 
     /*********************************************************************************
@@ -217,9 +284,14 @@ public class SessionTPTPManager {
                     break;
                 default:
                     // Complex predicates (partition, exhaustiveDecomposition, etc.)
-                    // — fall back to full session regeneration
+                    // — fall back to full session regeneration, unless batch mode is active
                     System.out.println("SessionTPTPManager.applyIncrementalUpdate: " +
-                                "no incremental handler for '" + pred + "', falling back to full regen");
+                                "no incremental handler for '" + pred + "'" +
+                                (isBatchMode(sessionId) ? ", deferring regen (batch mode)" : ", falling back to full regen"));
+                    if (isBatchMode(sessionId)) {
+                        setForceGeneration(sessionId);   // full regen deferred to askVampireForTQ()
+                        return null;
+                    }
                     return generateSessionTPTP(sessionId, kb, fileLang);
             }
         }
@@ -889,11 +961,13 @@ public class SessionTPTPManager {
             return;
         }
 
-        // Remove locks, timestamps, session KBcache, and session axiom key
+        // Remove locks, timestamps, session KBcache, session axiom key, and batch state
         sessionLocks.remove(sessionId);
         sessionGenerationTimestamps.remove(sessionId);
         sessionCaches.remove(sessionId);
         sessionAxiomKeys.remove(sessionId);
+        batchModeActive.remove(sessionId);
+        precomputedRegenRequired.remove(sessionId);
 
         Path sessionDir = getSessionDir(sessionId);
 

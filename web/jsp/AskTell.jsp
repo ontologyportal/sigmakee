@@ -1033,11 +1033,17 @@
                         out.println("<font color='red'>Could not read test file.</font>");
                     } else {
                         try {
-                            for (String s : itd.statements) {
-                                if (!StringUtil.emptyString(s)) kb.tell(s, session.getId());
+                            final String sid = session.getId();
+                            SessionTPTPManager.beginBatchTells(sid);
+                            try {
+                                for (String s : itd.statements) {
+                                    if (!StringUtil.emptyString(s)) kb.tell(s, sid);
+                                }
+                            }
+                            finally {
+                                SessionTPTPManager.endBatchTells(sid);
                             }
                             FormulaPreprocessor fp = new FormulaPreprocessor();
-                            final String sid = session.getId();
                             Set<Formula> qs =
                                     SessionTPTPManager.withSessionCache(
                                             sid, kb, () -> fp.preProcess(new Formula(itd.query), true, kb));

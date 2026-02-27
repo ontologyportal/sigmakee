@@ -1841,7 +1841,11 @@ public class KB implements Serializable {
                                            && kbCache.isTransitivePredicate(fPred)) {
                                     // Case (B): ground fact on a transitive relation — affects transitive
                                     // closure but no targeted KBcache method exists; fall back to full regen.
-                                    SessionTPTPManager.generateSessionTPTP(sessionId, this, tptpLang);
+                                    if (SessionTPTPManager.isBatchMode(sessionId)) {
+                                        SessionTPTPManager.setForceGeneration(sessionId);
+                                    } else {
+                                        SessionTPTPManager.generateSessionTPTP(sessionId, this, tptpLang);
+                                    }
                                 }
                             }
                         }
@@ -2335,39 +2339,64 @@ public class KB implements Serializable {
         // capture per-request to avoid races
         final String requestedLang = SUMOKBtoTPTPKB.getLang();          // typically "fof" or "tff"
         final String lang = "fof".equals(requestedLang) ? "tptp" : "tff";
-        boolean mustRegenBase = tqRequiresBaseRegeneration(sessionId);
 
-        // For session-specific TQ tests, always check if we need session-specific files
+        // For session-specific TQ tests, decide whether to generate/merge session files.
         if (sessionId != null && !sessionId.isEmpty()) {
-            // Check if session-specific UA files exist
-            Path sessionUAPath = SessionTPTPManager.getSessionUAPath(sessionId, this.name);
-            boolean hasSessionUA = java.nio.file.Files.exists(sessionUAPath);
-
-            if (mustRegenBase || hasSessionUA) {
+            // Read and clear the batch flag (one-shot): non-null → came from a batch tell loop
+            Boolean batchFlag = SessionTPTPManager.consumeBatchFlag(sessionId);
+            if (batchFlag != null) {
+                // ── Batch context ──────────────────────────────────────────────────
                 try {
-                    if (mustRegenBase) {
-                        // Full base regeneration required (schema/transitive changes)
-                        System.out.println("INFO askVampireForTQ(): Session-specific base regen for session " + sessionId);
+                    if (Boolean.TRUE.equals(batchFlag)) {
+                        // Case B/default tells were deferred → one full regen now
+                        System.out.println("INFO askVampireForTQ(): deferred regen (Case B/default tells present) for session " + sessionId);
                         SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
                     } else {
-                        // Only UA files changed - fast merge instead of full regen
-                        System.out.println("INFO askVampireForTQ(): Merging shared base with session UA for session " + sessionId);
-                        SessionTPTPManager.mergeBaseWithSessionUA(sessionId, this, lang);
+                        // batchFlag == false → only Case A patches were applied → session TPTP is current
+                        // (calling mergeBaseWithSessionUA here would be WRONG: it would overwrite patches
+                        //  with the shared base, causing conflicting axioms for domain/range tells)
+                        System.out.println("INFO askVampireForTQ(): patches current, skipping regen for session " + sessionId);
                     }
                 }
                 catch (Exception e) {
-                    System.err.println("ERROR askVampireForTQ(): Failed to generate/merge session TPTP: " + e.getMessage());
+                    System.err.println("ERROR askVampireForTQ(): Failed to generate session TPTP: " + e.getMessage());
                     e.printStackTrace();
                     // Fall back to shared base (askVampire will use shared TPTP)
                 }
+            } else {
+                // ── Non-batch context: original behaviour ──────────────────────────
+                boolean mustRegenBase = tqRequiresBaseRegeneration(sessionId);
+                Path sessionUAPath = SessionTPTPManager.getSessionUAPath(sessionId, this.name);
+                boolean hasSessionUA = java.nio.file.Files.exists(sessionUAPath);
+                if (mustRegenBase || hasSessionUA) {
+                    try {
+                        if (mustRegenBase) {
+                            // Full base regeneration required (schema/transitive changes)
+                            System.out.println("INFO askVampireForTQ(): Session-specific base regen for session " + sessionId);
+                            SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
+                        } else {
+                            // Only UA files changed - fast merge instead of full regen
+                            System.out.println("INFO askVampireForTQ(): Merging shared base with session UA for session " + sessionId);
+                            SessionTPTPManager.mergeBaseWithSessionUA(sessionId, this, lang);
+                        }
+                    }
+                    catch (Exception e) {
+                        System.err.println("ERROR askVampireForTQ(): Failed to generate/merge session TPTP: " + e.getMessage());
+                        e.printStackTrace();
+                        // Fall back to shared base (askVampire will use shared TPTP)
+                    }
+                }
             }
-        } else if (mustRegenBase) {
+        } else {
             // No session ID - modify shared base (old behavior)
-            System.out.println("INFO askVampireForTQ(): FULL base regen required -> regenerating "
-                    + this.name + "." + lang
-                    + " (current TQ assertions require base retranslation)");
-            synchronized (baseGenLock) {
-                TPTPGenerationManager.generateProperFile(this, lang);  // rebuild SUMO.<lang>
+            boolean mustRegenBase = tqRequiresBaseRegeneration(null);
+            if (mustRegenBase) {
+                System.out.println("INFO askVampireForTQ(): FULL base regen required -> regenerating "
+                        + this.name + "." + lang
+                        + " (current TQ assertions require base retranslation)");
+                synchronized (baseGenLock) {
+                    TPTPGenerationManager.generateProperFile(this, lang);  // rebuild SUMO.<lang>
+                }
             }
         }
 
