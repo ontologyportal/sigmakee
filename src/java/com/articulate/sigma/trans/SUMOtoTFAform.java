@@ -2164,7 +2164,7 @@ public class SUMOtoTFAform {
 
         String msg;
         Set<String> types;
-        for (String s : varmap.keySet()) {
+        for (String s : new ArrayList<>(varmap.keySet())) {
             types = varmap.get(s);
             for (String c1 : types) {
                 for (String c2 : types) {

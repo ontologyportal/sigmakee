@@ -11,7 +11,7 @@
 # Sigma temp files
 /EBatchConfig.txt
 
-.idea/
+
 .ivy
 lib
 /nbproject/private/
@@ -24,4 +24,8 @@ lib
 /prover_out.txttests/
 src/java/com/articulate/sigma/nlg/LanguageFormatter_New.java.backup
 tests/
+*:Zone.Identifier
 
+# IntelliJ
+.idea/
+*.iml

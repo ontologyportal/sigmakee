@@ -218,7 +218,7 @@ public class KBcache implements Serializable {
         if (kbCacheIn.instanceOf != null) {
             String key;
             Set<String> newSet;
-            for (Map.Entry<String, Set<String>> entry : kbCacheIn.instanceOf.entrySet()) {
+            for (Map.Entry<String, Set<String>> entry : new ArrayList<>(kbCacheIn.instanceOf.entrySet())) {
                 key = entry.getKey();
                 newSet = Sets.newHashSet(entry.getValue());
                 this.instanceOf.put(key, newSet);

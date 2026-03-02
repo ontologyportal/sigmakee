@@ -56,7 +56,7 @@ public class KifFileCheckerTest extends UnitTestBase {
         Formula kifFormula = new Formula(kifString);
         List<ErrRec> errorList = new ArrayList<>();
         kfc.CheckOrphanVars("fileName", kifFormula, kifString, 0, errorList);
-        ErrRec expected = new ErrRec( ErrRec.ERROR, "fileName", 0, 0, 102, "Formula has 2 disconnected variable groups: Group 1: [?A, ?B]; Group 2: [?X, ?Y]");
+        ErrRec expected = new ErrRec( ErrRec.ERROR, "fileName", 0, 0, 102, "Formula has 2 disconnected variable groups: Group 1: [?A, ?B]; Group 2: [?X, ?Y] in formula: " + kifString.trim());
         ErrRec actual = errorList.get(0);
         if (debug) {
             System.out.println(divider + "TEST = KifFileCheckerTest.testCheckOrphanVars1()");
@@ -249,7 +249,7 @@ public class KifFileCheckerTest extends UnitTestBase {
         Set<String> localIndividuals = new HashSet<>();
         Set<String> localSubclasses = new HashSet<>();
         List<ErrRec> errorList = new ArrayList<>();
-        ErrRec expected = new ErrRec(ErrRec.ERROR, "fileName", 0, 16, 50,"Term not below Entity: (instance Shaun Supercalifragilisticexpialidocious)");
+        ErrRec expected = new ErrRec(ErrRec.ERROR, "fileName", 0, 16, 50,"Term <Supercalifragilisticexpialidocious> not below Entity: (instance Shaun Supercalifragilisticexpialidocious)");
         kfc.CheckTermsBelowEntity("fileName", kifFormula, 0, kifString, kb, localIndividuals, localSubclasses, errorList);
         ErrRec actual = errorList.get(0);
         if (debug) {
