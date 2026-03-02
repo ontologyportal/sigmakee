@@ -312,6 +312,8 @@ public class Formula implements Comparable, Serializable {
      */
     public void setFormula(String f) {
         theFormula = f;
+        args = new ArrayList<>();
+        stringArgs = new ArrayList<>();
     }
 
     /** *****************************************************************
@@ -582,66 +584,10 @@ public class Formula implements Comparable, Serializable {
      */
     public String car() {
 
-        String ans = null;
-        if (this.listP()) {
-            if (this.empty())
-                // NS: Clean this up someday.
-                ans = "";  // this.theFormula;
-            else {
-                String input = this.theFormula.trim();
-                StringBuilder sb = new StringBuilder();
-                List quoteChars = Arrays.asList('"', '\'');
-                int i = 1;
-                int len = input.length();
-                int end = len - 1;
-                int level = 0;
-                char prev = '0';
-                char ch;
-                boolean insideQuote = false;
-                char quoteCharInForce = '0';
-                while (i < end) {
-                    ch = input.charAt(i);
-                    if (!insideQuote) {
-                        if (ch == '(') {
-                            sb.append(ch);
-                            level++;
-                        }
-                        else if (ch == ')') {
-                            sb.append(ch);
-                            level--;
-                            if (level <= 0)
-                                break;
-                        }
-                        else if (Character.isWhitespace(ch) && (level <= 0)) {
-                            if (sb.length() > 0)
-                                break;
-                        }
-                        else if (quoteChars.contains(ch) && (prev != '\\')) {
-                            sb.append(ch);
-                            insideQuote = true;
-                            quoteCharInForce = ch;
-                        }
-                        else
-                            sb.append(ch);
-                    }
-                    else if (quoteChars.contains(ch)
-                             && (ch == quoteCharInForce)
-                             && (prev != '\\')) {
-                        sb.append(ch);
-                        insideQuote = false;
-                        quoteCharInForce = '0';
-                        if (level <= 0)
-                            break;
-                    }
-                    else
-                        sb.append(ch);
-                    prev = ch;
-                    i++;
-                }
-                ans = sb.toString();
-            }
-        }
-        return ans;
+        if (!this.listP()) return null;
+        if (this.empty()) return "";
+        if (stringArgs.isEmpty()) loadArguments();
+        return stringArgs.isEmpty() ? "" : stringArgs.get(0);
     }
 
     /** ***************************************************************
@@ -651,71 +597,17 @@ public class Formula implements Comparable, Serializable {
      */
     public String cdr() {
 
-        String ans = null;
-        if (this.listP()) {
-            if (this.empty())
-                ans = this.theFormula;
-            else {
-                String input = theFormula.trim();
-                List<Character> quoteChars = Arrays.asList('"', '\'');
-                int i = 1;
-                int len = input.length();
-                int end = len - 1;
-                int level = 0;
-                char prev = '0';
-                char ch;
-                boolean insideQuote = false;
-                char quoteCharInForce = '0';
-                int carCount = 0;
-                while (i < end) {
-                    ch = input.charAt(i);
-                    if (!insideQuote) {
-                        if (ch == '(') {
-                            carCount++;
-                            level++;
-                        }
-                        else if (ch == ')') {
-                            carCount++;
-                            level--;
-                            if (level <= 0)
-                                break;
-                        }
-                        else if (Character.isWhitespace(ch) && (level <= 0)) {
-                            if (carCount > 0)
-                                break;
-                        }
-                        else if (quoteChars.contains(ch) && (prev != '\\')) {
-                            carCount++;
-                            insideQuote = true;
-                            quoteCharInForce = ch;
-                        }
-                        else
-                            carCount++;
-                    }
-                    else if (quoteChars.contains(ch)
-                             && (ch == quoteCharInForce)
-                             && (prev != '\\')) {
-                        carCount++;
-                        insideQuote = false;
-                        quoteCharInForce = '0';
-                        if (level <= 0)
-                            break;
-                    }
-                    else
-                        carCount++;
-                    prev = ch;
-                    i++;
-                }
-                if (carCount > 0) {
-                    int j = i + 1;
-                    if (j < end)
-                        ans = LP + input.substring(j, end).trim() + RP;
-                    else
-                        ans = LP+RP;
-                }
-            }
+        if (!this.listP()) return null;
+        if (this.empty()) return this.theFormula;
+        if (stringArgs.isEmpty()) loadArguments();
+        if (stringArgs.size() <= 1) return "()";
+        StringBuilder sb = new StringBuilder("(");
+        for (int j = 1; j < stringArgs.size(); j++) {
+            if (j > 1) sb.append(' ');
+            sb.append(stringArgs.get(j));
         }
-        return ans;
+        sb.append(')');
+        return sb.toString();
     }
 
     /** ***************************************************************
@@ -968,7 +860,7 @@ public class Formula implements Comparable, Serializable {
             result = validArgsRecurse(argF, filename, lineNo);
             if (!"".equals(result))
                 return result;
-            restF.theFormula = restF.cdr();
+            restF.read(restF.cdr());
         }
         String location = "";
         if ((filename != null) && (lineNo != null))
@@ -1549,18 +1441,80 @@ public class Formula implements Comparable, Serializable {
      */
     private void loadArguments() {
 
-        if (debug) System.out.println("Formula.loadArgument(): formula to load" + this.theFormula);
+        if (debug) System.out.println("Formula.loadArguments(): formula to load: " + this.theFormula);
         args = new ArrayList<>();
         stringArgs = new ArrayList<>();
-        String nextarg = "";
-        Formula form = this;
-        while (form.listP() && !form.empty()) {
-            nextarg = form.car();
-            stringArgs.add(nextarg);
-            args.add(new Formula(nextarg));
-            form = new Formula(form.cdr());
+        if (!this.listP() || this.empty()) return;
+
+        // Single-pass parse: scan theFormula once and extract all top-level S-expression elements.
+        // Previously used a car()/cdr() loop which re-scanned from the start on every step.
+        String input = this.theFormula.trim();
+        int len = input.length();
+        int i = 1;       // skip opening '('
+        int end = len - 1; // stop before closing ')'
+
+        while (i < end) {
+            // skip whitespace between elements
+            while (i < end && Character.isWhitespace(input.charAt(i))) i++;
+            if (i >= end) break;
+
+            char ch = input.charAt(i);
+            StringBuilder sb = new StringBuilder();
+
+            if (ch == '(') {
+                // Nested list: scan until the matching ')'
+                int level = 0;
+                char prev = '0';
+                boolean insideQuote = false;
+                char quoteCharInForce = '0';
+                while (i < len) {
+                    ch = input.charAt(i);
+                    if (!insideQuote) {
+                        if (ch == '(') { sb.append(ch); level++; }
+                        else if (ch == ')') {
+                            sb.append(ch); level--;
+                            if (level <= 0) { i++; break; }
+                        }
+                        else if ((ch == '"' || ch == '\'') && prev != '\\') {
+                            sb.append(ch); insideQuote = true; quoteCharInForce = ch;
+                        }
+                        else sb.append(ch);
+                    }
+                    else {
+                        sb.append(ch);
+                        if (ch == quoteCharInForce && prev != '\\') insideQuote = false;
+                    }
+                    prev = ch; i++;
+                }
+            }
+            else if (ch == '"' || ch == '\'') {
+                // Quoted string: scan until the matching closing quote
+                char openQuote = ch;
+                sb.append(ch); i++;
+                char prev = ch;
+                while (i < len) {
+                    ch = input.charAt(i);
+                    sb.append(ch); i++;
+                    if (ch == openQuote && prev != '\\') break;
+                    prev = ch;
+                }
+            }
+            else {
+                // Atom: scan until whitespace or ')'
+                while (i < end) {
+                    ch = input.charAt(i);
+                    if (Character.isWhitespace(ch) || ch == ')') break;
+                    sb.append(ch); i++;
+                }
+            }
+
+            String element = sb.toString();
+            if (!element.isEmpty()) {
+                stringArgs.add(element);
+                args.add(new Formula(element));
+            }
         }
-        if (debug) System.out.println("Formula.loadArgument(): args loaded: " + args);
+        if (debug) System.out.println("Formula.loadArguments(): args loaded: " + args);
     }
 
     /** ***************************************************************
