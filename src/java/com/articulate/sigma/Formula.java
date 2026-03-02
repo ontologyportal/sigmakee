@@ -213,6 +213,9 @@ public class Formula implements Comparable, Serializable {
     public Set<String> termCache = new HashSet<>();
 
     public Set<String> predVarCache = null; // null if not set, empty if no pred vars
+
+    /** Cached result of hashCode() — 0 means not yet computed. Reset whenever theFormula changes. */
+    private int cachedHashCode = 0;
     public Set<String> rowVarCache = null; // null if not set, empty if no row vars
 
     // includes the leading '?'.  Does not include row variables
@@ -312,6 +315,7 @@ public class Formula implements Comparable, Serializable {
      */
     public void setFormula(String f) {
         theFormula = f;
+        cachedHashCode = 0;
         args = new ArrayList<>();
         stringArgs = new ArrayList<>();
     }
@@ -445,6 +449,7 @@ public class Formula implements Comparable, Serializable {
     public void read(String s) {
 
         theFormula = s;
+        cachedHashCode = 0;
         allVarsCache = new HashSet<>();
         allVarsPairCache = new ArrayList<>();
         quantVarsCache = new HashSet<>();
@@ -1063,8 +1068,13 @@ public class Formula implements Comparable, Serializable {
     @Override
     public int hashCode() {
 
-        String thisString = Clausifier.normalizeVariables(this.theFormula).trim();
-        return (thisString.hashCode());
+        int h = cachedHashCode;
+        if (h == 0) {
+            h = Clausifier.normalizeVariables(this.theFormula).trim().hashCode();
+            if (h == 0) h = 1; // sentinel: avoid re-computing for the rare true-zero case
+            cachedHashCode = h;
+        }
+        return h;
     }
 
     /** ***************************************************************
