@@ -545,10 +545,11 @@ public class SUMOformulaToTPTPformula {
     }
 
     /** ***************************************************************
-     * Synchronized to keep axiom variable order when writing to file
-     * during threaded operations.
+     * Previously synchronized to guard shared static qlist/lang fields.
+     * Those fields are now ThreadLocal or passed as parameters, so no
+     * synchronization is needed — all state is per-thread or per-formula.
      */
-    private static synchronized String _tTptpParseSUOKIFString(String s, boolean query, String requestedLang) {
+    private static String _tTptpParseSUOKIFString(String s, boolean query, String requestedLang) {
 
         return _tptpParseSUOKIFString(s, query, requestedLang);
     }
