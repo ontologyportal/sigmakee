@@ -161,13 +161,13 @@ public class PredVarInstTest extends UnitTestBase  {
             System.out.println("testPredVarArity(): failure");
         assertEquals(expected, actual);
 
-        System.out.println("PredVarInstTest.testPredVarArity(): actual arity: " + PredVarInst.predVarArity.get("?REL"));
+        System.out.println("PredVarInstTest.testPredVarArity(): actual arity: " + PredVarInst.predVarArityTL.get().get("?REL"));
         System.out.println("PredVarInstTest.testPredVarArity(): expected arity: " + 2);
-        if (PredVarInst.predVarArity.get("?REL") == 2)
+        if (PredVarInst.predVarArityTL.get().get("?REL") == 2)
             System.out.println("testPredVarArity(): success!");
         else
             System.err.println("testPredVarArity(): failure");
-        assertEquals(2,PredVarInst.predVarArity.get("?REL").intValue());
+        assertEquals(2,PredVarInst.predVarArityTL.get().get("?REL").intValue());
     }
 
     /** ***************************************************************
@@ -190,7 +190,7 @@ public class PredVarInstTest extends UnitTestBase  {
         System.out.println("PredVarInstTest.testPredVarArity2(): formula: " + f);
         Set<String> actual = PredVarInst.gatherPredVarRecurse(kb,f);
         System.out.println("PredVarInstTest.testPredVarArity2(): actual pred vars: " + actual);
-        int arity = PredVarInst.predVarArity.get(var);
+        int arity = PredVarInst.predVarArityTL.get().get(var);
         int expectedArity = 2;
         System.out.println("PredVarInstTest.testPredVarArity2(): actual arity: " + arity);
         System.out.println("PredVarInstTest.testPredVarArity2(): expectedArity: " + expectedArity);
@@ -270,7 +270,7 @@ public class PredVarInstTest extends UnitTestBase  {
         System.out.println("PredVarInstTest.testTVRArity(): formula: " + f);
         System.out.println("PredVarInstTest.testTVRArity(): variable: " + var);
         Set<String> actual = PredVarInst.gatherPredVars(kb, f);
-        int arity = PredVarInst.predVarArity.get(var);
+        int arity = PredVarInst.predVarArityTL.get().get(var);
         int expected = 0; // variable arity is given as "0"
         System.out.println("PredVarInstTest.testTVRArity(): actual arity: " + arity);
         System.out.println("PredVarInstTest.testTVRArity(): expected arity: " + expected);

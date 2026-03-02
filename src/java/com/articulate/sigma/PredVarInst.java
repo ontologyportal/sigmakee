@@ -33,8 +33,9 @@ public class PredVarInst {
                                                         + "(not "
                                                             + "(?REL2 @ROW2)))";
 
-    // The implied arity of a predicate variable from its use in a Formula
-    public static Map<String,Integer> predVarArity = new HashMap<>();
+    // The implied arity of a predicate variable from its use in a Formula (ThreadLocal for thread safety)
+    public static final ThreadLocal<Map<String,Integer>> predVarArityTL =
+        ThreadLocal.withInitial(HashMap::new);
 
     // All predicates that meet that class membership and arity constraints for the given variable
 //    private static Map<String,Set<String>> candidatePredicates = new HashMap<>();
@@ -43,7 +44,7 @@ public class PredVarInst {
 
     // a debugging option to reject formulas with more than one predicate variable, to save time
     public static boolean rejectDoubles = false;
-    public static boolean doublesHandled = false;
+    public static final ThreadLocal<Boolean> doublesHandledTL = ThreadLocal.withInitial(() -> false);
 
     //The list of logical terms that not related to arity check, will skip these predicates
     private static final List<String> LOGICAL_TERMS = Arrays.asList(new String[]{Formula.UQUANT,Formula.EQUANT,Formula.IF,Formula.AND,Formula.OR,Formula.XOR,Formula.IFF,Formula.NOT,Formula.EQUAL});
@@ -52,9 +53,9 @@ public class PredVarInst {
      */
     public static void init() {
 
-        doublesHandled = false;
+        doublesHandledTL.set(false);
 //        candidatePredicates = new HashMap<>();
-        predVarArity = new HashMap<>();
+        predVarArityTL.get().clear();
     }
 
     /** ***************************************************************
@@ -209,7 +210,7 @@ public class PredVarInst {
         if (result2 != null)
             result.addAll(result2);
         if (result1 != null && result2 != null)
-            doublesHandled = true;
+            doublesHandledTL.set(true);
         if (debug) System.out.println("PredVarInst.handleDoubles(): handled with result: " + result);
         return result;
     }
@@ -235,7 +236,7 @@ public class PredVarInst {
                 return null;
             }
             else {
-                if (!doublesHandled) {
+                if (!doublesHandledTL.get()) {
                     SUMOtoTFAform.setFilterMessage("axiom with more than one predicate variable");
                     if (debug) System.out.println("instantiatePredVars(): should handle: \n" + input);
                     return handleDoubles(kb);
@@ -264,7 +265,7 @@ public class PredVarInst {
         Formula f, f2;
         int arity;
         for (String var : varTypes.keySet()) {
-            if (predVarArity == null || var == null || predVarArity.get(var) == null)
+            if (var == null || predVarArityTL.get().get(var) == null)
                 if (debug) System.out.println("instantiatePredVars(): pred var arity null for: " + var +
                     " in " + input);
             // 3.1 check: predVarArity should match arity of substituted relation
@@ -277,7 +278,7 @@ public class PredVarInst {
                 //    continue;
                 //}
                 if (debug) System.out.println("instantiatePredVars(): check relation: " + rel);
-                if (debug) System.out.println("instantiatePredVars(): pred var arity: " + predVarArity.get(var));
+                if (debug) System.out.println("instantiatePredVars(): pred var arity: " + predVarArityTL.get().get(var));
                 if (debug) System.out.println("instantiatePredVars(): relation arity: " + kb.kbCache.valences.get(rel));
                 if (rel.equals(Formula.EQUAL) || Formula.isLogicalOperator(rel) ||
                         Formula.isComparisonOperator(rel) || Formula.isMathFunction(rel))
@@ -286,8 +287,8 @@ public class PredVarInst {
                     if (debug) System.out.println("instantiatePredVars(): type expansion of relation: " + rel);
                     continue;
                 }
-                if (predVarArity == null || var == null) System.out.println("instantiatePredVars(): pred var arity null for: " + var);
-                arityInteger = predVarArity.get(var);
+                if (var == null) System.out.println("instantiatePredVars(): pred var arity null for: " + var);
+                arityInteger = predVarArityTL.get().get(var);
                 arity = 0;
                 if (arityInteger != null)
                     arity = arityInteger;
@@ -442,9 +443,9 @@ public class PredVarInst {
                             " with arglist: " + arglist);
                     ans.add(arg0.getFormula());
                     if (containsRowVariable(arglist))
-                        predVarArity.put(arg0.getFormula(),0);  // note that when expanding row vars we expand them to Formula.MAX_ARITY
+                        predVarArityTL.get().put(arg0.getFormula(),0);  // note that when expanding row vars we expand them to Formula.MAX_ARITY
                     else
-                        predVarArity.put(arg0.getFormula(),arglist.size());
+                        predVarArityTL.get().put(arg0.getFormula(),arglist.size());
                 }
                 else {
                     if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): not a predicate var: " + arg0);
