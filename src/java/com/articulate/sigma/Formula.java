@@ -37,8 +37,6 @@ public class Formula implements Comparable, Serializable {
 
     public static boolean debug = false;
 
-    private static final Pattern WHITESPACE_PATTERN = Pattern.compile(".*\\s.*");
-    private static final Pattern EMPTY_LIST_PATTERN = Pattern.compile("\\(\\s*\\)");
 
     public static final String AND    = "and";
     public static final String OR     = "or";
@@ -590,8 +588,10 @@ public class Formula implements Comparable, Serializable {
     public String car() {
 
         if (!this.listP()) return null;
-        if (this.empty()) return "";
-        if (stringArgs.isEmpty()) loadArguments();
+        if (stringArgs.isEmpty()) {
+            if (this.empty()) return "";
+            loadArguments();
+        }
         return stringArgs.isEmpty() ? "" : stringArgs.get(0);
     }
 
@@ -603,8 +603,10 @@ public class Formula implements Comparable, Serializable {
     public String cdr() {
 
         if (!this.listP()) return null;
-        if (this.empty()) return this.theFormula;
-        if (stringArgs.isEmpty()) loadArguments();
+        if (stringArgs.isEmpty()) {
+            if (this.empty()) return this.theFormula;
+            loadArguments();
+        }
         if (stringArgs.size() <= 1) return "()";
         StringBuilder sb = new StringBuilder("(");
         for (int j = 1; j < stringArgs.size(); j++) {
@@ -788,13 +790,14 @@ public class Formula implements Comparable, Serializable {
      */
     public static boolean atom(String s) {
 
-        boolean ans = false;
-        if (!StringUtil.emptyString(s)) {
-            String str = s.trim();
-            ans = (StringUtil.isQuotedString(s) ||
-                  (!str.contains(RP) && !WHITESPACE_PATTERN.matcher(str).matches()) );
+        if (StringUtil.emptyString(s)) return false;
+        if (StringUtil.isQuotedString(s)) return true;
+        String str = s.trim();
+        if (str.contains(RP)) return false;
+        for (int i = 0; i < str.length(); i++) {
+            if (Character.isWhitespace(str.charAt(i))) return false;
         }
-        return ans;
+        return true;
     }
 
     /** ***************************************************************
@@ -819,7 +822,13 @@ public class Formula implements Comparable, Serializable {
      * parentheses with nothing or whitespace in the middle.
      */
     public static boolean empty(String s) {
-        return (listP(s) && EMPTY_LIST_PATTERN.matcher(s).matches());
+
+        if (!listP(s)) return false;
+        String str = s.trim(); // consistent with listP's trimming
+        for (int i = 1, end = str.length() - 1; i < end; i++) {
+            if (!Character.isWhitespace(str.charAt(i))) return false;
+        }
+        return true;
     }
 
     /** ***************************************************************
