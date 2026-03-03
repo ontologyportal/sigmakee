@@ -93,6 +93,17 @@ public class TPTPGenerationTest {
 
         printFileReport("TFF", outputPath, elapsed);
 
+        // Save a persistent copy for cross-run comparison.
+        // Run 1 → /tmp/SUMO_tff_run1.tff, Run 2 → /tmp/SUMO_tff_run2.tff
+        // After two runs: diff /tmp/SUMO_tff_run1.tff /tmp/SUMO_tff_run2.tff
+        Path run1 = Paths.get("/tmp/SUMO_tff_run1.tff");
+        Path run2 = Paths.get("/tmp/SUMO_tff_run2.tff");
+        Path saveTo = Files.exists(run1) ? run2 : run1;
+        Files.copy(outputPath, saveTo, StandardCopyOption.REPLACE_EXISTING);
+        System.out.println("===== TFF copy saved to: " + saveTo + " =====");
+        if (Files.exists(run1) && Files.exists(run2))
+            System.out.println("===== Both runs saved. Compare with: diff " + run1 + " " + run2 + " =====");
+
         File file = outputPath.toFile();
         assertTrue("TFF file should exist", file.exists());
         assertTrue("TFF file should be non-empty (was " + file.length() + " bytes)", file.length() > 0);

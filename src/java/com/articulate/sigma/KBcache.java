@@ -59,6 +59,11 @@ public class KBcache implements Serializable {
 
     public KB kb = null;
 
+    /** Set to true after the first sequential preProcess() pre-pass in _tWriteFile().
+     *  Subsequent _tWriteFile() calls (e.g. TFF after FOF) skip the pre-pass since all
+     *  variable-arity signatures are already registered. */
+    public volatile boolean variableArityPrePopulated = false;
+
     // all the relations in the kb (ConcurrentHashMap-backed for thread-safe
     // concurrent access during parallel TFF generation)
     public Set<String> relations = ConcurrentHashMap.newKeySet();

@@ -386,7 +386,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             index = 0;
         }
         List<String> sig = kb.kbCache.signatures.get(t);
-        Map<String,Set<String>> modsig = new HashMap<>();
+        Map<String,Set<String>> modsig = new TreeMap<>();
         String s, strnum;
         for (int i = index; i < sig.size(); i++) {
             s = sig.get(i);
@@ -413,12 +413,13 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                 MapUtils.addToMap(modsig, strnum, strnum + ENTITY_SUFFIX);
             }
         }
-        Set<String> allsig = new HashSet<>();
+        Set<String> allsig = new TreeSet<>();
         allsig.add("");
-        Set<String> sigElem, newsig;
+        Set<String> sigElem;
+        Set<String> newsig;
         for (String str : modsig.keySet()) {  // number of the argument
-            sigElem = modsig.get(str);
-            newsig = new HashSet<>();
+            sigElem = new TreeSet<>(modsig.get(str));
+            newsig = new TreeSet<>();
             for (String res : allsig) {  // all the suffixes for previous arguments
                 for (String suf : sigElem) {  // suffixes for the new argument
                     newsig.add(res + suf);
@@ -618,7 +619,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public void writeSorts(PrintWriter pw) {
 
-        Map<String, Set<String>> toExtend = new HashMap<>();
+        Map<String, Set<String>> toExtend = new TreeMap<>();
         handleMathAndComp(toExtend); // needed within processing to determine types even though they don't appear in result
         handleVariableArity(toExtend); // special case
         handleListFn(toExtend);

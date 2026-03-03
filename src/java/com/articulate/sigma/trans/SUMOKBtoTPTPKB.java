@@ -464,7 +464,9 @@ public class SUMOKBtoTPTPKB {
         if (size == SUMOtoTFAform.numericConstantCount)
             return;
         String type;
-        for (String t : SUMOtoTFAform.getNumericConstantTypes().keySet()) {
+        List<String> sortedKeys = new ArrayList<>(SUMOtoTFAform.getNumericConstantTypes().keySet());
+        Collections.sort(sortedKeys);
+        for (String t : sortedKeys) {
             if (SUMOtoTFAform.numericConstantValues.keySet().contains(t))
                 continue;
             type = SUMOtoTFAform.getNumericConstantTypes().get(t);
@@ -489,7 +491,9 @@ public class SUMOKBtoTPTPKB {
         if (size == SUMOtoTFAform.numericConstantCount)
             return;
         String type;
-        for (String t : SUMOtoTFAform.getNumericConstantTypes().keySet()) {
+        List<String> sortedKeys = new ArrayList<>(SUMOtoTFAform.getNumericConstantTypes().keySet());
+        Collections.sort(sortedKeys);
+        for (String t : sortedKeys) {
             if (SUMOtoTFAform.numericConstantValues.keySet().contains(t))
                 continue;
             type = SUMOtoTFAform.getNumericConstantTypes().get(t);
@@ -810,7 +814,9 @@ public class SUMOKBtoTPTPKB {
         Map<String, String> ncts = SUMOtoTFAform.getNumericConstantTypes();
         if (ncts.size() == SUMOtoTFAform.numericConstantCount)
             return;
-        for (Map.Entry<String, String> e : new ArrayList<>(ncts.entrySet())) {
+        List<Map.Entry<String, String>> sortedEntries = new ArrayList<>(ncts.entrySet());
+        sortedEntries.sort(Map.Entry.comparingByKey());
+        for (Map.Entry<String, String> e : sortedEntries) {
             String t = e.getKey();
             if (SUMOtoTFAform.numericConstantValues.containsKey(t)) continue;
             String type = e.getValue();
@@ -984,6 +990,24 @@ public class SUMOKBtoTPTPKB {
 
         // Convert to List for parallel indexed processing (TreeSet iteration order preserved)
         List<Formula> formulaList = new ArrayList<>(orderedFormulae);
+
+        // ---- Pre-pass: populate all variable-arity signatures sequentially ----
+        // Without this, parallel threads race inside copyNewPredFromVariableArity() and
+        // each thread sees a different in-flight snapshot of kb.kbCache.functions when
+        // instantiatePredVars() calls new TreeSet<>(kb.kbCache.functions). This race
+        // produces different numbers of formula instantiations and therefore different
+        // output line counts between JVM runs.
+        // The flag ensures the pre-pass runs only ONCE per KB lifecycle: the first format
+        // pays the cost; subsequent formats (TFF, THF) skip it entirely
+        // because all signatures are already registered and copyNewPredFromVariableArity()
+        // returns immediately via its fast-path check.
+        // This mirrors the warm-up pattern used by THFnew.transModalTHF() / transPlainTHF().
+        if (localLang.equals("tff") && !kb.kbCache.variableArityPrePopulated) {
+            FormulaPreprocessor prePassFp = new FormulaPreprocessor();
+            for (Formula prePassFormula : formulaList)
+                prePassFp.preProcess(prePassFormula, false, kb);
+            kb.kbCache.variableArityPrePopulated = true;
+        }
 
         // ---- Phase 1: Parallel translation ----
         // Use a bounded ForkJoinPool to avoid over-subscribing CPU with THF parallel threads.

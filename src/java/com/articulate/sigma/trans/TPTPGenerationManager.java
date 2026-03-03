@@ -654,7 +654,7 @@ public class TPTPGenerationManager {
                     SUMOtoTFAform.initOnce();
 
                     stff.writeSorts(pw);
-                    stff.writeFile(outputPath.toString(), null, false, pw);
+                    stff.writeFile(kb.name + ".tff", null, false, pw);
 
                     if (SUMOKBtoTPTPKB.CWA) {
                         pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));

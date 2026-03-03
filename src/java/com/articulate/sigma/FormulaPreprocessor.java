@@ -120,7 +120,7 @@ public class FormulaPreprocessor {
 
         long t1 = 0L;
         if (types.size() > 1) {
-            Object[] valArr = types.toArray();
+            Object[] valArr = types.stream().sorted().toArray();
             String clX = null;
             String clY = null;
             boolean stop;
@@ -447,7 +447,7 @@ public class FormulaPreprocessor {
      */
     protected String getMostRelevantType(KB kb, Set<String> types) {
 
-        Set<String> insts = new HashSet<>();
+        Set<String> insts = new TreeSet<>();
         for (String type : types) {
             if (!type.endsWith("+"))
                 insts.add(type);
