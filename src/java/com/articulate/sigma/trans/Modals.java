@@ -284,67 +284,28 @@ public class Modals {
 
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1); // [F, M]
-        worldNum = worldNum + 1;
-        
-        // a normal or dyadic deontic 
-        if (flist.size() == 2) {
-        // Monadic case: (modalAttribute F M)
-        fstring.append("(=> (accreln1 ")
-                .append(flist.get(1)); // modality
-        // Accounts for Constant World (world 0)
-        if (worldNum - 1 == 0) { 
-            fstring.append(" CW");
-        } else {
-            fstring.append(" ?W").append(worldNum - 1);
+        if (flist == null || flist.size() < 2) {
+            throw new IllegalArgumentException("modalAttribute requires at least 2 arguments");
         }
-        fstring.append(" ?W").append(worldNum)
-                .append(") ")
-                .append(processRecurse(flist.get(0), kb, worldNum))
-                .append(")");
-        /* } else if (flist.size() == 3) {
-        // Dyadic case: (modalAttribute F C M)
-            Formula formula = flist.get(0);
-            Formula condition = flist.get(1);
-            Formula modality = flist.get(2);
-
-            fstring.append("(=> (and (accrelnP ")
-                    .append(modality);
-            // Accounts for Constant World (world 0)
-            if (worldNum - 1 == 0) { 
-                fstring.append(" CW");
-            } else {
-                fstring.append(" ?W").append(worldNum - 1);
-            }
-            fstring.append(" ?W").append(worldNum)
-                    .append(") ")
-                    .append(processRecurse(condition, kb, worldNum))
-                    .append(") ")
-                    .append(processRecurse(formula, kb, worldNum))
-                    .append(")"); */
+        int prevWorld = worldNum;
+        int currWorld  = worldNum + 1;
+        Formula modality = flist.get(1); // modality is the second complex arg
+        Formula formula  = flist.get(0);
+        fstring.append("(=> (accreln1 ").append(modality).append(Formula.SPACE);
+        // Account for CW (constant world):
+        if (prevWorld == 0) {
+            fstring.append("CW");
         } else {
-            throw new IllegalArgumentException("modalAttribute requires 2 or 3 arguments");
-    }
-
-        // Build antecedent: (accrelnP M ?W_{n-1} ?W_n)
-        fstring.append("(=> (accreln1 ")
-                .append(flist.get(1));           // the modal attribute constant, e.g. Necessity, Legal
-        // Accounts for Constant World (world 0)
-        if (worldNum - 1 == 0) { 
-            fstring.append(" CW");
-        } else {
-            fstring.append(" ?W").append(worldNum - 1);
+            fstring.append("?W").append(prevWorld);
         }
-        fstring.append(" ?W").append(worldNum)
-                .append(") ");
-
-        // Consequent: recursively process the embedded formula at the new world.
-        fstring.append(processRecurse(flist.get(0), kb, worldNum));
-
+        fstring.append(Formula.SPACE).append("?W").append(currWorld).append(") ");
+        // Recurse once on the embedded formula at the new current world:
+        fstring.append(processRecurse(formula, kb, currWorld));
         fstring.append(Formula.RP);
-
         Formula result = new Formula();
         result.read(fstring.toString());
         return result;
+
     }
 
     /***************************************************************
@@ -633,13 +594,10 @@ public class Modals {
     }
 
     /* CFeener
-     * Easy and Medium Deontic examples  
-     * TODO: Medium problems will need to be reworked in SUMO 
-     * (for example confersNorm breaks the translator, so 
-     * Formulas will need to be changed to 3rd arg) 
+     * Easy and Medium Deontic examples   
      */ 
     public static void deonticTests(KB kb) {
-        
+                
         /* This section is Easy problems (use modalAttribute)
          */
          
@@ -705,7 +663,7 @@ public class Modals {
         System.out.println(processModals(f, kb) + "\n\n");
         
         if (debug) {
-            System.out.println("MEDIUM: LegislativeBill");
+            System.out.println("EASY-MEDIUM: LegislativeBill");
         }
         fstr =
             "(=>" +
@@ -735,6 +693,32 @@ public class Modals {
         
         // TODO: Illegal, Legal, and Ally (all under EASY)
         
+        // EASY-MEDIUM: Nested problem from Hotel.kif 
+        if (debug) {
+            System.out.println("EASY-MEDIUM: Nested problem");
+        }
+        fstr =    
+            "(=>" +
+            "  (and" +
+            "    (instance ?POLICY ChildrenPolicy)" +
+            "    (policyOwner ?AGENT ?POLICY)" +
+            "    (policyLocationCoverage ?POLICY ?LOC))" +
+            "  (or" +
+            "    (containsInformation ?POLICY" +
+            "      (modalAttribute" +
+            "        (exists (?CUST1)" +
+            "          (and" +
+            "            (customer ?CUST1 ?AGENT)" +
+            "            (instance ?CUST1 HumanChild))) Possibility))" +
+            "    (containsInformation ?POLICY" +
+            "      (not" +
+            "        (modalAttribute" +
+            "          (exists (?CUST2)" +
+            "            (and" +
+            "              (customer ?CUST2 ?AGENT)" +
+            "              (instance ?CUST2 HumanChild))) Possibility)))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
         
         
         /* This half is Medium examples (the "Confers" family) 
@@ -893,7 +877,7 @@ public class Modals {
         f = new Formula(fstr);
         System.out.println(processModals(f, kb) + "\n\n");
 
-        // HARD (nested): holdsDuring / Sally example
+        // MEDIUM-HARD (nested): holdsDuring / Sally example
         /*if (debug) { 
             System.out.println("HARD: holdsDuring - Sally is aware of the deadline");
         } 
@@ -901,7 +885,6 @@ public class Modals {
             "(exists (?S)" +
             "  (and" +
             "    (instance ?S Human)" +
-            "    (names \"Sally\" ?S)" +
             "    (knows ?S" +
             "      (exists (?D ?P ?A)" +
             "        (holdsDuring" +
@@ -910,7 +893,7 @@ public class Modals {
             "            (agent ?P ?A)" +
             "            (finishes ?D (WhenFn ?P))))))))";
         f = new Formula(fstr);
-        System.out.println(processModals(f, kb) + "\n\n");*/
+        System.out.println(processModals(f, kb) + "\n\n");/*
     }
 
     /***************************************************************
