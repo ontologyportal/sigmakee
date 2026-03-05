@@ -11,6 +11,7 @@ import com.articulate.sigma.utils.StringUtil;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,21 +42,21 @@ public class SUMOtoTFAform {
     public static FormulaPreprocessor fp = new FormulaPreprocessor();
 
     // constraints on numeric types
-    public static Map<String,String> numericConstraints = new HashMap<>();
+    public static Map<String,String> numericConstraints = new ConcurrentHashMap<>();
 
     // variable names of constraints on numeric types
-    public static Map<String,String> numericVars = new HashMap<>();
+    public static Map<String,String> numericVars = new ConcurrentHashMap<>();
 
     // numeric constraint axioms that need not be processed since
     // their constraints will be substituted into axioms directly
-    public static Set<String> numConstAxioms = new HashSet<>();
+    public static Set<String> numConstAxioms = ConcurrentHashMap.newKeySet();
 
     // types like E and Pi — ThreadLocal for parallel FOF/TFF generation
     private static final ThreadLocal<Map<String,String>> numericConstantTypesTL =
         ThreadLocal.withInitial(HashMap::new);
     public static Map<String,String> getNumericConstantTypes() { return numericConstantTypesTL.get(); }
     public static void setNumericConstantTypes(Map<String,String> m) { numericConstantTypesTL.set(m); }
-    public static Map<String,String> numericConstantValues = new HashMap<>();
+    public static Map<String,String> numericConstantValues = new ConcurrentHashMap<>();
     public static int numericConstantCount = 0; // to compare with if another constant is found after initialization
 
     // storage for a message why the formula wasn't translated — ThreadLocal for parallel FOF/TFF generation
@@ -1357,7 +1358,7 @@ public class SUMOtoTFAform {
                         types.add(range);
                 }
             }
-            else if (kb.isInstance(s)) {
+            else if (kb.kbCache.isInstance(s)) {
                 if (kb.isRelation(s))
                     types.add("Entity");
                 else if (kb.isFunction(s)) {
@@ -2466,7 +2467,7 @@ public class SUMOtoTFAform {
      * Synchronized to keep to keep deep recursion synchronized during
      * threaded operations.
      */
-    private static synchronized String _t_process(String s, boolean q) {
+    private static String _t_process(String s, boolean q) {
         return _process(s, q);
     }
 

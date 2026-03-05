@@ -768,6 +768,13 @@ public class KBcache implements Serializable {
             return false;
     }
 
+    /** *************************************************************
+     * O(1) check: is term an instance of anything? Replaces KB.isInstance().
+     */
+    public boolean isInstance(String term) {
+        return instanceOf != null && instanceOf.containsKey(term);
+    }
+
     /** ***************************************************************
      * Find whether the given instance has the given parent class.
      * Include paths the have transitive relations between instances such
