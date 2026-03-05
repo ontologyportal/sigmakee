@@ -13,8 +13,10 @@ import com.articulate.sigma.trans.*;
  */
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
+import tptp_parser.TPTPFormula;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -844,6 +846,114 @@ public class Diagnostics {
         return result.toString();
     }
 
+    /***************************************************************
+     * @param termDependency a TreeMap of file name keys and an ArrayList of the
+     *         files on which it depends. The interior TreeMap file
+     *         name keys index ArrayLists of terms.
+     */
+    private static List<String> createDependDotGraphBody(Map<String,Map<String,List<String>>> termDependency) {
+
+        List<String> lines = new ArrayList<>();
+        String line;
+        for (String filename : termDependency.keySet()) {
+            String nameOnly = sanitizeFilenameForGraphViz(filename);
+            if (debug) System.out.println("createDependDotGraphBody()" + filename);
+            String newline = nameOnly + " [shape=\"box\" label = < " + nameOnly +
+                    " <br align=\"left\"/> > ]";
+            lines.add(newline);
+            if (termDependency.get(filename) != null) {
+                for (String otherFile : termDependency.get(filename).keySet()) {
+                    String otherNameOnly = sanitizeFilenameForGraphViz(otherFile);
+                    line = nameOnly + " -> " + otherNameOnly + "; ";
+                    lines.add(line);
+                }
+            }
+        }
+        return lines;
+    }
+
+    /** *************************************************************
+     */
+    public static String sanitizeFilenameForGraphViz(String s) {
+
+        return FileUtil.noExt(FileUtil.noPath(s)).replace("-","_");
+    }
+
+    /** *************************************************************
+     * Creates a specified formatted image from a generated *.dot file
+     * from GraphViz.
+     *
+     * @param filename the generated *.dot filename to create an image from
+     * @return the path to the generated image file
+     */
+    public static String createDependDotGraphImage(String filename) throws IOException {
+
+        int exitCode;
+        String retVal = "";
+        String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
+        String imageExt = KBmanager.getMgr().getPref("imageFormat");
+        if (imageExt == null || imageExt.isBlank())
+            imageExt = "png"; // default
+        File file = new File(filename + "." + imageExt);
+
+        List<String> cmd = new ArrayList<>();
+        cmd.add(graphVizDir + File.separator + "dot");
+        cmd.add("-T" + imageExt);
+        cmd.add("-O");
+        cmd.add(filename);
+        System.out.println(cmd);
+        try {
+            // Build a dependency graph image from an input file
+            // From: https://graphviz.org/doc/info/command.html#-O
+            ProcessBuilder pb = new ProcessBuilder(cmd);
+            pb.directory(file.getParentFile());
+            File log = new File(file.getParentFile(),"log");
+            if (log.exists())
+                log.delete();
+            pb.redirectErrorStream(true);
+            pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log)); // <- in case of any errors
+            Process proc = pb.start();
+            exitCode = proc.waitFor();
+        } catch (InterruptedException e) {
+            String err = "Error writing file " + file + "\n" + e.getMessage();
+            throw new IOException(err);
+        }
+        retVal = file.getAbsolutePath();
+        return retVal;
+    }
+
+    /**
+     * *************************************************************
+     * Create a dependency graphin a format suitable for GraphViz' input format
+     * http://www.graphviz.org/. Generate a dependency image from the .dot output
+     * with a command like <code>dot SUMO-graph.dot -Tgif > graph.gif</code>
+     */
+    public static void createDependDotGraph(Map<String,Map<String,List<String>>> termDependency) {
+
+        String sep = File.separator;
+        String dir = System.getenv("CATALINA_HOME") + sep + "webapps"
+                + sep + "sigma" + sep + "graph";
+        File dirfile = new File(dir);
+        if (!dirfile.exists())
+            dirfile.mkdirs();
+        String filename = dirfile.getPath() + sep + "depend.dot";
+        Path path = Paths.get(filename);
+        try (Writer bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8); PrintWriter pw = new PrintWriter(bw, true)) {
+            Set<String> result = new HashSet<>();
+            result.addAll(createDependDotGraphBody(termDependency));
+            pw.println("digraph G {");
+            pw.println("  node [color=black, fontcolor=black];"); // Black text and borders
+            pw.println("  edge [color=black];"); // Black edges
+            pw.println("  rankdir=LR");
+            for (String s : result)
+                pw.println(s);
+            pw.println("}");
+            System.out.println(createDependDotGraphImage(path.toString()));
+        } catch (IOException e) {
+            String err = "Error writing file " + path + "\n" + e.getMessage();
+        }
+    }
+
     /** *****************************************************************
      * Make an empty KB for use in Diagnostics.
      *
@@ -1555,6 +1665,7 @@ public class Diagnostics {
         System.out.println("  -o - terms not below Entity (Orphans)");
         System.out.println("  -c - terms without documentation");
         System.out.println("  -q - quantifier not in body");
+        System.out.println("  -d - create file dependency dot graph");
         System.out.println("  --vars <fname> - extract variable co-occurrences from a kif file");
     }
 
@@ -1603,6 +1714,10 @@ public class Diagnostics {
             }
             else if (argMap.containsKey("e")) {
                 partitionViolation(kb);
+            }
+            else if (argMap.containsKey("d")) {
+                Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
+                createDependDotGraph(fileDepends);
             }
             else if (argMap.containsKey("diff") && argMap.get("diff").size() == 2) {
                 diffTerms(kb, argMap.get("diff").get(0), argMap.get("diff").get(1));
