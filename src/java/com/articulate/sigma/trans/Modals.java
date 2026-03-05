@@ -893,7 +893,8 @@ public class Modals {
             "            (agent ?P ?A)" +
             "            (finishes ?D (WhenFn ?P))))))))";
         f = new Formula(fstr);
-        System.out.println(processModals(f, kb) + "\n\n");/*
+        System.out.println(processModals(f, kb) + "\n\n");
+        */
     }
 
     /***************************************************************
