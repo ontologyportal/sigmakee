@@ -15,6 +15,8 @@
 */
 
   String word = request.getParameter("word");
+  if (!word.isEmpty())
+      word = StringUtil.replaceNonIdChars(StringUtil.removeHTML(word));
   String writeProlog = request.getParameter("writeProlog");
   String synset = request.getParameter("synset");
   String POS = request.getParameter("POS");
