@@ -24,8 +24,11 @@ public class SUMOtoTFAform {
 
     public static boolean debug = false;
 
-    private static final Pattern VAR_ARITY_PATTERN = Pattern.compile(".*__\\d$");
-    private static final Pattern SIG_PART_PATTERN  = Pattern.compile("(\\d)(In|Re|Ra|En)");
+    private static final Pattern VAR_ARITY_PATTERN    = Pattern.compile(".*__\\d$");
+    private static final Pattern SIG_PART_PATTERN     = Pattern.compile("(\\d)(In|Re|Ra|En)");
+    private static final Pattern BARE_TERM_PATTERN    = Pattern.compile("^(.+)__.*");
+    private static final Pattern LIST_FN_PATTERN      = Pattern.compile("(ListFn[^ ]+)");
+    private static final Pattern INSTANCE_OBJ_PATTERN = Pattern.compile("\\(instance \\?\\w+ (\\w+)\\)");
 
     // a Set of types for each variable key — ThreadLocal for parallel FOF/TFF generation
     private static final ThreadLocal<Map<String,Set<String>>> varmapTL =
@@ -862,11 +865,10 @@ public class SUMOtoTFAform {
         String result = s;
         if (result.startsWith(Formula.TERM_SYMBOL_PREFIX))
             result = result.substring(3);
-        Pattern p = Pattern.compile("^(.+)__.*");
-        Matcher m = p.matcher(result);
+        Matcher m = BARE_TERM_PATTERN.matcher(result);
         while (m.lookingAt()) {
             result = m.group(1);
-            m = p.matcher(result);
+            m = BARE_TERM_PATTERN.matcher(result);
         }
         return result;
     }
@@ -2346,8 +2348,7 @@ public class SUMOtoTFAform {
     public Set<String> missingSorts(Formula f) {
 
         Set<String> result = new HashSet<>();
-        Pattern p = Pattern.compile("(ListFn[^ ]+)");
-        Matcher m = p.matcher(f.getFormula());
+        Matcher m = LIST_FN_PATTERN.matcher(f.getFormula());
         String rel, sort;
         while (m.find()) {
             rel = m.group(1);
@@ -2517,8 +2518,7 @@ public class SUMOtoTFAform {
         //System.out.println("SUMOtoTFAform.matchingPostcondTerm(): const: " + cons);
         if (f.getFormula() == null)
             return null;
-        Pattern p = Pattern.compile("\\(instance \\?\\w+ (\\w+)\\)");
-        Matcher m = p.matcher(f.getFormula());
+        Matcher m = INSTANCE_OBJ_PATTERN.matcher(f.getFormula());
         if (m.find()) {
             if (debug) System.out.println("SUMOtoTFAform.matchingInstanceTerm(): matches! ");
             String type = m.group(1);
@@ -2549,8 +2549,7 @@ public class SUMOtoTFAform {
             realChildren.addAll(kb.kbCache.getChildClasses("RealNumber"));
         if (realChildren.contains("Integer"))
             realChildren.remove("Integer");
-        Pattern p = Pattern.compile("\\(instance \\?\\w+ (\\w+)\\)");
-        Matcher m = p.matcher(f.getFormula());
+        Matcher m = INSTANCE_OBJ_PATTERN.matcher(f.getFormula());
         String type;
         while (m.find()) {
             type = m.group(1);

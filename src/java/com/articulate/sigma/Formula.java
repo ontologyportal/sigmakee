@@ -37,6 +37,10 @@ public class Formula implements Comparable, Serializable {
 
     public static boolean debug = false;
 
+    private static final Pattern HAS_WHITESPACE  = Pattern.compile(".*\\s.*");
+    private static final Pattern STARTS_WITH_AND = Pattern.compile("^\\s*\\(\\s*and.*");
+    private static final Pattern WHITESPACE_NORM = Pattern.compile("\\s+");
+
 
     public static final String AND    = "and";
     public static final String OR     = "or";
@@ -1104,8 +1108,8 @@ public class Formula implements Comparable, Serializable {
         if (f.theFormula == null) {
             return (this.theFormula == null);
         }
-        String thisString = Clausifier.normalizeVariables(this.theFormula).trim().replaceAll("\\s+", SPACE);
-        String argString = Clausifier.normalizeVariables(f.theFormula).trim().replaceAll("\\s+", SPACE);
+        String thisString = WHITESPACE_NORM.matcher(Clausifier.normalizeVariables(this.theFormula).trim()).replaceAll(SPACE);
+        String argString = WHITESPACE_NORM.matcher(Clausifier.normalizeVariables(f.theFormula).trim()).replaceAll(SPACE);
         return (thisString.equals(argString));
     }
 
@@ -1531,6 +1535,8 @@ public class Formula implements Comparable, Serializable {
             if (!element.isEmpty()) {
                 stringArgs.add(element);
                 args.add(new Formula(element));
+            } else if (i < end && input.charAt(i) == ')') {
+                i++; // skip stray ')' to prevent infinite loop on malformed input
             }
         }
         if (debug) System.out.println("Formula.loadArguments(): args loaded: " + args);
@@ -2207,7 +2213,7 @@ public class Formula implements Comparable, Serializable {
                                  && !isLogicalOperator(arg)
                                  && !arg.equals(SKFN)
                                  && !StringUtil.isQuotedString(arg)
-                                 && !arg.matches(".*\\s.*")) {
+                                 && !HAS_WHITESPACE.matcher(arg).matches()) {
                             relations.add(arg);
                         }
                         f = f.cdrAsFormula();
@@ -2660,7 +2666,7 @@ public class Formula implements Comparable, Serializable {
             if (kb.isChildOf(nextCar, "TemporalRelation")) {
                 return "";
             }
-            else if(nextCar.matches("^\\s*\\(\\s*and.*")) {
+            else if(STARTS_WITH_AND.matcher(nextCar).matches()) {
                 subFormula = removeTemporalRelations(nextCar, kb);
                 subF = new Formula(LP+subFormula+RP);
                 if (subF.cddr() == null || subF.cddr().isEmpty() || subF.cddr().equals("()")) {

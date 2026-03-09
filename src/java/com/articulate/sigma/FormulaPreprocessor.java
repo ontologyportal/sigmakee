@@ -36,6 +36,9 @@ public class FormulaPreprocessor {
      */
     private static final int AXIOM_EXPANSION_LIMIT = 2000;
 
+    private static final Pattern INSTANCE_TYPE_PATTERN = Pattern.compile("\\(instance (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-_]+)");
+    private static final Pattern SUBCLASS_TYPE_PATTERN  = Pattern.compile("\\(subclass (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-]+)");
+
     public static boolean debug = false;
 
     public static boolean addOnlyNonNumericTypes = false;
@@ -589,8 +592,7 @@ public class FormulaPreprocessor {
         else if (form.isSimpleClause(kb)) {
             if (isNegativeLiteral)  // If form is negative literal, do not add explicit type for the variable
                 return;
-            Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-_]+)");
-            Matcher m = p.matcher(form.getFormula());
+            Matcher m = INSTANCE_TYPE_PATTERN.matcher(form.getFormula());
             String var, cl;
             Set<String> hs;
             while (m.find()) {
@@ -610,8 +612,7 @@ public class FormulaPreprocessor {
                     varExplicitTypes.put(var, hs);
             }
 
-            p = Pattern.compile("\\(subclass (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-]+)");
-            m = p.matcher(form.getFormula());
+            m = SUBCLASS_TYPE_PATTERN.matcher(form.getFormula());
             while (m.find()) {
                 var = m.group(1);
                 cl = m.group(2);
