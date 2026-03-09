@@ -122,7 +122,7 @@ public class KB implements Serializable {
     public transient CELT celt = null;
 
     /** a cache built through lazy evaluation of the taxonomic depth of each term */
-    public Map<String,Integer> termDepthCache = new HashMap<>();
+    public Map<String,Integer> termDepthCache = new ConcurrentHashMap<>();
 
     /** A SortedSet of Strings, which are all the terms in the KB.
      *  ConcurrentSkipListSet for thread-safe concurrent access during
@@ -3198,6 +3198,12 @@ public class KB implements Serializable {
     public Set<String> immediateParents(String term) {
 
         //System.out.println("KB.immediateParents(): " + term);
+        if (kbCache != null) {
+            Set<String> cached = kbCache.directParentTerms.get(term);
+            if (cached != null)
+                return cached;
+        }
+        // Fallback for terms not yet in cache (e.g., during early KB initialization)
         Set<String> result = new HashSet<>();
         if (!terms.contains(term)) {
             System.out.println("KB.immediateParents(): no such term " + term);

@@ -99,6 +99,10 @@ public class KBcache implements Serializable {
      */
     public Map<String, Set<String>> instanceOf = new ConcurrentHashMap<>();
 
+    // Direct (non-transitive) parent terms per term, across subclass/instance/subrelation/subAttribute.
+    // Mirrors what KB.immediateParents() computes. Populated by buildDirectParentTerms().
+    public Map<String, Set<String>> directParentTerms = new ConcurrentHashMap<>();
+
     // all the instances of a class key, including through subrelation
     // and subAttribute
     public Map<String, Set<String>> instances = new HashMap<>();
@@ -170,6 +174,7 @@ public class KBcache implements Serializable {
         instTransRels = new HashSet<>(50,LOAD_FACTOR);
         parents = new HashMap<>(60,LOAD_FACTOR);
         instanceOf = new ConcurrentHashMap<>(kbin.getCountTerms()/2);
+        directParentTerms = new ConcurrentHashMap<>(kbin.getCountTerms()/2);
         instances = new HashMap<>(45,LOAD_FACTOR);
         insts = new HashSet<>(kbin.getCountTerms()/2,LOAD_FACTOR);
         children = new HashMap<>(200,LOAD_FACTOR);
@@ -231,6 +236,11 @@ public class KBcache implements Serializable {
                 key = entry.getKey();
                 newSet = Sets.newHashSet(entry.getValue());
                 this.instanceOf.put(key, newSet);
+            }
+        }
+        if (kbCacheIn.directParentTerms != null) {
+            for (Map.Entry<String, Set<String>> entry : kbCacheIn.directParentTerms.entrySet()) {
+                this.directParentTerms.put(entry.getKey(), Sets.newHashSet(entry.getValue()));
             }
         }
         if (kbCacheIn.insts != null) {
@@ -324,6 +334,8 @@ public class KBcache implements Serializable {
             this.instTransRels.addAll(kbCacheIn.instTransRels);
         if (kbCacheIn.instanceOf != null)
             this.instanceOf.putAll(kbCacheIn.instanceOf);
+        if (kbCacheIn.directParentTerms != null)
+            this.directParentTerms.putAll(kbCacheIn.directParentTerms);
         if (kbCacheIn.instances != null)
             this.instances.putAll(kbCacheIn.instances);
         if (kbCacheIn.insts != null)
@@ -461,6 +473,8 @@ public class KBcache implements Serializable {
             }
         }
 
+        directParentTerms.computeIfAbsent(child, k -> new HashSet<>()).add(parent);
+
         return affected;
     }
 
@@ -508,6 +522,8 @@ public class KBcache implements Serializable {
                 affected.add(cls);
             }
         }
+
+        directParentTerms.computeIfAbsent(inst, k -> new HashSet<>()).add(className);
 
         return affected;
     }
@@ -640,6 +656,8 @@ public class KBcache implements Serializable {
                 valences.put(child, parentValence);
             affected.add(child);
         }
+
+        directParentTerms.computeIfAbsent(child, k -> new HashSet<>()).add(parent);
 
         return affected;
     }
@@ -929,6 +947,25 @@ public class KBcache implements Serializable {
             if (superclasses != null && superclasses.get(parent) != null)
                 iset.addAll(superclasses.get(parent));
             instanceOf.put(child, iset);
+        }
+    }
+
+    /** ***************************************************************
+     * Populate directParentTerms: for each (subclass/instance/subrelation/subAttribute child parent),
+     * record parent → directParentTerms[child]. Mirrors KB.immediateParents().
+     */
+    public void buildDirectParentTerms() {
+
+        for (String rel : new String[]{"subclass", "instance", "subrelation", "subAttribute"}) {
+            List<Formula> forms = kb.ask("arg", 0, rel);
+            for (Formula f : forms) {
+                if (!f.isCached()) {
+                    String child = f.getStringArgument(1);
+                    String parent = f.getStringArgument(2);
+                    if (!StringUtil.emptyString(child) && !StringUtil.emptyString(parent))
+                        directParentTerms.computeIfAbsent(child, k -> new HashSet<>()).add(parent);
+                }
+            }
         }
     }
 
@@ -2182,6 +2219,9 @@ public class KBcache implements Serializable {
             buildDirectInstances();
             System.out.printf("KBcache.buildCaches(): buildDirectInstances:        %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
+            buildDirectParentTerms();
+            System.out.printf("KBcache.buildCaches(): buildDirectParentTerms:      %d m/s%n", (System.currentTimeMillis() - millis));
+            millis = System.currentTimeMillis();
             addTransitiveInstances();
             System.out.printf("KBcache.buildCaches(): addTransitiveInstances:      %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
@@ -2253,6 +2293,9 @@ public class KBcache implements Serializable {
         millis = System.currentTimeMillis();
         buildDirectInstances();
         System.out.printf("KBcache.buildCaches(): buildDirectInstances:        %d m/s%n", (System.currentTimeMillis() - millis));
+        millis = System.currentTimeMillis();
+        buildDirectParentTerms();
+        System.out.printf("KBcache.buildCaches(): buildDirectParentTerms:      %d m/s%n", (System.currentTimeMillis() - millis));
         millis = System.currentTimeMillis();
         addTransitiveInstances();
         System.out.printf("KBcache.buildCaches(): addTransitiveInstances:      %d m/s%n", (System.currentTimeMillis() - millis));
