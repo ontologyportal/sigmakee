@@ -2557,7 +2557,7 @@ public class KB implements Serializable {
                 "-fde","none","-updr","off"
         ));
         if (Vampire.askQuestion){
-            cmds.add(" -qa");
+            cmds.add("-qa");
             cmds.add("plain");
         }
 
