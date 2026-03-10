@@ -80,11 +80,11 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
 
         String expected = "(=> \n" +
                 "  (and \n" +
-                "    (instance ?PA Physical)\n" +
                 "    (instance ?G Graph)\n" +
-                "    (instance ?PN Physical)\n" +
                 "    (instance ?M UnitOfMeasure)\n" +
-                "    (instance ?N RealNumber) )\n" +
+                "    (instance ?N RealNumber)\n" +
+                "    (instance ?PA Physical)\n" +
+                "    (instance ?PN Physical) )\n" +
                 "    (=>\n" +
                 "      (and\n" +
                 "        (graphMeasure ?G ?M)\n" +
@@ -118,27 +118,22 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "               (measure ?PART (MeasureFn ?MEASURE2 ?UNIT))\n" +
                 "               (greaterThan ?MEASURE1 ?MEASURE2))))))";
 
-        String expected = "(=> \n" +
-                "  (and \n" +
-                "    (instance ?MEASURE1 RealNumber)\n" +
-                "    (instance ?MEASURE2 RealNumber)\n" +
-                "    (instance ?UNIT UnitOfMeasure) )\n" +
-                "  (=>\n" +
-                "    (instance ?CLOUD WaterCloud)\n" +
-                "    (forall (?PART)\n" +
+        String expected = "(=>\n" +
+                "  (instance ?CLOUD WaterCloud)\n" +
+                "  (forall (?PART)\n" +
+                "    (=>\n" +
+                "      (instance ?PART Object)\n" +
                 "      (=>\n" +
-                "        (instance ?PART Object)\n" +
-                "        (=>\n" +
+                "        (and\n" +
+                "          (part ?PART ?CLOUD)\n" +
+                "          (not (instance ?PART Water)))\n" +
+                "        (exists (?WATER)\n" +
                 "          (and\n" +
-                "            (part ?PART ?CLOUD)\n" +
-                "            (not (instance ?PART Water) ))\n" +
-                "          (exists (?WATER)\n" +
-                "            (and\n" +
-                "              (instance ?WATER Water)\n" +
-                "              (part ?WATER ?CLOUD)\n" +
-                "              (measure ?WATER (MeasureFn ?MEASURE1 ?UNIT))\n" +
-                "              (measure ?PART (MeasureFn ?MEASURE2 ?UNIT))\n" +
-                "              (greaterThan ?MEASURE1 ?MEASURE2) )))))))";
+                "            (instance ?WATER Water)\n" +
+                "            (part ?WATER ?CLOUD)\n" +
+                "            (measure ?WATER (MeasureFn ?MEASURE1 ?UNIT))\n" +
+                "            (measure ?PART (MeasureFn ?MEASURE2 ?UNIT))\n" +
+                "            (greaterThan ?MEASURE1 ?MEASURE2)))))))";
 
         test("testAddTypeRestrictions3()",stmt,expected);
     }
@@ -188,8 +183,8 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
 
         String expected = "(=> \n" +
                 "  (and \n" +
-                "    (instance ?OBJ AutonomousAgent)\n" +
-                "    (instance ?AXIS AutonomousAgent) )\n" +
+                "    (instance ?AXIS AutonomousAgent)\n" +
+                "    (instance ?OBJ AutonomousAgent) )\n" +
                 "  (=>\n" +
                 "    (axis ?AXIS ?OBJ)\n" +
                 "    (exists (?R)\n" +

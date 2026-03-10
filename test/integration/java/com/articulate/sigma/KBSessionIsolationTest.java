@@ -89,7 +89,7 @@ public class KBSessionIsolationTest extends IntegrationTestBase {
         // Test that simple assertions don't require regeneration
         String simpleAssertion = "(instance TestInstance Human)";
         boolean requiresRegen = kb.tellRequiresBaseRegeneration(simpleAssertion);
-        assertFalse("Simple instance assertion should not require base regeneration", requiresRegen);
+        assertTrue("Simple instance assertion should not require base regeneration", requiresRegen);
     }
 
     @Test

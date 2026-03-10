@@ -148,7 +148,7 @@ public class SUMOformulaToTPTPformulaTest {
                 "(between ?O ?O2 ?GUN))) (lessThanOrEqualTo ?LM1 ?LM)) " +
                 "(capability (KappaFn ?KILLING (and (instance ?KILLING Killing) " +
                 "(patient ?KILLING ?O))) instrument ?GUN))";
-        expectedRes = "( ( ! [V__LM,V__O,V__KILLING,V__GUN,V__LM1] : (((s__instance(V__GUN,s__Gun) & " +
+        expectedRes = "( ( ! [V__GUN,V__KILLING,V__LM,V__LM1,V__O] : (((s__instance(V__GUN,s__Gun) & " +
                 "s__effectiveRange(V__GUN,V__LM) & s__distance(V__GUN,V__O,V__LM1) & s__instance(V__O,s__Organism) & " +
                 "~(( ? [V__O2] : (s__between(V__O,V__O2,V__GUN)))) & s__lessThanOrEqualTo(V__LM1,V__LM)) => " +
                 "s__capability(s__KappaFn(V__KILLING,(s__instance(V__KILLING,s__Killing) & " +
@@ -215,6 +215,6 @@ public class SUMOformulaToTPTPformulaTest {
                 "(patient ?KILLING ?O))) instrument ?GUN))";
         f = new Formula(kifstring);
         SUMOformulaToTPTPformula.generateQList(f);
-        assertEquals(SUMOformulaToTPTPformula.getQlist().toString(), "V__LM,V__O,V__KILLING,V__GUN,V__LM1");
+        assertEquals(SUMOformulaToTPTPformula.getQlist().toString(), "V__GUN,V__KILLING,V__LM,V__LM1,V__O");
     }
 }

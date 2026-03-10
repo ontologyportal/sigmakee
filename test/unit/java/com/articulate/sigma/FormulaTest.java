@@ -384,7 +384,7 @@ public class FormulaTest {
     @Test
     public void testComplexVarsInstanceGovernmentFn1() {
 
-        List<String> expected = Lists.newArrayList("(GovernmentFn ?Place)", "StateGovernment)");
+        List<String> expected = Lists.newArrayList("(GovernmentFn ?Place)", "StateGovernment");
 
         Formula f1 = new Formula();
         f1.read("(instance (GovernmentFn ?Place) StateGovernment))");
@@ -397,7 +397,7 @@ public class FormulaTest {
     @Test
     public void testComplexVarsInstanceGovernmentFn2() {
 
-        List<String> expected = Lists.newArrayList("StateGovernment)");
+        List<String> expected = Lists.newArrayList("StateGovernment");
 
         Formula f1 = new Formula();
         f1.read("(instance (GovernmentFn ?Place) StateGovernment))");

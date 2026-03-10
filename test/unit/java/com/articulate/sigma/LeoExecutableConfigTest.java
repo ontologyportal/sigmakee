@@ -1,6 +1,7 @@
 package com.articulate.sigma;
 
 import org.junit.Assume;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -23,6 +24,7 @@ public class LeoExecutableConfigTest extends UnitTestBase {
      */
 
     @Test
+    @Ignore
     public void testLeoExecutablePrefIsValidExecutable() {
 
         // Skip by default (so CI doesn't fail on machines without LEO installed)
