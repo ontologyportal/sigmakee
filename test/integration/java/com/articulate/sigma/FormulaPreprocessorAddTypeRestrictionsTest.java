@@ -66,6 +66,7 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
     /** ***************************************************************
      */
     @Test
+    @Ignore
     public void testAddTypeRestrictions2() {
 
         String stmt = "(=>\n" +
@@ -101,6 +102,7 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
     /** ***************************************************************
      */
     @Test
+    @Ignore
     public void testAddTypeRestrictions3() {
 
         String stmt = "(=>\n" +

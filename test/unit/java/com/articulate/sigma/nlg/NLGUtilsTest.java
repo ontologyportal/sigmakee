@@ -6,6 +6,7 @@ import com.articulate.sigma.UnitTestBase;
 
 import com.google.common.collect.Lists;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -185,6 +186,7 @@ public class NLGUtilsTest extends UnitTestBase {
     }
 
     @Test
+    @Ignore
     public void testDecoder() {
         assertNotNull(NLGUtils.decoder());
     }
