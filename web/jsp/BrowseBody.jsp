@@ -23,8 +23,12 @@ if (flang == null || flang.isEmpty()) {
  show = new StringBuilder();       // Variable to contain the HTML page generated.
  String formattedFormula = null;
  term = request.getParameter("term");
+ if (!StringUtil.emptyString(term))
+     term = StringUtil.replaceNonIdChars(StringUtil.removeHTML(term));
  nonRelTerm = request.getParameter("nonrelation");
  relTerm = request.getParameter("relation");
+ if (!StringUtil.emptyString(relTerm))
+     relTerm = StringUtil.replaceNonIdChars(StringUtil.removeHTML(relTerm));
  filename = request.getParameter("file");
  line = request.getParameter("line");
  Map theMap = null;     // Map of natural language format strings.

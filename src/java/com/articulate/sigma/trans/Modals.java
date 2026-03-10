@@ -7,6 +7,9 @@ import com.articulate.sigma.KBmanager;
 import java.util.*;
 
 public class Modals {
+    
+    public static boolean debug = true; // Mainly for deontic sentences 
+
 
     // these are predicates that take a formula as (one of) their arguments in SUMO/KIF
     // e.g. (holdsDuring ?T ?FORMULA)
@@ -15,33 +18,33 @@ public class Modals {
                     Formula.KAPPAFN,
                     "believes",
                     "causesProposition",
-                    "conditionalProbability",
-                    "confersNorm",
+                    "conditionalProbability", 
+                    "confersNorm", 
                     "confersObligation",
-                    "confersRight",
+                    "confersRight", 
                     "considers",
                     "containsFormula",
-                    "decreasesLikelihood",
-                    "deprivesNorm",
+                    "decreasesLikelihood", 
+                    "deprivesNorm", 
                     "describes",
                     "desires",
                     "disapproves",
                     "doubts",
-                    "entails",
+                    "entails",  // Not modal 
                     "expects",
                     "hasPurpose",
-                    "hasPurposeForAgent",
+                    "hasPurposeForAgent", // Needs to switch formula with agent 
                     "holdsDuring",
                     "holdsObligation",
                     "holdsRight",
-                    "increasesLikelihood",
-                    "independentProbability",
+                    "increasesLikelihood",  // Not modal
+                    "independentProbability",   // Not modal
                     "knows",
                     "modalAttribute",
                     "permits",
                     "prefers",
                     "prohibits",
-                    "ProbabilityFn",
+                    "ProbabilityFn",    // Not modal 
                     "rateDetail",
                     "says",
                     "treatedPageDefinition",
@@ -65,8 +68,13 @@ public class Modals {
     // Modal operators that take an agent and a formula as arguments are
     // (<regHOLpred> ?AGENT ?FORMULA)
     public static final List<String> regHOL3pred = new ArrayList<>(
-            Arrays.asList("confersNorm","confersObligation", "confersRight",
-                    "deprivesNorm","hasPurposeForAgent"));
+            Arrays.asList(
+                    "confersNorm",          // TODO: Move Formula to 3rd 
+                    "confersObligation",    // TODO: Move Formula to 3rd 
+                    "confersRight",         // TODO: Move Formula to 3rd 
+                    "deprivesNorm",         // TODO: Move Formula to 3rd 
+                    "hasPurposeForAgent"    // TODO: Move Formula to 3rd 
+            ));
 
     public static final List<String> regHOLpred = new ArrayList<>(
             Arrays.asList("permits","prohibits","considers","sees","believes",
@@ -162,6 +170,7 @@ public class Modals {
                     "accreln",
                     "accreln1",
                     "accreln2",
+                    "accreln3",
 //                    "knows",
 //                    "believes",
 //                    "desires",
@@ -198,11 +207,11 @@ public class Modals {
 
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1);
-        Formula entity   = flist.get(flist.size() - 2);
-        Formula cogAgent  = flist.get(flist.size() - 1);
+        Formula arg1   = flist.get(0);
+        Formula arg2  = flist.get(1);
         worldNum = worldNum + 1;
         fstring.append("(=> (accreln3 ").append(f.car()).append(Formula.SPACE);
-        fstring.append(entity).append(Formula.SPACE).append(cogAgent).append(Formula.SPACE);
+        fstring.append(arg1).append(Formula.SPACE).append(arg2).append(Formula.SPACE);
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
             fstring.append(" CW");
@@ -210,7 +219,7 @@ public class Modals {
             fstring.append(" ?W").append(worldNum - 1);
         }
         fstring.append(" ?W").append(worldNum).append(") ");
-        fstring.append(Formula.SPACE).append(processRecurse(flist.get(0),kb,worldNum));
+        fstring.append(Formula.SPACE).append(processRecurse(flist.get(2),kb,worldNum));
         fstring.append(Formula.RP);
         Formula result = new Formula();
         result.read(fstring.toString());
@@ -275,67 +284,28 @@ public class Modals {
 
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1); // [F, M]
-        worldNum = worldNum + 1;
-        
-        // a normal or dyadic deontic 
-        if (flist.size() == 2) {
-        // Monadic case: (modalAttribute F M)
-        fstring.append("(=> (accreln1 ")
-                .append(flist.get(1)); // modality
-        // Accounts for Constant World (world 0)
-        if (worldNum - 1 == 0) { 
-            fstring.append(" CW");
-        } else {
-            fstring.append(" ?W").append(worldNum - 1);
+        if (flist == null || flist.size() < 2) {
+            throw new IllegalArgumentException("modalAttribute requires at least 2 arguments");
         }
-        fstring.append(" ?W").append(worldNum)
-                .append(") ")
-                .append(processRecurse(flist.get(0), kb, worldNum))
-                .append(")");
-        /* } else if (flist.size() == 3) {
-        // Dyadic case: (modalAttribute F C M)
-            Formula formula = flist.get(0);
-            Formula condition = flist.get(1);
-            Formula modality = flist.get(2);
-
-            fstring.append("(=> (and (accrelnP ")
-                    .append(modality);
-            // Accounts for Constant World (world 0)
-            if (worldNum - 1 == 0) { 
-                fstring.append(" CW");
-            } else {
-                fstring.append(" ?W").append(worldNum - 1);
-            }
-            fstring.append(" ?W").append(worldNum)
-                    .append(") ")
-                    .append(processRecurse(condition, kb, worldNum))
-                    .append(") ")
-                    .append(processRecurse(formula, kb, worldNum))
-                    .append(")"); */
+        int prevWorld = worldNum;
+        int currWorld  = worldNum + 1;
+        Formula modality = flist.get(1); // modality is the second complex arg
+        Formula formula  = flist.get(0);
+        fstring.append("(=> (accreln1 ").append(modality).append(Formula.SPACE);
+        // Account for CW (constant world):
+        if (prevWorld == 0) {
+            fstring.append("CW");
         } else {
-            throw new IllegalArgumentException("modalAttribute requires 2 or 3 arguments");
-    }
-
-        // Build antecedent: (accrelnP M ?W_{n-1} ?W_n)
-        fstring.append("(=> (accreln1 ")
-                .append(flist.get(1));           // the modal attribute constant, e.g. Necessity, Legal
-        // Accounts for Constant World (world 0)
-        if (worldNum - 1 == 0) { 
-            fstring.append(" CW");
-        } else {
-            fstring.append(" ?W").append(worldNum - 1);
+            fstring.append("?W").append(prevWorld);
         }
-        fstring.append(" ?W").append(worldNum)
-                .append(") ");
-
-        // Consequent: recursively process the embedded formula at the new world.
-        fstring.append(processRecurse(flist.get(0), kb, worldNum));
-
+        fstring.append(Formula.SPACE).append("?W").append(currWorld).append(") ");
+        // Recurse once on the embedded formula at the new current world:
+        fstring.append(processRecurse(formula, kb, currWorld));
         fstring.append(Formula.RP);
-
         Formula result = new Formula();
         result.read(fstring.toString());
         return result;
+
     }
 
     /***************************************************************
@@ -508,69 +478,10 @@ public class Modals {
 
     }
     
-    /************************************************************************************
-     * Tests based on ~/workspace/sumo/tests/TQM10.kif
-     * Uses same KB instance as main method 
-     */
-    public static void doTQM10Tests(KB kb) {
-        // "The US government obliges Agent Smith not to enter Area 51." 
-        String fstr = 
-        "(confersObligation " +
-        "  (not " +
-        "    (exists (?E)" +
-        "      (and" +
-        "        (instance ?E Entering)" +
-        "        (agent ?E AgentSmith)" +
-        "        (destination ?E Area51)))) " +
-        "  USGovernment AgentSmith)";
-        Formula f = new Formula(fstr);
-        System.out.println(processModals(f,kb) + "\n\n");
-
-        // "Agents that violate their obligations have a US government disciplinary hearing."
-        // CF: Is this example correct? 
-        fstr = 
-        "(=>" +
-        "  (and" +
-        "    (confersObligation ?F USGovernment ?A)" +
-        "    (not ?F))" +
-        "  (exists (?H)" +
-        "    (and" +
-        "      (instance ?H LegalAction)" +
-        "      (plaintiff ?H USGovernment)" +
-        "      (defendant ?H ?A))))";
-        f = new Formula(fstr);
-        System.out.println(processModals(f,kb) + "\n\n");
-        
-        // "Agents that violate their obligations are fired after a US government disciplinary hearing."
-        // CF: Is this example correct? 
-        /*fstr = 
-        "(=>" +
-        "  (and" +
-        "    (confersObligation ?F USGovernment ?A)" +
-        "    (not ?F)" +
-        "    (instance ?H LegalAction)" +
-        "    (plaintiff ?H USGovernment)" +
-        "    (defendant ?H ?A))" +
-        "  (exists (?FIRE)" +
-        "    (and" +
-        "      (instance ?FIRE TerminatingEmployment)" +
-        "      (earlier " +
-        "        (WhenFn ?H) " +
-        "        (WhenFn ?FIRE))" +
-        "      (patient ?FIRE ?A))))";
-        f = new Formula(fstr);
-        System.out.println(processModals(f,kb) + "\n\n");*/
-    }
-
-    /***************************************************************
-     */
-    public static void main(String[] args) {
-    
-        KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        System.out.println("HOL.main(): completed init");
-        
-        // Examples: 
+    /* These are the original tests from this file 
+     * A combination of different modalities (deontic to temporal) 
+     */ 
+    public static void someInitialTests(KB kb) {
         
         String fstr = "(<=>\n" +
                 "    (modalAttribute ?FORMULA Prohibition)\n" +
@@ -627,9 +538,379 @@ public class Modals {
         "                       (acquaintance Bill Jane)))))))";
         f = new Formula(fstr);
         System.out.println(processModals(f,kb) + "\n\n");
+    }
+    
+    /************************************************************************************
+     * Tests based on ~/workspace/sumo/tests/TQM10.kif
+     * Uses same KB instance as main method 
+     */
+    public static void doTQM10Tests(KB kb) {
+        // "The US government obliges Agent Smith not to enter Area 51." 
+        String fstr = 
+        "(confersObligation USGovernment AgentSmith" +
+        "  (not " +
+        "    (exists (?E)" +
+        "      (and" +
+        "        (instance ?E Entering)" +
+        "        (agent ?E AgentSmith)" +
+        "        (destination ?E Area51)))))";
+        Formula f = new Formula(fstr);
+        System.out.println(processModals(f,kb) + "\n\n");
+
+        // "Agents that violate their obligations have a US government disciplinary hearing."
+        // CF: Is this example correct? 
+        fstr = 
+        "(=>" +
+        "  (and" +
+        "    (confersObligation USGovernment ?A ?F) " +
+        "    (not ?F))" +
+        "  (exists (?H)" +
+        "    (and" +
+        "      (instance ?H LegalAction)" +
+        "      (plaintiff ?H USGovernment)" +
+        "      (defendant ?H ?A))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f,kb) + "\n\n");
         
+        // "Agents that violate their obligations are fired after a US government disciplinary hearing."
+        // CF: Is this example correct? 
+        fstr = 
+        "(=>" +
+        "  (and" +
+        "    (confersObligation USGovernment ?A ?F)" +
+        "    (not ?F)" +
+        "    (instance ?H LegalAction)" +
+        "    (plaintiff ?H USGovernment)" +
+        "    (defendant ?H ?A))" +
+        "  (exists (?FIRE)" +
+        "    (and" +
+        "      (instance ?FIRE TerminatingEmployment)" +
+        "      (earlier " +
+        "        (WhenFn ?H) " +
+        "        (WhenFn ?FIRE))" +
+        "      (patient ?FIRE ?A))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f,kb) + "\n\n");
+    }
+
+    /* CFeener
+     * Easy and Medium Deontic examples   
+     */ 
+    public static void deonticTests(KB kb) {
+                
+        /* This section is Easy problems (use modalAttribute)
+         */
+         
+        if (debug) {
+            System.out.println("EASY: Permission - Constitution grants permission pattern");
+        }
+        String fstr =
+            "(=>" +
+            "    (instance ?CONST Constitution)" +
+            "    (exists (?FORMULA ?PART)" +
+            "        (and" +
+            "            (instance ?FORMULA Formula)" +
+            "            (containsInformation ?FORMULA ?PART)" +
+            "            (instance ?PART Proposition)" +
+            "            (subProposition ?PART ?CONST)" +
+            "            (modalAttribute ?FORMULA Permission))))";
+        Formula f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+
+        if (debug) {
+            System.out.println("EASY: Obligation - If entering, must enter on path");
+        }
+        fstr =
+            "(=>" +
+            "  (and" +
+            "    (instance ?E Entering)" +
+            "    (destination ?E ?F)" +
+            "    (attribute ?F PhysicallyRestrictedRegion))" +
+            "  (modalAttribute" +
+            "    (exists (?R)" +
+            "      (and" +
+            "        (entrance ?R ?F)" +
+            "        (path ?E ?R))) Obligation))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+
+        if (debug) {
+            System.out.println("EASY: Prohibition, It is prohibited for Bill to walk to the store");
+        }
+        fstr =
+            "(modalAttribute\n" +
+            "  (exists (?W ?B)\n" +
+            "    (and\n" +
+            "      (instance ?W Walking)\n" +
+            "      (instance ?B Human)\n" +
+            "      (instance ?GS GroceryStore)\n" +
+            "      (names \"Bill\" ?B)\n" +
+            "      (agent ?W ?B)\n" +
+            "      (destination ?W ?GS))) Prohibition)";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+
+        if (debug) {
+            System.out.println("EASY: Law - Immigration and Nationality Act");
+        }
+        fstr =
+            "(exists (?FORMULA)"+
+            "  (and"+
+            "    (instance ?FORMULA Formula)"+
+            "    (containsInformation ?FORMULA ImmigrationAndNationalityAct_US)"+
+            "    (modalAttribute ?FORMULA Law)))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+        
+        if (debug) {
+            System.out.println("EASY-MEDIUM: LegislativeBill");
+        }
+        fstr =
+            "(=>" +
+            "  (holdsDuring ?TIME1" +
+            "    (modalAttribute ?TEXT Law))" +
+            "  (exists (?TIME2)" +
+            "    (and" +
+            "      (holdsDuring ?TIME2" +
+            "        (attribute ?TEXT LegislativeBill))" +
+            "      (earlier ?TIME2 ?TIME1))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+        
+        // EASY: InternationalLaw -> Law
+        if (debug) {
+            System.out.println("EASY: InternationalLaw");
+        }
+        fstr =
+            "(=>" +
+            "  (and" +
+            "    (instance ?UNCLOS FORMULA)" +
+            "    (modalAttribute ?UNCLOS InternationalLaw))" +
+            "  (modalAttribute ?UNCLOS Law))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+        
+        
+        // TODO: Illegal, Legal, and Ally (all under EASY)
+        
+        // EASY-MEDIUM: Nested problem from Hotel.kif 
+        if (debug) {
+            System.out.println("EASY-MEDIUM: Nested problem");
+        }
+        fstr =    
+            "(=>" +
+            "  (and" +
+            "    (instance ?POLICY ChildrenPolicy)" +
+            "    (policyOwner ?AGENT ?POLICY)" +
+            "    (policyLocationCoverage ?POLICY ?LOC))" +
+            "  (or" +
+            "    (containsInformation ?POLICY" +
+            "      (modalAttribute" +
+            "        (exists (?CUST1)" +
+            "          (and" +
+            "            (customer ?CUST1 ?AGENT)" +
+            "            (instance ?CUST1 HumanChild))) Possibility))" +
+            "    (containsInformation ?POLICY" +
+            "      (not" +
+            "        (modalAttribute" +
+            "          (exists (?CUST2)" +
+            "            (and" +
+            "              (customer ?CUST2 ?AGENT)" +
+            "              (instance ?CUST2 HumanChild))) Possibility)))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+        
+        
+        /* This half is Medium examples (the "Confers" family) 
+         */
+        
+        if (debug) {
+            System.out.println("MEDIUM: confersNorm, permission vs prohibition");
+        }
+        fstr =
+            "(=>" +
+            "  (and" +
+            "    (instance ?USG GovernmentOrganization)" +
+            "    (confersNorm ?USG Permission ?FORMULA))" +
+            "  (not" +
+            "    (confersNorm ?USG Prohibition ?F)))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+        
+        if (debug) {
+            System.out.println("MEDIUM: confersNorm - Must enter restricted region through entrance");
+        }
+        fstr =
+            "(=>" +
+            "  (and" +
+            "    (instance ?E Entering)" +
+            "    (instance ?G GovernmentOrganization)" +
+            "    (destination ?E ?F)" +
+            "    (attribute ?F PhysicallyRestrictedRegion)" +
+            "    (located ?G ?F))" +
+            "  (confersNorm ?G Obligation" +
+            "    (exists (?R)" +
+            "      (and" +
+            "        (entrance ?R ?F)" +
+            "        (path ?E ?R)))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+        
+        if (debug) {
+            System.out.println("MEDIUM: confersObligation - USG obliges Bill to use the entrance to get in");
+        }
+        fstr =
+            "(=>" +
+            "  (and" +
+            "    (instance ?E Entering)" +
+            "    (instance ?G GovernmentOrganization)" +
+            "    (instance ?BILL Human)" +
+            "    (destination ?E ?F)" +
+            "    (attribute ?F PhysicallyRestrictedRegion)" +
+            "    (located ?G ?F))" +
+            "  (confersObligation ?G ?BILL" +
+            "    (exists (?R)" +
+            "      (and" +
+            "        (entrance ?R ?F)" +
+            "        (path ?E ?R))) ))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+
+        if (debug) {
+            System.out.println("MEDIUM: confersObligation - The US government obliges Agent Smith not to enter Area 51");
+        }
+        fstr =
+            "(confersObligation USGovernment AgentSmith" +
+            "  (not" +
+            "    (exists (?E)" +
+            "      (and" +
+            "        (instance ?E Entering)" +
+            "        (agent ?E AgentSmith)" +
+            "        (destination ?E Area51)))) )";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+
+        if (debug) {
+            System.out.println("MEDIUM: Agents that violate their obligations have a US government disciplinary hearing");
+        }
+        fstr =
+            "(=>" +
+            "  (and" +
+            "    (confersObligation USGovernment ?A ?F)" +
+            "    (not ?F))" +
+            "  (exists (?H)" +
+            "    (and" +
+            "      (instance ?H LegalAction)" +
+            "      (plaintiff ?H USGovernment)" +
+            "      (defendant ?H ?A))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+
+        if (debug) {
+            System.out.println("MEDIUM: Agents that violate their obligations are fired after a US government disciplinary hearing");
+        }
+        fstr =
+            "(=>" +
+            "  (and" +
+            "    (confersObligation USGovernment ?A ?F)" +
+            "    (not ?F)" +
+            "    (instance ?H LegalAction)" +
+            "    (plaintiff ?H USGovernment)" +
+            "    (defendant ?H ?A))" +
+            "  (exists (?FIRE)" +
+            "    (and" +
+            "      (instance ?FIRE TerminatingEmployment)" +
+            "      (earlier" +
+            "        (WhenFn ?H)" +
+            "        (WhenFn ?FIRE))" +
+            "      (patient ?FIRE ?A))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+
+        // MEDIUM: deprivesNorm -> confersNorm
+        if (debug) {
+            System.out.println("MEDIUM: deprivesNorm implies confersNorm (Prohibition -> Permission)");
+        }
+        fstr =
+            "(=>" +
+            "  (deprivesNorm ?AGENT Prohibition ?F)" +
+            "  (confersNorm ?AGENT Permission ?F))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+        
+        
+        if (debug) {
+            System.out.println("MEDIUM to HARD: confersRight");
+        }
+        fstr =
+            "(=>" +
+            "    (and" +
+            "        (facility ?AGENT ?OBJ)" +
+            "        (customer ?CUST ?AGENT)" +
+            "        (instance ?X ?OBJ)" +
+            "        (desires ?CUST" +
+            "            (exists (?PROC)" +
+            "                (and" +
+            "                    (instance ?PROC IntentionalProcess)" +
+            "                    (patient ?PROC ?X)" +
+            "                    (agent ?PROC ?CUST)))))" +
+            "    (modalAttribute" +
+            "        (confersRight ?AGENT ?CUST" +
+            "            (uses ?X ?CUST)) Possibility))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n"); 
+        
+        if (debug) { 
+            System.out.println("MEDIUM: confers norm example");
+        }
+        fstr =
+            "(=>\n" +
+            "  (and\n" +
+            "    (instance ?POLICY PetsAllowedPolicy)" +
+            "    (policyLocationCoverage ?POLICY ?LOC)" +
+            "    (policyOwner ?AGENT ?POLICY))" +
+            "  (confersNorm ?AGENT Permission" +
+            "    (exists (?PET)" +
+            "      (and" +
+            "        (instance ?PET DomesticAnimal)" +
+            "        (located ?PET ?LOC))) ))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+
+        // MEDIUM-HARD (nested): holdsDuring / Sally example
+        /*if (debug) { 
+            System.out.println("HARD: holdsDuring - Sally is aware of the deadline");
+        } 
+        fstr =
+            "(exists (?S)" +
+            "  (and" +
+            "    (instance ?S Human)" +
+            "    (knows ?S" +
+            "      (exists (?D ?P ?A)" +
+            "        (holdsDuring" +
+            "          (and" +
+            "            (instance ?P Process)" +
+            "            (agent ?P ?A)" +
+            "            (finishes ?D (WhenFn ?P))))))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f, kb) + "\n\n");
+        */
+    }
+
+    /***************************************************************
+     */
+    public static void main(String[] args) {
+    
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        System.out.println("HOL.main(): completed init");
+        
+        // Examples: 
+        //someInitialTests(kb);
         // More tests: 
-        doTQM10Tests(kb);
+        //doTQM10Tests(kb);
+        deonticTests(kb);
+        
    
     }
 }

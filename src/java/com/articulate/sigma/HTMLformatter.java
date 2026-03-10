@@ -786,6 +786,8 @@ public class HTMLformatter {
                                                    String language, String flang, int start, int limit,
                                                    int arg, String type) {
 
+        if (!StringUtil.emptyString(term))
+            term = StringUtil.replaceNonIdChars(StringUtil.removeHTML(term));
         List<Formula> forms = kb.ask(type, arg, term);
         StringBuilder show = new StringBuilder();
         String limitString = "";

@@ -343,11 +343,12 @@ public class EditorServlet extends HttpServlet {
         try {
             final String textFinal = text;
             final boolean isTptpFinal = isTptp;
+            final String fileNameFinal = fileName;
             try {
                 errors = EditorWorkerQueue.submit(() -> {
                     return isTptpFinal
                             ? TPTPFileChecker.check(textFinal, "(web-editor)")
-                            : KifFileChecker.check(textFinal);
+                            : KifFileChecker.check(textFinal, fileNameFinal);
                 }, 4000); // 4s timeout for auto-checks
 
             } catch (RejectedExecutionException rex) {

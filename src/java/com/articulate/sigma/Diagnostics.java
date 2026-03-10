@@ -13,8 +13,10 @@ import com.articulate.sigma.trans.*;
  */
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
+import tptp_parser.TPTPFormula;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -186,6 +188,37 @@ public class Diagnostics {
             }
             if (RESULT_LIMIT > 0 && count > RESULT_LIMIT)
                 result.add("limited to 100 results");
+        }
+        return result;
+    }
+
+    /** *****************************************************************
+     * Check that partitioned classes don't have any direct subclasses
+     * For example, if we have (partition Physical Object Process)
+     * (subclass Collection Physical) then the exhaustiveDecomposition is
+     * violated
+     */
+    public static List<String> partitionViolation(KB kb) {
+
+        System.out.println("Partition violations:");
+        List<String> result = new ArrayList<>();
+        List<Formula> flist = kb.ask("arg",0,"partition");
+        for (Formula f : flist) {
+            //System.out.println(f);
+            String parent = f.getStringArgument(1);
+            List<String> subs = f.argumentsToArrayListString(2);
+            List<Formula> foundSubs = kb.askWithRestriction(0,"subclass",2,parent);
+            for (Formula subf : foundSubs) {
+                if (!subf.isCached()) {
+                    String newSub = subf.getStringArgument(1);
+                    if (!subs.contains(newSub)) {
+                        String s = "Error in partitionViolation(): " + subf +
+                                " not part of " + f;
+                        System.out.println(s);
+                        result.add(s);
+                    }
+                }
+            }
         }
         return result;
     }
@@ -811,6 +844,114 @@ public class Diagnostics {
             result.append("\n\n");
         }
         return result.toString();
+    }
+
+    /***************************************************************
+     * @param termDependency a TreeMap of file name keys and an ArrayList of the
+     *         files on which it depends. The interior TreeMap file
+     *         name keys index ArrayLists of terms.
+     */
+    private static List<String> createDependDotGraphBody(Map<String,Map<String,List<String>>> termDependency) {
+
+        List<String> lines = new ArrayList<>();
+        String line;
+        for (String filename : termDependency.keySet()) {
+            String nameOnly = sanitizeFilenameForGraphViz(filename);
+            if (debug) System.out.println("createDependDotGraphBody()" + filename);
+            String newline = nameOnly + " [shape=\"box\" label = < " + nameOnly +
+                    " <br align=\"left\"/> > ]";
+            lines.add(newline);
+            if (termDependency.get(filename) != null) {
+                for (String otherFile : termDependency.get(filename).keySet()) {
+                    String otherNameOnly = sanitizeFilenameForGraphViz(otherFile);
+                    line = nameOnly + " -> " + otherNameOnly + "; ";
+                    lines.add(line);
+                }
+            }
+        }
+        return lines;
+    }
+
+    /** *************************************************************
+     */
+    public static String sanitizeFilenameForGraphViz(String s) {
+
+        return FileUtil.noExt(FileUtil.noPath(s)).replace("-","_");
+    }
+
+    /** *************************************************************
+     * Creates a specified formatted image from a generated *.dot file
+     * from GraphViz.
+     *
+     * @param filename the generated *.dot filename to create an image from
+     * @return the path to the generated image file
+     */
+    public static String createDependDotGraphImage(String filename) throws IOException {
+
+        int exitCode;
+        String retVal = "";
+        String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
+        String imageExt = KBmanager.getMgr().getPref("imageFormat");
+        if (imageExt == null || imageExt.isBlank())
+            imageExt = "png"; // default
+        File file = new File(filename + "." + imageExt);
+
+        List<String> cmd = new ArrayList<>();
+        cmd.add(graphVizDir + File.separator + "dot");
+        cmd.add("-T" + imageExt);
+        cmd.add("-O");
+        cmd.add(filename);
+        System.out.println(cmd);
+        try {
+            // Build a dependency graph image from an input file
+            // From: https://graphviz.org/doc/info/command.html#-O
+            ProcessBuilder pb = new ProcessBuilder(cmd);
+            pb.directory(file.getParentFile());
+            File log = new File(file.getParentFile(),"log");
+            if (log.exists())
+                log.delete();
+            pb.redirectErrorStream(true);
+            pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log)); // <- in case of any errors
+            Process proc = pb.start();
+            exitCode = proc.waitFor();
+        } catch (InterruptedException e) {
+            String err = "Error writing file " + file + "\n" + e.getMessage();
+            throw new IOException(err);
+        }
+        retVal = file.getAbsolutePath();
+        return retVal;
+    }
+
+    /**
+     * *************************************************************
+     * Create a dependency graphin a format suitable for GraphViz' input format
+     * http://www.graphviz.org/. Generate a dependency image from the .dot output
+     * with a command like <code>dot SUMO-graph.dot -Tgif > graph.gif</code>
+     */
+    public static void createDependDotGraph(Map<String,Map<String,List<String>>> termDependency) {
+
+        String sep = File.separator;
+        String dir = System.getenv("CATALINA_HOME") + sep + "webapps"
+                + sep + "sigma" + sep + "graph";
+        File dirfile = new File(dir);
+        if (!dirfile.exists())
+            dirfile.mkdirs();
+        String filename = dirfile.getPath() + sep + "depend.dot";
+        Path path = Paths.get(filename);
+        try (Writer bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8); PrintWriter pw = new PrintWriter(bw, true)) {
+            Set<String> result = new HashSet<>();
+            result.addAll(createDependDotGraphBody(termDependency));
+            pw.println("digraph G {");
+            pw.println("  node [color=black, fontcolor=black];"); // Black text and borders
+            pw.println("  edge [color=black];"); // Black edges
+            pw.println("  rankdir=LR");
+            for (String s : result)
+                pw.println(s);
+            pw.println("}");
+            System.out.println(createDependDotGraphImage(path.toString()));
+        } catch (IOException e) {
+            String err = "Error writing file " + path + "\n" + e.getMessage();
+        }
     }
 
     /** *****************************************************************
@@ -1516,14 +1657,16 @@ public class Diagnostics {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t - print term def by file");
-        System.out.println("  -l <fname> - add labels for a file of terms");
-        System.out.println("  -f <fname> - print term def by file");
+        System.out.println("  --labels <fname> - add labels for a file of terms");
+        System.out.println("  --file <fname> - print term def by file");
         System.out.println("  -p - print all terms in KB");
-        System.out.println("  -d <f1> <f2> - print all terms in f2 not in f1");
+        System.out.println("  -e - exhaustive decomposition violations");
+        System.out.println("  --diff <f1> <f2> - print all terms in f2 not in f1");
         System.out.println("  -o - terms not below Entity (Orphans)");
         System.out.println("  -c - terms without documentation");
         System.out.println("  -q - quantifier not in body");
-        System.out.println("  -v <fname> - extract variable co-occurrences from a kif file");
+        System.out.println("  -d - create file dependency dot graph");
+        System.out.println("  --vars <fname> - extract variable co-occurrences from a kif file");
     }
 
     /** ***************************************************************
@@ -1531,52 +1674,56 @@ public class Diagnostics {
      */
     public static void main(String args[]) {
 
-        if (args != null && args.length > 0) {
-            for (int i = 0; i < args.length; i++) {
-                System.out.println("Arg[" + i + "]: '" + args[i] + "'");
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        System.out.println("argMap: " + argMap);
+        System.out.println("argMap keys: " + argMap.keySet());
+        System.out.println("argMap contains e: " + argMap.containsKey("e"));
+        if (argMap.isEmpty() || argMap.containsKey("h"))
+            showHelp();
+        else {
+            KBmanager.getMgr().initializeOnce();
+            //resultLimit = 0; // don't limit number of results on command line
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            System.out.println("Diagnostics: Completed init");
+            if (argMap.containsKey("t")) {
+                termDefsByFile(kb);
             }
-        } else
-            showHelp();
-
-        KBmanager.getMgr().initializeOnce();
-        //resultLimit = 0; // don't limit number of results on command line
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        if (args != null && args.length > 0 && args[0].equals("-t")) {
-            termDefsByFile(kb);
-        }
-        if (args != null && args.length > 1 && args[0].equals("-f")) {
-            Set<String> files = new HashSet<>();
-            List<String> lines = FileUtil.readLines(args[1],false);
-            files.addAll(lines);
-            termDefsByGivenFile(kb,files);
-        }
-        if (args != null && args.length > 1 && args[0].equals("-l")) {
-            Set<String> files = new HashSet<>();
-            List<String> lines = FileUtil.readLines(args[1],false);
-            files.addAll(lines);
-            addLabels(kb,files);
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-o")) {
-            System.out.println(termsNotBelowEntity(kb));
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-c")) {
-            System.out.println(termsWithoutDoc(kb));
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-q")) {
-            System.out.println(quantifierNotInBody(kb));
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-p")) {
-            printAllTerms(kb);
-        }
-        else if (args != null && args.length > 2 && args[0].equals("-d")) {
-            diffTerms(kb,args[1],args[2]);
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-h")) {
-            showHelp();
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-v")) {
-            if (args[1] != null && !args[1].isBlank()) {
-                String path = args[1];
+            else if (argMap.containsKey("file") && argMap.get("file").size() == 1) {
+                Set<String> files = new HashSet<>();
+                List<String> lines = FileUtil.readLines(argMap.get("file").get(0), false);
+                files.addAll(lines);
+                termDefsByGivenFile(kb, files);
+            }
+            else if (argMap.containsKey("labels") && argMap.get("labels").size() == 1) {
+                Set<String> files = new HashSet<>();
+                List<String> lines = FileUtil.readLines(argMap.get("labels").get(0), false);
+                files.addAll(lines);
+                addLabels(kb, files);
+            }
+            else if (argMap.containsKey("o")) {
+                System.out.println(termsNotBelowEntity(kb));
+            }
+            else if (argMap.containsKey("c")) {
+                System.out.println(termsWithoutDoc(kb));
+            }
+            else if (argMap.containsKey("q")) {
+                System.out.println(quantifierNotInBody(kb));
+            }
+            else if (argMap.containsKey("p")) {
+                printAllTerms(kb);
+            }
+            else if (argMap.containsKey("e")) {
+                partitionViolation(kb);
+            }
+            else if (argMap.containsKey("d")) {
+                Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
+                createDependDotGraph(fileDepends);
+            }
+            else if (argMap.containsKey("diff") && argMap.get("diff").size() == 2) {
+                diffTerms(kb, argMap.get("diff").get(0), argMap.get("diff").get(1));
+            }
+            else if (argMap.containsKey("vars") && argMap.get("vars").size() == 1) {
+                String path = argMap.get("vars").get(0);
                 Path inPath = Paths.get(path);
 
                 try (Stream<Path> paths = Files.walk(inPath)) {
@@ -1584,7 +1731,8 @@ public class Diagnostics {
                         HashMap<String, HashSet<String>> fileVarLinks = parseFormulaFile(f.toFile());
                         mergeResults(varLinksParentMap, fileVarLinks);
                     });
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     System.err.println("Error processing input: " + e);
                 }
             }

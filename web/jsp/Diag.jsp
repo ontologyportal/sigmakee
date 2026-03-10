@@ -52,6 +52,14 @@ if (!role.equals("admin") && !role.equals("user")) {
   out.println("<br>" + HTMLformatter.htmlDivider("Error: Terms with disjoint parents"));
   out.println(HTMLformatter.termList(disjoint,kbHref));
 
+  // Children of disjoint parents
+  List<String> parts = Diagnostics.partitionViolation(kb);
+  out.println("<br>" + HTMLformatter.htmlDivider("Error: Partition violations"));
+  for (String s : parts) {
+      out.println(s + "<br>\n");
+  }
+  out.println(HTMLformatter.termList(disjoint,kbHref));
+
   out.println("<br>" + HTMLformatter.htmlDivider("Error: Formulae with type conflicts"));
   KButilities.clearErrors();
   kb.kbCache.errors.clear();
