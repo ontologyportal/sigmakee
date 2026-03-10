@@ -123,7 +123,7 @@ public class FormulaPreprocessor {
 
         long t1 = 0L;
         if (types.size() > 1) {
-            Object[] valArr = types.stream().sorted().toArray();
+            Object[] valArr = types.toArray();
             String clX = null;
             String clY = null;
             boolean stop;
