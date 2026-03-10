@@ -118,22 +118,27 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "               (measure ?PART (MeasureFn ?MEASURE2 ?UNIT))\n" +
                 "               (greaterThan ?MEASURE1 ?MEASURE2))))))";
 
-        String expected = "(=>\n" +
-                "  (instance ?CLOUD WaterCloud)\n" +
-                "  (forall (?PART)\n" +
-                "    (=>\n" +
-                "      (instance ?PART Object)\n" +
+        String expected = "(=> \n" +
+                "  (and \n" +
+                "    (instance ?MEASURE1 RealNumber)\n" +
+                "    (instance ?MEASURE2 RealNumber)\n" +
+                "    (instance ?UNIT UnitOfMeasure) )\n" +
+                "  (=>\n" +
+                "    (instance ?CLOUD WaterCloud)\n" +
+                "    (forall (?PART)\n" +
                 "      (=>\n" +
-                "        (and\n" +
-                "          (part ?PART ?CLOUD)\n" +
-                "          (not (instance ?PART Water)))\n" +
-                "        (exists (?WATER)\n" +
+                "        (instance ?PART Object)\n" +
+                "        (=>\n" +
                 "          (and\n" +
-                "            (instance ?WATER Water)\n" +
-                "            (part ?WATER ?CLOUD)\n" +
-                "            (measure ?WATER (MeasureFn ?MEASURE1 ?UNIT))\n" +
-                "            (measure ?PART (MeasureFn ?MEASURE2 ?UNIT))\n" +
-                "            (greaterThan ?MEASURE1 ?MEASURE2)))))))";
+                "            (part ?PART ?CLOUD)\n" +
+                "            (not (instance ?PART Water) ))\n" +
+                "          (exists (?WATER)\n" +
+                "            (and\n" +
+                "              (instance ?WATER Water)\n" +
+                "              (part ?WATER ?CLOUD)\n" +
+                "              (measure ?WATER (MeasureFn ?MEASURE1 ?UNIT))\n" +
+                "              (measure ?PART (MeasureFn ?MEASURE2 ?UNIT))\n" +
+                "              (greaterThan ?MEASURE1 ?MEASURE2) )))))))";
 
         test("testAddTypeRestrictions3()",stmt,expected);
     }
