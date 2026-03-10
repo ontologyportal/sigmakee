@@ -195,7 +195,7 @@ public class SUMOtoTFAform {
         int size = Integer.parseInt(rel.substring(rel.length()-1,rel.length()));
         List<String> sig = new ArrayList<>(kb.kbCache.signatures.get(bareRel));
         String type = kb.kbCache.variableArityType(bareRel);
-        fill(sig,sig.size(),size,type);
+        fill(sig,sig.size()-1,size,type);
         return sig;
     }
 
