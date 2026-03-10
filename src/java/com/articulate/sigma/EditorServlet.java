@@ -234,7 +234,7 @@ public class EditorServlet extends HttpServlet {
             String tptp = EditorWorkerQueue.submit(() -> {
                 synchronized (TRANSLATE_LOCK) {
                     KBmanager.getMgr().initializeOnce();
-                    SUMOformulaToTPTPformula.lang = "fof";
+                    SUMOformulaToTPTPformula.setLang("fof");
                     final String codeFinal = code;
                     final String fileNameFinal = fileName;
                     List<String> kifForms = splitKifFormulas(codeFinal);

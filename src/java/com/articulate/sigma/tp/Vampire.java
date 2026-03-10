@@ -202,9 +202,9 @@ public class Vampire {
                     }
                     // 3. Write to new tptp file
                     for (String theTPTPFormula : tptpFormulas) {
-                        pw.print(SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
+                        pw.print(SUMOformulaToTPTPformula.getLang() + "(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
                         pw.println(",axiom,(" + theTPTPFormula + ")).");
-                        tptpStr = SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" +
+                        tptpStr = SUMOformulaToTPTPformula.getLang() + "(kb_" + kb.name + "_UserAssertion" +
                                 "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
                         if (debug) System.out.println("INFO in Vampire.assertFormula(2): TPTP for user assertion = " + tptpStr);
                     }
@@ -239,7 +239,7 @@ public class Vampire {
         result = new ATPResult.Builder()
                 .engineName("Vampire")
                 .engineMode(mode != null ? mode.name() : "CASC")
-                .inputLanguage(SUMOKBtoTPTPKB.lang.toUpperCase())
+                .inputLanguage(SUMOKBtoTPTPKB.getLang().toUpperCase())
                 .inputSource(kbFile != null ? kbFile.getName() : "unknown")
                 .timeoutMs(timeoutMs)
                 .build();
@@ -380,7 +380,7 @@ public class Vampire {
         result = new ATPResult.Builder()
                 .engineName("Vampire")
                 .engineMode(logic == Logic.HOL ? "HOL" : (mode != null ? mode.name() : "CUSTOM"))
-                .inputLanguage(logic == Logic.HOL ? "THF" : SUMOKBtoTPTPKB.lang.toUpperCase())
+                .inputLanguage(logic == Logic.HOL ? "THF" : SUMOKBtoTPTPKB.getLang().toUpperCase())
                 .inputSource(kbFile != null ? kbFile.getName() : "unknown")
                 .timeoutMs(timeoutMs)
                 .build();
@@ -572,7 +572,7 @@ public class Vampire {
         // Thread safe
         return kb.withUserAssertionLock(() -> {
             String userAssertionTPTP = kb.name + KB._userAssertionsTPTP;
-            if (SUMOKBtoTPTPKB.lang.equals("tff"))
+            if (SUMOKBtoTPTPKB.getLang().equals("tff"))
                 userAssertionTPTP = kb.name + KB._userAssertionsTFF;
 
             // Determine directory based on sessionId
@@ -620,7 +620,7 @@ public class Vampire {
     public void run(KB kb, File kbFile, int timeout, Set<String> stmts, String sessionId) throws Exception {
 
         String lang = "tff";
-        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+        if (SUMOKBtoTPTPKB.getLang().equals("fof"))
             lang = "tptp";
 
         // Use explicit sessionId if provided; otherwise try to extract from kbFile path
@@ -700,7 +700,7 @@ public class Vampire {
         KB kb = KBmanager.getMgr().getKB(kbName);
         String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
         String lang = "tff";
-        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+        if (SUMOKBtoTPTPKB.getLang().equals("fof"))
             lang = "tptp";
         File kbFile = new File(dir + kbName + "." + lang);
         if (!kbFile.exists()) {

@@ -12,9 +12,25 @@ public class SUMOformulaToTPTPformula {
 
     public Formula _f = null;
     public static boolean debug = false;
-    public static boolean hideNumbers = true;
-    public static String lang = "fof"; // or "tff"
-    public static StringBuilder qlist = new StringBuilder();
+
+    // ThreadLocal fields to allow parallel FOF/TFF generation
+    private static final ThreadLocal<Boolean> hideNumbersTL = ThreadLocal.withInitial(() -> true);
+    private static final ThreadLocal<String> langTL = ThreadLocal.withInitial(() -> "fof");
+    private static final ThreadLocal<StringBuilder> qlistTL = ThreadLocal.withInitial(StringBuilder::new);
+
+    public static boolean getHideNumbers() { return hideNumbersTL.get(); }
+    public static void setHideNumbers(boolean h) { hideNumbersTL.set(h); }
+    public static String getLang() { return langTL.get(); }
+    public static void setLang(String l) { langTL.set(l); }
+    public static StringBuilder getQlist() { return qlistTL.get(); }
+    public static void setQlist(StringBuilder q) { qlistTL.set(q); }
+
+    /** Remove ThreadLocal values to prevent leaks in thread pools */
+    public static void clearThreadLocal() {
+        hideNumbersTL.remove();
+        langTL.remove();
+        qlistTL.remove();
+    }
 
     /** ***************************************************************
      */
@@ -26,7 +42,7 @@ public class SUMOformulaToTPTPformula {
      */
     public SUMOformulaToTPTPformula (String l) {
 
-        lang = l;
+        setLang(l);
     }
 
     /** ***************************************************************
@@ -37,7 +53,13 @@ public class SUMOformulaToTPTPformula {
      * @param st is the StreamTokenizer_s that contains the current token
      * @return the String that is the translated token
      */
+    /** Backward-compatible overload — reads lang from ThreadLocal. */
     public static String translateWord(String st, int type, boolean hasArguments) {
+        return translateWord(st, type, hasArguments, getLang());
+    }
+
+    /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
+    public static String translateWord(String st, int type, boolean hasArguments, String lang) {
 
         if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): input: '" + st + "'");
         if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): containsKey: " + SUMOtoTFAform.numericConstantValues.containsKey(st));
@@ -45,11 +67,12 @@ public class SUMOformulaToTPTPformula {
         if (debug) System.out.println("translateWord(): " + SUMOtoTFAform.numericConstantValues);
         String result = null;
         try {
-            result = translateWord_1(st,type,hasArguments);
+            result = translateWord_1(st, type, hasArguments, lang);
+            if (result == null) return "";
             if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
             if (result.equals("$true" + Formula.TERM_MENTION_SUFFIX) || result.equals("$false" + Formula.TERM_MENTION_SUFFIX))
                 result = "'" + result + "'";
-            if (StringUtil.isNumeric(result) && hideNumbers && !lang.equals("tff")) {
+            if (StringUtil.isNumeric(result) && getHideNumbers() && !"tff".equals(lang)) {
                 if (result.contains("."))
                     result = result.replace('.','_');
                 if (result.contains("-"))
@@ -80,7 +103,7 @@ public class SUMOformulaToTPTPformula {
      *                     "__m"
      * @return the String that is the translated token
      */
-    private static String translateWord_1(String st, int type, boolean hasArguments) {
+    private static String translateWord_1(String st, int type, boolean hasArguments, String lang) {
 
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): st: " + st);
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): hasArguments: " + hasArguments);
@@ -138,7 +161,7 @@ public class SUMOformulaToTPTPformula {
             return(Formula.TERM_VARIABLE_PREFIX + st.substring(1).replace('-','_'));
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here2: ");
         //----Translate special predicates
-        if (lang.equals("tff")) {
+        if ("tff".equals(lang)) {
             if (Formula.isInequality(st) && !hasArguments)
                 return Formula.TERM_SYMBOL_PREFIX + st + Formula.TERM_MENTION_SUFFIX;
             translateIndex = kifPredicates.indexOf(st);
@@ -152,7 +175,7 @@ public class SUMOformulaToTPTPformula {
             return(tptpConstants.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here4: ");
         //----Translate special functions
-        if (lang.equals("tff")) {
+        if ("tff".equals(lang)) {
             translateIndex = kifFunctions.indexOf(st);
             if (translateIndex != -1)
                 return (tptpFunctions.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
@@ -241,7 +264,7 @@ public class SUMOformulaToTPTPformula {
     /** *************************************************************
      */
     private static String processQuant(Formula f, Formula car, String op,
-                                       List<String> args) {
+                                       List<String> args, String lang) {
 
         if (debug) System.out.println("SUMOformulaToTPTPformula.processQuant(): quantifier");
         if (args.size() < 2) {
@@ -258,7 +281,7 @@ public class SUMOformulaToTPTPformula {
                 StringBuilder varStr = new StringBuilder();
                 String oneVar;
                 for (String v : vars) {
-                    oneVar = SUMOformulaToTPTPformula.translateWord(v,v.charAt(0),false);
+                    oneVar = SUMOformulaToTPTPformula.translateWord(v, v.charAt(0), false, lang);
                     varStr.append(oneVar).append(", ");
                 }
                 //if (debug) System.out.println("SUMOformulaToTPTPformula.processQuant(): valid vars: " + varStr);
@@ -267,7 +290,7 @@ public class SUMOformulaToTPTPformula {
                     opStr = " ? ";
                 //if (debug) System.out.println("SUMOformulaToTPTPformula.processQuant(): quantified formula: " + args.get(1));
                 return Formula.LP + opStr + "[" + varStr.toString().substring(0,varStr.length()-2) + "] : (" +
-                        processRecurse(new Formula(args.get(1))) + "))";
+                        processRecurse(new Formula(args.get(1)), lang) + "))";
             }
             else {
                 System.err.println("Error in SUMOformulaToTPTPformula.processQuant(): null arguments to " + op + " in " + f);
@@ -279,7 +302,7 @@ public class SUMOformulaToTPTPformula {
     /** *************************************************************
      */
     private static String processConjDisj(Formula f, Formula car,
-                                          List<String> args) {
+                                          List<String> args, String lang) {
 
         String op = car.getFormula();
         if (args.size() < 2) {
@@ -292,9 +315,9 @@ public class SUMOformulaToTPTPformula {
         if (op.equals(Formula.XOR))
             tptpOp = "<~>";
         StringBuilder sb = new StringBuilder();
-        sb.append(Formula.LP).append(processRecurse(new Formula(args.get(0))));
+        sb.append(Formula.LP).append(processRecurse(new Formula(args.get(0)), lang));
         for (int i = 1; i < args.size(); i++) {
-            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE).append(processRecurse(new Formula(args.get(i))));
+            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE).append(processRecurse(new Formula(args.get(i)), lang));
         }
         sb.append(Formula.RP);
         return sb.toString();
@@ -302,13 +325,19 @@ public class SUMOformulaToTPTPformula {
 
     /** *************************************************************
      */
+    /** Backward-compatible overload — reads lang from ThreadLocal. */
     public static String processLogOp(Formula f, Formula car, List<String> args) {
+        return processLogOp(f, car, args, getLang());
+    }
+
+    /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
+    public static String processLogOp(Formula f, Formula car, List<String> args, String lang) {
 
         String op = car.getFormula();
         if (debug) System.out.println("processLogOp(): op: " + op);
         if (debug) System.out.println("processLogOp(): args: " + args);
         if (op.equals(Formula.AND))
-            return processConjDisj(f,car,args);
+            return processConjDisj(f, car, args, lang);
         if (op.equals(Formula.IF)) {
             if (args.size() < 2) {
                 System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
@@ -316,11 +345,11 @@ public class SUMOformulaToTPTPformula {
             }
             else {
                 if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
-                    return Formula.LP + processRecurse(new Formula(args.get(0))) + " => " +
-                        Formula.LP + processRecurse(new Formula(args.get(1))) + "))";
+                    return Formula.LP + processRecurse(new Formula(args.get(0)), lang) + " => " +
+                        Formula.LP + processRecurse(new Formula(args.get(1)), lang) + "))";
                 else
-                    return Formula.LP + processRecurse(new Formula(args.get(0))) + " => " +
-                            processRecurse(new Formula(args.get(1))) + Formula.RP;
+                    return Formula.LP + processRecurse(new Formula(args.get(0)), lang) + " => " +
+                            processRecurse(new Formula(args.get(1)), lang) + Formula.RP;
             }
         }
         if (op.equals(Formula.IFF)) {
@@ -329,32 +358,38 @@ public class SUMOformulaToTPTPformula {
                 return "";
             }
             else
-                return "((" + processRecurse(new Formula(args.get(0))) + " => " +
-                        processRecurse(new Formula(args.get(1))) + ") & (" +
-                        processRecurse(new Formula(args.get(1))) + " => " +
-                        processRecurse(new Formula(args.get(0))) + "))";
+                return "((" + processRecurse(new Formula(args.get(0)), lang) + " => " +
+                        processRecurse(new Formula(args.get(1)), lang) + ") & (" +
+                        processRecurse(new Formula(args.get(1)), lang) + " => " +
+                        processRecurse(new Formula(args.get(0)), lang) + "))";
         }
         if (op.equals(Formula.OR))
-            return processConjDisj(f,car,args);
+            return processConjDisj(f, car, args, lang);
         if (op.equals(Formula.XOR))
-            return processConjDisj(f,car,args);
+            return processConjDisj(f, car, args, lang);
         if (op.equals(Formula.NOT)) {
             if (args.size() != 1) {
                 System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
             else
-                return "~(" + processRecurse(new Formula(args.get(0))) + Formula.RP;
+                return "~(" + processRecurse(new Formula(args.get(0)), lang) + Formula.RP;
         }
         if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
-            return processQuant(f,car,op,args);
+            return processQuant(f, car, op, args, lang);
         System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): bad logical operator " + op + " in " + f);
         return "";
     }
 
     /** *************************************************************
      */
+    /** Backward-compatible overload — reads lang from ThreadLocal. */
     public static String processEquals(Formula f, Formula car, List<String> args) {
+        return processEquals(f, car, args, getLang());
+    }
+
+    /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
+    public static String processEquals(Formula f, Formula car, List<String> args, String lang) {
 
         String op = car.getFormula();
         if (args.size() != 2) {
@@ -362,8 +397,8 @@ public class SUMOformulaToTPTPformula {
             return "";
         }
         if (op.startsWith(Formula.EQUAL)) {
-            return Formula.LP + processRecurse(new Formula(args.get(0))) + " = " +
-                    processRecurse(new Formula(args.get(1))) + Formula.RP;
+            return Formula.LP + processRecurse(new Formula(args.get(0)), lang) + " = " +
+                    processRecurse(new Formula(args.get(1)), lang) + Formula.RP;
         }
         System.err.println("Error in SUMOformulaToTPTPformula.processCompOp(): bad comparison operator " + op + " in " + f);
         return "";
@@ -371,7 +406,13 @@ public class SUMOformulaToTPTPformula {
 
     /** *************************************************************
      */
+    /** Backward-compatible overload — reads lang from ThreadLocal. */
     public static String processRecurse(Formula f) {
+        return processRecurse(f, getLang());
+    }
+
+    /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
+    public static String processRecurse(Formula f, String lang) {
 
         if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): " + f);
         if (f == null)
@@ -380,7 +421,7 @@ public class SUMOformulaToTPTPformula {
             int ttype = f.getFormula().charAt(0);
             if (Character.isDigit(ttype))
                 ttype = StreamTokenizer_s.TT_NUMBER;
-            return SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false);
+            return SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false,lang);
         }
         Formula car = f.carAsFormula();
         //System.out.println("SUMOformulaToTPTPformula.processRecurse(): car: " + car);
@@ -391,27 +432,27 @@ public class SUMOformulaToTPTPformula {
             return "";
         }
         if (Formula.isLogicalOperator(car.getFormula()))
-            return processLogOp(f,car,args);
+            return processLogOp(f,car,args,lang);
         else if (car.getFormula().equals(Formula.EQUAL))
-            return processEquals(f,car,args);
+            return processEquals(f,car,args,lang);
         else {
             if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): not math or comparison op: " + car);
             StringBuilder argStr = new StringBuilder();
-            int ttype ;
+            int ttype;
             for (String s : args) {
                 if (car.getFormula().equals("instance")) {
                     ttype = f.getFormula().charAt(0);
                     if (Character.isDigit(ttype))
                         ttype = StreamTokenizer_s.TT_NUMBER;
                     if (Formula.atom(s))
-                        argStr.append(SUMOformulaToTPTPformula.translateWord(s,ttype,false)).append(",");
+                        argStr.append(SUMOformulaToTPTPformula.translateWord(s,ttype,false,lang)).append(",");
                     else
-                        argStr.append(processRecurse(new Formula(s))).append(",");
+                        argStr.append(processRecurse(new Formula(s),lang)).append(",");
                 }
                 else
-                    argStr.append(processRecurse(new Formula(s))).append(",");
+                    argStr.append(processRecurse(new Formula(s),lang)).append(",");
             }
-            String result = translateWord(car.getFormula(), StreamTokenizer.TT_WORD,true) + Formula.LP + argStr.substring(0,argStr.length()-1) + Formula.RP;
+            String result = translateWord(car.getFormula(), StreamTokenizer.TT_WORD,true,lang) + Formula.LP + argStr.substring(0,argStr.length()-1) + Formula.RP;
             //if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): result: " + result);
             return result;
         }
@@ -419,7 +460,13 @@ public class SUMOformulaToTPTPformula {
 
     /** *************************************************************
      */
+    /** Backward-compatible overload — reads lang from ThreadLocal. */
     public static void generateQList(Formula f) {
+        generateQList(f, getLang());
+    }
+
+    /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
+    public static void generateQList(Formula f, String lang) {
         Set<String> UqVars = f.collectUnquantifiedVariables();
         StringBuilder qlist = new StringBuilder();
         qlist.setLength(0); // reset
@@ -427,7 +474,7 @@ public class SUMOformulaToTPTPformula {
         int sizeUqVars = UqVars.size();
         int count = 0;
         for (String s : UqVars) {
-            oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
+            oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false,lang);
             qlist.append(oneVar); // don't write a final comma
             if (count < sizeUqVars-1 && sizeUqVars > 1)
                 qlist.append(",");
@@ -436,13 +483,13 @@ public class SUMOformulaToTPTPformula {
         }
         f.qlist = qlist;
         // Backward compatibility:
-        SUMOformulaToTPTPformula.qlist = qlist;
+        setQlist(qlist);
         if (debug) System.err.println("SUMOformulaToTPTPformula.generateQList(): qlist: " + qlist);
     }
 
     /** ***************************************************************
      * Parse a single formula into TPTP format.
-     * This version reads from the static SUMOKBtoTPTPKB.lang field.
+     * This version reads from the ThreadLocal SUMOKBtoTPTPKB.getLang() field.
      * For thread-safe operation during background TPTP generation, use
      * tptpParseSUOKIFString(String, boolean, String) instead.
      *
@@ -450,8 +497,8 @@ public class SUMOformulaToTPTPformula {
      * @param query true if the suoString is a query
      */
     public static String tptpParseSUOKIFString(String suoString, boolean query) {
-        // Delegate to parameterized version with current static lang value
-        return tptpParseSUOKIFString(suoString, query, SUMOKBtoTPTPKB.lang);
+        // Delegate to parameterized version with current ThreadLocal lang value
+        return tptpParseSUOKIFString(suoString, query, SUMOKBtoTPTPKB.getLang());
     }
 
     /** ***************************************************************
@@ -492,16 +539,17 @@ public class SUMOformulaToTPTPformula {
             return "( " + thf.KIF2THF(stmts,queries,kb) + " )";
         }
         if ("fof".equals(requestedLang))
-            return "( " + process(new Formula(s),q) + " )";
+            return "( " + process(new Formula(s),q,requestedLang) + " )";
         System.err.println("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): unknown language type: " + requestedLang);
-        return "( " + process(new Formula(s),q) + " )";
+        return "( " + process(new Formula(s),q,requestedLang) + " )";
     }
 
     /** ***************************************************************
-     * Synchronized to keep axiom variable order when writing to file
-     * during threaded operations.
+     * Previously synchronized to guard shared static qlist/lang fields.
+     * Those fields are now ThreadLocal or passed as parameters, so no
+     * synchronization is needed — all state is per-thread or per-formula.
      */
-    private static synchronized String _tTptpParseSUOKIFString(String s, boolean query, String requestedLang) {
+    private static String _tTptpParseSUOKIFString(String s, boolean query, String requestedLang) {
 
         return _tptpParseSUOKIFString(s, query, requestedLang);
     }
@@ -510,18 +558,24 @@ public class SUMOformulaToTPTPformula {
      * This is the primary method of the class.  It takes a SUO-KIF
      * formula and returns a TPTP formula.
      */
+    /** Backward-compatible overload — reads lang from ThreadLocal. */
     public static String process(Formula f, boolean query) {
+        return process(f, query, getLang());
+    }
+
+    /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
+    public static String process(Formula f, boolean query, String lang) {
 
         if (f == null) {
             if (debug) System.err.println("Error in SUMOformulaToTPTPformula.process(): null formula: ");
             return "";
         }
         if (f.atom())
-            return SUMOformulaToTPTPformula.translateWord(f.getFormula(),f.getFormula().charAt(0),false);
+            return SUMOformulaToTPTPformula.translateWord(f.getFormula(),f.getFormula().charAt(0),false,lang);
         if (f.listP()) {
-            String result = processRecurse(f);
+            String result = processRecurse(f, lang);
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): result 1: " + result);
-            generateQList(f);
+            generateQList(f, lang);
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): qlist: " + f.qlist);
             if (f.qlist.length() > 1) {
                 String quantification = "! [";

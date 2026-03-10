@@ -35,7 +35,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (!kb.containsFile("Merge.kif") || !kb.containsFile("Mid-level-ontology.kif"))
             System.out.println("!!!!!!!! error in init(): missing KB files !!!!!!!!!!!!");
         SUMOtoTFAform.setNumericFunctionInfo();
-        SUMOformulaToTPTPformula.lang = "tff";
+        SUMOformulaToTPTPformula.setLang("tff");
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
         try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
@@ -240,7 +240,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
                 "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
         String result = SUMOtoTFAform.process(f,false);
         System.out.println("SUMOtoTFAformTest.test3(): result:   " + result);
-        String expected = "! [V__NUMBER1 : $int,V__NUMBER2 : $int,V__NUMBER : $int] : "
+        String expected = "! [V__NUMBER : $int,V__NUMBER1 : $int,V__NUMBER2 : $int] : "
                 + "((($remainder_t(V__NUMBER1 ,V__NUMBER2) = V__NUMBER => "
                 + "$sum($product($floor($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1) & "
                 + "($sum($product($floor($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1 => "
@@ -316,7 +316,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
         System.out.println("SUMOtoTFAformTest.testFloorFn(): result: " + result);
-        String expected = "! [V__NUMBER1 : $int,V__NUMBER2 : $int,V__NUMBER : $int] : "
+        String expected = "! [V__NUMBER : $int,V__NUMBER1 : $int,V__NUMBER2 : $int] : "
                 + "((($remainder_t(V__NUMBER1 ,V__NUMBER2) = V__NUMBER => "
                 + "$sum($product($floor($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1) & "
                 + "($sum($product($floor($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1 => "
@@ -397,7 +397,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
         System.out.println("SUMOtoTFAformTest.testVariableArity(): result: " + result);
-        String expected = "! [V__ROW : $i,V__REL : $i] : ((((s__instance(V__REL, s__TotalValuedRelation) & "
+        String expected = "! [V__REL : $i,V__ROW : $i] : ((((s__instance(V__REL, s__TotalValuedRelation) & "
                 + "s__instance(V__REL, s__Predicate)) => ( ? [V__VALENCE:$int] : ((s__instance(V__REL, s__Relation) & "
                 + "s__valence(V__REL,V__VALENCE) & (( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : "
                 + "(((($less(V__NUMBER,V__VALENCE)) & s__domain(V__REL,V__NUMBER,V__CLASS) & V__ELEMENT = "
@@ -597,7 +597,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
         System.out.println("actual: " + result);
-        String expected = "! [V__Q2 : $i,V__U : $i,V__I1 : $real,V__I2 : $real,V__Q1 : $i] : "
+        String expected = "! [V__I1 : $real,V__I2 : $real,V__Q1 : $i,V__Q2 : $i,V__U : $i] : "
                 + "(((s__instance(s__equal__m, s__RelationExtendedToQuantities) & V__Q1 = "
                 + "s__MeasureFn(V__I1, V__U) & V__Q2 = s__MeasureFn(V__I2, V__U) & V__I1 = V__I2) => "
                 + "V__Q1 = V__Q2))";
@@ -625,7 +625,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         String s = SUMOtoTFAform.process(f,false);
         //KBcache.debug = true;
         boolean inc = SUMOtoTFAform.inconsistentVarTypes();
-        System.out.println("SUMOtoTFAformTest.testTypeConflict(): varmap: " + SUMOtoTFAform.varmap);
+        System.out.println("SUMOtoTFAformTest.testTypeConflict(): varmap: " + SUMOtoTFAform.getVarmap());
         if (inc)
             System.out.println("testTypeConflict(): Success!");
         else
@@ -673,7 +673,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         String result = SUMOtoTFAform.process(f,false);
         assertTrue(result.isBlank());
         boolean inc = SUMOtoTFAform.inconsistentVarTypes();
-        System.out.println("SUMOtoTFAformTest.testTypeConflict3(): varmap: " + SUMOtoTFAform.varmap);
+        System.out.println("SUMOtoTFAformTest.testTypeConflict3(): varmap: " + SUMOtoTFAform.getVarmap());
         if (inc)
             System.out.println("testTypeConflict3(): Success!");
         else
@@ -740,7 +740,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         String input = "(=> (and (memberTypeCount ?GROUP ?TYPE ?NUMBER) (equal ?NUMBER 0)) " +
                 "(not (exists (?ITEM) (and (instance ?ITEM ?TYPE) (member ?ITEM ?GROUP)))))";
         String actualRes = SUMOtoTFAform.process(input,false);
-        String expectedRes = "! [V__GROUP : $i,V__TYPE : $i,V__NUMBER : $int] : "
+        String expectedRes = "! [V__GROUP : $i,V__NUMBER : $int,V__TYPE : $i] : "
                 + "(((s__memberTypeCount(V__GROUP,V__TYPE,V__NUMBER) & V__NUMBER = 0) => "
                 + "~(( ? [V__ITEM:$i] : ((s__instance(V__ITEM, V__TYPE) & "
                 + "s__member(V__ITEM, V__GROUP)))))))";
@@ -768,7 +768,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
                 "(instance intelligenceQuotient Predicate) (intelligenceQuotient__2Re ?ROW1 ?ROW2)) " +
                 "(instance (ListOrderFn__2InFn (ListFn__2Fn__2ReFn ?ROW1 ?ROW2) ?NUMBER) ?CLASS))";
         Formula f = new Formula(input);
-        SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
+        SUMOtoTFAform.setVarmap(SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb));
         System.out.println("testTypeConflict4(): testing missing sorts");
         stfa.sorts = stfa.missingSorts(f);
         System.out.println("testTypeConflict4(): sorts: " + stfa.sorts);

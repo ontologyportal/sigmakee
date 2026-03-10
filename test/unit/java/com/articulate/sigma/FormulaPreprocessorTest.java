@@ -27,8 +27,8 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
 
     @After
     public void tearDown() {
-        SUMOformulaToTPTPformula.lang = "fof";
-        SUMOKBtoTPTPKB.lang = "fof";
+        SUMOformulaToTPTPformula.setLang("fof");
+        SUMOKBtoTPTPKB.setLang("fof");
     }
 
     /** ***************************************************************
@@ -432,8 +432,8 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
     @Test
     public void testTVRPreprocess() {
 
-        SUMOformulaToTPTPformula.lang = "tff";
-        SUMOKBtoTPTPKB.lang = "tff";
+        SUMOformulaToTPTPformula.setLang("tff");
+        SUMOKBtoTPTPKB.setLang("tff");
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
         String kbName = KBmanager.getMgr().getPref("sumokbname");

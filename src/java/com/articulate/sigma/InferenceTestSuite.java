@@ -185,7 +185,7 @@ public class InferenceTestSuite {
             for (Formula f : theQueries) {
                 TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
                 String q = f.getFormula();
-                if (f.isHigherOrder(kb) && !"thf".equals(SUMOformulaToTPTPformula.lang)) {
+                if (f.isHigherOrder(kb) && !"thf".equals(SUMOformulaToTPTPformula.getLang())) {
                     System.out.println("Skipping higher-order query not in THF: " + q);
                     continue;
                 }
@@ -585,8 +585,9 @@ public class InferenceTestSuite {
                 KIF test = new KIF();
                 test.readFile(f.getCanonicalPath());
                 System.out.println("INFO in InferenceTestSuite.readTestFile(): num formulas: " +
-                        String.valueOf(test.formulaMap.keySet().size()));
-                for (String formula : test.formulaMap.keySet()) {
+                        String.valueOf(test.formulasOrdered.size()));
+                for (Formula orderedF : test.formulasOrdered.values()) {
+                    String formula = orderedF.getFormula();
                     if (formula.contains(";"))
                         formula = formula.substring(0, formula.indexOf(";"));
                     System.out.println("INFO in InferenceTestSuite.readTestFile(): Formula: " + formula);
@@ -659,7 +660,7 @@ public class InferenceTestSuite {
         String sharedKbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
         try {
-            String langExt = SUMOformulaToTPTPformula.lang;
+            String langExt = SUMOformulaToTPTPformula.getLang();
             if (langExt.equals("fof"))
                 langExt = "tptp";
             Files.copy(Paths.get(sharedKbDir + sep + kbName + "." + langExt),
@@ -877,7 +878,7 @@ public class InferenceTestSuite {
         com.articulate.sigma.tp.LEO leo;
         for (Formula f : theQueries) {
             processedStmt = f.getFormula();
-            if (f.isHigherOrder(kb) && !SUMOformulaToTPTPformula.lang.equals("thf")) {
+            if (f.isHigherOrder(kb) && !SUMOformulaToTPTPformula.getLang().equals("thf")) {
                 System.out.println("Error in InferenceTestSuite.inferenceUnitTest(): skipping higher order query: " +
                         processedStmt + " in test " + itd.note);
                 continue;
@@ -1125,9 +1126,9 @@ public class InferenceTestSuite {
                 KBmanager.getMgr().initializeOnce();
                 InferenceTestSuite its = new InferenceTestSuite();
                 if (args[0].indexOf('l') != -1)
-                    SUMOKBtoTPTPKB.lang = "thf";
+                    SUMOKBtoTPTPKB.setLang("thf");
                 if (args[0].indexOf('f') != -1)
-                    SUMOKBtoTPTPKB.lang = "tff";
+                    SUMOKBtoTPTPKB.setLang("tff");
                 KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
                 try {
                     resetAllForInference(kb);
@@ -1140,18 +1141,18 @@ public class InferenceTestSuite {
                     kb.loadEProver();
                 }
                 if (args[0].indexOf('l') != -1) {
-                    SUMOformulaToTPTPformula.lang = "thf";
+                    SUMOformulaToTPTPformula.setLang("thf");
                     KBmanager.getMgr().prover = KBmanager.Prover.LEO;
                     kb.loadLeo();
                 }
                 if (args[0].indexOf('f') != -1) {
-                    SUMOformulaToTPTPformula.lang = "tff";
+                    SUMOformulaToTPTPformula.setLang("tff");
                     SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
                     skbtfakb.initOnce();
                     SUMOtoTFAform.initOnce();
                 }
                 if (args[0].indexOf('0') != -1) {
-                    SUMOformulaToTPTPformula.lang = "thf";
+                    SUMOformulaToTPTPformula.setLang("thf");
                 }
                 if (args[0].indexOf('v') != -1)
                     KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;

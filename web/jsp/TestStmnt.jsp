@@ -56,9 +56,9 @@ if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
                 error = true;
             }
             SUMOtoTFAform.initOnce();
-            SUMOtoTFAform.varmap = fp.findAllTypeRestrictions(f, kb);
+            SUMOtoTFAform.setVarmap(fp.findAllTypeRestrictions(f, kb));
             if (SUMOtoTFAform.inconsistentVarTypes()) {
-                status.append("Inconsistent variable types: " + SUMOtoTFAform.varmap + "<P>\n");
+                status.append("Inconsistent variable types: " + SUMOtoTFAform.getVarmap() + "<P>\n");
                 error = true;
             }
             if (Diagnostics.quantifierNotInStatement(f)) {

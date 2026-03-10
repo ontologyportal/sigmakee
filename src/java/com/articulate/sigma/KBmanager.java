@@ -303,7 +303,7 @@ public class KBmanager implements Serializable {
 
         if (debug) System.out.println("INFO in KBmanager.infFileOld(): ");
         String lang = "tff";
-        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+        if (SUMOKBtoTPTPKB.getLang().equals("fof"))
             lang = "tptp";
         return infFileOld(lang);
     }

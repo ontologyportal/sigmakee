@@ -25,7 +25,7 @@ public class SUMOtoTFAKBTest extends IntegrationTestBase {
         System.out.println("\n======================== SUMOtoTFAKBTest.init(): ");
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
-        SUMOformulaToTPTPformula.lang = "tff";
+        SUMOformulaToTPTPformula.setLang("tff");
         SUMOtoTFAform.setNumericFunctionInfo();
     }
 
@@ -52,7 +52,7 @@ public class SUMOtoTFAKBTest extends IntegrationTestBase {
         System.out.println("\n======================== SUMOtoTFAKBTest.testPartition(): ");
         List<String> sig = SUMOtoTFAform.relationExtractNonNumericSig("partition__5");
         System.out.println(sig);
-        String expectedRes = "[, Class, Class, Class, Class]";
+        String expectedRes = "[, Class, Class, Class, Class, Class]";
         String result = sig.toString();
         System.out.println("testDynamicSortDef(): result: " + result);
         System.out.println("testDynamicSortDef(): expect: " + expectedRes);

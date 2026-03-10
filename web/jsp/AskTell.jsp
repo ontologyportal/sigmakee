@@ -557,12 +557,12 @@
     String TPTPlang = request.getParameter("TPTPlang");
     if (StringUtil.emptyString(TPTPlang) || TPTPlang.equals("fof")) {
         TPTPlang = "fof";
-        SUMOformulaToTPTPformula.lang = "fof";
-        SUMOKBtoTPTPKB.lang = "fof";
+        SUMOformulaToTPTPformula.setLang("fof");
+        SUMOKBtoTPTPKB.setLang("fof");
     }
     if ("tff".equals(TPTPlang)) {
-        SUMOformulaToTPTPformula.lang = "tff";
-        SUMOKBtoTPTPKB.lang = "tff";
+        SUMOformulaToTPTPformula.setLang("tff");
+        SUMOKBtoTPTPKB.setLang("tff");
     }
 
     boolean syntaxError = false, english = false;
@@ -1033,11 +1033,20 @@
                         out.println("<font color='red'>Could not read test file.</font>");
                     } else {
                         try {
-                            for (String s : itd.statements) {
-                                if (!StringUtil.emptyString(s)) kb.tell(s, session.getId());
+                            final String sid = session.getId();
+                            SessionTPTPManager.beginBatchTells(sid);
+                            try {
+                                for (String s : itd.statements) {
+                                    if (!StringUtil.emptyString(s)) kb.tell(s, sid);
+                                }
+                            }
+                            finally {
+                                SessionTPTPManager.endBatchTells(sid);
                             }
                             FormulaPreprocessor fp = new FormulaPreprocessor();
-                            Set<Formula> qs = fp.preProcess(new Formula(itd.query), true, kb);
+                            Set<Formula> qs =
+                                    SessionTPTPManager.withSessionCache(
+                                            sid, kb, () -> fp.preProcess(new Formula(itd.query), true, kb));
                             for (Formula q : qs) {
                                 String qstr = q.getFormula();
                                 if ("EProver".equals(inferenceEngine)) {
@@ -1498,6 +1507,30 @@
 
     // ===== Server-side execution for "Tell" button =====
     if ("Tell".equalsIgnoreCase(req) && !syntaxError) {
+        // Check if required TPTP format is ready (background generation may still be in progress)
+        boolean tellNeedsFOF = "fof".equals(TPTPlang);
+        boolean tellNeedsTFF = "tff".equals(TPTPlang);
+        boolean tellGenerationInProgress = false;
+        String tellWaitingFor = "";
+
+        if (tellNeedsFOF && !TPTPGenerationManager.isFOFReady()) {
+            tellGenerationInProgress = true;
+            tellWaitingFor = "FOF (SUMO.tptp)";
+        } else if (tellNeedsTFF && !TPTPGenerationManager.isTFFReady()) {
+            tellGenerationInProgress = true;
+            tellWaitingFor = "TFF (SUMO.tff)";
+        }
+
+        if (tellGenerationInProgress) {
+%>
+<div style="border:1px solid #ff9900; background:#fff8f0; padding:16px; margin:10px 0; border-radius:6px;">
+    <strong style="color:#b35900;">KB Translation In Progress</strong><br><br>
+    The <code><%= tellWaitingFor %></code> translation file is still being generated in the background.<br>
+    Please wait a moment and try your assertion again.<br><br>
+    <em style="color:#666;">This happens once after startup while the knowledge base is being prepared for inference.</em>
+</div>
+<%
+        } else {
         try {
             final java.util.concurrent.atomic.AtomicBoolean mustRegenBaseRef =
                     new java.util.concurrent.atomic.AtomicBoolean(false);
@@ -1519,7 +1552,7 @@
                 tellResultRef.set(tellResult);
 
                 if (mustRegen) {
-                    final String requestedLang = SUMOKBtoTPTPKB.lang; // "fof" or "tff"
+                    final String requestedLang = SUMOKBtoTPTPKB.getLang(); // "fof" or "tff"
                     final String lang = "fof".equals(requestedLang) ? "tptp" : "tff";
                     regenLangRef.set(lang);
 
@@ -1598,6 +1631,7 @@
             } catch (com.articulate.sigma.tp.ATPException atpe) {
                 renderExceptionPanel(atpe, out);
             }
+        } // end else (generation ready)
         }
     %>
 </div>

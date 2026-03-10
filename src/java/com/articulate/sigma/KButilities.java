@@ -24,6 +24,9 @@ import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Serializer;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 
 import com.google.common.collect.Sets;
 
@@ -31,13 +34,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -177,6 +174,25 @@ public class KButilities implements ServletContextListener {
         Kryo kryo = new Kryo();
         kryo.setRegistrationRequired(false); // No need to pre-register classes
         kryo.setReferences(true);
+        // ConcurrentHashMap.KeySetView has no no-arg constructor; register custom serializer
+        kryo.register(ConcurrentHashMap.newKeySet().getClass(),
+                new Serializer<java.util.Set<?>>() {
+            @Override
+            public void write(Kryo k, Output output, java.util.Set<?> set) {
+                output.writeInt(set.size());
+                for (Object item : set)
+                    k.writeClassAndObject(output, item);
+            }
+            @Override
+            public java.util.Set<?> read(Kryo k, Input input,
+                    Class<? extends java.util.Set<?>> type) {
+                int size = input.readInt();
+                java.util.Set<Object> set = ConcurrentHashMap.newKeySet(size);
+                for (int i = 0; i < size; i++)
+                    set.add(k.readClassAndObject(input));
+                return set;
+            }
+        });
         return kryo;
     });
 
@@ -282,19 +298,19 @@ public class KButilities implements ServletContextListener {
     public static boolean hasCorrectTypes(KB kb, Formula f) {
 
         SUMOtoTFAform.initOnce();
-        SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
+        SUMOtoTFAform.setVarmap(SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb));
         if (!FormulaPreprocessor.errors.isEmpty()) {
             errors.addAll(FormulaPreprocessor.errors);
             FormulaPreprocessor.errors.clear();
             return false;
         }
-        if (debug) System.out.println("hasCorrectTypes() varmap: " + SUMOtoTFAform.varmap);
+        if (debug) System.out.println("hasCorrectTypes() varmap: " + SUMOtoTFAform.getVarmap());
         Map<String, Set<String>> explicit = SUMOtoTFAform.fp.findExplicitTypes(kb, f);
         if (debug) System.out.println("hasCorrectTypes() explicit: " + explicit);
-        KButilities.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
+        KButilities.mergeToMap(SUMOtoTFAform.getVarmap(),explicit,kb);
         String error;
         if (SUMOtoTFAform.inconsistentVarTypes()) {
-            error = "inconsistent types in " + SUMOtoTFAform.varmap;
+            error = "inconsistent types in " + SUMOtoTFAform.getVarmap();
             System.err.println("hasCorrectTypes(): " + error);
             errors.addAll(SUMOtoTFAform.errors);
             SUMOtoTFAform.errors.clear();

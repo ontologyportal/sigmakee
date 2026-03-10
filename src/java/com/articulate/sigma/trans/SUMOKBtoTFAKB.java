@@ -386,7 +386,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             index = 0;
         }
         List<String> sig = kb.kbCache.signatures.get(t);
-        Map<String,Set<String>> modsig = new HashMap<>();
+        Map<String,Set<String>> modsig = new TreeMap<>();
         String s, strnum;
         for (int i = index; i < sig.size(); i++) {
             s = sig.get(i);
@@ -413,12 +413,13 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                 MapUtils.addToMap(modsig, strnum, strnum + ENTITY_SUFFIX);
             }
         }
-        Set<String> allsig = new HashSet<>();
+        Set<String> allsig = new TreeSet<>();
         allsig.add("");
-        Set<String> sigElem, newsig;
+        Set<String> sigElem;
+        Set<String> newsig;
         for (String str : modsig.keySet()) {  // number of the argument
-            sigElem = modsig.get(str);
-            newsig = new HashSet<>();
+            sigElem = new TreeSet<>(modsig.get(str));
+            newsig = new TreeSet<>();
             for (String res : allsig) {  // all the suffixes for previous arguments
                 for (String suf : sigElem) {  // suffixes for the new argument
                     newsig.add(res + suf);
@@ -618,13 +619,15 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public void writeSorts(PrintWriter pw) {
 
-        Map<String, Set<String>> toExtend = new HashMap<>();
+        Map<String, Set<String>> toExtend = new TreeMap<>();
         handleMathAndComp(toExtend); // needed within processing to determine types even though they don't appear in result
         handleVariableArity(toExtend); // special case
         handleListFn(toExtend);
         String fnSuffix;
         String bareTerm;
-        for (String t : kb.getTerms()) {
+        // Snapshot copy: kb.terms may be modified concurrently by FOF's preProcess()
+        // calling copyNewPredFromVariableArity() on another thread
+        for (String t : new ArrayList<>(kb.getTerms())) {
             bareTerm = SUMOtoTFAform.getBareTerm(t);
             pw.println("% SUMOKBtoTFAKB.writeSorts(): " + t);
             if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): t: " + t);
@@ -706,12 +709,12 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             skbtfakb.initOnce();
             System.out.println("SUMOKBtoTFAKB.main(): completed init");
 
-            SUMOformulaToTPTPformula.lang = "tff"; // this setting has to be *after* initialization, otherwise init
+            SUMOformulaToTPTPformula.setLang("tff"); // this setting has to be *after* initialization, otherwise init
             // tries to write a TPTP file and then sees that tff is set and tries to write tff, but then sorts etc
             // haven't been set
-            SUMOKBtoTPTPKB.lang = "tff";
+            SUMOKBtoTPTPKB.setLang("tff");
             String kbName = KBmanager.getMgr().getPref("sumokbname");
-            String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.lang;
+            String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.getLang();
             System.out.println("SUMOKBtoTFAKB.main(): " + skbtfakb.kb.kbCache.getSignature("ListOrderFn"));
             String fileWritten = null;
             try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(filename)))) {

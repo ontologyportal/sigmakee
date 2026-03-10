@@ -36,6 +36,9 @@ public class FormulaPreprocessor {
      */
     private static final int AXIOM_EXPANSION_LIMIT = 2000;
 
+    private static final Pattern INSTANCE_TYPE_PATTERN = Pattern.compile("\\(instance (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-_]+)");
+    private static final Pattern SUBCLASS_TYPE_PATTERN  = Pattern.compile("\\(subclass (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-]+)");
+
     public static boolean debug = false;
 
     public static boolean addOnlyNonNumericTypes = false;
@@ -258,7 +261,7 @@ public class FormulaPreprocessor {
             //String unquantifiedV = unquantifiedVariables.get(i);
             types = varmap.get(unquantifiedV);
             if (types != null && !types.isEmpty()) {
-                for (String t : types) {
+                for (String t : new TreeSet<>(types)) {
                     if (StringUtil.emptyString(t))
                         continue;
                     if (begin) {
@@ -354,7 +357,7 @@ public class FormulaPreprocessor {
                     existentiallyQV = quantifiedVariables.get(i);
                     types = varmap.get(existentiallyQV);
                     if (types != null && !types.isEmpty()) {
-                        for (String t : types) {
+                        for (String t : new TreeSet<>(types)) {
                             if (StringUtil.emptyString(t))
                                 continue;
                             if (!t.endsWith("+")) {
@@ -447,7 +450,7 @@ public class FormulaPreprocessor {
      */
     protected String getMostRelevantType(KB kb, Set<String> types) {
 
-        Set<String> insts = new HashSet<>();
+        Set<String> insts = new TreeSet<>();
         for (String type : types) {
             if (!type.endsWith("+"))
                 insts.add(type);
@@ -589,8 +592,7 @@ public class FormulaPreprocessor {
         else if (form.isSimpleClause(kb)) {
             if (isNegativeLiteral)  // If form is negative literal, do not add explicit type for the variable
                 return;
-            Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-_]+)");
-            Matcher m = p.matcher(form.getFormula());
+            Matcher m = INSTANCE_TYPE_PATTERN.matcher(form.getFormula());
             String var, cl;
             Set<String> hs;
             while (m.find()) {
@@ -610,8 +612,7 @@ public class FormulaPreprocessor {
                     varExplicitTypes.put(var, hs);
             }
 
-            p = Pattern.compile("\\(subclass (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-]+)");
-            m = p.matcher(form.getFormula());
+            m = SUBCLASS_TYPE_PATTERN.matcher(form.getFormula());
             while (m.find()) {
                 var = m.group(1);
                 cl = m.group(2);
@@ -923,7 +924,7 @@ public class FormulaPreprocessor {
                     instantiations = PredVarInst.instantiatePredVars(f,kb);
                     if (predVars.size() > 1) {
                         if (debug) System.out.println("FormulaPreprocessor.replacePredVarsAndRowVars(): returning doubles: " + instantiations);
-                        if (debug) System.out.println(SUMOtoTFAform.filterMessage);
+                        if (debug) System.out.println(SUMOtoTFAform.getFilterMessage());
                     }
                     if (debug) System.out.println("FormulaPreprocessor.replacePredVarsAndRowVars(): pred vars repl: " + f + "\n" + instantiations);
                     form.errors.addAll(f.getErrors());
@@ -1034,7 +1035,7 @@ public class FormulaPreprocessor {
             if (isQuery)
                 result.addAll(variableReplacements);
             else {
-                Set<Formula> formulae = new HashSet<>();
+                Set<Formula> formulae = new TreeSet<>();
                 String arg0, ioStr, arg;
                 Formula f, ioF;
                 int start, argslen;
@@ -1071,7 +1072,7 @@ public class FormulaPreprocessor {
                         }
                     }
                 }
-                result.addAll(formulae);
+                result.addAll(new TreeSet<>(formulae));
             }
         }
         return result;

@@ -376,7 +376,7 @@ public class EProver {
 
         try {
             String query = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,true);
-            this.qlist = SUMOformulaToTPTPformula.qlist;
+            this.qlist = SUMOformulaToTPTPformula.getQlist();
             String conjecture = "fof(conj1,conjecture, " + query + ").";
             System.out.println("\nINFO in EProver.submitQuery() write: " + conjecture + "\n");
             System.out.println("\nINFO in EProver.submitQuery() write: go.");

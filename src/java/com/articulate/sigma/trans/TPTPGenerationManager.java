@@ -15,7 +15,9 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.HashMap;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -45,14 +47,26 @@ public class TPTPGenerationManager {
 
     private static final Object GEN_LOCK = new Object();
 
+    /**
+     * When true, {@link #startBackgroundGeneration()} returns immediately without
+     * spawning any threads.  All latches are counted down so {@code waitFor*()} calls
+     * do not block.  Intended for tests that drive generation directly via
+     * {@link #generateFOFToPath} / {@link #generateTFFToPath}.
+     */
+    private static final AtomicBoolean skipBackgroundGeneration = new AtomicBoolean(false);
+
+    public static void setSkipBackgroundGeneration(boolean skip) {
+        skipBackgroundGeneration.set(skip);
+    }
+
 
     /**
      * Start background generation of all TPTP formats for all KBs.
      * This should be called after KBmanager initialization is complete.
      *
-     * FOF and TFF run SEQUENTIALLY on the same thread to avoid race conditions
-     * with the static SUMOKBtoTPTPKB.lang and SUMOformulaToTPTPformula.lang fields.
-     * THF generation can run in parallel (uses different code path).
+     * FOF and TFF now run in PARALLEL on separate threads since the shared
+     * static lang/hideNumbers/qlist/varmap/numericConstantTypes/filterMessage
+     * fields have been converted to ThreadLocal.
      */
     public static void startBackgroundGeneration() {
         System.out.println("TPTPGenerationManager: Starting background TPTP generation");
@@ -68,45 +82,53 @@ public class TPTPGenerationManager {
         thfModalReady.set(false);
         thfPlainReady.set(false);
 
-        // Use 3 threads: FOF→TFF sequential on one thread, THF Modal on another, THF Plain on third
-        executor = Executors.newFixedThreadPool(3);
+        if (skipBackgroundGeneration.get()) {
+            System.out.println("TPTPGenerationManager: Background generation suppressed (skipBackgroundGeneration=true)");
+            fofLatch.countDown();
+            tffLatch.countDown();
+            thfModalLatch.countDown();
+            thfPlainLatch.countDown();
+            return;
+        }
+
+        // Use 4 threads: FOF, TFF, THF Modal, THF Plain all in parallel
+        executor = Executors.newFixedThreadPool(4);
 
         for (KB kb : KBmanager.getMgr().kbs.values()) {
-            // FOF and TFF run SEQUENTIALLY on same thread to avoid lang field race condition
+            // FOF on its own thread
             executor.submit(() -> {
-                System.out.println("TPTPGenerationManager: FOF Generating...");
-
                 String kbDir = KBmanager.getMgr().getPref("kbDir");
                 String infFilename = kbDir + File.separator + kb.name + ".tptp";
                 File infFile = new File(infFilename);
-                // Check if file already exists and is not stale
                 if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                    System.out.println("TPTPGenerationManager: FOF file already exists and is current: " + infFilename);
+                    System.out.println("TPTPGenerationManager: FOF file is current: " + infFilename +
+                            "; rebuilding axiomKey in background for incremental patching");
+                    // Mark FOF file ready immediately (file is current for prover use).
+                    // Rebuild axiomKey asynchronously — patchSessionTPTP degrades gracefully
+                    // (no stale-axiom commenting-out) if a tell() arrives before rebuild completes.
+                    new Thread(() -> rebuildAxiomKey(kb), "axiomKey-rebuild-" + kb.name).start();
                     fofReady.set(true);
-                }else{
-                    generateFOF(kb);   // FOF first
+                    fofLatch.countDown();
+                } else {
+                    generateFOF(kb);
                 }
-                System.out.println("TPTPGenerationManager: FOF Finished...");
+            });
 
-//                KBmanager.serialize();
-
-                System.out.println("TPTPGenerationManager: TFF Generating...");
-                infFilename = kbDir + File.separator + kb.name + ".tff";
-                infFile = new File(infFilename);
-                // Check if file already exists and is not stale
+            // TFF on its own thread (parallel with FOF)
+            executor.submit(() -> {
+                String kbDir = KBmanager.getMgr().getPref("kbDir");
+                String infFilename = kbDir + File.separator + kb.name + ".tff";
+                File infFile = new File(infFilename);
                 if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
                     System.out.println("TPTPGenerationManager: TFF file already exists and is current: " + infFilename);
                     tffReady.set(true);
-                }else{
-                    generateTFF(kb);   // TFF after FOF completes
+                    tffLatch.countDown();
+                } else {
+                    generateTFF(kb);
                 }
-                System.out.println("TPTPGenerationManager: TFF complete...");
-
-//                KBmanager.serialize();
-
             });
 
-            // THF can run in parallel (different code path, no shared lang field)
+            // THF can run in parallel (different code path)
             executor.submit(() -> generateTHFModal(kb));
             executor.submit(() -> generateTHFPlain(kb));
         }
@@ -115,6 +137,7 @@ public class TPTPGenerationManager {
     }
 
     public static void generateProperFile(KB kb, String lang) {
+        if (skipBackgroundGeneration.get()) return;
         synchronized (GEN_LOCK) {
             if ("fof".equals(lang) || "tptp".equals(lang)) {
                 generateFOF(kb);
@@ -133,9 +156,6 @@ public class TPTPGenerationManager {
             return; // Already generating
         }
 
-        String originalLang  = SUMOKBtoTPTPKB.lang;
-        String originalLang2 = SUMOformulaToTPTPformula.lang;
-
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String infFilename = kbDir + File.separator + kb.name + ".tptp";
 
@@ -150,9 +170,9 @@ public class TPTPGenerationManager {
             try { java.nio.file.Files.deleteIfExists(tmp); } catch (Exception ignore) {}
 
             // Set BOTH static language fields to FOF
-            SUMOKBtoTPTPKB.lang = "fof";
-            SUMOformulaToTPTPformula.lang = "fof";
-            SUMOformulaToTPTPformula.hideNumbers = true;
+            SUMOKBtoTPTPKB.setLang("fof");
+            SUMOformulaToTPTPformula.setLang("fof");
+            SUMOformulaToTPTPformula.setHideNumbers(true);
 
             // IMPORTANT: write to tmp, not to target
             try (java.io.PrintWriter pw = new java.io.PrintWriter(
@@ -167,12 +187,12 @@ public class TPTPGenerationManager {
 
             // Atomic replace (or fallback)
             try {
-                java.nio.file.Files.move(tmp, target,
-                        java.nio.file.StandardCopyOption.REPLACE_EXISTING,
-                        java.nio.file.StandardCopyOption.ATOMIC_MOVE);
-            } catch (java.nio.file.AtomicMoveNotSupportedException e) {
-                java.nio.file.Files.move(tmp, target,
-                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                Files.move(tmp, target,
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(tmp, target,
+                        StandardCopyOption.REPLACE_EXISTING);
             }
 
             long elapsed = System.currentTimeMillis() - startTime;
@@ -182,11 +202,13 @@ public class TPTPGenerationManager {
         } catch (Exception e) {
             System.err.println("TPTPGenerationManager: Error generating FOF: " + e.getMessage());
             e.printStackTrace();
-            // best effort cleanup
+            // best effort cleanupT
             try { java.nio.file.Files.deleteIfExists(tmp); } catch (Exception ignore) {}
         } finally {
-            SUMOKBtoTPTPKB.lang = originalLang;
-            SUMOformulaToTPTPformula.lang = originalLang2;
+            // Clean up ThreadLocal state to prevent leaks in thread pools
+            SUMOformulaToTPTPformula.clearThreadLocal();
+            SUMOKBtoTPTPKB.clearThreadLocal();
+            SUMOtoTFAform.clearThreadLocal();
             fofGenerating.set(false);
             fofLatch.countDown();
         }
@@ -202,10 +224,6 @@ public class TPTPGenerationManager {
             return; // Already generating
         }
 
-        // Save current lang settings
-        String originalLang  = SUMOKBtoTPTPKB.lang;
-        String originalLang2 = SUMOformulaToTPTPformula.lang;
-
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String infFilename = kbDir + File.separator + kb.name + ".tff";
 
@@ -220,11 +238,11 @@ public class TPTPGenerationManager {
             try { Files.deleteIfExists(tmp); } catch (Exception ignore) {}
 
             // Set BOTH static language fields to TFF
-            SUMOKBtoTPTPKB.lang = "tff";
-            SUMOformulaToTPTPformula.lang = "tff";
+            SUMOKBtoTPTPKB.setLang("tff");
+            SUMOformulaToTPTPformula.setLang("tff");
 
             // IMPORTANT: write to tmp, not target
-            try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(tmp, java.nio.charset.StandardCharsets.UTF_8))) {
+            try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(tmp, StandardCharsets.UTF_8))) {
 
                 if (!kb.formulaMap.isEmpty()) {
                     SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();
@@ -263,9 +281,10 @@ public class TPTPGenerationManager {
             // best-effort cleanup
             try { Files.deleteIfExists(tmp); } catch (Exception ignore) {}
         } finally {
-            // Restore original lang settings
-            SUMOKBtoTPTPKB.lang = originalLang;
-            SUMOformulaToTPTPformula.lang = originalLang2;
+            // Clean up ThreadLocal state to prevent leaks in thread pools
+            SUMOformulaToTPTPformula.clearThreadLocal();
+            SUMOKBtoTPTPKB.clearThreadLocal();
+            SUMOtoTFAform.clearThreadLocal();
             tffGenerating.set(false);
             tffLatch.countDown();
         }
@@ -526,35 +545,84 @@ public class TPTPGenerationManager {
      */
     public static void generateFOFToPath(KB kb, Path outputPath) throws IOException {
 
-        synchronized (GEN_LOCK) {
-            String originalLang = SUMOKBtoTPTPKB.lang;
-            String originalLang2 = SUMOformulaToTPTPformula.lang;
+        try {
+            System.out.println("TPTPGenerationManager: Generating FOF to custom path: " + outputPath);
+            long startTime = System.currentTimeMillis();
 
+            // Set ThreadLocal language fields to FOF
+            SUMOKBtoTPTPKB.setLang("fof");
+            SUMOformulaToTPTPformula.setLang("fof");
+            SUMOformulaToTPTPformula.setHideNumbers(true);
+
+            // Redirect axiomKey writes to a session-local map so this session-specific
+            // generation does not overwrite the global SUMOKBtoTPTPKB.axiomKey, which
+            // must only track shared base-KB axiom names.
+            SUMOKBtoTPTPKB.localAxiomKeyOverride.set(new HashMap<>());
             try {
-                System.out.println("TPTPGenerationManager: Generating FOF to custom path: " + outputPath);
-                long startTime = System.currentTimeMillis();
-
-                // Set BOTH static language fields to FOF
-                SUMOKBtoTPTPKB.lang = "fof";
-                SUMOformulaToTPTPformula.lang = "fof";
-                SUMOformulaToTPTPformula.hideNumbers = true;
-
                 try (PrintWriter pw = new PrintWriter(
-                        Files.newBufferedWriter(outputPath, java.nio.charset.StandardCharsets.UTF_8))) {
+                        Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8))) {
 
                     SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                     skb.kb = kb;
-                    skb.writeFile(outputPath.toString(), null, false, pw);
+                    skb.writeFile(kb.name, null, false, pw);
                 }
-
-                long elapsed = System.currentTimeMillis() - startTime;
-                System.out.println("TPTPGenerationManager: FOF generation to custom path complete in " +
-                                   (elapsed / 1000.0) + "s");
-
             } finally {
-                SUMOKBtoTPTPKB.lang = originalLang;
-                SUMOformulaToTPTPformula.lang = originalLang2;
+                SUMOKBtoTPTPKB.localAxiomKeyOverride.remove();
             }
+
+            long elapsed = System.currentTimeMillis() - startTime;
+            System.out.println("TPTPGenerationManager: FOF generation to custom path complete in " +
+                               (elapsed / 1000.0) + "s");
+
+        } finally {
+            SUMOformulaToTPTPformula.clearThreadLocal();
+            SUMOKBtoTPTPKB.clearThreadLocal();
+            SUMOtoTFAform.clearThreadLocal();
+        }
+    }
+
+    /**
+     * Re-runs the FOF translation pipeline against the shared KB, writing to a
+     * null {@link java.io.PrintWriter} (no disk I/O), solely to populate
+     * {@link SUMOKBtoTPTPKB#axiomKey} in memory.
+     *
+     * <p>Called on warm starts when {@code SUMO.tptp} already exists and is current,
+     * so normal {@link #generateFOF} is skipped.  Without this, {@code axiomKey}
+     * would stay empty until the server is restarted with changed KIF files, causing
+     * every first {@code tell()} in a session to fall back to full TPTP regeneration.
+     *
+     * <p>Runs on a background thread; {@link #fofReady} is already {@code true} by
+     * the time this is launched.  {@link SessionTPTPManager#patchSessionTPTP} degrades
+     * gracefully (no stale-axiom commenting-out) if {@code tell()} arrives before
+     * this completes.
+     *
+     * @param kb the shared knowledge base (must contain only base formulas, no user assertions)
+     */
+    private static void rebuildAxiomKey(KB kb) {
+        try {
+            System.out.println("TPTPGenerationManager: Rebuilding axiomKey in background (warm start, no I/O)...");
+            long start = System.currentTimeMillis();
+            String kbDir = KBmanager.getMgr().getPref("kbDir");
+            String infFilename = kbDir + java.io.File.separator + kb.name + ".tptp";
+            SUMOKBtoTPTPKB.setLang("fof");
+            SUMOformulaToTPTPformula.setLang("fof");
+            SUMOformulaToTPTPformula.setHideNumbers(true);
+            // Null writer: we want the axiomKey side-effect only, not file output.
+            try (java.io.PrintWriter pw = new java.io.PrintWriter(java.io.Writer.nullWriter())) {
+                SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                skb.kb = kb;
+                skb.writeFile(infFilename, null, false, pw);
+            }
+            long elapsed = System.currentTimeMillis() - start;
+            System.out.println("TPTPGenerationManager: axiomKey rebuilt in " +
+                    (elapsed / 1000.0) + "s — " + SUMOKBtoTPTPKB.axiomKey.size() + " entries");
+        } catch (Exception e) {
+            System.err.println("TPTPGenerationManager: Failed to rebuild axiomKey: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            SUMOformulaToTPTPformula.clearThreadLocal();
+            SUMOKBtoTPTPKB.clearThreadLocal();
+            SUMOtoTFAform.clearThreadLocal();
         }
     }
 
@@ -568,46 +636,42 @@ public class TPTPGenerationManager {
      */
     public static void generateTFFToPath(KB kb, Path outputPath) throws IOException {
 
-        synchronized (GEN_LOCK) {
-            String originalLang = SUMOKBtoTPTPKB.lang;
-            String originalLang2 = SUMOformulaToTPTPformula.lang;
+        try {
+            System.out.println("TPTPGenerationManager: Generating TFF to custom path: " + outputPath);
+            long startTime = System.currentTimeMillis();
 
-            try {
-                System.out.println("TPTPGenerationManager: Generating TFF to custom path: " + outputPath);
-                long startTime = System.currentTimeMillis();
+            // Set ThreadLocal language fields to TFF
+            SUMOKBtoTPTPKB.setLang("tff");
+            SUMOformulaToTPTPformula.setLang("tff");
 
-                // Set BOTH static language fields to TFF
-                SUMOKBtoTPTPKB.lang = "tff";
-                SUMOformulaToTPTPformula.lang = "tff";
+            try (PrintWriter pw = new PrintWriter(
+                    Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8))) {
 
-                try (PrintWriter pw = new PrintWriter(
-                        Files.newBufferedWriter(outputPath, java.nio.charset.StandardCharsets.UTF_8))) {
+                if (!kb.formulaMap.isEmpty()) {
+                    SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();
+                    stff.kb = kb;
 
-                    if (!kb.formulaMap.isEmpty()) {
-                        SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();
-                        stff.kb = kb;
+                    SUMOtoTFAform.initOnce();
 
-                        SUMOtoTFAform.initOnce();
+                    stff.writeSorts(pw);
+                    stff.writeFile(kb.name + ".tff", null, false, pw);
 
-                        stff.writeSorts(pw);
-                        stff.writeFile(outputPath.toString(), null, false, pw);
-
-                        if (SUMOKBtoTPTPKB.CWA) {
-                            pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
-                        }
-
-                        stff.printTFFNumericConstants(pw);
+                    if (SUMOKBtoTPTPKB.CWA) {
+                        pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
                     }
+
+                    stff.printTFFNumericConstants(pw);
                 }
-
-                long elapsed = System.currentTimeMillis() - startTime;
-                System.out.println("TPTPGenerationManager: TFF generation to custom path complete in " +
-                                   (elapsed / 1000.0) + "s");
-
-            } finally {
-                SUMOKBtoTPTPKB.lang = originalLang;
-                SUMOformulaToTPTPformula.lang = originalLang2;
             }
+
+            long elapsed = System.currentTimeMillis() - startTime;
+            System.out.println("TPTPGenerationManager: TFF generation to custom path complete in " +
+                               (elapsed / 1000.0) + "s");
+
+        } finally {
+            SUMOformulaToTPTPformula.clearThreadLocal();
+            SUMOKBtoTPTPKB.clearThreadLocal();
+            SUMOtoTFAform.clearThreadLocal();
         }
     }
 

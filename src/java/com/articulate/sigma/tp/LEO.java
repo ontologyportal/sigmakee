@@ -129,9 +129,9 @@ public class LEO {
                     }
                     // 3. Write to new tptp file
                     for (String theTPTPFormula : tptpFormulas) {
-                        pw.print(SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
+                        pw.print(SUMOformulaToTPTPformula.getLang() + "(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
                         pw.println(",axiom,(" + theTPTPFormula + ")).");
-                        tptpStr = SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" +
+                        tptpStr = SUMOformulaToTPTPformula.getLang() + "(kb_" + kb.name + "_UserAssertion" +
                                 "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
                         if (debug) System.out.println("INFO in LEO.assertFormula(2): TPTP for user assertion = " + tptpStr);
                     }
@@ -367,7 +367,7 @@ public class LEO {
 
         System.out.println("Leo.run(): query : " + stmts);
         String lang = "tff";
-        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+        if (SUMOKBtoTPTPKB.getLang().equals("fof"))
             lang = "tptp";
 
         // Use explicit sessionId if provided; otherwise try to extract from kbFile path

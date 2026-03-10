@@ -26,6 +26,7 @@ import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /** ************************************************************
  * Handle operations on an individual formula.  This includes
@@ -35,6 +36,11 @@ import java.util.*;
 public class Formula implements Comparable, Serializable {
 
     public static boolean debug = false;
+
+    private static final Pattern HAS_WHITESPACE  = Pattern.compile(".*\\s.*");
+    private static final Pattern STARTS_WITH_AND = Pattern.compile("^\\s*\\(\\s*and.*");
+    private static final Pattern WHITESPACE_NORM = Pattern.compile("\\s+");
+
 
     public static final String AND    = "and";
     public static final String OR     = "or";
@@ -209,6 +215,9 @@ public class Formula implements Comparable, Serializable {
     public Set<String> termCache = new HashSet<>();
 
     public Set<String> predVarCache = null; // null if not set, empty if no pred vars
+
+    /** Cached result of hashCode() — 0 means not yet computed. Reset whenever theFormula changes. */
+    private int cachedHashCode = 0;
     public Set<String> rowVarCache = null; // null if not set, empty if no row vars
 
     // includes the leading '?'.  Does not include row variables
@@ -308,6 +317,9 @@ public class Formula implements Comparable, Serializable {
      */
     public void setFormula(String f) {
         theFormula = f;
+        cachedHashCode = 0;
+        args = new ArrayList<>();
+        stringArgs = new ArrayList<>();
     }
 
     /** *****************************************************************
@@ -439,6 +451,7 @@ public class Formula implements Comparable, Serializable {
     public void read(String s) {
 
         theFormula = s;
+        cachedHashCode = 0;
         allVarsCache = new HashSet<>();
         allVarsPairCache = new ArrayList<>();
         quantVarsCache = new HashSet<>();
@@ -578,66 +591,12 @@ public class Formula implements Comparable, Serializable {
      */
     public String car() {
 
-        String ans = null;
-        if (this.listP()) {
-            if (this.empty())
-                // NS: Clean this up someday.
-                ans = "";  // this.theFormula;
-            else {
-                String input = this.theFormula.trim();
-                StringBuilder sb = new StringBuilder();
-                List quoteChars = Arrays.asList('"', '\'');
-                int i = 1;
-                int len = input.length();
-                int end = len - 1;
-                int level = 0;
-                char prev = '0';
-                char ch;
-                boolean insideQuote = false;
-                char quoteCharInForce = '0';
-                while (i < end) {
-                    ch = input.charAt(i);
-                    if (!insideQuote) {
-                        if (ch == '(') {
-                            sb.append(ch);
-                            level++;
-                        }
-                        else if (ch == ')') {
-                            sb.append(ch);
-                            level--;
-                            if (level <= 0)
-                                break;
-                        }
-                        else if (Character.isWhitespace(ch) && (level <= 0)) {
-                            if (sb.length() > 0)
-                                break;
-                        }
-                        else if (quoteChars.contains(ch) && (prev != '\\')) {
-                            sb.append(ch);
-                            insideQuote = true;
-                            quoteCharInForce = ch;
-                        }
-                        else
-                            sb.append(ch);
-                    }
-                    else if (quoteChars.contains(ch)
-                             && (ch == quoteCharInForce)
-                             && (prev != '\\')) {
-                        sb.append(ch);
-                        insideQuote = false;
-                        quoteCharInForce = '0';
-                        if (level <= 0)
-                            break;
-                    }
-                    else
-                        sb.append(ch);
-                    prev = ch;
-                    i++;
-                }
-                ans = sb.toString();
-            }
+        if (!this.listP()) return null;
+        if (stringArgs.isEmpty()) {
+            if (this.empty()) return "";
+            loadArguments();
         }
-        return ans;
+        return stringArgs.isEmpty() ? "" : stringArgs.get(0);
     }
 
     /** ***************************************************************
@@ -647,71 +606,19 @@ public class Formula implements Comparable, Serializable {
      */
     public String cdr() {
 
-        String ans = null;
-        if (this.listP()) {
-            if (this.empty())
-                ans = this.theFormula;
-            else {
-                String input = theFormula.trim();
-                List<Character> quoteChars = Arrays.asList('"', '\'');
-                int i = 1;
-                int len = input.length();
-                int end = len - 1;
-                int level = 0;
-                char prev = '0';
-                char ch;
-                boolean insideQuote = false;
-                char quoteCharInForce = '0';
-                int carCount = 0;
-                while (i < end) {
-                    ch = input.charAt(i);
-                    if (!insideQuote) {
-                        if (ch == '(') {
-                            carCount++;
-                            level++;
-                        }
-                        else if (ch == ')') {
-                            carCount++;
-                            level--;
-                            if (level <= 0)
-                                break;
-                        }
-                        else if (Character.isWhitespace(ch) && (level <= 0)) {
-                            if (carCount > 0)
-                                break;
-                        }
-                        else if (quoteChars.contains(ch) && (prev != '\\')) {
-                            carCount++;
-                            insideQuote = true;
-                            quoteCharInForce = ch;
-                        }
-                        else
-                            carCount++;
-                    }
-                    else if (quoteChars.contains(ch)
-                             && (ch == quoteCharInForce)
-                             && (prev != '\\')) {
-                        carCount++;
-                        insideQuote = false;
-                        quoteCharInForce = '0';
-                        if (level <= 0)
-                            break;
-                    }
-                    else
-                        carCount++;
-                    prev = ch;
-                    i++;
-                }
-                if (carCount > 0) {
-                    int j = i + 1;
-                    if (j < end)
-                        ans = LP + input.substring(j, end).trim() + RP;
-                    else
-                        ans = LP+RP;
-                }
-            }
+        if (!this.listP()) return null;
+        if (stringArgs.isEmpty()) {
+            if (this.empty()) return this.theFormula;
+            loadArguments();
         }
-        return ans;
+        if (stringArgs.size() <= 1) return "()";
+        StringBuilder sb = new StringBuilder("(");
+        for (int j = 1; j < stringArgs.size(); j++) {
+            if (j > 1) sb.append(' ');
+            sb.append(stringArgs.get(j));
+        }
+        sb.append(')');
+        return sb.toString();
     }
 
     /** ***************************************************************
@@ -887,13 +794,14 @@ public class Formula implements Comparable, Serializable {
      */
     public static boolean atom(String s) {
 
-        boolean ans = false;
-        if (!StringUtil.emptyString(s)) {
-            String str = s.trim();
-            ans = (StringUtil.isQuotedString(s) ||
-                  (!str.contains(RP) && !str.matches(".*\\s.*")) );
+        if (StringUtil.emptyString(s)) return false;
+        if (StringUtil.isQuotedString(s)) return true;
+        String str = s.trim();
+        if (str.contains(RP)) return false;
+        for (int i = 0; i < str.length(); i++) {
+            if (Character.isWhitespace(str.charAt(i))) return false;
         }
-        return ans;
+        return true;
     }
 
     /** ***************************************************************
@@ -918,7 +826,13 @@ public class Formula implements Comparable, Serializable {
      * parentheses with nothing or whitespace in the middle.
      */
     public static boolean empty(String s) {
-        return (listP(s) && s.matches("\\(\\s*\\)"));
+
+        if (!listP(s)) return false;
+        String str = s.trim(); // consistent with listP's trimming
+        for (int i = 1, end = str.length() - 1; i < end; i++) {
+            if (!Character.isWhitespace(str.charAt(i))) return false;
+        }
+        return true;
     }
 
     /** ***************************************************************
@@ -964,7 +878,7 @@ public class Formula implements Comparable, Serializable {
             result = validArgsRecurse(argF, filename, lineNo);
             if (!"".equals(result))
                 return result;
-            restF.theFormula = restF.cdr();
+            restF.read(restF.cdr());
         }
         String location = "";
         if ((filename != null) && (lineNo != null))
@@ -1167,8 +1081,13 @@ public class Formula implements Comparable, Serializable {
     @Override
     public int hashCode() {
 
-        String thisString = Clausifier.normalizeVariables(this.theFormula).trim();
-        return (thisString.hashCode());
+        int h = cachedHashCode;
+        if (h == 0) {
+            h = Clausifier.normalizeVariables(this.theFormula).trim().hashCode();
+            if (h == 0) h = 1; // sentinel: avoid re-computing for the rare true-zero case
+            cachedHashCode = h;
+        }
+        return h;
     }
 
     /** ***************************************************************
@@ -1189,8 +1108,8 @@ public class Formula implements Comparable, Serializable {
         if (f.theFormula == null) {
             return (this.theFormula == null);
         }
-        String thisString = Clausifier.normalizeVariables(this.theFormula).trim().replaceAll("\\s+", SPACE);
-        String argString = Clausifier.normalizeVariables(f.theFormula).trim().replaceAll("\\s+", SPACE);
+        String thisString = WHITESPACE_NORM.matcher(Clausifier.normalizeVariables(this.theFormula).trim()).replaceAll(SPACE);
+        String argString = WHITESPACE_NORM.matcher(Clausifier.normalizeVariables(f.theFormula).trim()).replaceAll(SPACE);
         return (thisString.equals(argString));
     }
 
@@ -1545,18 +1464,82 @@ public class Formula implements Comparable, Serializable {
      */
     private void loadArguments() {
 
-        if (debug) System.out.println("Formula.loadArgument(): formula to load" + this.theFormula);
+        if (debug) System.out.println("Formula.loadArguments(): formula to load: " + this.theFormula);
         args = new ArrayList<>();
         stringArgs = new ArrayList<>();
-        String nextarg = "";
-        Formula form = this;
-        while (form.listP() && !form.empty()) {
-            nextarg = form.car();
-            stringArgs.add(nextarg);
-            args.add(new Formula(nextarg));
-            form = new Formula(form.cdr());
+        if (!this.listP() || this.empty()) return;
+
+        // Single-pass parse: scan theFormula once and extract all top-level S-expression elements.
+        // Previously used a car()/cdr() loop which re-scanned from the start on every step.
+        String input = this.theFormula.trim();
+        int len = input.length();
+        int i = 1;       // skip opening '('
+        int end = len - 1; // stop before closing ')'
+
+        while (i < end) {
+            // skip whitespace between elements
+            while (i < end && Character.isWhitespace(input.charAt(i))) i++;
+            if (i >= end) break;
+
+            char ch = input.charAt(i);
+            StringBuilder sb = new StringBuilder();
+
+            if (ch == '(') {
+                // Nested list: scan until the matching ')'
+                int level = 0;
+                char prev = '0';
+                boolean insideQuote = false;
+                char quoteCharInForce = '0';
+                while (i < len) {
+                    ch = input.charAt(i);
+                    if (!insideQuote) {
+                        if (ch == '(') { sb.append(ch); level++; }
+                        else if (ch == ')') {
+                            sb.append(ch); level--;
+                            if (level <= 0) { i++; break; }
+                        }
+                        else if ((ch == '"' || ch == '\'') && prev != '\\') {
+                            sb.append(ch); insideQuote = true; quoteCharInForce = ch;
+                        }
+                        else sb.append(ch);
+                    }
+                    else {
+                        sb.append(ch);
+                        if (ch == quoteCharInForce && prev != '\\') insideQuote = false;
+                    }
+                    prev = ch; i++;
+                }
+            }
+            else if (ch == '"' || ch == '\'') {
+                // Quoted string: scan until the matching closing quote
+                char openQuote = ch;
+                sb.append(ch); i++;
+                char prev = ch;
+                while (i < len) {
+                    ch = input.charAt(i);
+                    sb.append(ch); i++;
+                    if (ch == openQuote && prev != '\\') break;
+                    prev = ch;
+                }
+            }
+            else {
+                // Atom: scan until whitespace or ')'
+                while (i < end) {
+                    ch = input.charAt(i);
+                    if (Character.isWhitespace(ch) || ch == ')') break;
+                    sb.append(ch); i++;
+                }
+            }
+
+            String element = sb.toString();
+            if (!element.isEmpty()) {
+                stringArgs.add(element);
+                args.add(new Formula(element));
+            } else if (i < end && input.charAt(i) == ')') {
+                i++; // skip stray ')' to prevent infinite loop on malformed input
+            }
         }
-        if (debug) System.out.println("Formula.loadArgument(): args loaded: " + args);
+        if (debug) System.out.println("Formula.loadArguments(): args loaded: " + args);
     }
 
     /** ***************************************************************
@@ -1746,12 +1729,12 @@ public class Formula implements Comparable, Serializable {
         if (!allVarsPairCache.isEmpty() && KBmanager.initialized)
             return allVarsPairCache;
         List<Set<String>> ans = new ArrayList<>();
-        ans.add(new HashSet());
-        ans.add(new HashSet());
-        allVarsPairCache.add(new HashSet());
-        allVarsPairCache.add(new HashSet());
-    	Set<String> quantified = new HashSet<>();
-    	Set<String> unquantified = new HashSet<>();
+        ans.add(new TreeSet<>());
+        ans.add(new TreeSet<>());
+        allVarsPairCache.add(new TreeSet<>());
+        allVarsPairCache.add(new TreeSet<>());
+    	Set<String> quantified = new TreeSet<>();
+    	Set<String> unquantified = new TreeSet<>();
         unquantified.addAll(collectAllVariables());
         quantified.addAll(collectQuantifiedVariables());
         unquantified.removeAll(quantified);
@@ -2230,7 +2213,7 @@ public class Formula implements Comparable, Serializable {
                                  && !isLogicalOperator(arg)
                                  && !arg.equals(SKFN)
                                  && !StringUtil.isQuotedString(arg)
-                                 && !arg.matches(".*\\s.*")) {
+                                 && !HAS_WHITESPACE.matcher(arg).matches()) {
                             relations.add(arg);
                         }
                         f = f.cdrAsFormula();
@@ -2683,7 +2666,7 @@ public class Formula implements Comparable, Serializable {
             if (kb.isChildOf(nextCar, "TemporalRelation")) {
                 return "";
             }
-            else if(nextCar.matches("^\\s*\\(\\s*and.*")) {
+            else if(STARTS_WITH_AND.matcher(nextCar).matches()) {
                 subFormula = removeTemporalRelations(nextCar, kb);
                 subF = new Formula(LP+subFormula+RP);
                 if (subF.cddr() == null || subF.cddr().isEmpty() || subF.cddr().equals("()")) {
