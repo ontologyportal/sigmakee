@@ -56,7 +56,7 @@ if (!role.equalsIgnoreCase("admin")) {
       <tr>
           <td align="left">
               <font face="Arial,helvetica"><b>Term:</b></font>
-              <input type="text" name="term" VALUE=<%= "\"" + (request.getParameter("term")==null?"":request.getParameter("term")) + "\"" %>><P>
+              <input type="text" name="term" VALUE=<%= "\"" + term + "\"" %>><P>
               <%=EditGUI.genInstPage(kb,term,kbHref)%>
               <%=EditGUI.genClassPage(kb,term,kbHref)%>
               <P>

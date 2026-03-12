@@ -1,5 +1,12 @@
 <%@ include file="Prelude.jsp" %>
 
+<%!
+  private static String escHtml(String s) {
+    if (s == null) return "";
+    return s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;").replace("\"","&quot;");
+  }
+%>
+
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017:-present,
     Infosys (c) 2017-2019.
@@ -49,7 +56,7 @@ if (sentence != null && sentCounter != null)
 
 <form name="sentenceLoader" id="sentenceLoader" action="WordSense.jsp" method="GET">
   <font face="Arial,helvetica"><b>Sentence:&nbsp;</b></font>
-  <input type="textarea" rows="4" cols="50" name="sentence" VALUE=<%= "\"" + (request.getParameter("sentence")==null?"":request.getParameter("sentence")) + "\"" %>>
+  <input type="textarea" rows="4" cols="50" name="sentence" VALUE="<%= escHtml(request.getParameter("sentence")) %>">
   <input type="submit" value="Submit">
 </form>
 
