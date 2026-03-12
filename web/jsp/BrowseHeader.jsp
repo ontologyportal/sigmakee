@@ -13,6 +13,8 @@
 */
 
  term = request.getParameter("term");
+ if (!StringUtil.emptyString(term))
+     term = StringUtil.replaceNonIdChars(StringUtil.removeHTML(term));
 
   String POS = request.getParameter("POS");
   if (POS == null)
@@ -34,7 +36,7 @@
           </td>
           <td align="left" valign="top">
               <input type="submit" value="Show">
-              <img src="pixmaps/1pixel.gif" width="10"><a href="Intersect.jsp?kb=<%=kbName %>&lang=<%=language %>&flang=<%=flang %>&term1=<%=term %>">Term intersection</a>              
+              <img src="pixmaps/1pixel.gif" width="10"><a href="Intersect.jsp?kb=<%=kbName %>&lang=<%=language %>&flang=<%=flang %>&term1=<%=java.net.URLEncoder.encode(term, "UTF-8") %>">Term intersection</a>              
           </td>
          <br> 
       </tr>
