@@ -15,6 +15,14 @@
  term = request.getParameter("term");
  if (!StringUtil.emptyString(term))
      term = StringUtil.replaceNonIdChars(StringUtil.removeHTML(term));
+ else
+     term = "";
+
+  String word = request.getParameter("word");
+  if (!StringUtil.emptyString(word))
+      word = StringUtil.replaceNonIdChars(StringUtil.removeHTML(word));
+  else
+      word = "";
 
   String POS = request.getParameter("POS");
   if (POS == null)
@@ -54,7 +62,7 @@
         <input type="hidden" name="lang" value=<%=language%>>
         <input type="hidden" name="flang" value=<%=flang%>>      
       <td align="left" valign="top">
-          <input type="text" size="27" name="word">
+          <input type="text" size="27" name="word" value="<%= word %>">
           <img src="pixmaps/1pixel.gif" width="3"></td>
       <td align="left" valign="top">
           <select name="POS">
