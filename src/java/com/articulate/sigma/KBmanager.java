@@ -131,6 +131,25 @@ public class KBmanager implements Serializable {
     private static final java.util.concurrent.locks.ReentrantLock SER_LOCK =
             new java.util.concurrent.locks.ReentrantLock();
 
+    /** Build version loaded from version.properties packaged in the WAR/JAR. */
+    public static final String BUILD_VERSION = loadBuildVersion();
+
+    private static String loadBuildVersion() {
+        try (InputStream is = KBmanager.class.getResourceAsStream("/version.properties")) {
+            if (is == null) return "dev";
+            Properties p = new Properties();
+            p.load(is);
+            return p.getProperty("build.version", "dev");
+        }
+        catch (Exception e) {
+            return "dev";
+        }
+    }
+
+    public static String getBuildVersion() {
+        return BUILD_VERSION;
+    }
+
     protected static final String CONFIG_FILE = "config.xml";
     protected static final String KB_MANAGER_SER = "kbmanager.ser";
 

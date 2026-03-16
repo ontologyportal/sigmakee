@@ -313,7 +313,29 @@
         <mkdir dir="${reports.dir}"/>
     </target>
 
-    <target name="dist" depends="compile.test" description="Create the *.war file and place in $CATALINA_HOME/webapps/sigma, create sigmakee.jar.">
+    <target name="generate-version" description="Write version.properties to build/classes">
+        <mkdir dir="${build.classes}"/>
+        <!-- If build.commit was not passed on the command line, try to get it from git -->
+        <exec executable="git" outputproperty="git.commit.sha" failifexecutionfails="false" errorproperty="">
+            <arg value="rev-parse"/>
+            <arg value="--short"/>
+            <arg value="HEAD"/>
+        </exec>
+        <!-- Use git SHA if available -->
+        <condition property="build.commit" value="${git.commit.sha}">
+            <and>
+                <isset property="git.commit.sha"/>
+                <not><equals arg1="${git.commit.sha}" arg2=""/></not>
+            </and>
+        </condition>
+        <!-- Fallback to "dev" if git was unavailable or build.commit not set by caller -->
+        <property name="build.commit" value="dev"/>
+        <echo file="${build.classes}/version.properties" append="false">build.version=${product.Version}-${build.commit}
+build.date=${TODAY_US}
+</echo>
+    </target>
+
+    <target name="dist" depends="compile.test,generate-version" description="Create the *.war file and place in $CATALINA_HOME/webapps/sigma, create sigmakee.jar.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${user.name}"/>
             <attribute name="Specification-Title"
