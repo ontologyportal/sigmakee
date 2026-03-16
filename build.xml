@@ -330,8 +330,16 @@
         </condition>
         <!-- Fallback to "dev" if git was unavailable or build.commit not set by caller -->
         <property name="build.commit" value="dev"/>
+        <!-- Get the date of the current commit (not the build date) -->
+        <exec executable="git" outputproperty="git.commit.date" failifexecutionfails="false" errorproperty="">
+            <arg value="log"/>
+            <arg value="-1"/>
+            <arg value="--format=%cs"/>
+        </exec>
+        <property name="git.commit.date" value=""/>
         <echo file="${build.classes}/version.properties" append="false">build.version=${product.Version}-${build.commit}
-build.date=${TODAY_US}
+build.commit=${build.commit}
+build.date=${git.commit.date}
 </echo>
     </target>
 

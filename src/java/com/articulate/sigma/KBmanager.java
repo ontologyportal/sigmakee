@@ -134,20 +134,38 @@ public class KBmanager implements Serializable {
     /** Build version loaded from version.properties packaged in the WAR/JAR. */
     public static final String BUILD_VERSION = loadBuildVersion();
 
+    /** Raw commit SHA loaded from version.properties (e.g. "ab25e6c"), or "dev". */
+    public static final String BUILD_COMMIT = loadBuildProperty("build.commit", "dev");
+
+    /** Build date loaded from version.properties. */
+    public static final String BUILD_DATE = loadBuildProperty("build.date", "");
+
     private static String loadBuildVersion() {
+        return loadBuildProperty("build.version", "dev");
+    }
+
+    private static String loadBuildProperty(String key, String fallback) {
         try (InputStream is = KBmanager.class.getResourceAsStream("/version.properties")) {
-            if (is == null) return "dev";
+            if (is == null) return fallback;
             Properties p = new Properties();
             p.load(is);
-            return p.getProperty("build.version", "dev");
+            return p.getProperty(key, fallback);
         }
         catch (Exception e) {
-            return "dev";
+            return fallback;
         }
     }
 
     public static String getBuildVersion() {
         return BUILD_VERSION;
+    }
+
+    public static String getBuildCommit() {
+        return BUILD_COMMIT;
+    }
+
+    public static String getBuildDate() {
+        return BUILD_DATE;
     }
 
     protected static final String CONFIG_FILE = "config.xml";
