@@ -1,6 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -447,8 +448,11 @@ public class SUMOKBtoTPTPKB {
             if (result != null) {
                 for (Formula f : result) {
                     s = f.getFormula().replace(value,key);
+                    String varArityTPTP = ExprToTPTP.translateKifString(s, false, getLang());
+                    if (varArityTPTP == null)
+                        varArityTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(s, false);
                     pr.println(getLang() + "(kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement() +
-                            ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s, false) + ")).");
+                            ",axiom,(" + varArityTPTP + ")).");
                 }
             }
         }
@@ -710,7 +714,9 @@ public class SUMOKBtoTPTPKB {
                     switch (getLang()) {
                         case "fof":
                             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tptp input: " + f3.format("", "", Formula.SPACE));
-                            result = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
+                            result = ExprToTPTP.translateKifString(f3.getFormula(), false, "fof");
+                            if (result == null) // fallback to legacy string-based translator
+                                result = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
                             if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
                             if (result != null) {
                                 f.theFofFormulas.add(result);
@@ -902,7 +908,9 @@ public class SUMOKBtoTPTPKB {
                     case "fof":
                         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tptp input: "
                                 + f3.format("", "", " "));
-                        String fofResult = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
+                        String fofResult = ExprToTPTP.translateKifString(f3.getFormula(), false, "fof");
+                        if (fofResult == null) // fallback to legacy string-based translator
+                            fofResult = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
                         if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): result: " + fofResult);
                         if (fofResult != null) {
                             f.theFofFormulas.add(fofResult);

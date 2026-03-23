@@ -16,7 +16,8 @@ import org.junit.runners.Suite;
     RowVarTest.class,
     SortalTest.class,
     TPTPWriterTest.class,
-    TypeTest.class
+    TypeTest.class,
+    KIFEquivalenceTest.class
 })
 public class IntegrationParsingTestSuite extends IntegrationTestBase {
 

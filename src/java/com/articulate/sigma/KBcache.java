@@ -2083,7 +2083,7 @@ public class KBcache implements Serializable {
         StringBuilder sb = new StringBuilder();
         System.out.println("KBcache.storeCacheAsFormulas()");
         long cacheCount = 0;
-        KIF kif = new KIF();
+        KIFAST kif = new KIFAST();
         kif.filename = kb.name + _cacheFileSuffix;
         long millis = System.currentTimeMillis();
         Map<String,Set<String>> valSet;
@@ -2120,7 +2120,7 @@ public class KBcache implements Serializable {
             return;
         }
         if (KBmanager.getMgr().getPref("cache").equals("yes"))
-            kb.addConstituentInfo(kif);
+            kb.addConstituentInfoAST(kif);
 
         System.out.printf("KBcache.storeCacheAsFormulas(): done creating cache formulas, in %d m/s%n", (System.currentTimeMillis() - millis));
         System.out.printf("KBcache.storeCacheAsFormulas(): cached statements: %d%n", cacheCount);

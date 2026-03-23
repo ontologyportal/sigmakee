@@ -24,8 +24,8 @@ public class PredVarInstTest extends IntegrationTestBase {
     private static int process(String input) {
 
         System.out.println("PredVarInstTest Input: " + input);
-        SuokifVisitor.parseString(input);
-        Map<Integer, FormulaAST> hm = SuokifVisitor.result;
+        SuokifVisitor visitor = SuokifVisitor.parseString(input);
+        Map<Integer, FormulaAST> hm = visitor.result;
         VarTypes vt = new VarTypes(hm.values(),kb);
         vt.findTypes();
         FormulaAST f = hm.values().iterator().next();

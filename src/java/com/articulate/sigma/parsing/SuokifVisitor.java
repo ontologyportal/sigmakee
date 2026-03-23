@@ -14,8 +14,8 @@ import org.antlr.v4.runtime.tree.*;
 public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
 
     public static boolean debug = false;
-    public static Map<Integer,FormulaAST> result = new HashMap<>();
-    public static Map<String,Set<FormulaAST>> keys = new HashMap<>();
+    public Map<Integer,FormulaAST> result = new HashMap<>();
+    public Map<String,Set<FormulaAST>> keys = new HashMap<>();
 
     public Set<FormulaAST> hasRowVar;
     public Set<FormulaAST> hasPredVar;
@@ -30,9 +30,6 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
     /** ***************************************************************
      */
     public SuokifVisitor() {
-
-        result.clear();
-        keys.clear();
 
         hasRowVar = new HashSet<>();
         hasPredVar = new HashSet<>();
@@ -76,8 +73,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
         CharStream inputStream = CharStreams.fromString(input);
         SuokifVisitor visitor = new SuokifVisitor();
         visitor.parse_common(inputStream);
-        Map<Integer,FormulaAST> hm = SuokifVisitor.result;
-        if (hm == null || hm.values().isEmpty()) {
+        if (visitor.result.isEmpty()) {
             String errStr = "Error in SuokifVisitor.parseString(): no results for input:\n"  + Formula.textFormat(input);
             System.err.println(errStr);
         }
@@ -95,9 +91,8 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
 
         if (debug) System.out.println(input);
         SuokifVisitor visitor = SuokifVisitor.parseString(input.getFormula());
-        Map<Integer,FormulaAST> hm = SuokifVisitor.result;
-        if (hm != null && !hm.values().isEmpty())
-            for (FormulaAST f : hm.values()) {
+        if (!visitor.result.isEmpty())
+            for (FormulaAST f : visitor.result.values()) {
                 f.startLine = input.startLine;
                 f.endLine = input.endLine;
                 f.sourceFile = input.sourceFile;
@@ -122,7 +117,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
         try {
             fileContext = suokifParser.file();
             visitFile(fileContext);
-            System.out.println("Successful parse, no errors");
+//            System.out.println("Successful parse, no errors");
         } catch (IllegalArgumentException ex) {
             System.err.println(ex.getMessage());
             errors.add(ex.getMessage());
@@ -189,6 +184,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
             if (c instanceof SuokifParser.SentenceContext) {
                 f = visitSentence((SuokifParser.SentenceContext) c);
                 f.parsedFormula = (SuokifParser.SentenceContext) c;
+                f.expr = SuokifToExpr.convert(f.parsedFormula);
                 f.startLine = ((SuokifParser.SentenceContext) c).start.getLine();
                 f.endLine = ((SuokifParser.SentenceContext) c).stop.getLine();
                 f.sourceFile = ((SuokifParser.SentenceContext) c).start.getTokenSource().getSourceName();
@@ -415,7 +411,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 if (debug) System.out.println("isRowVar: " + isRowVarArgument(ac));
                 if (isRowVarArgument(ac)) {
                     f.rowvarLiterals.add(context);
-                    rs = f.new RowStruct();
+                    rs = new FormulaAST.RowStruct();
                     rs.pred = pred;
                     rs.rowvar = ac.getText();
                     if (debug) System.out.println("rs: " + rs);
@@ -424,7 +420,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                     newRowVarStructs.add(rs); // can't add them to the formula's list until we have the whole literal
                 }
                 else if (isConstantArgument(ac)) {
-                    as = f.new ArgStruct();
+                    as = new FormulaAST.ArgStruct();
                     as.pred = pred;
                     as.constant = ac.getText();
                     as.argPos = argnum;
@@ -784,7 +780,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                     vars = varlist.toString().split(Formula.SPACE);
                     for (String var : vars) {
                         if (var.startsWith(Formula.R_PREF)) {
-                            rs = f.new RowStruct();
+                            rs = new FormulaAST.RowStruct();
                             rs.pred = "__quantList";
                             rs.rowvar = var;
                             if (debug) System.out.println("rs: " + rs);
@@ -829,7 +825,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 body = f.getFormula();
                 if (farg != null && farg.getFormula().contains(Formula.R_PREF)) {
                     f.rowvarLiterals.add(context);
-                    rs = f.new RowStruct();
+                    rs = new FormulaAST.RowStruct();
                     rs.pred = "__quantList";
                     rs.rowvar = farg.toString();
                     if (debug) System.out.println("rs: " + rs);
@@ -947,7 +943,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 farg = visitArgument(ac);
                 if (isRowVarArgument(ac)) {
                     farg.rowvarLiterals.add(context);
-                    rs = farg.new RowStruct();
+                    rs = new FormulaAST.RowStruct();
                     rs.pred = funword;
                     rs.rowvar = ac.getText();
                     // rs.literal = f.getFormula(); // formulas isn't complete so can't do it yet
@@ -1026,8 +1022,8 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
             showHelp();
         else {
             if (args != null && args.length > 1 && args[0].equals("-f")) {
-                SuokifVisitor.parseFile(Paths.get(args[1]).toFile());
-                Map<Integer,FormulaAST> hm = SuokifVisitor.result;
+                SuokifVisitor sv = SuokifVisitor.parseFile(Paths.get(args[1]).toFile());
+                Map<Integer,FormulaAST> hm = sv.result;
                 StringBuilder sb = new StringBuilder();
                 for (FormulaAST f : hm.values())
                     sb.append(f.getFormula()).append("\n");

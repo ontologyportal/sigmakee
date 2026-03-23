@@ -56,6 +56,8 @@ MA  02111-1307 USA
 
 */
 
+import com.articulate.sigma.parsing.ExprToTPTP;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.tp.ATPException;
 import com.articulate.sigma.tp.ArityException;
 import com.articulate.sigma.tp.FormulaTranslationException;
@@ -1578,21 +1580,39 @@ public class KB implements Serializable {
      * ArrayList.
      */
     public List<Formula> merge(KIF kif, String pathname) {
+        return mergeFormulaSource(kif.terms, kif.formulas, kif.formulaMap, pathname);
+    }
+
+    /**
+     * KIFAST-based overload of {@link #merge(KIF, String)}.
+     * {@link KIFAST} stores {@link com.articulate.sigma.parsing.FormulaAST} values
+     * (which extend Formula), so it is compatible with the same merge logic.
+     */
+    public List<Formula> merge(KIFAST kif, String pathname) {
+        return mergeFormulaSource(kif.terms, kif.formulas,
+                (Map<String, Formula>)(Map<?,?>)kif.formulaMap, pathname);
+    }
+
+    /** Shared implementation used by both merge() overloads. */
+    private List<Formula> mergeFormulaSource(Set<String> newTerms,
+            Map<String, List<String>> newFormulaIndex,
+            Map<String, Formula> newFormulaMap,
+            String pathname) {
 
         List<Formula> formulasPresent = new ArrayList<>();
         // Add all the terms from the new formula into the KB's current list
-        getTerms().addAll(kif.terms);
-        for (String t : kif.terms)
+        getTerms().addAll(newTerms);
+        for (String t : newTerms)
             capterms.put(t.toUpperCase(),t);
-        Set<String> keys = kif.formulas.keySet();
+        Set<String> keys = newFormulaIndex.keySet();
         List<String> newFormulas, oldFormulas;
         Formula newFormula, oldFormula, f;
         for (String key : keys) {
-            newFormulas = new ArrayList<>(kif.formulas.get(key));
+            newFormulas = new ArrayList<>(newFormulaIndex.get(key));
             if (formulas.containsKey(key)) {
                 oldFormulas = formulas.get(key);
                 for (int i = 0; i < newFormulas.size(); i++) {
-                    newFormula = kif.formulaMap.get(newFormulas.get(i));
+                    newFormula = newFormulaMap.get(newFormulas.get(i));
                     if (pathname != null)
                         newFormula.sourceFile = pathname;
                     boolean found = false;
@@ -1615,7 +1635,7 @@ public class KB implements Serializable {
             else {
                 formulas.put(key, newFormulas);
                 for(String newformulaStr : newFormulas) {
-                    newFormula = kif.formulaMap.get(newformulaStr);
+                    newFormula = newFormulaMap.get(newformulaStr);
                     f = formulaMap.get(newformulaStr);
                     if (f == null) // If kb.formulaMap does not contain the new
                         // formula, should we add it into the kb?
@@ -1717,7 +1737,7 @@ public class KB implements Serializable {
         synchronized (uaLock) {
             String result = "The formula could not be added";
             KBmanager mgr = KBmanager.getMgr();
-            KIF kif = new KIF(); // 1. Parse the input string.
+            KIFAST kif = new KIFAST(); // 1. Parse the input string via ANTLR.
             String msg = kif.parseStatement(input);
             if (msg != null) {
                 throw new FormulaTranslationException("Error parsing \"" + input + "\": " + msg, "KIF");
@@ -1953,34 +1973,36 @@ public class KB implements Serializable {
                 }
                 Set<String> tptpquery = new HashSet<>();
                 StringBuilder combined = new StringBuilder();
+                String lastKifStr;
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
                     for (Formula p : processedQuery) {
                         combined.append(p.getFormula()).append(Formula.SPACE);
                     }
                     combined.append(Formula.RP);
+                    lastKifStr = combined.toString();
                     // Use captured requestedLang to avoid race conditions with background TPTP generation
-                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                            ",conjecture,(" +
-                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
-                            + ")).";
+                    String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
+                    if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
+                    String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
                     tptpquery.add(theTPTPstatement);
                 }
                 else {
                     // Use captured requestedLang to avoid race conditions with background TPTP generation
-                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                            ",conjecture,(" +
-                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().getFormula(), true, requestedLang)
-                            + ")).";
+                    lastKifStr = processedQuery.iterator().next().getFormula();
+                    String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
+                    if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
+                    String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
                     tptpquery.add(theTPTPstatement);
                 }
+                StringBuilder exprQlist = ExprToTPTP.getQlist(lastKifStr);
                 try {
                     tptpQuery = tptpquery;
                     System.out.println("KB.askLeo(): calling with: " + s + ", " + timeout + ", " + tptpquery);
                     System.out.println("KB.askLeo(): qlist: " + leo.qlist);
                     LEO leo = new LEO();
                     leo.run(this, s, timeout, tptpQuery);
-                    leo.qlist = SUMOformulaToTPTPformula.getQlist();
+                    leo.qlist = !exprQlist.isEmpty() ? exprQlist : SUMOformulaToTPTPformula.getQlist();
                     return leo;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -2070,30 +2092,32 @@ public class KB implements Serializable {
                 }
                 Set<String> tptpquery = new HashSet<>();
                 StringBuilder combined = new StringBuilder();
+                String lastKifStr;
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
                     for (Formula p : processedQuery) {
                         combined.append(p.getFormula()).append(Formula.SPACE);
                     }
                     combined.append(Formula.RP);
-                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                            ",conjecture,(" +
-                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
-                            + ")).";
+                    lastKifStr = combined.toString();
+                    String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
+                    if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
+                    String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
                     tptpquery.add(theTPTPstatement);
                 }
                 else {
-                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                            ",conjecture,(" +
-                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().getFormula(), true, requestedLang)
-                            + ")).";
+                    lastKifStr = processedQuery.iterator().next().getFormula();
+                    String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
+                    if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
+                    String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
                     tptpquery.add(theTPTPstatement);
                 }
+                StringBuilder exprQlist = ExprToTPTP.getQlist(lastKifStr);
                 try {
                     tptpQuery = tptpquery;
                     LEO leoInst = new LEO();
                     leoInst.run(this, s, timeout, tptpQuery, sessionId);
-                    leoInst.qlist = SUMOformulaToTPTPformula.getQlist();
+                    leoInst.qlist = !exprQlist.isEmpty() ? exprQlist : SUMOformulaToTPTPformula.getQlist();
                     return leoInst;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -2158,24 +2182,24 @@ public class KB implements Serializable {
                         }
                         combined.append(Formula.RP);
                         // Use captured requestedLang to avoid race conditions with background TPTP generation
-                        String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                                ",conjecture,(" +
-                                SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
-                                + ")).";
+                        String kifStr = combined.toString();
+                        String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
+                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
+                        String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
                         tptpquery.add(theTPTPstatement);
                     }
                     else {
                         // Use captured requestedLang to avoid race conditions with background TPTP generation
-                        String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                                ",conjecture,(" +
-                                SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedStmts.iterator().next().getFormula(), true, requestedLang)
-                                + ")).";
+                        String kifStr = processedStmts.iterator().next().getFormula();
+                        String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
+                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
+                        String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
                         tptpquery.add(theTPTPstatement);
                     }
                     try {
                         tptpQuery = tptpquery;
                         System.out.println("KB.askVampire(): calling with: " + s + ", " + timeout + ", " + tptpquery);
-                        System.out.println("KB.askVampire(): qlist: " + SUMOformulaToTPTPformula.getQlist());
+                        System.out.println("KB.askVampire(): qlist: " + ExprToTPTP.getQlist(processedStmts.iterator().next().getFormula()));
                         System.out.println("KB.askVampire(): mode before: " + Vampire.mode);
                         Vampire vampire = new Vampire();
                         if (Vampire.mode == null) {
@@ -2279,17 +2303,17 @@ public class KB implements Serializable {
                             combined.append(p.getFormula()).append(Formula.SPACE);
                         }
                         combined.append(Formula.RP);
-                        String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                                ",conjecture,(" +
-                                SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
-                                + ")).";
+                        String kifStr = combined.toString();
+                        String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
+                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
+                        String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
                         tptpquery.add(theTPTPstatement);
                     }
                     else {
-                        String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                                ",conjecture,(" +
-                                SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedStmts.iterator().next().getFormula(), true, requestedLang)
-                                + ")).";
+                        String kifStr = processedStmts.iterator().next().getFormula();
+                        String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
+                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
+                        String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
                         tptpquery.add(theTPTPstatement);
                     }
                     try {
@@ -2412,7 +2436,7 @@ public class KB implements Serializable {
      */
     public boolean tellRequiresBaseRegeneration(String input) {
 
-        KIF kif = new KIF();
+        KIFAST kif = new KIFAST();
         String msg = kif.parseStatement(input);
 
         // If it doesn't parse, tell() will fail anyway → no regen decision needed here
@@ -2420,7 +2444,8 @@ public class KB implements Serializable {
 
         if (kif.formulaMap == null || kif.formulaMap.isEmpty()) return false;
 
-        return requiresBaseRegenForFormulas(kif.formulaMap.values());
+        return requiresBaseRegenForFormulas(
+                (java.util.Collection<Formula>)(java.util.Collection<?>)kif.formulaMap.values());
     }
 
 
@@ -3831,6 +3856,91 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * Read a constituent KIF file using the ANTLR-based KIFAST parser.
+     * Controlled by the {@code useAntlrParser} preference in config.xml.
+     */
+    public KIFAST readConstituentAST(String filename) {
+
+        String canonicalPath = null;
+        KIFAST file = null;
+        try {
+            if (filename.endsWith(".owl") || filename.endsWith(".OWL") || filename.endsWith(".rdf")
+                    || filename.endsWith(".RDF")) {
+                OWLtranslator.read(filename);
+                filename = filename + ".kif";
+            }
+            File constituent = new File(filename);
+            canonicalPath = constituent.getCanonicalPath();
+            if (constituents.contains(canonicalPath))
+                errors.add("Error. " + canonicalPath + " already loaded.");
+            file = new KIFAST();
+            file.readFile(canonicalPath);
+            warnings.addAll(file.warningSet);
+        }
+        catch (Exception ex1) {
+            StringBuilder error = new StringBuilder();
+            error.append(ex1.getMessage());
+            error.append(" in file ").append(canonicalPath);
+            errors.add(error.toString());
+            System.err.println("Error in KB.readConstituentAST(): " + error);
+            ex1.printStackTrace();
+        }
+        return file;
+    }
+
+    /***************************************************************
+     * Merge a {@link KIFAST}-parsed constituent into the KB.
+     * Mirrors {@link #addConstituentInfo(KIF)} but works with the typed AST maps.
+     */
+    public void addConstituentInfoAST(KIFAST file) {
+
+        // Term frequencies
+        for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
+            termFrequency.merge(entry.getKey(), entry.getValue(), Integer::sum);
+        }
+
+        int count = 2;
+        int total = file.formulas.keySet().size();
+        // Merge predicate-position index
+        for (String key : file.formulas.keySet()) {
+            if ((count++ % 100) == 1) progressSb.append(".");
+            if ((count % 4000) == 1) {
+                System.out.print(progressSb + "x");
+                progressSb.setLength(0);
+                System.out.printf("%nINFO in KB.addConstituentInfoAST(): still adding keys. %d%% done.%n",
+                        count * 100 / total);
+            }
+            List<String> newlist = file.formulas.get(key);
+            List<String> list = formulas.get(key);
+            if (list != null) {
+                newlist.addAll(list);
+            }
+            formulas.put(key, newlist);
+        }
+
+        count = 2;
+        total = file.formulaMap.values().size();
+        // Merge formulaMap (FormulaAST extends Formula, so it fits Map<String,Formula>)
+        for (FormulaAST f : file.formulaMap.values()) {
+            String internedFormula = f.getFormula().intern();
+            if ((count++ % 100) == 1) progressSb.append(".");
+            if ((count % 4000) == 1) {
+                System.out.print(progressSb + "x");
+                progressSb.setLength(0);
+                System.out.printf("%nINFO in KB.addConstituentInfoAST(): still adding values. %d%% done.%n",
+                        count * 100 / total);
+            }
+            if (!formulaMap.containsKey(internedFormula))
+                formulaMap.put(internedFormula, f);
+        }
+        this.getTerms().addAll(file.terms);
+        for (String t : file.terms)
+            capterms.put(t.toUpperCase(), t);
+        if (!constituents.contains(file.filename) && !file.filename.endsWith(_cacheFileSuffix))
+            constituents.add(file.filename);
+    }
+
+    /***************************************************************
      */
     public KIF readConstituent(String filename) {
 
@@ -3934,12 +4044,22 @@ public class KB implements Serializable {
 
         long millis = System.currentTimeMillis();
         System.out.println("INFO in KB.addConstituent(): " + filename);
-        KIF file = readConstituent(filename);
-        addConstituentInfo(file);
-        System.out.println("\nINFO in KB.addConstituent(): added " + file.formulaMap.values().size() + " formulas and "
-                + file.terms.size() + " terms.");
-        System.out.println("INFO in KB.addConstituent(): " + file.filename + " loaded in: " +
-                (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
+        // KIFAST (ANTLR-based) is the default parser. Opt out with useAntlrParser=false in config.xml.
+        if (!"false".equals(KBmanager.getMgr().getPref("useAntlrParser"))) {
+            KIFAST file = readConstituentAST(filename);
+            addConstituentInfoAST(file);
+            System.out.println("\nINFO in KB.addConstituent(ANTLR): added " + file.formulaMap.values().size()
+                    + " formulas and " + file.terms.size() + " terms.");
+            System.out.println("INFO in KB.addConstituent(ANTLR): " + file.filename + " loaded in: " +
+                    (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
+        } else {
+            KIF file = readConstituent(filename);
+            addConstituentInfo(file);
+            System.out.println("\nINFO in KB.addConstituent(KIF): added " + file.formulaMap.values().size()
+                    + " formulas and " + file.terms.size() + " terms.");
+            System.out.println("INFO in KB.addConstituent(KIF): " + file.filename + " loaded in: " +
+                    (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
+        }
     }
 
     /*****************************************************************
@@ -4821,7 +4941,11 @@ public class KB implements Serializable {
             tptp = new HashSet<>();
             if (tptpParseP) {
                 for (Formula pform : processed) {
-                    tptp.add(SUMOformulaToTPTPformula.tptpParseSUOKIFString(pform.getFormula(), false)); // not a query
+                    String tptpStr = ExprToTPTP.translateKifString(pform.getFormula(), false,
+                            com.articulate.sigma.trans.SUMOKBtoTPTPKB.getLang());
+                    if (tptpStr == null)
+                        tptpStr = SUMOformulaToTPTPformula.tptpParseSUOKIFString(pform.getFormula(), false);
+                    tptp.add(tptpStr); // not a query
                     errors.addAll(pform.getErrors());
                 }
             }

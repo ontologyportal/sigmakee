@@ -25,8 +25,8 @@ public class SortalTest extends IntegrationTestBase {
     public static String process(String input, String expected) {
 
         System.out.println("Input: " + input);
-        SuokifVisitor.parseString(input);
-        Map<Integer,FormulaAST> hm = SuokifVisitor.result;
+        SuokifVisitor visitor = SuokifVisitor.parseString(input);
+        Map<Integer,FormulaAST> hm = visitor.result;
         VarTypes vt = new VarTypes(hm.values(),kb);
         vt.findTypes();
         FormulaAST f = hm.values().iterator().next();
@@ -160,8 +160,8 @@ public class SortalTest extends IntegrationTestBase {
                 "                    (?REL @ROW ?ITEM))))))";
 
         System.out.println("Input: " + input);
-        SuokifVisitor.parseString(input);
-        Map<Integer,FormulaAST> hm = SuokifVisitor.result;
+        SuokifVisitor visitor = SuokifVisitor.parseString(input);
+        Map<Integer,FormulaAST> hm = visitor.result;
         VarTypes vt = new VarTypes(hm.values(),kb);
         vt.findTypes();
         FormulaAST f = hm.values().iterator().next();

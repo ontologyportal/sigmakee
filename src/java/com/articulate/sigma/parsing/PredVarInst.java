@@ -4,6 +4,7 @@ import com.articulate.sigma.KB;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 // Instantiate predicate variables
@@ -19,6 +20,26 @@ public class PredVarInst {
      */
     public PredVarInst(KB kbin) {
         kb = kbin;
+    }
+
+    /**
+     * Recursively substitute all occurrences of {@code Var(varName)} with
+     * {@code Atom(atomName)} in the given {@link Expr} tree.  Returns a new
+     * tree (all nodes are immutable records; unchanged sub-trees are reused).
+     */
+    public static Expr substituteVar(Expr expr, String varName, String atomName) {
+
+        return switch (expr) {
+            case Expr.Var v when v.name().equals(varName) -> new Expr.Atom(atomName);
+            case Expr.SExpr se -> {
+                Expr newHead = se.head() != null ? substituteVar(se.head(), varName, atomName) : null;
+                List<Expr> newArgs = se.args().stream()
+                        .map(a -> substituteVar(a, varName, atomName))
+                        .toList();
+                yield new Expr.SExpr(newHead, newArgs);
+            }
+            default -> expr; // Atom, RowVar, NumLiteral, StrLiteral, other Var — unchanged
+        };
     }
 
     /** ***************************************************************
@@ -56,7 +77,13 @@ public class PredVarInst {
                     fnew = vt.constrainVars(rel, var, fnew);
                     if (debug) System.out.println("PredVarInst.processOne(): substituting: " + rel + " for " + var);
                     if (debug) System.out.println("PredVarInst.processOne(): in formula: " + fnew);
-                    fnew.setFormula(fnew.getFormula().replace(var, rel)); // TODO: vulnerable to a match of variable name substrings
+                    if (fnew.expr != null) {
+                        // Expr-based substitution: precise, no substring-match issues
+                        fnew.expr = substituteVar(fnew.expr, var, rel);
+                        fnew.setFormula(fnew.expr.toKifString());
+                    } else {
+                        fnew.setFormula(fnew.getFormula().replace(var, rel)); // TODO: vulnerable to a match of variable name substrings
+                    }
                     if (debug) System.out.println("PredVarInst.processOne(): with result: " + fnew);
                     for (Set<FormulaAST.RowStruct> frhs : fnew.rowVarStructs.values()) {
                         for (FormulaAST.RowStruct fr : frhs) {
