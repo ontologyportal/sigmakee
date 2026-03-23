@@ -75,7 +75,7 @@ public class ExprToTPTP {
      */
     public static String translateKifString(String kif, boolean query, String lang) {
         try {
-            SuokifVisitor visitor = SuokifVisitor.parseString(kif);
+            SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
             if (visitor.result == null || visitor.result.isEmpty()) return null;
             FormulaAST ast = visitor.result.get(0);
             if (ast == null || ast.expr == null) return null;
@@ -99,7 +99,7 @@ public class ExprToTPTP {
     public static StringBuilder getQlist(String kif) {
         if (kif == null || kif.isEmpty()) return new StringBuilder();
         try {
-            SuokifVisitor visitor = SuokifVisitor.parseString(kif);
+            SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
             if (visitor.result == null || visitor.result.isEmpty()) return new StringBuilder();
             FormulaAST ast = visitor.result.get(0);
             if (ast == null || ast.expr == null) return new StringBuilder();

@@ -14,6 +14,17 @@ import org.antlr.v4.runtime.tree.*;
 public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
 
     public static boolean debug = false;
+
+    // Thread-local reusable ANTLR instances for single-formula hot path (parseSentence)
+    private static final ThreadLocal<SuokifLexer> LEXER_TL =
+        ThreadLocal.withInitial(() -> new SuokifLexer(CharStreams.fromString("")));
+    private static final ThreadLocal<SuokifParser> PARSER_TL =
+        ThreadLocal.withInitial(() -> {
+            SuokifLexer lex = new SuokifLexer(CharStreams.fromString(""));
+            return new SuokifParser(new CommonTokenStream(lex));
+        });
+    // Stateless shared error listener — throws IllegalArgumentException on first syntax error
+    private static final ANTLRErrorListener SHARED_ERROR_LISTENER = new SuokifParserErrorListener();
     public Map<Integer,FormulaAST> result = new HashMap<>();
     public Map<String,Set<FormulaAST>> keys = new HashMap<>();
 
@@ -97,6 +108,42 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 f.endLine = input.endLine;
                 f.sourceFile = input.sourceFile;
             }
+        return visitor;
+    }
+
+    /** ***************************************************************
+     * Parse a single SUO-KIF sentence using thread-local ANTLR instances
+     * and the {@code sentence()} grammar rule (skips file-level EOF handling).
+     * This is the hot-path alternative to {@link #parseString(String)} for use
+     * in {@code ExprToTPTP.translateKifString()} where per-call ANTLR object
+     * allocation is a measurable bottleneck.
+     *
+     * @param input the KIF sentence string (a single top-level S-expression)
+     * @return an instance whose {@code result} map contains at most one formula
+     */
+    public static SuokifVisitor parseSentence(String input) {
+
+        SuokifVisitor visitor = new SuokifVisitor();
+        try {
+            SuokifLexer lexer = LEXER_TL.get();
+            lexer.setInputStream(CharStreams.fromString(input));
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            SuokifParser parser = PARSER_TL.get();
+            parser.setInputStream(tokens);
+            parser.reset();
+            parser.removeErrorListeners();
+            parser.addErrorListener(SHARED_ERROR_LISTENER);
+            SuokifParser.SentenceContext ctx = parser.sentence();
+            FormulaAST f = visitor.visitSentence(ctx);
+            if (f != null) {
+                f.parsedFormula = ctx;
+                f.expr = SuokifToExpr.convert(ctx);
+                visitor.result.put(0, f);
+            }
+        } catch (IllegalArgumentException ex) {
+            visitor.errors.add(ex.getMessage());
+            if (debug) System.err.println("SuokifVisitor.parseSentence(): parse error for: " + input + " — " + ex.getMessage());
+        }
         return visitor;
     }
 

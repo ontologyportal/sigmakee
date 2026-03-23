@@ -1,7 +1,9 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -890,8 +892,41 @@ public class SUMOKBtoTPTPKB {
 
         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : process: " + f);
 
-        // ---- preprocess ----
+        // ---- preprocess + translate ----
         FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        // Expr fast path: FormulaAST with no pred-vars/row-vars bypasses the string-scanning
+        // preProcessRecurse() and the parseSentence() re-parse in translateKifString().
+        // Variable-arity renaming and type restrictions are handled inside preProcessExpr().
+        // Only wired for FOF; TFF still uses SUMOtoTFAform (string-based).
+        boolean usedExprPath = false;
+        if (localLang.equals("fof")
+                && formula instanceof FormulaAST
+                && ((FormulaAST) formula).expr != null
+                && (((FormulaAST) formula).rowVarCache == null || ((FormulaAST) formula).rowVarCache.isEmpty())
+                && (((FormulaAST) formula).predVarCache == null || ((FormulaAST) formula).predVarCache.isEmpty())) {
+            FormulaAST fa = (FormulaAST) formula;
+            Set<Expr> processedExprs = fp.preProcessExpr(fa.expr, false, kb);
+            if (processedExprs != null && !processedExprs.isEmpty()) {
+                usedExprPath = true;
+                for (Expr pexpr : processedExprs) {
+                    if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % expr path fof input: "
+                            + pexpr.toKifString());
+                    String fofResult = ExprToTPTP.translate(pexpr, false, "fof");
+                    if (fofResult == null) { // fallback to legacy string-based translator
+                        String kifStr = pexpr.toKifString();
+                        fofResult = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, false);
+                    }
+                    if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): fof result: " + fofResult);
+                    if (fofResult != null) {
+                        f.theFofFormulas.add(fofResult);
+                        f.theTptpFormulas.add(fofResult); // Legacy compatibility
+                    }
+                }
+            }
+        }
+
+        if (!usedExprPath) {
         Set<Formula> processed = fp.preProcess(f, false, kb);
 
         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : processed: " + processed);
@@ -957,6 +992,7 @@ public class SUMOKBtoTPTPKB {
             res.prologueLines.add("% empty result from preprocess on "
                     + f.getFormula().replace("\\n", Formula.SPACE));
         }
+        } // end if (!usedExprPath)
 
         // Collect sort and TPTP bodies for sequential dedup+write phase (sorted for determinism)
         for (String sort : new TreeSet<>(f.tffSorts)) {

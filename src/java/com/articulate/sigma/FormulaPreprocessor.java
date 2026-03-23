@@ -20,12 +20,16 @@
  */
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.utils.*;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class FormulaPreprocessor {
 
@@ -1095,6 +1099,89 @@ public class FormulaPreprocessor {
      * @return an Set of Formula(s), which could be empty.
      *
      */
+    /** ***************************************************************
+     * Recursively rename any VariableArityRelation predicates in an
+     * {@link Expr} tree by appending the arity suffix {@code __N}
+     * (or {@code __NFn} for function symbols). This mirrors the
+     * renaming done in {@link #preProcessRecurse} and
+     * {@link Formula#renameVariableArityRelations}, but operates
+     * directly on the Expr AST without string reconstruction.
+     */
+    private Expr renameVariableArityInExpr(Expr expr, KB kb) {
+        if (!(expr instanceof Expr.SExpr se)) return expr;
+        // Recurse into all arguments first
+        List<Expr> renamedArgs = se.args().stream()
+                .map(a -> renameVariableArityInExpr(a, kb))
+                .collect(Collectors.toList());
+        Expr head = se.head();
+        if (head instanceof Expr.Atom headAtom) {
+            String pred = headAtom.name();
+            if (kb.kbCache.transInstOf(pred, "VariableArityRelation")) {
+                int arity = renamedArgs.size();
+                String func = kb.kbCache.isInstanceOf(pred, "Function") ? Formula.FN_SUFF : "";
+                String suffix = "__" + arity + func;
+                if (!pred.endsWith(suffix)) {
+                    kb.kbCache.copyNewPredFromVariableArity(pred + suffix, pred, arity);
+                    head = new Expr.Atom(pred + suffix);
+                }
+            }
+        }
+        return new Expr.SExpr(head, renamedArgs);
+    }
+
+    /** ***************************************************************
+     * Expr-based preprocessing: fast path for {@link FormulaAST} formulas
+     * that have no predicate variables and no row variables.
+     *
+     * <p>For the common case (90%+ of SUMO formulas):
+     * <ol>
+     *   <li>Variable-arity renaming is done directly on the {@link Expr} tree
+     *       via {@link #renameVariableArityInExpr}, avoiding all the
+     *       {@link Formula#loadArguments} / {@link Formula#read} overhead in
+     *       {@link #preProcessRecurse}.</li>
+     *   <li>If {@code typePrefix=yes}, {@link #addTypeRestrictions} is called
+     *       on the string fallback and the result is re-parsed via the
+     *       thread-local {@link SuokifVisitor#parseSentence} (Phase 1
+     *       optimisation).</li>
+     * </ol>
+     *
+     * @param expr    the Expr tree from {@link FormulaAST#expr}
+     * @param isQuery {@code true} for query mode
+     * @param kb      the knowledge base
+     * @return set of preprocessed Expr trees ready for
+     *         {@link com.articulate.sigma.parsing.ExprToTPTP#translate}
+     */
+    public Set<Expr> preProcessExpr(Expr expr, boolean isQuery, KB kb) {
+        Set<Expr> results = new HashSet<>();
+        // Step 1: rename variable-arity predicates in the Expr tree
+        Expr renamed = renameVariableArityInExpr(expr, kb);
+        // Step 2: type restrictions (string fallback for addTypeRestrictions)
+        KBmanager mgr = KBmanager.getMgr();
+        boolean typePrefix = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
+        if (typePrefix && !isQuery) {
+            String kifStr = renamed.toKifString();
+            Formula tmpF = new Formula();
+            tmpF.read(kifStr);
+            Formula restricted = addTypeRestrictions(tmpF, kb);
+            String restrictedStr = restricted.getFormula();
+            if (!StringUtil.emptyString(restrictedStr) && !restrictedStr.equals(kifStr)) {
+                // Type restrictions were added — re-parse via thread-local ANTLR
+                SuokifVisitor visitor = SuokifVisitor.parseSentence(restrictedStr);
+                FormulaAST ast = visitor.result.isEmpty() ? null : visitor.result.get(0);
+                if (ast != null && ast.expr != null) {
+                    results.add(ast.expr);
+                } else {
+                    results.add(renamed); // parse failed, use pre-restriction expr
+                }
+            } else {
+                results.add(renamed); // type restrictions left the formula unchanged
+            }
+        } else {
+            results.add(renamed);
+        }
+        return results;
+    }
+
     public Set<Formula> preProcess(Formula form, boolean isQuery, KB kb) {
 
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): form: " + form);
