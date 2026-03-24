@@ -128,10 +128,6 @@ public class ExprToTPTP {
         return body;
     }
 
-    // -----------------------------------------------------------------------
-    // Core recursive translator
-    // -----------------------------------------------------------------------
-
     /**
      * Translate a single {@link Expr} node.
      *
@@ -403,7 +399,7 @@ public class ExprToTPTP {
      * depth-first traversal order — matching
      * {@link Formula#collectUnquantifiedVariables()}.
      */
-    static Set<String> collectFreeVars(Expr expr) {
+    public static Set<String> collectFreeVars(Expr expr) {
         Set<String> bound = new LinkedHashSet<>();
         Set<String> free  = new LinkedHashSet<>();
         collectFreeVars(expr, bound, free);

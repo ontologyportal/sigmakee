@@ -679,15 +679,16 @@ public class SUMOKBtoTPTPKB {
             f.theTptpFormulas.clear(); // Legacy compatibility
             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : source line: " + f.startLine);
             if (!f.getFormula().startsWith("(documentation")) {
-                pw.println("% f: " + f.format("", "", Formula.SPACE));
+                pw.println("% f: " + f.getFormula());
                 if (!f.derivation.parents.isEmpty()) {
                     for (Formula derivF : f.derivation.parents)
-                        pw.println("% original f: " + derivF.format("", "", Formula.SPACE));
+                        pw.println("% original f: " + derivF.getFormula());
                 }
                 pw.println("% " + formCount.getAndIncrement() + " of " + total +
                         " from file " + f.sourceFile + " at line " + f.startLine);
             }
-            if (f.isHigherOrder(kb)) {
+            boolean isHOL = isHigherOrderExpr(f, kb);
+            if (isHOL) {
                 pw.println("% is higher order");
                 if (getLang().equals("thf")) {  // TODO create a flag for adding modals (or not)
                     f = Modals.processModals(f,kb);
@@ -805,6 +806,58 @@ public class SUMOKBtoTPTPKB {
     }
 
 
+    /**
+     * Expr-based analogue of {@link Formula#isHigherOrder(KB)}.
+     *
+     * <p>Walks the already-parsed {@link Expr} tree without constructing any
+     * {@link Formula} objects or calling {@code findAllTypeRestrictions}.
+     * The logic mirrors {@code Formula.isHigherOrder} exactly:
+     * <ul>
+     *   <li>If the predicate's signature contains {@code "Formula"} → HOL.</li>
+     *   <li>For logical operators: recurse into each compound (non-atom, non-function) arg.</li>
+     *   <li>For regular predicates: any compound non-function arg → HOL immediately.</li>
+     * </ul>
+     */
+    private static boolean isHigherOrderExpr(Expr expr, KB kb) {
+        if (!(expr instanceof Expr.SExpr se)) return false;
+        String head = se.headName();
+        if (head == null) return false; // var-list node inside a quantifier
+        List<String> sig = kb.kbCache.getSignature(head);
+        if (sig != null && !Formula.isVariable(head) && sig.contains("Formula"))
+            return true;
+        boolean logop = Formula.isLogicalOperator(head);
+        for (Expr arg : se.args()) {
+            if (!(arg instanceof Expr.SExpr argSe)) continue; // atom/var/literal — not HOL
+            String argHead = argSe.headName();
+            if (argHead != null && !kb.isFunction(argHead)) {
+                // compound, non-function arg
+                if (logop) {
+                    if (isHigherOrderExpr(argSe, kb)) return true; // recurse for logical ops
+                } else {
+                    return true; // compound non-function arg to non-logop predicate → HOL
+                }
+            } else {
+                // function application (or null-head var-list) — recurse
+                if (isHigherOrderExpr(argSe, kb)) return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Dispatches to {@link #isHigherOrderExpr(Expr, KB)} when the formula
+     * has a parsed {@link Expr} tree, otherwise falls back to
+     * {@link Formula#isHigherOrder(KB)}.
+     */
+    private static boolean isHigherOrderExpr(Formula f, KB kb) {
+        if (f instanceof FormulaAST fa && fa.expr != null) {
+            boolean hol = isHigherOrderExpr(fa.expr, kb);
+            if (hol) fa.higherOrder = true;
+            return hol;
+        }
+        return f.isHigherOrder(kb);
+    }
+
     private static boolean isNonReasoningForATP(String kif) {
         // keep it cheap: no parsing, just prefix checks / contains checks
         return kif.startsWith("(termFormat ")
@@ -860,19 +913,20 @@ public class SUMOKBtoTPTPKB {
         }
         f.theTptpFormulas.clear(); // Legacy compatibility
 
-        // Prologue comment lines
-        if (!f.getFormula().startsWith("(documentation")) {
-            res.prologueLines.add("% f: " + f.format("", "", Formula.SPACE));
-            if (!f.derivation.parents.isEmpty()) {
-                for (Formula derivF : f.derivation.parents)
-                    res.prologueLines.add("% original f: " + derivF.format("", "", Formula.SPACE));
-            }
-            res.prologueLines.add("% " + formulaIndex + " of " + total
-                    + " from file " + f.sourceFile + " at line " + f.startLine);
+        // Prologue comment lines (getFormula() is O(1) vs format() which scans char-by-char)
+        res.prologueLines.add("% f: " + f.getFormula());
+        if (!f.derivation.parents.isEmpty()) {
+            for (Formula derivF : f.derivation.parents)
+                res.prologueLines.add("% original f: " + derivF.getFormula());
         }
+        res.prologueLines.add("% " + formulaIndex + " of " + total
+                + " from file " + f.sourceFile + " at line " + f.startLine);
 
-        // HOL check
-        if (f.isHigherOrder(kb)) {
+        // HOL check — use Expr fast path when available (avoids findAllTypeRestrictions +
+        // Formula allocation per arg in the original string-based isHigherOrder)
+        boolean isHOL = isHigherOrderExpr(f, kb);
+        if (isHOL) {
+            f.higherOrder = true;
             res.prologueLines.add("% is higher order");
             if (localLang.equals("thf"))
                 f = Modals.processModals(f, kb);
@@ -903,8 +957,8 @@ public class SUMOKBtoTPTPKB {
         if (localLang.equals("fof")
                 && formula instanceof FormulaAST
                 && ((FormulaAST) formula).expr != null
-                && (((FormulaAST) formula).rowVarCache == null || ((FormulaAST) formula).rowVarCache.isEmpty())
-                && (((FormulaAST) formula).predVarCache == null || ((FormulaAST) formula).predVarCache.isEmpty())) {
+                && ((formula).rowVarCache == null || (formula).rowVarCache.isEmpty())
+                && ((formula).predVarCache == null || (formula).predVarCache.isEmpty())) {
             FormulaAST fa = (FormulaAST) formula;
             Set<Expr> processedExprs = fp.preProcessExpr(fa.expr, false, kb);
             if (processedExprs != null && !processedExprs.isEmpty()) {
@@ -1166,12 +1220,12 @@ public class SUMOKBtoTPTPKB {
             return removeNum;
         }
         if (removeStrings && (tptp.contains("'") || tptp.indexOf('"') >= 0)) {
-            pw.println("% f: " + form.format("", "", Formula.SPACE));
+            pw.println("% f: " + form.getFormula());
             pw.println("% quoted thing");
             return true;
         }
 
-        if (form.isHigherOrder(kb))
+        if (isHigherOrderExpr(form, kb))
             if (removeHOL)
                 return true;
         if (!filterExcludePredicates(form)) {
@@ -1199,12 +1253,12 @@ public class SUMOKBtoTPTPKB {
             return removeNum;
         }
         if (removeStrings && (tptp.contains("'") || tptp.indexOf('"') >= 0)) {
-            fileContents.add("% f: " + form.format("", "", Formula.SPACE));
+            fileContents.add("% f: " + form.getFormula());
             fileContents.add("% quoted thing");
             return true;
         }
 
-        if (form.isHigherOrder(kb))
+        if (isHigherOrderExpr(form, kb))
             if (removeHOL)
                 return true;
         if (!filterExcludePredicates(form)) {

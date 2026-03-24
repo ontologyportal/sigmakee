@@ -21,8 +21,8 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.parsing.FormulaAST;
-import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.utils.*;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 
@@ -1099,6 +1099,358 @@ public class FormulaPreprocessor {
      * @return an Set of Formula(s), which could be empty.
      *
      */
+    // -----------------------------------------------------------------------
+    // Pure-Expr type-restriction pipeline (no string round-trip)
+    // -----------------------------------------------------------------------
+
+    /** ***************************************************************
+     * Expr analogue of {@link #computeVariableTypes(Formula, KB)}.
+     *
+     * <p>Walks the Expr tree and collects a {@code variable → types} map
+     * by looking up each predicate's argument signature in
+     * {@code kb.kbCache.signatures}.  No KIF string is constructed.</p>
+     */
+    Map<String, Set<String>> computeVariableTypesExpr(Expr expr, KB kb) {
+        return computeVariableTypesRecurseExpr(kb, expr, new HashMap<>());
+    }
+
+    private Map<String, Set<String>> computeVariableTypesRecurseExpr(KB kb, Expr expr,
+                                                                      Map<String, Set<String>> input) {
+        if (!(expr instanceof Expr.SExpr se)) return new HashMap<>();
+        String head = se.headName();
+        if (head == null) return new HashMap<>(); // var-list node inside a quantifier
+
+        Map<String, Set<String>> result = new HashMap<>();
+
+        if (Formula.isLogicalOperator(head) && !head.equals(Formula.EQUAL)) {
+            // Logical operator: recurse into subformulas
+            result.putAll(input);
+            int start = 0;
+            if (Formula.isQuantifier(head)) start = 1; // skip the variable-list argument
+            for (int i = start; i < se.args().size(); i++) {
+                result = KButilities.mergeToMap(result,
+                        computeVariableTypesRecurseExpr(kb, se.args().get(i), input), kb);
+            }
+        } else {
+            // Predicate application (ground or with variables)
+            String pred = head;
+            if (!Formula.isVariable(pred)) {
+                // Special case: (equal funcExpr ?var) or (equal ?var funcExpr)
+                if (pred.equals(Formula.EQUAL) && se.args().size() >= 2) {
+                    Expr a0 = se.args().get(0);
+                    Expr a1 = se.args().get(1);
+                    if (a0 instanceof Expr.Var vv && a1 instanceof Expr.SExpr fse) {
+                        String fhead = fse.headName();
+                        if (fhead != null && kb.isFunction(fhead)) {
+                            String type = kb.kbCache.getRange(fhead);
+                            MapUtils.addToMap(result, vv.name(), type != null ? type : "Entity");
+                        }
+                    }
+                    if (a1 instanceof Expr.Var vv && a0 instanceof Expr.SExpr fse) {
+                        String fhead = fse.headName();
+                        if (fhead != null && kb.isFunction(fhead)) {
+                            String type = kb.kbCache.getRange(fhead);
+                            MapUtils.addToMap(result, vv.name(), type != null ? type : "Entity");
+                        }
+                    }
+                }
+                int argnum = 1;
+                for (Expr arg : se.args()) {
+                    if (arg instanceof Expr.Var vv) {
+                        String cl = findType(argnum, pred, kb);
+                        if (!StringUtil.emptyString(cl)) {
+                            MapUtils.addToMap(result, vv.name(), cl);
+                        }
+                    } else if (arg instanceof Expr.SExpr argSe) {
+                        String argHead = argSe.headName();
+                        if (argHead != null && !Formula.isVariable(argHead) && kb.isFunction(argHead)) {
+                            result = KButilities.mergeToMap(result,
+                                    computeVariableTypesRecurseExpr(kb, arg, input), kb);
+                        }
+                    }
+                    argnum++;
+                }
+            }
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * Expr analogue of {@link #findExplicitTypesClassesInAntecedent(KB, Formula)}.
+     *
+     * <p>Locates the antecedent of an implication
+     * ({@code (=> A B)} → A, {@code (<=> A B)} → A, otherwise the whole
+     * formula), then walks it collecting variables that are explicitly
+     * typed with {@code (instance ?V T)} or {@code (subclass ?V T)}
+     * expressions.</p>
+     */
+    private Map<String, Set<String>> findExplicitTypesClassesInAntecedentExpr(Expr expr, KB kb) {
+        Expr antecedent = findAntecedentExpr(expr);
+        Map<String, Set<String>> varExplicitTypes   = new HashMap<>();
+        Map<String, Set<String>> varExplicitClasses = new HashMap<>();
+        findExplicitTypesRecurseExpr(antecedent, false, varExplicitTypes, varExplicitClasses);
+        return varExplicitTypes;
+    }
+
+    private static Expr findAntecedentExpr(Expr expr) {
+        if (!(expr instanceof Expr.SExpr se)) return expr;
+        String head = se.headName();
+        if ((Formula.IF.equals(head) || Formula.IFF.equals(head)) && se.args().size() >= 2)
+            return se.args().get(0);
+        return expr;
+    }
+
+    private static void findExplicitTypesRecurseExpr(Expr expr, boolean isNegativeLiteral,
+                                                      Map<String, Set<String>> varExplicitTypes,
+                                                      Map<String, Set<String>> varExplicitClasses) {
+        if (!(expr instanceof Expr.SExpr se)) return;
+        String head = se.headName();
+        if (head == null) return;
+
+        if (Formula.isLogicalOperator(head)) {
+            switch (head) {
+                case Formula.UQUANT:
+                case Formula.EQUANT:
+                    // Skip variable-list; recurse into body only
+                    if (se.args().size() == 2)
+                        findExplicitTypesRecurseExpr(se.args().get(1), false,
+                                varExplicitTypes, varExplicitClasses);
+                    break;
+                case Formula.NOT:
+                    for (Expr arg : se.args())
+                        findExplicitTypesRecurseExpr(arg, true,
+                                varExplicitTypes, varExplicitClasses);
+                    break;
+                default:
+                    for (Expr arg : se.args())
+                        findExplicitTypesRecurseExpr(arg, false,
+                                varExplicitTypes, varExplicitClasses);
+                    break;
+            }
+        } else {
+            if (isNegativeLiteral) return;
+            // Match (instance ?V T) or (subclass ?V T) where V is a Var and T is an Atom
+            if ("instance".equals(head) && se.args().size() == 2
+                    && se.args().get(0) instanceof Expr.Var vv
+                    && se.args().get(1) instanceof Expr.Atom typeAtom
+                    && !typeAtom.name().startsWith(Formula.V_PREF)) {
+                MapUtils.addToMap(varExplicitTypes, vv.name(), typeAtom.name());
+            } else if ("subclass".equals(head) && se.args().size() == 2
+                    && se.args().get(0) instanceof Expr.Var vv
+                    && se.args().get(1) instanceof Expr.Atom typeAtom
+                    && !typeAtom.name().startsWith(Formula.V_PREF)) {
+                MapUtils.addToMap(varExplicitClasses, vv.name(), typeAtom.name() + "+");
+            } else {
+                // Recurse into any other predicate's args (handles function-nested expressions)
+                for (Expr arg : se.args())
+                    findExplicitTypesRecurseExpr(arg, false, varExplicitTypes, varExplicitClasses);
+            }
+        }
+    }
+
+    /** ***************************************************************
+     * Fully Expr-based replacement for {@link #findTypeRestrictions(Formula, KB)}.
+     *
+     * <p>No KIF string is ever constructed.  Merging logic is identical to
+     * the original: domain types are kept for implicitly-typed variables;
+     * for explicitly-typed variables only {@code "+"} (subclass) markers
+     * from either source are retained.</p>
+     *
+     * <p>This is intentionally package-private for unit testing.</p>
+     */
+    Map<String, Set<String>> findTypeRestrictionsExpr(Expr expr, KB kb) {
+        Map<String, Set<String>> varDomainTypes   = computeVariableTypesExpr(expr, kb);
+        Map<String, Set<String>> varExplicitTypes = findExplicitTypesClassesInAntecedentExpr(expr, kb);
+
+        Map<String, Set<String>> varmap = new HashMap<>();
+        for (Map.Entry<String, Set<String>> e : varDomainTypes.entrySet()) {
+            String var = e.getKey();
+            if (!varExplicitTypes.containsKey(var)) {
+                varmap.put(var, e.getValue());
+            } else {
+                // Variable already has an explicit type — keep only subclass ("+") markers
+                Set<String> types = new HashSet<>();
+                for (String dt : e.getValue())
+                    if (dt.endsWith("+")) types.add(dt);
+                for (String et : varExplicitTypes.get(var))
+                    if (et.endsWith("+")) types.add(et);
+                varmap.put(var, types);
+            }
+        }
+        return varmap;
+    }
+
+    /** ***************************************************************
+     * Build a single type-guard {@link Expr}: {@code (instance ?V T)} or
+     * {@code (subclass ?V T)} for a {@code T+} marker.
+     * Returns {@code null} when the type should be skipped (Entity, World,
+     * or a numeric type when {@link #addOnlyNonNumericTypes} is set).
+     */
+    private Expr buildTypeGuardExpr(String varName, String type, KB kb) {
+        if (StringUtil.emptyString(type)) return null;
+        if (type.endsWith("+")) {
+            String t = type.substring(0, type.length() - 1);
+            if (t.equals("Entity")) return null;
+            return new Expr.SExpr(new Expr.Atom("subclass"),
+                    List.of(new Expr.Var(varName), new Expr.Atom(t)));
+        } else {
+            if (type.equals("Entity") || type.equals("World")) return null;
+            if (addOnlyNonNumericTypes && kb.isSubclass(type, "Quantity")) return null;
+            return new Expr.SExpr(new Expr.Atom("instance"),
+                    List.of(new Expr.Var(varName), new Expr.Atom(type)));
+        }
+    }
+
+    /** ***************************************************************
+     * Wrap a non-empty list of guard {@link Expr}s into
+     * {@code (and g1 g2 ...)} or return the single element directly
+     * when the list has exactly one entry (eliminating a unary {@code and}).
+     */
+    private static Expr wrapAndExpr(List<Expr> guards) {
+        if (guards.size() == 1) return guards.get(0);
+        return new Expr.SExpr(new Expr.Atom(Formula.AND), guards);
+    }
+
+    /** ***************************************************************
+     * Recursively walk an {@link Expr} tree and inject type guards
+     * inside quantifier ({@code forall}/{@code exists}) bodies.
+     * This is the Expr-based analogue of
+     * {@link #addTypeRestrictionsRecurse(KB, Formula, StringBuilder)}.
+     *
+     * <ul>
+     *   <li>{@code forall (?Z) body} with guard G becomes
+     *       {@code forall (?Z) (=> G body)}</li>
+     *   <li>{@code exists (?Z) body} with guard G becomes
+     *       {@code exists (?Z) (and G body)}</li>
+     *   <li>Other logical operators are recursed into transparently.</li>
+     *   <li>Simple predicate clauses are returned unchanged.</li>
+     * </ul>
+     *
+     * @param expr    Expr subtree to transform
+     * @param varmap  type map for the current lexical scope
+     * @param kb      knowledge base (for {@link #buildTypeGuardExpr})
+     * @return transformed Expr; may be the same object when nothing changed
+     */
+    private Expr addTypeRestrictionsRecurseExpr(Expr expr,
+                                                 Map<String, Set<String>> varmap,
+                                                 KB kb) {
+        if (!(expr instanceof Expr.SExpr se)) return expr;
+        String head = se.headName();
+        if (head == null) return expr; // variable-list node inside a quantifier
+
+        boolean isLogOp = Formula.isLogicalOperator(head);
+        boolean isEqual  = head.equals(Formula.EQUAL);
+        if (!isLogOp && !isEqual) {
+            return expr; // simple clause — return unchanged
+        }
+
+        if (head.equals(Formula.EQUANT) || head.equals(Formula.UQUANT)) {
+            if (se.args().size() != 2) return expr;
+            Expr varListExpr = se.args().get(0);
+            Expr bodyExpr    = se.args().get(1);
+
+            // Collect quantified variable names
+            List<String> quantVarNames = new ArrayList<>();
+            if (varListExpr instanceof Expr.SExpr varSe) {
+                for (Expr v : varSe.args()) {
+                    if (v instanceof Expr.Var vv)         quantVarNames.add(vv.name());
+                    else if (v instanceof Expr.RowVar rv) quantVarNames.add(rv.name());
+                }
+            }
+
+            // Compute type restrictions scoped to this sub-expression
+            Map<String, Set<String>> subVarmap = findTypeRestrictionsExpr(expr, kb);
+
+            // Build type guards for the quantified variables
+            List<Expr> guards = new ArrayList<>();
+            for (String qv : quantVarNames) {
+                Set<String> types = subVarmap.get(qv);
+                if (types != null) {
+                    for (String t : new TreeSet<>(types)) {
+                        Expr g = buildTypeGuardExpr(qv, t, kb);
+                        if (g != null) guards.add(g);
+                    }
+                }
+            }
+
+            // Recurse into the body
+            Expr newBody = addTypeRestrictionsRecurseExpr(bodyExpr, subVarmap, kb);
+
+            if (guards.isEmpty()) {
+                if (newBody == bodyExpr) return expr; // nothing changed
+                return new Expr.SExpr(se.head(), List.of(varListExpr, newBody));
+            }
+
+            Expr guardedBody;
+            if (head.equals(Formula.EQUANT)) {
+                // (exists (?Z) (and (instance ?Z T) body))
+                List<Expr> andArgs = new ArrayList<>(guards);
+                andArgs.add(newBody);
+                guardedBody = wrapAndExpr(andArgs);
+            } else {
+                // (forall (?Z) (=> (and (instance ?Z T)) body))
+                Expr antecedent = wrapAndExpr(guards);
+                guardedBody = new Expr.SExpr(new Expr.Atom(Formula.IF),
+                        List.of(antecedent, newBody));
+            }
+            return new Expr.SExpr(se.head(), List.of(varListExpr, guardedBody));
+
+        } else {
+            // Other logical operators: recurse into all arguments
+            boolean changed = false;
+            List<Expr> newArgs = new ArrayList<>(se.args().size());
+            for (Expr arg : se.args()) {
+                Expr newArg = addTypeRestrictionsRecurseExpr(arg, varmap, kb);
+                if (newArg != arg) changed = true;
+                newArgs.add(newArg);
+            }
+            return changed ? new Expr.SExpr(se.head(), newArgs) : expr;
+        }
+    }
+
+    /** ***************************************************************
+     * Expr-based equivalent of {@link #addTypeRestrictions(Formula, KB)}.
+     *
+     * <p>Wraps the formula with type-guard antecedents for free variables
+     * and injects type guards inside quantifier bodies via
+     * {@link #addTypeRestrictionsRecurseExpr}.  Returns the original
+     * {@code expr} reference unchanged when no type restrictions apply,
+     * allowing the caller to detect this with reference equality.</p>
+     *
+     * <p>This is intentionally package-private for unit testing.</p>
+     *
+     * @param expr   the Expr tree (after variable-arity renaming)
+     * @param varmap type map from {@link #findTypeRestrictionsExpr}
+     * @param kb     knowledge base
+     * @return type-guarded Expr, or {@code expr} itself if nothing changed
+     */
+    Expr addTypeRestrictionsExpr(Expr expr, Map<String, Set<String>> varmap, KB kb) {
+        // Collect free (unquantified) variables
+        Set<String> freeVars = ExprToTPTP.collectFreeVars(expr);
+
+        // Build guards for free variables
+        List<Expr> freeGuards = new ArrayList<>();
+        for (String fv : freeVars) {
+            Set<String> types = varmap.get(fv);
+            if (types != null) {
+                for (String t : new TreeSet<>(types)) {
+                    Expr g = buildTypeGuardExpr(fv, t, kb);
+                    if (g != null) freeGuards.add(g);
+                }
+            }
+        }
+
+        // Recursively inject guards into quantifier bodies
+        Expr body = addTypeRestrictionsRecurseExpr(expr, varmap, kb);
+
+        // Wrap with free-variable guards (if any)
+        if (freeGuards.isEmpty()) {
+            return body; // same reference as expr when nothing changed inside
+        }
+        Expr antecedent = wrapAndExpr(freeGuards);
+        return new Expr.SExpr(new Expr.Atom(Formula.IF), List.of(antecedent, body));
+    }
+
     /** ***************************************************************
      * Recursively rename any VariableArityRelation predicates in an
      * {@link Expr} tree by appending the arity suffix {@code __N}
@@ -1139,10 +1491,9 @@ public class FormulaPreprocessor {
      *       via {@link #renameVariableArityInExpr}, avoiding all the
      *       {@link Formula#loadArguments} / {@link Formula#read} overhead in
      *       {@link #preProcessRecurse}.</li>
-     *   <li>If {@code typePrefix=yes}, {@link #addTypeRestrictions} is called
-     *       on the string fallback and the result is re-parsed via the
-     *       thread-local {@link SuokifVisitor#parseSentence} (Phase 1
-     *       optimisation).</li>
+     *   <li>If {@code typePrefix=yes}, {@link #addTypeRestrictionsExpr} is called
+     *       directly on the {@link Expr} tree — no string round-trip,
+     *       no ANTLR re-parse.</li>
      * </ol>
      *
      * @param expr    the Expr tree from {@link FormulaAST#expr}
@@ -1155,27 +1506,13 @@ public class FormulaPreprocessor {
         Set<Expr> results = new HashSet<>();
         // Step 1: rename variable-arity predicates in the Expr tree
         Expr renamed = renameVariableArityInExpr(expr, kb);
-        // Step 2: type restrictions (string fallback for addTypeRestrictions)
+        // Step 2: type restrictions — pure Expr path (no string round-trip)
         KBmanager mgr = KBmanager.getMgr();
         boolean typePrefix = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
         if (typePrefix && !isQuery) {
-            String kifStr = renamed.toKifString();
-            Formula tmpF = new Formula();
-            tmpF.read(kifStr);
-            Formula restricted = addTypeRestrictions(tmpF, kb);
-            String restrictedStr = restricted.getFormula();
-            if (!StringUtil.emptyString(restrictedStr) && !restrictedStr.equals(kifStr)) {
-                // Type restrictions were added — re-parse via thread-local ANTLR
-                SuokifVisitor visitor = SuokifVisitor.parseSentence(restrictedStr);
-                FormulaAST ast = visitor.result.isEmpty() ? null : visitor.result.get(0);
-                if (ast != null && ast.expr != null) {
-                    results.add(ast.expr);
-                } else {
-                    results.add(renamed); // parse failed, use pre-restriction expr
-                }
-            } else {
-                results.add(renamed); // type restrictions left the formula unchanged
-            }
+            Map<String, Set<String>> varmap = findTypeRestrictionsExpr(renamed, kb);
+            Expr restricted = addTypeRestrictionsExpr(renamed, varmap, kb);
+            results.add(restricted);
         } else {
             results.add(renamed);
         }
