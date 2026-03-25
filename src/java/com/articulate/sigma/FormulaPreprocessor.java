@@ -1524,7 +1524,6 @@ public class FormulaPreprocessor {
             if (afterPredVar == null || afterPredVar.isEmpty())
                 return Set.of(); // no instantiations → drop formula (matches string-path behaviour)
             // Pred vars are now handled for this formula; safe to proceed to row-var phase
-            com.articulate.sigma.parsing.PredVarInst.predVarInstDone = true;
         } else {
             afterPredVar = List.of(fa);
         }

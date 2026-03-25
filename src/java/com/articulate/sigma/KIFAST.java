@@ -145,7 +145,6 @@ public class KIFAST {
     // -----------------------------------------------------------------------
     // Internal: integrate SuokifVisitor results into this instance's maps
     // -----------------------------------------------------------------------
-
     private void integrateVisitorResult(SuokifVisitor visitor) {
 
         if (visitor == null) return;
