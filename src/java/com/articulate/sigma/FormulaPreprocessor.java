@@ -23,6 +23,9 @@ package com.articulate.sigma;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.RowVar;
+// Note: com.articulate.sigma.parsing.PredVarInst is referenced by fully-qualified name below
+// to avoid shadowing com.articulate.sigma.PredVarInst (used by replacePredVarsAndRowVars).
 import com.articulate.sigma.utils.*;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 
@@ -1482,19 +1485,101 @@ public class FormulaPreprocessor {
     }
 
     /** ***************************************************************
-     * Expr-based preprocessing: fast path for {@link FormulaAST} formulas
-     * that have no predicate variables and no row variables.
+     * Expr-based preprocessing: extended fast path that handles predicate
+     * variables (Phase A), row variables (Phase B), and type restrictions
+     * (Phase C) entirely within the Expr AST — no string round-trips.
      *
-     * <p>For the common case (90%+ of SUMO formulas):
-     * <ol>
-     *   <li>Variable-arity renaming is done directly on the {@link Expr} tree
-     *       via {@link #renameVariableArityInExpr}, avoiding all the
-     *       {@link Formula#loadArguments} / {@link Formula#read} overhead in
-     *       {@link #preProcessRecurse}.</li>
-     *   <li>If {@code typePrefix=yes}, {@link #addTypeRestrictionsExpr} is called
-     *       directly on the {@link Expr} tree — no string round-trip,
-     *       no ANTLR re-parse.</li>
-     * </ol>
+     * <p>Phase A — Predicate variable expansion:
+     * If {@code fa.predVarCache} is non-empty,
+     * {@link com.articulate.sigma.parsing.PredVarInst#processOne}
+     * instantiates every predicate variable at the Expr level via
+     * {@link com.articulate.sigma.parsing.PredVarInst#substituteVar}.
+     * The result is a set of FormulaASTs, each with a concrete relation
+     * in place of each pred-var.
+     *
+     * <p>Phase B — Row variable expansion:
+     * For each FormulaAST from Phase A that has row variables,
+     * {@link RowVar#expandRowVarExpr} splices the expanded argument lists
+     * directly into the Expr tree.
+     *
+     * <p>Phase C — Variable-arity renaming + type restrictions:
+     * Unchanged from the original no-var fast path.
+     *
+     * @param fa      the FormulaAST (must have a non-null {@code expr})
+     * @param isQuery {@code true} for query mode
+     * @param kb      the knowledge base
+     * @return set of preprocessed Expr trees ready for
+     *         {@link com.articulate.sigma.parsing.ExprToTPTP#translate};
+     *         empty if pred-var instantiation yields no results
+     */
+    public Set<Expr> preProcessExpr(FormulaAST fa, boolean isQuery, KB kb) {
+
+        if (fa == null || fa.expr == null) return Set.of();
+
+        // Phase A: Predicate variable expansion (must precede row-var expansion)
+        Collection<FormulaAST> afterPredVar;
+        if (fa.predVarCache != null && !fa.predVarCache.isEmpty()) {
+            com.articulate.sigma.parsing.PredVarInst pvi = new com.articulate.sigma.parsing.PredVarInst(kb);
+            afterPredVar = pvi.processOne(fa); // returns List — no hashCode() calls
+            if (afterPredVar == null || afterPredVar.isEmpty())
+                return Set.of(); // no instantiations → drop formula (matches string-path behaviour)
+            // Pred vars are now handled for this formula; safe to proceed to row-var phase
+            com.articulate.sigma.parsing.PredVarInst.predVarInstDone = true;
+        } else {
+            afterPredVar = List.of(fa);
+        }
+
+        // Phase B: Row variable expansion
+        // Use TreeSet sorted by KIF string so Phase C iterates axioms in deterministic order.
+        Set<Expr> afterRowVar = new TreeSet<>(Comparator.comparing(Expr::toKifString));
+        // predVarInstDone must be true before constructing RowVar (see RowVar constructor)
+        com.articulate.sigma.parsing.PredVarInst.predVarInstDone = true;
+        RowVar rv = new RowVar(kb);
+        for (FormulaAST fa2 : afterPredVar) {
+            if (fa2.expr == null) continue;
+            boolean hasRows = (fa2.rowVarCache != null && !fa2.rowVarCache.isEmpty())
+                           || (fa.rowVarCache != null && !fa.rowVarCache.isEmpty());
+            if (hasRows) {
+                // Mirror expandRowVar(Set): skip HOL and number formulas during row-var expansion.
+                // Do NOT apply this filter when there are no row vars — HOL/number formulas without
+                // row vars must still proceed to Phase C (same as the old no-var fast path).
+                if (fa2.higherOrder || fa2.containsNumber) continue;
+                Set<Expr> expanded = rv.expandRowVarExpr(fa2);
+                afterRowVar.addAll(expanded.isEmpty() ? Set.of(fa2.expr) : expanded);
+                if (afterRowVar.size() > AXIOM_EXPANSION_LIMIT) {
+                    System.err.println("Error in FormulaPreprocessor.preProcessExpr(): " +
+                            "AXIOM_EXPANSION_LIMIT EXCEEDED: " + AXIOM_EXPANSION_LIMIT);
+                    break;
+                }
+            } else {
+                // No row vars: pass through regardless of HOL/containsNumber status
+                afterRowVar.add(fa2.expr);
+            }
+        }
+        if (afterRowVar.isEmpty()) return Set.of();
+
+        // Phase C: Variable-arity renaming + type restrictions (unchanged from no-var fast path)
+        // LinkedHashSet preserves the sorted order established by afterRowVar's TreeSet.
+        Set<Expr> results = new LinkedHashSet<>();
+        KBmanager mgr = KBmanager.getMgr();
+        boolean typePrefix = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
+        for (Expr e : afterRowVar) {
+            Expr renamed = renameVariableArityInExpr(e, kb);
+            if (typePrefix && !isQuery) {
+                Map<String, Set<String>> varmap = findTypeRestrictionsExpr(renamed, kb);
+                results.add(addTypeRestrictionsExpr(renamed, varmap, kb));
+            } else {
+                results.add(renamed);
+            }
+        }
+        return results;
+    }
+
+    /** ***************************************************************
+     * Bridge overload: wraps a bare {@link Expr} in a minimal
+     * {@link FormulaAST} (no pred-var / row-var caches) and delegates to
+     * {@link #preProcessExpr(FormulaAST, boolean, KB)}.  Keeps existing
+     * callers and tests working without change.
      *
      * @param expr    the Expr tree from {@link FormulaAST#expr}
      * @param isQuery {@code true} for query mode
@@ -1503,20 +1588,9 @@ public class FormulaPreprocessor {
      *         {@link com.articulate.sigma.parsing.ExprToTPTP#translate}
      */
     public Set<Expr> preProcessExpr(Expr expr, boolean isQuery, KB kb) {
-        Set<Expr> results = new HashSet<>();
-        // Step 1: rename variable-arity predicates in the Expr tree
-        Expr renamed = renameVariableArityInExpr(expr, kb);
-        // Step 2: type restrictions — pure Expr path (no string round-trip)
-        KBmanager mgr = KBmanager.getMgr();
-        boolean typePrefix = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
-        if (typePrefix && !isQuery) {
-            Map<String, Set<String>> varmap = findTypeRestrictionsExpr(renamed, kb);
-            Expr restricted = addTypeRestrictionsExpr(renamed, varmap, kb);
-            results.add(restricted);
-        } else {
-            results.add(renamed);
-        }
-        return results;
+        FormulaAST fa = new FormulaAST();
+        fa.expr = expr;
+        return preProcessExpr(fa, isQuery, kb);
     }
 
     public Set<Formula> preProcess(Formula form, boolean isQuery, KB kb) {

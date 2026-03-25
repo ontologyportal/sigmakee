@@ -68,6 +68,7 @@ public class FormulaAST extends Formula {
         this.startLine = f.startLine;
         this.sourceFile = f.sourceFile;
         this.setFormula(f.getFormula());
+        this.expr = f.expr; // Expr nodes are immutable records — safe to share reference
         this.allVarsPairCache.addAll(f.allVarsPairCache);
         this.quantVarsCache.addAll(f.quantVarsCache);
         this.unquantVarsCache.addAll(f.unquantVarsCache);

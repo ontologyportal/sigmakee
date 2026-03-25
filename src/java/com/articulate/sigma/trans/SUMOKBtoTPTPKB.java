@@ -4,6 +4,7 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -34,6 +35,14 @@ public class SUMOKBtoTPTPKB {
     public static boolean rapidParsing = true;
 
     public static boolean debug = false;
+
+    // One-shot diagnostic flags (print first occurrence only, thread-safe)
+    private static final java.util.concurrent.atomic.AtomicBoolean loggedReparse =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+    private static final java.util.concurrent.atomic.AtomicBoolean loggedExprPath =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+    private static final java.util.concurrent.atomic.AtomicBoolean loggedStringPath =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
 
     // ThreadLocal to allow parallel FOF/TFF generation
     private static final ThreadLocal<String> langTL = ThreadLocal.withInitial(() -> "fof");
@@ -949,18 +958,44 @@ public class SUMOKBtoTPTPKB {
         // ---- preprocess + translate ----
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
-        // Expr fast path: FormulaAST with no pred-vars/row-vars bypasses the string-scanning
+        // Expr fast path: FormulaAST with an Expr bypasses the string-scanning
         // preProcessRecurse() and the parseSentence() re-parse in translateKifString().
-        // Variable-arity renaming and type restrictions are handled inside preProcessExpr().
+        // Pred-var instantiation (Phase A) and row-var expansion (Phase B) are now
+        // handled inside preProcessExpr(FormulaAST,...); variable-arity renaming
+        // and type restrictions follow in Phase C.
         // Only wired for FOF; TFF still uses SUMOtoTFAform (string-based).
         boolean usedExprPath = false;
-        if (localLang.equals("fof")
-                && formula instanceof FormulaAST
-                && ((FormulaAST) formula).expr != null
-                && ((formula).rowVarCache == null || (formula).rowVarCache.isEmpty())
-                && ((formula).predVarCache == null || (formula).predVarCache.isEmpty())) {
+        if (localLang.equals("fof") && formula instanceof FormulaAST) {
             FormulaAST fa = (FormulaAST) formula;
-            Set<Expr> processedExprs = fp.preProcessExpr(fa.expr, false, kb);
+            // Re-parse expr if missing — happens on warm start when Kryo cannot preserve
+            // the sealed-interface Expr record hierarchy from kbmanager.ser.
+            if (fa.expr == null) {
+                if (loggedReparse.compareAndSet(false, true))
+                    System.out.println("SUMOKBtoTPTPKB.translateOneFormula(): expr==null, re-parsing from KIF (warm-start path). formula=" + fa.getFormula().substring(0, Math.min(80, fa.getFormula().length())));
+                try {
+                    SuokifVisitor visitor = SuokifVisitor.parseSentence(fa.getFormula());
+                    if (visitor.result != null && !visitor.result.isEmpty()) {
+                        FormulaAST reparsed = visitor.result.get(0);
+                        if (reparsed != null && reparsed.expr != null) {
+                            fa.expr = reparsed.expr;
+                            if (fa.predVarCache == null || fa.predVarCache.isEmpty())
+                                fa.predVarCache = reparsed.predVarCache;
+                            if (fa.rowVarCache == null || fa.rowVarCache.isEmpty())
+                                fa.rowVarCache = reparsed.rowVarCache;
+                            if (fa.rowVarStructs == null || fa.rowVarStructs.isEmpty())
+                                fa.rowVarStructs = reparsed.rowVarStructs;
+                            if (fa.varTypes == null || fa.varTypes.isEmpty())
+                                fa.varTypes = reparsed.varTypes;
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+            if (fa.expr == null) { // parse failed — fall through to string path
+                usedExprPath = false;
+            } else {
+                if (loggedExprPath.compareAndSet(false, true))
+                    System.out.println("SUMOKBtoTPTPKB.translateOneFormula(): using EXPR path for formula=" + fa.getFormula().substring(0, Math.min(80, fa.getFormula().length())));
+            Set<Expr> processedExprs = fp.preProcessExpr(fa, false, kb);
             if (processedExprs != null && !processedExprs.isEmpty()) {
                 usedExprPath = true;
                 for (Expr pexpr : processedExprs) {
@@ -978,9 +1013,12 @@ public class SUMOKBtoTPTPKB {
                     }
                 }
             }
-        }
+            } // end else (fa.expr != null)
+        } // end if (fof && FormulaAST)
 
         if (!usedExprPath) {
+        if (loggedStringPath.compareAndSet(false, true))
+            System.out.println("SUMOKBtoTPTPKB.translateOneFormula(): using STRING path for formula=" + f.getFormula().substring(0, Math.min(80, f.getFormula().length())));
         Set<Formula> processed = fp.preProcess(f, false, kb);
 
         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : processed: " + processed);
@@ -1088,6 +1126,17 @@ public class SUMOKBtoTPTPKB {
 
         // Convert to List for parallel indexed processing (TreeSet iteration order preserved)
         List<Formula> formulaList = new ArrayList<>(orderedFormulae);
+
+        // ---- Diagnostic: count how many FormulaAST entries have expr populated ----
+        if (localLang.equals("fof")) {
+            long withExpr = formulaList.stream()
+                    .filter(f -> f instanceof FormulaAST && ((FormulaAST) f).expr != null)
+                    .count();
+            long totalAST = formulaList.stream().filter(f -> f instanceof FormulaAST).count();
+            System.out.println("SUMOKBtoTPTPKB._tWriteFile(): FormulaAST=" + totalAST
+                    + "/" + formulaList.size() + "  expr!=null=" + withExpr
+                    + " (cold=" + (withExpr == totalAST) + ")");
+        }
 
         // ---- Pre-pass: populate all variable-arity signatures sequentially ----
         // Without this, parallel threads race inside copyNewPredFromVariableArity() and
