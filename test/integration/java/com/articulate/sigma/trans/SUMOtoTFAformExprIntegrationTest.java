@@ -293,4 +293,73 @@ public class SUMOtoTFAformExprIntegrationTest extends IntegrationTestBase {
                 "(instance ?Y Integer) (equal (AdditionFn ?X ?Y) ?Z)) " +
                 "(instance ?Z Integer)))");
     }
+
+    /**
+     * Dual-run (string vs Expr) for the AbsoluteValueFn biconditional, with
+     * structural assertions against the known TFF output from SUMO.tff.
+     *
+     * The preprocessing pipeline transforms the formula significantly:
+     *  - (instance ?NUMBER1 NonnegativeRealNumber) → SignumFn checks (= 1 or = 0)
+     *  - (instance ?NUMBER1 NegativeRealNumber)    → SignumFn check  (= -1)
+     *  - SubtractionFn 0.0 ?NUMBER1               → $difference(0.0, ?NUMBER1)
+     *  - <=>                                       → (A => B) & (B => A)
+     *  - ?NUMBER1, ?NUMBER2 typed as $real
+     *
+     * Expected TFF (from SUMO.tff):
+     *   ! [V__NUMBER1 : $real, V__NUMBER2 : $real] :
+     *     (((s__AbsoluteValueFn(V__NUMBER1) = V__NUMBER2 =>
+     *          (((s__SignumFn(V__NUMBER1) = 1 | s__SignumFn(V__NUMBER1) = 0) & V__NUMBER1 = V__NUMBER2)
+     *         | (s__SignumFn(V__NUMBER1) = -1 & V__NUMBER2 = $difference(0.0, V__NUMBER1))))
+     *       & ((((s__SignumFn(V__NUMBER1) = 1 | s__SignumFn(V__NUMBER1) = 0) & V__NUMBER1 = V__NUMBER2)
+     *         | (s__SignumFn(V__NUMBER1) = -1 & V__NUMBER2 = $difference(0.0, V__NUMBER1)))
+     *          => s__AbsoluteValueFn(V__NUMBER1) = V__NUMBER2)))
+     */
+    @Test
+    public void testDualRunAbsoluteValueFnBiconditional() {
+        String kif =
+            "(<=> " +
+            "  (and " +
+            "    (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
+            "    (instance ?NUMBER1 RealNumber) " +
+            "    (instance ?NUMBER2 RealNumber)) " +
+            "  (or " +
+            "    (and " +
+            "      (instance ?NUMBER1 NonnegativeRealNumber) " +
+            "      (equal ?NUMBER1 ?NUMBER2)) " +
+            "    (and " +
+            "      (instance ?NUMBER1 NegativeRealNumber) " +
+            "      (equal ?NUMBER2 (SubtractionFn 0.0 ?NUMBER1)))))";
+
+        Expr expr = parse(kif);
+        String strResult  = SUMOtoTFAform.process(kif, false);
+        String exprResult = SUMOtoTFAform.processExpr(expr, false);
+
+        System.out.println("AbsoluteValueFn biconditional");
+        System.out.println("  kif:    " + kif);
+        System.out.println("  string: " + strResult);
+        System.out.println("  expr:   " + exprResult);
+
+        assertNotNull("string path must produce a result", strResult);
+        assertNotNull("expr path must produce a result", exprResult);
+        assertEquals("string and expr TFF outputs must match", strResult, exprResult);
+
+        // ---- structural assertions against the known SUMO.tff output ----
+
+        // Variables must be universally quantified as $real
+        assertTrue("must quantify NUMBER1 as $real", exprResult.contains("$real"));
+        // AbsoluteValueFn must appear as a SUMO-prefixed function
+        assertTrue("must contain s__AbsoluteValueFn", exprResult.contains("s__AbsoluteValueFn"));
+        // NonnegativeRealNumber/NegativeRealNumber instance checks become SignumFn
+        assertTrue("must contain s__SignumFn (instance checks lowered to signum)",
+                exprResult.contains("s__SignumFn"));
+        // SubtractionFn 0.0 becomes $difference
+        assertTrue("must contain $difference (SubtractionFn lowered to TPTP arithmetic)",
+                exprResult.contains("$difference"));
+        // The real literal must be preserved
+        assertTrue("must contain 0.0", exprResult.contains("0.0"));
+        // Biconditional must be expanded to two implications
+        long arrowCount = exprResult.chars().filter(c -> c == '>').count();
+        assertTrue("biconditional must expand to at least two '=>' arrows (got " + arrowCount + ")",
+                arrowCount >= 2);
+    }
 }

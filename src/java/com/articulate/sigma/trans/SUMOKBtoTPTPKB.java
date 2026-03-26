@@ -871,6 +871,25 @@ public class SUMOKBtoTPTPKB {
     }
 
     /**
+     * Returns true if {@code expr} contains a {@link Expr.Var} in predicate
+     * position (i.e., as the head of an {@link Expr.SExpr}).
+     *
+     * Such formulas cannot be expressed in FOF or TFF after pred-var expansion
+     * has failed to find any KB instances for the variable's type constraint.
+     * They should be skipped rather than emitted as malformed first-order axioms.
+     */
+    static boolean hasUnresolvedPredVar(Expr expr) {
+        return switch (expr) {
+            case Expr.SExpr se -> {
+                if (se.head() instanceof Expr.Var) yield true;  // Var in predicate position
+                if (se.head() != null && hasUnresolvedPredVar(se.head())) yield true;
+                yield se.args().stream().anyMatch(SUMOKBtoTPTPKB::hasUnresolvedPredVar);
+            }
+            default -> false;
+        };
+    }
+
+    /**
      * Dispatches to {@link #isHigherOrderExpr(Expr, KB)} when the formula
      * has a parsed {@link Expr} tree, otherwise falls back to
      * {@link Formula#isHigherOrder(KB)}.
@@ -993,6 +1012,13 @@ public class SUMOKBtoTPTPKB {
                 if (localLang.equals("fof")) fofExprCount.incrementAndGet();
                 else                         tffExprCount.incrementAndGet();
                 for (Expr pexpr : processedExprs) {
+                    // A Var in predicate position means pred-var expansion found no KB instances
+                    // and kept the original. Such a formula cannot be expressed in FOF/TFF — skip it.
+                    if (hasUnresolvedPredVar(pexpr)) {
+                        res.prologueLines.add("% skipped: unresolved pred-var (no KB instances for type constraint): "
+                                + pexpr.toKifString());
+                        continue;
+                    }
                     if (localLang.equals("fof")) {
                         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % expr path fof input: "
                                 + pexpr.toKifString());
