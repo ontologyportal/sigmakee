@@ -162,7 +162,7 @@ public class THFnew {
             if (Character.isDigit(ttype))
                 ttype = StreamTokenizer_s.TT_NUMBER;
             boolean hasArguments = false; // if it's a modal op, don't add the __m suffix
-            if (Modals.regHOLpred.contains(f.getFormula()))
+            if (Modals.regHOLpred.contains(f.getFormula()) || Modals.regHOL3pred.contains(f.getFormula()))
                 hasArguments = true;
             return SUMOformulaToTPTPformula.translateWord(f.getFormula(), ttype, hasArguments);
         }
@@ -1082,7 +1082,7 @@ public class THFnew {
                 }
 
                 String sigStr;
-                if (Modals.regHOLpred.contains(baseHead)){
+                if (Modals.regHOLpred.contains(baseHead) || Modals.regHOL3pred.contains(baseHead)) {
                     sigStr = "m";
                     out.write( sigStr + ")).\n");
                 }
