@@ -10,7 +10,6 @@ public class Modals {
     
     public static boolean debug = true; // Mainly for deontic sentences 
 
-
     // these are predicates that take a formula as (one of) their arguments in SUMO/KIF
     // e.g. (holdsDuring ?T ?FORMULA)
     public static final List<String> formulaPreds = new ArrayList<>(
@@ -215,7 +214,8 @@ public class Modals {
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
             fstring.append(" CW");
-        } else {
+        }
+        else {
             fstring.append(" ?W").append(worldNum - 1);
         }
         fstring.append(" ?W").append(worldNum).append(") ");
@@ -295,7 +295,8 @@ public class Modals {
         // Account for CW (constant world):
         if (prevWorld == 0) {
             fstring.append("CW");
-        } else {
+        }
+        else {
             fstring.append("?W").append(prevWorld);
         }
         fstring.append(Formula.SPACE).append("?W").append(currWorld).append(") ");
@@ -305,19 +306,16 @@ public class Modals {
         Formula result = new Formula();
         result.read(fstring.toString());
         return result;
-
     }
 
     /***************************************************************
      */
     public static Formula processRecurse(Formula f, KB kb, Integer worldNum) {
 
-        if (f.atom()) {
+        if (f.atom())
             return f;
-        }
-        if (f.empty()) {
+        if (f.empty())
             return f;
-        }
 
         if (f.listP()) {
             if (regHOL3pred.contains(f.car()))
@@ -367,7 +365,8 @@ public class Modals {
                             // Account for Constant-world (world 0)
                             if (worldNum == 0) {
                                 fstring.append(" CW");
-                            } else {
+                            }
+                            else {
                                 fstring.append(" ?W").append(worldNum);
                             }
                 }
@@ -385,11 +384,10 @@ public class Modals {
             result.read(fstring.toString());
             return result;
         }
-
         return f;
     }
 
-    /**
+    /***************************************************************
      * Return the base functor name by stripping a trailing "__<digits>" suffix.
      * E.g. "partition__7" -> "partition", "disjointDecomposition__4" -> "disjointDecomposition".
      * If there is no such suffix, returns the input unchanged.
@@ -419,7 +417,6 @@ public class Modals {
         kb.kbCache.signatures.put("accreln",sig);
     }
 
-
     /***************************************************************
      */
     public static Formula processModals(Formula f, KB kb) {
@@ -427,7 +424,7 @@ public class Modals {
         addAccrelnDef(kb);
         //addAccrelnDefP(kb);
         // Start at index 0 for constant world (W0 = CW) 
-        int worldNum = 0;
+        int worldNum = 1;
         //if (!f.isHigherOrder(kb))
         //    return f;
         Formula result = processRecurse(f,kb,worldNum);
@@ -456,28 +453,30 @@ public class Modals {
 
         return 
                 // CF: add these lines into getTHFHeader() result string
+                "thf(modals_tp,type,(m : $tType)).\n" +
                 "thf(obligation_tp,type,(s__Obligation : m)).\n" +
                 "thf(permission_tp,type,(s__Permission : m)).\n" +
                 "thf(prohibition_tp,type,(s__Prohibition : m)).\n" +
                 
                 "thf(worlds_tp,type,(w : $tType)).\n" +
+                "thf(cworld_tp,type,(s__CW : w)).\n" +
                 "thf(s__worlds_tp,type,(s__World : w)).\n" +
-                "thf(modals_tp,type,(m : $tType)).\n" +
-                "thf(accreln_tp,type,(s__accreln : (m > $i > w > w > $o))).\n" +
-                "thf(accreln_tp,type, accreln1: m > $i > w > w > $o )." +
-                "thf(accreln_tp,type, accreln2: m > $i > $i > w > w > $o )." + 
+
+                "thf(accreln1_tp,type,s__accreln1 : (m > $i > w > w > $o)).\n" +
+                "thf(accreln2_tp,type, s__accreln2: m > $i > w > w > $o ).\n" +
+                "thf(accreln3_tp,type, s__accreln3: m > $i > $i > w > w > $o ).\n" +
                 //"thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +     // CF: This is no longer needed, we are using accreln[ |2|3] 
-//                "thf(knows_tp,type,(s__knows : m)).\n" +
-//                "thf(believes_tp,type,(s__believes : m)).\n" +
-//                "thf(desires_tp,type,(s__desires : m)).\n" +
-                "thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__desires @ P @ W @ W))).\n" +
-                "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__knows @ P @ W @ W))).\n" +
-                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n" +
+                "thf(knows_tp,type,(s__knows : m)).\n" +
+                "thf(believes_tp,type,(s__believes : m)).\n" +
+                "thf(desires_tp,type,(s__desires : m)).\n" +
+                "thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__desires @ P @ W @ W))).\n" +
+                "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__knows @ P @ W @ W))).\n" +
+                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__believes @ P @ W @ W))).\n" +
                 // ISSUE 6
                 "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n";
-
     }
-    
+
+    /***************************************************************
     /* These are the original tests from this file 
      * A combination of different modalities (deontic to temporal) 
      */ 
@@ -593,6 +592,7 @@ public class Modals {
         System.out.println(processModals(f,kb) + "\n\n");
     }
 
+    /***************************************************************
     /* CFeener
      * Easy and Medium Deontic examples   
      */ 
@@ -900,17 +900,16 @@ public class Modals {
     /***************************************************************
      */
     public static void main(String[] args) {
-    
+
+        SUMOformulaToTPTPformula.setHideNumbers(false);
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("HOL.main(): completed init");
-        
+
         // Examples: 
         //someInitialTests(kb);
         // More tests: 
         //doTQM10Tests(kb);
         deonticTests(kb);
-        
-   
     }
 }

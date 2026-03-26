@@ -882,6 +882,9 @@ public class SUMOtoTFAform {
                                         List<String> args,
                                         List<String> argTypes) {
 
+        HashSet hs = new HashSet();
+        hs.addAll(argTypes);
+        if (hs.size() == 1)
         if (debug) System.out.println("SUMOtoTFAform.mixedQuotient(): f: " + f);
         if (debug) System.out.println("SUMOtoTFAform.mixedQuotient(): argTypes: " + argTypes);
         String mgt = "Entity";
@@ -904,7 +907,7 @@ public class SUMOtoTFAform {
         }
         if ("".equals(promote)) {
             System.err.println("Error in SUMOtoTFAform.mixedQuotient() with args: " + args +
-                    " and types " + argTypes);
+                    " and types " + argTypes + " in formula: " + f);
             return "$quotient" + eSuffix + Formula.LP + processRecurse(lhs,parentType) + " ," +
                     processRecurse(rhs,parentType) + Formula.RP;
         }
@@ -964,6 +967,7 @@ public class SUMOtoTFAform {
             return promotion + "$product(" + processRecurse(arg1,arg1Type) + " ," +
                     processRecurse(arg2,arg2Type) + Formula.RP + closeP;
         if (op.startsWith(Formula.DIVIDEFN)) {
+            System.out.println("processMathOp(): allOfType() " + allOfType(args,"Integer"));
             if (allOfType(args,"Integer"))
                 return promotion + "$quotient_e(" + processRecurse(arg1,"Integer") + " ," +
                         processRecurse(arg2,"Integer") + Formula.RP + closeP;
@@ -2366,6 +2370,7 @@ public class SUMOtoTFAform {
     public static String process(Formula f, boolean query) {
 
         initOnce();
+        System.out.println("SUMOtoTFAform.process(): setHideNumbers false");
         SUMOformulaToTPTPformula.setHideNumbers(false);
         if (kb == null) {
             System.err.println("Error in SUMOtoTFAform.process(): null kb");

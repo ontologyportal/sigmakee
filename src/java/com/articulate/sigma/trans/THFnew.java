@@ -1028,9 +1028,8 @@ public class THFnew {
         for (String t : kb.terms) {
             // ISSUE 2
             // 1. Skip modal helper symbols – they already have correct types in the header.
-            if (Modals.RESERVED_MODAL_SYMBOLS.contains(t)) {
+            if (Modals.RESERVED_MODAL_SYMBOLS.contains(t))
                 continue;
-            }
             if (excludeForTypedef(t,out))
                 continue;
             if (kb.isInstanceOf(t,"Relation")) {
@@ -1044,7 +1043,7 @@ public class THFnew {
                 List<String> sig = new ArrayList<>(baseSig);
 
                 // ISSUE 14
-                // Check that the sigStr alligns with the __NUM of the term:
+                // Check that the sigStr aligns with the __NUM of the term:
                 Integer suffixNum = getSuffixNumber(t);
                 String baseHead = Modals.baseFunctor(t);
                 // For relations:
@@ -1054,7 +1053,6 @@ public class THFnew {
                 //  - skip modal relations
                 //  - every other relation gets a trailing "World" argument
                 if (!Formula.isLogicalOperator(t) && !t.equals("equals")) {
-
                     if (!Modals.RIGID_RELATIONS.contains(baseHead)
                             && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)
                             && !Modals.regHOLpred.contains(baseHead)) {
@@ -1087,7 +1085,8 @@ public class THFnew {
                 if (Modals.regHOLpred.contains(baseHead)){
                     sigStr = "m";
                     out.write( sigStr + ")).\n");
-                }else{
+                }
+                else {
                     sigStr = sigString(t, sig,kb,isFunction);
                     out.write("(" + sigStr + "))).\n");
                 }
@@ -1097,8 +1096,8 @@ public class THFnew {
                 if (Modals.MODAL_RELATIONS.contains(baseHead) && !Modals.regHOLpred.contains(baseHead)) {
                     typeStr = "m";
                 }
-                out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
-                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : "+typeStr+")).\n"); // write relation constant
+                out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_m_tp,type,(" +
+                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : " + typeStr + ")).\n"); // write relation constant
                 // End of Second Signature
             }
             // ISSUE 3
@@ -1226,10 +1225,9 @@ public class THFnew {
                 // to run and call copyNewPredFromVariableArity(...)
                 fp.preProcess(f, false, kb);
             }
-            writeTypes(kb,out);
-
             // Write at the end of the header the hard coded types because they use some from the auto-generated ones.
             out.write(Modals.getTHFHeader() + "\n");
+            writeTypes(kb,out);
             for (Formula f : kb.formulaMap.values()) {
                 if (debug) System.out.println("THFnew.transModalTHF(): " + f);
                 if (!exclude(f,kb,out))
@@ -1237,11 +1235,9 @@ public class THFnew {
                 else {
                     // ISSUE 8
                     String flatFormula = f.getFormula().replace("\n", " ").replace("\r", " ");
-                    out.write("% excluded: " + flatFormula + "\n");
+                    String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
+                    out.write("% excluded: " + stripped + "\n");
                     out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
-
-//                    out.write("% excluded: " + f.getFormula() + "\n" +
-//                            "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
                 }
             }
             System.out.println("\n\nTHFnew.transModalTHF(): Result written to file " + filename);
@@ -1284,7 +1280,8 @@ public class THFnew {
                 else {
                     String flatFormula = f.getFormula()
                             .replace("\n", " ").replace("\r", " ");
-                    out.write("% excluded (non-modal): " + flatFormula + "\n");
+                    String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
+                    out.write("% excluded (non-modal): " + stripped + "\n");
                     out.write("% from file " + f.sourceFile + " at line " +
                             f.startLine + "\n");
                 }
@@ -1479,6 +1476,7 @@ public class THFnew {
     /** ***************************************************************
      */
     public static void showHelp() {
+
         System.out.println("THFnew");
         System.out.println("  options (with a leading '-'):");
         System.out.println("  m - THF translation with modals");
