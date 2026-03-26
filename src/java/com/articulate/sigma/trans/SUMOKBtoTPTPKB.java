@@ -44,6 +44,23 @@ public class SUMOKBtoTPTPKB {
     private static final java.util.concurrent.atomic.AtomicBoolean loggedStringPath =
             new java.util.concurrent.atomic.AtomicBoolean(false);
 
+    // Per-language path counters for observability (reset via resetPathCounters())
+    public static final java.util.concurrent.atomic.AtomicInteger fofExprCount   = new java.util.concurrent.atomic.AtomicInteger(0);
+    public static final java.util.concurrent.atomic.AtomicInteger fofStringCount = new java.util.concurrent.atomic.AtomicInteger(0);
+    public static final java.util.concurrent.atomic.AtomicInteger tffExprCount   = new java.util.concurrent.atomic.AtomicInteger(0);
+    public static final java.util.concurrent.atomic.AtomicInteger tffStringCount = new java.util.concurrent.atomic.AtomicInteger(0);
+
+    public static void resetPathCounters() {
+        fofExprCount.set(0); fofStringCount.set(0);
+        tffExprCount.set(0); tffStringCount.set(0);
+    }
+
+    public static void logPathCounters() {
+        System.out.println("SUMOKBtoTPTPKB path counters: " +
+            "fof-expr=" + fofExprCount + " fof-string=" + fofStringCount + " | " +
+            "tff-expr=" + tffExprCount + " tff-string=" + tffStringCount);
+    }
+
     // ThreadLocal to allow parallel FOF/TFF generation
     private static final ThreadLocal<String> langTL = ThreadLocal.withInitial(() -> "fof");
     public static String getLang() { return langTL.get(); }
@@ -963,9 +980,9 @@ public class SUMOKBtoTPTPKB {
         // Pred-var instantiation (Phase A) and row-var expansion (Phase B) are now
         // handled inside preProcessExpr(FormulaAST,...); variable-arity renaming
         // and type restrictions follow in Phase C.
-        // Only wired for FOF; TFF still uses SUMOtoTFAform (string-based).
         boolean usedExprPath = false;
-        if (localLang.equals("fof") && formula instanceof FormulaAST && ((FormulaAST) formula).expr != null) {
+        if ((localLang.equals("fof") || localLang.equals("tff")) &&
+                formula instanceof FormulaAST && ((FormulaAST) formula).expr != null) {
 
             FormulaAST fa = (FormulaAST) formula;
             if (loggedExprPath.compareAndSet(false, true))
@@ -973,25 +990,60 @@ public class SUMOKBtoTPTPKB {
             Set<Expr> processedExprs = fp.preProcessExpr(fa, false, kb);
             if (processedExprs != null && !processedExprs.isEmpty()) {
                 usedExprPath = true;
+                if (localLang.equals("fof")) fofExprCount.incrementAndGet();
+                else                         tffExprCount.incrementAndGet();
                 for (Expr pexpr : processedExprs) {
-                    if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % expr path fof input: "
-                            + pexpr.toKifString());
-                    String fofResult = ExprToTPTP.translate(pexpr, false, "fof");
-                    if (fofResult == null) { // fallback to legacy string-based translator
-                        String kifStr = pexpr.toKifString();
-                        fofResult = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, false);
-                    }
-                    if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): fof result: " + fofResult);
-                    if (fofResult != null) {
-                        f.theFofFormulas.add(fofResult);
-                        f.theTptpFormulas.add(fofResult); // Legacy compatibility
+                    if (localLang.equals("fof")) {
+                        if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % expr path fof input: "
+                                + pexpr.toKifString());
+                        String fofResult = ExprToTPTP.translate(pexpr, false, "fof");
+                        if (fofResult == null) { // fallback to legacy string-based translator
+                            String kifStr = pexpr.toKifString();
+                            fofResult = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, false);
+                        }
+                        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): fof result: " + fofResult);
+                        if (fofResult != null) {
+                            f.theFofFormulas.add(fofResult);
+                            f.theTptpFormulas.add(fofResult); // Legacy compatibility
+                        }
+                    } else { // tff
+                        if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % expr path tff input: "
+                                + pexpr.toKifString());
+                        SUMOtoTFAform stfa = new SUMOtoTFAform();
+                        SUMOtoTFAform.kb = kb;
+                        stfa.sorts = stfa.missingSortsExpr(pexpr);
+                        if (stfa.sorts != null && !stfa.sorts.isEmpty())
+                            f.tffSorts.addAll(stfa.sorts);
+                        String tffResult = SUMOtoTFAform.processExpr(pexpr, false);
+                        collectNumericConstants(res.numConstLines);
+                        SUMOtoTFAform.getNumericConstantTypes().clear();
+                        SUMOtoTFAform.getNumericConstantTypes().put("NumberE", "RealNumber");
+                        SUMOtoTFAform.getNumericConstantTypes().put("Pi", "RealNumber");
+                        if (!StringUtil.emptyString(tffResult)) {
+                            f.theTffFormulas.add(tffResult);
+                            f.theTptpFormulas.add(tffResult); // Legacy compatibility
+                        } else if (!StringUtil.emptyString(SUMOtoTFAform.getFilterMessage()))
+                            res.prologueLines.add("% " + SUMOtoTFAform.getFilterMessage());
                     }
                 }
             }
-        } // end if (fof && FormulaAST)
+        } // end if ((fof || tff) && FormulaAST)
 
         // ---- string-based pre-processing ----
         if (!usedExprPath) {
+            if (localLang.equals("fof")) fofStringCount.incrementAndGet();
+            else                         tffStringCount.incrementAndGet();
+            // Diagnose every string-path fallback for tff (only ~6 formulas — safe to log all)
+            if (localLang.equals("tff")) {
+                String reason;
+                if (!(formula instanceof FormulaAST))
+                    reason = "not FormulaAST (class=" + formula.getClass().getSimpleName() + ")";
+                else if (((FormulaAST) formula).expr == null)
+                    reason = "FormulaAST.expr == null";
+                else
+                    reason = "preProcessExpr returned empty";
+                System.out.println("SUMOKBtoTPTPKB.tff-string-fallback [" + reason + "]: " + f.getFormula());
+            }
             // Print the first formula that fallback to string manipulation
             if (loggedStringPath.compareAndSet(false, true))
                 System.out.println("SUMOKBtoTPTPKB.translateOneFormula(): using STRING path for formula=" + f.getFormula());

@@ -1521,9 +1521,11 @@ public class FormulaPreprocessor {
         if (fa.predVarCache != null && !fa.predVarCache.isEmpty()) {
             com.articulate.sigma.parsing.PredVarInst pvi = new com.articulate.sigma.parsing.PredVarInst(kb);
             afterPredVar = pvi.processOne(fa); // returns List — no hashCode() calls
-            if (afterPredVar == null || afterPredVar.isEmpty())
-                return Set.of(); // no instantiations → drop formula (matches string-path behaviour)
-            // Pred vars are now handled for this formula; safe to proceed to row-var phase
+            if (afterPredVar == null)
+                return Set.of(); // null = formula marked "reject" by processOne
+            if (afterPredVar.isEmpty())
+                afterPredVar = List.of(fa); // empty = no KB instances found for this pred-var type;
+                                             // keep original (mirrors string-path: accumulator.add(f))
         } else {
             afterPredVar = List.of(fa);
         }
@@ -1539,10 +1541,13 @@ public class FormulaPreprocessor {
             boolean hasRows = (fa2.rowVarCache != null && !fa2.rowVarCache.isEmpty())
                            || (fa.rowVarCache != null && !fa.rowVarCache.isEmpty());
             if (hasRows) {
-                // Mirror expandRowVar(Set): skip HOL and number formulas during row-var expansion.
-                // Do NOT apply this filter when there are no row vars — HOL/number formulas without
-                // row vars must still proceed to Phase C (same as the old no-var fast path).
-                if (fa2.higherOrder || fa2.containsNumber) continue;
+                // When row-var expansion is not applicable (HOL or numeric formulas), keep the
+                // original expr without expansion — mirrors string-path: if expandRowVars() returns
+                // null/empty, accumulator.add(f) keeps the original formula.
+                if (fa2.higherOrder || fa2.containsNumber) {
+                    afterRowVar.add(fa2.expr);
+                    continue;
+                }
                 Set<Expr> expanded = rv.expandRowVarExpr(fa2);
                 afterRowVar.addAll(expanded.isEmpty() ? Set.of(fa2.expr) : expanded);
                 if (afterRowVar.size() > AXIOM_EXPANSION_LIMIT) {
