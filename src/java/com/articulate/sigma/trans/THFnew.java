@@ -244,9 +244,10 @@ public class THFnew {
 //            System.out.println("V= "+v);
 //            System.out.println("typeMap(v)= "+typeMap.get(v));
 //        }
-        // TODO: Implement a more generic solution for variable types
-        // TODO: Identify why the typeMap.get(v) most of the times is Null
-        if (v.equals("?W1") || v.equals("?W2") )
+        // Any variable of the form ?W<digits> is a Kripke world variable.
+        // The hardcoded ?W1/?W2 check was insufficient for formulas with 3+
+        // nested modal operators which generate ?W3, ?W4, etc.
+        if (v.matches("\\?W\\d+"))
             return "w";
         if (typeMap.get(v) == null)
             return "$i";
@@ -1001,11 +1002,49 @@ public class THFnew {
     }
 
     /** ***************************************************************
+     * Recursively collect all numeric literals from a formula string.
+     * Collects integers and floats; skips negatives (rare in SUMO,
+     * and the "--" normalization produces awkward constant names).
      */
-    public static void writeIntegerTypes(KB kb, Writer out) throws IOException {
+    private static void collectNumbersFromFormula(String fstr, Set<String> numbers) {
 
-        for (int i = 0; i < 7; i++) {
-            out.write("thf(n__" + i + "_tp,type,(n__" + i + " : $i)).\n");
+        Formula f = new Formula(fstr);
+        if (f.atom()) {
+            if (StringUtil.isNumeric(fstr) && !fstr.contains("-"))
+                numbers.add(fstr);
+            return;
+        }
+        List<String> args = f.complexArgumentsToArrayListString(0);
+        if (args != null) {
+            for (String arg : args)
+                collectNumbersFromFormula(arg, numbers);
+        }
+    }
+
+    /** ***************************************************************
+     * Scan all KB formulas and return the set of every numeric literal
+     * that appears (e.g. "24", "0.0", "360.0").  These will be declared
+     * as thf(n__24_tp,type,(n__24 : $i)). so that hideNumbers=true
+     * translations are well-typed.  Dots are normalised to underscores
+     * to match the output of translateWord (0.0 -> n__0_0).
+     */
+    public static Set<String> collectNumbers(KB kb) {
+
+        Set<String> numbers = new TreeSet<>();
+        for (Formula f : kb.formulaMap.values())
+            collectNumbersFromFormula(f.getFormula(), numbers);
+        return numbers;
+    }
+
+    /** ***************************************************************
+     * Emit a THF type declaration for every numeric literal in numbers.
+     * Applies the same normalisation as translateWord: '.' -> '_'.
+     */
+    public static void writeIntegerTypes(Set<String> numbers, Writer out) throws IOException {
+
+        for (String n : numbers) {
+            String normalized = n.replace('.', '_');
+            out.write("thf(n__" + normalized + "_tp,type,(n__" + normalized + " : $i)).\n");
         }
     }
 
@@ -1022,9 +1061,9 @@ public class THFnew {
 
     /** ***************************************************************
      */
-    public static void writeTypes(KB kb, Writer out) throws IOException {
+    public static void writeTypes(KB kb, Writer out, Set<String> numbers) throws IOException {
 
-        writeIntegerTypes(kb,out);
+        writeIntegerTypes(numbers, out);
         for (String t : kb.terms) {
             // ISSUE 2
             // 1. Skip modal helper symbols – they already have correct types in the header.
@@ -1114,7 +1153,7 @@ public class THFnew {
      */
     public static void writeTypesNonModal(KB kb, Writer out) throws IOException {
 
-        writeIntegerTypes(kb, out);
+        writeIntegerTypes(collectNumbers(kb), out);
         for (String pred : kb.kbCache.signatures.keySet()) {
             // Derive base predicate name (strip __N or __NFn if present)
             String base = pred;
@@ -1225,9 +1264,12 @@ public class THFnew {
                 // to run and call copyNewPredFromVariableArity(...)
                 fp.preProcess(f, false, kb);
             }
+            // Pre-collect all integer literals so every n__N constant gets a type declaration.
+            SUMOformulaToTPTPformula.setHideNumbers(true);
+            Set<String> numbers = collectNumbers(kb);
             // Write at the end of the header the hard coded types because they use some from the auto-generated ones.
             out.write(Modals.getTHFHeader() + "\n");
-            writeTypes(kb,out);
+            writeTypes(kb, out, numbers);
             for (Formula f : kb.formulaMap.values()) {
                 if (debug) System.out.println("THFnew.transModalTHF(): " + f);
                 if (!exclude(f,kb,out))
