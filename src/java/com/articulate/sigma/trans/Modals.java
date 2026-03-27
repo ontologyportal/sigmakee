@@ -496,8 +496,8 @@ public class Modals {
      */
     public static String genFrameAxiom(String modalOp, FrameAx frameAx) {
 
-        String quantArgs = ", P:$i";
-        String args = " @ P1";
+        String quantArgs = "";
+        String args = "";
         String accreln = "s__accreln1";
         if (regHOLpred.contains(modalOp)) {
             quantArgs = ", P1:$i";
@@ -990,7 +990,7 @@ public class Modals {
     public static void testFrameAx() {
 
         System.out.println("testFrameAx():");
-        System.out.println(genModalSystem("desires",ModalSystem.S5));
+        System.out.println(genModalSystem("Possibility",ModalSystem.S5));
     }
 
     /** ***************************************************************
