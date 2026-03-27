@@ -512,24 +512,24 @@ public class Modals {
         switch (frameAx) {
             case REFLEXIVE:
                 return "thf(" + modalOp + "_refl" + ",axiom,(! [W:w" + quantArgs +
-                        "] : (" + accreln + " @ " + modalOp + args + " @ W @ W))).";
+                        "] : (" + accreln + " @ s__" + modalOp + args + " @ W @ W))).";
             case SYMMETRIC:
                 return "thf(" + modalOp + "_refl" + ",axiom,(! [W1:w, W2:w" + quantArgs +
-                        "] : ((" + accreln + " @ " + modalOp + args + " @ W1 @ W2) => " +
-                        "(" + accreln + " @ " + modalOp + " @ P @ W2 @ W1)))).";
+                        "] : ((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) => " +
+                        "(" + accreln + " @ s__" + modalOp + " @ P @ W2 @ W1)))).";
             case TRANSITIVE:
                 return "thf(" + modalOp + "_refl" + ",axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
-                        "] : (((" + accreln + " @ " + modalOp + args + " @ W1 @ W2) & " +
-                        "(" + accreln + " @ " + modalOp + args + " @ W2 @ W3)) => " +
-                        "(" + accreln + " @ " + modalOp + args + " @ W1 @ W3)))).";
+                        "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
+                        "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3)) => " +
+                        "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)))).";
             case SERIAL:
                 return "thf(" + modalOp + "_refl" + ",axiom,(! [W:w" + quantArgs +
-                        "] : (?[U:w] : (" + accreln + " @ " + modalOp + args + " @ W @ U)))).";
+                        "] : (?[U:w] : (" + accreln + " @ s__" + modalOp + args + " @ W @ U)))).";
             case EUCLIDEAN:
                 return "thf(" + modalOp + "_refl" + ",axiom,(! [W1:w,W2:2,W3:w" + quantArgs +
-                        "] : (((" + accreln + " @ " + modalOp + args + " @ W1 @ W2) & " +
-                        "(" + accreln + " @ " + modalOp + args + " @ W1 @ W3)) => " +
-                        "(" + accreln + " @ " + modalOp + args + " @ W2 @ W3))).";
+                        "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
+                        "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)) => " +
+                        "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3))).";
         }
         System.out.println("Error in genFrameAxiom() invalid frame: " + frameAx);
         return "";
