@@ -472,6 +472,18 @@ public class Modals {
     }
 
     /***************************************************************
+     * Generates the appropriate modal type for every operator
+     */
+    public static String genModalTypes(HashSet<String> allModals) {
+
+        StringBuffer result = new StringBuffer();
+        for (String s : allModals)
+            result.append("thf(" + Character.toLowerCase(s.charAt(0)) + s.substring(1) +
+                    "_tp,type,(s__" + s + " : m)).\n");
+        return result.toString();
+    }
+
+    /***************************************************************
      * Generates the appropriate modal system for every operator
      * Use system D for deontics and T for everything else
      */
@@ -481,6 +493,7 @@ public class Modals {
         HashSet<String> allModals = new HashSet<>();
         allModals.addAll(regHOLpred);
         allModals.addAll(regHOL3pred);
+        result.append(genModalTypes(allModals));
         //System.out.println("Modals.genAllModalSystems(): allModals size: " + allModals.size());
         for (String s : allModals) {
             if (deontics.contains(s))
@@ -580,26 +593,26 @@ public class Modals {
         return 
                 // CF: add these lines into getTHFHeader() result string
                 "thf(modals_tp,type,(m : $tType)).\n" +
-                "thf(obligation_tp,type,(s__Obligation : m)).\n" +
-                "thf(permission_tp,type,(s__Permission : m)).\n" +
-                "thf(prohibition_tp,type,(s__Prohibition : m)).\n" +
+                //"thf(obligation_tp,type,(s__Obligation : m)).\n" +
+                //"thf(permission_tp,type,(s__Permission : m)).\n" +
+                //"thf(prohibition_tp,type,(s__Prohibition : m)).\n" +
                 
                 "thf(worlds_tp,type,(w : $tType)).\n" +
                 "thf(cworld_tp,type,(s__CW : w)).\n" +
                 "thf(s__worlds_tp,type,(s__World : w)).\n" +
 
                 "thf(accreln1_tp,type,s__accreln1 : (m > w > w > $o)).\n" +
-                "thf(accreln2_tp,type, s__accreln2: m > $i > w > w > $o ).\n" +
-                "thf(accreln3_tp,type, s__accreln3: m > $i > $i > w > w > $o ).\n" +
+                "thf(accreln2_tp,type, s__accreln2: (m > $i > w > w > $o) ).\n" +
+                "thf(accreln3_tp,type, s__accreln3: (m > $i > $i > w > w > $o) ).\n" +
                 //"thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +     // CF: This is no longer needed, we are using accreln[ |2|3] 
-                "thf(knows_tp,type,(s__knows : m)).\n" +
-                "thf(believes_tp,type,(s__believes : m)).\n" +
-                "thf(desires_tp,type,(s__desires : m)).\n" +
-                "thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__desires @ P @ W @ W))).\n" +
-                "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__knows @ P @ W @ W))).\n" +
-                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__believes @ P @ W @ W))).\n" +
+                //"thf(knows_tp,type,(s__knows : m)).\n" +
+                //"thf(believes_tp,type,(s__believes : m)).\n" +
+                //"thf(desires_tp,type,(s__desires : m)).\n" +
+                //"thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__desires @ P @ W @ W))).\n" +
+                //"thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__knows @ P @ W @ W))).\n" +
+                //"thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__believes @ P @ W @ W))).\n" +
                 // ISSUE 6
-                "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n" +
+                //"thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n" +
                 genAllModalSystems();
     }
 
