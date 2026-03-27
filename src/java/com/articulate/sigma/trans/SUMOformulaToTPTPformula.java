@@ -74,8 +74,8 @@ public class SUMOformulaToTPTPformula {
             if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
             if (result.equals("$true" + Formula.TERM_MENTION_SUFFIX) || result.equals("$false" + Formula.TERM_MENTION_SUFFIX))
                 result = "'" + result + "'";
-            System.out.println("SUMOformulaToTPTPformula.translateWord(): getHideNumbers(): " + getHideNumbers());
-            System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
+            //System.out.println("SUMOformulaToTPTPformula.translateWord(): getHideNumbers(): " + getHideNumbers());
+            //System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
 
             if (StringUtil.isNumeric(result) && getHideNumbers() && !"tff".equals(lang)) {
                 if (result.contains("."))
