@@ -70,11 +70,25 @@ public class Modals {
     // (<regHOLpred> ?AGENT ?FORMULA)
     public static final List<String> regHOL3pred = new ArrayList<>(
             Arrays.asList(
-                    "confersNorm",          // TODO: Move Formula to 3rd 
-                    "confersObligation",    // TODO: Move Formula to 3rd 
-                    "confersRight",         // TODO: Move Formula to 3rd 
-                    "deprivesNorm",         // TODO: Move Formula to 3rd 
-                    "hasPurposeForAgent"    // TODO: Move Formula to 3rd 
+                    "confersNorm",
+                    "confersObligation",
+                    "confersRight",
+                    "deprivesNorm",
+                    "hasPurposeForAgent"
+            ));
+
+    public static final List<String> deontics = new ArrayList<>(
+            Arrays.asList(
+                    "confersNorm",
+                    "confersObligation",
+                    "confersRight",
+                    "deprivesNorm",
+                    "hasPurposeForAgent",
+                    "Obligation",
+                    "Permission",
+                    "Prohibition",
+                    "holdsObligation",
+                    "holdsRight"
             ));
 
     public static final List<String> regHOLpred = new ArrayList<>(
@@ -458,6 +472,26 @@ public class Modals {
     }
 
     /***************************************************************
+     * Generates the appropriate modal system for every operator
+     * Use system D for deontics and T for everything else
+     */
+    public static String genAllModalSystems() {
+
+        StringBuffer result = new StringBuffer();
+        HashSet<String> allModals = new HashSet<>();
+        allModals.addAll(regHOLpred);
+        allModals.addAll(regHOL3pred);
+        //System.out.println("Modals.genAllModalSystems(): allModals size: " + allModals.size());
+        for (String s : allModals) {
+            if (deontics.contains(s))
+                result.append(genModalSystem(s, ModalSystem.D));
+            else
+                result.append(genModalSystem(s, ModalSystem.T));
+        }
+        return result.toString();
+    }
+
+    /***************************************************************
      * Generates the appropriate modal system
      * See https://en.wikipedia.org/wiki/Modal_logic
      * K := no conditions
@@ -469,6 +503,8 @@ public class Modals {
      */
     public static String genModalSystem(String modalOp, ModalSystem modalsys) {
 
+        //System.out.println("Modals.genModalSystem(): modalOp: " + modalOp);
+        //System.out.println("Modals.genModalSystem(): modalsys: " + modalsys);
         String result = "";
         switch (modalsys) {
             case K: return "";
@@ -496,6 +532,8 @@ public class Modals {
      */
     public static String genFrameAxiom(String modalOp, FrameAx frameAx) {
 
+        //System.out.println("Modals.genFrameAxiom(): modalOp: " + modalOp);
+        //System.out.println("Modals.genFrameAxiom(): frameAx: " + frameAx);
         String quantArgs = "";
         String args = "";
         String accreln = "s__accreln1";
@@ -512,24 +550,24 @@ public class Modals {
         switch (frameAx) {
             case REFLEXIVE:
                 return "thf(" + modalOp + "_refl" + ",axiom,(! [W:w" + quantArgs +
-                        "] : (" + accreln + " @ s__" + modalOp + args + " @ W @ W))).";
+                        "] : (" + accreln + " @ s__" + modalOp + args + " @ W @ W))).\n";
             case SYMMETRIC:
-                return "thf(" + modalOp + "_refl" + ",axiom,(! [W1:w, W2:w" + quantArgs +
+                return "thf(" + modalOp + "_symm" + ",axiom,(! [W1:w, W2:w" + quantArgs +
                         "] : ((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) => " +
-                        "(" + accreln + " @ s__" + modalOp + " @ P @ W2 @ W1)))).";
+                        "(" + accreln + " @ s__" + modalOp + " @ P @ W2 @ W1)))).\n";
             case TRANSITIVE:
-                return "thf(" + modalOp + "_refl" + ",axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
+                return "thf(" + modalOp + "_trans" + ",axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
                         "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
                         "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3)) => " +
-                        "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)))).";
+                        "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)))).\n";
             case SERIAL:
-                return "thf(" + modalOp + "_refl" + ",axiom,(! [W:w" + quantArgs +
-                        "] : (?[U:w] : (" + accreln + " @ s__" + modalOp + args + " @ W @ U)))).";
+                return "thf(" + modalOp + "_ser" + ",axiom,(! [W:w" + quantArgs +
+                        "] : (?[U:w] : (" + accreln + " @ s__" + modalOp + args + " @ W @ U)))).\n";
             case EUCLIDEAN:
-                return "thf(" + modalOp + "_refl" + ",axiom,(! [W1:w,W2:2,W3:w" + quantArgs +
+                return "thf(" + modalOp + "_eucl" + ",axiom,(! [W1:w,W2:2,W3:w" + quantArgs +
                         "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
                         "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)) => " +
-                        "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3))).";
+                        "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3))).\n";
         }
         System.out.println("Error in genFrameAxiom() invalid frame: " + frameAx);
         return "";
@@ -561,7 +599,8 @@ public class Modals {
                 "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__knows @ P @ W @ W))).\n" +
                 "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__believes @ P @ W @ W))).\n" +
                 // ISSUE 6
-                "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n";
+                "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n" +
+                genAllModalSystems();
     }
 
     /***************************************************************
@@ -1011,21 +1050,22 @@ public class Modals {
         if (argMap.isEmpty() || argMap.containsKey("h"))
             showHelp();
         else {
-            SUMOformulaToTPTPformula.setHideNumbers(false);
-            KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            System.out.println("Modals.main(): completed init");
-            System.out.println("Modals.main(): KB loaded");
             if (argMap.containsKey("r")) {
+                SUMOformulaToTPTPformula.setHideNumbers(false);
+                KBmanager.getMgr().initializeOnce();
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                System.out.println("Modals.main(): completed init");
+                System.out.println("Modals.main(): KB loaded");
                 THFnew.waitForBackgroundGeneration();
                 System.out.println("Modals.main(): translate to THF with modals");
                 THFnew.transModalTHF(kb);
             }
             else if (argMap.containsKey("t")) {
+                System.out.println("Modals: run tests");
                 //someInitialTests(kb);
                 //doTQM10Tests(kb);
                 //deonticTests(kb);
-                testFrameAx();
+                System.out.println(genAllModalSystems());
             }
         }
     }
