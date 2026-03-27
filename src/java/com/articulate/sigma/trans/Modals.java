@@ -1,9 +1,11 @@
 package com.articulate.sigma.trans;
 
+import com.articulate.sigma.CLIMapParser;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 
+import java.io.IOException;
 import java.util.*;
 
 public class Modals {
@@ -176,7 +178,6 @@ public class Modals {
                     "holdsDuring" // ISSUE 6
             ));
 
-
     // list that contains the allowed head predicates for the modal predicates
     public static final List<String> allowedHeads;
     static {
@@ -188,6 +189,13 @@ public class Modals {
         tmp.addAll(formulaPreds);
         allowedHeads = Collections.unmodifiableList(tmp);
     }
+
+    public enum FrameAx { // frame axioms
+        REFLEXIVE, SYMMETRIC, TRANSITIVE, SERIAL, EUCLIDEAN}
+
+    public enum ModalSystem {
+        K,D,T,B,S4,S5}
+
     public static final Set<String> noWorld = new HashSet<>(Arrays.asList(
             "instance","subclass","domain","domainSubclass","range","rangeSubclass",
             "immediateInstance","immediateSubclass","disjoint","partition",
@@ -254,7 +262,8 @@ public class Modals {
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
             fstring.append(" CW");
-        } else {
+        }
+        else {
             fstring.append(" ?W").append(worldNum - 1);
         }
         fstring.append(" ?W").append(worldNum)
@@ -393,6 +402,7 @@ public class Modals {
      * If there is no such suffix, returns the input unchanged.
      */
     public static String baseFunctor(String head) {
+
         if (head == null) return null;
         java.util.regex.Matcher m = java.util.regex.Pattern
                 .compile("^(.*)__\\d+$")
@@ -445,6 +455,84 @@ public class Modals {
         return "tff(worlds_tp,type,(w : $tType)).\n" +
                 "tff(modals_tp,type,(m : $tType)).\n" +
                 "tff(accreln_tp,type,(s__accreln : (m * $i * w * w) > $o)).";
+    }
+
+    /***************************************************************
+     * Generates the appropriate modal system
+     * See https://en.wikipedia.org/wiki/Modal_logic
+     * K := no conditions
+     * D := serial
+     * T := reflexive
+     * B := reflexive and symmetric
+     * S4 := reflexive and transitive
+     * S5 := reflexive and Euclidean
+     */
+    public static String genModalSystem(String modalOp, ModalSystem modalsys) {
+
+        String result = "";
+        switch (modalsys) {
+            case K: return "";
+            case D: return genFrameAxiom(modalOp,FrameAx.SERIAL);
+            case T: return genFrameAxiom(modalOp,FrameAx.REFLEXIVE);
+            case B: return genFrameAxiom(modalOp,FrameAx.REFLEXIVE) +
+                    genFrameAxiom(modalOp,FrameAx.SYMMETRIC);
+            case S4: return genFrameAxiom(modalOp,FrameAx.REFLEXIVE) +
+                    genFrameAxiom(modalOp,FrameAx.TRANSITIVE);
+            case S5: return genFrameAxiom(modalOp,FrameAx.REFLEXIVE) +
+                    genFrameAxiom(modalOp,FrameAx.EUCLIDEAN);
+        }
+        return result;
+    }
+
+    /***************************************************************
+     * Generates the appropriate frame axioms for each modal.  Requires
+     * regHOLpred or regHOL3pred to have the right modal relations.
+     * See https://en.wikipedia.org/wiki/Modal_logic
+     * reflexive if w R w, for every w in G
+     * symmetric if w R u implies u R w, for all w and u in G
+     * transitive if w R u and u R q together imply w R q, for all w, u, q in G.
+     * serial if, for every w in G there is some u in G such that w R u.
+     * Euclidean if, for every u, t, and w, w R u and w R t implies u R t (by symmetry, it also implies t R u, as well as t R t and u R u)
+     */
+    public static String genFrameAxiom(String modalOp, FrameAx frameAx) {
+
+        String quantArgs = ", P:$i";
+        String args = " @ P1";
+        String accreln = "s__accreln1";
+        if (regHOLpred.contains(modalOp)) {
+            quantArgs = ", P1:$i";
+            args = " @ P1";
+            accreln = "s__accreln2";
+        }
+        if (regHOL3pred.contains(modalOp)) {
+            quantArgs = ", P1:$i, P2:$i";
+            args = " @ P1 @ P2";
+            accreln = "s__accreln3";
+        }
+        switch (frameAx) {
+            case REFLEXIVE:
+                return "thf(" + modalOp + "_refl" + ",axiom,(! [W:w" + quantArgs +
+                        "] : (" + accreln + " @ " + modalOp + " @ P @ W @ W))).";
+            case SYMMETRIC:
+                return "thf(" + modalOp + "_refl" + ",axiom,(! [W1:w, W2:w" + quantArgs +
+                        "] : ((" + accreln + " @ " + modalOp + " @ P @ W1 @ W2) =>" +
+                        "(" + accreln + " @ " + modalOp + " @ P @ W2 @ W1)))).";
+            case TRANSITIVE:
+                return "thf(" + modalOp + "_refl" + ",axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
+                        "] : (((" + accreln + " @ " + modalOp + " @ P @ W1 @ W2) &" +
+                        "(" + accreln + " @ " + modalOp + " @ P @ W2 @ W3)) =>" +
+                        "(" + accreln + " @ " + modalOp + " @ P @ W1 @ W3)))).";
+            case SERIAL:
+                return "thf(" + modalOp + "_refl" + ",axiom,(! [W:w" + quantArgs +
+                        "] : (?[U:w] : (" + accreln + " @ " + modalOp + " @ P @ W @ U)))).";
+            case EUCLIDEAN:
+                return "thf(" + modalOp + "_refl" + ",axiom,(! [W1:w,W2:2,W3:w" + quantArgs +
+                        "] : (((" + accreln + " @ " + modalOp + " @ P @ W1 @ W2) &" +
+                        "(" + accreln + " @ " + modalOp + " @ P @ W1 @ W3)) =>" +
+                        "(" + accreln + " @ " + modalOp + " @ P @ W2 @ W3))).";
+        }
+        System.out.println("Error in genFrameAxiom() invalid frame: " + frameAx);
+        return "";
     }
 
     /***************************************************************
@@ -897,19 +985,39 @@ public class Modals {
         */
     }
 
+    /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("Modals");
+        System.out.println("  h - show this help screen");
+        System.out.println("  t - run tests");
+        System.out.println("  r - tRanslate to KB to THF with modals");
+    }
+
     /***************************************************************
      */
     public static void main(String[] args) {
 
-        SUMOformulaToTPTPformula.setHideNumbers(false);
-        KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        System.out.println("HOL.main(): completed init");
-
-        // Examples: 
-        //someInitialTests(kb);
-        // More tests: 
-        //doTQM10Tests(kb);
-        deonticTests(kb);
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.isEmpty() || argMap.containsKey("h"))
+            showHelp();
+        else {
+            SUMOformulaToTPTPformula.setHideNumbers(false);
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            System.out.println("Modals.main(): completed init");
+            System.out.println("Modals.main(): KB loaded");
+            if (argMap.containsKey("r")) {
+                THFnew.waitForBackgroundGeneration();
+                System.out.println("Modals.main(): translate to THF with modals");
+                THFnew.transModalTHF(kb);
+            }
+            else if (argMap.containsKey("t")) {
+                //someInitialTests(kb);
+                //doTQM10Tests(kb);
+                deonticTests(kb);
+            }
+        }
     }
 }
