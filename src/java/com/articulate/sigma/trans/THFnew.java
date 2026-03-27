@@ -1534,7 +1534,7 @@ public class THFnew {
      * Only needed for full-KB export modes (-m, -r), not for
      * single-formula translation (--one).
      */
-    private static void waitForBackgroundGeneration() {
+    public static void waitForBackgroundGeneration() {
 
         if (!TPTPGenerationManager.waitForTHFModal(600)) {
             System.out.println("THFnew.main(): Background generation not ready, generating THF Modal synchronously");
