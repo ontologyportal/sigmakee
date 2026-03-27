@@ -512,24 +512,24 @@ public class Modals {
         switch (frameAx) {
             case REFLEXIVE:
                 return "thf(" + modalOp + "_refl" + ",axiom,(! [W:w" + quantArgs +
-                        "] : (" + accreln + " @ " + modalOp + " @ P @ W @ W))).";
+                        "] : (" + accreln + " @ " + modalOp + args + " @ W @ W))).";
             case SYMMETRIC:
                 return "thf(" + modalOp + "_refl" + ",axiom,(! [W1:w, W2:w" + quantArgs +
-                        "] : ((" + accreln + " @ " + modalOp + " @ P @ W1 @ W2) =>" +
+                        "] : ((" + accreln + " @ " + modalOp + args + " @ W1 @ W2) => " +
                         "(" + accreln + " @ " + modalOp + " @ P @ W2 @ W1)))).";
             case TRANSITIVE:
                 return "thf(" + modalOp + "_refl" + ",axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
-                        "] : (((" + accreln + " @ " + modalOp + " @ P @ W1 @ W2) &" +
-                        "(" + accreln + " @ " + modalOp + " @ P @ W2 @ W3)) =>" +
-                        "(" + accreln + " @ " + modalOp + " @ P @ W1 @ W3)))).";
+                        "] : (((" + accreln + " @ " + modalOp + args + " @ W1 @ W2) & " +
+                        "(" + accreln + " @ " + modalOp + args + " @ W2 @ W3)) => " +
+                        "(" + accreln + " @ " + modalOp + args + " @ W1 @ W3)))).";
             case SERIAL:
                 return "thf(" + modalOp + "_refl" + ",axiom,(! [W:w" + quantArgs +
-                        "] : (?[U:w] : (" + accreln + " @ " + modalOp + " @ P @ W @ U)))).";
+                        "] : (?[U:w] : (" + accreln + " @ " + modalOp + args + " @ W @ U)))).";
             case EUCLIDEAN:
                 return "thf(" + modalOp + "_refl" + ",axiom,(! [W1:w,W2:2,W3:w" + quantArgs +
-                        "] : (((" + accreln + " @ " + modalOp + " @ P @ W1 @ W2) &" +
-                        "(" + accreln + " @ " + modalOp + " @ P @ W1 @ W3)) =>" +
-                        "(" + accreln + " @ " + modalOp + " @ P @ W2 @ W3))).";
+                        "] : (((" + accreln + " @ " + modalOp + args + " @ W1 @ W2) & " +
+                        "(" + accreln + " @ " + modalOp + args + " @ W1 @ W3)) => " +
+                        "(" + accreln + " @ " + modalOp + args + " @ W2 @ W3))).";
         }
         System.out.println("Error in genFrameAxiom() invalid frame: " + frameAx);
         return "";
@@ -987,6 +987,14 @@ public class Modals {
 
     /** ***************************************************************
      */
+    public static void testFrameAx() {
+
+        System.out.println("testFrameAx():");
+        System.out.println(genModalSystem("desires",ModalSystem.S5));
+    }
+
+    /** ***************************************************************
+     */
     public static void showHelp() {
 
         System.out.println("Modals");
@@ -1016,7 +1024,8 @@ public class Modals {
             else if (argMap.containsKey("t")) {
                 //someInitialTests(kb);
                 //doTQM10Tests(kb);
-                deonticTests(kb);
+                //deonticTests(kb);
+                testFrameAx();
             }
         }
     }
