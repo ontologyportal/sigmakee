@@ -462,7 +462,7 @@ public class Modals {
                 "thf(cworld_tp,type,(s__CW : w)).\n" +
                 "thf(s__worlds_tp,type,(s__World : w)).\n" +
 
-                "thf(accreln1_tp,type,s__accreln1 : (m > $i > w > w > $o)).\n" +
+                "thf(accreln1_tp,type,s__accreln1 : (m > w > w > $o)).\n" +
                 "thf(accreln2_tp,type, s__accreln2: m > $i > w > w > $o ).\n" +
                 "thf(accreln3_tp,type, s__accreln3: m > $i > $i > w > w > $o ).\n" +
                 //"thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +     // CF: This is no longer needed, we are using accreln[ |2|3] 
