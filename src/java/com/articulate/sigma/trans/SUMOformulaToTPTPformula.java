@@ -21,7 +21,7 @@ public class SUMOformulaToTPTPformula {
     public static boolean getHideNumbers() { return hideNumbersTL.get(); }
     public static void setHideNumbers(boolean h) {
         hideNumbersTL.set(h);
-        System.out.println("setting hideNumbers to: " +  h);}
+        //System.out.println("setting hideNumbers to: " +  h);}
     public static String getLang() { return langTL.get(); }
     public static void setLang(String l) { langTL.set(l); }
     public static StringBuilder getQlist() { return qlistTL.get(); }
