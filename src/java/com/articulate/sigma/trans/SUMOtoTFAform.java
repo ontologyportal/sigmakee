@@ -2370,7 +2370,7 @@ public class SUMOtoTFAform {
     public static String process(Formula f, boolean query) {
 
         initOnce();
-        System.out.println("SUMOtoTFAform.process(): setHideNumbers false");
+        //System.out.println("SUMOtoTFAform.process(): setHideNumbers false");
         SUMOformulaToTPTPformula.setHideNumbers(false);
         if (kb == null) {
             System.err.println("Error in SUMOtoTFAform.process(): null kb");
