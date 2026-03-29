@@ -1268,7 +1268,7 @@ public class THFnew {
             SUMOformulaToTPTPformula.setHideNumbers(true);
             Set<String> numbers = collectNumbers(kb);
             // Write at the end of the header the hard coded types because they use some from the auto-generated ones.
-            out.write(Modals.getTHFHeader() + "\n");
+            out.write(Modals.getTHFHeader(kb) + "\n");
             writeTypes(kb, out, numbers);
             for (Formula f : kb.formulaMap.values()) {
                 if (debug) System.out.println("THFnew.transModalTHF(): " + f);

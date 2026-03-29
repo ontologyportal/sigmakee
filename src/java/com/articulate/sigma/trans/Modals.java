@@ -224,7 +224,7 @@ public class Modals {
      * Handle the predicates given in regHOL3pred, which have a parameter
      * followed by a formula.
      */
-    public static Formula handleHOL3pred(Formula f, KB kb, Integer worldNum) {
+    public static Formula handleHOL3pred(Formula f, KB kb, String worldvar, Integer worldNum) {
 
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1);
@@ -238,10 +238,10 @@ public class Modals {
             fstring.append(" CW");
         }
         else {
-            fstring.append(" ?W").append(worldNum - 1);
+            fstring.append(" ?" + worldvar).append(worldNum - 1);
         }
-        fstring.append(" ?W").append(worldNum).append(") ");
-        fstring.append(Formula.SPACE).append(processRecurse(flist.get(2),kb,worldNum));
+        fstring.append(" ?" + worldvar).append(worldNum).append(") ");
+        fstring.append(Formula.SPACE).append(processRecurse(flist.get(2),kb,worldvar,worldNum));
         fstring.append(Formula.RP);
         Formula result = new Formula();
         result.read(fstring.toString());
@@ -258,15 +258,15 @@ public class Modals {
      * where F' is recursively processed and world-indexed, and we
      * introduce a fresh world variable ?Wn.
      */
-    public static Formula handleHOLpred(Formula f, KB kb, Integer worldNum) {
+    public static Formula handleHOLpred(Formula f, KB kb, String worldvar, Integer worldNum) {
 
         List<Formula> flist = f.complexArgumentsToArrayList(1); // args after the head
         // Expect: flist.get(0) = "agent"/parameter, flist.get(1) = formula argument
         worldNum = worldNum + 1;
 
         // Recursively process the “parameter” term as well
-        Formula param = processRecurse(flist.get(0), kb, worldNum - 1);
-        Formula embedded = processRecurse(flist.get(1), kb, worldNum);
+        Formula param = processRecurse(flist.get(0), kb, worldvar, worldNum - 1);
+        Formula embedded = processRecurse(flist.get(1), kb, worldvar, worldNum);
 
         StringBuilder fstring = new StringBuilder();
         fstring.append("(=> (accreln2 ")
@@ -278,9 +278,9 @@ public class Modals {
             fstring.append(" CW");
         }
         else {
-            fstring.append(" ?W").append(worldNum - 1);
+            fstring.append(" ?" + worldvar).append(worldNum - 1);
         }
-        fstring.append(" ?W").append(worldNum)
+        fstring.append(" ?" + worldvar).append(worldNum)
                 .append(") ")
                 .append(embedded.toString())
                 .append(Formula.RP);
@@ -303,7 +303,7 @@ public class Modals {
      * where F' is recursively processed and world-indexed, and
      * we introduce a fresh world variable ?Wn.
      */
-    public static Formula handleModalAttribute(Formula f, KB kb, Integer worldNum) {
+    public static Formula handleModalAttribute(Formula f, KB kb, String worldvar, Integer worldNum) {
 
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1); // [F, M]
@@ -320,11 +320,11 @@ public class Modals {
             fstring.append("CW");
         }
         else {
-            fstring.append("?W").append(prevWorld);
+            fstring.append("?" + worldvar).append(prevWorld);
         }
-        fstring.append(Formula.SPACE).append("?W").append(currWorld).append(") ");
+        fstring.append(Formula.SPACE).append("?" + worldvar).append(currWorld).append(") ");
         // Recurse once on the embedded formula at the new current world:
-        fstring.append(processRecurse(formula, kb, currWorld));
+        fstring.append(processRecurse(formula, kb, worldvar, currWorld));
         fstring.append(Formula.RP);
         Formula result = new Formula();
         result.read(fstring.toString());
@@ -333,7 +333,8 @@ public class Modals {
 
     /***************************************************************
      */
-    public static Formula processRecurse(Formula f, KB kb, Integer worldNum) {
+    public static Formula processRecurse(Formula f, KB kb,
+                                         String worldvar, Integer worldNum) {
 
         if (f.atom())
             return f;
@@ -342,12 +343,12 @@ public class Modals {
 
         if (f.listP()) {
             if (regHOL3pred.contains(f.car()))
-                return handleHOL3pred(f,kb,worldNum);
+                return handleHOL3pred(f,kb,worldvar,worldNum);
             if (regHOLpred.contains(f.car())) {
-                return handleHOLpred(f, kb, worldNum);
+                return handleHOLpred(f, kb, worldvar,worldNum);
             }
             if (f.car().equals("modalAttribute")) {
-                return handleModalAttribute(f, kb, worldNum);
+                return handleModalAttribute(f, kb, worldvar, worldNum);
             }
 
             int argStart = 1;
@@ -363,7 +364,7 @@ public class Modals {
 
             // Recursively process arguments
             for (Formula arg : flist) {
-                fstring.append(Formula.SPACE).append(processRecurse(arg, kb, worldNum));
+                fstring.append(Formula.SPACE).append(processRecurse(arg, kb, worldvar, worldNum));
             }
             // Close the term / formula
             if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL))) {
@@ -390,10 +391,9 @@ public class Modals {
                                 fstring.append(" CW");
                             }
                             else {
-                                fstring.append(" ?W").append(worldNum);
+                                fstring.append(" ?" + worldvar).append(worldNum);
                             }
                 }
-
                 fstring.append(Formula.RP);
 
                 // Signatures are read-only here; no mutation. We only log missing ones.
@@ -435,29 +435,36 @@ public class Modals {
         List<String> sig = new ArrayList<>();
         sig.add(""); // empty 0th argument for relations
         sig.add("Entity");
-        sig.add("Entity");
         sig.add("World");
         sig.add("World");
-        kb.kbCache.signatures.put("accreln",sig);
+        kb.kbCache.signatures.put("accreln1",sig);
+        sig.add(0,"Entity");
+        kb.kbCache.signatures.put("accreln2",sig);
+        sig.add(0,"Entity");
+        kb.kbCache.signatures.put("accreln3",sig);
     }
 
     /***************************************************************
      */
     public static Formula processModals(Formula f, KB kb) {
 
-        addAccrelnDef(kb);
-        //addAccrelnDefP(kb);
-        // Start at index 0 for constant world (W0 = CW) 
         int worldNum = 1;
+        String worldvar = "W" ;
+        //System.out.println("processModals(): vars: " + f.collectAllVariables());
+        //System.out.println("processModals(): world var: " + worldvar + worldNum);
+        while (f.collectAllVariables().contains("?" + worldvar + worldNum))  // f might have ?W1 already
+            worldvar = worldvar + "W";
+        //addAccrelnDefP(kb);
+        // Start at index 0 for constant world (W0 = CW)
         //if (!f.isHigherOrder(kb))
         //    return f;
-        Formula result = processRecurse(f,kb,worldNum);
+        Formula result = processRecurse(f,kb,worldvar,worldNum);
         String fstring = result.getFormula();
         result.read(fstring);
         Set<String> types = new HashSet<>();
         types.add("World");
         for (int i = 0; i <= worldNum; i++) {
-            result.varTypeCache.put("?W" + i,types);
+            result.varTypeCache.put("?" + worldvar + i,types);
         } 
         return result;
     }
@@ -588,8 +595,9 @@ public class Modals {
 
     /***************************************************************
      */
-    public static String getTHFHeader() {
+    public static String getTHFHeader(KB kb) {
 
+        addAccrelnDef(kb);
         return 
                 // CF: add these lines into getTHFHeader() result string
                 "thf(modals_tp,type,(m : $tType)).\n" +
@@ -613,6 +621,7 @@ public class Modals {
                 //"thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__believes @ P @ W @ W))).\n" +
                 // ISSUE 6
                 //"thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n" +
+
                 genAllModalSystems();
     }
 
@@ -1053,6 +1062,7 @@ public class Modals {
         System.out.println("  h - show this help screen");
         System.out.println("  t - run tests");
         System.out.println("  r - tRanslate to KB to THF with modals");
+        System.out.println("  --form \"<fomula>\" - translate one formula with modals");
     }
 
     /***************************************************************
@@ -1079,6 +1089,12 @@ public class Modals {
                 //doTQM10Tests(kb);
                 //deonticTests(kb);
                 System.out.println(genAllModalSystems());
+            }
+            else if (argMap.containsKey("form")) {
+                SUMOformulaToTPTPformula.setHideNumbers(false);
+                KBmanager.getMgr().initializeOnce();
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                System.out.println(processModals(new Formula(argMap.get("form").get(0)),kb));
             }
         }
     }

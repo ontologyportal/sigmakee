@@ -1874,7 +1874,7 @@ public class THF {
         String filename = kbDir + sep + kb.name + ".thf";
         try (Writer fstream = new FileWriter(filename);
             Writer out = new BufferedWriter(fstream)) {
-            out.write(Modals.getTHFHeader());
+            out.write(Modals.getTHFHeader(kb));
             for (String s : kbAll2)
                 out.write(s);
             System.out.println("\n\nTHF.main(): Result written to file " + filename);
