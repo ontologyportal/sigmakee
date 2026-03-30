@@ -51,13 +51,25 @@ function setWidth(id) {
   String inst = request.getParameter("inst");
   String all = request.getParameter("all");
   String fileRestrict = request.getParameter("fileRestrict");
+
+  if(StringUtil.emptyString(fileRestrict))
+    fileRestrict = "";
+  else 
+    fileRestrict = StringUtil.removeHTML(fileRestrict);
+
   if (fileRestrict == null || fileRestrict.equals("null"))
-      fileRestrict = "";
+    fileRestrict = "";
 
   if (view == null)
   	view = "text";
   if (term == null || term.equals("null")) term = "Process";
+
   String relation = request.getParameter("relation");
+  if (StringUtil.emptyString(relation))
+    relation = "";
+  else
+      relation = StringUtil.replaceNonIdChars(StringUtil.removeHTML(relation));
+
   if (relation == null || relation.equals("null") || relation.equals("")) {
       if (KButilities.isRelation(kb,term))
           relation = "subrelation";
@@ -66,18 +78,36 @@ function setWidth(id) {
       else
           relation = "subclass";
   }
+
   String up = request.getParameter("up");
+  if (StringUtil.emptyString(up) || !StringUtil.isInteger(up))
+    up = "1";
+  else
+    up = StringUtil.replaceNonIdChars(StringUtil.removeHTML(up));
+
   if (up == null) up = "1";
   int upint = Integer.parseInt(up);
   if (upint > 10)
       upint = 1;
   String down = request.getParameter("down");
+
+  if (StringUtil.emptyString(down) || !StringUtil.isInteger(down))
+    down = "1";
+  else
+    down = StringUtil.replaceNonIdChars(StringUtil.removeHTML(down));
+
   if (down == null) down = "1";
   int downint = Integer.parseInt(down);
   if (downint > 10)
       downint = 1;
   int limitInt = 100;
   String limit = request.getParameter("limit");
+
+  if(StringUtil.emptyString(limit) || !StringUtil.isInteger(limit))
+    limit = "";
+  else 
+    limit = StringUtil.replaceNonIdChars(StringUtil.removeHTML(limit));
+
   try {
       limitInt = Integer.parseInt(limit);
       if (limitInt > 100 || limitInt < 10)
