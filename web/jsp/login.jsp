@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=US-ASCII" import="com.articulate.sigma.*" pageEncoding="US-ASCII"%>
+<%@ page language="java" contentType="text/html; charset=US-ASCII" import="com.articulate.sigma.*, com.articulate.sigma.utils.*" pageEncoding="US-ASCII"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
@@ -21,7 +21,16 @@
         */
 
         String userName = request.getParameter("userName");
+        if(StringUtil.emptyString(userName))
+            userName = "";
+        else 
+            userName = StringUtil.removeHTML(userName);
+
         String password = request.getParameter("password");
+        if(StringUtil.emptyString(password))
+            password = "";
+        else 
+            password = StringUtil.removeHTML(password);
 
         PasswordService ps = PasswordService.getInstance();
         if (ps.userExists(userName)) {
@@ -45,15 +54,17 @@
             }
         }
         else {
-            String role = Login.validateUser(userName,password);
-            session.setAttribute("user",userName);
-            session.setAttribute("role",role);
-            ServletContext siblingContext = request.getSession().getServletContext().getContext("/sigma");
-            siblingContext.setAttribute("user",userName);
-            siblingContext.setAttribute("role",role);
-            System.out.println("login.jsp: Set sibling context");
-            System.out.println("login.jsp: Successful login for " + userName + " with role " + role);
-            response.sendRedirect("KBs.jsp");
+            //String role = Login.validateUser(userName,password);
+            //session.setAttribute("user",userName);
+            //session.setAttribute("role",role);
+            //ServletContext siblingContext = request.getSession().getServletContext().getContext("/sigma");
+            //siblingContext.setAttribute("user",userName);
+            //siblingContext.setAttribute("role",role);
+            //System.out.println("login.jsp: Set sibling context");
+            //System.out.println("login.jsp: Successful login for " + userName + " with role " + role);
+            //response.sendRedirect("KBs.jsp");
+            System.err.println("Bad login attempt in login.jsp - no matching password for " + userName);
+            response.sendRedirect("login.html");
         }
         %>
     </body>
