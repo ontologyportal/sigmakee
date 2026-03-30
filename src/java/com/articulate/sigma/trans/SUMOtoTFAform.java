@@ -649,8 +649,6 @@ public class SUMOtoTFAform {
         String arityCountStr = null;
         if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(): car: " + car);
         if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(): argTypeMap: " + argTypeMap);
-        if (!hasNumeric(argTypeMap))
-            return car.getFormula();
         List<String> newArgTypeMap = new ArrayList<>();
         newArgTypeMap.addAll(argTypeMap);
         int index = 0;
@@ -665,10 +663,29 @@ public class SUMOtoTFAform {
             index = 1;
             newArgTypeMap.set(0,"");
         }
+        if (!hasNumeric(argTypeMap)) {
+            // All arg types are Entity (no numeric). If the base predicate's SUMO signature
+            // has numeric arg types, the base TFF declaration uses $int/$real/$rat which
+            // conflicts with $i-typed (Entity) variables. Return the all-Entity variant
+            // (e.g. defaultMaxValue__1En2En3En) so every arg position uses $i.
+            List<String> baseSig = kb.kbCache.getSignature(car.getFormula());
+            if (baseSig == null || !hasNumeric(baseSig))
+                return car.getFormula();
+            // Fall through: build the all-Entity variant directly from newArgTypeMap
+            // (skip mostSpecificSignature which would upgrade Entity to Integer).
+        }
         List<String> predTypes = kb.kbCache.getSignature(car.getFormula());
         if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(): predTypes: " + predTypes);
         if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(): newArgTypeMap: " + newArgTypeMap);
-        List<String> types = mostSpecificSignature(predTypes,newArgTypeMap);
+        List<String> types;
+        if (!hasNumeric(argTypeMap)) {
+            // All-Entity with numeric base sig: use newArgTypeMap directly so
+            // mostSpecificSignature does not upgrade Entity positions to Integer/RealNumber.
+            types = newArgTypeMap;
+        }
+        else {
+            types = mostSpecificSignature(predTypes, newArgTypeMap);
+        }
         if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(1): types: " + types);
         String mostSpecific = mostSpecificType(types);
         if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(): isEqualTypeOp(pred): " + isEqualTypeOp(pred));
@@ -724,6 +741,17 @@ public class SUMOtoTFAform {
             newArgTypes.set(0,bestOfPair(parentType,argTypes.get(0)));
         List<String> predTypes = kb.kbCache.getSignature(car.getFormula());
         newArgTypes = bestSignature(predTypes,newArgTypes);
+        // If the call has more arguments than the predicate's declared arity, the extra
+        // numeric types came from varmap (borrowed from another predicate sharing the same
+        // row variables) and must not drive predicate-variant naming.  Using them would
+        // generate a variant (e.g. foo__1En2En3In) that has no TFF type declaration, causing
+        // a sort conflict in the prover.  Replace those positions with Entity.
+        if (predTypes != null && newArgTypes.size() > predTypes.size()) {
+            for (int i = predTypes.size(); i < newArgTypes.size(); i++) {
+                if (isNumericType(newArgTypes.get(i)))
+                    newArgTypes.set(i, "Entity");
+            }
+        }
         if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): newArgTypes: " + newArgTypes);
         String pred = car.getFormula();
         List<String> sig = kb.kbCache.getSignature(pred);
@@ -1012,8 +1040,30 @@ public class SUMOtoTFAform {
             if (!equalTFFsig(newArgTypes,sig,op) || KButilities.isVariableArity(kb,op)) // only add the suffix if arg types are different from the original sort of the predicate
                 op = makePredFromArgTypes(car,newArgTypes);
         }
+        List<String> origArgTypes = new ArrayList<>(newArgTypes); // save actual arg types before bestSignature
         List<String> predTypes = kb.kbCache.getSignature(car.getFormula());
         newArgTypes = bestSignature(predTypes,newArgTypes);
+        // If the call has more arguments than the predicate's declared arity (e.g. a binary
+        // predicate applied with 3 args due to row-variable arity mismatch), extra numeric
+        // types are borrowed from varmap via another predicate.  Don't use them for variant
+        // naming — that would generate undeclared TFF predicates causing prover sort errors.
+        if (predTypes != null && newArgTypes.size() > predTypes.size()) {
+            for (int i = predTypes.size(); i < newArgTypes.size(); i++) {
+                if (isNumericType(newArgTypes.get(i)))
+                    newArgTypes.set(i, "Entity");
+            }
+        }
+        // For predicates: if actual args are all Entity but SUMO sig has numeric types,
+        // use the all-Entity variant (e.g. defaultMaxValue__1En2En3En) to avoid $i/$int
+        // conflicts. Variables declared as $i (Entity) cannot satisfy a $int parameter.
+        if (!SUMOKBtoTFAKB.alreadyExtended(op) && !kb.isFunctional(f) &&
+                predTypes != null && hasNumeric(predTypes) && !hasNumeric(origArgTypes)) {
+            List<String> entityArgTypes = new ArrayList<>();
+            entityArgTypes.add(""); // placeholder for predicate position (index 0)
+            for (String ignored : origArgTypes)
+                entityArgTypes.add("Entity");
+            op = makePredFromArgTypes(car, entityArgTypes);
+        }
         if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): newArgTypes: " + newArgTypes);
         StringBuilder argStr = new StringBuilder();
         String s, type;
@@ -3177,12 +3227,16 @@ public class SUMOtoTFAform {
             String bestVar = bestSpecificTerm(getVarmap().get(v.name()));
             best = bestOfPair(bestVar, best);
         }
-        // Register numeric constants
-        if (rhsExpr instanceof Expr.Atom || rhsExpr instanceof Expr.NumLiteral) {
+        // Register numeric constants — only named Atoms (e.g. Pi, NumberE, custom SUMO constants),
+        // NOT NumLiteral nodes. Integer/real literals (-1, 0, 1, 3.14) are TPTP built-in typed
+        // values; they cannot appear as symbols in tff(name,type,symbol:sort) declarations.
+        // This mirrors the string path's isTerm() guard, which excludes anything not starting
+        // with a Java identifier start character.
+        if (rhsExpr instanceof Expr.Atom) {
             if (builtInNumericType(best))
                 getNumericConstantTypes().put(rhsExpr.toKifString(), best);
         }
-        if (lhsExpr instanceof Expr.Atom || lhsExpr instanceof Expr.NumLiteral) {
+        if (lhsExpr instanceof Expr.Atom) {
             if (builtInNumericType(best))
                 getNumericConstantTypes().put(lhsExpr.toKifString(), best);
         }
@@ -3361,8 +3415,29 @@ public class SUMOtoTFAform {
             if (!equalTFFsig(newArgTypes, sig, op) || KButilities.isVariableArity(kb, op))
                 op = makePredFromArgTypes(new Formula(op), newArgTypes);
         }
+        List<String> origArgTypes = new ArrayList<>(newArgTypes); // save actual arg types before bestSignature
         List<String> predTypes = kb.kbCache.getSignature(se.headName());
         newArgTypes = bestSignature(predTypes, newArgTypes);
+        // If the call has more arguments than the predicate's declared arity, extra numeric
+        // types are borrowed from varmap via another predicate sharing row variables.
+        // Don't use them for variant naming — undeclared TFF predicates cause sort errors.
+        if (predTypes != null && newArgTypes.size() > predTypes.size()) {
+            for (int i = predTypes.size(); i < newArgTypes.size(); i++) {
+                if (isNumericType(newArgTypes.get(i)))
+                    newArgTypes.set(i, "Entity");
+            }
+        }
+        // For predicates: if actual args are all Entity but SUMO sig has numeric types,
+        // use the all-Entity variant (e.g. defaultMaxValue__1En2En3En) to avoid $i/$int
+        // conflicts. Variables declared as $i (Entity) cannot satisfy a $int parameter.
+        if (!SUMOKBtoTFAKB.alreadyExtended(op) && !isFunctionalExpr(se) &&
+                predTypes != null && hasNumeric(predTypes) && !hasNumeric(origArgTypes)) {
+            List<String> entityArgTypes = new ArrayList<>();
+            entityArgTypes.add(""); // placeholder for predicate position (index 0)
+            for (String ignored : origArgTypes)
+                entityArgTypes.add("Entity");
+            op = makePredFromArgTypes(new Formula(op), entityArgTypes);
+        }
         StringBuilder argStr = new StringBuilder();
         for (int i = 0; i < args.size(); i++) {
             Expr argExpr = args.get(i);
@@ -3370,7 +3445,7 @@ public class SUMOtoTFAform {
             if (i + 1 < newArgTypes.size()) // newArgTypes[0]=return/pred type, [1..n]=arg types
                 type = newArgTypes.get(i + 1);
             if (se.headName().startsWith("instance")) {
-                if ((argExpr instanceof Expr.Atom || argExpr instanceof Expr.NumLiteral) && i == 0) {
+                if (argExpr instanceof Expr.Atom && i == 0) {
                     if (args.size() > 1 && builtInOrSubNumericType(args.get(1).toKifString()))
                         getNumericConstantTypes().put(argExpr.toKifString(), args.get(1).toKifString());
                 }
@@ -3533,8 +3608,11 @@ public class SUMOtoTFAform {
             } else if (expr instanceof Expr.StrLiteral s) {
                 form  = s.value();
                 ttype = '"';
+            } else if (expr instanceof Expr.RowVar rv) {
+                form  = rv.name();
+                ttype = rv.name().charAt(0); // '@' — translateWord handles '@' same as '?'
             } else {
-                return expr.toKifString(); // RowVar or unknown: pass through
+                return expr.toKifString(); // unknown: pass through
             }
             String promotion = numTypePromotionExpr(expr, parentType);
             if (promotion != null)

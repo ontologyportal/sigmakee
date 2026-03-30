@@ -1,5 +1,6 @@
 package com.articulate.sigma.trans;
 
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.parsing.Expr;
@@ -14,7 +15,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import static org.junit.Assert.*;
 
@@ -361,5 +364,130 @@ public class SUMOtoTFAformExprIntegrationTest extends IntegrationTestBase {
         long arrowCount = exprResult.chars().filter(c -> c == '>').count();
         assertTrue("biconditional must expand to at least two '=>' arrows (got " + arrowCount + ")",
                 arrowCount >= 2);
+    }
+
+    // ---- row-var predvar expansion: $int typing regression ----------------
+
+    /**
+     * Regression test for the row-var / pred-var interaction bug where the
+     * Expr-based pipeline typed expanded row-var arguments as $int instead of $i.
+     *
+     * Formula: (=> (and (instance ?REL1 Predicate) (instance ?REL2 Predicate)
+     *                   (disjointRelation ?REL1 ?REL2) (?REL1 @ROW2))
+     *              (not (?REL2 @ROW2)))
+     *
+     * After predvar+rowvar expansion for abstractCounterpart (arity 3), the
+     * Expr path was generating:
+     *   ! [V__ROW21 : $i, V__ROW22 : $i, V__ROW23 : $int] : ...
+     * while the string path generated:
+     *   ! [V__ROW21 : $i, V__ROW22 : $i, V__ROW23 : $i] : ...
+     *
+     * The $int for V__ROW23 causes a Vampire parse error because the
+     * predicate declaration uses ($i * $i * $i) > $o.
+     */
+    @Test
+    public void testRowVarPredVarNoIntTypingForRowArgs() {
+        String kif = "(=> (and (instance ?REL1 Predicate) (instance ?REL2 Predicate) " +
+                "(disjointRelation ?REL1 ?REL2) (?REL1 @ROW2)) (not (?REL2 @ROW2)))";
+
+        SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
+        assertNotNull("visitor result must not be null", visitor.result);
+        assertFalse("visitor result must not be empty", visitor.result.isEmpty());
+        FormulaAST fa = visitor.result.get(0);
+        assertNotNull("FormulaAST must not be null", fa);
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        // --- String path: preProcess → process ---
+        Formula f = new Formula(kif);
+        Set<Formula> strExpanded = fp.preProcess(f, false, kb);
+        System.out.println("\n=== STRING PATH preProcess results ===");
+        Map<String, String> strResults = new TreeMap<>();
+        for (Formula sf : strExpanded) {
+            String expandedKif = sf.getFormula();
+            String tff = SUMOtoTFAform.process(sf, false);
+            Map<String, Set<String>> varmap = new java.util.HashMap<>(
+                    fp.findAllTypeRestrictions(new Formula(expandedKif), kb));
+            System.out.println("  expanded: " + expandedKif);
+            System.out.println("  varmap:   " + varmap);
+            System.out.println("  tff:      " + tff);
+            if (tff != null && !tff.isEmpty())
+                strResults.put(expandedKif, tff);
+        }
+
+        // --- Expr path: preProcessExpr → processExpr ---
+        Set<Expr> exprExpanded = fp.preProcessExpr(fa, false, kb);
+        System.out.println("\n=== EXPR PATH preProcessExpr results ===");
+        Map<String, String> exprResults = new TreeMap<>();
+        boolean foundIntTypedRowVar = false;
+        for (Expr pexpr : exprExpanded) {
+            String expandedKif = pexpr.toKifString();
+            String tff = SUMOtoTFAform.processExpr(pexpr, false);
+            Map<String, Set<String>> varmap = new java.util.HashMap<>(
+                    fp.findAllTypeRestrictions(new Formula(expandedKif), kb));
+            System.out.println("  expanded: " + expandedKif);
+            System.out.println("  varmap:   " + varmap);
+            System.out.println("  tff:      " + tff);
+            if (tff != null && !tff.isEmpty())
+                exprResults.put(expandedKif, tff);
+            // Check: no row variable (V__ROW\d+) should be typed $int
+            if (tff != null && tff.matches(".*V__ROW\\d+ : \\$int.*")) {
+                foundIntTypedRowVar = true;
+                System.out.println("  *** FAIL: row var typed as $int: " + tff);
+            }
+        }
+
+        System.out.println("\n=== COMPARISON ===");
+        System.out.println("String path produced " + strResults.size() + " TFF results");
+        System.out.println("Expr   path produced " + exprResults.size() + " TFF results");
+
+        // Primary assertion: no row variable should be typed $int
+        assertFalse(
+                "Expr path must not type row-var arguments as $int (causes Vampire parse error)",
+                foundIntTypedRowVar);
+    }
+
+    /**
+     * Dual-run for the pre-expanded form of the abstractCounterpart row-var formula.
+     * Tests process() vs processExpr() on the already-expanded formula to isolate
+     * whether the type difference originates in preProcess/preProcessExpr or
+     * in process/processExpr.
+     */
+    @Test
+    public void testRowVarPreExpandedDualRun() {
+        // This is the expected post-expansion formula for abstractCounterpart (arity 3).
+        // If abstractCounterpart is not in the test KB this test is skipped.
+        String expandedKif =
+                "(=> (and (instance abstractCounterpart Predicate) " +
+                "(instance memberTypeCount Predicate) " +
+                "(disjointRelation abstractCounterpart memberTypeCount) " +
+                "(abstractCounterpart ?ROW21 ?ROW22 ?ROW23)) " +
+                "(not (memberTypeCount ?ROW21 ?ROW22 ?ROW23)))";
+
+        // Skip if abstractCounterpart is not in the test KB
+        if (kb == null || !kb.containsTerm("abstractCounterpart")) {
+            System.out.println("testRowVarPreExpandedDualRun: skipped (abstractCounterpart not in KB)");
+            return;
+        }
+
+        Expr expr = parse(expandedKif);
+        String strResult  = SUMOtoTFAform.process(expandedKif, false);
+        String exprResult = SUMOtoTFAform.processExpr(expr, false);
+
+        System.out.println("pre-expanded kif:    " + expandedKif);
+        System.out.println("pre-expanded string: " + strResult);
+        System.out.println("pre-expanded expr:   " + exprResult);
+
+        // Neither result should type a V__ROW variable as $int
+        if (strResult != null)
+            assertFalse("String path must not type row-var as $int: " + strResult,
+                    strResult.matches(".*V__ROW\\d+ : \\$int.*"));
+        if (exprResult != null)
+            assertFalse("Expr path must not type row-var as $int: " + exprResult,
+                    exprResult.matches(".*V__ROW\\d+ : \\$int.*"));
+
+        // Both paths should agree
+        assertEquals("process() vs processExpr() must agree on pre-expanded formula",
+                strResult, exprResult);
     }
 }

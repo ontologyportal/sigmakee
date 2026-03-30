@@ -1541,15 +1541,19 @@ public class FormulaPreprocessor {
             boolean hasRows = (fa2.rowVarCache != null && !fa2.rowVarCache.isEmpty())
                            || (fa.rowVarCache != null && !fa.rowVarCache.isEmpty());
             if (hasRows) {
-                // When row-var expansion is not applicable (HOL or numeric formulas), keep the
+                // When row-var expansion is not applicable (HOL), keep the
                 // original expr without expansion — mirrors string-path: if expandRowVars() returns
                 // null/empty, accumulator.add(f) keeps the original formula.
-                if (fa2.higherOrder || fa2.containsNumber) {
+                // Note: containsNumber is NOT a barrier here; the string path expands row vars
+                // even in numeric formulas (e.g. GreatestCommonDivisorFn @ROW with literal 0).
+                if (fa2.higherOrder) {
                     afterRowVar.add(fa2.expr);
                     continue;
                 }
                 Set<Expr> expanded = rv.expandRowVarExpr(fa2);
-                afterRowVar.addAll(expanded.isEmpty() ? Set.of(fa2.expr) : expanded);
+                // empty result means arity conflict → drop this formula (do not fall back to
+                // the unexpanded original, which still contains raw row variables)
+                afterRowVar.addAll(expanded);
                 if (afterRowVar.size() > AXIOM_EXPANSION_LIMIT) {
                     System.err.println("Error in FormulaPreprocessor.preProcessExpr(): " +
                             "AXIOM_EXPANSION_LIMIT EXCEEDED: " + AXIOM_EXPANSION_LIMIT);

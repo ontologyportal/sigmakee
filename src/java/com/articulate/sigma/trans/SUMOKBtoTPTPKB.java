@@ -503,9 +503,10 @@ public class SUMOKBtoTPTPKB {
                 continue;
             type = SUMOtoTFAform.getNumericConstantTypes().get(t);
             if (debug) System.out.println("SUMOKBtoTPTPKB.printTFFNumericConstants(): term, type: " + t + ", " + type);
-            pw.println("tff(" + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)  +
-                    "_sig,type," + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)  +
-                    ":" + SUMOKBtoTFAKB.translateSort(kb,type) + ").");
+            if (isTptpArithmeticLiteral(t)) continue;
+            pw.println("tff(" + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)
+                    + "_sig,type," + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)
+                    + ":" + SUMOKBtoTFAKB.translateSort(kb,type) + ").");
         }
 //        for (String t : SUMOtoTFAform.getNumericConstantTypes().keySet()) {
 //            if (SUMOtoTFAform.numericConstantValues.keySet().contains(t))
@@ -530,9 +531,10 @@ public class SUMOKBtoTPTPKB {
                 continue;
             type = SUMOtoTFAform.getNumericConstantTypes().get(t);
             if (debug) System.out.println("SUMOKBtoTPTPKB.printTFFNumericConstants(): term, type: " + t + ", " + type);
-            fileContents.add("tff(" + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)  +
-                    "_sig,type," + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)  +
-                    ":" + SUMOKBtoTFAKB.translateSort(kb,type) + ").");
+            if (isTptpArithmeticLiteral(t)) continue;
+            fileContents.add("tff(" + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)
+                    + "_sig,type," + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)
+                    + ":" + SUMOKBtoTFAKB.translateSort(kb,type) + ").");
         }
     }
 
@@ -926,11 +928,27 @@ public class SUMOKBtoTPTPKB {
             String t = e.getKey();
             if (SUMOtoTFAform.numericConstantValues.containsKey(t)) continue;
             String type = e.getValue();
+            if (isTptpArithmeticLiteral(t)) continue;
             lines.add("tff(" + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD, false)
                     + "_sig,type,"
                     + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD, false)
                     + ":" + SUMOKBtoTFAKB.translateSort(kb, type) + ").");
         }
+    }
+
+    /**
+     * Returns true if {@code name} is a TPTP arithmetic literal (integer, rational,
+     * or real) that is already typed by TFF arithmetic.  Such values cannot appear as
+     * the symbol in a {@code tff(name,type,symbol:sort)} declaration, so callers should
+     * skip generating a type signature for them.
+     *
+     * Covers:  integers  -?[0-9]+
+     *          rationals -?[0-9]+/[0-9]+
+     *          reals     -?[0-9]+\.[0-9]*  or  -?[0-9]*\.[0-9]+
+     */
+    static boolean isTptpArithmeticLiteral(String name) {
+        if (name == null || name.isEmpty()) return false;
+        return name.matches("-?[0-9]+(\\.[0-9]*|/[0-9]+)?|-?[0-9]*\\.[0-9]+");
     }
 
     /** *************************************************************

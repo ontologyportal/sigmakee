@@ -534,7 +534,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         }
         finalsuffixes.addAll(suffixes);
         List<String> newsuffixes;
-        for (int i = 2; i <= RowVars.MAX_ARITY+1; i++) {
+        for (int i = 2; i <= RowVars.MAX_ARITY+2; i++) {  // +2 to match expandVariableArityRowVar's <= 7 limit
             newsuffixes = new ArrayList<>();
             for (String suffix : suffixes) {
                 for (String t : types) {
