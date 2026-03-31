@@ -293,7 +293,8 @@ public class KB implements Serializable {
         if (kbIn.formulaMap != null) {
             for (Map.Entry<String, Formula> pair : kbIn.formulaMap.entrySet()) {
                 key = pair.getKey();
-                newFormula = new Formula(pair.getValue());
+                Formula src = pair.getValue();
+                newFormula = (src instanceof FormulaAST fa) ? new FormulaAST(fa) : new Formula(src);
                 this.formulaMap.put(key, newFormula);
             }
         }
@@ -1905,14 +1906,35 @@ public class KB implements Serializable {
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             if (this.eprover == null)
                 loadEProver(requestedLang);
-            Formula query = new Formula();
-            query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = fp.preProcess(query, true, this);
-            if (!processedStmts.isEmpty() && this.eprover != null) {
-                // set timeout in EBatchConfig file
+
+            // FormulaAST fast path: KIFAST → preProcessExpr → Set<Expr>
+            Set<Expr> processedExprs = null;
+            try {
+                KIFAST kifAst = new KIFAST();
+                String parseErr = kifAst.parseStatement(suoKifFormula);
+                if (parseErr == null && !kifAst.formulaMap.isEmpty()) {
+                    FormulaAST queryFA = kifAst.formulaMap.values().iterator().next();
+                    processedExprs = fp.preProcessExpr(queryFA, true, this);
+                }
+            } catch (Exception e) {
+                System.err.println("KB.askEProver(): FormulaAST path failed, using string fallback: " + e.getMessage());
+                processedExprs = null;
+            }
+            // String fallback
+            String strQuery = null;
+            if (processedExprs != null && !processedExprs.isEmpty()) {
+                strQuery = processedExprs.iterator().next().toKifString();
+            } else {
+                System.err.println("KB.askEProver(): FormulaAST path failed, using string fallback for formula: "+suoKifFormula);
+                Formula query = new Formula();
+                query.read(suoKifFormula);
+                Set<Formula> processedStmts = fp.preProcess(query, true, this);
+                if (!processedStmts.isEmpty())
+                    strQuery = processedStmts.iterator().next().getFormula();
+            }
+            if (strQuery != null && this.eprover != null) {
                 EProver.addBatchConfig(null, timeout);
-                String strQuery = processedStmts.iterator().next().getFormula();
                 eprover.submitQuery(strQuery, this);
             }
         }
@@ -1951,15 +1973,35 @@ public class KB implements Serializable {
 //        THF thf = new THF();
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             loadLeo(requestedLang);
-            Formula query = new Formula();
-            query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedQuery = fp.preProcess(query, true, this);
-            if (!processedQuery.isEmpty() && this.leo != null) {
-                int axiomIndex = 0;
+
+            // FormulaAST fast path: KIFAST → preProcessExpr → Set<Expr>
+            Set<Expr> processedExprs = null;
+            try {
+                KIFAST kifAst = new KIFAST();
+                String parseErr = kifAst.parseStatement(suoKifFormula);
+                if (parseErr == null && !kifAst.formulaMap.isEmpty()) {
+                    FormulaAST queryFA = kifAst.formulaMap.values().iterator().next();
+                    processedExprs = fp.preProcessExpr(queryFA, true, this);
+                }
+            } catch (Exception e) {
+                System.err.println("KB.askLeo(): FormulaAST path failed, using string fallback: " + e.getMessage());
+                processedExprs = null;
+            }
+            // String fallback
+            Set<Formula> processedQuery = null;
+            if (processedExprs == null || processedExprs.isEmpty()) {
+                System.err.println("KB.askLeo(): FormulaAST path failed, using string fallback for formula: "+suoKifFormula);
+                Formula query = new Formula();
+                query.read(suoKifFormula);
+                processedQuery = fp.preProcess(query, true, this);
+            }
+
+            boolean hasProcessed = (processedExprs != null && !processedExprs.isEmpty())
+                    || (processedQuery != null && !processedQuery.isEmpty());
+            if (hasProcessed && this.leo != null) {
                 String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
                 String kbName = name;
-                // Use the captured requestedLang instead of reading from static field again
                 String lang = "tff";
                 if ("fof".equals(requestedLang))
                     lang = "tptp";
@@ -1975,26 +2017,42 @@ public class KB implements Serializable {
                 Set<String> tptpquery = new HashSet<>();
                 StringBuilder combined = new StringBuilder();
                 String lastKifStr;
-                if (processedQuery.size() > 1) {
-                    combined.append("(or ");
-                    for (Formula p : processedQuery) {
-                        combined.append(p.getFormula()).append(Formula.SPACE);
+                if (processedExprs != null && !processedExprs.isEmpty()) {
+                    // FormulaAST fast path: translate Expr directly for single result
+                    if (processedExprs.size() > 1) {
+                        combined.append("(or ");
+                        for (Expr pexpr : processedExprs)
+                            combined.append(pexpr.toKifString()).append(Formula.SPACE);
+                        combined.append(Formula.RP);
+                        lastKifStr = combined.toString();
+                        String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
+                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
+                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
+                    } else {
+                        Expr pexpr = processedExprs.iterator().next();
+                        String tptpBody = ExprToTPTP.translate(pexpr, true, requestedLang);
+                        if (tptpBody == null)
+                            tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(pexpr.toKifString(), true, requestedLang);
+                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
+                        lastKifStr = pexpr.toKifString();
                     }
-                    combined.append(Formula.RP);
-                    lastKifStr = combined.toString();
-                    // Use captured requestedLang to avoid race conditions with background TPTP generation
-                    String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
-                    if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
-                    String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
-                    tptpquery.add(theTPTPstatement);
-                }
-                else {
-                    // Use captured requestedLang to avoid race conditions with background TPTP generation
-                    lastKifStr = processedQuery.iterator().next().getFormula();
-                    String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
-                    if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
-                    String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
-                    tptpquery.add(theTPTPstatement);
+                } else {
+                    // String fallback path
+                    if (processedQuery.size() > 1) {
+                        combined.append("(or ");
+                        for (Formula p : processedQuery)
+                            combined.append(p.getFormula()).append(Formula.SPACE);
+                        combined.append(Formula.RP);
+                        lastKifStr = combined.toString();
+                        String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
+                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
+                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
+                    } else {
+                        lastKifStr = processedQuery.iterator().next().getFormula();
+                        String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
+                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
+                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
+                    }
                 }
                 StringBuilder exprQlist = ExprToTPTP.getQlist(lastKifStr);
                 try {
@@ -2008,10 +2066,8 @@ public class KB implements Serializable {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                String strQuery = processedQuery.iterator().next().getFormula();
-            }
-            else
-                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
+            } else
+                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + suoKifFormula);
         }
         return leo;
     }
@@ -2044,12 +2100,34 @@ public class KB implements Serializable {
         }
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             loadLeo(requestedLang);
-            Formula query = new Formula();
-            query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedQuery = fp.preProcess(query, true, this);
-            if (!processedQuery.isEmpty() && this.leo != null) {
-                int axiomIndex = 0;
+
+            // FormulaAST fast path: KIFAST → preProcessExpr → Set<Expr>
+            Set<Expr> processedExprs = null;
+            try {
+                KIFAST kifAst = new KIFAST();
+                String parseErr = kifAst.parseStatement(suoKifFormula);
+                if (parseErr == null && !kifAst.formulaMap.isEmpty()) {
+                    FormulaAST queryFA = kifAst.formulaMap.values().iterator().next();
+                    processedExprs = SessionTPTPManager.withSessionCache(
+                            sessionId, this, () -> fp.preProcessExpr(queryFA, true, this));
+                }
+            } catch (Exception e) {
+                System.err.println("KB.askLeo(): FormulaAST path failed, using string fallback: " + e.getMessage());
+                processedExprs = null;
+            }
+            // String fallback
+            Set<Formula> processedQuery = null;
+            if (processedExprs == null || processedExprs.isEmpty()) {
+                Formula query = new Formula();
+                query.read(suoKifFormula);
+                processedQuery = SessionTPTPManager.withSessionCache(
+                        sessionId, this, () -> fp.preProcess(query, true, this));
+            }
+
+            boolean hasProcessed = (processedExprs != null && !processedExprs.isEmpty())
+                    || (processedQuery != null && !processedQuery.isEmpty());
+            if (hasProcessed && this.leo != null) {
                 String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
                 String kbName = name;
                 String lang = "tff";
@@ -2074,8 +2152,6 @@ public class KB implements Serializable {
 
                 if (!s.exists()) {
                     if (sessionId != null && !sessionId.isEmpty()) {
-                        // Generate to session dir instead of polluting shared folder
-                        // (in-memory KB may contain user assertions from tell())
                         System.out.println("KB.askLeo(): shared base missing, generating session-specific TPTP for session " + sessionId);
                         try {
                             Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
@@ -2094,24 +2170,42 @@ public class KB implements Serializable {
                 Set<String> tptpquery = new HashSet<>();
                 StringBuilder combined = new StringBuilder();
                 String lastKifStr;
-                if (processedQuery.size() > 1) {
-                    combined.append("(or ");
-                    for (Formula p : processedQuery) {
-                        combined.append(p.getFormula()).append(Formula.SPACE);
+                if (processedExprs != null && !processedExprs.isEmpty()) {
+                    // FormulaAST fast path: translate Expr directly for single result
+                    if (processedExprs.size() > 1) {
+                        combined.append("(or ");
+                        for (Expr pexpr : processedExprs)
+                            combined.append(pexpr.toKifString()).append(Formula.SPACE);
+                        combined.append(Formula.RP);
+                        lastKifStr = combined.toString();
+                        String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
+                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
+                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
+                    } else {
+                        Expr pexpr = processedExprs.iterator().next();
+                        String tptpBody = ExprToTPTP.translate(pexpr, true, requestedLang);
+                        if (tptpBody == null)
+                            tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(pexpr.toKifString(), true, requestedLang);
+                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
+                        lastKifStr = pexpr.toKifString();
                     }
-                    combined.append(Formula.RP);
-                    lastKifStr = combined.toString();
-                    String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
-                    if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
-                    String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
-                    tptpquery.add(theTPTPstatement);
-                }
-                else {
-                    lastKifStr = processedQuery.iterator().next().getFormula();
-                    String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
-                    if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
-                    String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
-                    tptpquery.add(theTPTPstatement);
+                } else {
+                    // String fallback path
+                    if (processedQuery.size() > 1) {
+                        combined.append("(or ");
+                        for (Formula p : processedQuery)
+                            combined.append(p.getFormula()).append(Formula.SPACE);
+                        combined.append(Formula.RP);
+                        lastKifStr = combined.toString();
+                        String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
+                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
+                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
+                    } else {
+                        lastKifStr = processedQuery.iterator().next().getFormula();
+                        String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
+                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
+                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
+                    }
                 }
                 StringBuilder exprQlist = ExprToTPTP.getQlist(lastKifStr);
                 try {
@@ -2123,9 +2217,8 @@ public class KB implements Serializable {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
-            else
-                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
+            } else
+                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + suoKifFormula);
         }
         return leo;
     }
@@ -2157,7 +2250,6 @@ public class KB implements Serializable {
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
             System.out.println("KB.askVampire(): processed query: " + processedStmts);
             if (!processedStmts.isEmpty()) {
-                int axiomIndex = 0;
                 String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
                 String kbName = name;
                 // Use the captured requestedLang instead of reading from static field again
@@ -2186,7 +2278,7 @@ public class KB implements Serializable {
                         String kifStr = combined.toString();
                         String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
                         if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
-                        String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
+                        String theTPTPstatement = requestedLang + "(query_0,conjecture,(" + tptpBody + ")).";
                         tptpquery.add(theTPTPstatement);
                     }
                     else {
@@ -2194,7 +2286,7 @@ public class KB implements Serializable {
                         String kifStr = processedStmts.iterator().next().getFormula();
                         String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
                         if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
-                        String theTPTPstatement = requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
+                        String theTPTPstatement = requestedLang + "(query_0,conjecture,(" + tptpBody + ")).";
                         tptpquery.add(theTPTPstatement);
                     }
                     try {
@@ -2275,7 +2367,6 @@ public class KB implements Serializable {
             boolean hasProcessed = (processedExprs != null && !processedExprs.isEmpty())
                     || (processedStmts != null && !processedStmts.isEmpty());
             if (hasProcessed) {
-                int axiomIndex = 0;
                 String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
                 String kbName = name;
                 String lang = "tff";
@@ -2331,13 +2422,13 @@ public class KB implements Serializable {
                             String kifStr = combined.toString();
                             String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
                             if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
-                            tptpquery.add(requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).");
+                            tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
                         } else {
                             Expr pexpr = processedExprs.iterator().next();
                             String tptpBody = ExprToTPTP.translate(pexpr, true, requestedLang);
                             if (tptpBody == null)
                                 tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(pexpr.toKifString(), true, requestedLang);
-                            tptpquery.add(requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).");
+                            tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
                         }
                     } else {
                         // String fallback path
@@ -2350,12 +2441,12 @@ public class KB implements Serializable {
                             String kifStr = combined.toString();
                             String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
                             if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
-                            tptpquery.add(requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).");
+                            tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
                         } else {
                             String kifStr = processedStmts.iterator().next().getFormula();
                             String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
                             if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
-                            tptpquery.add(requestedLang + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).");
+                            tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
                         }
                     }
                     try {
