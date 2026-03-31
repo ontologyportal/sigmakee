@@ -1223,8 +1223,12 @@ public class SUMOKBtoTPTPKB {
         // This mirrors the warm-up pattern used by THFnew.transModalTHF() / transPlainTHF().
         if (localLang.equals("tff") && !kb.kbCache.variableArityPrePopulated) {
             FormulaPreprocessor prePassFp = new FormulaPreprocessor();
-            for (Formula prePassFormula : formulaList)
-                prePassFp.preProcess(prePassFormula, false, kb);
+            for (Formula prePassFormula : formulaList) {
+                if (prePassFormula instanceof FormulaAST fa && fa.expr != null)
+                    prePassFp.preProcessExpr(fa, false, kb);
+                else
+                    prePassFp.preProcess(prePassFormula, false, kb);
+            }
             kb.kbCache.variableArityPrePopulated = true;
         }
 
