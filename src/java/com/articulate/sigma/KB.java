@@ -2714,7 +2714,7 @@ public class KB implements Serializable {
                 "--input_syntax","tptp",
                 "--proof","tptp",
                 "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                "-fde","none","-updr","off","rp","off","bce","off"
+                "-fde","none","-updr","off","-rp","off","-bce","off"
         ));
         if (Vampire.askQuestion){
             cmds.add("-qa");
@@ -2805,7 +2805,7 @@ public class KB implements Serializable {
                     "--input_syntax","tptp",
                     "--proof","tptp",                  // <-- TSTP-style proof lines
                     "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                    "-fde","none","-updr","off","rp","off","bce","off",
+                    "-fde","none","-updr","off","-rp","off","-bce","off",
                     "-qa","plain"
             );
             List<TPTPFormula> proof = TPTPutil.processProofLines(vampire.output);
