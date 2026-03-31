@@ -40,8 +40,8 @@ String populate = request.getParameter("populate");
 if(numVars == null) numVars = "3";
 if(depth == null) depth = "5";
 
-int numVarsInt = ValidationUtils.returnValidatedInteger(numVars);
-int depthInt = ValidationUtils.returnValidatedInteger(depth);
+int numVarsInt = ValidationUtils.sanitizeInteger(numVars);
+int depthInt = ValidationUtils.sanitizeInteger(depth);
 %>
 
 <form action="LogLearn.jsp" method="get">

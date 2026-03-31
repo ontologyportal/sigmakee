@@ -12,19 +12,11 @@
     http://github.com/ontologyportal
 */
 
- term = request.getParameter("term");
- if (!StringUtil.emptyString(term))
-     term = StringUtil.replaceNonIdChars(StringUtil.removeHTML(term));
- else
-     term = "";
+  term = ValidationUtils.sanitizeSumoTerm(request.getParameter("term"));
 
-  String word = request.getParameter("word");
-  if (!StringUtil.emptyString(word))
-      word = StringUtil.replaceNonIdChars(StringUtil.removeHTML(word));
-  else
-      word = "";
+  String word = ValidationUtils.sanitizeSumoTerm(request.getParameter("word"));
 
-  String POS = request.getParameter("POS");
+  String POS = StringUtil.removeHTML(request.getParameter("POS"));
   if (POS == null)
       POS = "0";
 %>

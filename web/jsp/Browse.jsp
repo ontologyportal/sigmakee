@@ -22,8 +22,6 @@
  String nonRelTerm = request.getParameter("nonrelation");
  String relTerm = request.getParameter("relation");
 
- if (StringUtil.emptyString(term))
-    term = "";
  if (StringUtil.emptyString(nonRelTerm))
     nonRelTerm = "";
  if (StringUtil.emptyString(relTerm))

@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=US-ASCII" import="com.articulate.sigma.*, com.articulate.sigma.utils.*" pageEncoding="US-ASCII"%>
+<%@ page language="java" contentType="text/html; charset=US-ASCII" import="com.articulate.sigma.*, com.articulate.sigma.security.*, com.articulate.sigma.utils.*" pageEncoding="US-ASCII"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
@@ -20,17 +20,8 @@
             http://github.com/ontologyportal
         */
 
-        String userName = request.getParameter("userName");
-        if(StringUtil.emptyString(userName))
-            userName = "";
-        else 
-            userName = StringUtil.removeHTML(userName);
-
-        String password = request.getParameter("password");
-        if(StringUtil.emptyString(password))
-            password = "";
-        else 
-            password = StringUtil.removeHTML(password);
+        String userName = ValidationUtils.sanitizeString(request.getParameter("userName"));
+        String password = ValidationUtils.sanitizeString(request.getParameter("password"));
 
         PasswordService ps = PasswordService.getInstance();
         if (ps.userExists(userName)) {
@@ -48,10 +39,10 @@
                 System.out.println("login.jsp: Successful login for " + u.username + " with role " + u.role);
                 response.sendRedirect("KBs.jsp");
             }
-            else {
-                System.err.println("Bad login attempt in login.jsp - no matching password for " + u.username);
-                response.sendRedirect("login.html");
-            }
+                else {
+                    response.sendRedirect("login.html?error=invalid_crudentials");
+                    return;
+                }
         }
         else {
             //String role = Login.validateUser(userName,password);

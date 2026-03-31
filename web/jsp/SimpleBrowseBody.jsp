@@ -12,9 +12,9 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
  show = new StringBuilder();       // Variable to contain the HTML page generated.
  String formattedFormula = null;
- term = StringUtil.removeHTML(request.getParameter("term"));
- nonRelTerm = StringUtil.removeHTML(request.getParameter("nonrelation"));
- relTerm = StringUtil.removeHTML(term)request.getParameter("relation");
+ term = ValidationUtils.sanitizeSumoTerm(term);
+ nonRelTerm = ValidationUtils.sanitizeSumoTerm(request.getParameter("nonrelation"));
+ relTerm = ValidationUtils.sanitizeSumoTerm(request.getParameter("relation"));
 
  Map theMap = null;     // Map of natural language format strings.
 
