@@ -2236,11 +2236,11 @@ public class KB implements Serializable {
      */
     public Vampire askVampire(String suoKifFormula, int timeout, int maxAnswers) {
 
-        System.out.println("============ Normal Vampire Run =============");
+        System.out.println("\n============ Normal Vampire Run =============");
         // Capture the user's selected lang IMMEDIATELY at the start of this method
         // to avoid race conditions with background TPTP generation threads
         final String requestedLang = SUMOKBtoTPTPKB.getLang();
-        System.out.println("KB.askVampire(): captured requestedLang=" + requestedLang);
+        System.out.println("[Vampire] Query started | lang=" + requestedLang + " ---");
 
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             loadVampire(requestedLang);
@@ -2248,7 +2248,6 @@ public class KB implements Serializable {
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
-            System.out.println("KB.askVampire(): processed query: " + processedStmts);
             if (!processedStmts.isEmpty()) {
                 String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
                 String kbName = name;
@@ -2258,10 +2257,9 @@ public class KB implements Serializable {
                     lang = "tptp";
                 else
                     SUMOtoTFAform.initOnce();
-                System.out.println("KB.askVampire(): lang: " + lang);
                 File s = new File(dir + kbName + "." + lang);
                 if (!s.exists()) {
-                    System.out.println("Vampire.askVampire(): no such file: " + s + ". Creating it.");
+                    System.out.println("[Vampire] TPTP file missing, regenerating: " + s);
                     KB kb = KBmanager.getMgr().getKB(kbName);
                     KBmanager.getMgr().loadKBforInference(kb);
                 }
@@ -2291,9 +2289,6 @@ public class KB implements Serializable {
                     }
                     try {
                         tptpQuery = tptpquery;
-                        System.out.println("KB.askVampire(): calling with: " + s + ", " + timeout + ", " + tptpquery);
-                        System.out.println("KB.askVampire(): qlist: " + ExprToTPTP.getQlist(processedStmts.iterator().next().getFormula()));
-                        System.out.println("KB.askVampire(): mode before: " + Vampire.mode);
                         Vampire vampire = new Vampire();
                         if (Vampire.mode == null) {
                             if (!StringUtil.emptyString(System.getenv("VAMPIRE_OPTS")))
@@ -2301,9 +2296,9 @@ public class KB implements Serializable {
                             else
                                 Vampire.mode = Vampire.ModeType.CASC;
                         }
-                        System.out.println("KB.askVampire(): mode: " + Vampire.mode);
+                        System.out.println("[Vampire] Running | file=" + s.getName() + " | timeout=" + timeout + "s | mode=" + Vampire.mode);
                         vampire.run(this, s, timeout, tptpquery);
-                        System.out.println("============ Normal Vampire Run Finished =============");
+                        System.out.println("--- [Vampire] Done ---");
                         return vampire;
                     } catch (ATPException e) {
                         throw e; // preserve type + payload
@@ -2333,8 +2328,8 @@ public class KB implements Serializable {
      */
     public Vampire askVampire(String suoKifFormula, int timeout, int maxAnswers, String sessionId) {
 
-        System.out.println("============ Vampire Run (session=" + sessionId + ") =============");
         final String requestedLang = SUMOKBtoTPTPKB.getLang();
+        System.out.println("[Vampire] Query started | lang=" + requestedLang + " | session=" + sessionId + " ---");
 
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             loadVampire(requestedLang);
@@ -2380,7 +2375,7 @@ public class KB implements Serializable {
                 if (sessionId != null && !sessionId.isEmpty()) {
                     Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionTPTPPath(sessionId, kbName, lang);
                     if (Files.exists(sessionPath)) {
-                        System.out.println("KB.askVampire(): using session-specific TPTP: " + sessionPath);
+                        System.out.println("[Vampire] Using session TPTP: " + sessionPath.getFileName());
                         baseFile = sessionPath.toFile();
                     } else {
                         baseFile = new File(kbDir + kbName + "." + lang);
@@ -2393,7 +2388,7 @@ public class KB implements Serializable {
                     if (sessionId != null && !sessionId.isEmpty()) {
                         // Generate to session dir instead of polluting shared folder
                         // (in-memory KB may contain user assertions from tell())
-                        System.out.println("KB.askVampire(): shared base missing, generating session-specific TPTP for session " + sessionId);
+                        System.out.println("[Vampire] Shared base missing, generating session TPTP");
                         try {
                             Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
                             baseFile = sessionPath.toFile();
@@ -2403,7 +2398,7 @@ public class KB implements Serializable {
                             return null;
                         }
                     } else {
-                        System.out.println("KB.askVampire(): no such file: " + baseFile + ". Creating it.");
+                        System.out.println("[Vampire] TPTP file missing, regenerating: " + baseFile);
                         KB kb = KBmanager.getMgr().getKB(kbName);
                         KBmanager.getMgr().loadKBforInference(kb);
                     }
@@ -2458,7 +2453,9 @@ public class KB implements Serializable {
                             else
                                 Vampire.mode = Vampire.ModeType.CASC;
                         }
+                        System.out.println("[Vampire] Running | file=" + baseFile.getName() + " | timeout=" + timeout + "s | mode=" + Vampire.mode);
                         vampire.run(this, baseFile, timeout, tptpquery, sessionId);
+                        System.out.println("--- [Vampire] Done ---");
                         return vampire;
                     } catch (ATPException e) {
                         throw e;
@@ -2687,7 +2684,8 @@ public class KB implements Serializable {
      */
     public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers, String sessionId) {
 
-        if (debug) System.out.println("============ Vampire w/ModensPomens (session=" + sessionId + ") =============");
+        System.out.println("\n============ Modens Ponens Vampire Run =============");
+        System.out.println("--- [Vampire+MP] Query started | session=" + sessionId + " ---");
         // STEP 1 - use session-aware askVampire
         Vampire vampire_initial = askVampire(suoKifFormula, timeout, maxAnswers, sessionId);
         // STEPS 2-6
@@ -2704,6 +2702,7 @@ public class KB implements Serializable {
         // STEP 2
         List<TPTPFormula> proof = TPTPutil.processProofLines(vampireInitial.output);
         List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
+        System.out.println("[Vampire+MP] Pass 1 complete | authored axioms: " + authored_lines.size());
 
         // STEP 3
         Vampire vampire_pomens = new Vampire();
@@ -2721,9 +2720,9 @@ public class KB implements Serializable {
             cmds.add("plain");
         }
 
+        System.out.println("[Vampire+MP] Pass 2: modus ponens refinement");
         try{
             vampire_pomens.runCustom(kb, timeout, cmds);
-            if (debug) System.out.println("============ Vampire w/ModensPomens run =============");
             vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
         } catch (ATPException e){
             throw e;
@@ -2732,15 +2731,12 @@ public class KB implements Serializable {
         }
 
         // STEP 4
-        if (dropOnePremiseFormulas) {
-            if (debug) System.out.println("============ Vampire Attempt to Drop One Premise Formulas  =============");
+        if (dropOnePremiseFormulas)
             vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
-            if (debug) System.out.println("============ Vampire Drop One Premise Formulas Finished =============");
-        }
 
         // STEP 5
         vampire_pomens.output = TPTPutil.replaceFOFinfRule(vampire_pomens.output, authored_lines);
-        if (debug) System.out.println("============ Vampire replace FOF infRules Finished =============");
+        System.out.println("--- [Vampire+MP] Done ---");
 
         // STEP 6
         return vampire_pomens;
@@ -4878,7 +4874,7 @@ public class KB implements Serializable {
      */
     public void loadVampire(String requestedLang) {
 
-        System.out.println("INFO in KB.loadVampire(): requestedLang=" + requestedLang);
+        if (debug) System.out.println("INFO in KB.loadVampire(): requestedLang=" + requestedLang);
         String vampex = KBmanager.getMgr().getPref("vampire");
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         if (StringUtil.emptyString(vampex)) {
