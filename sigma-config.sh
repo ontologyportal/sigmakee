@@ -23,6 +23,31 @@
 
 set -e
 
+# Cross-platform in-place sed:
+# - GNU sed: sed -i
+# - BSD/macOS sed: sed -i ''
+sed_in_place() {
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
+    fi
+}
+
+# Resolve to an absolute path if possible, without requiring GNU realpath.
+resolve_path() {
+    local p="$1"
+    p="${p/#\~/$HOME}"
+
+    if command -v realpath >/dev/null 2>&1; then
+        realpath "$p" 2>/dev/null || echo "$p"
+    elif command -v python3 >/dev/null 2>&1; then
+        python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$p" 2>/dev/null || echo "$p"
+    else
+        echo "$p"
+    fi
+}
+
 # Determine SIGMA_HOME
 if [[ -z "$SIGMA_HOME" ]]; then
     SIGMA_HOME="$HOME/.sigmakee"
@@ -99,12 +124,9 @@ init_configs() {
     # Create fast config if missing
     if [[ ! -f "$FAST" ]]; then
         echo "Creating config-fast.xml..."
-        # Start with current config and reduce to minimal KB
         cp "$CURRENT" "$FAST"
 
-        # Replace the kb block with minimal constituents
-        # This is a simple approach - keeps Merge.kif only
-        sed -i '/<kb name="SUMO"/,/<\/kb>/c\
+        sed_in_place '/<kb name="SUMO"/,/<\/kb>/c\
   <kb name="SUMO" >\
     <constituent filename="Merge.kif" />\
   </kb>' "$FAST"
@@ -152,7 +174,6 @@ switch_fast() {
 add_file() {
     local filepath="$1"
 
-    # Interactive prompt if no file path provided
     if [[ -z "$filepath" ]]; then
         echo -e "${BLUE}Add a .kif file to the Sigma KB${NC}"
         echo ""
@@ -163,11 +184,8 @@ add_file() {
         echo ""
     fi
 
-    # Expand ~ and resolve to absolute path
-    filepath="${filepath/#\~/$HOME}"
-    filepath="$(realpath "$filepath" 2>/dev/null || echo "$filepath")"
+    filepath="$(resolve_path "$filepath")"
 
-    # Validate the file exists and is a .kif file
     if [[ ! -f "$filepath" ]]; then
         echo -e "${YELLOW}Error: File not found: $filepath${NC}"
         exit 1
@@ -181,11 +199,9 @@ add_file() {
     local basename
     basename="$(basename "$filepath")"
 
-    # Check if already in config
     if grep -q "\"$basename\"" "$CURRENT" 2>/dev/null; then
         echo -e "${YELLOW}$basename is already in the current config.${NC}"
 
-        # Check if symlink exists
         if [[ -L "$CONFIG_DIR/$basename" ]]; then
             echo "  Symlink: $CONFIG_DIR/$basename -> $(readlink "$CONFIG_DIR/$basename")"
         elif [[ -f "$CONFIG_DIR/$basename" ]]; then
@@ -194,7 +210,6 @@ add_file() {
         return 0
     fi
 
-    # Create symlink into KBs directory (if file isn't already there)
     if [[ "$(dirname "$filepath")" != "$CONFIG_DIR" ]]; then
         if [[ -e "$CONFIG_DIR/$basename" ]]; then
             echo -e "${YELLOW}Warning: $CONFIG_DIR/$basename already exists.${NC}"
@@ -209,16 +224,17 @@ add_file() {
         echo -e "  Symlink: ${GREEN}$CONFIG_DIR/$basename -> $filepath${NC}"
     fi
 
-    # Add constituent line to config.xml (before </kb>)
-    sed -i "/<\/kb>/i\\    <constituent filename=\"$basename\" />" "$CURRENT"
+    sed_in_place "/<\/kb>/i\\
+    <constituent filename=\"$basename\" />" "$CURRENT"
 
-    # Also add to full and fast configs if they exist
     if [[ -f "$FULL" ]] && ! grep -q "\"$basename\"" "$FULL"; then
-        sed -i "/<\/kb>/i\\    <constituent filename=\"$basename\" />" "$FULL"
+        sed_in_place "/<\/kb>/i\\
+    <constituent filename=\"$basename\" />" "$FULL"
         echo "  Added to: config-full.xml"
     fi
     if [[ -f "$FAST" ]] && ! grep -q "\"$basename\"" "$FAST"; then
-        sed -i "/<\/kb>/i\\    <constituent filename=\"$basename\" />" "$FAST"
+        sed_in_place "/<\/kb>/i\\
+    <constituent filename=\"$basename\" />" "$FAST"
         echo "  Added to: config-fast.xml"
     fi
 
@@ -238,10 +254,8 @@ remove_file() {
         exit 1
     fi
 
-    # Normalize: just the basename
     name="$(basename "$name")"
 
-    # Protect core files from removal
     case "$name" in
         Merge.kif|english_format.kif|domainEnglishFormat.kif)
             echo -e "${YELLOW}Error: Cannot remove core file $name${NC}"
@@ -254,12 +268,10 @@ remove_file() {
         exit 1
     fi
 
-    # Remove from all config files
-    sed -i "/\"$name\"/d" "$CURRENT"
-    [[ -f "$FULL" ]] && sed -i "/\"$name\"/d" "$FULL"
-    [[ -f "$FAST" ]] && sed -i "/\"$name\"/d" "$FAST"
+    sed_in_place "/\"$name\"/d" "$CURRENT"
+    [[ -f "$FULL" ]] && sed_in_place "/\"$name\"/d" "$FULL"
+    [[ -f "$FAST" ]] && sed_in_place "/\"$name\"/d" "$FAST"
 
-    # Remove symlink if it is one (don't delete actual files)
     if [[ -L "$CONFIG_DIR/$name" ]]; then
         rm "$CONFIG_DIR/$name"
         echo "  Removed symlink: $CONFIG_DIR/$name"
@@ -281,7 +293,8 @@ list_files() {
 }
 
 show_status() {
-    local mode=$(detect_mode)
+    local mode
+    mode=$(detect_mode)
     echo -e "Current mode: ${GREEN}$mode${NC}"
     echo ""
     echo "Config files:"
@@ -292,7 +305,6 @@ show_status() {
     echo "Use '$0 full' or '$0 fast' to switch modes."
 }
 
-# Main
 case "${1:-status}" in
     full)
         switch_full

@@ -164,4 +164,6 @@ if (port == null)
 String term = request.getParameter("term");
 if (StringUtil.emptyString(term))
     term = "";
+else
+    term = StringUtil.replaceNonIdChars(StringUtil.removeHTML(term));
 %>

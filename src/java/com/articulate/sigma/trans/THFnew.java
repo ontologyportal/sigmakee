@@ -162,7 +162,7 @@ public class THFnew {
             if (Character.isDigit(ttype))
                 ttype = StreamTokenizer_s.TT_NUMBER;
             boolean hasArguments = false; // if it's a modal op, don't add the __m suffix
-            if (Modals.regHOLpred.contains(f.getFormula()))
+            if (Modals.regHOLpred.contains(f.getFormula()) || Modals.regHOL3pred.contains(f.getFormula()))
                 hasArguments = true;
             return SUMOformulaToTPTPformula.translateWord(f.getFormula(), ttype, hasArguments);
         }
@@ -244,9 +244,10 @@ public class THFnew {
 //            System.out.println("V= "+v);
 //            System.out.println("typeMap(v)= "+typeMap.get(v));
 //        }
-        // TODO: Implement a more generic solution for variable types
-        // TODO: Identify why the typeMap.get(v) most of the times is Null
-        if (v.equals("?W1") || v.equals("?W2") )
+        // Any variable of the form ?W<digits> is a Kripke world variable.
+        // The hardcoded ?W1/?W2 check was insufficient for formulas with 3+
+        // nested modal operators which generate ?W3, ?W4, etc.
+        if (v.matches("\\?W\\d+"))
             return "w";
         if (typeMap.get(v) == null)
             return "$i";
@@ -1001,11 +1002,49 @@ public class THFnew {
     }
 
     /** ***************************************************************
+     * Recursively collect all numeric literals from a formula string.
+     * Collects integers and floats; skips negatives (rare in SUMO,
+     * and the "--" normalization produces awkward constant names).
      */
-    public static void writeIntegerTypes(KB kb, Writer out) throws IOException {
+    private static void collectNumbersFromFormula(String fstr, Set<String> numbers) {
 
-        for (int i = 0; i < 7; i++) {
-            out.write("thf(n__" + i + "_tp,type,(n__" + i + " : $i)).\n");
+        Formula f = new Formula(fstr);
+        if (f.atom()) {
+            if (StringUtil.isNumeric(fstr) && !fstr.contains("-"))
+                numbers.add(fstr);
+            return;
+        }
+        List<String> args = f.complexArgumentsToArrayListString(0);
+        if (args != null) {
+            for (String arg : args)
+                collectNumbersFromFormula(arg, numbers);
+        }
+    }
+
+    /** ***************************************************************
+     * Scan all KB formulas and return the set of every numeric literal
+     * that appears (e.g. "24", "0.0", "360.0").  These will be declared
+     * as thf(n__24_tp,type,(n__24 : $i)). so that hideNumbers=true
+     * translations are well-typed.  Dots are normalised to underscores
+     * to match the output of translateWord (0.0 -> n__0_0).
+     */
+    public static Set<String> collectNumbers(KB kb) {
+
+        Set<String> numbers = new TreeSet<>();
+        for (Formula f : kb.formulaMap.values())
+            collectNumbersFromFormula(f.getFormula(), numbers);
+        return numbers;
+    }
+
+    /** ***************************************************************
+     * Emit a THF type declaration for every numeric literal in numbers.
+     * Applies the same normalisation as translateWord: '.' -> '_'.
+     */
+    public static void writeIntegerTypes(Set<String> numbers, Writer out) throws IOException {
+
+        for (String n : numbers) {
+            String normalized = n.replace('.', '_');
+            out.write("thf(n__" + normalized + "_tp,type,(n__" + normalized + " : $i)).\n");
         }
     }
 
@@ -1022,15 +1061,14 @@ public class THFnew {
 
     /** ***************************************************************
      */
-    public static void writeTypes(KB kb, Writer out) throws IOException {
+    public static void writeTypes(KB kb, Writer out, Set<String> numbers) throws IOException {
 
-        writeIntegerTypes(kb,out);
+        writeIntegerTypes(numbers, out);
         for (String t : kb.terms) {
             // ISSUE 2
             // 1. Skip modal helper symbols – they already have correct types in the header.
-            if (Modals.RESERVED_MODAL_SYMBOLS.contains(t)) {
+            if (Modals.RESERVED_MODAL_SYMBOLS.contains(t))
                 continue;
-            }
             if (excludeForTypedef(t,out))
                 continue;
             if (kb.isInstanceOf(t,"Relation")) {
@@ -1044,7 +1082,7 @@ public class THFnew {
                 List<String> sig = new ArrayList<>(baseSig);
 
                 // ISSUE 14
-                // Check that the sigStr alligns with the __NUM of the term:
+                // Check that the sigStr aligns with the __NUM of the term:
                 Integer suffixNum = getSuffixNumber(t);
                 String baseHead = Modals.baseFunctor(t);
                 // For relations:
@@ -1054,7 +1092,6 @@ public class THFnew {
                 //  - skip modal relations
                 //  - every other relation gets a trailing "World" argument
                 if (!Formula.isLogicalOperator(t) && !t.equals("equals")) {
-
                     if (!Modals.RIGID_RELATIONS.contains(baseHead)
                             && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)
                             && !Modals.regHOLpred.contains(baseHead)) {
@@ -1084,10 +1121,11 @@ public class THFnew {
                 }
 
                 String sigStr;
-                if (Modals.regHOLpred.contains(baseHead)){
+                if (Modals.regHOLpred.contains(baseHead) || Modals.regHOL3pred.contains(baseHead)) {
                     sigStr = "m";
                     out.write( sigStr + ")).\n");
-                }else{
+                }
+                else {
                     sigStr = sigString(t, sig,kb,isFunction);
                     out.write("(" + sigStr + "))).\n");
                 }
@@ -1097,8 +1135,8 @@ public class THFnew {
                 if (Modals.MODAL_RELATIONS.contains(baseHead) && !Modals.regHOLpred.contains(baseHead)) {
                     typeStr = "m";
                 }
-                out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
-                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : "+typeStr+")).\n"); // write relation constant
+                out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_m_tp,type,(" +
+                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : " + typeStr + ")).\n"); // write relation constant
                 // End of Second Signature
             }
             // ISSUE 3
@@ -1115,7 +1153,7 @@ public class THFnew {
      */
     public static void writeTypesNonModal(KB kb, Writer out) throws IOException {
 
-        writeIntegerTypes(kb, out);
+        writeIntegerTypes(collectNumbers(kb), out);
         for (String pred : kb.kbCache.signatures.keySet()) {
             // Derive base predicate name (strip __N or __NFn if present)
             String base = pred;
@@ -1226,10 +1264,12 @@ public class THFnew {
                 // to run and call copyNewPredFromVariableArity(...)
                 fp.preProcess(f, false, kb);
             }
-            writeTypes(kb,out);
-
+            // Pre-collect all integer literals so every n__N constant gets a type declaration.
+            SUMOformulaToTPTPformula.setHideNumbers(true);
+            Set<String> numbers = collectNumbers(kb);
             // Write at the end of the header the hard coded types because they use some from the auto-generated ones.
-            out.write(Modals.getTHFHeader() + "\n");
+            out.write(Modals.getTHFHeader(kb) + "\n");
+            writeTypes(kb, out, numbers);
             for (Formula f : kb.formulaMap.values()) {
                 if (debug) System.out.println("THFnew.transModalTHF(): " + f);
                 if (!exclude(f,kb,out))
@@ -1237,11 +1277,9 @@ public class THFnew {
                 else {
                     // ISSUE 8
                     String flatFormula = f.getFormula().replace("\n", " ").replace("\r", " ");
-                    out.write("% excluded: " + flatFormula + "\n");
+                    String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
+                    out.write("% excluded: " + stripped + "\n");
                     out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
-
-//                    out.write("% excluded: " + f.getFormula() + "\n" +
-//                            "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
                 }
             }
             System.out.println("\n\nTHFnew.transModalTHF(): Result written to file " + filename);
@@ -1284,7 +1322,8 @@ public class THFnew {
                 else {
                     String flatFormula = f.getFormula()
                             .replace("\n", " ").replace("\r", " ");
-                    out.write("% excluded (non-modal): " + flatFormula + "\n");
+                    String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
+                    out.write("% excluded (non-modal): " + stripped + "\n");
                     out.write("% from file " + f.sourceFile + " at line " +
                             f.startLine + "\n");
                 }
@@ -1479,6 +1518,7 @@ public class THFnew {
     /** ***************************************************************
      */
     public static void showHelp() {
+
         System.out.println("THFnew");
         System.out.println("  options (with a leading '-'):");
         System.out.println("  m - THF translation with modals");
@@ -1494,7 +1534,7 @@ public class THFnew {
      * Only needed for full-KB export modes (-m, -r), not for
      * single-formula translation (--one).
      */
-    private static void waitForBackgroundGeneration() {
+    public static void waitForBackgroundGeneration() {
 
         if (!TPTPGenerationManager.waitForTHFModal(600)) {
             System.out.println("THFnew.main(): Background generation not ready, generating THF Modal synchronously");

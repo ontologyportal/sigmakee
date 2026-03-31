@@ -41,7 +41,8 @@
   <kb name="SUMO" >
     <constituent filename="english_format.kif" />
     <constituent filename="domainEnglishFormat.kif" />
-    <constituent filename="ArabicCulture.kif" />
+    
+    <!-- <constituent filename="ArabicCulture.kif" />
     <constituent filename="Anatomy.kif" />
     <constituent filename="arteries.kif" />
     <constituent filename="Biography.kif" />
@@ -65,10 +66,12 @@
     <constituent filename="Languages.kif" />
     <constituent filename="Law.kif" />
     <constituent filename="Media.kif" />
-    <constituent filename="Medicine.kif" />
+    <constituent filename="Medicine.kif" /> -->
+    
     <constituent filename="Merge.kif" />
     <constituent filename="Mid-level-ontology.kif" />
-    <constituent filename="MilitaryDevices.kif" />
+    
+    <!-- <constituent filename="MilitaryDevices.kif" />
     <constituent filename="Military.kif" />
     <constituent filename="MilitaryPersons.kif" />
     <constituent filename="MilitaryProcesses.kif" />
@@ -86,6 +89,6 @@
     <constituent filename="UXExperimentalTerms.kif" />
     <constituent filename="VirusProteinAndCellPart.kif" />
     <constituent filename="Weather.kif" />
-    <constituent filename="WMD.kif" />
+    <constituent filename="WMD.kif" /> -->
   </kb>
 </configuration>

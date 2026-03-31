@@ -21,11 +21,15 @@
 */
 
   String term1 = request.getParameter("term1");
-  if (term1 == null || term1.equals("null"))
-  	term1 = "Object";
+  if (StringUtil.emptyString(term1) || term1.equals("null"))
+      term1 = "Object";
+  else
+      term1 = StringUtil.replaceNonIdChars(StringUtil.removeHTML(term1));
   String term2 = request.getParameter("term2");
-  if (term2 == null || term2.equals("null"))
-  	term2 = "subclass";
+  if (StringUtil.emptyString(term2) || term2.equals("null"))
+      term2 = "subclass";
+  else
+      term2 = StringUtil.replaceNonIdChars(StringUtil.removeHTML(term2));
   List<Formula> forms = KButilities.termIntersection(kb,term1,term2);
 %>
 
