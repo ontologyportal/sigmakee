@@ -69,11 +69,11 @@ public class Modals {
     // (<regHOLpred> ?AGENT ?FORMULA)
     public static final List<String> regHOL3pred = new ArrayList<>(
             Arrays.asList(
-                    "confersNorm",          // TODO: Move Formula to 3rd 
-                    "confersObligation",    // TODO: Move Formula to 3rd 
-                    "confersRight",         // TODO: Move Formula to 3rd 
-                    "deprivesNorm",         // TODO: Move Formula to 3rd 
-                    "hasPurposeForAgent"    // TODO: Move Formula to 3rd 
+                    "confersNorm", 
+                    "confersObligation", 
+                    "confersRight", 
+                    "deprivesNorm", 
+                    "hasPurposeForAgent" 
             ));
 
     public static final List<String> regHOLpred = new ArrayList<>(
@@ -123,7 +123,7 @@ public class Modals {
                     "trichotomizingOn",
                     "totalOrderingOn",
                     "disjointDecomposition", // New Entry (Angelos)
-                    // CF: TODO: Include all temporals other than the SEVEN: 
+                    // TODO: Include all temporals other than the SEVEN: 
                     // weddingAnniversary, typicallyContainsTemporalPart, typicalTemporalPart
                     // time, cooccur, anniversary, WhenFn 
                     "AfternoonFn",
@@ -513,9 +513,9 @@ public class Modals {
         f = new Formula(fstr);
         System.out.println(processModals(f,kb)+ "\n\n");
 
-        // this one is wrong due to the two relations not conforming to argument order
+        // CF: Revised to fit word order, with 3rd-arg as formula
         fstr = "(=>\n" +
-                "    (confersRight ?FORMULA ?AGENT1 ?AGENT2)\n" +
+                "    (confersRight ?AGENT1 ?AGENT2 ?FORMULA)\n" +
                 "    (holdsRight ?FORMULA ?AGENT2))";
         f = new Formula(fstr);
         System.out.println(processModals(f,kb)+ "\n\n");
@@ -573,7 +573,6 @@ public class Modals {
         System.out.println(processModals(f,kb) + "\n\n");
         
         // "Agents that violate their obligations are fired after a US government disciplinary hearing."
-        // CF: Is this example correct? 
         fstr = 
         "(=>" +
         "  (and" +
