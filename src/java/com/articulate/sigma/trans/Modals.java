@@ -308,7 +308,9 @@ public class Modals {
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1); // [F, M]
         if (flist == null || flist.size() < 2) {
-            throw new IllegalArgumentException("modalAttribute requires at least 2 arguments");
+            System.out.println("Error in Modals.handleModalAttribute(): " + f + " at " +
+                f.getSourceFile() + ":" + f.startLine);
+            throw new IllegalArgumentException("modalAttribute requires at least 2 arguments: " + f);
         }
         int prevWorld = worldNum;
         int currWorld  = worldNum + 1;
