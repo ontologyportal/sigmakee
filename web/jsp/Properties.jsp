@@ -1,4 +1,4 @@
-<%@ include    file="Prelude.jsp" %>
+<%@ include    file="Prelude.jsp" page import="com.articulate.sigma.security.*" %>
 
 <%
 if (!role.equalsIgnoreCase("admin"))
@@ -33,8 +33,8 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
   boolean changed = false;
   boolean reload = false;
-  String inferenceEngine = request.getParameter("inferenceEngine");
-  String iePref = KBmanager.getMgr().getPref("inferenceEngine");
+  String inferenceEngine = ValidationUtils.santizeString(request.getParameter("inferenceEngine"));
+  String iePref = ValidationUtils.santizeString(KBmanager.getMgr().getPref("inferenceEngine"));
   if (iePref == null) iePref = "";
   if (inferenceEngine != null) {
       if (!inferenceEngine.equals(iePref)) {
@@ -42,59 +42,54 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           reload = true;
           KBmanager.getMgr().setPref("inferenceEngine",inferenceEngine);
       }
-  }
-  else {
+  } else {
       inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
       if (inferenceEngine == null)
           inferenceEngine = "";
   }
 
-  String celtdir = request.getParameter("celtdir");
+  String celtdir = ValidationUtils.santizeString(request.getParameter("celtdir"));
   if (celtdir != null) {
       changed = true;
       KBmanager.getMgr().setPref("celtdir",celtdir);
-  }
-  else {
+  } else {
       celtdir = KBmanager.getMgr().getPref("celtdir");
       if (celtdir == null)
           celtdir = "";
   }
 
-  String prolog = request.getParameter("prolog");
+  String prolog = ValidationUtils.santizeString(request.getParameter("prolog"));
   if (prolog != null) {
       changed = true;
       KBmanager.getMgr().setPref("prolog",prolog);
-  }
-  else {
+  } else {
       prolog = KBmanager.getMgr().getPref("prolog");
       if (prolog == null)
           prolog = "";
   }
 
-  String sumokbname = request.getParameter("sumokbname");
+  String sumokbname = ValidationUtils.santizeString(request.getParameter("sumokbname"));
   if (sumokbname != null) {
       changed = true;
       KBmanager.getMgr().setPref("sumokbname",sumokbname);
-  }
-  else {
+  } else {
       sumokbname = KBmanager.getMgr().getPref("sumokbname");
       if (sumokbname == null)
           sumokbname = "";
   }
 
-  String cache = request.getParameter("cache");
+  String cache = ValidationUtils.santizeString(request.getParameter("cache"));
   if (cache != null) {
       changed = true;
       reload = true;
       KBmanager.getMgr().setPref("cache",cache);
-  }
-  else {
+  } else {
       cache = KBmanager.getMgr().getPref("cache");
       if (cache == null)
           cache = "no";
   }
 
-  String holdsPrefix = request.getParameter("holdsPrefix");
+  String holdsPrefix = ValidationUtils.santizeString(request.getParameter("holdsPrefix"));
   if (holdsPrefix != null) {
       changed = true;
       reload = true;
@@ -106,41 +101,38 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           holdsPrefix = "no";
   }
 
-  String overwrite = request.getParameter("overwrite");
+  String overwrite = ValidationUtils.santizeString(request.getParameter("overwrite"));
   if (StringUtil.isNonEmptyString(overwrite)) {
       changed = true;
       KBmanager.getMgr().setPref("overwrite",overwrite);
-  }
-  else {
+  } else {
       overwrite = KBmanager.getMgr().getPref("overwrite");
       if (StringUtil.emptyString(overwrite)
           || !overwrite.equalsIgnoreCase("yes"))
           overwrite = "no";
   }
 
-  String showcached = request.getParameter("showcached");
+  String showcached = ValidationUtils.santizeString(request.getParameter("showcached"));
   if (showcached != null) {
       changed = true;
       KBmanager.getMgr().setPref("showcached",showcached);
-  }
-  else {
+  } else {
       showcached = KBmanager.getMgr().getPref("showcached");
       if (showcached == null)
           showcached = "yes";
   }
 
-  String loadCELT = request.getParameter("loadCELT");
+  String loadCELT = ValidationUtils.santizeString(request.getParameter("loadCELT"));
   if (loadCELT != null) {
       changed = true;
       KBmanager.getMgr().setPref("loadCELT",loadCELT);
-  }
-  else {
+  } else {
       loadCELT = KBmanager.getMgr().getPref("loadCELT");
       if (loadCELT == null)
           loadCELT = "yes";
   }
 
-  String TPTP = request.getParameter("TPTP");
+  String TPTP = ValidationUtils.santizeString(request.getParameter("TPTP"));
   if (TPTP != null) {
       changed = true;
       reload = true;
@@ -152,29 +144,27 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           TPTP = "yes";
   }
 
-  String testOutputDir = request.getParameter("testOutputDir");
+  String testOutputDir = ValidationUtils.santizeString(request.getParameter("testOutputDir"));
   if (testOutputDir != null) {
         changed = true;
         KBmanager.getMgr().setPref("testOutputDir", testOutputDir);
-  }
-  else {
+  } else {
       testOutputDir = KBmanager.getMgr().getPref("testOutputDir");
       if (testOutputDir == null)
           testOutputDir = "";
   }
 
-  String TPTPDisplay = request.getParameter("TPTPDisplay");
+  String TPTPDisplay = ValidationUtils.santizeString(request.getParameter("TPTPDisplay"));
   if (TPTPDisplay != null) {
       changed = true;
       KBmanager.getMgr().setPref("TPTPDisplay",TPTPDisplay);
-  }
-  else {
+  } else {
       TPTP = KBmanager.getMgr().getPref("TPTP");
       if (TPTP == null)
           TPTP = "yes";
   }
 
-  String typePrefix = request.getParameter("typePrefix");
+  String typePrefix = ValidationUtils.santizeString(request.getParameter("typePrefix"));
   if (typePrefix != null) {
       changed = true;
       reload = true;
@@ -186,7 +176,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           typePrefix = "yes";
   }
 
-  String inferenceTestDir = request.getParameter("inferenceTestDir");
+  String inferenceTestDir = ValidationUtils.santizeString(request.getParameter("inferenceTestDir"));
   if (inferenceTestDir != null) {
       changed = true;
       KBmanager.getMgr().setPref("inferenceTestDir",inferenceTestDir);
@@ -197,7 +187,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           inferenceTestDir = "";
   }
 
-  String tptpHomeDir = request.getParameter("tptpHomeDir");
+  String tptpHomeDir = ValidationUtils.santizeString(request.getParameter("tptpHomeDir"));
   if (tptpHomeDir != null) {
       changed = true;
       KBmanager.getMgr().setPref("tptpHomeDir",tptpHomeDir);
@@ -208,7 +198,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           tptpHomeDir = "";
   }
 
-  String systemsDir = request.getParameter("systemsDir");
+  String systemsDir = ValidationUtils.santizeString(request.getParameter("systemsDir"));
   if (systemsDir != null) {
       changed = true;
       KBmanager.getMgr().setPref("systemsDir",systemsDir);
@@ -219,7 +209,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           systemsDir = "";
   }
 
-  String graphDir = request.getParameter("graphDir");
+  String graphDir = ValidationUtils.santizeString(request.getParameter("graphDir"));
   if (graphDir != null) {
       changed = true;
       KBmanager.getMgr().setPref("graphDir",graphDir);
@@ -230,7 +220,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           graphDir = "";
   }
 
-  String editorCommand = request.getParameter("editorCommand");
+  String editorCommand = ValidationUtils.santizeString(request.getParameter("editorCommand"));
   if (editorCommand != null) {
       changed = true;
       KBmanager.getMgr().setPref("editorCommand",editorCommand);
@@ -241,7 +231,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           editorCommand = "";
   }
 
-  String lineNumberCommand = request.getParameter("lineNumberCommand");
+  String lineNumberCommand = ValidationUtils.santizeString(request.getParameter("lineNumberCommand"));
   if (lineNumberCommand != null) {
       changed = true;
       KBmanager.getMgr().setPref("lineNumberCommand",lineNumberCommand);
@@ -252,7 +242,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           lineNumberCommand = "";
   }
 
-  String adminBrowserLimit = request.getParameter("adminBrowserLimit");
+  String adminBrowserLimit = ValidationUtils.santizeString(request.getParameter("adminBrowserLimit"));
   if (adminBrowserLimit != null) {
       changed = true;
       KBmanager.getMgr().setPref("adminBrowserLimit",adminBrowserLimit);
@@ -262,7 +252,8 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
       if (adminBrowserLimit == null)
           adminBrowserLimit = "200";
   }
-  String userBrowserLimit = request.getParameter("userBrowserLimit");
+
+  String userBrowserLimit = ValidationUtils.santizeString(request.getParameter("userBrowserLimit"));
   if (userBrowserLimit != null) {
       changed = true;
       KBmanager.getMgr().setPref("userBrowserLimit",userBrowserLimit);
@@ -273,7 +264,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           userBrowserLimit = "25";
   }
 
-  String logDir = request.getParameter("logDir");
+  String logDir = ValidationUtils.santizeString(request.getParameter("logDir"));
   if (logDir != null) {
       changed = true;
       KBmanager.getMgr().setPref("logDir", logDir);
@@ -284,7 +275,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           logDir = "";
   }
 
-  String logLevel = request.getParameter("logLevel");
+  String logLevel = ValidationUtils.santizeString(request.getParameter("logLevel"));
   if (logLevel != null) {
       changed = true;
       KBmanager.getMgr().setPref("logLevel", logLevel);

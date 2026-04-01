@@ -149,8 +149,7 @@ public final class ValidationUtils {
      * @return Validated String
      */
     public static String sanitizeString(String s, String defaultString) {
-
-        if (StringUtil.emptyString(s)) {
+        if (s == null || StringUtil.emptyString(s)) {
             return StringUtil.removeHTML(defaultString);
         }
         return StringUtil.removeHTML(s);
@@ -163,7 +162,6 @@ public final class ValidationUtils {
      * @return Validated String
      */
     public static String sanitizeString(String s) {
-
         if (StringUtil.emptyString(s)) {
             return "";
         }
