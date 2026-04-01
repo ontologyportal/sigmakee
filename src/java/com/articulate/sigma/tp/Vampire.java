@@ -264,7 +264,7 @@ public class Vampire {
 
         String[] cmds = createCommandList(executable, timeout, kbFile);
         result.setCommandLine(cmds);
-        System.out.println("Vampire.run(): Initializing Vampire with:\n" + Arrays.toString(cmds));
+        System.out.println("[Vampire] Initializing with: " + Arrays.toString(cmds));
 
         ProcessBuilder _builder = new ProcessBuilder(cmds);
         _builder.redirectErrorStream(false);  // Keep stderr separate for better error capture
@@ -344,7 +344,6 @@ public class Vampire {
                 throw new FormulaTranslationException(msg, result.getInputLanguage(), lineNo, stdoutLines, stderrLines);
             }
         }
-        System.out.println("Vampire.run() done executing");
     }
 
     /** *************************************************************
@@ -502,7 +501,7 @@ public class Vampire {
             if (!java.nio.file.Files.exists(sessionDir)) {
                 try {
                     java.nio.file.Files.createDirectories(sessionDir);
-                    System.out.println("Vampire.writeStatements(): created session dir " + sessionDir);
+                    if (debug) System.out.println("Vampire.writeStatements(): created session dir " + sessionDir);
                 }
                 catch (IOException ex) {
                     System.err.println("Error in writeStatements(): could not create session dir " + sessionDir);
@@ -638,7 +637,7 @@ public class Vampire {
             }
         }
         if (sessionId != null && !sessionId.isEmpty()) {
-            System.out.println("INFO Vampire.run(): using session dir for temp files, sessionId=" + sessionId);
+            if (debug) System.out.println("INFO Vampire.run(): using session dir for temp files, sessionId=" + sessionId);
         }
 
         // Use session dir for temp files when session-specific, otherwise shared kbDir

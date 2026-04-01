@@ -14,6 +14,7 @@ import org.junit.runners.Suite;
     FormulaDeepEqualsTest.class,
     FormulaLogicalEqualityTest.class,
     FormulaPreprocessorComputeVariableTypesTest.class,
+    FormulaPreprocessorExprTest.class,
     FormulaPreprocessorFindExplicitTypesTest.class,
     FormulaPreprocessorTest.class,
     FormulaTest.class,

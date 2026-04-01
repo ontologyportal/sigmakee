@@ -237,6 +237,7 @@ public class TPTPGenerationManager {
 
         try {
             System.out.println("==== TPTPGenerationManager: Generating TFF file: " + infFilename);
+            SUMOKBtoTPTPKB.resetPathCounters();
             long startTime = System.currentTimeMillis();
 
             // Ensure we don't leave a stale tmp around
@@ -278,6 +279,7 @@ public class TPTPGenerationManager {
 
             long elapsed = System.currentTimeMillis() - startTime;
             System.out.println("==== TPTPGenerationManager: TFF generation complete in " + (elapsed / 1000.0) + "s");
+            SUMOKBtoTPTPKB.logPathCounters();
             tffReady.set(true);
 
         }
@@ -663,6 +665,7 @@ public class TPTPGenerationManager {
 
         try {
             System.out.println("TPTPGenerationManager: Generating TFF to custom path: " + outputPath);
+            SUMOKBtoTPTPKB.resetPathCounters();
             long startTime = System.currentTimeMillis();
 
             // Set ThreadLocal language fields to TFF
@@ -692,6 +695,7 @@ public class TPTPGenerationManager {
             long elapsed = System.currentTimeMillis() - startTime;
             System.out.println("TPTPGenerationManager: TFF generation to custom path complete in " +
                                (elapsed / 1000.0) + "s");
+            SUMOKBtoTPTPKB.logPathCounters();
 
         } finally {
             SUMOformulaToTPTPformula.clearThreadLocal();

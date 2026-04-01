@@ -14,6 +14,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
     SUMOtoTFAKBTest.class,
     SUMOtoTFAformTest.class,
+    SUMOtoTFAformExprIntegrationTest.class,
     THFtest.class,
     TPTP2SUMOTest.class
 })

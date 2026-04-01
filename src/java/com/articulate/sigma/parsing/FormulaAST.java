@@ -15,11 +15,13 @@ public class FormulaAST extends Formula {
 
     // arguments to relations in order to find the types of arg in a second pass
     // first key is a relation name, interior key is argument number starting at 1
-    public Map<String, Map<Integer, Set<SuokifParser.ArgumentContext>>> argMap = new HashMap<>();
+    // transient: ANTLR ParserRuleContext objects are not Kryo-serializable
+    public transient Map<String, Map<Integer, Set<SuokifParser.ArgumentContext>>> argMap = new HashMap<>();
 
     // all the equality statements in a formula.  The interior ArrayList must have
     // only two elements, one for each side of the equation
-    public List<List<SuokifParser.TermContext>> eqList = new ArrayList<>();
+    // transient: ANTLR ParserRuleContext objects are not Kryo-serializable
+    public transient List<List<SuokifParser.TermContext>> eqList = new ArrayList<>();
 
     // a map of all variables that have an explicit type declaration
     public Map<String,Set<String>> explicitTypes = new HashMap<>();
@@ -27,7 +29,8 @@ public class FormulaAST extends Formula {
     // a map of variables and all their inferred types
     public Map<String,Set<String>> varTypes = new HashMap<>();
 
-    public Set<ParserRuleContext> rowvarLiterals = new HashSet<>(); // this can have a RelsentContext, FuntermContext,
+    // transient: ANTLR ParserRuleContext objects are not Kryo-serializable
+    public transient Set<ParserRuleContext> rowvarLiterals = new HashSet<>(); // this can have a RelsentContext, FuntermContext,
       // as well as ForallContext or ExistsContext for vars in a quantifier list
 
     public Map<String,ArgStruct> constants = new HashMap<>(); // constants as arguments and their enclosing literal
@@ -36,7 +39,11 @@ public class FormulaAST extends Formula {
 
     //public HashMap<String,String> predVarSub = new HashMap<>();
 
-    public SuokifParser.SentenceContext parsedFormula = null;
+    // transient: ANTLR SentenceContext is not Kryo-serializable
+    public transient SuokifParser.SentenceContext parsedFormula = null;
+
+    /** Structured AST representation of this formula (Phase 1+). Null until SuokifVisitor populates it. */
+    public Expr expr = null;
 
     public boolean isDoc = false; // a documentation statement that is excluded from theorem proving
     public boolean isRule = false;
@@ -61,6 +68,7 @@ public class FormulaAST extends Formula {
         this.startLine = f.startLine;
         this.sourceFile = f.sourceFile;
         this.setFormula(f.getFormula());
+        this.expr = f.expr; // Expr nodes are immutable records — safe to share reference
         this.allVarsPairCache.addAll(f.allVarsPairCache);
         this.quantVarsCache.addAll(f.quantVarsCache);
         this.unquantVarsCache.addAll(f.unquantVarsCache);
@@ -290,7 +298,7 @@ public class FormulaAST extends Formula {
      * A class for holding information about constants (non-variables) and the literal
      * in which they appear
      */
-    public class ArgStruct {
+    public static class ArgStruct {
         public String pred = "";
         public String literal = "";
         public String constant = "";
@@ -313,7 +321,7 @@ public class FormulaAST extends Formula {
      * A class for holding information about row variables and the literal
      * in which they appear
      */
-    public class RowStruct {
+    public static class RowStruct {
         public String rowvar = "";
         public String pred = "";
         public String literal = "";

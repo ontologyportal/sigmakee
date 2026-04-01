@@ -6,6 +6,9 @@ package com.articulate.sigma.trans;
 // apease@articulatesoftware.com
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
 
@@ -646,8 +649,6 @@ public class SUMOtoTFAform {
         String arityCountStr = null;
         if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(): car: " + car);
         if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(): argTypeMap: " + argTypeMap);
-        if (!hasNumeric(argTypeMap))
-            return car.getFormula();
         List<String> newArgTypeMap = new ArrayList<>();
         newArgTypeMap.addAll(argTypeMap);
         int index = 0;
@@ -662,10 +663,29 @@ public class SUMOtoTFAform {
             index = 1;
             newArgTypeMap.set(0,"");
         }
+        if (!hasNumeric(argTypeMap)) {
+            // All arg types are Entity (no numeric). If the base predicate's SUMO signature
+            // has numeric arg types, the base TFF declaration uses $int/$real/$rat which
+            // conflicts with $i-typed (Entity) variables. Return the all-Entity variant
+            // (e.g. defaultMaxValue__1En2En3En) so every arg position uses $i.
+            List<String> baseSig = kb.kbCache.getSignature(car.getFormula());
+            if (baseSig == null || !hasNumeric(baseSig))
+                return car.getFormula();
+            // Fall through: build the all-Entity variant directly from newArgTypeMap
+            // (skip mostSpecificSignature which would upgrade Entity to Integer).
+        }
         List<String> predTypes = kb.kbCache.getSignature(car.getFormula());
         if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(): predTypes: " + predTypes);
         if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(): newArgTypeMap: " + newArgTypeMap);
-        List<String> types = mostSpecificSignature(predTypes,newArgTypeMap);
+        List<String> types;
+        if (!hasNumeric(argTypeMap)) {
+            // All-Entity with numeric base sig: use newArgTypeMap directly so
+            // mostSpecificSignature does not upgrade Entity positions to Integer/RealNumber.
+            types = newArgTypeMap;
+        }
+        else {
+            types = mostSpecificSignature(predTypes, newArgTypeMap);
+        }
         if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(1): types: " + types);
         String mostSpecific = mostSpecificType(types);
         if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(): isEqualTypeOp(pred): " + isEqualTypeOp(pred));
@@ -721,6 +741,17 @@ public class SUMOtoTFAform {
             newArgTypes.set(0,bestOfPair(parentType,argTypes.get(0)));
         List<String> predTypes = kb.kbCache.getSignature(car.getFormula());
         newArgTypes = bestSignature(predTypes,newArgTypes);
+        // If the call has more arguments than the predicate's declared arity, the extra
+        // numeric types came from varmap (borrowed from another predicate sharing the same
+        // row variables) and must not drive predicate-variant naming.  Using them would
+        // generate a variant (e.g. foo__1En2En3In) that has no TFF type declaration, causing
+        // a sort conflict in the prover.  Replace those positions with Entity.
+        if (predTypes != null && newArgTypes.size() > predTypes.size()) {
+            for (int i = predTypes.size(); i < newArgTypes.size(); i++) {
+                if (isNumericType(newArgTypes.get(i)))
+                    newArgTypes.set(i, "Entity");
+            }
+        }
         if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): newArgTypes: " + newArgTypes);
         String pred = car.getFormula();
         List<String> sig = kb.kbCache.getSignature(pred);
@@ -1013,8 +1044,30 @@ public class SUMOtoTFAform {
             if (!equalTFFsig(newArgTypes,sig,op) || KButilities.isVariableArity(kb,op)) // only add the suffix if arg types are different from the original sort of the predicate
                 op = makePredFromArgTypes(car,newArgTypes);
         }
+        List<String> origArgTypes = new ArrayList<>(newArgTypes); // save actual arg types before bestSignature
         List<String> predTypes = kb.kbCache.getSignature(car.getFormula());
         newArgTypes = bestSignature(predTypes,newArgTypes);
+        // If the call has more arguments than the predicate's declared arity (e.g. a binary
+        // predicate applied with 3 args due to row-variable arity mismatch), extra numeric
+        // types are borrowed from varmap via another predicate.  Don't use them for variant
+        // naming — that would generate undeclared TFF predicates causing prover sort errors.
+        if (predTypes != null && newArgTypes.size() > predTypes.size()) {
+            for (int i = predTypes.size(); i < newArgTypes.size(); i++) {
+                if (isNumericType(newArgTypes.get(i)))
+                    newArgTypes.set(i, "Entity");
+            }
+        }
+        // For predicates: if actual args are all Entity but SUMO sig has numeric types,
+        // use the all-Entity variant (e.g. defaultMaxValue__1En2En3En) to avoid $i/$int
+        // conflicts. Variables declared as $i (Entity) cannot satisfy a $int parameter.
+        if (!SUMOKBtoTFAKB.alreadyExtended(op) && !kb.isFunctional(f) &&
+                predTypes != null && hasNumeric(predTypes) && !hasNumeric(origArgTypes)) {
+            List<String> entityArgTypes = new ArrayList<>();
+            entityArgTypes.add(""); // placeholder for predicate position (index 0)
+            for (String ignored : origArgTypes)
+                entityArgTypes.add("Entity");
+            op = makePredFromArgTypes(car, entityArgTypes);
+        }
         if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): newArgTypes: " + newArgTypes);
         StringBuilder argStr = new StringBuilder();
         String s, type;
@@ -2979,5 +3032,628 @@ public class SUMOtoTFAform {
             else
                 showHelp();
         }
+    }
+
+    // =========================================================================
+    // Expr fast path – TFF (mirrors the Formula/string path above)
+    //
+    // Each method corresponds to its string-based counterpart:
+    //   processRecurseExpr  ↔  processRecurse(Formula, String)
+    //   processLogOpExpr    ↔  processLogOp
+    //   processQuantExpr    ↔  processQuant
+    //   processConjDisjExpr ↔  processConjDisj
+    //   processCompOpExpr   ↔  processCompOp
+    //   processMathOpExpr   ↔  processMathOp
+    //   processListFnExpr   ↔  processListFn
+    //   processNumericSuperArgsExpr ↔ processNumericSuperArgs
+    //   processOtherRelationExpr    ↔ processOtherRelation
+    //   missingSortsExpr    ↔  missingSorts(Formula)
+    //   processExpr         ↔  process(String, boolean)
+    //
+    // Key substitutions:
+    //   new Formula(s)                  → Expr node already in tree
+    //   f.atom() + charAt(0) dispatch   → instanceof on sealed hierarchy
+    //   f.carAsFormula().getFormula()   → se.headName()
+    //   f.complexArgumentsToArrayListString(1) → se.args()  (List<Expr>)
+    //   argStrings [head + args as strings]    → reused by collectArgTypes()
+    // =========================================================================
+
+    /** Return the SUMO type of an Expr node – mirrors findType(Formula). */
+    private static String findTypeExpr(Expr expr) {
+        if (expr == null)
+            return "Entity";
+        if (expr instanceof Expr.NumLiteral n) {
+            if (StringUtil.isInteger(n.value()))  return "Integer";
+            if (StringUtil.isNumeric(n.value()))  return "RealNumber";
+            return "Entity";
+        }
+        if (expr instanceof Expr.Var v) {
+            Set<String> vartypes = getVarmap().get(v.name());
+            return bestSpecificTerm(vartypes);
+        }
+        if (expr instanceof Expr.Atom a) {
+            if (kb.isFunction(a.name()))
+                return kb.kbCache.getRange(a.name());
+            return "Entity";
+        }
+        if (expr instanceof Expr.SExpr se && se.headName() != null) {
+            if (kb.isFunction(se.headName()))
+                return kb.kbCache.getRange(se.headName());
+        }
+        return "Entity";
+    }
+
+    /** True if expr has a numeric type – mirrors isNumeric(Formula). */
+    private static boolean isNumericExpr(Expr expr) {
+        String type = findTypeExpr(expr);
+        return !StringUtil.emptyString(type) &&
+               (kb.isSubclass(type, "RealNumber") || type.equals("RealNumber"));
+    }
+
+    /** Numeric promotion – mirrors numTypePromotion(Formula, String). */
+    private static String numTypePromotionExpr(Expr expr, String parentType) {
+        String type = findTypeExpr(expr);
+        if (type == null) return null;
+        if (isNumericExpr(expr) && isNumericType(parentType) &&
+                kb.compareTermDepth(type, parentType) > 0) {
+            if (parentType.equals("RealNumber"))     return "$to_real(";
+            if (parentType.equals("RationalNumber")) return "$to_rat(";
+        }
+        return null;
+    }
+
+    /** True if expr is a function application – mirrors KB.isFunctional(Formula). */
+    private static boolean isFunctionalExpr(Expr expr) {
+        return expr instanceof Expr.SExpr se
+                && se.headName() != null
+                && kb.isFunction(se.headName());
+    }
+
+    // ---- sub-methods ----------------------------------------------------------
+
+    private static String processConjDisjExpr(Expr.SExpr se, String parentType) {
+        String op = se.headName();
+        List<Expr> args = se.args();
+        if (args.size() < 2) {
+            System.err.println("Error in SUMOtoTFAform.processConjDisjExpr(): " +
+                "wrong number of arguments to " + op + " in " + se.toKifString());
+            return "";
+        }
+        String tptpOp = "&";
+        if (op.equals(Formula.OR))  tptpOp = "|";
+        if (op.equals(Formula.XOR)) tptpOp = "<~>";
+        StringBuilder sb = new StringBuilder();
+        sb.append(Formula.LP).append(processRecurseExpr(args.get(0), parentType));
+        for (int i = 1; i < args.size(); i++)
+            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE)
+              .append(processRecurseExpr(args.get(i), parentType));
+        sb.append(Formula.RP);
+        return sb.toString();
+    }
+
+    private static String processQuantExpr(Expr.SExpr se, String parentType, String op) {
+        List<Expr> args = se.args();
+        if (args.size() != 2) { // var-list + body
+            System.err.println("Error in SUMOtoTFAform.processQuantExpr(): " +
+                "wrong number of arguments to " + op + " in " + se.toKifString());
+            return "";
+        }
+        Expr varListExpr = args.get(0);
+        if (!(varListExpr instanceof Expr.SExpr varList)) {
+            System.err.println("Error in SUMOtoTFAform.processQuantExpr(): " +
+                "bad var list in " + se.toKifString());
+            return "";
+        }
+        StringBuilder varStr = new StringBuilder();
+        for (Expr v : varList.args()) {
+            String varName = (v instanceof Expr.Var vv) ? vv.name() : v.toKifString();
+            String oneVar = SUMOformulaToTPTPformula.translateWord(varName, varName.charAt(0), false);
+            if (getVarmap().containsKey(varName) &&
+                    !StringUtil.emptyString(getVarmap().get(varName))) {
+                String type = mostSpecificType(getVarmap().get(varName));
+                oneVar = oneVar + ":" + SUMOKBtoTFAKB.translateSort(kb, type);
+            }
+            else
+                System.err.println("Error in SUMOtoTFAform.processQuantExpr(): " +
+                    "var type not found for " + varName + " in formula " + se.toKifString());
+            varStr.append(oneVar).append(", ");
+        }
+        String opStr = " ! ";
+        if (op.equals("exists")) opStr = " ? ";
+        return Formula.LP + opStr + "[" +
+                varStr.toString().substring(0, varStr.length() - 2) + "] : (" +
+                processRecurseExpr(args.get(1), parentType) + "))";
+    }
+
+    private static String processLogOpExpr(Expr.SExpr se, String parentType) {
+        String op = se.headName();
+        List<Expr> args = se.args();
+        if (op.equals(Formula.AND) || op.equals(Formula.OR) || op.equals(Formula.XOR))
+            return processConjDisjExpr(se, parentType);
+        if (op.equals(Formula.IF)) {
+            if (args.size() != 2) {
+                System.err.println("Error in SUMOtoTFAform.processLogOpExpr(): " +
+                    "wrong number of arguments to " + op + " in " + se.toKifString());
+                return "";
+            }
+            return Formula.LP + processRecurseExpr(args.get(0), parentType) + " => " +
+                    processRecurseExpr(args.get(1), parentType) + Formula.RP;
+        }
+        if (op.equals(Formula.IFF)) {
+            if (args.size() != 2) {
+                System.err.println("Error in SUMOtoTFAform.processLogOpExpr(): " +
+                    "wrong number of arguments to " + op + " in " + se.toKifString());
+                return "";
+            }
+            return "((" + processRecurseExpr(args.get(0), parentType) + " => " +
+                    processRecurseExpr(args.get(1), parentType) + ") & (" +
+                    processRecurseExpr(args.get(1), parentType) + " => " +
+                    processRecurseExpr(args.get(0), parentType) + "))";
+        }
+        if (op.equals(Formula.NOT)) {
+            if (args.size() != 1) {
+                System.err.println("Error in SUMOtoTFAform.processLogOpExpr(): " +
+                    "wrong number of arguments to " + op + " in " + se.toKifString());
+                return "";
+            }
+            return "~(" + processRecurseExpr(args.get(0), parentType) + Formula.RP;
+        }
+        if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
+            return processQuantExpr(se, parentType, op);
+        System.err.println("Error in SUMOtoTFAform.processLogOpExpr(): " +
+            "bad logical operator " + op + " in " + se.toKifString());
+        return "";
+    }
+
+    /**
+     * argStrings: [op, arg1_str, arg2_str, ...] — needed for type analysis.
+     * se.args().get(i) gives the Expr for actual recursive calls.
+     */
+    private static String processCompOpExpr(Expr.SExpr se,
+                                            List<String> argStrings,
+                                            List<String> argTypes) {
+        String op = se.headName();
+        List<Expr> args = se.args();
+        if (args.size() != 2) {
+            System.err.println("Error in SUMOtoTFAform.processCompOpExpr(): " +
+                "wrong number of arguments to " + op + " in " + se.toKifString());
+            return "";
+        }
+        Expr lhsExpr = args.get(0);
+        Expr rhsExpr = args.get(1);
+        String best = "Entity";
+        if (argTypes != null && argTypes.size() > 2)
+            best = bestOfPair(argTypes.get(1), argTypes.get(2));
+        if (lhsExpr instanceof Expr.Var v) {
+            String bestVar = bestSpecificTerm(getVarmap().get(v.name()));
+            best = bestOfPair(bestVar, best);
+        }
+        if (rhsExpr instanceof Expr.Var v) {
+            String bestVar = bestSpecificTerm(getVarmap().get(v.name()));
+            best = bestOfPair(bestVar, best);
+        }
+        // Register numeric constants — only named Atoms (e.g. Pi, NumberE, custom SUMO constants),
+        // NOT NumLiteral nodes. Integer/real literals (-1, 0, 1, 3.14) are TPTP built-in typed
+        // values; they cannot appear as symbols in tff(name,type,symbol:sort) declarations.
+        // This mirrors the string path's isTerm() guard, which excludes anything not starting
+        // with a Java identifier start character.
+        if (rhsExpr instanceof Expr.Atom) {
+            if (builtInNumericType(best))
+                getNumericConstantTypes().put(rhsExpr.toKifString(), best);
+        }
+        if (lhsExpr instanceof Expr.Atom) {
+            if (builtInNumericType(best))
+                getNumericConstantTypes().put(lhsExpr.toKifString(), best);
+        }
+        if (!op.startsWith(Formula.LT) && !op.startsWith(Formula.GT) &&
+                !op.startsWith(Formula.EQUAL)) {
+            System.err.println("Error in SUMOtoTFAform.processCompOpExpr(): " +
+                "bad comparison operator " + op + " in " + se.toKifString());
+            return "";
+        }
+        String lhsResult = processRecurseExpr(lhsExpr, best);
+        String rhsResult = processRecurseExpr(rhsExpr, best);
+        if (op.startsWith(Formula.EQUAL))
+            return lhsResult + " = " + rhsResult;
+        String comparator;
+        if (op.startsWith(Formula.GTET))       comparator = "$greatereq(";
+        else if (op.startsWith(Formula.GT))    comparator = "$greater(";
+        else if (op.startsWith(Formula.LTET))  comparator = "$lesseq(";
+        else                                   comparator = "$less(";
+        return Formula.LP + comparator + lhsResult + "," + rhsResult + "))";
+    }
+
+    private static String mixedQuotientExpr(Expr.SExpr se, String parentType,
+                                            List<String> argStrings,
+                                            List<String> argTypes) {
+        String mgt = "Entity";
+        if (argTypes != null && argTypes.size() > 2)
+            mgt = bestOfPair(argTypes.get(1), argTypes.get(2));
+        String promote = "";
+        String eSuffix = "_e";
+        if (mgt != null) {
+            if (mgt.equals("RealNumber"))     { promote = "$to_real"; eSuffix = ""; }
+            if (mgt.equals("RationalNumber")) { promote = "$to_rat";  eSuffix = ""; }
+        }
+        Expr lhsExpr = se.args().get(0);
+        Expr rhsExpr = se.args().get(1);
+        if ("".equals(promote)) {
+            System.err.println("Error in SUMOtoTFAform.mixedQuotientExpr() with args: " +
+                argStrings + " and types " + argTypes);
+            return "$quotient" + eSuffix + Formula.LP +
+                    processRecurseExpr(lhsExpr, parentType) + " ," +
+                    processRecurseExpr(rhsExpr, parentType) + Formula.RP;
+        }
+        return "$quotient" + eSuffix + Formula.LP +
+                promote + Formula.LP + processRecurseExpr(lhsExpr, parentType) + ") ," +
+                promote + Formula.LP + processRecurseExpr(rhsExpr, parentType) + "))";
+    }
+
+    private static String processMathOpExpr(Expr.SExpr se, String parentType,
+                                            List<String> argStrings,
+                                            List<String> argTypes) {
+        String op = se.headName();
+        List<Expr> args = se.args();
+        List<String> sig = kb.kbCache.getSignature(op);
+        String best = mostGeneralNumericType(sig);
+        if (!op.startsWith(Formula.FLOORFN) && !op.startsWith(Formula.CEILINGFN) &&
+                args.size() != 2) {
+            System.err.println("Error in SUMOtoTFAform.processMathOpExpr(): " +
+                "wrong number of arguments to " + op + " in " + se.toKifString());
+            return "";
+        }
+        if (op.startsWith(Formula.FLOORFN) && op.startsWith(Formula.CEILINGFN) &&
+                args.size() != 1) {
+            System.err.println("Error in SUMOtoTFAform.processMathOpExpr(): " +
+                "wrong number of arguments to " + op + " in " + se.toKifString());
+            return "";
+        }
+        Expr arg1 = args.get(0);
+        String arg1Type = best;
+        String promotion = numTypePromotionExpr(se, parentType);
+        String closeP = "";
+        if (promotion != null)
+            closeP = Formula.RP;
+        else
+            promotion = "";
+        if (op.startsWith(Formula.FLOORFN))
+            return promotion + "$floor("   + processRecurseExpr(arg1, arg1Type) + Formula.RP + closeP;
+        if (op.startsWith(Formula.CEILINGFN))
+            return promotion + "$ceiling(" + processRecurseExpr(arg1, arg1Type) + Formula.RP + closeP;
+        if (op.startsWith(Formula.ROUNDFN))
+            return promotion + "$round("   + processRecurseExpr(arg1, arg1Type) + Formula.RP + closeP;
+        Expr arg2 = args.get(1);
+        String arg2Type = best;
+        if (op.startsWith(Formula.PLUSFN))
+            return promotion + "$sum("        + processRecurseExpr(arg1, arg1Type) + " ," +
+                    processRecurseExpr(arg2, arg2Type) + Formula.RP + closeP;
+        if (op.startsWith(Formula.MINUSFN))
+            return promotion + "$difference(" + processRecurseExpr(arg1, arg1Type) + " ," +
+                    processRecurseExpr(arg2, arg2Type) + Formula.RP + closeP;
+        if (op.startsWith(Formula.TIMESFN))
+            return promotion + "$product("    + processRecurseExpr(arg1, arg1Type) + " ," +
+                    processRecurseExpr(arg2, arg2Type) + Formula.RP + closeP;
+        if (op.startsWith(Formula.DIVIDEFN)) {
+            if (allOfType(argStrings, "Integer"))
+                return promotion + "$quotient_e(" + processRecurseExpr(arg1, "Integer") + " ," +
+                        processRecurseExpr(arg2, "Integer") + Formula.RP + closeP;
+            else
+                return mixedQuotientExpr(se, parentType, argStrings, argTypes);
+        }
+        if (op.startsWith(Formula.REMAINDERFN)) {
+            if (allOfType(argStrings, "Integer"))
+                return promotion + "$remainder_e(" + processRecurseExpr(arg1, arg1Type) + " ," +
+                        processRecurseExpr(arg2, arg2Type) + Formula.RP + closeP;
+            else
+                return promotion + "$remainder_t(" + processRecurseExpr(arg1, arg1Type) + " ," +
+                        processRecurseExpr(arg2, arg2Type) + Formula.RP + closeP;
+        }
+        System.err.println("Error in SUMOtoTFAform.processMathOpExpr(): " +
+            "bad math operator " + op + " in " + se.toKifString());
+        return "";
+    }
+
+    private static String processListFnExpr(Expr.SExpr se, String parentType,
+                                            List<String> argStrings,
+                                            List<String> argTypes) {
+        String pred = se.headName();
+        List<Expr> args = se.args();
+        List<String> sig = kb.kbCache.getSignature(pred);
+        if (!equalTFFsig(argTypes, sig, pred) || KButilities.isVariableArity(kb, pred))
+            pred = makePredFromArgTypes(new Formula(pred), argTypes);
+        List<String> processedArgs = new ArrayList<>();
+        for (Expr arg : args)
+            processedArgs.add(processRecurseExpr(arg, parentType));
+        StringBuilder result = new StringBuilder();
+        result.append(Formula.TERM_SYMBOL_PREFIX).append(pred).append(Formula.LP);
+        for (String arg : processedArgs)
+            result.append(arg).append(",");
+        result.deleteCharAt(result.length() - 1);
+        result.append(Formula.RP);
+        return result.toString();
+    }
+
+    private static String processNumericSuperArgsExpr(Expr.SExpr se, String parentType,
+                                                       List<String> argStrings,
+                                                       List<String> argTypes) {
+        String op = se.headName();
+        List<Expr> args = se.args();
+        List<String> newArgTypes = new ArrayList<>(argTypes);
+        if (isFunctionalExpr(se) && argTypes != null && !argTypes.isEmpty())
+            newArgTypes.set(0, bestOfPair(parentType, argTypes.get(0)));
+        List<String> predTypes = kb.kbCache.getSignature(op);
+        newArgTypes = bestSignature(predTypes, newArgTypes);
+        String pred = op;
+        List<String> sig = kb.kbCache.getSignature(pred);
+        if (!equalTFFsig(newArgTypes, sig, pred) || KButilities.isVariableArity(kb, pred))
+            pred = makePredFromArgTypes(new Formula(pred), newArgTypes);
+        List<String> processedArgs = new ArrayList<>();
+        for (int i = 0; i < args.size(); i++) {
+            String argType = "Entity";
+            if (i + 1 < newArgTypes.size())
+                argType = newArgTypes.get(i + 1); // argTypes[0]=return type, [1..n]=arg types
+            else
+                System.err.println("Error in SUMOtoTFAform.processNumericSuperArgsExpr(): " +
+                    "type list and arg list different size for " + se.toKifString());
+            processedArgs.add(processRecurseExpr(args.get(i), argType));
+        }
+        StringBuilder result = new StringBuilder();
+        result.append(Formula.TERM_SYMBOL_PREFIX).append(pred).append(Formula.LP);
+        for (String arg : processedArgs)
+            result.append(arg).append(",");
+        result.deleteCharAt(result.length() - 1);
+        result.append(Formula.RP);
+        return result.toString();
+    }
+
+    private static String processOtherRelationExpr(Expr.SExpr se, String parentType,
+                                                    List<String> argStrings,
+                                                    List<String> argTypes) {
+        String op = se.headName();
+        List<Expr> args = se.args();
+        List<String> newArgTypes = new ArrayList<>(argTypes);
+        List<String> sig = kb.kbCache.getSignature(op);
+        if (!SUMOKBtoTFAKB.alreadyExtended(op) && isFunctionalExpr(se) &&
+                !argTypes.isEmpty() && kb.isSubclass("RealNumber", argTypes.get(0))) {
+            String best = bestOfPair(argTypes.get(0), parentType);
+            newArgTypes.set(0, best);
+            if (!equalTFFsig(newArgTypes, sig, op) || KButilities.isVariableArity(kb, op))
+                op = makePredFromArgTypes(new Formula(op), newArgTypes);
+        }
+        List<String> origArgTypes = new ArrayList<>(newArgTypes); // save actual arg types before bestSignature
+        List<String> predTypes = kb.kbCache.getSignature(se.headName());
+        newArgTypes = bestSignature(predTypes, newArgTypes);
+        // If the call has more arguments than the predicate's declared arity, extra numeric
+        // types are borrowed from varmap via another predicate sharing row variables.
+        // Don't use them for variant naming — undeclared TFF predicates cause sort errors.
+        if (predTypes != null && newArgTypes.size() > predTypes.size()) {
+            for (int i = predTypes.size(); i < newArgTypes.size(); i++) {
+                if (isNumericType(newArgTypes.get(i)))
+                    newArgTypes.set(i, "Entity");
+            }
+        }
+        // For predicates: if actual args are all Entity but SUMO sig has numeric types,
+        // use the all-Entity variant (e.g. defaultMaxValue__1En2En3En) to avoid $i/$int
+        // conflicts. Variables declared as $i (Entity) cannot satisfy a $int parameter.
+        if (!SUMOKBtoTFAKB.alreadyExtended(op) && !isFunctionalExpr(se) &&
+                predTypes != null && hasNumeric(predTypes) && !hasNumeric(origArgTypes)) {
+            List<String> entityArgTypes = new ArrayList<>();
+            entityArgTypes.add(""); // placeholder for predicate position (index 0)
+            for (String ignored : origArgTypes)
+                entityArgTypes.add("Entity");
+            op = makePredFromArgTypes(new Formula(op), entityArgTypes);
+        }
+        StringBuilder argStr = new StringBuilder();
+        for (int i = 0; i < args.size(); i++) {
+            Expr argExpr = args.get(i);
+            String type = "Entity";
+            if (i + 1 < newArgTypes.size()) // newArgTypes[0]=return/pred type, [1..n]=arg types
+                type = newArgTypes.get(i + 1);
+            if (se.headName().startsWith("instance")) {
+                if (argExpr instanceof Expr.Atom && i == 0) {
+                    if (args.size() > 1 && builtInOrSubNumericType(args.get(1).toKifString()))
+                        getNumericConstantTypes().put(argExpr.toKifString(), args.get(1).toKifString());
+                }
+                if (!(argExpr instanceof Expr.SExpr))
+                    argStr.append(SUMOformulaToTPTPformula.translateWord(
+                            argExpr.toKifString(), argExpr.toKifString().charAt(0), false))
+                          .append(", ");
+                else
+                    argStr.append(processRecurseExpr(argExpr, type)).append(", ");
+            }
+            else
+                argStr.append(processRecurseExpr(argExpr, type)).append(", ");
+        }
+        String promotion = numTypePromotionExpr(se, parentType);
+        String closeP = "";
+        if (promotion != null)
+            closeP = Formula.RP;
+        else
+            promotion = "";
+        return promotion + Formula.TERM_SYMBOL_PREFIX + op + Formula.LP +
+                argStr.substring(0, argStr.length() - 2) + Formula.RP + closeP;
+    }
+
+    /**
+     * Walk an Expr tree collecting ListFn-based sort declarations –
+     * mirrors missingSorts(Formula) without regex.
+     */
+    public Set<String> missingSortsExpr(Expr expr) {
+        Set<String> result = new HashSet<>();
+        missingSortsExprWalk(expr, result);
+        return result;
+    }
+
+    private static void missingSortsExprWalk(Expr expr, Set<String> result) {
+        if (!(expr instanceof Expr.SExpr se)) return;
+        String hn = se.headName();
+        if (hn != null && hn.startsWith("ListFn")) {
+            String sort = sortFromRelation(hn);
+            if (!StringUtil.emptyString(sort))
+                result.add(sort);
+        }
+        for (Expr child : se.args())
+            missingSortsExprWalk(child, result);
+    }
+
+    /**
+     * Translate an Expr node to a TFF string.
+     * This is the main Expr entry point for TFF, mirroring process(String, boolean).
+     *
+     * Strategy: TFF preprocessing still runs on a Formula string (those helpers are
+     * string-based); then the modified string is re-parsed to Expr, and the hot
+     * recursive translation runs on the Expr tree via processRecurseExpr().
+     */
+    public static String processExpr(Expr expr, boolean query) {
+        if (expr == null) return "";
+        // Convert Expr → KIF string for TFF preprocessing
+        String kifStr = expr.toKifString();
+        if (kifStr.startsWith("(instance equal")) {
+            System.err.println("Error in SUMOtoTFAform.processExpr(): rejected (instance equal: " + kifStr);
+            return "";
+        }
+        setFilterMessage("");
+        if (kifStr.contains("ListFn"))
+            setFilterMessage("SUMOtoTFAform.processExpr(): Formula contains a list operator");
+        initOnce();
+        SUMOformulaToTPTPformula.setHideNumbers(false);
+        if (kb == null) {
+            System.err.println("Error in SUMOtoTFAform.processExpr(): null kb");
+            return "";
+        }
+        // Run TFF preprocessing on the string-based Formula
+        Formula f = new Formula(kifStr);
+        SUMOformulaToTPTPformula.generateQList(f);
+        f = instantiateNumericConstants(f);
+        f = new Formula(modifyPrecond(f));
+        if (f == null || StringUtil.emptyString(f.getFormula())) return "";
+        f = new Formula(modifyTypesToConstraints(f));
+        String oldf;
+        int counter = 0;
+        do {
+            counter++;
+            oldf = f.getFormula();
+            f = new Formula(elimUnitaryLogops(f));
+        } while (!f.getFormula().equals(oldf) && counter < 5);
+        setVarmap(fp.findAllTypeRestrictions(f, kb));
+        if (inconsistentVarTypes()) {
+            System.err.println("Error in SUMOtoTFAform.processExpr(): rejected inconsistent variable types: " +
+                    getVarmap() + " in : " + f);
+            return "";
+        }
+        counter = 0;
+        do {
+            counter++;
+            oldf = f.getFormula();
+            f = constrainFunctVars(f);
+        } while (!f.getFormula().equals(oldf) && counter < 5);
+        f = new Formula(removeNumericInstance(f.getFormula()));
+        if ("".equals(f.getFormula())) return "";
+        f = new Formula(elimUnitaryLogops(f));
+        if (f == null || !f.listP()) return "";
+        // Re-parse the preprocessed KIF back to Expr for the recursive translation
+        SuokifVisitor visitor = SuokifVisitor.parseSentence(f.getFormula());
+        Expr preprocessedExpr = null;
+        if (visitor.result != null && !visitor.result.isEmpty()) {
+            FormulaAST ast = visitor.result.get(0);
+            if (ast != null) preprocessedExpr = ast.expr;
+        }
+        if (preprocessedExpr == null) {
+            // Re-parse failed: fall back to string-based recursive translation
+            String result = processRecurse(f, "Entity");
+            return buildQuantifiedResult(f, result, query);
+        }
+        // Expr-based recursive translation (no new Formula(...) allocations in the hot path)
+        String result = processRecurseExpr(preprocessedExpr, "Entity");
+        return buildQuantifiedResult(f, result, query);
+    }
+
+    /** Build the quantifier wrapper around a TFF body, using the varmap already set. */
+    private static String buildQuantifiedResult(Formula f, String result, boolean query) {
+        Set<String> uqVars = f.collectUnquantifiedVariables();
+        StringBuilder qlist = new StringBuilder();
+        for (String s : uqVars) {
+            String oneVar = SUMOformulaToTPTPformula.translateWord(s, s.charAt(0), false);
+            if (getVarmap().containsKey(s) && !StringUtil.emptyString(getVarmap().get(s))) {
+                String t = mostSpecificType(getVarmap().get(s));
+                if (t != null)
+                    qlist.append(oneVar).append(" : ").append(SUMOKBtoTFAKB.translateSort(kb, t)).append(",");
+            }
+        }
+        if (qlist.length() > 1) {
+            qlist.deleteCharAt(qlist.length() - 1);
+            String quant = "!";
+            if (query) quant = Formula.V_PREF;
+            result = quant + " [" + qlist + "] : (" + result + Formula.RP;
+        }
+        return result;
+    }
+
+    /**
+     * Translate an Expr node to a TFF string, walking the tree directly.
+     * This is the recursive hot path – no new Formula() allocations.
+     */
+    public static String processRecurseExpr(Expr expr, String parentType) {
+        if (debug) System.out.println("SUMOtoTFAform.processRecurseExpr(): expr: " +
+            (expr == null ? null : expr.toKifString()) + "  parentType: " + parentType);
+        if (expr == null) return "";
+        // ---- leaf nodes ----
+        if (!(expr instanceof Expr.SExpr)) {
+            String form;
+            int ttype;
+            if (expr instanceof Expr.Var v) {
+                form  = v.name();
+                ttype = v.name().charAt(0); // '?'
+            } else if (expr instanceof Expr.NumLiteral n) {
+                form  = n.value();
+                ttype = StreamTokenizer_s.TT_NUMBER;
+            } else if (expr instanceof Expr.Atom a) {
+                form  = a.name();
+                ttype = StreamTokenizer_s.TT_WORD;
+            } else if (expr instanceof Expr.StrLiteral s) {
+                form  = s.value();
+                ttype = '"';
+            } else if (expr instanceof Expr.RowVar rv) {
+                form  = rv.name();
+                ttype = rv.name().charAt(0); // '@' — translateWord handles '@' same as '?'
+            } else {
+                return expr.toKifString(); // unknown: pass through
+            }
+            String promotion = numTypePromotionExpr(expr, parentType);
+            if (promotion != null)
+                return promotion + SUMOformulaToTPTPformula.translateWord(form, ttype, false) + Formula.RP;
+            return SUMOformulaToTPTPformula.translateWord(form, ttype, false);
+        }
+        // ---- compound node ----
+        Expr.SExpr se = (Expr.SExpr) expr;
+        String op = se.headName();
+        if (op == null) {
+            System.err.println("Error in SUMOtoTFAform.processRecurseExpr(): null head in " + se.toKifString());
+            return "";
+        }
+        // Build argStrings with op at [0] to reuse collectArgTypes (same structure as string path)
+        List<String> argStrings = new ArrayList<>(se.args().size() + 1);
+        argStrings.add(op);
+        for (Expr a : se.args())
+            argStrings.add(a.toKifString());
+        List<String> argTypes     = collectArgTypes(argStrings);
+        List<String> argsFromSig  = relationExtractSigFromName(op);
+        argTypes = bestSignature(argTypes, argsFromSig);
+        if (Formula.listP(op)) {
+            System.err.println("Error in SUMOtoTFAform.processRecurseExpr(): formula " + se.toKifString());
+            return "";
+        }
+        if (Formula.isLogicalOperator(op))
+            return processLogOpExpr(se, parentType);
+        else if (isComparisonOperator(op))
+            return processCompOpExpr(se, argStrings, argTypes);
+        else if (isMathFunction(op))
+            return processMathOpExpr(se, parentType, argStrings, argTypes);
+        else if (op.startsWith("ListFn"))
+            return processListFnExpr(se, parentType, argStrings, argTypes);
+        else if (hasNumericSuper(argTypes))
+            return processNumericSuperArgsExpr(se, parentType, argStrings, argTypes);
+        else
+            return processOtherRelationExpr(se, parentType, argStrings, argTypes);
     }
 }

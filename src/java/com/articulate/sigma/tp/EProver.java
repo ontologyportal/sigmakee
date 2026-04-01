@@ -16,6 +16,7 @@ Infosys LTD.
 */
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.utils.StringUtil;
 
@@ -375,8 +376,13 @@ public class EProver {
         List<String> stdoutLines = new ArrayList<>();
 
         try {
-            String query = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,true);
-            this.qlist = SUMOformulaToTPTPformula.getQlist();
+            String query = ExprToTPTP.translateKifString(formula, true, "fof");
+            if (query == null) {
+                query = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula, true);
+                this.qlist = SUMOformulaToTPTPformula.getQlist();
+            } else {
+                this.qlist = ExprToTPTP.getQlist(formula);
+            }
             String conjecture = "fof(conj1,conjecture, " + query + ").";
             System.out.println("\nINFO in EProver.submitQuery() write: " + conjecture + "\n");
             System.out.println("\nINFO in EProver.submitQuery() write: go.");

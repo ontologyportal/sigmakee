@@ -122,7 +122,7 @@
     <property name="sigma.antlr.home" value="../sigmaAntlr"/>
     <property name="kbs.home" value="${git.home}/sumo"/>
 
-    <property name="javac.release" value="11"/>
+    <property name="javac.release" value="21"/>
     <property name="run.jvmargs" value="-Xmx10g -Xss1m"/>
     <property name="tomcat.version" value="9.0.107"/>
 

@@ -161,12 +161,11 @@ public class KifFileCheckerTest extends UnitTestBase {
         Formula kifFormula = new Formula(kifString);
         List<ErrRec> errorList = new ArrayList<>();
         kfc.CheckIsValidFormula("fileName", kifFormula, 0, kb, kifString, errorList);
+        // KIFAST (ANTLR) error message format (replaces KIF StreamTokenizer format)
         ErrRec expected = new ErrRec(ErrRec.ERROR, "fileName", 0, 1, 2,
-            "Parsing error in: Formula:\n" +
-            "\tMissed closing parenthesis near line: 1\n" +
-            "\tfor token: null and form: null\n" +
-            "\tand expression: (=> (instance ?X Man) (instance ?X Woman)\n" +
-            "\tand keySet: [ant-instance, cons-instance, arg-0-=>, ant-Man, cons-Woman] (=>\n" +
+            "Error parsing: (=>\n" +
+            "(instance ?X Man)\n" +
+            "(instance ?X Woman) — [Parse error at line:charposn 3:19: -> missing ')' at '<EOF>'] (=>\n" +
             "(instance ?X Man)\n" +
             "(instance ?X Woman)");
         // ErrRec actual = new ErrRec();

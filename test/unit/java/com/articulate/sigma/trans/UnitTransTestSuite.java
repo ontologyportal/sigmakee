@@ -11,7 +11,9 @@ import org.junit.runners.Suite;
 //    SUMOtoTFATest.class,
     TPTP3ProofProcTest.class,
     TPTPUtilTest.class,
-    SessionTPTPManagerTest.class
+    SessionTPTPManagerTest.class,
+    SUMOtoTFAformExprTest.class,
+    SUMOKBtoTPTPKBTest.class
 })
 public class UnitTransTestSuite extends UnitTestBase {
 

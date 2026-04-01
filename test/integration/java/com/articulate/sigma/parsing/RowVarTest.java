@@ -32,7 +32,7 @@ public class RowVarTest extends IntegrationTestBase {
 
         System.out.println("RowVarTest.process(): " + input);
         visitor = SuokifVisitor.parseString(input);
-        Map<Integer,FormulaAST> hm = SuokifVisitor.result;
+        Map<Integer,FormulaAST> hm = visitor.result;
         if (!visitor.hasPredVar.isEmpty()) {
             System.err.println("Error - can't have tests with pred vars in this routine.");
             return null;
