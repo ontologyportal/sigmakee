@@ -1,15 +1,16 @@
 package com.articulate.sigma.trans;
 
+import com.articulate.sigma.CLIMapParser;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 
+import java.io.IOException;
 import java.util.*;
 
 public class Modals {
     
     public static boolean debug = true; // Mainly for deontic sentences 
-
 
     // these are predicates that take a formula as (one of) their arguments in SUMO/KIF
     // e.g. (holdsDuring ?T ?FORMULA)
@@ -69,11 +70,25 @@ public class Modals {
     // (<regHOLpred> ?AGENT ?FORMULA)
     public static final List<String> regHOL3pred = new ArrayList<>(
             Arrays.asList(
-                    "confersNorm",          // TODO: Move Formula to 3rd 
-                    "confersObligation",    // TODO: Move Formula to 3rd 
-                    "confersRight",         // TODO: Move Formula to 3rd 
-                    "deprivesNorm",         // TODO: Move Formula to 3rd 
-                    "hasPurposeForAgent"    // TODO: Move Formula to 3rd 
+                    "confersNorm",
+                    "confersObligation",
+                    "confersRight",
+                    "deprivesNorm",
+                    "hasPurposeForAgent"
+            ));
+
+    public static final List<String> deontics = new ArrayList<>(
+            Arrays.asList(
+                    "confersNorm",
+                    "confersObligation",
+                    "confersRight",
+                    "deprivesNorm",
+                    "hasPurposeForAgent",
+                    "Obligation",
+                    "Permission",
+                    "Prohibition",
+                    "holdsObligation",
+                    "holdsRight"
             ));
 
     public static final List<String> regHOLpred = new ArrayList<>(
@@ -177,7 +192,6 @@ public class Modals {
                     "holdsDuring" // ISSUE 6
             ));
 
-
     // list that contains the allowed head predicates for the modal predicates
     public static final List<String> allowedHeads;
     static {
@@ -189,6 +203,13 @@ public class Modals {
         tmp.addAll(formulaPreds);
         allowedHeads = Collections.unmodifiableList(tmp);
     }
+
+    public enum FrameAx { // frame axioms
+        REFLEXIVE, SYMMETRIC, TRANSITIVE, SERIAL, EUCLIDEAN}
+
+    public enum ModalSystem {
+        K,D,T,B,S4,S5}
+
     public static final Set<String> noWorld = new HashSet<>(Arrays.asList(
             "instance","subclass","domain","domainSubclass","range","rangeSubclass",
             "immediateInstance","immediateSubclass","disjoint","partition",
@@ -203,7 +224,7 @@ public class Modals {
      * Handle the predicates given in regHOL3pred, which have a parameter
      * followed by a formula.
      */
-    public static Formula handleHOL3pred(Formula f, KB kb, Integer worldNum) {
+    public static Formula handleHOL3pred(Formula f, KB kb, String worldvar, Integer worldNum) {
 
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1);
@@ -215,11 +236,12 @@ public class Modals {
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
             fstring.append(" CW");
-        } else {
-            fstring.append(" ?W").append(worldNum - 1);
         }
-        fstring.append(" ?W").append(worldNum).append(") ");
-        fstring.append(Formula.SPACE).append(processRecurse(flist.get(2),kb,worldNum));
+        else {
+            fstring.append(" ?" + worldvar).append(worldNum - 1);
+        }
+        fstring.append(" ?" + worldvar).append(worldNum).append(") ");
+        fstring.append(Formula.SPACE).append(processRecurse(flist.get(2),kb,worldvar,worldNum));
         fstring.append(Formula.RP);
         Formula result = new Formula();
         result.read(fstring.toString());
@@ -236,15 +258,15 @@ public class Modals {
      * where F' is recursively processed and world-indexed, and we
      * introduce a fresh world variable ?Wn.
      */
-    public static Formula handleHOLpred(Formula f, KB kb, Integer worldNum) {
+    public static Formula handleHOLpred(Formula f, KB kb, String worldvar, Integer worldNum) {
 
         List<Formula> flist = f.complexArgumentsToArrayList(1); // args after the head
         // Expect: flist.get(0) = "agent"/parameter, flist.get(1) = formula argument
         worldNum = worldNum + 1;
 
         // Recursively process the “parameter” term as well
-        Formula param = processRecurse(flist.get(0), kb, worldNum - 1);
-        Formula embedded = processRecurse(flist.get(1), kb, worldNum);
+        Formula param = processRecurse(flist.get(0), kb, worldvar, worldNum - 1);
+        Formula embedded = processRecurse(flist.get(1), kb, worldvar, worldNum);
 
         StringBuilder fstring = new StringBuilder();
         fstring.append("(=> (accreln2 ")
@@ -254,10 +276,11 @@ public class Modals {
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
             fstring.append(" CW");
-        } else {
-            fstring.append(" ?W").append(worldNum - 1);
         }
-        fstring.append(" ?W").append(worldNum)
+        else {
+            fstring.append(" ?" + worldvar).append(worldNum - 1);
+        }
+        fstring.append(" ?" + worldvar).append(worldNum)
                 .append(") ")
                 .append(embedded.toString())
                 .append(Formula.RP);
@@ -280,7 +303,7 @@ public class Modals {
      * where F' is recursively processed and world-indexed, and
      * we introduce a fresh world variable ?Wn.
      */
-    public static Formula handleModalAttribute(Formula f, KB kb, Integer worldNum) {
+    public static Formula handleModalAttribute(Formula f, KB kb, String worldvar, Integer worldNum) {
 
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1); // [F, M]
@@ -295,38 +318,37 @@ public class Modals {
         // Account for CW (constant world):
         if (prevWorld == 0) {
             fstring.append("CW");
-        } else {
-            fstring.append("?W").append(prevWorld);
         }
-        fstring.append(Formula.SPACE).append("?W").append(currWorld).append(") ");
+        else {
+            fstring.append("?" + worldvar).append(prevWorld);
+        }
+        fstring.append(Formula.SPACE).append("?" + worldvar).append(currWorld).append(") ");
         // Recurse once on the embedded formula at the new current world:
-        fstring.append(processRecurse(formula, kb, currWorld));
+        fstring.append(processRecurse(formula, kb, worldvar, currWorld));
         fstring.append(Formula.RP);
         Formula result = new Formula();
         result.read(fstring.toString());
         return result;
-
     }
 
     /***************************************************************
      */
-    public static Formula processRecurse(Formula f, KB kb, Integer worldNum) {
+    public static Formula processRecurse(Formula f, KB kb,
+                                         String worldvar, Integer worldNum) {
 
-        if (f.atom()) {
+        if (f.atom())
             return f;
-        }
-        if (f.empty()) {
+        if (f.empty())
             return f;
-        }
 
         if (f.listP()) {
             if (regHOL3pred.contains(f.car()))
-                return handleHOL3pred(f,kb,worldNum);
+                return handleHOL3pred(f,kb,worldvar,worldNum);
             if (regHOLpred.contains(f.car())) {
-                return handleHOLpred(f, kb, worldNum);
+                return handleHOLpred(f, kb, worldvar,worldNum);
             }
             if (f.car().equals("modalAttribute")) {
-                return handleModalAttribute(f, kb, worldNum);
+                return handleModalAttribute(f, kb, worldvar, worldNum);
             }
 
             int argStart = 1;
@@ -342,7 +364,7 @@ public class Modals {
 
             // Recursively process arguments
             for (Formula arg : flist) {
-                fstring.append(Formula.SPACE).append(processRecurse(arg, kb, worldNum));
+                fstring.append(Formula.SPACE).append(processRecurse(arg, kb, worldvar, worldNum));
             }
             // Close the term / formula
             if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL))) {
@@ -367,11 +389,11 @@ public class Modals {
                             // Account for Constant-world (world 0)
                             if (worldNum == 0) {
                                 fstring.append(" CW");
-                            } else {
-                                fstring.append(" ?W").append(worldNum);
+                            }
+                            else {
+                                fstring.append(" ?" + worldvar).append(worldNum);
                             }
                 }
-
                 fstring.append(Formula.RP);
 
                 // Signatures are read-only here; no mutation. We only log missing ones.
@@ -385,16 +407,16 @@ public class Modals {
             result.read(fstring.toString());
             return result;
         }
-
         return f;
     }
 
-    /**
+    /***************************************************************
      * Return the base functor name by stripping a trailing "__<digits>" suffix.
      * E.g. "partition__7" -> "partition", "disjointDecomposition__4" -> "disjointDecomposition".
      * If there is no such suffix, returns the input unchanged.
      */
     public static String baseFunctor(String head) {
+
         if (head == null) return null;
         java.util.regex.Matcher m = java.util.regex.Pattern
                 .compile("^(.*)__\\d+$")
@@ -413,30 +435,36 @@ public class Modals {
         List<String> sig = new ArrayList<>();
         sig.add(""); // empty 0th argument for relations
         sig.add("Entity");
-        sig.add("Entity");
         sig.add("World");
         sig.add("World");
-        kb.kbCache.signatures.put("accreln",sig);
+        kb.kbCache.signatures.put("accreln1",sig);
+        sig.add(0,"Entity");
+        kb.kbCache.signatures.put("accreln2",sig);
+        sig.add(0,"Entity");
+        kb.kbCache.signatures.put("accreln3",sig);
     }
-
 
     /***************************************************************
      */
     public static Formula processModals(Formula f, KB kb) {
 
-        addAccrelnDef(kb);
+        int worldNum = 1;
+        String worldvar = "W" ;
+        //System.out.println("processModals(): vars: " + f.collectAllVariables());
+        //System.out.println("processModals(): world var: " + worldvar + worldNum);
+        while (f.collectAllVariables().contains("?" + worldvar + worldNum))  // f might have ?W1 already
+            worldvar = worldvar + "W";
         //addAccrelnDefP(kb);
-        // Start at index 0 for constant world (W0 = CW) 
-        int worldNum = 0;
+        // Start at index 0 for constant world (W0 = CW)
         //if (!f.isHigherOrder(kb))
         //    return f;
-        Formula result = processRecurse(f,kb,worldNum);
+        Formula result = processRecurse(f,kb,worldvar,worldNum);
         String fstring = result.getFormula();
         result.read(fstring);
         Set<String> types = new HashSet<>();
         types.add("World");
         for (int i = 0; i <= worldNum; i++) {
-            result.varTypeCache.put("?W" + i,types);
+            result.varTypeCache.put("?" + worldvar + i,types);
         } 
         return result;
     }
@@ -451,33 +479,153 @@ public class Modals {
     }
 
     /***************************************************************
+     * Generates the appropriate modal type for every operator
      */
-    public static String getTHFHeader() {
+    public static String genModalTypes(HashSet<String> allModals) {
 
+        StringBuffer result = new StringBuffer();
+        for (String s : allModals)
+            result.append("thf(" + Character.toLowerCase(s.charAt(0)) + s.substring(1) +
+                    "_tp,type,(s__" + s + " : m)).\n");
+        return result.toString();
+    }
+
+    /***************************************************************
+     * Generates the appropriate modal system for every operator
+     * Use system D for deontics and T for everything else
+     */
+    public static String genAllModalSystems() {
+
+        StringBuffer result = new StringBuffer();
+        HashSet<String> allModals = new HashSet<>();
+        allModals.addAll(regHOLpred);
+        allModals.addAll(regHOL3pred);
+        result.append(genModalTypes(allModals));
+        //System.out.println("Modals.genAllModalSystems(): allModals size: " + allModals.size());
+        for (String s : allModals) {
+            if (deontics.contains(s))
+                result.append(genModalSystem(s, ModalSystem.D));
+            else
+                result.append(genModalSystem(s, ModalSystem.T));
+        }
+        return result.toString();
+    }
+
+    /***************************************************************
+     * Generates the appropriate modal system
+     * See https://en.wikipedia.org/wiki/Modal_logic
+     * K := no conditions
+     * D := serial
+     * T := reflexive
+     * B := reflexive and symmetric
+     * S4 := reflexive and transitive
+     * S5 := reflexive and Euclidean
+     */
+    public static String genModalSystem(String modalOp, ModalSystem modalsys) {
+
+        //System.out.println("Modals.genModalSystem(): modalOp: " + modalOp);
+        //System.out.println("Modals.genModalSystem(): modalsys: " + modalsys);
+        String result = "";
+        switch (modalsys) {
+            case K: return "";
+            case D: return genFrameAxiom(modalOp,FrameAx.SERIAL);
+            case T: return genFrameAxiom(modalOp,FrameAx.REFLEXIVE);
+            case B: return genFrameAxiom(modalOp,FrameAx.REFLEXIVE) +
+                    genFrameAxiom(modalOp,FrameAx.SYMMETRIC);
+            case S4: return genFrameAxiom(modalOp,FrameAx.REFLEXIVE) +
+                    genFrameAxiom(modalOp,FrameAx.TRANSITIVE);
+            case S5: return genFrameAxiom(modalOp,FrameAx.REFLEXIVE) +
+                    genFrameAxiom(modalOp,FrameAx.EUCLIDEAN);
+        }
+        return result;
+    }
+
+    /***************************************************************
+     * Generates the appropriate frame axioms for each modal.  Requires
+     * regHOLpred or regHOL3pred to have the right modal relations.
+     * See https://en.wikipedia.org/wiki/Modal_logic
+     * reflexive if w R w, for every w in G
+     * symmetric if w R u implies u R w, for all w and u in G
+     * transitive if w R u and u R q together imply w R q, for all w, u, q in G.
+     * serial if, for every w in G there is some u in G such that w R u.
+     * Euclidean if, for every u, t, and w, w R u and w R t implies u R t (by symmetry, it also implies t R u, as well as t R t and u R u)
+     */
+    public static String genFrameAxiom(String modalOp, FrameAx frameAx) {
+
+        //System.out.println("Modals.genFrameAxiom(): modalOp: " + modalOp);
+        //System.out.println("Modals.genFrameAxiom(): frameAx: " + frameAx);
+        String quantArgs = "";
+        String args = "";
+        String accreln = "s__accreln1";
+        if (regHOLpred.contains(modalOp)) {
+            quantArgs = ", P1:$i";
+            args = " @ P1";
+            accreln = "s__accreln2";
+        }
+        if (regHOL3pred.contains(modalOp)) {
+            quantArgs = ", P1:$i, P2:$i";
+            args = " @ P1 @ P2";
+            accreln = "s__accreln3";
+        }
+        switch (frameAx) {
+            case REFLEXIVE:
+                return "thf(" + modalOp + "_refl" + ",axiom,(! [W:w" + quantArgs +
+                        "] : (" + accreln + " @ s__" + modalOp + args + " @ W @ W))).\n";
+            case SYMMETRIC:
+                return "thf(" + modalOp + "_symm" + ",axiom,(! [W1:w, W2:w" + quantArgs +
+                        "] : ((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) => " +
+                        "(" + accreln + " @ s__" + modalOp + " @ P @ W2 @ W1)))).\n";
+            case TRANSITIVE:
+                return "thf(" + modalOp + "_trans" + ",axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
+                        "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
+                        "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3)) => " +
+                        "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)))).\n";
+            case SERIAL:
+                return "thf(" + modalOp + "_ser" + ",axiom,(! [W:w" + quantArgs +
+                        "] : (?[U:w] : (" + accreln + " @ s__" + modalOp + args + " @ W @ U)))).\n";
+            case EUCLIDEAN:
+                return "thf(" + modalOp + "_eucl" + ",axiom,(! [W1:w,W2:2,W3:w" + quantArgs +
+                        "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
+                        "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)) => " +
+                        "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3))).\n";
+        }
+        System.out.println("Error in genFrameAxiom() invalid frame: " + frameAx);
+        return "";
+    }
+
+    /***************************************************************
+     */
+    public static String getTHFHeader(KB kb) {
+
+        addAccrelnDef(kb);
         return 
                 // CF: add these lines into getTHFHeader() result string
-                "thf(obligation_tp,type,(s__Obligation : m)).\n" +
-                "thf(permission_tp,type,(s__Permission : m)).\n" +
-                "thf(prohibition_tp,type,(s__Prohibition : m)).\n" +
+                "thf(modals_tp,type,(m : $tType)).\n" +
+                //"thf(obligation_tp,type,(s__Obligation : m)).\n" +
+                //"thf(permission_tp,type,(s__Permission : m)).\n" +
+                //"thf(prohibition_tp,type,(s__Prohibition : m)).\n" +
                 
                 "thf(worlds_tp,type,(w : $tType)).\n" +
+                "thf(cworld_tp,type,(s__CW : w)).\n" +
                 "thf(s__worlds_tp,type,(s__World : w)).\n" +
-                "thf(modals_tp,type,(m : $tType)).\n" +
-                "thf(accreln_tp,type,(s__accreln : (m > $i > w > w > $o))).\n" +
-                "thf(accreln_tp,type, accreln1: m > $i > w > w > $o )." +
-                "thf(accreln_tp,type, accreln2: m > $i > $i > w > w > $o )." + 
-                //"thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +     // CF: This is no longer needed, we are using accreln[ |2|3] 
-//                "thf(knows_tp,type,(s__knows : m)).\n" +
-//                "thf(believes_tp,type,(s__believes : m)).\n" +
-//                "thf(desires_tp,type,(s__desires : m)).\n" +
-                "thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__desires @ P @ W @ W))).\n" +
-                "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__knows @ P @ W @ W))).\n" +
-                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n" +
-                // ISSUE 6
-                "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n";
 
+                "thf(accreln1_tp,type,s__accreln1 : (m > w > w > $o)).\n" +
+                "thf(accreln2_tp,type, s__accreln2: (m > $i > w > w > $o) ).\n" +
+                "thf(accreln3_tp,type, s__accreln3: (m > $i > $i > w > w > $o) ).\n" +
+                //"thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +     // CF: This is no longer needed, we are using accreln[ |2|3] 
+                //"thf(knows_tp,type,(s__knows : m)).\n" +
+                //"thf(believes_tp,type,(s__believes : m)).\n" +
+                //"thf(desires_tp,type,(s__desires : m)).\n" +
+                //"thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__desires @ P @ W @ W))).\n" +
+                //"thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__knows @ P @ W @ W))).\n" +
+                //"thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__believes @ P @ W @ W))).\n" +
+                // ISSUE 6
+                //"thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n" +
+
+                genAllModalSystems();
     }
-    
+
+    /***************************************************************
     /* These are the original tests from this file 
      * A combination of different modalities (deontic to temporal) 
      */ 
@@ -593,6 +741,7 @@ public class Modals {
         System.out.println(processModals(f,kb) + "\n\n");
     }
 
+    /***************************************************************
     /* CFeener
      * Easy and Medium Deontic examples   
      */ 
@@ -897,20 +1046,56 @@ public class Modals {
         */
     }
 
+    /** ***************************************************************
+     */
+    public static void testFrameAx() {
+
+        System.out.println("testFrameAx():");
+        System.out.println(genModalSystem("Possibility",ModalSystem.S5));
+    }
+
+    /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("Modals");
+        System.out.println("  h - show this help screen");
+        System.out.println("  t - run tests");
+        System.out.println("  r - tRanslate to KB to THF with modals");
+        System.out.println("  --form \"<fomula>\" - translate one formula with modals");
+    }
+
     /***************************************************************
      */
     public static void main(String[] args) {
-    
-        KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        System.out.println("HOL.main(): completed init");
-        
-        // Examples: 
-        //someInitialTests(kb);
-        // More tests: 
-        //doTQM10Tests(kb);
-        deonticTests(kb);
-        
-   
+
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.isEmpty() || argMap.containsKey("h"))
+            showHelp();
+        else {
+            if (argMap.containsKey("r")) {
+                SUMOformulaToTPTPformula.setHideNumbers(false);
+                KBmanager.getMgr().initializeOnce();
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                System.out.println("Modals.main(): completed init");
+                System.out.println("Modals.main(): KB loaded");
+                THFnew.waitForBackgroundGeneration();
+                System.out.println("Modals.main(): translate to THF with modals");
+                THFnew.transModalTHF(kb);
+            }
+            else if (argMap.containsKey("t")) {
+                System.out.println("Modals: run tests");
+                //someInitialTests(kb);
+                //doTQM10Tests(kb);
+                //deonticTests(kb);
+                System.out.println(genAllModalSystems());
+            }
+            else if (argMap.containsKey("form")) {
+                SUMOformulaToTPTPformula.setHideNumbers(false);
+                KBmanager.getMgr().initializeOnce();
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                System.out.println(processModals(new Formula(argMap.get("form").get(0)),kb));
+            }
+        }
     }
 }

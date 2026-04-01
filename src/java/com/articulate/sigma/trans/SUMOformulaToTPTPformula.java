@@ -19,7 +19,10 @@ public class SUMOformulaToTPTPformula {
     private static final ThreadLocal<StringBuilder> qlistTL = ThreadLocal.withInitial(StringBuilder::new);
 
     public static boolean getHideNumbers() { return hideNumbersTL.get(); }
-    public static void setHideNumbers(boolean h) { hideNumbersTL.set(h); }
+    public static void setHideNumbers(boolean h) {
+        hideNumbersTL.set(h);
+        //System.out.println("setting hideNumbers to: " +  h);
+    }
     public static String getLang() { return langTL.get(); }
     public static void setLang(String l) { langTL.set(l); }
     public static StringBuilder getQlist() { return qlistTL.get(); }
@@ -72,6 +75,9 @@ public class SUMOformulaToTPTPformula {
             if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
             if (result.equals("$true" + Formula.TERM_MENTION_SUFFIX) || result.equals("$false" + Formula.TERM_MENTION_SUFFIX))
                 result = "'" + result + "'";
+            //System.out.println("SUMOformulaToTPTPformula.translateWord(): getHideNumbers(): " + getHideNumbers());
+            //System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
+
             if (StringUtil.isNumeric(result) && getHideNumbers() && !"tff".equals(lang)) {
                 if (result.contains("."))
                     result = result.replace('.','_');
