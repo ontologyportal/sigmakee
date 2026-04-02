@@ -857,15 +857,18 @@ public class Diagnostics {
         String line;
         for (String filename : termDependency.keySet()) {
             String nameOnly = sanitizeFilenameForGraphViz(filename);
-            if (debug) System.out.println("createDependDotGraphBody()" + filename);
-            String newline = nameOnly + " [shape=\"box\" label = < " + nameOnly +
-                    " <br align=\"left\"/> > ]";
-            lines.add(newline);
-            if (termDependency.get(filename) != null) {
-                for (String otherFile : termDependency.get(filename).keySet()) {
-                    String otherNameOnly = sanitizeFilenameForGraphViz(otherFile);
-                    line = nameOnly + " -> " + otherNameOnly + "; ";
-                    lines.add(line);
+            if(!nameOnly.equals("SUMO_Cache")) {
+                if (debug) System.out.println("createDependDotGraphBody()" + filename);
+                String newline = nameOnly + " [shape=\"box\" label = < " + nameOnly + " <br align=\"left\"/> > ]";
+                lines.add(newline);
+                if (termDependency.get(filename) != null) {
+                    for (String otherFile : termDependency.get(filename).keySet()) {
+                        String otherNameOnly = sanitizeFilenameForGraphViz(otherFile);
+                        if(!otherNameOnly.equals("SUMO_Cache")) {
+                            line = nameOnly + " -> " + otherNameOnly + "; ";
+                            lines.add(line);
+                        }
+                    }
                 }
             }
         }
