@@ -846,116 +846,186 @@ public class Diagnostics {
         return result.toString();
     }
 
-    /***************************************************************
-     * @param termDependency a TreeMap of file name keys and an ArrayList of the
-     *         files on which it depends. The interior TreeMap file
-     *         name keys index ArrayLists of terms.
-     */
-    private static List<String> createDependDotGraphBody(Map<String,Map<String,List<String>>> termDependency) {
+/***************************************************************
+ * @param termDependency a TreeMap of file name keys and an ArrayList of the
+ *         files on which it depends. The interior TreeMap file
+ *         name keys index ArrayLists of terms.
+ */
+private static List<String> createDependDotGraphBody(Map<String,Map<String,List<String>>> termDependency) {
 
-        List<String> lines = new ArrayList<>();
-        String line;
-        for (String filename : termDependency.keySet()) {
-            String nameOnly = sanitizeFilenameForGraphViz(filename);
-            if(!nameOnly.equals("SUMO_Cache")) {
-                if (debug) System.out.println("createDependDotGraphBody()" + filename);
-                String newline = nameOnly + " [shape=\"box\" label = < " + nameOnly + " <br align=\"left\"/> > ]";
-                lines.add(newline);
-                if (termDependency.get(filename) != null) {
-                    for (String otherFile : termDependency.get(filename).keySet()) {
-                        String otherNameOnly = sanitizeFilenameForGraphViz(otherFile);
-                        if(!otherNameOnly.equals("SUMO_Cache")) {
-                            line = nameOnly + " -> " + otherNameOnly + "; ";
-                            lines.add(line);
-                        }
-                    }
-                }
+    List<String> lines = new ArrayList<>();
+
+    // All graph nodes that should be shown
+    Set<String> nodes = new HashSet<>();
+
+    // Count of how many files depend on a given node (incoming edges)
+    Map<String,Integer> incomingCounts = new HashMap<>();
+
+    // Store edges so we can output them after node collection
+    List<String[]> edges = new ArrayList<>();
+
+    // First pass: collect nodes and compute incoming edge counts
+    for (String filename : termDependency.keySet()) {
+
+        String nameOnly = sanitizeFilenameForGraphViz(filename);
+        if (nameOnly.equals("SUMO_Cache"))
+            continue;
+
+        if (debug)
+            System.out.println("createDependDotGraphBody(): file = " + filename);
+
+        nodes.add(nameOnly);
+        incomingCounts.putIfAbsent(nameOnly, 0);
+
+        Map<String,List<String>> dependencyMap = termDependency.get(filename);
+        if (dependencyMap != null) {
+            for (String otherFile : dependencyMap.keySet()) {
+
+                String otherNameOnly = sanitizeFilenameForGraphViz(otherFile);
+                if (otherNameOnly.equals("SUMO_Cache"))
+                    continue;
+
+                nodes.add(otherNameOnly);
+                incomingCounts.putIfAbsent(otherNameOnly, 0);
+
+                // filename depends on otherFile
+                edges.add(new String[]{nameOnly, otherNameOnly});
+
+                // otherFile is depended upon by filename
+                incomingCounts.put(otherNameOnly, incomingCounts.get(otherNameOnly) + 1);
             }
         }
-        return lines;
     }
 
-    /** *************************************************************
-     */
-    public static String sanitizeFilenameForGraphViz(String s) {
-
-        return FileUtil.noExt(FileUtil.noPath(s)).replace("-","_");
+    // Output node declarations
+    for (String node : nodes) {
+        String newline = node + " [shape=\"box\" label = < " + node + " <br align=\"left\"/> > ]";
+        lines.add(newline);
     }
 
-    /** *************************************************************
-     * Creates a specified formatted image from a generated *.dot file
-     * from GraphViz.
-     *
-     * @param filename the generated *.dot filename to create an image from
-     * @return the path to the generated image file
-     */
-    public static String createDependDotGraphImage(String filename) throws IOException {
-
-        int exitCode;
-        String retVal = "";
-        String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
-        String imageExt = KBmanager.getMgr().getPref("imageFormat");
-        if (imageExt == null || imageExt.isBlank())
-            imageExt = "png"; // default
-        File file = new File(filename + "." + imageExt);
-
-        List<String> cmd = new ArrayList<>();
-        cmd.add(graphVizDir + File.separator + "dot");
-        cmd.add("-T" + imageExt);
-        cmd.add("-O");
-        cmd.add(filename);
-        System.out.println(cmd);
-        try {
-            // Build a dependency graph image from an input file
-            // From: https://graphviz.org/doc/info/command.html#-O
-            ProcessBuilder pb = new ProcessBuilder(cmd);
-            pb.directory(file.getParentFile());
-            File log = new File(file.getParentFile(),"log");
-            if (log.exists())
-                log.delete();
-            pb.redirectErrorStream(true);
-            pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log)); // <- in case of any errors
-            Process proc = pb.start();
-            exitCode = proc.waitFor();
-        } catch (InterruptedException e) {
-            String err = "Error writing file " + file + "\n" + e.getMessage();
-            throw new IOException(err);
-        }
-        retVal = file.getAbsolutePath();
-        return retVal;
+    // Output edge declarations
+    for (String[] edge : edges) {
+        String line = edge[0] + " -> " + edge[1] + ";";
+        lines.add(line);
     }
 
-    /**
-     * *************************************************************
-     * Create a dependency graphin a format suitable for GraphViz' input format
-     * http://www.graphviz.org/. Generate a dependency image from the .dot output
-     * with a command like <code>dot SUMO-graph.dot -Tgif > graph.gif</code>
-     */
-    public static void createDependDotGraph(Map<String,Map<String,List<String>>> termDependency) {
+    // Group nodes by how many incoming edges they have
+    // Highest counts first so the most depended-upon nodes are ranked highest
+    Map<Integer,List<String>> rankGroups = new TreeMap<>(Collections.reverseOrder());
+    for (String node : nodes) {
+        int count = incomingCounts.getOrDefault(node, 0);
+        rankGroups.computeIfAbsent(count, k -> new ArrayList<>()).add(node);
+    }
 
-        String sep = File.separator;
-        String dir = System.getenv("CATALINA_HOME") + sep + "webapps"
-                + sep + "sigma" + sep + "graph";
-        File dirfile = new File(dir);
-        if (!dirfile.exists())
-            dirfile.mkdirs();
-        String filename = dirfile.getPath() + sep + "depend.dot";
-        Path path = Paths.get(filename);
-        try (Writer bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8); PrintWriter pw = new PrintWriter(bw, true)) {
-            Set<String> result = new HashSet<>();
-            result.addAll(createDependDotGraphBody(termDependency));
-            pw.println("digraph G {");
-            pw.println("  node [color=black, fontcolor=black];"); // Black text and borders
-            pw.println("  edge [color=black];"); // Black edges
-            pw.println("  rankdir=LR");
-            for (String s : result)
-                pw.println(s);
-            pw.println("}");
-            System.out.println(createDependDotGraphImage(path.toString()));
-        } catch (IOException e) {
-            String err = "Error writing file " + path + "\n" + e.getMessage();
+    // Force nodes with the same incoming edge count to share the same rank
+    for (Map.Entry<Integer,List<String>> entry : rankGroups.entrySet()) {
+        List<String> group = entry.getValue();
+        if (!group.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("{ rank=same; ");
+            for (String node : group)
+                sb.append(node).append("; ");
+            sb.append("}");
+            lines.add(sb.toString());
         }
     }
+
+    return lines;
+}
+
+/** *************************************************************
+ */
+public static String sanitizeFilenameForGraphViz(String s) {
+
+    return FileUtil.noExt(FileUtil.noPath(s)).replace("-","_");
+}
+
+/** *************************************************************
+ * Creates a specified formatted image from a generated *.dot file
+ * from GraphViz.
+ *
+ * @param filename the generated *.dot filename to create an image from
+ * @return the path to the generated image file
+ */
+public static String createDependDotGraphImage(String filename) throws IOException {
+
+    int exitCode;
+    String retVal = "";
+    String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
+    String imageExt = KBmanager.getMgr().getPref("imageFormat");
+    if (imageExt == null || imageExt.isBlank())
+        imageExt = "png"; // default
+    File file = new File(filename + "." + imageExt);
+
+    List<String> cmd = new ArrayList<>();
+    cmd.add(graphVizDir + File.separator + "dot");
+    cmd.add("-T" + imageExt);
+    cmd.add("-O");
+    cmd.add(filename);
+    System.out.println(cmd);
+    try {
+        // Build a dependency graph image from an input file
+        // From: https://graphviz.org/doc/info/command.html#-O
+        ProcessBuilder pb = new ProcessBuilder(cmd);
+        pb.directory(file.getParentFile());
+        File log = new File(file.getParentFile(),"log");
+        if (log.exists())
+            log.delete();
+        pb.redirectErrorStream(true);
+        pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log)); // <- in case of any errors
+        Process proc = pb.start();
+        exitCode = proc.waitFor();
+    }
+    catch (InterruptedException e) {
+        String err = "Error writing file " + file + "\n" + e.getMessage();
+        throw new IOException(err);
+    }
+    retVal = file.getAbsolutePath();
+    return retVal;
+}
+
+/**
+ * *************************************************************
+ * Create a dependency graph in a format suitable for GraphViz' input format
+ * http://www.graphviz.org/. Generate a dependency image from the .dot output
+ * with a command like <code>dot SUMO-graph.dot -Tgif > graph.gif</code>
+ */
+public static void createDependDotGraph(Map<String,Map<String,List<String>>> termDependency) {
+
+    String sep = File.separator;
+    String dir = System.getenv("CATALINA_HOME") + sep + "webapps"
+            + sep + "sigma" + sep + "graph";
+    File dirfile = new File(dir);
+    if (!dirfile.exists())
+        dirfile.mkdirs();
+    String filename = dirfile.getPath() + sep + "depend.dot";
+    Path path = Paths.get(filename);
+
+    try (Writer bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8);
+         PrintWriter pw = new PrintWriter(bw, true)) {
+
+        List<String> result = createDependDotGraphBody(termDependency);
+
+        pw.println("digraph G {");
+        pw.println("  node [color=black, fontcolor=black];");
+        pw.println("  edge [color=black];");
+
+        // Top-to-bottom so heavily depended-on nodes appear higher
+        pw.println("  rankdir=BT;");
+        pw.println("  nodesep=0.35;");
+        pw.println("  ranksep=0.75;");
+
+        for (String s : result)
+            pw.println("  " + s);
+
+        pw.println("}");
+        System.out.println(createDependDotGraphImage(path.toString()));
+    }
+    catch (IOException e) {
+        String err = "Error writing file " + path + "\n" + e.getMessage();
+        System.err.println(err);
+    }
+}
 
     /** *****************************************************************
      * Make an empty KB for use in Diagnostics.
