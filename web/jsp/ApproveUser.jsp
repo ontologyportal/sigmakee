@@ -29,7 +29,7 @@ if (!role.equals("admin")) {
     return;
 }
 
-String user = request.getParameter("user");
+String user = ValidationUtils.sanitizeString(request.getParameter("user"));
 
 PasswordService ps = new PasswordService();
 User u = User.fromDB(ps.conn, user);

@@ -41,23 +41,17 @@ function setWidth(id) {
 
   // If the request parameter can appear more than once in the query string, get all values
   String[] values = request.getParameterValues("columns");
-  //if (values != null) {
-  //    for (int i = 0; i < values.length; i++)
-  //        System.out.println("  value[" + i + "] == " + values[i]);
-  //}
 
   Graph g = new Graph();
-  String view = request.getParameter("view");
+  String view = ValidationUtils.sanitizeString(request.getParameter("view"), "text");
   String inst = request.getParameter("inst");
   String all = request.getParameter("all");
-  String fileRestrict = request.getParameter("fileRestrict");
-  if (fileRestrict == null || fileRestrict.equals("null"))
-      fileRestrict = "";
+  String fileRestrict = ValidationUtils.sanitizeString(request.getParameter("fileRestrict"));
 
-  if (view == null)
-  	view = "text";
   if (term == null || term.equals("null")) term = "Process";
-  String relation = request.getParameter("relation");
+
+  String relation = ValidationUtils.sanitizeSumoTerm(request.getParameter("relation"));
+
   if (relation == null || relation.equals("null") || relation.equals("")) {
       if (KButilities.isRelation(kb,term))
           relation = "subrelation";
@@ -66,24 +60,23 @@ function setWidth(id) {
       else
           relation = "subclass";
   }
-  String up = request.getParameter("up");
-  if (up == null) up = "1";
-  int upint = Integer.parseInt(up);
-  if (upint > 10)
-      upint = 1;
-  String down = request.getParameter("down");
-  if (down == null) down = "1";
-  int downint = Integer.parseInt(down);
-  if (downint > 10)
-      downint = 1;
+  String up = ValidationUtils.sanitizeIntegerString(request.getParameter("up"), "1");
+  int upint = ValidationUtils.sanitizeInteger(up, 1);
+  if (upint > 10) upint = 1;
+
+  String down = ValidationUtils.sanitizeIntegerString(request.getParameter("down"), "1");
+  int downint = ValidationUtils.sanitizeInteger(down, 1);
+  if (downint > 10) downint = 1;
+  
+  String limit = ValidationUtils.sanitizeString(request.getParameter("limit"));
+  if(!StringUtil.isInteger(limit))
+    limit = "";
+  
   int limitInt = 100;
-  String limit = request.getParameter("limit");
   try {
-      limitInt = Integer.parseInt(limit);
-      if (limitInt > 100 || limitInt < 10)
-          limitInt = 100;
-  }
-  catch (NumberFormatException nfe) {
+      limitInt = ValidationUtils.sanitizeInteger(limit);
+      if (limitInt > 100 || limitInt < 10) limitInt = 100;
+  } catch (NumberFormatException nfe) {
       limit = "";
   }
   String[] items = request.getParameterValues("columns");
@@ -97,7 +90,6 @@ function setWidth(id) {
       for (int i = 0; i < items.length; i++)
           g.columnList.put(items[i],"yes");
   }
-
 %>
 
 <form action="Graph.jsp">
@@ -120,8 +112,8 @@ function setWidth(id) {
               if (limit != null && limit != "")
                   result = g.createBoundedSizeGraph(kb,term,relation,limitInt,instBool,language);
               else
-                  result = g.createGraph(kb,term,relation,Integer.parseInt(up),
-                                         Integer.parseInt(down),limitInt,instBool,language);
+                  result = g.createGraph(kb,term,relation,upint,
+                                         downint,limitInt,instBool,language);
               out.println("<p><table>\n");
               for (String element : result) {
                   out.println(element);
@@ -145,8 +137,6 @@ function setWidth(id) {
                   try {
                       if (!StringUtil.emptyString(all))
                           relation = "all";
-                      System.out.println("Graph.jsp: creating graph with limitInt=" + limitInt +
-                          " and fileRestrict=" + fileRestrict);
                       graphAvailable = g.createDotGraph(kb,term,relation,Integer.parseInt(up),
                                                         Integer.parseInt(down),limitInt,fname,fileRestrict);
                   }

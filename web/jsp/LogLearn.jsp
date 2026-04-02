@@ -1,5 +1,5 @@
 <%@ include file="Prelude.jsp" %>
-<%@ page import="java.net.URLEncoder, java.nio.charset.Charset, java.io.*, com.articulate.sigma.tp.GenPropFormulas" %>
+<%@ page import="java.net.URLEncoder, java.nio.charset.Charset, java.io.*, com.articulate.sigma.tp.GenPropFormulas, com.articulate.sigma.security.*" %>
 
 <html>
 <head>
@@ -37,12 +37,11 @@ String erase = request.getParameter("erase");
 String generate = request.getParameter("generate");
 String populate = request.getParameter("populate");
 
-if (StringUtil.emptyString(numVars)) numVars = "3";
-if (StringUtil.emptyString(depth)) depth = "5";
+if(numVars == null) numVars = "3";
+if(depth == null) depth = "5";
 
-int numVarsInt = Math.max(1, Math.min(7, Integer.parseInt(numVars)));
-int depthInt = Math.max(1, Math.min(7, Integer.parseInt(depth)));
-
+int numVarsInt = ValidationUtils.sanitizeInteger(numVars);
+int depthInt = ValidationUtils.sanitizeInteger(depth);
 %>
 
 <form action="LogLearn.jsp" method="get">
