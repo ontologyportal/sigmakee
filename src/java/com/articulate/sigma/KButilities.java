@@ -55,6 +55,7 @@ public class KButilities implements ServletContextListener {
     private static volatile ExecutorService currentExecutorService;
     private static final Object executorLock = new Object();
     private static volatile boolean isJEditMode = false;
+    public static boolean debug = false;
 
     // Create the appropriate ExecutorService based on context
     private static ExecutorService createExecutorService() {
@@ -72,7 +73,7 @@ public class KButilities implements ServletContextListener {
 
         if (isJEditMode) {
             // For jEdit: use single-threaded executor to prevent deadlocks
-            System.out.println("KButilities: Creating single-threaded executor for jEdit mode");
+            if(debug) if (debug) System.out.println("KButilities: Creating single-threaded executor for jEdit mode");
             return Executors.newSingleThreadExecutor(r -> {
                 Thread t = new Thread(r, "SIGMA-jEdit-Thread");
                 t.setDaemon(true); // Make it daemon to ensure JVM exits cleanly
@@ -80,7 +81,7 @@ public class KButilities implements ServletContextListener {
             });
         } else {
             // For translation: use fixed thread pool for predictable performance
-            System.out.println("KButilities: Creating fixed thread pool (" + PAR + " threads) for translation mode");
+            if (debug) System.out.println("KButilities: Creating fixed thread pool (" + PAR + " threads) for translation mode");
             return Executors.newFixedThreadPool(PAR, r -> {
                 Thread t = new Thread(r, "SIGMA-Translation-Thread");
                 t.setDaemon(true); // Make it daemon to ensure JVM exits cleanly
@@ -207,12 +208,10 @@ public class KButilities implements ServletContextListener {
         final String msg = (env == null || env.isEmpty())
                 ? "SIGMA_HOME not set in environment; defaulting to " + SIGMA_HOME
                 : "SIGMA_HOME set to " + SIGMA_HOME;
-        System.out.println("[KButilities] " + msg);
+        if(debug) if (debug) System.out.println("[KButilities] " + msg);
     }
 
     public static final int ONE_K = 1000;
-
-    public static boolean debug = false;
 
     /** Errors found during processing formulas */
     public static Set<String> errors = new TreeSet<>();
@@ -311,14 +310,14 @@ public class KButilities implements ServletContextListener {
         String error;
         if (SUMOtoTFAform.inconsistentVarTypes()) {
             error = "inconsistent types in " + SUMOtoTFAform.getVarmap();
-            System.err.println("hasCorrectTypes(): " + error);
+            if (debug) System.err.println("hasCorrectTypes(): " + error);
             errors.addAll(SUMOtoTFAform.errors);
             SUMOtoTFAform.errors.clear();
             return false;
         }
         if (SUMOtoTFAform.typeConflict(f)) {
             error = "Type conflict: " + SUMOtoTFAform.errors;
-            System.err.println("hasCorrectTypes(): " + error);
+            if (debug) System.err.println("hasCorrectTypes(): " + error);
             errors.addAll(SUMOtoTFAform.errors);
             SUMOtoTFAform.errors.clear();
             return false;
@@ -357,7 +356,7 @@ public class KButilities implements ServletContextListener {
             String error = "Formula rejected due to arity error of predicate " + term
                     + " in formula: \n" + f.getFormula();
             errors.add(error);
-            if (debug) System.err.println("isValidFormula(): Error: " + error);
+            if (debug) if (debug) System.err.println("isValidFormula(): Error: " + error);
             return false;
         }
         if (!hasCorrectTypes(kb,f))
@@ -477,7 +476,7 @@ public class KButilities implements ServletContextListener {
         for (List<String> row : spread) {
             if (row != null && row.size() > 1) {
                 label = row.get(termcol);
-                System.out.println("(synonymousExternalConcept \"" + label + "\" Entity Taxonomy)");
+                if (debug) System.out.println("(synonymousExternalConcept \"" + label + "\" Entity Taxonomy)");
             }
         }
     }
@@ -533,7 +532,7 @@ public class KButilities implements ServletContextListener {
      */
     public static void countRelations(KB kb) {
 
-        System.out.println("Relations: " + kb.getCountRelations());
+        if (debug) System.out.println("Relations: " + kb.getCountRelations());
         Iterator it = kb.terms.iterator();
         String term;
         List al;
@@ -541,7 +540,7 @@ public class KButilities implements ServletContextListener {
             term = (String) it.next();
             al = kb.ask("arg",0,term);
             if (al != null && !al.isEmpty()) {
-                System.out.println(term + " " + al.size());
+                if (debug) System.out.println(term + " " + al.size());
             }
         }
     }
@@ -568,8 +567,8 @@ public class KButilities implements ServletContextListener {
                     wncount += WordNet.wn.SUMOHash.get(term).size();
             }
         }
-        System.out.println("SUMO Process subclass count: " + count);
-        System.out.println("SUMO Process synsets: " + wncount);
+        if (debug) System.out.println("SUMO Process subclass count: " + count);
+        if (debug) System.out.println("SUMO Process synsets: " + wncount);
     }
 
     /** *************************************************************
@@ -602,7 +601,7 @@ public class KButilities implements ServletContextListener {
             f = (Formula) results.get(i);
             url = StringUtil.removeEnclosingQuotes(f.getStringArgument(2));
             if (!uRLexists(url))
-                System.err.println(f + " doesn't exist");
+                if (debug) System.err.println(f + " doesn't exist");
         }
     }
 
@@ -628,18 +627,18 @@ public class KButilities implements ServletContextListener {
                 m = p.matcher(line);
                 if (m.matches()) {
                     url = StringUtil.removeEnclosingQuotes(m.group(3));
-                    //System.out.println("the url: " + url);
+                    //if (debug) System.out.println("the url: " + url);
                     if (!uRLexists(url))
-                        System.out.println(";; " + line);
+                        if (debug) System.out.println(";; " + line);
                     else
-                        System.out.println(line);
+                        if (debug) System.out.println(line);
                 }
                 else
-                    System.out.println(line);
+                    if (debug) System.out.println(line);
             }
         }
         catch (IOException e) {
-            System.err.println("Error reading pictureList.kif\n" + e.getMessage());
+            if (debug) System.err.println("Error reading pictureList.kif\n" + e.getMessage());
         }
     }
 
@@ -785,11 +784,11 @@ public class KButilities implements ServletContextListener {
                 }
             }
         }
-        //System.out.println("generateSemNetNeighbors(): before recursion: " + resultSet);
+        //if (debug) System.out.println("generateSemNetNeighbors(): before recursion: " + resultSet);
         if (count > 0)
             for (String s : targets)
                 resultSet.addAll(generateSemNetNeighbors(kb,cached,strings,links,s,count-1));
-        //System.out.println("generateSemNetNeighbors(): returning: " + resultSet);
+        //if (debug) System.out.println("generateSemNetNeighbors(): returning: " + resultSet);
         return resultSet;
     }
 
@@ -838,7 +837,7 @@ public class KButilities implements ServletContextListener {
                     arg1 = f.getStringArgument(1);
                     arg2 = f.getStringArgument(2);
                     if (arg1.contains(Formula.LP) || arg1.contains(Formula.RP) || arg2.contains(Formula.LP) || arg2.contains(Formula.RP))
-                        System.out.println("error in generateSemanticNetwork(): for formula: " + f);
+                        if (debug) System.out.println("error in generateSemanticNetwork(): for formula: " + f);
                     else if (!Formula.isLogicalOperator(arg1) && !Formula.isLogicalOperator(arg2) &&
                             !Formula.isVariable(arg1) && !Formula.isVariable(arg1) &&
                             (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2)))
@@ -974,7 +973,7 @@ public class KButilities implements ServletContextListener {
             edgepw.print(sb.toString());
         }
         catch (IOException e) {
-            System.err.println(e.getMessage());
+            if (debug) System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -1018,7 +1017,7 @@ public class KButilities implements ServletContextListener {
             }
         }
         catch (Exception e) {
-            System.err.println(e.getMessage());
+            if (debug) System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -1067,7 +1066,7 @@ public class KButilities implements ServletContextListener {
             edgepw.print(sb.toString());
         }
         catch (IOException e) {
-            System.err.println(e.getMessage());
+            if (debug) System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -1188,7 +1187,7 @@ public class KButilities implements ServletContextListener {
             }
         }
         catch (IOException e) {
-            System.err.println(e.getMessage());
+            if (debug) System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -1199,10 +1198,10 @@ public class KButilities implements ServletContextListener {
 
         try {
             int counter = 0;
-            System.out.println("INFO in KB.generateTPTPTestAssertions()");
+            if (debug) System.out.println("INFO in KB.generateTPTPTestAssertions()");
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            System.out.println("INFO in KB.generateTPTPTestAssertions(): printing predicates");
+            if (debug) System.out.println("INFO in KB.generateTPTPTestAssertions(): printing predicates");
             String argType1, argType2;
             for (String term : kb.terms) {
                 if (Character.isLowerCase(term.charAt(0)) && kb.kbCache.valences.get(term) <= 2) {
@@ -1212,23 +1211,23 @@ public class KButilities implements ServletContextListener {
                         String argnum = forms.get(i).getArgument(2);
                         String type = forms.get(i).getArgument(3);
                         if (argnum.equals("1"))
-                            System.out.print("(instance Foo " + type + "),");
+                            if (debug) System.out.print("(instance Foo " + type + "),");
                         if (argnum.equals("2"))
-                            System.out.print("(instance Bar " + type + Formula.RP);
+                            if (debug) System.out.print("(instance Bar " + type + Formula.RP);
                     }
                     */
                     argType1 = kb.getArgType(term,1);
                     argType2 = kb.getArgType(term,2);
                     if (argType1 != null && argType2 != null) {
-                        System.out.print("fof(local_" + counter++ + ",axiom,(s__" + term + "(s__Foo,s__Bar))).|");
-                        System.out.print("fof(local_" + counter++ + ",axiom,(s__instance(s__Foo,s__" + argType1 + "))).|");
-                        System.out.println("fof(local_" + counter++ + ",axiom,(s__instance(s__Bar,s__" + argType2 + "))).");
+                        if (debug) System.out.print("fof(local_" + counter++ + ",axiom,(s__" + term + "(s__Foo,s__Bar))).|");
+                        if (debug) System.out.print("fof(local_" + counter++ + ",axiom,(s__instance(s__Foo,s__" + argType1 + "))).|");
+                        if (debug) System.out.println("fof(local_" + counter++ + ",axiom,(s__instance(s__Bar,s__" + argType2 + "))).");
                     }
                 }
             }
         }
         catch (Exception e) {
-            System.err.println(e.getMessage());
+            if (debug) System.err.println(e.getMessage());
         }
     }
 
@@ -1238,17 +1237,17 @@ public class KButilities implements ServletContextListener {
     public static void generateRelationList() {
 
         try {
-            System.out.println("INFO in KB.generateRelationList()");
+            if (debug) System.out.println("INFO in KB.generateRelationList()");
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            System.out.println("INFO in KB.generateRelationList(): printing predicates");
+            if (debug) System.out.println("INFO in KB.generateRelationList(): printing predicates");
             for (String term : kb.terms) {
                 if (Character.isLowerCase(term.charAt(0)))
-                    System.out.println(term);
+                    if (debug) System.out.println(term);
             }
         }
         catch (Exception e) {
-            System.err.println(e.getMessage());
+            if (debug) System.err.println(e.getMessage());
         }
     }
 
@@ -1276,7 +1275,7 @@ public class KButilities implements ServletContextListener {
     public static void countStringWords(KB kb) {
 
         int total = 0;
-        System.out.println("INFO in KB.countStringWords(): counting words");
+        if (debug) System.out.println("INFO in KB.countStringWords(): counting words");
         Pattern p;
         Matcher m;
         boolean b;
@@ -1293,11 +1292,11 @@ public class KButilities implements ServletContextListener {
                     if (ar[i].matches("\\w+"))
                         total++;
                 }
-                System.out.println(quoted);
-                System.out.println(ar.length);
+                if (debug) System.out.println(quoted);
+                if (debug) System.out.println(ar.length);
             }
         }
-        System.out.println(total);
+        if (debug) System.out.println(total);
     }
 
     /** *************************************************************
@@ -1381,14 +1380,14 @@ public class KButilities implements ServletContextListener {
      */
     public static void genDoc(KB kb, String fname) {
 
-        System.out.println(genDocHeader(true));
+        if (debug) System.out.println(genDocHeader(true));
         List<Formula> al = kb.ask("arg",0,"documentation");
         for (Formula form : al) {
             String arg;
             if (form.sourceFile.endsWith(fname)) {
                 arg = form.getArgument(3).toString();
                 arg = arg.replace("&%","");
-                System.out.println(form.getArgument(1) + "\t" + arg);
+                if (debug) System.out.println(form.getArgument(1) + "\t" + arg);
             }
         }
     }
@@ -1438,7 +1437,7 @@ public class KButilities implements ServletContextListener {
                 files.put(s,pw);
             }
             catch (Exception e) {
-                System.err.println(e.getMessage());
+                if (debug) System.err.println(e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -1559,22 +1558,22 @@ public class KButilities implements ServletContextListener {
      */
     public static void genAllHTMLDoc(KB kb) {
 
-        System.out.println("<h2>Data Dictionary</h2>");
-        System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
+        if (debug) System.out.println("<h2>Data Dictionary</h2>");
+        if (debug) System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
         Map<String,String> map = genDocList(kb);
         boolean shade = false;
         String arg2;
         for (String term : map.keySet()) {
             arg2 = map.get(term);
             if (shade)
-                System.out.println("<tr bgcolor=\"#ddd\"><td>");
+                if (debug) System.out.println("<tr bgcolor=\"#ddd\"><td>");
             else
-                System.out.println("<tr><td>");
+                if (debug) System.out.println("<tr><td>");
             // (KB kb, String term, String lang, String doc, boolean noSUMO, boolean coreTerm)
-            System.out.println(htmlForDoc(kb,term,"EnglishLanguage",arg2,false,false));
+            if (debug) System.out.println(htmlForDoc(kb,term,"EnglishLanguage",arg2,false,false));
             shade = !shade;
         }
-        System.out.println("</table>\n");
+        if (debug) System.out.println("</table>\n");
     }
 
     /** *************************************************************
@@ -1594,8 +1593,8 @@ public class KButilities implements ServletContextListener {
         List<String> lines = FileUtil.readLines(file);
         List<String> aux = new ArrayList<>();
         genDocHeader(true); // true = one page
-        System.out.println("<h2>Data Dictionary</h2>");
-        System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th><b>label</b></th><th><b>in List or Aux</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
+        if (debug) System.out.println("<h2>Data Dictionary</h2>");
+        if (debug) System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th><b>label</b></th><th><b>in List or Aux</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
         Map<String,String> map = genDocList(kb);
         boolean shade = false;
         List<String> links;
@@ -1607,13 +1606,13 @@ public class KButilities implements ServletContextListener {
             aux.addAll(links);
             arg2 = map.get(term);
             if (shade)
-                System.out.println("<tr bgcolor=\"#ddd\"><td>");
+                if (debug) System.out.println("<tr bgcolor=\"#ddd\"><td>");
             else
-                System.out.println("<tr><td>");
-            System.out.println(htmlForDoc(kb,term,"EnglishLanguage",arg2,false,true));
+                if (debug) System.out.println("<tr><td>");
+            if (debug) System.out.println(htmlForDoc(kb,term,"EnglishLanguage",arg2,false,true));
             shade = !shade;
         }
-        System.out.println("</table>\n");
+        if (debug) System.out.println("</table>\n");
     }
 
     /** ***************************************************************
@@ -1646,24 +1645,24 @@ public class KButilities implements ServletContextListener {
     public static void shutDownExecutorService() {
         synchronized (executorLock) {
             if (currentExecutorService != null) {
-                System.out.println("KButilities.shutDownExecutorService(): Initiating executor shutdown");
+                if (debug) System.out.println("KButilities.shutDownExecutorService(): Initiating executor shutdown");
                 currentExecutorService.shutdown();
                 try {
                     // Give translation processes more time to complete
                     int timeoutSeconds = isJEditMode ? 10 : 60;
                     if (!currentExecutorService.awaitTermination(timeoutSeconds, TimeUnit.SECONDS)) {
-                        System.out.println("KButilities.shutDownExecutorService(): Forcing immediate shutdown");
+                        if (debug) System.out.println("KButilities.shutDownExecutorService(): Forcing immediate shutdown");
                         List<Runnable> unfinishedTasks = currentExecutorService.shutdownNow();
-                        System.out.println("KButilities.shutDownExecutorService(): " + unfinishedTasks.size() + " tasks were cancelled");
+                        if (debug) System.out.println("KButilities.shutDownExecutorService(): " + unfinishedTasks.size() + " tasks were cancelled");
 
                         // Give forceful shutdown a moment to complete
                         if (!currentExecutorService.awaitTermination(10, TimeUnit.SECONDS)) {
-                            System.err.println("KButilities.shutDownExecutorService(): ExecutorService did not terminate cleanly");
+                            if (debug) System.err.println("KButilities.shutDownExecutorService(): ExecutorService did not terminate cleanly");
                         }
                     }
-                    System.out.println("KButilities.shutDownExecutorService(): ExecutorService shutdown complete");
+                    if (debug) System.out.println("KButilities.shutDownExecutorService(): ExecutorService shutdown complete");
                 } catch (InterruptedException e) {
-                    System.err.println("KButilities.shutDownExecutorService(): Shutdown interrupted, forcing immediate termination");
+                    if (debug) System.err.println("KButilities.shutDownExecutorService(): Shutdown interrupted, forcing immediate termination");
                     currentExecutorService.shutdownNow();
                     Thread.currentThread().interrupt();
                 }
@@ -1769,7 +1768,7 @@ public class KButilities implements ServletContextListener {
                 if (valid)
                     System.out.println(sb.append(valid));
                 else
-                    System.err.println(sb.append(valid));
+                    if (debug) System.err.println(sb.append(valid));
             }
             else if (args != null && args.length > 1 && args[0].equals("-a")) {
                 SUMOtoTFAform.initOnce();

@@ -715,11 +715,11 @@ public class KBcache implements Serializable {
     public int getArity(String rel) {
 
         if (valences == null) {
-            System.err.println("Error in KBcache.getArity(): null valences");
+            if (debug) System.err.println("Error in KBcache.getArity(): null valences");
             return 0;
         }
         if (!valences.containsKey(rel)) {
-            System.err.println("Error in KBcache.getArity(): " + rel + " not found");
+            if (debug) System.err.println("Error in KBcache.getArity(): " + rel + " not found");
             return 0;
         }
         return valences.get(rel);
@@ -731,7 +731,7 @@ public class KBcache implements Serializable {
     private void arrayListReplace(List<String> al, int index, String newEl) {
 
         if (index > al.size()) {
-            System.err.println("Error in KBcache.arrayListReplace(): index " + index +
+            if (debug) System.err.println("Error in KBcache.arrayListReplace(): index " + index +
                     " out of bounds.");
             return;
         }
@@ -913,7 +913,7 @@ public class KBcache implements Serializable {
             sig.add("Entity");
         }
         if (sig == null)
-            System.err.println("Error in KBcache.extendInstance(): no sig for term " + term);
+            if (debug) System.err.println("Error in KBcache.extendInstance(): no sig for term " + term);
         List<String> newsig = SUMOtoTFAform.relationExtractSigFromName(newTerm);
         signatures.put(newTerm,newsig);
         // The number of arguments to each relation.  Variable arity is -1
@@ -1134,18 +1134,18 @@ public class KBcache implements Serializable {
         if (!StringUtil.emptyString(c1) && !StringUtil.emptyString(c2) && c1.endsWith("+") && !c2.endsWith("+") && !c2.endsWith("Class")) {
             String err = "KBcache.checkDisjoint(): mixing class and instance: " + c1 + ", " + c2;
             errors.add(err);
-            System.err.println(err);
+            if (debug) System.err.println(err);
             return true;
         }
         if (!StringUtil.emptyString(c1) && !StringUtil.emptyString(c2) && c2.endsWith("+") && !c1.endsWith("+") && !c1.endsWith("Class")) {
             String err = "KBcache.checkDisjoint(): mixing class and instance: " + c1 + ", " + c2;
-            System.err.println(err);
+            if (debug) System.err.println(err);
             errors.add(err);
             return true;
         }
         if (disjoint.contains(c1 + "\t" + c2) || disjoint.contains(c2 + "\t" + c1)) {
             String err = "KBcache.checkDisjoint(): disjoint classes: " + c1 + ", " + c2;
-            System.err.println(err);
+            if (debug) System.err.println(err);
             errors.add(err);
             return true;
         }
@@ -1265,7 +1265,7 @@ public class KBcache implements Serializable {
         for (String cl : p1) {
             classes = subclasses.get(cl);
             if (classes == null)
-                System.err.println("Error in KBcache.mostSpecificParent(): no subclasses for : " + cl);
+                if (debug) System.err.println("Error in KBcache.mostSpecificParent(): no subclasses for : " + cl);
             else {
                 count = classes.size();
                 countString = Integer.toString(count);
@@ -1640,7 +1640,7 @@ public class KBcache implements Serializable {
 
         Map<String,Set<String>> relParents = parents.get(rel);
         if (relParents == null) {
-            System.err.println("Error in KBcache.breadthFirstBuildParents(): no relation " + rel);
+            if (debug) System.err.println("Error in KBcache.breadthFirstBuildParents(): no relation " + rel);
             return;
         }
         int threshold = 10;      // maximum time that a term can be traversed in breadthFirstBuildParents()
@@ -1690,7 +1690,7 @@ public class KBcache implements Serializable {
 
         Map<String,Set<String>> relChildren = children.get(rel);
         if (relChildren == null) {
-            System.err.println("Error in KBcache.breadthFirstBuildChildren(): no relation " + rel);
+            if (debug) System.err.println("Error in KBcache.breadthFirstBuildChildren(): no relation " + rel);
             return;
         }
         //if (debug) System.out.println("INFO in KBcache.breadthFirstBuildChildren(): trying relation " + rel);
@@ -1904,7 +1904,7 @@ public class KBcache implements Serializable {
                     if (debug) System.out.println("INFO in KBcache.collectDomains(): form " + form);
                     arg2 = form.getStringArgument(2);
                     if (StringUtil.emptyString(arg2) || !StringUtil.isNumeric(arg2)) {
-                        System.err.println("Error in KBcache.collectDomains(): arg2 not a number in:  " + form);
+                        if (debug) System.err.println("Error in KBcache.collectDomains(): arg2 not a number in:  " + form);
                         continue;
                     }
                     arg = Integer.parseInt(form.getStringArgument(2));
@@ -1970,8 +1970,8 @@ public class KBcache implements Serializable {
         String rel = "subrelation";
         Map<String,Set<String>> relParents = parents.get("subrelation");
         if (relParents == null) {
-            System.err.println("Error in KBcache.breadthFirstInheritDomains(): no parents using relation subrelation");
-            System.err.println(parents);
+            if (debug) System.err.println("Error in KBcache.breadthFirstInheritDomains(): no parents using relation subrelation");
+            if (debug) System.err.println(parents);
             return;
         }
         Deque<String> Q = new ArrayDeque<>();
@@ -1990,7 +1990,7 @@ public class KBcache implements Serializable {
                     newDomains = signatures.get(newTerm);
                     if (debug) System.out.println("KBcache.breadthFirstInheritDomains(); newDomains: " + newDomains);
                     if (valences.get(t) == null) {
-                        System.err.println("Error in KBcache.breadthFirstInheritDomains(): no valence for " + t);
+                        if (debug) System.err.println("Error in KBcache.breadthFirstInheritDomains(): no valence for " + t);
                         continue;
                     }
                     else if (valences.get(newTerm) == null || valences.get(newTerm) < valences.get(t)) {
@@ -2116,14 +2116,14 @@ public class KBcache implements Serializable {
         try (Reader r = new StringReader(sb.toString())) {
             kif.parse(r);
         } catch (IOException ioe) {
-            System.err.println("Error in KBcache.storeCacheAsFormulas(): " + ioe.getMessage());
+            if (debug) System.err.println("Error in KBcache.storeCacheAsFormulas(): " + ioe.getMessage());
             return;
         }
         if (KBmanager.getMgr().getPref("cache").equals("yes"))
             kb.addConstituentInfo(kif);
 
-        System.out.printf("KBcache.storeCacheAsFormulas(): done creating cache formulas, in %d m/s%n", (System.currentTimeMillis() - millis));
-        System.out.printf("KBcache.storeCacheAsFormulas(): cached statements: %d%n", cacheCount);
+        if (debug) System.out.printf("KBcache.storeCacheAsFormulas(): done creating cache formulas, in %d m/s%n", (System.currentTimeMillis() - millis));
+        if (debug) System.out.printf("KBcache.storeCacheAsFormulas(): cached statements: %d%n", cacheCount);
     }
 
     /** ***************************************************************
@@ -2152,7 +2152,7 @@ public class KBcache implements Serializable {
             instrel = true;
             sig = signatures.get(rel);
             if (sig == null)
-                System.err.println("Error in KBcache.buildInstTransRels(): Error " + rel + " not found.");
+                if (debug) System.err.println("Error in KBcache.buildInstTransRels(): Error " + rel + " not found.");
             else {
                 for (int i = 0; i < sig.size(); i++) {
                     signatureElement = sig.get(i);
@@ -2253,7 +2253,7 @@ public class KBcache implements Serializable {
             try {
                 f.get(); // waits for task completion
             } catch (InterruptedException | ExecutionException ex) {
-                System.err.printf("Error in KBcache.buildCaches(): %s%n", ex.getMessage());
+                if (debug) System.err.printf("Error in KBcache.buildCaches(): %s%n", ex.getMessage());
                 ex.printStackTrace();
             }
 
@@ -2375,7 +2375,7 @@ public class KBcache implements Serializable {
 
         List<String> sig = getSignature(r);
         if (sig == null)
-            System.err.println("Error in variableArityType() null signature for " + r);
+            if (debug) System.err.println("Error in variableArityType() null signature for " + r);
         String type = sig.get(sig.size() - 1);
         return type;
     }
