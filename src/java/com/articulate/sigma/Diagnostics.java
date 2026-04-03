@@ -613,7 +613,7 @@ public class Diagnostics {
 
         List<String> definitionalRelations = Arrays.asList("instance", "subclass",
                 "subAttribute", "domain", "domainSubclass", "range",
-                "rangeSubclass", "documentation", "subrelation");
+                "rangeSubclass", "subrelation");
 
         List<Formula> forms, newform;
         String relation, filename;
