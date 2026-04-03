@@ -16,7 +16,7 @@
 
   String word = ValidationUtils.sanitizeSumoTerm(request.getParameter("word"));
 
-  String POS = ValidationUtils.santizeString(request.getParameter("POS"), "0");
+  String POS = ValidationUtils.sanitizeString(request.getParameter("POS"), "0");
   if (POS == null)
       POS = "0";
 %>
