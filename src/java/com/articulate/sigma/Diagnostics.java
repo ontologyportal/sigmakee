@@ -95,7 +95,7 @@ public class Diagnostics {
      */
     public static List termsWithoutDoc(KB kb) {
 
-        if (debug) System.out.println("INFO in Diagnostics.termsWithoutDoc(): ");
+        System.out.println("INFO in Diagnostics.termsWithoutDoc(): ");
         return termsWithoutRelation(kb,"documentation",1,' ');
     }
 
@@ -173,7 +173,7 @@ public class Diagnostics {
      */
     public static List<String> termsNotBelowEntity(KB kb) {
 
-        if (debug) System.out.println("INFO in Diagnostics.termsNotBelowEntity(): ");
+        System.out.println("INFO in Diagnostics.termsNotBelowEntity(): ");
         List<String> result = new ArrayList<>();
         int count = 0;
         String term;
@@ -200,7 +200,7 @@ public class Diagnostics {
      */
     public static List<String> partitionViolation(KB kb) {
 
-        if (debug) System.out.println("Partition violations:");
+        System.out.println("Partition violations:");
         List<String> result = new ArrayList<>();
         List<Formula> flist = kb.ask("arg",0,"partition");
         for (Formula f : flist) {
@@ -214,7 +214,7 @@ public class Diagnostics {
                     if (!subs.contains(newSub)) {
                         String s = "Error in partitionViolation(): " + subf +
                                 " not part of " + f;
-                        if (debug) System.out.println(s);
+                        System.out.println(s);
                         result.add(s);
                     }
                 }
@@ -697,8 +697,7 @@ public class Diagnostics {
      */
     private static Map<String,Map<String,List<String>>> termDependency(KB kb) {
 
-        debug = true;
-        if (debug) System.out.println("INFO in Diagnostics.termDependency()");
+        System.out.println("INFO in Diagnostics.termDependency()");
 
         // A map of terms keys with an ArrayList as values listing files
         // in which the term is used.
@@ -781,19 +780,21 @@ public class Diagnostics {
         // on which the given file depends.  The interior TreeMap file name
         // keys index ArrayLists of terms.  file -depends on-> filenames -that defines-> terms
         Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
-        if (debug) System.out.println("Diagnostics.printTermDependency(): fileDepends /n" + fileDepends);
+        System.out.println(fileDepends);
         Map<String,List<String>> tm;
         List<String> al;
         String term;
         int i;
         for (String f : fileDepends.keySet()) {
+
             // result.append("File " + f + " depends on: ");
             tm = fileDepends.get(f);
             for (String f2 : tm.keySet()) {
+                if (StringUtil.removeFilePath(f).equals("SUMO_Cache.kif") || StringUtil.removeFilePath(f2).equals("SUMO_Cache.kif")) continue;
                 al = tm.get(f2);
 
                 if (al != null && al.size() < 40) {
-                    result.append("<br/>File ").append(f).append(" dependency size on file ").append(f2).append(" is ").append(al.size()).append(" with terms:<br/>");
+                    result.append("<br/>File ").append(StringUtil.removeFilePath(f)).append(" dependency size on file ").append(StringUtil.removeFilePath(f2)).append(" is ").append(al.size()).append(" with terms:<br/>");
                     for (int ix = 0; ix < al.size(); ix++) {
                         term = (String) al.get(ix);
                         result.append("<a href=\"").append(kbHref).append("&term=").append(term).append("\">").append(term).append("</a>");
@@ -805,7 +806,7 @@ public class Diagnostics {
                 else {
                     i = dependencySize(fileDepends, f, f2);
                     if (i > 0)
-                        result.append("<br/>File ").append(f).append(" dependency size on file ").append(f2).append(" is ").append(i).append("<P>");
+                        result.append("<br/>File ").append(StringUtil.removeFilePath(f)).append(" dependency size on file ").append(StringUtil.removeFilePath(f2)).append(" is ").append(i).append("<P>");
                 }
                 // if (al != null
                 // && (dependencySize(fileDepends, f, f2) > al.size() || al
@@ -847,185 +848,113 @@ public class Diagnostics {
         return result.toString();
     }
 
-/***************************************************************
- * @param termDependency a TreeMap of file name keys and an ArrayList of the
- *         files on which it depends. The interior TreeMap file
- *         name keys index ArrayLists of terms.
- */
-private static List<String> createDependDotGraphBody(Map<String,Map<String,List<String>>> termDependency) {
+    /***************************************************************
+     * @param termDependency a TreeMap of file name keys and an ArrayList of the
+     *         files on which it depends. The interior TreeMap file
+     *         name keys index ArrayLists of terms.
+     */
+    private static List<String> createDependDotGraphBody(Map<String,Map<String,List<String>>> termDependency) {
 
-    List<String> lines = new ArrayList<>();
-
-    // All graph nodes that should be shown
-    Set<String> nodes = new HashSet<>();
-
-    // Count of how many files depend on a given node (incoming edges)
-    Map<String,Integer> incomingCounts = new HashMap<>();
-
-    // Store edges so we can output them after node collection
-    List<String[]> edges = new ArrayList<>();
-
-    // First pass: collect nodes and compute incoming edge counts
-    for (String filename : termDependency.keySet()) {
-
-        String nameOnly = sanitizeFilenameForGraphViz(filename);
-        if (nameOnly.equals("SUMO_Cache"))
-            continue;
-
-        if (debug) System.out.println("createDependDotGraphBody(): file = " + filename);
-
-        nodes.add(nameOnly);
-        incomingCounts.putIfAbsent(nameOnly, 0);
-
-        Map<String,List<String>> dependencyMap = termDependency.get(filename);
-        if (dependencyMap != null) {
-            for (String otherFile : dependencyMap.keySet()) {
-
-                String otherNameOnly = sanitizeFilenameForGraphViz(otherFile);
-                if (otherNameOnly.equals("SUMO_Cache"))
-                    continue;
-
-                nodes.add(otherNameOnly);
-                incomingCounts.putIfAbsent(otherNameOnly, 0);
-
-                // filename depends on otherFile
-                edges.add(new String[]{nameOnly, otherNameOnly});
-
-                // otherFile is depended upon by filename
-                incomingCounts.put(otherNameOnly, incomingCounts.get(otherNameOnly) + 1);
+        List<String> lines = new ArrayList<>();
+        String line;
+        for (String filename : termDependency.keySet()) {
+            String nameOnly = sanitizeFilenameForGraphViz(filename);
+            if (debug) System.out.println("createDependDotGraphBody()" + filename);
+            String newline = nameOnly + " [shape=\"box\" label = < " + nameOnly +
+                    " <br align=\"left\"/> > ]";
+            lines.add(newline);
+            if (termDependency.get(filename) != null) {
+                for (String otherFile : termDependency.get(filename).keySet()) {
+                    String otherNameOnly = sanitizeFilenameForGraphViz(otherFile);
+                    line = nameOnly + " -> " + otherNameOnly + "; ";
+                    lines.add(line);
+                }
             }
         }
+        return lines;
     }
 
-    // Output node declarations
-    for (String node : nodes) {
-        String newline = node + " [shape=\"box\" label = < " + node + " <br align=\"left\"/> > ]";
-        lines.add(newline);
+    /** *************************************************************
+     */
+    public static String sanitizeFilenameForGraphViz(String s) {
+
+        return FileUtil.noExt(FileUtil.noPath(s)).replace("-","_");
     }
 
-    // Output edge declarations
-    for (String[] edge : edges) {
-        String line = edge[0] + " -> " + edge[1] + ";";
-        lines.add(line);
+    /** *************************************************************
+     * Creates a specified formatted image from a generated *.dot file
+     * from GraphViz.
+     *
+     * @param filename the generated *.dot filename to create an image from
+     * @return the path to the generated image file
+     */
+    public static String createDependDotGraphImage(String filename) throws IOException {
+
+        int exitCode;
+        String retVal = "";
+        String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
+        String imageExt = KBmanager.getMgr().getPref("imageFormat");
+        if (imageExt == null || imageExt.isBlank())
+            imageExt = "png"; // default
+        File file = new File(filename + "." + imageExt);
+
+        List<String> cmd = new ArrayList<>();
+        cmd.add(graphVizDir + File.separator + "dot");
+        cmd.add("-T" + imageExt);
+        cmd.add("-O");
+        cmd.add(filename);
+        System.out.println(cmd);
+        try {
+            // Build a dependency graph image from an input file
+            // From: https://graphviz.org/doc/info/command.html#-O
+            ProcessBuilder pb = new ProcessBuilder(cmd);
+            pb.directory(file.getParentFile());
+            File log = new File(file.getParentFile(),"log");
+            if (log.exists())
+                log.delete();
+            pb.redirectErrorStream(true);
+            pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log)); // <- in case of any errors
+            Process proc = pb.start();
+            exitCode = proc.waitFor();
+        } catch (InterruptedException e) {
+            String err = "Error writing file " + file + "\n" + e.getMessage();
+            throw new IOException(err);
+        }
+        retVal = file.getAbsolutePath();
+        return retVal;
     }
 
-    // Group nodes by how many incoming edges they have
-    // Highest counts first so the most depended-upon nodes are ranked highest
-    Map<Integer,List<String>> rankGroups = new TreeMap<>(Collections.reverseOrder());
-    for (String node : nodes) {
-        int count = incomingCounts.getOrDefault(node, 0);
-        rankGroups.computeIfAbsent(count, k -> new ArrayList<>()).add(node);
-    }
+    /**
+     * *************************************************************
+     * Create a dependency graphin a format suitable for GraphViz' input format
+     * http://www.graphviz.org/. Generate a dependency image from the .dot output
+     * with a command like <code>dot SUMO-graph.dot -Tgif > graph.gif</code>
+     */
+    public static void createDependDotGraph(Map<String,Map<String,List<String>>> termDependency) {
 
-    // Force nodes with the same incoming edge count to share the same rank
-    for (Map.Entry<Integer,List<String>> entry : rankGroups.entrySet()) {
-        List<String> group = entry.getValue();
-        if (!group.isEmpty()) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("{ rank=same; ");
-            for (String node : group)
-                sb.append(node).append("; ");
-            sb.append("}");
-            lines.add(sb.toString());
+        String sep = File.separator;
+        String dir = System.getenv("CATALINA_HOME") + sep + "webapps"
+                + sep + "sigma" + sep + "graph";
+        File dirfile = new File(dir);
+        if (!dirfile.exists())
+            dirfile.mkdirs();
+        String filename = dirfile.getPath() + sep + "depend.dot";
+        Path path = Paths.get(filename);
+        try (Writer bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8); PrintWriter pw = new PrintWriter(bw, true)) {
+            Set<String> result = new HashSet<>();
+            result.addAll(createDependDotGraphBody(termDependency));
+            pw.println("digraph G {");
+            pw.println("  node [color=black, fontcolor=black];"); // Black text and borders
+            pw.println("  edge [color=black];"); // Black edges
+            pw.println("  rankdir=LR");
+            for (String s : result)
+                pw.println(s);
+            pw.println("}");
+            System.out.println(createDependDotGraphImage(path.toString()));
+        } catch (IOException e) {
+            String err = "Error writing file " + path + "\n" + e.getMessage();
         }
     }
-
-    return lines;
-}
-
-/** *************************************************************
- */
-public static String sanitizeFilenameForGraphViz(String s) {
-
-    return FileUtil.noExt(FileUtil.noPath(s)).replace("-","_");
-}
-
-/** *************************************************************
- * Creates a specified formatted image from a generated *.dot file
- * from GraphViz.
- *
- * @param filename the generated *.dot filename to create an image from
- * @return the path to the generated image file
- */
-public static String createDependDotGraphImage(String filename) throws IOException {
-
-    int exitCode;
-    String retVal = "";
-    String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
-    String imageExt = KBmanager.getMgr().getPref("imageFormat");
-    if (imageExt == null || imageExt.isBlank())
-        imageExt = "png"; // default
-    File file = new File(filename + "." + imageExt);
-
-    List<String> cmd = new ArrayList<>();
-    cmd.add(graphVizDir + File.separator + "dot");
-    cmd.add("-T" + imageExt);
-    cmd.add("-O");
-    cmd.add(filename);
-    if (debug) System.out.println(cmd);
-    try {
-        // Build a dependency graph image from an input file
-        // From: https://graphviz.org/doc/info/command.html#-O
-        ProcessBuilder pb = new ProcessBuilder(cmd);
-        pb.directory(file.getParentFile());
-        File log = new File(file.getParentFile(),"log");
-        if (log.exists())
-            log.delete();
-        pb.redirectErrorStream(true);
-        pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log)); // <- in case of any errors
-        Process proc = pb.start();
-        exitCode = proc.waitFor();
-    }
-    catch (InterruptedException e) {
-        String err = "Error writing file " + file + "\n" + e.getMessage();
-        throw new IOException(err);
-    }
-    retVal = file.getAbsolutePath();
-    return retVal;
-}
-
-/**
- * *************************************************************
- * Create a dependency graph in a format suitable for GraphViz' input format
- * http://www.graphviz.org/. Generate a dependency image from the .dot output
- * with a command like <code>dot SUMO-graph.dot -Tgif > graph.gif</code>
- */
-public static void createDependDotGraph(Map<String,Map<String,List<String>>> termDependency) {
-
-    String sep = File.separator;
-    String dir = System.getenv("CATALINA_HOME") + sep + "webapps"
-            + sep + "sigma" + sep + "graph";
-    File dirfile = new File(dir);
-    if (!dirfile.exists())
-        dirfile.mkdirs();
-    String filename = dirfile.getPath() + sep + "depend.dot";
-    Path path = Paths.get(filename);
-
-    try (Writer bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8);
-         PrintWriter pw = new PrintWriter(bw, true)) {
-
-        List<String> result = createDependDotGraphBody(termDependency);
-
-        pw.println("digraph G {");
-        pw.println("  node [color=black, fontcolor=black];");
-        pw.println("  edge [color=black];");
-
-        // Top-to-bottom so heavily depended-on nodes appear higher
-        pw.println("  rankdir=BT;");
-        pw.println("  nodesep=0.35;");
-        pw.println("  ranksep=0.75;");
-
-        for (String s : result)
-            pw.println("  " + s);
-
-        pw.println("}");
-        if (debug) System.out.println(createDependDotGraphImage(path.toString()));
-    }
-    catch (IOException e) {
-        String err = "Error writing file " + path + "\n" + e.getMessage();
-        System.err.println(err);
-    }
-}
 
     /** *****************************************************************
      * Make an empty KB for use in Diagnostics.
@@ -1043,7 +972,7 @@ public static void createDependDotGraph(Map<String,Map<String,List<String>>> ter
         String emptyCFilename = emptyCFile.getAbsolutePath();
         KBmanager.getMgr().addKB(kbName);
         KB empty = KBmanager.getMgr().getKB(kbName);
-        if (debug) System.out.println("empty = " + empty);
+        System.out.println("empty = " + empty);
 
         // Fails elsewhere if no constituents, or empty constituent, thus...
         try (Writer fw = new FileWriter( emptyCFile );
@@ -1115,7 +1044,7 @@ public static void createDependDotGraph(Map<String,Map<String,List<String>>> ter
         StringBuilder answer = new StringBuilder();
         KB empty = makeEmptyKB("consistencyCheck");
 
-        if (debug) System.out.println("=================== Consistency Testing ===================");
+        System.out.println("=================== Consistency Testing ===================");
         try {
             FormulaPreprocessor fp;
             String processedQuery;
@@ -1128,11 +1057,11 @@ public static void createDependDotGraph(Map<String,Map<String,List<String>>> ter
                 //System.out.println(" query = " + query);
                 //System.out.println(" processedQueries = " + processedQueries);
 
-                if (debug) System.out.println("INFO in Diagnostics.kbConsistencyCheck(): size = " + processedQueries.size());
+                System.out.println("INFO in Diagnostics.kbConsistencyCheck(): size = " + processedQueries.size());
                 for (Formula f : processedQueries) {
-                    if (debug) System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.getFormula());
+                    System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.getFormula());
                     processedQuery = f.makeQuantifiersExplicit(false);
-                    if (debug) System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
+                    System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
                     proof = empty.askEProver(processedQuery,timeout,maxAnswers) + " ";
                     a = new StringBuilder();
                     a.append(reportAnswer(kb,proof,query,processedQuery,"Redundancy"));
@@ -1182,14 +1111,14 @@ public static void createDependDotGraph(Map<String,Map<String,List<String>>> ter
                     tformstrs.add(str);
                 }
                 simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
-                if (debug) System.out.print(t + "\t" + simpleName + "\t");
+                System.out.print(t + "\t" + simpleName + "\t");
                 int i = 0;
                 for (String st : tformstrs) {
                     if (i < 3)
-                        if (debug) System.out.print(st + "\t");
+                        System.out.print(st + "\t");
                     i++;
                 }
-                if (debug) System.out.println();
+                System.out.println();
             }
         }
     }
@@ -1199,7 +1128,7 @@ public static void createDependDotGraph(Map<String,Map<String,List<String>>> ter
      */
     public static void termDefsByGivenFile(KB kb, Set<String> files) {
 
-        if (debug) System.out.println("termDefsByGivenFile(): files: " + files);
+        System.out.println("termDefsByGivenFile(): files: " + files);
         Set<String> alreadyCounted = new HashSet<>();
         Map<String,Set<String>> termsByFile = new HashMap<>();
         String fname, simpleName, str;
@@ -1254,14 +1183,14 @@ public static void createDependDotGraph(Map<String,Map<String,List<String>>> ter
                     str = f.getStringArgument(3);
                     tformstrs.add(str);
                 }
-                if (debug) System.out.print(term + "\t" + fnam + "\t");
+                System.out.print(term + "\t" + fnam + "\t");
                 int i = 0;
                 for (String st : tformstrs) {
                     if (i < 3)
-                        if (debug) System.out.print(st + "\t");
+                        System.out.print(st + "\t");
                     i++;
                 }
-                if (debug) System.out.println();
+                System.out.println();
             }
         }
     }
@@ -1282,14 +1211,14 @@ public static void createDependDotGraph(Map<String,Map<String,List<String>>> ter
                 str = f.getStringArgument(3);
                 tformstrs.add(str);
             }
-            if (debug) System.out.print(term + "\t");
+            System.out.print(term + "\t");
             i = 0;
             for (String st : tformstrs) {
                 if (i < 3)
-                    if (debug) System.out.print(st + "\t");
+                    System.out.print(st + "\t");
                 i++;
             }
-            if (debug) System.out.println();
+            System.out.println();
         }
     }
 
@@ -1298,7 +1227,7 @@ public static void createDependDotGraph(Map<String,Map<String,List<String>>> ter
     public static void printAllTerms(KB kb) {
 
         for (String t : kb.terms)
-            if (debug) System.out.println(t);
+            System.out.println(t);
     }
 
     /** ***************************************************************
@@ -1337,14 +1266,14 @@ public static void createDependDotGraph(Map<String,Map<String,List<String>>> ter
                 str = f.getStringArgument(3);
                 tformstrs.add(str);
             }
-            if (debug) System.out.print(term + "\t"); //  + fname + "\t");
+            System.out.print(term + "\t"); //  + fname + "\t");
             int i = 0;
             for (String st : tformstrs) {
                 if (i < 3)
-                    if (debug) System.out.print(st + "\t");
+                    System.out.print(st + "\t");
                 i++;
             }
-            if (debug) System.out.println();
+            System.out.println();
         }
     }
 
@@ -1673,8 +1602,8 @@ public static void createDependDotGraph(Map<String,Map<String,List<String>>> ter
                     // a variable appearing multiple times, e.g., on both sides of an implication is intentional usage, not an orphan
                     int count = countOccurrences(f.getFormula(), var);
                     if (count == 1) {
-                        if (debug) System.out.println("\nWARNING in formula: " + f.getFormula());
-                        if (debug) System.out.println("  Orphan variable found: " + var);
+                        System.out.println("\nWARNING in formula: " + f.getFormula());
+                        System.out.println("  Orphan variable found: " + var);
                         hasOrphans = true;
                         foundAnyWarnings = true;
                     }
@@ -1684,10 +1613,10 @@ public static void createDependDotGraph(Map<String,Map<String,List<String>>> ter
             if (!hasOrphans && !map.isEmpty()) {
                 ArrayList<HashSet<String>> groups = findDisconnectedGroups(map);
                 if (groups.size() > 1) {
-                    if (debug) System.out.println("\nWARNING in formula: " + f.getFormula());
-                    if (debug) System.out.println("  Formula has " + groups.size() + " variable groups that are disconnected from each other:");
+                    System.out.println("\nWARNING in formula: " + f.getFormula());
+                    System.out.println("  Formula has " + groups.size() + " variable groups that are disconnected from each other:");
                     for (int i = 0; i < groups.size(); i++) {
-                        if (debug) System.out.println("    Group " + (i + 1) + ": " + groups.get(i));
+                        System.out.println("    Group " + (i + 1) + ": " + groups.get(i));
                     }
                     foundAnyWarnings = true;
                 }
@@ -1695,7 +1624,7 @@ public static void createDependDotGraph(Map<String,Map<String,List<String>>> ter
             mergeResults(links, map);
         }
         if (!foundAnyWarnings) {
-            if (debug) System.out.println("\nNo variable connectivity issues found.");
+            System.out.println("\nNo variable connectivity issues found.");
         }
         return links;
     }
