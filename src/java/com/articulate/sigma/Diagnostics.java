@@ -697,8 +697,6 @@ public class Diagnostics {
      */
     private static Map<String,Map<String,List<String>>> termDependency(KB kb) {
 
-        System.out.println("INFO in Diagnostics.termDependency()");
-
         // A map of terms keys with an ArrayList as values listing files
         // in which the term is used.
         Map<String,List<String>> termsUsed = new TreeMap<>();
@@ -720,6 +718,7 @@ public class Diagnostics {
         // A map of file name keys and TreeMap values listing file names
         // on which the given file depends.  The interior TreeMap file name
         // keys index ArrayLists of terms.  file -depends on-> filenames -that defines-> terms
+        //  dependentFile, dependeeFile, Terms
         Map<String,Map<String,List<String>>> fileDepends = new TreeMap<>();
 
         termLinks(kb,termsUsed,termsDefined);
@@ -742,6 +741,33 @@ public class Diagnostics {
             }
         }
         return fileDepends;
+    }
+
+    /** *****************************************************************
+    * This function returns a map of mutual dependencies and the terms used
+    * by the less dependent file that are defined in the more dependent file.
+    * The intended application of this function is to find the low hanging fruit 
+    * for removing mutual dependencies between files.
+    * 
+    * @param Map<String,Map<String,List<String>>> fileDepends <Dependent, <Dependees, Terms>>
+    * @return Map<String,List<String>> a TreeMap of mutual term dependent files in the format of 
+    *         Key: (LessDependentFile)>(MoreDependentFile), List<String> TermsLessDependentUsesFromMoreDependent
+     */
+    private static Map<String, List<String>> mutualDependency(Map<String, Map<String, List<String>>> fileDepends) {
+        
+        Map<String, List<String>> mutDepends = new TreeMap<>();
+        for (Map.Entry<String, Map<String, List<String>>> dependentKif : fileDepends.entrySet()) {
+            Map<String, List<String>> innerMap = dependentKif.getValue();
+            for (Map.Entry<String, List<String>> dependeeKif : innerMap.entrySet()) {
+                if(fileDepends.containsKey(dependeeKif.getKey()) 
+                    && fileDepends.get(dependeeKif.getKey()).containsKey(dependentKif.getKey())
+                    && dependeeKif.getValue().size() < fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).size()
+                    ) {
+                    mutDepends.put(dependentKif.getKey() + ">" + dependeeKif.getKey(), dependeeKif.getValue());
+                }
+            }
+        }
+        return mutDepends;
     }
 
     /** *****************************************************************
@@ -780,7 +806,7 @@ public class Diagnostics {
         // on which the given file depends.  The interior TreeMap file name
         // keys index ArrayLists of terms.  file -depends on-> filenames -that defines-> terms
         Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
-        System.out.println(fileDepends);
+
         Map<String,List<String>> tm;
         List<String> al;
         String term;
@@ -847,6 +873,8 @@ public class Diagnostics {
         }
         return result.toString();
     }
+
+
 
     /***************************************************************
      * @param termDependency a TreeMap of file name keys and an ArrayList of the
@@ -1704,6 +1732,29 @@ public class Diagnostics {
             }
             else if (argMap.containsKey("o")) {
                 System.out.println(termsNotBelowEntity(kb));
+            }
+            else if (argMap.containsKey("m")) {
+                System.out.println("--------------------------\nFinding Mutual Dependencies mutualDependency()...\n");
+                Map<String, List<String>> mutDepends = Diagnostics.mutualDependency(Diagnostics.termDependency(kb));
+                for(Map.Entry<String, List<String>> mutDepend : mutDepends.entrySet()) { 
+                    String[] mutuallyDependentFiles = mutDepend.getKey().split(">");
+                    System.out.println(StringUtil.removeFilePath(mutuallyDependentFiles[0]) + " depends on " + StringUtil.removeFilePath(mutuallyDependentFiles[1]) + " for " + mutDepend.getValue().size() + " terms");
+                }
+            }
+            else if (argMap.containsKey("D")) {
+                System.out.println("\n--------------------------\nPrinting Term Depencies to Log...\n");
+                Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
+                for (Map.Entry<String, Map<String, List<String>>> outerEntry : fileDepends.entrySet()) {
+                    Map<String, List<String>> innerMap = outerEntry.getValue();
+                    for (Map.Entry<String, List<String>> innerEntry : innerMap.entrySet()) {
+                        List<String> values = innerEntry.getValue();
+                        String dependent = StringUtil.removeFilePath(outerEntry.getKey());
+                        String dependee = StringUtil.removeFilePath(innerEntry.getKey());
+                        if (!dependent.equals("SUMO_Cache.kif") && !dependee.equals("SUMO_Cache.kif"))
+                            System.out.println(dependent + " uses " + values.size() + " terms defined in " + dependee);
+                    }
+                    System.out.println();
+                }
             }
             else if (argMap.containsKey("c")) {
                 System.out.println(termsWithoutDoc(kb));
