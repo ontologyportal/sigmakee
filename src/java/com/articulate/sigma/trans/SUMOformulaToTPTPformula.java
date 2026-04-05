@@ -211,7 +211,7 @@ public class SUMOformulaToTPTPformula {
                 }
             }
             else {
-                return (Formula.TERM_SYMBOL_PREFIX + st.substring(1).replace('-','_'));
+                return (Formula.TERM_SYMBOL_PREFIX + st.replace('-','_'));
             }
 
         }

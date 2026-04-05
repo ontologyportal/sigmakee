@@ -260,6 +260,12 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         }
         output = output + " : $i  ).";
         pw.println(output);
+        // Also declare the non-__m version so formulas using the symbol without __m are typed
+        if (t.endsWith(Formula.TERM_MENTION_SUFFIX)) {
+            String labelNoM = label + "_noM";
+            String symbolNoM = t.substring(0, t.length() - Formula.TERM_MENTION_SUFFIX.length());
+            pw.println("tff(" + labelNoM + ",type," + symbolNoM + " : $i  ).");
+        }
     }
 
     /** *************************************************************
@@ -284,7 +290,12 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         pw.println("% SUMOKBtoTFAKB.writeRelationSort(): " + t);
         if (t.endsWith(Formula.FN_SUFF) != kb.isFunction(t))
             System.err.println("Error in writeRelationSort(): is function mismatch with term name : " + t + ", " + kb.isFunction(t));
-        if (Formula.isLogicalOperator(t) || Formula.isMathFunction(t)  || Formula.isComparisonOperator(t)) {
+        String bareTerm = SUMOtoTFAform.getBareTerm(t);
+        boolean isLeoUnsupportedMath = bareTerm.equals(Formula.REMAINDERFN) ||
+                bareTerm.equals(Formula.DIVIDEFN) || bareTerm.equals(Formula.FLOORFN) ||
+                bareTerm.equals(Formula.CEILINGFN) || bareTerm.equals(Formula.ROUNDFN);
+        if (Formula.isLogicalOperator(t) || (Formula.isMathFunction(bareTerm) && !isLeoUnsupportedMath)
+                || Formula.isComparisonOperator(t)) {
             String label = translateName(t);
             String output = "tff(" + label + ",type," + label +
                     " : $i ).";
@@ -295,7 +306,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         int endIndex = sig.size();
         if (KButilities.isVariableArity(kb,SUMOtoTFAform.withoutSuffix(t)))
             endIndex = getVariableAritySuffix(t) + 1;
-        if (endIndex > 8) {
+        if (endIndex > 9) {
             pw.println("% SUMOKBtoTFAKB.writeRelationSort(): size too large: " + t);
             return;
         }
@@ -303,8 +314,14 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             System.err.println("Error in SUMOKBtoTFAKB.writeRelationSort(): " + t + " variable arity relation without suffix");
             endIndex = sig.size();
         }
-        if (endIndex > sig.size())
-            endIndex = sig.size();
+        if (endIndex > sig.size()) {
+            // Pad sig to required length by repeating last type (mirrors copyNewPredFromVariableArity)
+            String lastType = sig.get(sig.size() - 1);
+            List<String> paddedSig = new ArrayList<>(sig);
+            while (paddedSig.size() < endIndex)
+                paddedSig.add(lastType);
+            sig = paddedSig;
+        }
         if (sig == null || sig.isEmpty()) {
             pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
             System.err.println("Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
@@ -547,6 +564,10 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         }
         for (String suffix : finalsuffixes)
             MapUtils.addToMap(toExtend, "ListFn", suffix);
+        // Plain entity-typed variants (all args $i): ListFn__1Fn .. ListFn__7Fn.
+        // These have no type-annotation suffix and are not covered by the typed permutations above.
+        for (int i = 1; i <= 7; i++)
+            MapUtils.addToMap(toExtend, "ListFn", Integer.toString(i));
     }
 
     /** *************************************************************
@@ -570,9 +591,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                 continue;
             sig = kb.kbCache.getSignature(r);
             size = sig.size();
-            System.out.println("SUMOKBtoTFAKB.handleVariableArity(): r,sig,size: " + r + Formula.SPACE + sig + " size " + size);
-            if (size > 1)
-                size = size - 1;  // first sig element is range, some sig elements before variable arity element may be fixed and explicit
+            // Always start from arity 1: (?REL @ROW) instantiation can expand any
+            // VariableArityRelation to arity 1..7 regardless of its normal minimum arity.
             inStr = new StringBuilder();
             reStr = new StringBuilder();
             raStr = new StringBuilder();
@@ -587,13 +607,11 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             if (kb.isFunction(r))
                 fnSuffix = Formula.FN_SUFF;
             if (hasNumericArg(r) || listOperator(r)) {
-                for (int i = size; i <= 7; i++) {
-                    //if (expandableArg(r,i,sig)) {
+                for (int i = 1; i <= 7; i++) {
                     inStr.append(Integer.toString(i)).append("In");
                     reStr.append(Integer.toString(i)).append("Re");
                     raStr.append(Integer.toString(i)).append("Ra");
                     enStr.append(Integer.toString(i)).append("En");
-                    //}
                     newInStr = Integer.toString(i) + fnSuffix + "__" + inStr.toString();
                     newReStr = Integer.toString(i) + fnSuffix + "__" + reStr.toString();
                     newRaStr = Integer.toString(i) + fnSuffix + "__" + raStr.toString();
@@ -604,10 +622,11 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                     MapUtils.addToMap(toExtend, r, newEnStr);
                 }
             }
-            else {
-                for (int i = size; i < 7; i++) {
-                    MapUtils.addToMap(toExtend, r, Integer.toString(i));
-                }
+            // All variable-arity relations also need plain numeric entries because
+            // RowVar.java always generates plain numeric suffixes (e.g. AssignmentFn__7Fn).
+            // Go to 8: one fixed arg + 7 @ROW elements = totalArity 8.
+            for (int i = 1; i <= 8; i++) {
+                MapUtils.addToMap(toExtend, r, Integer.toString(i));
             }
         }
     }
@@ -678,6 +697,16 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                     writeRelationSort(newTerm, pw);
                 }
             }
+        }
+        // Explicitly declare mention forms ($i) for all math functions.
+        // processRecurseExpr calls translateWord without "tff" lang, so AdditionFn used as
+        // a first-class term (e.g. identityElement AdditionFn 0) becomes s__AdditionFn__m
+        // rather than the TPTP built-in $sum__m. We must declare it.
+        // Use TERM_SYMBOL_PREFIX directly — translateName() would add __m itself (no-arg path).
+        for (String mathFn : Formula.MATH_FUNCTIONS) {
+            String symbol = Formula.TERM_SYMBOL_PREFIX + mathFn;
+            String mentionSymbol = symbol + Formula.TERM_MENTION_SUFFIX;
+            pw.println("tff(" + symbol + "_m,type," + mentionSymbol + " : $i ).");
         }
         pw.flush();
         pw.println("% SUMOKBtoTFAKB.writeSorts(): finished\n");

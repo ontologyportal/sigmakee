@@ -788,7 +788,7 @@ public class SUMOKBtoTPTPKB {
                         !alreadyWrittenTPTPs.contains(sort)) {
                     name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
                     putAxiom(name,f);
-                    pw.println(getLang() + Formula.LP + name + ",axiom,(" + sort + ")).");
+                    pw.println(getLang() + Formula.LP + name + ",type," + sort + ").");
                     alreadyWrittenTPTPs.add(sort);
                 }
             }
@@ -1271,7 +1271,7 @@ public class SUMOKBtoTPTPKB {
                 if (!alreadyWrittenTPTPs.contains(sort)) {
                     name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
                     putAxiom(name, res.formula);
-                    linesBuf.add(localLang + Formula.LP + name + ",axiom,(" + sort + ")).");
+                    linesBuf.add(localLang + Formula.LP + name + ",type," + sort + ").");
                     alreadyWrittenTPTPs.add(sort);
                 }
             }
