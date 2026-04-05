@@ -19,6 +19,15 @@
             </tr>
         </table>
         <table ALIGN="LEFT" WIDTH=80%><tr><td BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' alt="'pixmaps/1pixel.gif'" width=1 height=1 border=0></td></tr></table><BR>
+        <div id="errorMessage" style="color:red;"></div>
+        <script>
+            const params = new URLSearchParams(window.location.search);
+            const error = params.get("error");
+            const errorBox = document.getElementById("errorMessage");
+            if (error === "invalid_crudentials") {
+                errorBox.textContent = "Incorrect username or password!";
+            }
+        </script>
         <form METHOD="POST" ACTION="login.jsp">
             <table>
                 <tr>

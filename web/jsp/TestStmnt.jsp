@@ -27,8 +27,8 @@ if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
     System.out.println("INFO in TestStatement.jsp");
     StringBuilder status = new StringBuilder();
     ArrayList processedStmts = null;
-    String stmt = request.getParameter("stmt");
-    String req = request.getParameter("request");
+    String stmt = ValidationUtils.sanitizeString(request.getParameter("stmt"), "(instance ?X Relation)");
+    String req = ValidationUtils.sanitizeString(request.getParameter("request"));
     boolean error = false;
 
     if ((kbName == null) || kbName.equals("")) {

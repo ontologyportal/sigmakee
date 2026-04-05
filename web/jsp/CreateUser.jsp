@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=US-ASCII"
-    import="com.articulate.sigma.*, com.articulate.sigma.utils.*, java.net.URLConnection, javax.servlet.http.HttpServletRequest, java.io.*"
+    import="com.articulate.sigma.*, com.articulate.sigma.utils.*, com.articulate.sigma.security.*, java.net.URLConnection, javax.servlet.http.HttpServletRequest, java.io.*"
     pageEncoding="US-ASCII"%>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -24,13 +24,13 @@
     http://github.com/ontologyportal
 */
 KBmanager.getMgr().initializeOnce();
-String firstName = request.getParameter("firstName");
-String lastName = request.getParameter("lastName");
-String userName = request.getParameter("userName");
-String password = request.getParameter("password");
-String organization = request.getParameter("organization");
-String email = request.getParameter("email");
-String notRobot = request.getParameter("notRobot");
+String firstName = ValidationUtils.sanitizeString(request.getParameter("firstName"));
+String lastName =  ValidationUtils.sanitizeString(request.getParameter("lastName"));
+String userName =  ValidationUtils.sanitizeString(request.getParameter("userName"));
+String password = ValidationUtils.sanitizeString(request.getParameter("password"));
+String organization = ValidationUtils.sanitizeString(request.getParameter("organization"));
+String email = ValidationUtils.sanitizeString(request.getParameter("email"));
+String notRobot = ValidationUtils.sanitizeString(request.getParameter("notRobot"));
 
 if (StringUtil.emptyString(firstName) ||
     StringUtil.emptyString(lastName) ||
@@ -52,8 +52,8 @@ else {
         ps.onlineRegister(u);
     }
     else {
-        String errStr = "\n<br/>Error: User: " + userName + " may already be registered!\n<br/>";
-        out.println(errStr);
+        response.sendRedirect("Register.jsp?error=user_exists");
+        return;
     }
     response.sendRedirect("KBs.jsp");
 }

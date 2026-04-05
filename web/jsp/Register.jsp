@@ -20,6 +20,19 @@
             http://github.com/ontologyportal
         */
         %>
+        <div id="errorMessage" style="color:red;"></div>
+        <script>
+            const params = new URLSearchParams(window.location.search);
+            const error = params.get("error");
+            const errorBox = document.getElementById("errorMessage");
+            if (error === "invalid_username") {
+                errorBox.textContent = "Username can only contain letters, numbers, hyphens, and underscores.";
+            } else if (error === "missing_fields") {
+                errorBox.textContent = "Please fill out all required fields.";
+            } else if (error === "user_exists") {
+                errorBox.textContent = "That username may already be registered.";
+            }
+        </script>
         <form method="post" action="CreateUser.jsp">
             <p>
             <table align="left" border="0" >
