@@ -147,6 +147,11 @@ public class PredVarInst {
                             if (fr.pred.equals(var)) {  // have to update the row var record to reflect the pred var substitution
                                 fr.pred = rel;
                                 fr.literal = fr.literal.replace(var, rel);
+                                // Predicate variables don't increment argnum during parsing, so
+                                // rs.arity is 1 short (it counts only non-pred args). Now that a
+                                // concrete predicate occupies the head position, add 1 so findArities()
+                                // computes the correct rowVarArity for @ROW expansion.
+                                fr.arity += 1;
                             }
                         }
                     }
