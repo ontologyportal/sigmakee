@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
-public class Antenna {
+public class SimFile {
 
     public static final HashMap<String,String> mapping = new HashMap<>();
     public int idcount = 1;
@@ -24,7 +24,7 @@ public class Antenna {
 
     /** ***************************************************************
      */
-    public Antenna() {
+    public SimFile() {
         mapping.put("minimum_gain", "minimumGain");
         mapping.put("azimuth_beamwidth", "azimuthBeamwidth");
         mapping.put("az_beam_width", "azimuthBeamwidth");
@@ -92,7 +92,7 @@ public class Antenna {
                 id = type + Integer.toString(idcount++);
                 if (StringUtil.emptyString(stype))
                     System.out.println("Error in genSUMO(): no mapping for type: " + type);
-                sumoForms.add("(instance " + id + " Antenna)");
+                sumoForms.add("(instance " + id + " SimFile)");
                 sumoForms.add("(antennaPattern " + id + " " + stype + ")");
             }
             if (mapping.keySet().contains(be.getTagName())) {
@@ -123,7 +123,7 @@ public class Antenna {
                 id = args[1];
                 String type = args[2];
                 String stype = mapping.get(type);
-                sumoForms.add("(instance " + id + " Antenna)");
+                sumoForms.add("(instance " + id + " SimFile)");
                 sumoForms.add("(antennaPattern " + id + " " + stype + ")");
                 continue;
             }
@@ -160,13 +160,13 @@ public class Antenna {
      */
     public static void main(String[] args) throws IOException {
 
-        //System.out.println("INFO in Antenna.main()");
+        //System.out.println("INFO in SimFile.main()");
         if (args != null && args.length > 0 && args[0].equals("-h"))
             showHelp();
         else {
             //if (args != null)
-            //    System.out.println("Antenna.main(): args[0]: " + args[0]);
-            Antenna ant = new Antenna();
+            //    System.out.println("SimFile.main(): args[0]: " + args[0]);
+            SimFile ant = new SimFile();
             if (args != null && args.length > 1 && args[0].contains("r")) {
                 String filename = args[1];
                 if (filename.endsWith("txt"))
