@@ -145,7 +145,7 @@
   // Files with mutual term dependencies
   out.println("<details>");
   out.println("<summary><b>Warning: Files with mutual dependencies</b><hr></summary>");
-  out.println(Diagnostics.printTermDependency(kb,kbHref));
+  out.println(Diagnostics.printMutualDependencies(kb,kbHref));
   out.println("</details></br>");
 
   // Diagnostic runtime

@@ -753,8 +753,9 @@ public class Diagnostics {
     * @return Map<String,List<String>> a TreeMap of mutual term dependent files in the format of 
     *         Key: (LessDependentFile)>(MoreDependentFile), List<String> TermsLessDependentUsesFromMoreDependent
      */
-    private static Map<String, List<String>> mutualDependency(Map<String, Map<String, List<String>>> fileDepends) {
+    private static Map<String, List<String>> mutualDependency(KB kb) {
         
+        Map<String, Map<String, List<String>>> fileDepends = Diagnostics.termDependency(kb);
         Map<String, List<String>> mutDepends = new TreeMap<>();
         for (Map.Entry<String, Map<String, List<String>>> dependentKif : fileDepends.entrySet()) {
             Map<String, List<String>> innerMap = dependentKif.getValue();
@@ -768,6 +769,40 @@ public class Diagnostics {
             }
         }
         return mutDepends;
+    }
+
+    /** *****************************************************************
+    * This function returns a map of mutual dependencies and the terms used
+    * by the less dependent file that are defined in the more dependent file.
+    * The intended application of this function is to find the low hanging fruit 
+    * for removing mutual dependencies between files.
+    * 
+    * @param kb the knowledge base we are printing term dependency for.
+    * @param kbHref a helper String for creating clickable href links to KB term pages.
+     */
+    public static String printMutualDependencies(KB kb, String kbHref) {
+
+        Map<String, List<String>> mutDepends = Diagnostics.mutualDependency(kb);
+        StringBuilder html = new StringBuilder();
+        for (Map.Entry<String, List<String>> mutDepend : mutDepends.entrySet()) {
+            String[] fileNames = mutDepend.getKey().split(">");
+            String fileName1 = StringUtil.removeFilePath(fileNames[0]);
+            String fileName2 = StringUtil.removeFilePath(fileNames[1]);
+            if(fileName1.equals("SUMO_Cache.kif") || fileName2.equals("SUMO_Cache.kif")) continue;
+            html.append("<br/>Mutual dependency between " + fileName1 + " and " + fileName2 + ", with " + fileName1 + " using the following " + mutDepend.getValue().size() + " terms from " + fileName2 + "\n<br/>");
+            List<String> terms = mutDepend.getValue();
+            html.append("<a href=\"" + kbHref + "&term=" + terms.get(0) + "\">" + terms.get(0) + "</a>");
+            for(int i = 1; i < terms.size(); i++) {
+                String term = terms.get(i);
+                html.append(", <a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
+                if(i > 25) {
+                    html.append(", and " + (terms.size() - i) + " more terms.");
+                    break;
+                }
+            }
+            html.append("<br/>");
+        }
+        return html.toString();
     }
 
     /** *****************************************************************
@@ -794,6 +829,9 @@ public class Diagnostics {
      * Show file dependencies.  If two files depend on each other,
      * show only the smaller list of dependencies, under the
      * assumption that that is the erroneous set.
+     * 
+     * @param kb the knowledge base we are printing term dependency for.
+     * @param kbHref a helper String for creating clickable href links to KB term pages.
      */
     public static String printTermDependency(KB kb, String kbHref) {
 
@@ -1692,6 +1730,8 @@ public class Diagnostics {
         System.out.println("  -p - print all terms in KB");
         System.out.println("  -e - exhaustive decomposition violations");
         System.out.println("  --diff <f1> <f2> - print all terms in f2 not in f1");
+        System.out.println("  -m - mutual dependencies");
+        System.out.println("  -M - print mutual dependencies html");
         System.out.println("  -o - terms not below Entity (Orphans)");
         System.out.println("  -c - terms without documentation");
         System.out.println("  -q - quantifier not in body");
@@ -1735,11 +1775,14 @@ public class Diagnostics {
             }
             else if (argMap.containsKey("m")) {
                 System.out.println("--------------------------\nFinding Mutual Dependencies mutualDependency()...\n");
-                Map<String, List<String>> mutDepends = Diagnostics.mutualDependency(Diagnostics.termDependency(kb));
+                Map<String, List<String>> mutDepends = Diagnostics.mutualDependency(kb);
                 for(Map.Entry<String, List<String>> mutDepend : mutDepends.entrySet()) { 
                     String[] mutuallyDependentFiles = mutDepend.getKey().split(">");
                     System.out.println(StringUtil.removeFilePath(mutuallyDependentFiles[0]) + " depends on " + StringUtil.removeFilePath(mutuallyDependentFiles[1]) + " for " + mutDepend.getValue().size() + " terms");
                 }
+            }
+            else if (argMap.containsKey("M")) {
+                System.out.println("\n Printing Mutual Depencies HTML\n" + Diagnostics.printMutualDependencies(kb, ""));
             }
             else if (argMap.containsKey("D")) {
                 System.out.println("\n--------------------------\nPrinting Term Depencies to Log...\n");
