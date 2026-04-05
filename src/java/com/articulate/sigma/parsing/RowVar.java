@@ -406,8 +406,12 @@ public class RowVar {
             if (!pred.equals("__quantList")) {
                 Integer valence = kb.kbCache.valences.get(pred);
                 if (valence != null && valence == -1) {
-                    // VariableArityRelation: rename predicate to pred_totalArity[Fn]
-                    int totalArity = computeTotalArity(pred, rowVarName, n, fa);
+                    // VariableArityRelation: rename predicate to pred_totalArity[Fn].
+                    // Use newArgs.size() directly — it is always correct after @ROW splicing
+                    // and avoids the Set-ordering ambiguity in computeTotalArity() when the
+                    // same pred appears with different arities under the same row variable
+                    // (e.g. (ListFn @ROW ?ITEM) and (ListFn @ROW) in the same formula).
+                    int totalArity = newArgs.size();
                     String fnSuffix = pred.endsWith(Formula.FN_SUFF) ? Formula.FN_SUFF : "";
                     String newPredName = pred + "__" + totalArity + fnSuffix;
                     newHead = new Expr.Atom(newPredName);

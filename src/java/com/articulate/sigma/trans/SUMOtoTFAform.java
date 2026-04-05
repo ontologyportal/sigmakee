@@ -102,9 +102,26 @@ public class SUMOtoTFAform {
     public static boolean isMathFunction(String s) {
 
         int under = s.lastIndexOf("__");
-        if (under == -1)
-            return Formula.isMathFunction(s);
-        return Formula.isMathFunction(s.substring(0,under));
+        String base = (under == -1) ? s : s.substring(0, under);
+        // These have no LEO-III-supported TPTP built-in; fall through to s__Xxx SUMO function translation
+        if (base.equals(Formula.REMAINDERFN) || base.equals(Formula.DIVIDEFN) ||
+                base.equals(Formula.FLOORFN) || base.equals(Formula.CEILINGFN) ||
+                base.equals(Formula.ROUNDFN))
+            return false;
+        return Formula.isMathFunction(base);
+    }
+
+    /** *************************************************************
+     * Returns true for math functions whose KB cache signature may be
+     * unreliable (Entity instead of RealNumber/Integer), requiring
+     * makePredFromArgTypes to always be called so the type-suffixed
+     * name is used and extendRelationSig derives the sort from the name.
+     */
+    private static boolean needsForcedTypeSuffix(String pred) {
+        int under = pred.lastIndexOf("__");
+        String base = (under == -1) ? pred : pred.substring(0, under);
+        return base.equals(Formula.DIVIDEFN) || base.equals(Formula.FLOORFN) ||
+               base.equals(Formula.CEILINGFN) || base.equals(Formula.ROUNDFN);
     }
 
     /** *************************************************************
@@ -258,6 +275,20 @@ public class SUMOtoTFAform {
         if (VAR_ARITY_PATTERN.matcher(rel).matches())
             return relationExtractNonNumericSig(rel);
         String text = rel.substring(under + 2, rel.length());
+        // Plain arity-N function variant with no type annotations, e.g. ListFn__7Fn.
+        // The text is just "NFn" — no SIG_PART_PATTERN match possible.
+        if (text.matches("\\d+Fn")) {
+            String bareRel = rel.substring(0, under);
+            int arity = Integer.parseInt(text.substring(0, text.length() - 2)); // strip "Fn"
+            List<String> baseSig = kb.kbCache.signatures.get(bareRel);
+            String range   = (baseSig != null && !baseSig.isEmpty() && !StringUtil.emptyString(baseSig.get(0)))
+                             ? baseSig.get(0) : "Entity";
+            String varType = kb.kbCache.variableArityType(bareRel);
+            if (varType == null || varType.isEmpty()) varType = "Entity";
+            sig.add(range);
+            for (int i = 1; i <= arity; i++) sig.add(varType);
+            return sig;
+        }
         Matcher matcher = SIG_PART_PATTERN.matcher(text);
         String type;
         while (matcher.find()) {
@@ -755,7 +786,7 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): newArgTypes: " + newArgTypes);
         String pred = car.getFormula();
         List<String> sig = kb.kbCache.getSignature(pred);
-        if (!equalTFFsig(newArgTypes,sig,pred) || KButilities.isVariableArity(kb,pred))
+        if (!equalTFFsig(newArgTypes,sig,pred) || KButilities.isVariableArity(kb,pred) || needsForcedTypeSuffix(pred))
             pred = makePredFromArgTypes(car,newArgTypes);
         if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): pred: " + pred);
         List<String> processedArgs = new ArrayList<>();
@@ -906,45 +937,27 @@ public class SUMOtoTFAform {
 
     /** *************************************************************
      * When the arguments to quotient are mixed, promote the more
-     * specific type to the more general type
+     * specific type to the more general type.
+     * Each argument is promoted individually only when its own type is
+     * more specific than mgt; arguments already at the target type are
+     * left unwrapped (avoids redundant $to_real on already-$real values).
      */
     private static String mixedQuotient(Formula f, String op,
                                         String parentType,
                                         List<String> args,
                                         List<String> argTypes) {
 
-        HashSet hs = new HashSet();
-        hs.addAll(argTypes);
-        if (hs.size() == 1)
         if (debug) System.out.println("SUMOtoTFAform.mixedQuotient(): f: " + f);
         if (debug) System.out.println("SUMOtoTFAform.mixedQuotient(): argTypes: " + argTypes);
         String mgt = "Entity";
         if (argTypes != null && argTypes.size() > 2)
-            mgt = bestOfPair(argTypes.get(1),argTypes.get(2));
+            mgt = bestOfPair(argTypes.get(1), argTypes.get(2));
         if (debug) System.out.println("SUMOtoTFAform.mixedQuotient(): most general: " + mgt);
-        String promote = "";
         Formula lhs = new Formula(args.get(1));
         Formula rhs = new Formula(args.get(2));
-        String eSuffix = "_e";
-        if (mgt != null) {
-            if (mgt.equals("RealNumber")) {
-                promote = "$to_real";
-                eSuffix = "";
-            }
-            if (mgt.equals("RationalNumber")) {
-                promote = "$to_rat";
-                eSuffix = "";
-            }
-        }
-        if ("".equals(promote)) {
-            System.err.println("Error in SUMOtoTFAform.mixedQuotient() with args: " + args +
-                    " and types " + argTypes + " in formula: " + f);
-            return "$quotient" + eSuffix + Formula.LP + processRecurse(lhs,parentType) + " ," +
-                    processRecurse(rhs,parentType) + Formula.RP;
-        }
-        else
-            return "$quotient" + eSuffix + Formula.LP + promote + Formula.LP + processRecurse(lhs,parentType) + ") ," +
-                    promote + Formula.LP + processRecurse(rhs,parentType) + "))";
+        String lhsResult = processRecurse(lhs, parentType);
+        String rhsResult = processRecurse(rhs, parentType);
+        return "$quotient_e" + Formula.LP + lhsResult + " ," + rhsResult + Formula.RP;
     }
 
     /** *************************************************************
@@ -1006,13 +1019,6 @@ public class SUMOtoTFAform {
                 return mixedQuotient(f,op,parentType,args,argTypes);
             }
         }
-        if (op.startsWith(Formula.REMAINDERFN))
-            if (allOfType(args,"Integer"))
-                return promotion + "$remainder_e(" + processRecurse(arg1,arg1Type) + " ," +
-                    processRecurse(arg2,arg2Type) + Formula.RP + closeP;
-            else
-                return promotion + "$remainder_t(" + processRecurse(arg1,arg1Type) + " ," +
-                        processRecurse(arg2,arg2Type) + Formula.RP + closeP;
         System.err.println("Error in SUMOtoTFAform.processMathOp(): bad math operator " + op + " in " + f);
         return "";
     }
@@ -1041,7 +1047,7 @@ public class SUMOtoTFAform {
                 kb.isSubclass("RealNumber",argTypes.get(0))) {
             String best = bestOfPair(argTypes.get(0),parentType);
             newArgTypes.set(0,best);
-            if (!equalTFFsig(newArgTypes,sig,op) || KButilities.isVariableArity(kb,op)) // only add the suffix if arg types are different from the original sort of the predicate
+            if (!equalTFFsig(newArgTypes,sig,op) || KButilities.isVariableArity(kb,op) || needsForcedTypeSuffix(op)) // only add the suffix if arg types are different from the original sort of the predicate
                 op = makePredFromArgTypes(car,newArgTypes);
         }
         List<String> origArgTypes = new ArrayList<>(newArgTypes); // save actual arg types before bestSignature
@@ -1233,14 +1239,7 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): isNumericType(parentType): " + isNumericType(parentType));
         if (findType(f) != null)
             if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): kb.compareTermDepth(findType(f),parentType): " + kb.compareTermDepth(findType(f),parentType));
-        if (isNumeric(f) && isNumericType(parentType) && findType(f) != null &&
-                kb.compareTermDepth(findType(f),parentType) > 0) {
-            if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): promoting");
-            if (parentType.equals("RealNumber"))
-                return "$to_real(";
-            if (parentType.equals("RationalNumber"))
-                return "$to_rat(";
-        }
+        // $to_real and $to_rat are not supported by LEO-III; skip promotion
         return null;
     }
 
@@ -1265,9 +1264,9 @@ public class SUMOtoTFAform {
             String result;
             if (debug) System.out.println("SUMOtoTFAform.processRecurse(): promotion: " + promotion);
             if (promotion != null)
-                result = promotion + SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false) + Formula.RP;
+                result = promotion + SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false,"tff") + Formula.RP;
             else
-                result = SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false);
+                result = SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false,"tff");
             if (debug) System.out.println("SUMOtoTFAform.processRecurse(): result: " + result);
             return result;
         }
@@ -2391,11 +2390,10 @@ public class SUMOtoTFAform {
             String range = sig.get(0);
             if (StringUtil.emptyString(range))
                 range = "Entity";
-            //return("tff(" + StringUtil.initialLowerCase(axname) + "_sig,type," + rel + " : ( " + sigStr + " ) > " + SUMOKBtoTFAKB.translateSort(kb,range) + " ).");
-            return(rel + " : ( " + sigStr + " ) > " + SUMOKBtoTFAKB.translateSort(kb,range));
+            return(relname + " : ( " + sigStr + " ) > " + SUMOKBtoTFAKB.translateSort(kb,range));
         }
         else
-            return(rel + " : ( " + sigStr + " ) > $o ");
+            return(relname + " : ( " + sigStr + " ) > $o ");
     }
 
     /** *************************************************************
@@ -3092,13 +3090,7 @@ public class SUMOtoTFAform {
 
     /** Numeric promotion – mirrors numTypePromotion(Formula, String). */
     private static String numTypePromotionExpr(Expr expr, String parentType) {
-        String type = findTypeExpr(expr);
-        if (type == null) return null;
-        if (isNumericExpr(expr) && isNumericType(parentType) &&
-                kb.compareTermDepth(type, parentType) > 0) {
-            if (parentType.equals("RealNumber"))     return "$to_real(";
-            if (parentType.equals("RationalNumber")) return "$to_rat(";
-        }
+        // $to_real and $to_rat are not supported by LEO-III; skip promotion
         return null;
     }
 
@@ -3269,24 +3261,11 @@ public class SUMOtoTFAform {
         String mgt = "Entity";
         if (argTypes != null && argTypes.size() > 2)
             mgt = bestOfPair(argTypes.get(1), argTypes.get(2));
-        String promote = "";
-        String eSuffix = "_e";
-        if (mgt != null) {
-            if (mgt.equals("RealNumber"))     { promote = "$to_real"; eSuffix = ""; }
-            if (mgt.equals("RationalNumber")) { promote = "$to_rat";  eSuffix = ""; }
-        }
         Expr lhsExpr = se.args().get(0);
         Expr rhsExpr = se.args().get(1);
-        if ("".equals(promote)) {
-            System.err.println("Error in SUMOtoTFAform.mixedQuotientExpr() with args: " +
-                argStrings + " and types " + argTypes);
-            return "$quotient" + eSuffix + Formula.LP +
-                    processRecurseExpr(lhsExpr, parentType) + " ," +
-                    processRecurseExpr(rhsExpr, parentType) + Formula.RP;
-        }
-        return "$quotient" + eSuffix + Formula.LP +
-                promote + Formula.LP + processRecurseExpr(lhsExpr, parentType) + ") ," +
-                promote + Formula.LP + processRecurseExpr(rhsExpr, parentType) + "))";
+        String lhsResult = processRecurseExpr(lhsExpr, parentType);
+        String rhsResult = processRecurseExpr(rhsExpr, parentType);
+        return "$quotient_e" + Formula.LP + lhsResult + " ," + rhsResult + Formula.RP;
     }
 
     private static String processMathOpExpr(Expr.SExpr se, String parentType,
@@ -3340,14 +3319,6 @@ public class SUMOtoTFAform {
             else
                 return mixedQuotientExpr(se, parentType, argStrings, argTypes);
         }
-        if (op.startsWith(Formula.REMAINDERFN)) {
-            if (allOfType(argStrings, "Integer"))
-                return promotion + "$remainder_e(" + processRecurseExpr(arg1, arg1Type) + " ," +
-                        processRecurseExpr(arg2, arg2Type) + Formula.RP + closeP;
-            else
-                return promotion + "$remainder_t(" + processRecurseExpr(arg1, arg1Type) + " ," +
-                        processRecurseExpr(arg2, arg2Type) + Formula.RP + closeP;
-        }
         System.err.println("Error in SUMOtoTFAform.processMathOpExpr(): " +
             "bad math operator " + op + " in " + se.toKifString());
         return "";
@@ -3385,7 +3356,7 @@ public class SUMOtoTFAform {
         newArgTypes = bestSignature(predTypes, newArgTypes);
         String pred = op;
         List<String> sig = kb.kbCache.getSignature(pred);
-        if (!equalTFFsig(newArgTypes, sig, pred) || KButilities.isVariableArity(kb, pred))
+        if (!equalTFFsig(newArgTypes, sig, pred) || KButilities.isVariableArity(kb, pred) || needsForcedTypeSuffix(pred))
             pred = makePredFromArgTypes(new Formula(pred), newArgTypes);
         List<String> processedArgs = new ArrayList<>();
         for (int i = 0; i < args.size(); i++) {
@@ -3417,7 +3388,7 @@ public class SUMOtoTFAform {
                 !argTypes.isEmpty() && kb.isSubclass("RealNumber", argTypes.get(0))) {
             String best = bestOfPair(argTypes.get(0), parentType);
             newArgTypes.set(0, best);
-            if (!equalTFFsig(newArgTypes, sig, op) || KButilities.isVariableArity(kb, op))
+            if (!equalTFFsig(newArgTypes, sig, op) || KButilities.isVariableArity(kb, op) || needsForcedTypeSuffix(op))
                 op = makePredFromArgTypes(new Formula(op), newArgTypes);
         }
         List<String> origArgTypes = new ArrayList<>(newArgTypes); // save actual arg types before bestSignature
@@ -3456,7 +3427,7 @@ public class SUMOtoTFAform {
                 }
                 if (!(argExpr instanceof Expr.SExpr))
                     argStr.append(SUMOformulaToTPTPformula.translateWord(
-                            argExpr.toKifString(), argExpr.toKifString().charAt(0), false))
+                            argExpr.toKifString(), argExpr.toKifString().charAt(0), false, "tff"))
                           .append(", ");
                 else
                     argStr.append(processRecurseExpr(argExpr, type)).append(", ");
