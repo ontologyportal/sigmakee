@@ -11,10 +11,7 @@ import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.FileUtil;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 
 public class SimFile {
 
@@ -105,6 +102,39 @@ public class SimFile {
                 String srel = mapping.get(be.getTagName());
                 String val = be.getText();
                 sumoForms.add("(" + srel + " " + id + " (MeasureFn " + val + " " + sunit + "))");
+            }
+        }
+    }
+
+    /** ***************************************************************
+     */
+    public void readInstanceFile(String fname) {
+
+        HashMap<String,HashMap<String,ArrayList<String>>> frames = new HashMap<>();
+        List<String> lines = new ArrayList<String>();
+        List<String> ls = FileUtil.readLines(fname);
+        boolean inProps = false;
+        String id = "";
+        for (String line : ls) {
+            if (StringUtil.emptyString(line) || line.startsWith("#"))
+                continue;
+            lines.add(line);
+        }
+        HashMap<String,ArrayList<String>> frame = new HashMap<>();
+        boolean first = true;
+        String instName = "";
+        String type = "";
+        Iterator<String> it = lines.iterator();
+        while (it.hasNext()) {
+            String line = it.next();
+            ArrayList<String> header = new ArrayList<>(Arrays.asList(line.split(" ")));
+            type = header.get(0);
+            instName = header.get(1);
+            if (!line.startsWith(" ") && !line.startsWith("include")) {
+                if (first) {
+                    frames.put(instName,frame);
+                    first = false;
+                }
             }
         }
     }
