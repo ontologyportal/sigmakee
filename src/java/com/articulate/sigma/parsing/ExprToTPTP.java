@@ -173,8 +173,10 @@ public class ExprToTPTP {
         if (Character.isDigit(ch0) || (ch0 == '-' && Character.isDigit(ch1)))
             return translateNumber(name, lang);
 
-        // TFF-specific inequality predicates when used as terms (not in head position)
-        if ("tff".equals(lang) && Formula.isInequality(name) && !isHead)
+        // Inequality predicates used as terms (not in head position) need the __m
+        // mention suffix so the same symbol is not used both as a predicate and as
+        // a term — that is a TPTP type error for all languages (FOF and TFF alike).
+        if (Formula.isInequality(name) && !isHead)
             return Formula.TERM_SYMBOL_PREFIX + name + Formula.TERM_MENTION_SUFFIX;
 
         // Logical operators used in head position → their TPTP equivalents
@@ -184,9 +186,13 @@ public class ExprToTPTP {
         if (tptpOp != null && isHead)
             return tptpOp; // shouldn't normally happen — SExpr handles head dispatch
 
-        // Special constants
-        if (Formula.LOG_TRUE.equals(name))  return "$true"  + (isHead ? "" : Formula.TERM_MENTION_SUFFIX);
-        if (Formula.LOG_FALSE.equals(name)) return "$false" + (isHead ? "" : Formula.TERM_MENTION_SUFFIX);
+        // Special constants. When used as head they translate directly; in argument
+        // position they become distinct-object constants (single-quoted) so the prover
+        // does not confuse them with the defined TPTP propositions $true/$false.
+        if (Formula.LOG_TRUE.equals(name))
+            return isHead ? "$true"  : "'" + "$true"  + Formula.TERM_MENTION_SUFFIX + "'";
+        if (Formula.LOG_FALSE.equals(name))
+            return isHead ? "$false" : "'" + "$false" + Formula.TERM_MENTION_SUFFIX + "'";
 
         // TFF arithmetic functions (only when used as head)
         if ("tff".equals(lang) && isHead) {
