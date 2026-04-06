@@ -166,10 +166,12 @@ public class SUMOformulaToTPTPformula {
         if (ch0 == '?' || ch0 == '@')
             return(Formula.TERM_VARIABLE_PREFIX + st.substring(1).replace('-','_'));
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here2: ");
+        //----Inequality predicates used as terms need __m in all languages to avoid
+        // the predicate/term symbol clash that TPTP parsers reject as a type error.
+        if (Formula.isInequality(st) && !hasArguments)
+            return Formula.TERM_SYMBOL_PREFIX + st + Formula.TERM_MENTION_SUFFIX;
         //----Translate special predicates
         if ("tff".equals(lang)) {
-            if (Formula.isInequality(st) && !hasArguments)
-                return Formula.TERM_SYMBOL_PREFIX + st + Formula.TERM_MENTION_SUFFIX;
             translateIndex = kifPredicates.indexOf(st);
             if (translateIndex != -1)
                 return (tptpPredicates.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
