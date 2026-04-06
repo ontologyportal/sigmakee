@@ -107,8 +107,12 @@ public class SimFile {
     }
 
     /** ***************************************************************
+     * Read instance file format into a data structure that consists
+     * of an instance name key and a frame value.  Frames have a slot
+     * for their type information, keyed by instance name and other
+     * slots consist of a slot name key and a list of values.
      */
-    public void readInstanceFile(String fname) {
+    public Map<String,HashMap<String,ArrayList<String>>> readInstanceFile(String fname) {
 
         HashMap<String,HashMap<String,ArrayList<String>>> frames = new HashMap<>();
         List<String> lines = new ArrayList<String>();
@@ -116,7 +120,7 @@ public class SimFile {
         boolean inProps = false;
         String id = "";
         for (String line : ls) {
-            if (StringUtil.emptyString(line) || line.startsWith("#"))
+            if (StringUtil.emptyString(line) || line.startsWith("#") || line.trim() == "")
                 continue;
             lines.add(line);
         }
@@ -127,16 +131,34 @@ public class SimFile {
         Iterator<String> it = lines.iterator();
         while (it.hasNext()) {
             String line = it.next();
-            ArrayList<String> header = new ArrayList<>(Arrays.asList(line.split(" ")));
-            type = header.get(0);
-            instName = header.get(1);
-            if (!line.startsWith(" ") && !line.startsWith("include")) {
-                if (first) {
-                    frames.put(instName,frame);
-                    first = false;
-                }
+            System.out.println("SimFile.readInstanceFile(): line: " + line);
+            if (line.startsWith("include_once")) {
+                String fnameInc = System.getProperty("user.dir") + File.separator +
+                        line.trim().substring(line.indexOf(" ")+1);
+                System.out.println("SimFile.readInstanceFile(): read include file: " + fnameInc);
+                //    frames.putAll(readInstanceFile(fnameInc));
+            }
+            else if (!line.startsWith(" ") && !line.startsWith("include") && !line.startsWith("end_")) { // start of a frame
+                ArrayList<String> header = new ArrayList<>(Arrays.asList(line.split(" ")));
+                type = header.get(0);
+                instName = header.get(1);
+                frame = new HashMap<>();
+                frame.put(instName,header);
+            }
+            else if (line.startsWith("end_")) {
+                frames.put(instName,frame);
+            }
+            else {
+                line = line.trim();
+                ArrayList<String> slot = new ArrayList<>();
+                slot.addAll(Arrays.asList(line.split(" ")));
+                String key = slot.get(0);
+                ArrayList<String> newslot = new ArrayList<>();
+                newslot.addAll(slot.subList(1,slot.size()));
+                frame.put(key, newslot);
             }
         }
+        return frames;
     }
 
     /** ***************************************************************
@@ -181,6 +203,7 @@ public class SimFile {
         System.out.println("  options (with a leading '-'):");
         System.out.println("  h - show this help screen");
         System.out.println("  r - read files and translate to SUMO");
+        System.out.println("  file <fname> - read frame file");
     }
 
     /** ***************************************************************
@@ -190,20 +213,25 @@ public class SimFile {
      */
     public static void main(String[] args) throws IOException {
 
-        //System.out.println("INFO in SimFile.main()");
-        if (args != null && args.length > 0 && args[0].equals("-h"))
+        System.out.println("INFO in SimFile.main()");
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.isEmpty() || argMap.containsKey("h"))
             showHelp();
         else {
             //if (args != null)
             //    System.out.println("SimFile.main(): args[0]: " + args[0]);
             SimFile ant = new SimFile();
-            if (args != null && args.length > 1 && args[0].contains("r")) {
+            if (argMap.containsKey("r")) {
                 String filename = args[1];
                 if (filename.endsWith("txt"))
                     ant.readTextFile(filename);
                 if (filename.endsWith("xml"))
                     ant.readXMLFile(filename);
                 ant.printSUMO();
+            }
+            else if (argMap.containsKey("file")) {
+                String fname = argMap.get("file").get(0);
+                System.out.println(ant.readInstanceFile(fname));
             }
         }
     }
