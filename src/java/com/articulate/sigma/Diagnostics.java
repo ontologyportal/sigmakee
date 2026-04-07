@@ -744,6 +744,34 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
+     * This function loads a new  kb with all kif files found in .sigmakee 
+     * (not just constituents from the xml),then maps all the term dependencies 
+     * between files. 
+     */
+    private static void mapDependenciesForAllKif() {
+        
+    }
+
+    /** *****************************************************************
+    * This function returns a list of error messages for missing dependencies.
+    * If the user has a constituent loaded, and the file depends on another file 
+    * that is not loaded as a constituent, then it will be added to the error list.
+    * 
+    * @param Map<String,Map<String,List<String>>> fileDepends <Dependent, <Dependees, Terms>>
+    * @return Map<String,Map<String,List<String>>> a TreeMap with the loaded constituent files 
+    *         as the outer key, the missing dependee constituent files as the inner key, and 
+    *         dependent terms as the list. 
+    */
+    // private static Map<String,Map<String,List<String>>> missingConstituentDependencies(KB kb) {
+
+    //     Map<String,Map<String,List<String>>> missing = new ArrayList<>();
+    //     System.out.println("Printing KB Constituent Files: ");
+    //     for(String constituent : kb.constituents) {
+    //         System.out.println("    " + constituent);
+    //     }
+    // }
+
+    /** *****************************************************************
     * This function returns a map of mutual dependencies and the terms used
     * by the less dependent file that are defined in the more dependent file.
     * The intended application of this function is to find the low hanging fruit 
@@ -753,18 +781,28 @@ public class Diagnostics {
     * @return Map<String,List<String>> a TreeMap of mutual term dependent files in the format of 
     *         Key: (LessDependentFile)>(MoreDependentFile), List<String> TermsLessDependentUsesFromMoreDependent
      */
-    private static Map<String, List<String>> mutualDependency(KB kb) {
+    private static Map<String, List<List<String>>> mutualDependency(KB kb) {
         
         Map<String, Map<String, List<String>>> fileDepends = Diagnostics.termDependency(kb);
-        Map<String, List<String>> mutDepends = new TreeMap<>();
+        Map<String, List<List<String>>> mutDepends = new TreeMap<>();
         for (Map.Entry<String, Map<String, List<String>>> dependentKif : fileDepends.entrySet()) {
             Map<String, List<String>> innerMap = dependentKif.getValue();
             for (Map.Entry<String, List<String>> dependeeKif : innerMap.entrySet()) {
                 if(fileDepends.containsKey(dependeeKif.getKey()) 
-                    && fileDepends.get(dependeeKif.getKey()).containsKey(dependentKif.getKey())
-                    && dependeeKif.getValue().size() < fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).size()
-                    ) {
-                    mutDepends.put(dependentKif.getKey() + ">" + dependeeKif.getKey(), dependeeKif.getValue());
+                && fileDepends.get(dependeeKif.getKey()).containsKey(dependentKif.getKey()) 
+                && dependeeKif.getValue().size() < fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).size()) {
+                    List<List<String>> totalTerms = new ArrayList<>();
+                    List<String> dependeeFromDependentTerms = new ArrayList<>();
+                    List<String> dependentFromDependeeTerms = new ArrayList<>();
+                    for(int i = 0; i < dependeeKif.getValue().size(); i++) {
+                        dependeeFromDependentTerms.add(dependeeKif.getValue().get(i));
+                    }
+                    totalTerms.add(dependeeFromDependentTerms);
+                    for(int i = 0; i < fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).size(); i++) {
+                        dependentFromDependeeTerms.add(fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).get(i));
+                    }
+                    totalTerms.add(dependentFromDependeeTerms);
+                    mutDepends.put(dependentKif.getKey() + ">" + dependeeKif.getKey(), totalTerms);
                 }
             }
         }
@@ -782,21 +820,32 @@ public class Diagnostics {
      */
     public static String printMutualDependencies(KB kb, String kbHref) {
 
-        Map<String, List<String>> mutDepends = Diagnostics.mutualDependency(kb);
+        Map<String, List<List<String>>> mutDepends = Diagnostics.mutualDependency(kb);
         StringBuilder html = new StringBuilder();
-        for (Map.Entry<String, List<String>> mutDepend : mutDepends.entrySet()) {
+        for (Map.Entry<String, List<List<String>>> mutDepend : mutDepends.entrySet()) {
             String[] fileNames = mutDepend.getKey().split(">");
             String fileName1 = StringUtil.removeFilePath(fileNames[0]);
             String fileName2 = StringUtil.removeFilePath(fileNames[1]);
             if(fileName1.equals("SUMO_Cache.kif") || fileName2.equals("SUMO_Cache.kif")) continue;
-            html.append("<br/>Mutual dependency between " + fileName1 + " and " + fileName2 + ", with " + fileName1 + " using the following " + mutDepend.getValue().size() + " terms from " + fileName2 + "\n<br/>");
-            List<String> terms = mutDepend.getValue();
-            html.append("<a href=\"" + kbHref + "&term=" + terms.get(0) + "\">" + terms.get(0) + "</a>");
-            for(int i = 1; i < terms.size(); i++) {
-                String term = terms.get(i);
-                html.append(", <a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
+            html.append("<br/>Mutual dependency between " + fileName1 + " and " + fileName2 + ".");
+            html.append("<br/>" + fileName1 + " uses the following " + mutDepend.getValue().get(0).size() + " terms defined in " + fileName2 + "\n<br/>");
+            List<List<String>> terms = mutDepend.getValue();
+            html.append("<a href=\"" + kbHref + "&term=" + terms.get(0).get(0) + "\" target=\"_blank\">" + terms.get(0).get(0) + "</a>");
+            for(int i = 1; i < terms.get(0).size(); i++) {
+                String term = terms.get(0).get(i);
+                html.append(", <a href=\"" + kbHref + "&term=" + term + "\" target=\"_blank\">" + term + "</a>");
                 if(i > 25) {
-                    html.append(", and " + (terms.size() - i) + " more terms.");
+                    html.append(", and " + (terms.get(0).size() - i) + " more terms.");
+                    break;
+                }
+            }
+            html.append("<br/>" + fileName2 + " uses the following " + mutDepend.getValue().get(0).size() + " terms defined in " + fileName1 + "\n<br/>");
+            html.append("<a href=\"" + kbHref + "&term=" + terms.get(1).get(0) + "\" target=\"_blank\">" + terms.get(0).get(0) + "</a>");
+            for(int i = 1; i < terms.get(1).size(); i++) {
+                String term = terms.get(1).get(i);
+                html.append(", <a href=\"" + kbHref + "&term=" + term + "\" target=\"_blank\">" + term + "</a>");
+                if(i > 25) {
+                    html.append(", and " + (terms.get(1).size() - i) + " more terms.");
                     break;
                 }
             }
@@ -1736,6 +1785,7 @@ public class Diagnostics {
         System.out.println("  -c - terms without documentation");
         System.out.println("  -q - quantifier not in body");
         System.out.println("  -d - create file dependency dot graph");
+        System.out.println("  -missingConstDepends print the missing dependee files for the current constituents");
         System.out.println("  --vars <fname> - extract variable co-occurrences from a kif file");
     }
 
@@ -1775,10 +1825,10 @@ public class Diagnostics {
             }
             else if (argMap.containsKey("m")) {
                 System.out.println("--------------------------\nFinding Mutual Dependencies mutualDependency()...\n");
-                Map<String, List<String>> mutDepends = Diagnostics.mutualDependency(kb);
-                for(Map.Entry<String, List<String>> mutDepend : mutDepends.entrySet()) { 
+                Map<String, List<List<String>>> mutDepends = Diagnostics.mutualDependency(kb);
+                for(Map.Entry<String, List<List<String>>> mutDepend : mutDepends.entrySet()) { 
                     String[] mutuallyDependentFiles = mutDepend.getKey().split(">");
-                    System.out.println(StringUtil.removeFilePath(mutuallyDependentFiles[0]) + " depends on " + StringUtil.removeFilePath(mutuallyDependentFiles[1]) + " for " + mutDepend.getValue().size() + " terms");
+                    System.out.println(StringUtil.removeFilePath(mutuallyDependentFiles[0]) + " depends on " + StringUtil.removeFilePath(mutuallyDependentFiles[1]) + " for " + mutDepend.getValue().get(0).size() + " terms");
                 }
             }
             else if (argMap.containsKey("M")) {
@@ -1814,6 +1864,9 @@ public class Diagnostics {
             else if (argMap.containsKey("d")) {
                 Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
                 createDependDotGraph(fileDepends);
+            }
+            else if (argMap.containsKey("missingDepends")) {
+                // Diagnostics.missingConstituentDependencies();
             }
             else if (argMap.containsKey("diff") && argMap.get("diff").size() == 2) {
                 diffTerms(kb, argMap.get("diff").get(0), argMap.get("diff").get(1));
