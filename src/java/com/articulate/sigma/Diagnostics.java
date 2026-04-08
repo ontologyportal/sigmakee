@@ -839,7 +839,7 @@ public class Diagnostics {
                     break;
                 }
             }
-            html.append("<br/>" + fileName2 + " uses the following " + mutDepend.getValue().get(0).size() + " terms defined in " + fileName1 + "\n<br/>");
+            html.append("<br/>" + fileName2 + " uses the following " + mutDepend.getValue().get(1).size() + " terms defined in " + fileName1 + "\n<br/>");
             html.append("<a href=\"" + kbHref + "&term=" + terms.get(1).get(0) + "\" target=\"_blank\">" + terms.get(0).get(0) + "</a>");
             for(int i = 1; i < terms.get(1).size(); i++) {
                 String term = terms.get(1).get(i);
@@ -974,6 +974,7 @@ public class Diagnostics {
         String line;
         for (String filename : termDependency.keySet()) {
             String nameOnly = sanitizeFilenameForGraphViz(filename);
+            if(StringUtil.removeFilePath(nameOnly).equals("SUMO_Cache")) continue;
             if (debug) System.out.println("createDependDotGraphBody()" + filename);
             String newline = nameOnly + " [shape=\"box\" label = < " + nameOnly +
                     " <br align=\"left\"/> > ]";
@@ -981,6 +982,7 @@ public class Diagnostics {
             if (termDependency.get(filename) != null) {
                 for (String otherFile : termDependency.get(filename).keySet()) {
                     String otherNameOnly = sanitizeFilenameForGraphViz(otherFile);
+                    if(StringUtil.removeFilePath(otherNameOnly).equals("SUMO_Cache")) continue;
                     line = nameOnly + " -> " + otherNameOnly + "; ";
                     lines.add(line);
                 }
@@ -1061,7 +1063,7 @@ public class Diagnostics {
             pw.println("digraph G {");
             pw.println("  node [color=black, fontcolor=black];"); // Black text and borders
             pw.println("  edge [color=black];"); // Black edges
-            pw.println("  rankdir=LR");
+            pw.println("  rankdir=BT");
             for (String s : result)
                 pw.println(s);
             pw.println("}");
@@ -1864,6 +1866,16 @@ public class Diagnostics {
             else if (argMap.containsKey("d")) {
                 Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
                 createDependDotGraph(fileDepends);
+            }
+            else if (argMap.containsKey("i") && argMap.get("i").size() == 1) {
+                try {
+                    String message = Diagnostics.createDependDotGraphImage(argMap.get("i").get(0));
+                    System.out.println(message);
+                }
+                catch (IOException e) {
+                    System.err.println("Failed to create dependency graph image: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
             else if (argMap.containsKey("missingDepends")) {
                 // Diagnostics.missingConstituentDependencies();
