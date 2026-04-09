@@ -613,7 +613,7 @@ public class Diagnostics {
 
         List<String> definitionalRelations = Arrays.asList("instance", "subclass",
                 "subAttribute", "domain", "domainSubclass", "range",
-                "rangeSubclass", "subrelation");
+                "rangeSubclass", "documentation", "subrelation");
 
         List<Formula> forms, newform;
         String relation, filename;
@@ -748,8 +748,41 @@ public class Diagnostics {
      * (not just constituents from the xml),then maps all the term dependencies 
      * between files. 
      */
-    private static void mapDependenciesForAllKif() {
-        
+    private static void saveDependenciesForAllKif(String serializedDependencyFilePath) {
+
+        System.out.println("saveDependenciesForAllKif KBmanager.initializeOnce()");
+        KBmanager.getMgr().initializeOnce("./config_full");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        System.out.println("Diagnostics: Completed init");
+        Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
+        serializedDependencyFilePath = KButilities.SIGMA_HOME + File.separator + "KBs" + File.separator + serializedDependencyFilePath;
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(serializedDependencyFilePath))) {
+            out.writeObject(fileDepends);
+            System.out.println("Saved term dependency to " + serializedDependencyFilePath);
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Failed to save term dependency file to: " + serializedDependencyFilePath, e);
+        }
+    }
+
+    /** *****************************************************************
+     * This function loads the serialized term dependency Map created by saveDependenciesForAllKif()
+     * and returns the resulting map.
+     * 
+     * @param String serializedDependencyFilePath
+     * @return Map<String,Map<String,List<String>>> allDepends
+     */
+    private static Map<String,Map<String,List<String>>> loadDependenciesForAllKif(String serializedDependencyFilePath) {
+
+        Map<String,Map<String,List<String>>> allDepends = new TreeMap<>();
+        serializedDependencyFilePath = KButilities.SIGMA_HOME + File.separator + "KBs" + File.separator + serializedDependencyFilePath;
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(serializedDependencyFilePath))) {
+            allDepends = (Map<String,Map<String,List<String>>>) in.readObject();
+        }
+        catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException("Error reading serialized dependencies from: " + serializedDependencyFilePath, e);
+        }
+        return allDepends;
     }
 
     /** *****************************************************************
@@ -762,14 +795,24 @@ public class Diagnostics {
     *         as the outer key, the missing dependee constituent files as the inner key, and 
     *         dependent terms as the list. 
     */
-    // private static Map<String,Map<String,List<String>>> missingConstituentDependencies(KB kb) {
+    private static Map<String,Map<String,List<String>>> missingConstituentDependencies(KB kb) {
 
-    //     Map<String,Map<String,List<String>>> missing = new ArrayList<>();
-    //     System.out.println("Printing KB Constituent Files: ");
-    //     for(String constituent : kb.constituents) {
-    //         System.out.println("    " + constituent);
-    //     }
-    // }
+        //OuterKey = Loaded constituent with term dependency
+        //InterKey = Unloaded constituent containing term def
+        //ListValues = Terms the OuterKey uses from the InnerKey
+        Map<String,Map<String,List<String>>> missing = new TreeMap<>();
+        Map<String,Map<String,List<String>>> allDepends = Diagnostics.loadDependenciesForAllKif("term_dependency.ser");
+        System.out.println(allDepends);
+        for(String constituent : kb.constituents) {
+            Map<String,List<String>> missingFromActiveConstituent = new TreeMap();
+            for (Map.Entry<String,List<String>> dependeeKifs : allDepends.get(constituent).entrySet()) {
+                if (!kb.constituents.contains(dependeeKifs.getKey()) && !dependeeKifs.getKey().equals("SUMO_Cache.kif"))
+                    missingFromActiveConstituent.put(dependeeKifs.getKey(), dependeeKifs.getValue());
+            }
+            missing.put(constituent, missingFromActiveConstituent);
+        }
+        return missing;
+    }
 
     /** *****************************************************************
     * This function returns a map of mutual dependencies and the terms used
@@ -840,7 +883,7 @@ public class Diagnostics {
                 }
             }
             html.append("<br/>" + fileName2 + " uses the following " + mutDepend.getValue().get(1).size() + " terms defined in " + fileName1 + "\n<br/>");
-            html.append("<a href=\"" + kbHref + "&term=" + terms.get(1).get(0) + "\" target=\"_blank\">" + terms.get(0).get(0) + "</a>");
+            html.append("<a href=\"" + kbHref + "&term=" + terms.get(1).get(0) + "\" target=\"_blank\">" + terms.get(1).get(0) + "</a>");
             for(int i = 1; i < terms.get(1).size(); i++) {
                 String term = terms.get(1).get(i);
                 html.append(", <a href=\"" + kbHref + "&term=" + term + "\" target=\"_blank\">" + term + "</a>");
@@ -1802,6 +1845,9 @@ public class Diagnostics {
         System.out.println("argMap contains e: " + argMap.containsKey("e"));
         if (argMap.isEmpty() || argMap.containsKey("h"))
             showHelp();
+        else if (argMap.containsKey("a")) {
+            Diagnostics.saveDependenciesForAllKif("term_dependency.ser");
+        }
         else {
             KBmanager.getMgr().initializeOnce();
             //resultLimit = 0; // don't limit number of results on command line
@@ -1809,6 +1855,13 @@ public class Diagnostics {
             System.out.println("Diagnostics: Completed init");
             if (argMap.containsKey("t")) {
                 termDefsByFile(kb);
+            }
+            else if (argMap.containsKey("A")) {
+                Map<String,Map<String,List<String>>> missing = Diagnostics.missingConstituentDependencies(kb);
+                for (Map.Entry<String,Map<String,List<String>>> missingDepend : missing.entrySet()) {
+                    System.out.println("\n"+missingDepend.getKey());
+                    System.out.println(missingDepend.getValue());
+                }
             }
             else if (argMap.containsKey("file") && argMap.get("file").size() == 1) {
                 Set<String> files = new HashSet<>();
@@ -1876,9 +1929,6 @@ public class Diagnostics {
                     System.err.println("Failed to create dependency graph image: " + e.getMessage());
                     e.printStackTrace();
                 }
-            }
-            else if (argMap.containsKey("missingDepends")) {
-                // Diagnostics.missingConstituentDependencies();
             }
             else if (argMap.containsKey("diff") && argMap.get("diff").size() == 2) {
                 diffTerms(kb, argMap.get("diff").get(0), argMap.get("diff").get(1));

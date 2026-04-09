@@ -178,7 +178,7 @@ public class KBmanager implements Serializable {
     public static Map<String,String> prefOverride = new HashMap<>();
     public static boolean initialized = false;
     public static boolean initializing = false;
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     public enum Prover { NONE, EPROVER, VAMPIRE, LEO };
     public Prover prover = Prover.VAMPIRE;
