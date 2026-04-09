@@ -208,7 +208,7 @@ public class Modals {
         REFLEXIVE, SYMMETRIC, TRANSITIVE, SERIAL, EUCLIDEAN}
 
     public enum ModalSystem {
-        K,D,T,B,S4,S5}
+        K,D,T,B,S4,S5,D4}
 
     public static final Set<String> noWorld = new HashSet<>(Arrays.asList(
             "instance","subclass","domain","domainSubclass","range","rangeSubclass",
@@ -308,7 +308,9 @@ public class Modals {
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1); // [F, M]
         if (flist == null || flist.size() < 2) {
-            throw new IllegalArgumentException("modalAttribute requires at least 2 arguments");
+            System.out.println("Error in Modals.handleModalAttribute(): " + f + " at " +
+                f.getSourceFile() + ":" + f.startLine);
+            throw new IllegalArgumentException("modalAttribute requires at least 2 arguments: " + f);
         }
         int prevWorld = worldNum;
         int currWorld  = worldNum + 1;
@@ -536,6 +538,8 @@ public class Modals {
                     genFrameAxiom(modalOp,FrameAx.TRANSITIVE);
             case S5: return genFrameAxiom(modalOp,FrameAx.REFLEXIVE) +
                     genFrameAxiom(modalOp,FrameAx.EUCLIDEAN);
+            case D4: return genFrameAxiom(modalOp,FrameAx.TRANSITIVE) +
+                    genFrameAxiom(modalOp,FrameAx.SERIAL);
         }
         return result;
     }
