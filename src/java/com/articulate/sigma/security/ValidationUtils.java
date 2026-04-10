@@ -180,6 +180,17 @@ public final class ValidationUtils {
     }
 
     /****************************************************************
+     * Returns validated SUMO term string.
+     *
+     * @param s A String
+     * @return Validated SUMO term
+     */
+    public static String sanitizeSumoTerm(String s, String defaultString) {
+        
+        return sanitizeString(s, defaultString);
+    }
+
+    /****************************************************************
      * Returns whether the given file name is a valid .kif filename.
      *
      * @param s A String
