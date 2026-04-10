@@ -1259,9 +1259,11 @@ public class FormulaPreprocessor {
      * for explicitly-typed variables only {@code "+"} (subclass) markers
      * from either source are retained.</p>
      *
-     * <p>This is intentionally package-private for unit testing.</p>
+     * <p>Was package-private; widened to {@code public} so that the
+     * {@code trans} package (THFnew) can use it directly on Expr trees
+     * without converting back to a Formula string.</p>
      */
-    Map<String, Set<String>> findTypeRestrictionsExpr(Expr expr, KB kb) {
+    public Map<String, Set<String>> findTypeRestrictionsExpr(Expr expr, KB kb) {
         Map<String, Set<String>> varDomainTypes   = computeVariableTypesExpr(expr, kb);
         Map<String, Set<String>> varExplicitTypes = findExplicitTypesClassesInAntecedentExpr(expr, kb);
 

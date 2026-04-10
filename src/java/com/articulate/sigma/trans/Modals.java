@@ -4,9 +4,11 @@ import com.articulate.sigma.CLIMapParser;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.parsing.Expr;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.AbstractMap.SimpleEntry;
 
 public class Modals {
     
@@ -469,6 +471,264 @@ public class Modals {
             result.varTypeCache.put("?" + worldvar + i,types);
         } 
         return result;
+    }
+
+    // =======================================================================
+    // Expr-based modal processing (FormulaAST path)
+    // Replicates processModals / processRecurse / handle* using Expr trees
+    // instead of Formula string manipulation.
+    // =======================================================================
+
+    /***************************************************************
+     * Collect all variable names (Var and RowVar) from an Expr tree.
+     * Used to find a world-variable prefix that doesn't conflict with
+     * existing variables.
+     */
+    private static void collectAllVarsExprRecurse(Expr expr, Set<String> vars) {
+        switch (expr) {
+            case Expr.Var v      -> vars.add(v.name());
+            case Expr.RowVar rv  -> vars.add(rv.name());
+            case Expr.SExpr se   -> {
+                for (Expr child : se.args())
+                    collectAllVarsExprRecurse(child, vars);
+            }
+            default -> { /* Atom, NumLiteral, StrLiteral — no variables */ }
+        }
+    }
+
+    private static Set<String> collectAllVarsExpr(Expr expr) {
+        Set<String> vars = new HashSet<>();
+        collectAllVarsExprRecurse(expr, vars);
+        return vars;
+    }
+
+    /***************************************************************
+     * Expr-based equivalent of {@link #makeWorldVar(KB, Formula)}.
+     * Returns the first {@code ?W<N>} variable name not already
+     * present in the expression.
+     */
+    public static String makeWorldVarExpr(Expr expr) {
+        Set<String> vars = collectAllVarsExpr(expr);
+        int num = 0;
+        while (vars.contains("?W" + num))
+            num++;
+        return "?W" + num;
+    }
+
+    /***************************************************************
+     * Expr-based equivalent of {@link #markModalAttributeFormulaVars}.
+     * Scans the Expr tree for {@code (modalAttribute ?VAR ...)} forms and
+     * marks the first argument as having type {@code "Formula"} in the
+     * supplied typeMap.
+     */
+    public static void markModalAttributeFormulaVarsExpr(Expr expr,
+                                                          Map<String, Set<String>> typeMap) {
+        if (expr == null) return;
+        switch (expr) {
+            case Expr.SExpr se -> {
+                if ("modalAttribute".equals(se.headName()) && !se.args().isEmpty()) {
+                    Expr first = se.args().get(0);
+                    if (first instanceof Expr.Var v) {
+                        typeMap.computeIfAbsent(v.name(), k -> new HashSet<>()).add("Formula");
+                    }
+                }
+                for (Expr child : se.args())
+                    markModalAttributeFormulaVarsExpr(child, typeMap);
+            }
+            default -> { /* leaf nodes have no subformulas */ }
+        }
+    }
+
+    /***************************************************************
+     * Expr-based equivalent of {@link #handleHOL3pred}.
+     * Rewrites {@code (pred a1 a2 form)} into the Kripke implication
+     * {@code (=> (accreln3 pred a1 a2 prevWorld currWorld) form')}.
+     */
+    private static Expr handleHOL3predExpr(Expr.SExpr se, KB kb,
+                                            String worldvar, int worldNum) {
+        List<Expr> flist = se.args(); // args after head (but se.args() has them already)
+        // flist[0]=a1, flist[1]=a2, flist[2]=form
+        int prevWorld = worldNum;
+        int currWorld = worldNum + 1;
+
+        Expr a1   = processRecurseExpr(flist.get(0), kb, worldvar, prevWorld);
+        Expr a2   = processRecurseExpr(flist.get(1), kb, worldvar, prevWorld);
+        Expr form = processRecurseExpr(flist.get(2), kb, worldvar, currWorld);
+
+        Expr prevWorldArg = (prevWorld == 0)
+                ? new Expr.Atom("CW")
+                : new Expr.Var("?" + worldvar + prevWorld);
+        Expr currWorldArg = new Expr.Var("?" + worldvar + currWorld);
+
+        // (accreln3 pred a1 a2 prevWorld currWorld)
+        Expr accreln = new Expr.SExpr(
+                new Expr.Atom("accreln3"),
+                List.of(se.head(), a1, a2, prevWorldArg, currWorldArg));
+
+        // (=> accreln form)
+        return new Expr.SExpr(new Expr.Atom("=>"), List.of(accreln, form));
+    }
+
+    /***************************************************************
+     * Expr-based equivalent of {@link #handleHOLpred}.
+     * Rewrites {@code (pred agent form)} into
+     * {@code (=> (accreln2 pred agent prevWorld currWorld) form')}.
+     */
+    private static Expr handleHOLpredExpr(Expr.SExpr se, KB kb,
+                                           String worldvar, int worldNum) {
+        List<Expr> flist = se.args(); // flist[0]=agent, flist[1]=form
+        int prevWorld = worldNum;
+        int currWorld = worldNum + 1;
+
+        Expr param    = processRecurseExpr(flist.get(0), kb, worldvar, prevWorld);
+        Expr embedded = processRecurseExpr(flist.get(1), kb, worldvar, currWorld);
+
+        Expr prevWorldArg = (prevWorld == 0)
+                ? new Expr.Atom("CW")
+                : new Expr.Var("?" + worldvar + prevWorld);
+        Expr currWorldArg = new Expr.Var("?" + worldvar + currWorld);
+
+        // (accreln2 pred agent prevWorld currWorld)
+        Expr accreln = new Expr.SExpr(
+                new Expr.Atom("accreln2"),
+                List.of(se.head(), param, prevWorldArg, currWorldArg));
+
+        // (=> accreln embedded)
+        return new Expr.SExpr(new Expr.Atom("=>"), List.of(accreln, embedded));
+    }
+
+    /***************************************************************
+     * Expr-based equivalent of {@link #handleModalAttribute}.
+     * Rewrites {@code (modalAttribute form modality)} into
+     * {@code (=> (accreln1 modality prevWorld currWorld) form')}.
+     */
+    private static Expr handleModalAttributeExpr(Expr.SExpr se, KB kb,
+                                                   String worldvar, int worldNum) {
+        List<Expr> flist = se.args(); // flist[0]=form, flist[1]=modality
+        int prevWorld = worldNum;
+        int currWorld = worldNum + 1;
+
+        Expr modality = flist.get(1);
+        Expr form     = processRecurseExpr(flist.get(0), kb, worldvar, currWorld);
+
+        Expr prevWorldArg = (prevWorld == 0)
+                ? new Expr.Atom("CW")
+                : new Expr.Var("?" + worldvar + prevWorld);
+        Expr currWorldArg = new Expr.Var("?" + worldvar + currWorld);
+
+        // (accreln1 modality prevWorld currWorld)
+        Expr accreln = new Expr.SExpr(
+                new Expr.Atom("accreln1"),
+                List.of(modality, prevWorldArg, currWorldArg));
+
+        // (=> accreln form)
+        return new Expr.SExpr(new Expr.Atom("=>"), List.of(accreln, form));
+    }
+
+    /***************************************************************
+     * Expr-based equivalent of {@link #processRecurse(Formula, KB, String, Integer)}.
+     * Recursively transforms an Expr tree by:
+     * <ul>
+     *   <li>Rewriting modal predicates (regHOLpred, regHOL3pred, modalAttribute)
+     *       into Kripke-style accessibility-relation implications.</li>
+     *   <li>Adding a world argument to all non-rigid, non-reserved predicates.</li>
+     *   <li>Leaving logical operators and quantifier bodies intact (recursing into them).</li>
+     * </ul>
+     */
+    public static Expr processRecurseExpr(Expr expr, KB kb,
+                                           String worldvar, int worldNum) {
+        return switch (expr) {
+            case Expr.Atom a       -> a;
+            case Expr.Var v        -> v;
+            case Expr.RowVar rv    -> rv;
+            case Expr.NumLiteral n -> n;
+            case Expr.StrLiteral s -> s;
+            case Expr.SExpr se     -> processRecurseSExprExpr(se, kb, worldvar, worldNum);
+        };
+    }
+
+    private static Expr processRecurseSExprExpr(Expr.SExpr se, KB kb,
+                                                  String worldvar, int worldNum) {
+        String headName = se.headName();
+        if (headName == null) return se; // null-head var list inside quantifier
+
+        // Modal predicate rewrites
+        if (regHOL3pred.contains(headName))
+            return handleHOL3predExpr(se, kb, worldvar, worldNum);
+        if (regHOLpred.contains(headName))
+            return handleHOLpredExpr(se, kb, worldvar, worldNum);
+        if ("modalAttribute".equals(headName))
+            return handleModalAttributeExpr(se, kb, worldvar, worldNum);
+
+        boolean isQuantifier = Formula.isQuantifier(headName);
+        boolean isLogical    = Formula.isLogicalOperator(headName)
+                               || Formula.EQUAL.equals(headName);
+
+        // Build new arg list by recursing; for quantifiers, skip the variable list
+        List<Expr> args    = se.args();
+        List<Expr> newArgs = new ArrayList<>(args.size());
+
+        for (int i = 0; i < args.size(); i++) {
+            if (isQuantifier && i == 0) {
+                // Keep variable list verbatim — do not add world args to bound variables
+                newArgs.add(args.get(i));
+            } else {
+                newArgs.add(processRecurseExpr(args.get(i), kb, worldvar, worldNum));
+            }
+        }
+
+        Expr.SExpr rebuilt = new Expr.SExpr(se.head(), newArgs);
+
+        // Add world argument to non-rigid, non-reserved, non-logical predicates
+        if (!isLogical && !isQuantifier) {
+            String baseHead = baseFunctor(headName);
+            if (!Formula.isVariable(baseHead)
+                    && !RIGID_RELATIONS.contains(baseHead)
+                    && !RESERVED_MODAL_SYMBOLS.contains(baseHead)
+                    && !modalAttributes.contains(baseHead)) {
+                Expr worldArg = (worldNum == 0)
+                        ? new Expr.Atom("CW")
+                        : new Expr.Var("?" + worldvar + worldNum);
+                List<Expr> argsWithWorld = new ArrayList<>(rebuilt.args());
+                argsWithWorld.add(worldArg);
+                return new Expr.SExpr(rebuilt.head(), argsWithWorld);
+            }
+        }
+        return rebuilt;
+    }
+
+    /***************************************************************
+     * Expr-based equivalent of {@link #processModals(Formula, KB)}.
+     *
+     * <p>Transforms the Expr tree to Kripke modal form:
+     * non-rigid predicates receive a world argument and modal predicates
+     * are rewritten into accessibility-relation implications.
+     *
+     * @param expr the formula Expr tree
+     * @param kb   the knowledge base (used for signature look-ups)
+     * @return a {@link Map.Entry} whose key is the transformed Expr and
+     *         whose value is the world-variable type map
+     *         ({@code "?W<n>" → {"World"}} for the primary world var)
+     */
+    public static Map.Entry<Expr, Map<String, Set<String>>> processModalsExpr(
+            Expr expr, KB kb) {
+
+        // Find a world-variable prefix that doesn't conflict with existing vars
+        Set<String> existingVars = collectAllVarsExpr(expr);
+        String worldvar  = "W";
+        int    worldNum  = 1;
+        while (existingVars.contains("?" + worldvar + worldNum))
+            worldvar = worldvar + "W";
+
+        Expr result = processRecurseExpr(expr, kb, worldvar, worldNum);
+
+        // Record world variable types (mirrors processModals varTypeCache population)
+        Map<String, Set<String>> worldTypes = new HashMap<>();
+        Set<String> wType = new HashSet<>(Collections.singleton("World"));
+        for (int i = 0; i <= worldNum; i++)
+            worldTypes.put("?" + worldvar + i, wType);
+
+        return new SimpleEntry<>(result, worldTypes);
     }
 
     /***************************************************************

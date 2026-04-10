@@ -1,6 +1,9 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.ExprToTHF;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -1069,6 +1072,13 @@ public class THFnew {
             // 1. Skip modal helper symbols – they already have correct types in the header.
             if (Modals.RESERVED_MODAL_SYMBOLS.contains(t))
                 continue;
+            // 2. Skip HOL-rewrite predicates (regHOLpred / regHOL3pred) – their types are
+            //    declared in the header by getTHFHeader(). Writing them again here
+            //    (possibly with a conflicting type like $i) causes a duplicate-declaration
+            //    parse error in LEO-III / Vampire. modalAttributes are NOT in the header
+            //    and are handled by the else-if branch below, so do NOT skip them here.
+            if (Modals.regHOLpred.contains(t) || Modals.regHOL3pred.contains(t))
+                continue;
             if (excludeForTypedef(t,out))
                 continue;
             if (kb.isInstanceOf(t,"Relation")) {
@@ -1243,6 +1253,129 @@ public class THFnew {
         }
     }
 
+    // =======================================================================
+    // Expr-based per-formula translation (FormulaAST path)
+    // These mirror oneTrans / oneTransNonModal but operate on Expr trees.
+    // =======================================================================
+
+    /** ***************************************************************
+     * Expr-based equivalent of {@link #oneTrans}.
+     * Used when the formula is a {@link FormulaAST} with a non-null
+     * {@code expr} field.
+     *
+     * <p>Pipeline:
+     * <ol>
+     *   <li>Run {@link Modals#processModalsExpr} on the original expr for
+     *       type-info only.</li>
+     *   <li>Preprocess the original expr with
+     *       {@link FormulaPreprocessor#preProcessExpr}.</li>
+     *   <li>Build the typeMap from domain/range restrictions plus world-var
+     *       entries from step 1.</li>
+     *   <li>For each preprocessed Expr, apply modal processing again and
+     *       translate to THF via {@link ExprToTHF#translate}.</li>
+     * </ol>
+     */
+    public static void oneTransExpr(KB kb, FormulaAST fa, PrintWriter bw)
+            throws IOException {
+
+        bw.write("% original: " + fa.getFormula() + "\n" +
+                "% from file " + fa.sourceFile + " at line " + fa.startLine + "\n");
+
+        // Step 1: modal pass on the original expr for TYPE INFO only
+        Map.Entry<Expr, Map<String, Set<String>>> modalResult =
+                Modals.processModalsExpr(fa.expr, kb);
+        Expr resExpr = modalResult.getKey();
+
+        if (resExpr == null) return;
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        // Step 2: preprocess ORIGINAL fa (not the modalized one)
+        Set<Expr> processed = fp.preProcessExpr(fa, false, kb);
+        if (processed == null || processed.isEmpty()) return;
+
+        // Step 3: build typeMap from modalized expr
+        Map<String, Set<String>> typeMap = new HashMap<>();
+        typeMap.putAll(fp.findTypeRestrictionsExpr(resExpr, kb));
+        typeMap.putAll(modalResult.getValue()); // world var types (?W0, ?W1 → {"World"})
+
+        // Add primary world var explicitly (mirrors oneTrans's makeWorldVar call)
+        Set<String> worldTypes = new HashSet<>(Collections.singleton("World"));
+        String primaryWorldVar = Modals.makeWorldVarExpr(fa.expr);
+        typeMap.put(primaryWorldVar, worldTypes);
+
+        // Mark formula-typed variables from modalAttribute forms
+        Modals.markModalAttributeFormulaVarsExpr(fa.expr, typeMap);
+
+        // Step 4: for each preprocessed Expr, apply modals and translate to THF
+        for (Expr e : processed) {
+            // Skip formulas where a predicate variable was not expanded by preProcessExpr
+            // (no KB instances found for the constraining type).  Applying a $i-typed
+            // variable as a function causes a Vampire SIGSEGV during THF parsing.
+            // The string-based oneTrans() implicitly drops these via exclude() when
+            // SUMOformulaToTPTPformula.process() returns empty for pred-var formulas.
+            if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(e)) continue;
+
+            Map.Entry<Expr, Map<String, Set<String>>> fmodalResult =
+                    Modals.processModalsExpr(e, kb);
+            Expr fmodal = fmodalResult.getKey();
+            if (fmodal == null) continue;
+
+            // Reuse the existing string-based exclude() check via round-trip
+            // (the string is cheap to compute and exclude() is complex to replicate)
+            Formula fmodalFormula = new Formula(fmodal.toKifString());
+            if (exclude(fmodalFormula, kb, bw)) continue;
+
+            String thf = ExprToTHF.translate(fmodal, false, typeMap);
+            bw.println("thf(ax" + axNum++ + ",axiom," + thf + ").\n");
+        }
+    }
+
+    /** ***************************************************************
+     * Expr-based equivalent of {@link #oneTransNonModal}.
+     * Used when the formula is a {@link FormulaAST} with a non-null
+     * {@code expr} field (plain/non-modal THF generation).
+     *
+     * <p>Pipeline:
+     * <ol>
+     *   <li>Preprocess the expr with
+     *       {@link FormulaPreprocessor#preProcessExpr}.</li>
+     *   <li>Build the typeMap from domain/range restrictions.</li>
+     *   <li>For each preprocessed Expr, translate to THF (non-modal) via
+     *       {@link ExprToTHF#translateNonModal}.</li>
+     * </ol>
+     */
+    public static void oneTransNonModalExpr(KB kb, FormulaAST fa, Writer bw)
+            throws IOException {
+
+        bw.write("% original: " + fa.getFormula() + "\n" +
+                "% from file " + fa.sourceFile + " at line " + fa.startLine + "\n");
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        // Step 1: preprocess original expr
+        Set<Expr> processed = fp.preProcessExpr(fa, false, kb);
+        if (processed == null || processed.isEmpty()) return;
+
+        // Step 2: build typeMap from the original (no modal processing)
+        Map<String, Set<String>> typeMap = new HashMap<>();
+        typeMap.putAll(fp.findTypeRestrictionsExpr(fa.expr, kb));
+
+        // Step 3: translate each preprocessed Expr
+        for (Expr e : processed) {
+            if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(e)) continue;
+            Formula fnewFormula = new Formula(e.toKifString());
+            if (excludeNonModal(fnewFormula, kb, bw)) {
+                String flat = fa.getFormula().replace("\n", " ").replace("\r", " ");
+                bw.write("% excluded processed formula (non-modal): " + flat + "\n");
+                bw.write("% from file " + fa.sourceFile + " at line " + fa.startLine + "\n");
+                continue;
+            }
+            String thf = ExprToTHF.translateNonModal(e, false, typeMap);
+            bw.write("thf(ax" + axNum++ + ",axiom," + thf + ").\n");
+        }
+    }
+
     /** ***************************************************************
      */
     public static void transModalTHF(KB kb) {
@@ -1258,11 +1391,20 @@ public class THFnew {
         try (Writer fstream = new FileWriter(filename);
              PrintWriter out = new PrintWriter(new BufferedWriter(fstream))) {
             // Warm Up
+            // Use the Expr-based path for FormulaAST formulas so that row-var expansion
+            // goes up to arity 7 (matching oneTransExpr's behaviour) and all __N predicate
+            // variants are registered in kb.terms/signatures BEFORE writeTypes() runs.
+            // The string-based preProcess() only expands to RowVars.MAX_ARITY=5, so any
+            // arity-6/7 variant created later by oneTransExpr would be missing a type
+            // declaration (Vampire SIGSEGV due to undeclared predicate).
             FormulaPreprocessor fp = new FormulaPreprocessor();
             for (Formula f : kb.formulaMap.values()) {
                 // We ignore the results; we just want preProcessRecurse()
                 // to run and call copyNewPredFromVariableArity(...)
-                fp.preProcess(f, false, kb);
+                if (f instanceof FormulaAST fa && fa.expr != null)
+                    fp.preProcessExpr(fa, false, kb);
+                else
+                    fp.preProcess(f, false, kb);
             }
             // Pre-collect all integer literals so every n__N constant gets a type declaration.
             SUMOformulaToTPTPformula.setHideNumbers(true);
@@ -1272,10 +1414,18 @@ public class THFnew {
             writeTypes(kb, out, numbers);
             for (Formula f : kb.formulaMap.values()) {
                 if (debug) System.out.println("THFnew.transModalTHF(): " + f);
-                if (!exclude(f,kb,out))
-                    oneTrans(kb,f,out);
+                if (!exclude(f, kb, out)) {
+                    // Use Expr-based path for FormulaAST formulas
+                    if (f instanceof FormulaAST fa && fa.expr != null) {
+                        oneTransExpr(kb, fa, out);
+                    }
+                    else {
+                        System.out.println("THFnew.transModalTHF(): fallback to string-based translation for: "
+                                + f.sourceFile + " line " + f.startLine + ": " + f.getFormula());
+                        oneTrans(kb, f, out);
+                    }
+                }
                 else {
-                    // ISSUE 8
                     String flatFormula = f.getFormula().replace("\n", " ").replace("\r", " ");
                     String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
                     out.write("% excluded: " + stripped + "\n");
@@ -1301,11 +1451,16 @@ public class THFnew {
         try (Writer fstream = new FileWriter(filename);
              Writer out = new BufferedWriter(fstream)) {
 
+            // Use Expr-based expansion in the warm-up so __N predicates up to arity 7
+            // are registered before writeTypesNonModal() runs (same fix as transModalTHF).
             FormulaPreprocessor fp = new FormulaPreprocessor();
             for (Formula f : kb.formulaMap.values()) {
                 // We ignore the results; we just want preProcessRecurse()
                 // to run and call copyNewPredFromVariableArity(...)
-                fp.preProcess(f, false, kb);
+                if (f instanceof FormulaAST fa && fa.expr != null)
+                    fp.preProcessExpr(fa, false, kb);
+                else
+                    fp.preProcess(f, false, kb);
             }
 
             // For pure { $i, $o } we probably don't need a big header.
@@ -1317,8 +1472,17 @@ public class THFnew {
 
             for (Formula f : kb.formulaMap.values()) {
                 if (debug) System.out.println("THFnew.transPlainTHF(): " + f);
-                if (!excludeNonModal(f, kb, out))
-                    oneTransNonModal(kb, f, out);
+                if (!excludeNonModal(f, kb, out)) {
+                    // Use Expr-based path for FormulaAST formulas
+                    if (f instanceof FormulaAST fa && fa.expr != null) {
+                        oneTransNonModalExpr(kb, fa, out);
+                    }
+                    else {
+                        System.out.println("THFnew.transPlainTHF(): fallback to string-based translation for: "
+                                + f.sourceFile + " line " + f.startLine + ": " + f.getFormula());
+                        oneTransNonModal(kb, f, out);
+                    }
+                }
                 else {
                     String flatFormula = f.getFormula()
                             .replace("\n", " ").replace("\r", " ");
