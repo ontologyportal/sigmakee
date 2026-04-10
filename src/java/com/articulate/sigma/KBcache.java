@@ -38,6 +38,7 @@ import com.google.common.collect.Sets;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -156,14 +157,17 @@ public class KBcache implements Serializable {
     // on hot query paths.
     // -----------------------------------------------------------------------
 
-    /** Interning table mapping KB terms ↔ int IDs. Null until buildSymbolTaxonomy() runs. */
-    private SymbolTable symbols = null;
+    /** Interning table mapping KB terms ↔ int IDs. Null until buildSymbolTaxonomy() runs.
+     *  Transient: rebuilt from parents/children after deserialization. */
+    private transient SymbolTable symbols = null;
 
-    /** Int-indexed parents map: rel → (termId → Set<parentId>). Unmodifiable after build. */
-    private Map<String, Map<Integer, Set<Integer>>> parentsBySymbol = null;
+    /** Int-indexed parents map: rel → (termId → Set<parentId>). Unmodifiable after build.
+     *  Transient: rebuilt from parents/children after deserialization. */
+    private transient Map<String, Map<Integer, Set<Integer>>> parentsBySymbol = null;
 
-    /** Int-indexed children map: rel → (termId → Set<childId>). Unmodifiable after build. */
-    private Map<String, Map<Integer, Set<Integer>>> childrenBySymbol = null;
+    /** Int-indexed children map: rel → (termId → Set<childId>). Unmodifiable after build.
+     *  Transient: rebuilt from parents/children after deserialization. */
+    private transient Map<String, Map<Integer, Set<Integer>>> childrenBySymbol = null;
 
     private static final float LOAD_FACTOR = 0.75f;
 
@@ -2318,10 +2322,7 @@ public class KBcache implements Serializable {
     public void buildCaches() {
 
         clearCaches(); // ensure a clean slate
-//        if (!SUMOKBtoTPTPKB.rapidParsing)
-            _buildCaches();
-//        else
-//            _t_buildCaches();
+        _p_buildCaches();
     }
 
     /** ***************************************************************
@@ -2406,7 +2407,100 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
-     * Conventional/sequential version
+     * Parallel build using CompletableFuture with a dependency-wave graph.
+     *
+     * Wave 1 (independent, parallel):
+     *   buildInsts, buildRelationsSet, buildTransitiveRelationsSet, buildDirectParentTerms
+     *
+     * Wave 2 (after Wave 1, parallel with each other):
+     *   buildParents (needs transRels), buildChildren (needs transRels)
+     *
+     * Wave 3 (after Wave 2, parallel with each other):
+     *   collectDomains (needs relations+parents), buildDirectInstances (needs parents)
+     *
+     * Wave 4 (sequential, after Wave 3):
+     *   buildInstTransRels → addTransitiveInstances → buildTransInstOf + correctValences
+     *   → buildFunctionsSet → [disjoint group] → storeCacheAsFormulas → buildSymbolTaxonomy
+     */
+    private void _p_buildCaches() {
+
+        long startMillis = System.currentTimeMillis();
+        if (debug) System.out.println("INFO in KBcache._p_buildCaches(): begin");
+
+        // Pre-warm Formula.stringArgs on all formulas before parallel access.
+        // Formula.getStringArgument() lazily initialises a non-thread-safe ArrayList
+        // via loadArguments(); calling it now (single-threaded) ensures every formula
+        // is fully parsed before Wave 1 threads read argument positions concurrently.
+        for (Formula f : kb.formulaMap.values())
+            f.getStringArgument(0);
+
+        // --- Wave 1: four fully-independent methods, no shared writes ---
+        CompletableFuture<Void> f1a = CompletableFuture.runAsync(this::buildInsts,                    KButilities.EXECUTOR_SERVICE);
+        CompletableFuture<Void> f1b = CompletableFuture.runAsync(this::buildRelationsSet,             KButilities.EXECUTOR_SERVICE);
+        CompletableFuture<Void> f1c = CompletableFuture.runAsync(this::buildTransitiveRelationsSet,   KButilities.EXECUTOR_SERVICE);
+        CompletableFuture<Void> f1d = CompletableFuture.runAsync(this::buildDirectParentTerms,        KButilities.EXECUTOR_SERVICE);
+        CompletableFuture.allOf(f1a, f1b, f1c, f1d).join();
+        System.out.printf("KBcache._p_buildCaches(): Wave 1 done:                     %d m/s%n", System.currentTimeMillis() - startMillis);
+
+        // --- Wave 2: buildParents and buildChildren both need transRels; write to different maps ---
+        long w2 = System.currentTimeMillis();
+        CompletableFuture<Void> f2a = CompletableFuture.runAsync(this::buildParents,  KButilities.EXECUTOR_SERVICE);
+        CompletableFuture<Void> f2b = CompletableFuture.runAsync(this::buildChildren, KButilities.EXECUTOR_SERVICE);
+        CompletableFuture.allOf(f2a, f2b).join();
+        System.out.printf("KBcache._p_buildCaches(): Wave 2 (parents+children):       %d m/s%n", System.currentTimeMillis() - w2);
+
+        // --- Wave 3: collectDomains and buildDirectInstances write to different fields ---
+        long w3 = System.currentTimeMillis();
+        CompletableFuture<Void> f3a = CompletableFuture.runAsync(this::collectDomains,       KButilities.EXECUTOR_SERVICE);
+        CompletableFuture<Void> f3b = CompletableFuture.runAsync(this::buildDirectInstances, KButilities.EXECUTOR_SERVICE);
+        CompletableFuture.allOf(f3a, f3b).join();
+        System.out.printf("KBcache._p_buildCaches(): Wave 3 (domains+directInsts):    %d m/s%n", System.currentTimeMillis() - w3);
+
+        // --- Wave 4: sequential — each step depends on the previous ---
+        long w4 = System.currentTimeMillis();
+        buildInstTransRels();
+        System.out.printf("KBcache._p_buildCaches(): buildInstTransRels:              %d m/s%n", System.currentTimeMillis() - w4);
+        w4 = System.currentTimeMillis();
+        addTransitiveInstances();
+        System.out.printf("KBcache._p_buildCaches(): addTransitiveInstances:          %d m/s%n", System.currentTimeMillis() - w4);
+        w4 = System.currentTimeMillis();
+        buildTransInstOf();
+        correctValences();
+        System.out.printf("KBcache._p_buildCaches(): buildTransInstOf+correctValences:%d m/s%n", System.currentTimeMillis() - w4);
+        w4 = System.currentTimeMillis();
+        buildFunctionsSet();
+        System.out.printf("KBcache._p_buildCaches(): buildFunctionsSet:               %d m/s%n", System.currentTimeMillis() - w4);
+
+        // --- Wave 5: optional disjoint maps ---
+        if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
+            long wd = System.currentTimeMillis();
+            buildExplicitDisjointMap();
+            System.out.printf("KBcache._p_buildCaches(): buildExplicitDisjointMap:        %d m/s%n", System.currentTimeMillis() - wd);
+            wd = System.currentTimeMillis();
+            buildDisjointRelationsMap();
+            System.out.printf("KBcache._p_buildCaches(): buildDisjointRelationsMap:       %d m/s%n", System.currentTimeMillis() - wd);
+            wd = System.currentTimeMillis();
+            buildDisjointMap();
+            System.out.printf("KBcache._p_buildCaches(): buildDisjointMap:                %d m/s%n", System.currentTimeMillis() - wd);
+        }
+
+        long ws = System.currentTimeMillis();
+        storeCacheAsFormulas();
+        System.out.printf("KBcache._p_buildCaches(): storeCacheAsFormulas:            %d m/s%n", System.currentTimeMillis() - ws);
+
+        System.out.printf("INFO in KBcache._p_buildCaches(): size: %d%n", instanceOf.keySet().size());
+
+        // Build int-indexed symbol taxonomy (M5)
+        long wsym = System.currentTimeMillis();
+        buildSymbolTaxonomy();
+        System.out.printf("KBcache._p_buildCaches(): buildSymbolTaxonomy:             %d m/s%n", System.currentTimeMillis() - wsym);
+
+        System.out.printf("KBcache._p_buildCaches(): total:                           %d m/s%n", System.currentTimeMillis() - startMillis);
+        initialized = true;
+    }
+
+    /** ***************************************************************
+     * Conventional/sequential version (kept for reference and fallback)
      */
     private void _buildCaches() {
 
