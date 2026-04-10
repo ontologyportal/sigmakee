@@ -40,6 +40,19 @@ public class ExprToTPTP {
 
     public static boolean debug = false;
 
+    /**
+     * Thread-local snapshot of the KB relations set.  Set this to
+     * {@code kb.kbCache.relations} before translating a batch of formulas so
+     * that {@link #shouldAddMention} can do a single O(1) {@code HashSet.contains()}
+     * instead of the per-atom {@link KB#isRelationInAnyKB} call (which iterates
+     * all KBs on every atom).  Remove it in the {@code finally} block after the
+     * batch to avoid cross-request contamination.
+     *
+     * <p>When {@code null} (the default), falls back to the original per-atom
+     * KB lookup so callers that don't set the snapshot continue to work correctly.</p>
+     */
+    public static final ThreadLocal<Set<String>> relationsThreadLocal = new ThreadLocal<>();
+
     // -----------------------------------------------------------------------
     // Public entry point
     // -----------------------------------------------------------------------
@@ -113,6 +126,29 @@ public class ExprToTPTP {
         } catch (Exception e) {
             return new StringBuilder();
         }
+    }
+
+    /**
+     * Fast-path overload: return a comma-separated list of TPTP variable names
+     * for the free variables in an already-parsed {@link Expr} tree.
+     *
+     * <p>Use this when the caller already holds a pre-built {@link Expr} (e.g.
+     * from {@link FormulaAST#expr}) to avoid redundant ANTLR re-parsing.
+     * Produces the same result as {@link #getQlist(String)} for the same formula.</p>
+     *
+     * @param expr the pre-built expression tree; {@code null} is handled safely
+     * @return comma-separated TPTP variable list (e.g. {@code "V__X,V__Y"}),
+     *         or an empty {@link StringBuilder} if there are no free variables
+     */
+    public static StringBuilder getQlist(Expr expr) {
+        if (expr == null) return new StringBuilder();
+        Set<String> freeVars = collectFreeVars(expr);
+        StringBuilder sb = new StringBuilder();
+        for (String v : freeVars) {
+            if (sb.length() > 0) sb.append(",");
+            sb.append(translateVarName(v));
+        }
+        return sb;
     }
 
     public static String translate(Expr expr, boolean query, String lang) {
@@ -217,6 +253,10 @@ public class ExprToTPTP {
         if (name.endsWith(Formula.FN_SUFF)) return true;
         if (!name.isEmpty() && Character.isLowerCase(name.charAt(0))) return true;
         // Ask the KB — relation names used as terms need __m
+        // Fast path: use pre-captured relations snapshot when available (avoids per-atom KB walk)
+        Set<String> rels = relationsThreadLocal.get();
+        if (rels != null) return rels.contains(name);
+        // Fallback: ask the KB directly (unit-test / legacy context)
         try {
             return KB.isRelationInAnyKB(name);
         } catch (Exception ignored) {

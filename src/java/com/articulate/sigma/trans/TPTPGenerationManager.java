@@ -12,6 +12,7 @@ pre-generating all formats at startup.
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -178,6 +179,11 @@ public class TPTPGenerationManager {
             System.out.println("TPTPGenerationManager.generateFOF(): setHideNumbers true");
             SUMOformulaToTPTPformula.setHideNumbers(true);
 
+            // Pre-capture relations set so ExprToTPTP.shouldAddMention() does a single
+            // O(1) HashSet.contains() per atom instead of the per-atom isRelationInAnyKB() walk.
+            if (kb.kbCache != null && kb.kbCache.relations != null)
+                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
+
             // IMPORTANT: write to tmp, not to target
             try (java.io.PrintWriter pw = new java.io.PrintWriter(
                     java.nio.file.Files.newBufferedWriter(tmp, java.nio.charset.StandardCharsets.UTF_8))) {
@@ -212,6 +218,7 @@ public class TPTPGenerationManager {
         }
         finally {
             // Clean up ThreadLocal state to prevent leaks in thread pools
+            ExprToTPTP.relationsThreadLocal.remove();
             SUMOformulaToTPTPformula.clearThreadLocal();
             SUMOKBtoTPTPKB.clearThreadLocal();
             SUMOtoTFAform.clearThreadLocal();
@@ -323,6 +330,9 @@ public class TPTPGenerationManager {
             System.out.println("==== TPTPGenerationManager: Generating THF Modal file: " + thfFilename);
             long startTime = System.currentTimeMillis();
 
+            if (kb.kbCache != null && kb.kbCache.relations != null)
+                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
+
             THFnew.transModalTHF(kb);
 
             long elapsed = System.currentTimeMillis() - startTime;
@@ -334,6 +344,7 @@ public class TPTPGenerationManager {
             e.printStackTrace();
         }
         finally {
+            ExprToTPTP.relationsThreadLocal.remove();
             thfModalGenerating.set(false);
             thfModalLatch.countDown();
         }
@@ -362,6 +373,9 @@ public class TPTPGenerationManager {
             System.out.println("==== TPTPGenerationManager: Generating THF Plain file: " + thfFilename);
             long startTime = System.currentTimeMillis();
 
+            if (kb.kbCache != null && kb.kbCache.relations != null)
+                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
+
             THFnew.transPlainTHF(kb);
 
             long elapsed = System.currentTimeMillis() - startTime;
@@ -373,6 +387,7 @@ public class TPTPGenerationManager {
             e.printStackTrace();
         }
         finally {
+            ExprToTPTP.relationsThreadLocal.remove();
             thfPlainGenerating.set(false);
             thfPlainLatch.countDown();
         }
@@ -576,6 +591,11 @@ public class TPTPGenerationManager {
             System.out.println("TPTPGenerationManager.generateFOFToPath(): setHideNumbers true");
             SUMOformulaToTPTPformula.setHideNumbers(true);
 
+            // Pre-capture relations set so ExprToTPTP.shouldAddMention() does a single
+            // O(1) HashSet.contains() per atom instead of the per-atom isRelationInAnyKB() walk.
+            if (kb.kbCache != null && kb.kbCache.relations != null)
+                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
+
             // Redirect axiomKey writes to a session-local map so this session-specific
             // generation does not overwrite the global SUMOKBtoTPTPKB.axiomKey, which
             // must only track shared base-KB axiom names.
@@ -598,6 +618,7 @@ public class TPTPGenerationManager {
 
         }
         finally {
+            ExprToTPTP.relationsThreadLocal.remove();
             SUMOformulaToTPTPformula.clearThreadLocal();
             SUMOKBtoTPTPKB.clearThreadLocal();
             SUMOtoTFAform.clearThreadLocal();
@@ -632,6 +653,8 @@ public class TPTPGenerationManager {
             SUMOformulaToTPTPformula.setLang("fof");
             System.out.println("TPTPGenerationManager.rebuildAxiomKey(): setHideNumbers true");
             SUMOformulaToTPTPformula.setHideNumbers(true);
+            if (kb.kbCache != null && kb.kbCache.relations != null)
+                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
             // Null writer: we want the axiomKey side-effect only, not file output.
             try (java.io.PrintWriter pw = new java.io.PrintWriter(java.io.Writer.nullWriter())) {
                 SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
@@ -647,6 +670,7 @@ public class TPTPGenerationManager {
             e.printStackTrace();
         }
         finally {
+            ExprToTPTP.relationsThreadLocal.remove();
             SUMOformulaToTPTPformula.clearThreadLocal();
             SUMOKBtoTPTPKB.clearThreadLocal();
             SUMOtoTFAform.clearThreadLocal();
