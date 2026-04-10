@@ -932,23 +932,26 @@ public class Diagnostics {
         StringBuilder html = new StringBuilder();
         Map<String,Map<String, List<String>>> missing = Diagnostics.missingConstituentDependencies(kb);
         for (Map.Entry<String,Map<String,List<String>>> constituent : missing.entrySet()) {
-            html.append("Loaded constituent " + constituent.getKey() + " uses terms defined in these unloaded constituents: ");
-            html.append("<div style=\"padding-left:20px\">");
-            for(Map.Entry<String,List<String>> missingDependee : constituent.getValue().entrySet()) {
-                html.append(missingDependee.getKey() + " terms(" + missingDependee.getValue().size() + "): ");
-                html.append("<a href=\"" + kbHref + "&term=" + missingDependee.getValue().get(0) + "\" target=\"_blank\">" + missingDependee.getValue().get(0) + "</a>");
-                for(int i = 1; i < missingDependee.getValue().size(); i++) {
-                    String term = missingDependee.getValue().get(i);
-                    html.append(", " + "<a href=\"" + kbHref + "&term=" + term + "\" target=\"_blank\">" + term + "</a>");
-                    if(i > 25) {
-                        html.append(" and " + (missingDependee.getValue().size() - 25) + " more terms.");
-                        break;
+            if (constituent.getValue().size() != 0) {
+                html.append("Loaded constituent " + constituent.getKey() + " uses terms defined in these unloaded constituents: ");
+                html.append("<div style=\"padding-left:20px\">");
+                for(Map.Entry<String,List<String>> missingDependee : constituent.getValue().entrySet()) {
+                    html.append(missingDependee.getKey() + " terms(" + missingDependee.getValue().size() + "): ");
+                    html.append("<a href=\"" + kbHref + "&term=" + missingDependee.getValue().get(0) + "\" target=\"_blank\">" + missingDependee.getValue().get(0) + "</a>");
+                    for(int i = 1; i < missingDependee.getValue().size(); i++) {
+                        String term = missingDependee.getValue().get(i);
+                        html.append(", " + "<a href=\"" + kbHref + "&term=" + term + "\" target=\"_blank\">" + term + "</a>");
+                        if(i > 25) {
+                            html.append(" and " + (missingDependee.getValue().size() - 25) + " more terms.");
+                            break;
+                        }
                     }
+                    html.append("<br>");
                 }
-                html.append("<br>");
+                html.append("</div><br>");
             }
-            html.append("</div><br>");
         }
+        if(html.toString().isEmpty()) html.append("No missing constituent dependencies found");
         return html.toString();
     }
     
