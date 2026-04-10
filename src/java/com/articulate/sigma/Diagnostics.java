@@ -735,7 +735,7 @@ public class Diagnostics {
                     for (int j = 0; j < fileDependencies.size(); j++) {
                         fileDepend = (String) fileDependencies.get(j);
                         if (!fileDepend.equals(fileUsesName))
-                            addToDoubleMapList(fileDepends,fileUsesName,fileDepend,term);
+                            addToDoubleMapList(fileDepends,StringUtil.removeFilePath(fileUsesName),StringUtil.removeFilePath(fileDepend),term);
                     }
                 }
             }
@@ -1896,8 +1896,8 @@ public class Diagnostics {
                     Map<String, List<String>> innerMap = outerEntry.getValue();
                     for (Map.Entry<String, List<String>> innerEntry : innerMap.entrySet()) {
                         List<String> values = innerEntry.getValue();
-                        String dependent = StringUtil.removeFilePath(outerEntry.getKey());
-                        String dependee = StringUtil.removeFilePath(innerEntry.getKey());
+                        String dependent = outerEntry.getKey();
+                        String dependee = innerEntry.getKey();
                         if (!dependent.equals("SUMO_Cache.kif") && !dependee.equals("SUMO_Cache.kif"))
                             System.out.println(dependent + " uses " + values.size() + " terms defined in " + dependee);
                     }
