@@ -25,6 +25,8 @@ import org.junit.runners.Suite;
     AffectedFormulasTest.class,
     KBcacheUnitTest.class,
     KBcacheIncrementalTest.class,
+    KBcacheSymbolTest.class,
+    SymbolTableTest.class,
     KIFTest.class,
     KifFileCheckerTest.class,
     LeoExecutableConfigTest.class,

@@ -149,6 +149,22 @@ public class KBcache implements Serializable {
 
     public boolean initialized = false;
 
+    // -----------------------------------------------------------------------
+    // Built once after buildCaches() completes by calling buildSymbolTaxonomy().
+    // Accessors getParentsSymbol / getChildrenSymbol produce the same results
+    // as the string maps but use integer lookups to reduce String hashing overhead
+    // on hot query paths.
+    // -----------------------------------------------------------------------
+
+    /** Interning table mapping KB terms ↔ int IDs. Null until buildSymbolTaxonomy() runs. */
+    private SymbolTable symbols = null;
+
+    /** Int-indexed parents map: rel → (termId → Set<parentId>). Unmodifiable after build. */
+    private Map<String, Map<Integer, Set<Integer>>> parentsBySymbol = null;
+
+    /** Int-indexed children map: rel → (termId → Set<childId>). Unmodifiable after build. */
+    private Map<String, Map<Integer, Set<Integer>>> childrenBySymbol = null;
+
     private static final float LOAD_FACTOR = 0.75f;
 
     public static HashMap<String,Integer> logOpValences = new HashMap<>();
@@ -748,18 +764,32 @@ public class KBcache implements Serializable {
 
         if (debug) System.out.println("INFO in KBcache.childOfP(): relation, parent, child: "
                 + rel + " " + parent + " " + child);
-        if (parent.equals(child)) {
+        if (parent.equals(child))
             return false;
+
+        // Fast path: use symbol-indexed maps if available (avoids String hashing on hot query path)
+        if (childrenBySymbol != null && symbols != null) {
+            Map<Integer, Set<Integer>> relMap = childrenBySymbol.get(rel);
+            if (relMap == null) return false;
+            int parentId = symbols.lookup(parent);
+            if (parentId == -1) return false;
+            Set<Integer> childIds = relMap.get(parentId);
+            if (childIds == null) return false;
+            int childId = symbols.lookup(child);
+            if (childId == -1) return false;
+            return childIds.contains(childId);
         }
+
+        // Fallback: string map (symbol taxonomy not yet built, e.g. session caches or early init)
         Map<String,Set<String>> childMap = children.get(rel);
         if (childMap == null)
             return false;
         Set<String> childSet = childMap.get(parent);
         if (debug) System.out.println("INFO in KBcache.childOfP(): children of " + parent + " : " + childSet);
         if (childSet == null) {
-        	if (debug) System.out.println("INFO in KBcache.childOfP(): null childset for relation, parent, child: "
-                + rel + " " + parent + " " + child);
-        	return false;
+            if (debug) System.out.println("INFO in KBcache.childOfP(): null childset for relation, parent, child: "
+                    + rel + " " + parent + " " + child);
+            return false;
         }
         if (debug) System.out.println("INFO in KBcache.childOfP(): child set contains " + child + " : " + childSet.contains(child));
         return childSet.contains(child);
@@ -2170,8 +2200,121 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
-     * Main entry point for the class.
+     * Builds int-indexed parent and child maps from the string-based
+     * {@link #parents} and {@link #children} maps.
+     *
+     * <p>Call this after {@link #buildCaches()} to enable the fast
+     * {@link #getParentsSymbol} / {@link #getChildrenSymbol} accessors.</p>
      */
+    public void buildSymbolTaxonomy() {
+
+        // Collect all distinct terms across parents and children
+        Set<String> allTerms = new HashSet<>();
+        for (Map.Entry<String, Map<String, Set<String>>> relEntry : parents.entrySet()) {
+            for (Map.Entry<String, Set<String>> termEntry : relEntry.getValue().entrySet()) {
+                allTerms.add(termEntry.getKey());
+                allTerms.addAll(termEntry.getValue());
+            }
+        }
+
+        SymbolTable st = new SymbolTable(allTerms.size());
+        for (String t : allTerms) st.intern(t);
+
+        Map<String, Map<Integer, Set<Integer>>> pSym = new HashMap<>(parents.size());
+        for (Map.Entry<String, Map<String, Set<String>>> relEntry : parents.entrySet()) {
+            String rel = relEntry.getKey();
+            Map<Integer, Set<Integer>> inner = new HashMap<>(relEntry.getValue().size());
+            for (Map.Entry<String, Set<String>> termEntry : relEntry.getValue().entrySet()) {
+                int termId = st.intern(termEntry.getKey());
+                Set<Integer> parentIds = new HashSet<>(termEntry.getValue().size());
+                for (String p : termEntry.getValue()) parentIds.add(st.intern(p));
+                inner.put(termId, Collections.unmodifiableSet(parentIds));
+            }
+            pSym.put(rel, inner);
+        }
+
+        Map<String, Map<Integer, Set<Integer>>> cSym = new HashMap<>(children.size());
+        for (Map.Entry<String, Map<String, Set<String>>> relEntry : children.entrySet()) {
+            String rel = relEntry.getKey();
+            Map<Integer, Set<Integer>> inner = new HashMap<>(relEntry.getValue().size());
+            for (Map.Entry<String, Set<String>> termEntry : relEntry.getValue().entrySet()) {
+                int termId = st.intern(termEntry.getKey());
+                Set<Integer> childIds = new HashSet<>(termEntry.getValue().size());
+                for (String c : termEntry.getValue()) childIds.add(st.intern(c));
+                inner.put(termId, Collections.unmodifiableSet(childIds));
+            }
+            cSym.put(rel, inner);
+        }
+
+        this.symbols          = st;
+        this.parentsBySymbol  = Collections.unmodifiableMap(pSym);
+        this.childrenBySymbol = Collections.unmodifiableMap(cSym);
+    }
+
+    /**
+     * Returns the set of transitive parents of {@code term} under {@code rel}
+     * using the symbol-indexed path built by {@link #buildSymbolTaxonomy}.
+     *
+     * <p>Falls back to the string map if the symbol taxonomy has not been built.</p>
+     *
+     * @param term the KB term to look up
+     * @param rel  the relation (e.g. {@code "subclass"})
+     * @return unmodifiable set of parent names; empty if none or unknown
+     */
+    public Set<String> getParentsSymbol(String term, String rel) {
+        if (parentsBySymbol == null || symbols == null) {
+            Map<String, Set<String>> relMap = parents.get(rel);
+            if (relMap == null) return Collections.emptySet();
+            Set<String> result = relMap.get(term);
+            return result != null ? result : Collections.emptySet();
+        }
+        int termId = symbols.lookup(term);
+        if (termId == -1) return Collections.emptySet();
+        Map<Integer, Set<Integer>> relMap = parentsBySymbol.get(rel);
+        if (relMap == null) return Collections.emptySet();
+        Set<Integer> parentIds = relMap.get(termId);
+        if (parentIds == null) return Collections.emptySet();
+        Set<String> result = new HashSet<>(parentIds.size());
+        for (int pid : parentIds) result.add(symbols.getName(pid));
+        return Collections.unmodifiableSet(result);
+    }
+
+    /**
+     * Returns the set of transitive children of {@code term} under {@code rel}
+     * using the symbol-indexed path built by {@link #buildSymbolTaxonomy}.
+     *
+     * <p>Falls back to the string map if the symbol taxonomy has not been built.</p>
+     *
+     * @param term the KB term to look up
+     * @param rel  the relation (e.g. {@code "subclass"})
+     * @return unmodifiable set of child names; empty if none or unknown
+     */
+    public Set<String> getChildrenSymbol(String term, String rel) {
+        if (childrenBySymbol == null || symbols == null) {
+            Map<String, Set<String>> relMap = children.get(rel);
+            if (relMap == null) return Collections.emptySet();
+            Set<String> result = relMap.get(term);
+            return result != null ? result : Collections.emptySet();
+        }
+        int termId = symbols.lookup(term);
+        if (termId == -1) return Collections.emptySet();
+        Map<Integer, Set<Integer>> relMap = childrenBySymbol.get(rel);
+        if (relMap == null) return Collections.emptySet();
+        Set<Integer> childIds = relMap.get(termId);
+        if (childIds == null) return Collections.emptySet();
+        Set<String> result = new HashSet<>(childIds.size());
+        for (int cid : childIds) result.add(symbols.getName(cid));
+        return Collections.unmodifiableSet(result);
+    }
+
+    /**
+     * Returns the {@link SymbolTable} built by {@link #buildSymbolTaxonomy},
+     * or {@code null} if the symbol taxonomy has not been built yet.
+     */
+    public SymbolTable getSymbolTable() {
+        return symbols;
+    }
+
     public void buildCaches() {
 
         clearCaches(); // ensure a clean slate
@@ -2324,6 +2467,13 @@ public class KBcache implements Serializable {
 
         System.out.printf("INFO in KBcache.buildCaches(): size: %d%n", instanceOf.keySet().size());
         System.out.printf("KBcache.buildCaches():                              %d total seconds%n", (System.currentTimeMillis() - startMillis) / KButilities.ONE_K);
+
+        // Build int-indexed symbol taxonomy (M5) so getParentsSymbol/getChildrenSymbol
+        // use integer comparisons instead of String hashing on hot query paths.
+        millis = System.currentTimeMillis();
+        buildSymbolTaxonomy();
+        System.out.printf("KBcache.buildCaches(): buildSymbolTaxonomy:         %d m/s%n", (System.currentTimeMillis() - millis));
+
         initialized = true;
     }
 
