@@ -19,11 +19,10 @@
     http://github.com/ontologyportal
 */
 
-if (!role.equals("admin") && !role.equals("user")) {
+  if (!role.equals("admin") && !role.equals("user")) {
     response.sendRedirect("KBs.jsp");
     return;
-}
-
+  }
   System.out.println("INFO in Diag.jsp: Running diagnostics");
   long t0 = System.currentTimeMillis();
   String kbHref = null;
@@ -38,29 +37,37 @@ if (!role.equals("admin") && !role.equals("user")) {
     %>
     <%@include file="CommonHeader.jsp" %>
 </form>
-
+<table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
+<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 <a href="WNDiag.jsp?kb=<%=kbName%>">Run WordNet diagnostics</a><p>
-
 <%
   // Terms without parents
   List<String> termsWithoutParent = Diagnostics.termsNotBelowEntity(kb);
-  out.println(HTMLformatter.htmlDivider("Error: Terms without a root at Entity"));
+  out.println("<details>");
+  out.println("<summary><b>Error: Terms without a root at Entity</b><hr></summary>");
   out.println(HTMLformatter.termList(termsWithoutParent,kbHref));
+  out.println("</details></br>");
 
   // Children of disjoint parents
   List<String> disjoint = Diagnostics.childrenOfDisjointParents(kb);
-  out.println("<br>" + HTMLformatter.htmlDivider("Error: Terms with disjoint parents"));
+  out.println("<details>");
+  out.println("<summary><b>Error: Terms with disjoint parents</b><hr></summary>");
   out.println(HTMLformatter.termList(disjoint,kbHref));
+  out.println("</details></br>");
 
   // Children of disjoint parents
   List<String> parts = Diagnostics.partitionViolation(kb);
-  out.println("<br>" + HTMLformatter.htmlDivider("Error: Partition violations"));
+  out.println("<details>");
+  out.println("<summary><b>Error: Partition violations</b><hr></summary>");
   for (String s : parts) {
       out.println(s + "<br>\n");
   }
   out.println(HTMLformatter.termList(disjoint,kbHref));
+  out.println("</details></br>");
 
-  out.println("<br>" + HTMLformatter.htmlDivider("Error: Formulae with type conflicts"));
+  // Formulae with type conflicts
+  out.println("<details>");
+  out.println("<summary><b>Error: Formulae with type conflicts</b><hr></summary>");
   KButilities.clearErrors();
   kb.kbCache.errors.clear();
   SUMOtoTFAform.errors.clear();
@@ -73,51 +80,75 @@ if (!role.equals("admin") && !role.equals("user")) {
       kb.kbCache.errors.clear();
       SUMOtoTFAform.errors.clear();
   }
+  out.println("</details></br>");
 
   // relations without format
   List<String> termsWithoutFormat = Diagnostics.relationsWithoutFormat(kb);
-  out.println("<br>" + HTMLformatter.htmlDivider("Warning: Relations without format"));
+  out.println("<details>");
+  out.println("<summary><b>Warning: Relations without format</b><hr></summary>");
   out.println(HTMLformatter.termList(termsWithoutFormat,kbHref));
+  out.println("</details></br>");
 
   // Terms without documentation
   List<String> termsWithoutDoc = Diagnostics.termsWithoutDoc(kb);
-  out.println("<br>" + HTMLformatter.htmlDivider("Warning: Terms without documentation"));
+  out.println("<details>");
+  out.println("<summary><b>Warning: Terms without documentation</b><hr></summary>");
   out.println(HTMLformatter.termList(termsWithoutDoc,kbHref));
+  out.println("</details></br>");
 
   // Terms with multiple documentation
   List<String> termsWithMultipleDoc = Diagnostics.termsWithMultipleDoc(kb);
-  out.println("<br>" + HTMLformatter.htmlDivider("Warning: Terms with multiple documentation"));
+  out.println("<details>");
+  out.println("<summary><b>Warning: Terms with multiple documentation</b><hr></summary>");
   out.println(HTMLformatter.termList(termsWithMultipleDoc,kbHref));
+  out.println("</details></br>");
 
   // Terms differing only in capitalization
   List<String> termCapDiff = Diagnostics.termCapDiff(kb);
-  out.println("<br>" + HTMLformatter.htmlDivider("Warning: Terms differing only in capitalization"));
+  out.println("<details>");
+  out.println("<summary><b>Warning: Terms differing only in capitalization</b><hr></summary>");
   out.println(HTMLformatter.termList(termCapDiff,kbHref));
+  out.println("</details></br>");
 
   // Members (instances) of a parent class that are not also members
   // of one of the subclasses that constitute the exhaustive
   // decomposition of the parent class.
   List<String> termsMissingFromPartition = Diagnostics.membersNotInAnyPartitionClass(kb);
-  out.println("<br>" + HTMLformatter.htmlDivider("Warning: Instances of a partitioned class that are not instances of one of the class's partitioning subclasses"));
+  out.println("<details>");
+  out.println("<summary><b>Warning: Instances of a partitioned class that are not instances of one of the class's partitioning subclasses</b><hr></summary>");
   out.println(HTMLformatter.termList(termsMissingFromPartition,kbHref));
+  out.println("</details></br>");
 
+  // Terms without rules
   List<String> norule = Diagnostics.termsWithoutRules(kb);
-  out.println("<br>" + HTMLformatter.htmlDivider("Warning: Terms that do not appear in any rules"));
+  out.println("<details>");
+  out.println("<summary><b>Warning: Terms that do not appear in any rules</b><hr></summary>");
   out.println(HTMLformatter.termList(norule,kbHref));
+  out.println("</details></br>");
 
+  // Formulae extraneous quanitified variables
   List<Formula> noquant = Diagnostics.quantifierNotInBody(kb);
-  out.println("<br>" + HTMLformatter.htmlDivider("Warning: Formulae with extraneous quantified variables"));
+  out.println("<details>");
+  out.println("<summary><b>Warning: Formulae with extraneous quantified variables</b><hr></summary>");
   for (Formula f : noquant)
 	  out.println(f.htmlFormat(kbHref) + "<p>");
+  out.println("</details></br>");
 
+  // Formulae with unquantified variables appearing only in consequent
   List<Formula> noquantconseq = Diagnostics.unquantsInConseq(kb);
-  out.println("<br>" + HTMLformatter.htmlDivider("Warning: Formulae with unquantified variable appearing only in consequent"));
+  out.println("<details>");
+  out.println("<summary><b>Warning: Formulae with unquantified variable appearing only in consequent</b><hr></summary>");
   for (Formula f : noquantconseq)
 	  out.println(f.htmlFormat(kbHref) + "<p>");
+  out.println("</details></br>");
 
-  out.println("<br>" + HTMLformatter.htmlDivider("Warning: Files with mutual dependencies"));
-  out.println(Diagnostics.printTermDependency(kb,kbHref));
+  // Files with mutual term dependencies
+  out.println("<details>");
+  out.println("<summary><b>Warning: Files with mutual dependencies</b><hr></summary>");
+  out.println(Diagnostics.printMutualDependencies(kb,kbHref));
+  out.println("</details></br>");
 
+  // Diagnostic runtime
   System.out.println("  > " + ((System.currentTimeMillis() - t0) / 1000.0)
                      + " seconds to run all diagnostics");
 %>

@@ -1412,7 +1412,7 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
         expected.add(new Formula(formulaStr));
 
 //        assertEquals(expected, actual);
-        assertEquals("actual size differs", actual.size(), 89);
+        assertEquals("actual size differs", actual.size(), 90);
     }
 
     /** ***************************************************************
