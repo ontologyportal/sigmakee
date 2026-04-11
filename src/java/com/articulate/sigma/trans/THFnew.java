@@ -1006,14 +1006,13 @@ public class THFnew {
 
     /** ***************************************************************
      * Recursively collect all numeric literals from a formula string.
-     * Collects integers and floats; skips negatives (rare in SUMO,
-     * and the "--" normalization produces awkward constant names).
+     * Collects integers, floats, and negatives (e.g. -1 → n___1).
      */
     private static void collectNumbersFromFormula(String fstr, Set<String> numbers) {
 
         Formula f = new Formula(fstr);
         if (f.atom()) {
-            if (StringUtil.isNumeric(fstr) && !fstr.contains("-"))
+            if (StringUtil.isNumeric(fstr))
                 numbers.add(fstr);
             return;
         }
@@ -1046,7 +1045,7 @@ public class THFnew {
     public static void writeIntegerTypes(Set<String> numbers, Writer out) throws IOException {
 
         for (String n : numbers) {
-            String normalized = n.replace('.', '_');
+            String normalized = n.replace('.', '_').replace('-', '_');
             out.write("thf(n__" + normalized + "_tp,type,(n__" + normalized + " : $i)).\n");
         }
     }
