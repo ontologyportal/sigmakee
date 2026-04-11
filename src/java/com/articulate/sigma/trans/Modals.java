@@ -5,7 +5,6 @@ import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 
-import java.io.IOException;
 import java.util.*;
 
 public class Modals {
@@ -494,7 +493,7 @@ public class Modals {
 
     /***************************************************************
      */
-    public static String genDisjointModals() {
+    public static String genDistinctModals() {
 
         StringBuffer result = new StringBuffer();
         HashSet<String> allModals = new HashSet<>();
@@ -502,8 +501,9 @@ public class Modals {
         allModals.addAll(regHOL3pred);
         result.append("thf(tdistinct,type,$distinct(");
         for (String s : allModals) {
-            result.append(s + ",");
+            result.append("s__" + s + ",");
         }
+        result.deleteCharAt(result.length()-1);
         result.append(")).");
         return result.toString();
     }
@@ -643,7 +643,7 @@ public class Modals {
                 //"thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n" +
 
                 genAllModalSystems() +
-                genDisjointModals();
+                genDistinctModals();
     }
 
     /***************************************************************
