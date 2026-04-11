@@ -848,6 +848,20 @@ public class KBcache implements Serializable {
      */
     public boolean subclassOf(String child, String parent) {
 
+        if (parent.equals(child)) return false;
+        // Fast path: symbol-indexed map (avoids String hashing on hot query path)
+        if (parentsBySymbol != null && symbols != null) {
+            Map<Integer, Set<Integer>> relMap = parentsBySymbol.get("subclass");
+            if (relMap == null) return false;
+            int childId = symbols.lookup(child);
+            if (childId == -1) return false;
+            Set<Integer> parentIds = relMap.get(childId);
+            if (parentIds == null) return false;
+            int parentId = symbols.lookup(parent);
+            if (parentId == -1) return false;
+            return parentIds.contains(parentId);
+        }
+        // Fallback: string map (symbol taxonomy not yet built)
     	Map<String,Set<String>> prentsForRel = parents.get("subclass");
     	if (prentsForRel != null) {
             Set<String> prents = prentsForRel.get(child);
@@ -864,6 +878,20 @@ public class KBcache implements Serializable {
      */
     public boolean subAttributeOf(String child, String parent) {
 
+        if (parent.equals(child)) return false;
+        // Fast path: symbol-indexed map (avoids String hashing on hot query path)
+        if (parentsBySymbol != null && symbols != null) {
+            Map<Integer, Set<Integer>> relMap = parentsBySymbol.get("subAttribute");
+            if (relMap == null) return false;
+            int childId = symbols.lookup(child);
+            if (childId == -1) return false;
+            Set<Integer> parentIds = relMap.get(childId);
+            if (parentIds == null) return false;
+            int parentId = symbols.lookup(parent);
+            if (parentId == -1) return false;
+            return parentIds.contains(parentId);
+        }
+        // Fallback: string map (symbol taxonomy not yet built)
         Map<String,Set<String>> prentsForRel = parents.get("subAttribute");
         if (prentsForRel != null) {
             Set<String> prents = prentsForRel.get(child);
