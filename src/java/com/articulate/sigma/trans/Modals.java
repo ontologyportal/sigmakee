@@ -493,6 +493,22 @@ public class Modals {
     }
 
     /***************************************************************
+     */
+    public static String genDisjointModals() {
+
+        StringBuffer result = new StringBuffer();
+        HashSet<String> allModals = new HashSet<>();
+        allModals.addAll(regHOLpred);
+        allModals.addAll(regHOL3pred);
+        result.append("thf(tdistinct,type,$distinct(");
+        for (String s : allModals) {
+            result.append(s + ",");
+        }
+        result.append(")).");
+        return result.toString();
+    }
+
+    /***************************************************************
      * Generates the appropriate modal system for every operator
      * Use system D for deontics and T for everything else
      */
@@ -626,7 +642,8 @@ public class Modals {
                 // ISSUE 6
                 //"thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n" +
 
-                genAllModalSystems();
+                genAllModalSystems() +
+                genDisjointModals();
     }
 
     /***************************************************************
