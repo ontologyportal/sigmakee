@@ -4,6 +4,7 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTHF;
 import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -1725,10 +1726,8 @@ public class THFnew {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("THFnew.main(): KB loaded");
-            if (!kb.errors.isEmpty()) {
-                System.err.println("Errors: " + kb.errors);
-                return;
-            }
+            if (!kb.errors.isEmpty())
+                System.err.println("THFnew.main(): KB loaded with non-fatal errors: " + kb.errors);
             System.out.println("contains one : " + argMap.containsKey("one"));
             System.out.println("has one arg: " + (argMap.containsKey("one") && argMap.get("one").size() == 1));
             if (argMap.containsKey("one") && argMap.get("one").size() == 1) {
@@ -1736,7 +1735,16 @@ public class THFnew {
                 System.out.println("THFnew.main(): translate to THF (with modals)");
                 PrintWriter writer = new PrintWriter(System.out, true);
                 try {
-                    oneTrans(kb, new Formula(argMap.get("one").get(0)), writer);
+                    String kifStr = argMap.get("one").get(0);
+                    SuokifVisitor visitor = SuokifVisitor.parseString(kifStr);
+                    FormulaAST fa = visitor.result.isEmpty() ? null
+                            : visitor.result.values().iterator().next();
+                    if (fa != null && fa.expr != null) {
+                        oneTransExpr(kb, fa, writer);
+                    } else {
+                        System.out.println("THFnew.main(): FormulaAST parse failed or expr is null — falling back to string-based translation");
+                        oneTrans(kb, new Formula(kifStr), writer);
+                    }
                 }
                 catch (Exception e) {
                     e.printStackTrace();
