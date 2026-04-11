@@ -22,6 +22,7 @@ import com.articulate.sigma.trans.TPTPutil;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNetUtilities;
+import com.articulate.sigma.security.*;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -787,7 +788,7 @@ public class HTMLformatter {
                                                    int arg, String type) {
 
         if (!StringUtil.emptyString(term))
-            term = StringUtil.replaceNonIdChars(StringUtil.removeHTML(term));
+            term = ValidationUtils.sanitizeSumoTerm(term);
         List<Formula> forms = kb.ask(type, arg, term);
         StringBuilder show = new StringBuilder();
         String limitString = "";

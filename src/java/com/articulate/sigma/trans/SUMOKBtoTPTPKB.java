@@ -2,6 +2,7 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.ExprToTFF;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.parsing.SuokifVisitor;
@@ -755,21 +756,32 @@ public class SUMOKBtoTPTPKB {
                             }
                             break;
                         case "tff":
-                            stfa = new SUMOtoTFAform();
-                            SUMOtoTFAform.kb = kb;
                             pw.println("% tff input: " + f3.format("", "", Formula.SPACE));
                             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: " + f3.format("", "", " "));
-                            stfa.sorts = stfa.missingSorts(f3);
-                            if (stfa.sorts != null && !stfa.sorts.isEmpty()) {
-                                f3.tffSorts.addAll(stfa.sorts);
+                            // Fast path: Expr-based TFF translation (no KB type walk, sort inference from formula only)
+                            result = ExprToTFF.translateKifString(f3.getFormula(), false, kb);
+                            if (result != null && !result.isBlank()) {
+                                tffExprCount.incrementAndGet();
+                                // Sort annotations are embedded in variable lists by ExprToTFF;
+                                // no separate tff(...,type,...) declarations needed.
                             }
-                            result = SUMOtoTFAform.process(f3.getFormula(), false);
-                            printTFFNumericConstants(pw);
-                            SUMOtoTFAform.initNumericConstantTypes();
+                            else {
+                                // Fallback: full SUMOtoTFAform processing with KB type inference
+                                tffStringCount.incrementAndGet();
+                                stfa = new SUMOtoTFAform();
+                                SUMOtoTFAform.kb = kb;
+                                stfa.sorts = stfa.missingSorts(f3);
+                                if (stfa.sorts != null && !stfa.sorts.isEmpty())
+                                    f3.tffSorts.addAll(stfa.sorts);
+                                result = SUMOtoTFAform.process(f3.getFormula(), false);
+                                printTFFNumericConstants(pw);
+                                SUMOtoTFAform.initNumericConstantTypes();
+                            }
                             if (!StringUtil.emptyString(result)) {
                                 f.theTffFormulas.add(result);
                                 f.theTptpFormulas.add(result); // Legacy compatibility
-                            } else if (!StringUtil.emptyString(SUMOtoTFAform.getFilterMessage())) {
+                            }
+                            else if (!StringUtil.emptyString(SUMOtoTFAform.getFilterMessage())) {
                                 pw.println("% " + SUMOtoTFAform.getFilterMessage());
                             }
                             break;
@@ -962,6 +974,15 @@ public class SUMOKBtoTPTPKB {
         res.formula = formula;
         Formula f = formula;
 
+        // Session isolation: skip UA formulas from other sessions during base generation.
+        // Base generation (sessionId==null) must never include session-specific assertions —
+        // they belong only in session TPTP files.  Cross-session formulas pollute the shared
+        // SUMO.tptp and corrupt any other session that reads it.
+        if (f.uaSessionId != null) {
+            res.skipEverything = true;
+            return res;
+        }
+
         // Non-reasoning formulas: skip entirely (nothing to write)
         if (isNonReasoningForATP(f.getFormula())) {
             res.skipEverything = true;
@@ -1053,20 +1074,27 @@ public class SUMOKBtoTPTPKB {
                     } else { // tff
                         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % expr path tff input: "
                                 + pexpr.toKifString());
-                        SUMOtoTFAform stfa = new SUMOtoTFAform();
-                        SUMOtoTFAform.kb = kb;
-                        stfa.sorts = stfa.missingSortsExpr(pexpr);
-                        if (stfa.sorts != null && !stfa.sorts.isEmpty())
-                            f.tffSorts.addAll(stfa.sorts);
-                        String tffResult = SUMOtoTFAform.processExpr(pexpr, false);
-                        collectNumericConstants(res.numConstLines);
-                        SUMOtoTFAform.getNumericConstantTypes().clear();
-                        SUMOtoTFAform.getNumericConstantTypes().put("NumberE", "RealNumber");
-                        SUMOtoTFAform.getNumericConstantTypes().put("Pi", "RealNumber");
+                        // Fast path: ExprToTFF translates directly from Expr tree with inline sort annotations
+                        String tffResult = ExprToTFF.translate(pexpr, false, kb);
+                        if (tffResult == null || tffResult.isBlank()) {
+                            // Fallback: SUMOtoTFAform.processExpr() with full KB type inference
+                            System.out.println("ExprToTFF.translate() fallback (expr path): " + pexpr.toKifString());
+                            SUMOtoTFAform stfa = new SUMOtoTFAform();
+                            SUMOtoTFAform.kb = kb;
+                            stfa.sorts = stfa.missingSortsExpr(pexpr);
+                            if (stfa.sorts != null && !stfa.sorts.isEmpty())
+                                f.tffSorts.addAll(stfa.sorts);
+                            tffResult = SUMOtoTFAform.processExpr(pexpr, false);
+                            collectNumericConstants(res.numConstLines);
+                            SUMOtoTFAform.getNumericConstantTypes().clear();
+                            SUMOtoTFAform.getNumericConstantTypes().put("NumberE", "RealNumber");
+                            SUMOtoTFAform.getNumericConstantTypes().put("Pi", "RealNumber");
+                        }
                         if (!StringUtil.emptyString(tffResult)) {
                             f.theTffFormulas.add(tffResult);
                             f.theTptpFormulas.add(tffResult); // Legacy compatibility
-                        } else if (!StringUtil.emptyString(SUMOtoTFAform.getFilterMessage()))
+                        }
+                        else if (!StringUtil.emptyString(SUMOtoTFAform.getFilterMessage()))
                             res.prologueLines.add("% " + SUMOtoTFAform.getFilterMessage());
                     }
                 }
@@ -1115,26 +1143,33 @@ public class SUMOKBtoTPTPKB {
                             break;
 
                         case "tff":
-                            SUMOtoTFAform stfa = new SUMOtoTFAform();
-                            SUMOtoTFAform.kb = kb;
-
                             res.prologueLines.add("% tff input: " + f3.format("", "", Formula.SPACE));
                             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: "
                                     + f3.format("", "", " "));
 
-                            stfa.sorts = stfa.missingSorts(f3);
+                            // Fast path: try ExprToTFF first (no heavyweight string manipulation)
+                            String tffResult = ExprToTFF.translateKifString(f3.getFormula(), false, kb);
 
-                            if (stfa.sorts != null && !stfa.sorts.isEmpty())
-                                f3.tffSorts.addAll(stfa.sorts);
+                            if (tffResult == null || tffResult.isBlank()) {
+                                // Fallback: full SUMOtoTFAform processing
+                                System.out.println("ExprToTFF.translateKifString() fallback (string path): " + f3.getFormula());
+                                SUMOtoTFAform stfa = new SUMOtoTFAform();
+                                SUMOtoTFAform.kb = kb;
 
-                            String tffResult = SUMOtoTFAform.process(f3.getFormula(), false);
+                                stfa.sorts = stfa.missingSorts(f3);
 
-                            // Collect numeric constants from this thread's TL (parallel-safe, no synchronized)
-                            collectNumericConstants(res.numConstLines);
-                            // Reset TL for the next formula processed by this thread
-                            SUMOtoTFAform.getNumericConstantTypes().clear();
-                            SUMOtoTFAform.getNumericConstantTypes().put("NumberE", "RealNumber");
-                            SUMOtoTFAform.getNumericConstantTypes().put("Pi", "RealNumber");
+                                if (stfa.sorts != null && !stfa.sorts.isEmpty())
+                                    f3.tffSorts.addAll(stfa.sorts);
+
+                                tffResult = SUMOtoTFAform.process(f3.getFormula(), false);
+
+                                // Collect numeric constants from this thread's TL (parallel-safe, no synchronized)
+                                collectNumericConstants(res.numConstLines);
+                                // Reset TL for the next formula processed by this thread
+                                SUMOtoTFAform.getNumericConstantTypes().clear();
+                                SUMOtoTFAform.getNumericConstantTypes().put("NumberE", "RealNumber");
+                                SUMOtoTFAform.getNumericConstantTypes().put("Pi", "RealNumber");
+                            }
 
                             if (!StringUtil.emptyString(tffResult)) {
                                 f.theTffFormulas.add(tffResult);

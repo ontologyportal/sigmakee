@@ -958,6 +958,14 @@ public class KBmanager implements Serializable {
                     if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
                     initializing = false;
                     initialized = true;
+                    // Rebuild transient symbol taxonomies in background (warm start: skipped buildCaches())
+                    for (KB kb : manager.kbs.values()) {
+                        final KB kbFinal = kb;
+                        KButilities.EXECUTOR_SERVICE.submit(() -> {
+                            try { kbFinal.kbCache.buildSymbolTaxonomy(); }
+                            catch (Exception e) { System.err.println("KBmanager: buildSymbolTaxonomy failed: " + e.getMessage()); }
+                        });
+                    }
                     // Start background TPTP generation for all needed formats (FOF, TFF, THF)
                     TPTPGenerationManager.startBackgroundGeneration();
                 }

@@ -145,6 +145,14 @@ public class Formula implements Comparable, Serializable {
     /** The Formula's Question List*/
     public StringBuilder qlist;
 
+    /**
+     * Non-null when this formula was asserted via {@code KB.tell()} for a specific HTTP session.
+     * Used to isolate UA formulas per-session: generation methods include a formula only if
+     * {@code uaSessionId} is {@code null} (base KB) or equals the session being generated for.
+     * Set to {@code null} and removed from {@code kb.formulaMap} on session cleanup.
+     */
+    public volatile String uaSessionId = null;
+
     /** The source file in which the formula appears. */
     public String sourceFile;
 
