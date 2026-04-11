@@ -14,11 +14,7 @@
     http://github.com/ontologyportal
 */
 
-  String word = request.getParameter("word");
-  if (!StringUtil.emptyString(word))
-      word = StringUtil.replaceNonIdChars(StringUtil.removeHTML(word));
-  else
-      word = "";
+  String word = ValidationUtils.sanitizeString(request.getParameter("word"));
   String writeProlog = request.getParameter("writeProlog");
   String synset = request.getParameter("synset");
   String POS = request.getParameter("POS");

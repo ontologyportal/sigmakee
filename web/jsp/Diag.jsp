@@ -48,6 +48,12 @@
   out.println(HTMLformatter.termList(termsWithoutParent,kbHref));
   out.println("</details></br>");
 
+  // Terms with unloaded constituents
+  out.println("<details>");
+  out.println("<summary><b>Error: Terms with unloaded constituents</b><hr></summary>");
+  out.println(Diagnostics.printMissingConstituentDependencies(kb, kbHref));
+  out.println("</details></br>");
+
   // Children of disjoint parents
   List<String> disjoint = Diagnostics.childrenOfDisjointParents(kb);
   out.println("<details>");

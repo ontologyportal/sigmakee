@@ -744,180 +744,6 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
-     * This function loads a new  kb with all kif files found in .sigmakee 
-     * (not just constituents from the xml),then maps all the term dependencies 
-     * between files. 
-     */
-    private static void saveDependenciesForAllKif(String serializedDependencyFilePath) {
-
-        System.out.println("saveDependenciesForAllKif KBmanager.initializeOnce()");
-        KBmanager.getMgr().initializeOnce("./config_full");
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        System.out.println("Diagnostics: Completed init");
-        Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
-        serializedDependencyFilePath = KButilities.SIGMA_HOME + File.separator + "KBs" + File.separator + serializedDependencyFilePath;
-        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(serializedDependencyFilePath))) {
-            out.writeObject(fileDepends);
-            System.out.println("Saved term dependency to " + serializedDependencyFilePath);
-        }
-        catch (IOException e) {
-            throw new RuntimeException("Failed to save term dependency file to: " + serializedDependencyFilePath, e);
-        }
-    }
-
-    /** *****************************************************************
-     * This function loads the serialized term dependency Map created by saveDependenciesForAllKif()
-     * and returns the resulting map.
-     * 
-     * @param String serializedDependencyFilePath
-     * @return Map<String,Map<String,List<String>>> allDepends
-     */
-    private static Map<String,Map<String,List<String>>> loadDependenciesForAllKif(String serializedDependencyFilePath) {
-
-        Map<String,Map<String,List<String>>> allDepends = new TreeMap<>();
-        serializedDependencyFilePath = KButilities.SIGMA_HOME + File.separator + "KBs" + File.separator + serializedDependencyFilePath;
-        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(serializedDependencyFilePath))) {
-            allDepends = (Map<String,Map<String,List<String>>>) in.readObject();
-        }
-        catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException("Error reading serialized dependencies from: " + serializedDependencyFilePath, e);
-        }
-        return allDepends;
-    }
-
-    /** *****************************************************************
-    * This function returns a list of error messages for missing dependencies.
-    * If the user has a constituent loaded, and the file depends on another file 
-    * that is not loaded as a constituent, then it will be added to the error list.
-    * 
-    * @param Map<String,Map<String,List<String>>> fileDepends <Dependent, <Dependees, Terms>>
-    * @return Map<String,Map<String,List<String>>> a TreeMap with the loaded constituent files 
-    *         as the outer key, the missing dependee constituent files as the inner key, and 
-    *         dependent terms as the list. 
-    */
-    private static Map<String,Map<String,List<String>>> missingConstituentDependencies(KB kb) {
-
-        //OuterKey = Loaded constituent with term dependency
-        //InterKey = Unloaded constituent containing term def
-        //ListValues = Terms the OuterKey uses from the InnerKey
-        Map<String,Map<String,List<String>>> missing = new TreeMap<>();
-        Map<String,Map<String,List<String>>> allDepends = Diagnostics.loadDependenciesForAllKif("term_dependency.ser");
-        System.out.println(allDepends);
-        for(String constituent : kb.constituents) {
-            Map<String,List<String>> missingFromActiveConstituent = new TreeMap();
-            for (Map.Entry<String,List<String>> dependeeKifs : allDepends.get(constituent).entrySet()) {
-                if (!kb.constituents.contains(dependeeKifs.getKey()) && !dependeeKifs.getKey().equals("SUMO_Cache.kif"))
-                    missingFromActiveConstituent.put(dependeeKifs.getKey(), dependeeKifs.getValue());
-            }
-            missing.put(constituent, missingFromActiveConstituent);
-        }
-        return missing;
-    }
-
-    /** *****************************************************************
-    * This function returns a map of mutual dependencies and the terms used
-    * by the less dependent file that are defined in the more dependent file.
-    * The intended application of this function is to find the low hanging fruit 
-    * for removing mutual dependencies between files.
-    * 
-    * @param Map<String,Map<String,List<String>>> fileDepends <Dependent, <Dependees, Terms>>
-    * @return Map<String,List<String>> a TreeMap of mutual term dependent files in the format of 
-    *         Key: (LessDependentFile)>(MoreDependentFile), List<String> TermsLessDependentUsesFromMoreDependent
-     */
-    private static Map<String, List<List<String>>> mutualDependency(KB kb) {
-        
-        Map<String, Map<String, List<String>>> fileDepends = Diagnostics.termDependency(kb);
-        Map<String, List<List<String>>> mutDepends = new TreeMap<>();
-        for (Map.Entry<String, Map<String, List<String>>> dependentKif : fileDepends.entrySet()) {
-            Map<String, List<String>> innerMap = dependentKif.getValue();
-            for (Map.Entry<String, List<String>> dependeeKif : innerMap.entrySet()) {
-                if(fileDepends.containsKey(dependeeKif.getKey()) 
-                && fileDepends.get(dependeeKif.getKey()).containsKey(dependentKif.getKey()) 
-                && dependeeKif.getValue().size() < fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).size()) {
-                    List<List<String>> totalTerms = new ArrayList<>();
-                    List<String> dependeeFromDependentTerms = new ArrayList<>();
-                    List<String> dependentFromDependeeTerms = new ArrayList<>();
-                    for(int i = 0; i < dependeeKif.getValue().size(); i++) {
-                        dependeeFromDependentTerms.add(dependeeKif.getValue().get(i));
-                    }
-                    totalTerms.add(dependeeFromDependentTerms);
-                    for(int i = 0; i < fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).size(); i++) {
-                        dependentFromDependeeTerms.add(fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).get(i));
-                    }
-                    totalTerms.add(dependentFromDependeeTerms);
-                    mutDepends.put(dependentKif.getKey() + ">" + dependeeKif.getKey(), totalTerms);
-                }
-            }
-        }
-        return mutDepends;
-    }
-
-    /** *****************************************************************
-    * This function returns a map of mutual dependencies and the terms used
-    * by the less dependent file that are defined in the more dependent file.
-    * The intended application of this function is to find the low hanging fruit 
-    * for removing mutual dependencies between files.
-    * 
-    * @param kb the knowledge base we are printing term dependency for.
-    * @param kbHref a helper String for creating clickable href links to KB term pages.
-     */
-    public static String printMutualDependencies(KB kb, String kbHref) {
-
-        Map<String, List<List<String>>> mutDepends = Diagnostics.mutualDependency(kb);
-        StringBuilder html = new StringBuilder();
-        for (Map.Entry<String, List<List<String>>> mutDepend : mutDepends.entrySet()) {
-            String[] fileNames = mutDepend.getKey().split(">");
-            String fileName1 = StringUtil.removeFilePath(fileNames[0]);
-            String fileName2 = StringUtil.removeFilePath(fileNames[1]);
-            if(fileName1.equals("SUMO_Cache.kif") || fileName2.equals("SUMO_Cache.kif")) continue;
-            html.append("<br/>Mutual dependency between " + fileName1 + " and " + fileName2 + ".");
-            html.append("<br/>" + fileName1 + " uses the following " + mutDepend.getValue().get(0).size() + " terms defined in " + fileName2 + "\n<br/>");
-            List<List<String>> terms = mutDepend.getValue();
-            html.append("<a href=\"" + kbHref + "&term=" + terms.get(0).get(0) + "\" target=\"_blank\">" + terms.get(0).get(0) + "</a>");
-            for(int i = 1; i < terms.get(0).size(); i++) {
-                String term = terms.get(0).get(i);
-                html.append(", <a href=\"" + kbHref + "&term=" + term + "\" target=\"_blank\">" + term + "</a>");
-                if(i > 25) {
-                    html.append(", and " + (terms.get(0).size() - i) + " more terms.");
-                    break;
-                }
-            }
-            html.append("<br/>" + fileName2 + " uses the following " + mutDepend.getValue().get(1).size() + " terms defined in " + fileName1 + "\n<br/>");
-            html.append("<a href=\"" + kbHref + "&term=" + terms.get(1).get(0) + "\" target=\"_blank\">" + terms.get(1).get(0) + "</a>");
-            for(int i = 1; i < terms.get(1).size(); i++) {
-                String term = terms.get(1).get(i);
-                html.append(", <a href=\"" + kbHref + "&term=" + term + "\" target=\"_blank\">" + term + "</a>");
-                if(i > 25) {
-                    html.append(", and " + (terms.get(1).size() - i) + " more terms.");
-                    break;
-                }
-            }
-            html.append("<br/>");
-        }
-        return html.toString();
-    }
-
-    /** *****************************************************************
-     * Check the size of the dependency list.
-     * @param depend is a map of file name keys and TreeMap values
-     *               listing file names on which the given file
-     *               depends. The interior TreeMap file name keys
-     *               index ArrayLists of terms. file -depends on->
-     *               filename -that defines-> terms
-     */
-    private static int dependencySize(Map<String,Map<String,List<String>>> depend, String f, String f2) {
-
-        Map<String,List<String>> tm = depend.get(f2);
-        List<String> al;
-        if (tm != null) {
-            al = (ArrayList) tm.get(f);
-            if (al != null)
-                return al.size();
-        }
-        return 0;
-    }
-
-    /** *****************************************************************
      * Show file dependencies.  If two files depend on each other,
      * show only the smaller list of dependencies, under the
      * assumption that that is the erroneous set.
@@ -1004,7 +830,234 @@ public class Diagnostics {
         return result.toString();
     }
 
+    /** *****************************************************************
+     * @author Shaun Rose
+     * 
+     * This function loads a new kb with all kif files found in .sigmakee 
+     * (using ./config_full/config.xml, must create this file!), then maps all the term dependencies 
+     * between files. 
+     * 
+     * @param String serializedDependencyFilePath is the location where the dependency cache
+     *               for all kifs is located. Usually in .sigmakee/cache/term_dependency.ser.
+     */
+    private static void saveDependenciesForAllKif(String serializedDependencyFilePath) {
 
+        System.out.println("saveDependenciesForAllKif KBmanager.initializeOnce()");
+        KBmanager.getMgr().initializeOnce("./config_full");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        System.out.println("Diagnostics: Completed init");
+        Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
+        serializedDependencyFilePath = KButilities.SIGMA_HOME + File.separator + "cache" + File.separator + serializedDependencyFilePath;
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(serializedDependencyFilePath))) {
+            out.writeObject(fileDepends);
+            System.out.println("Saved term dependency to " + serializedDependencyFilePath);
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Failed to save term dependency file to: " + serializedDependencyFilePath, e);
+        }
+    }
+
+    /** *****************************************************************
+     * @author Shaun Rose
+     * 
+     * This function loads the serialized term dependency Map created by saveDependenciesForAllKif()
+     * and returns the resulting nested map.
+     * 
+     * @param String serializedDependencyFilePath is the location where the dependency cache
+     *               for all kifs is located. Usually in .sigmakee/cache/term_dependency.ser.
+     * @return Map<String,Map<String,List<String>>> allDepends
+     */
+    private static Map<String,Map<String,List<String>>> loadDependenciesForAllKif(String serializedDependencyFilePath) {
+
+        Map<String,Map<String,List<String>>> allDepends = new TreeMap<>();
+        serializedDependencyFilePath = KButilities.SIGMA_HOME + File.separator + "cache" + File.separator + serializedDependencyFilePath;
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(serializedDependencyFilePath))) {
+            allDepends = (Map<String,Map<String,List<String>>>) in.readObject();
+        }
+        catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException("Error reading serialized dependencies from: " + serializedDependencyFilePath, e);
+        }
+        return allDepends;
+    }
+
+    /** *****************************************************************
+     * @author Shaun Rose
+     * 
+     * This function returns a list of error messages for missing dependencies.
+     * If the user has a constituent loaded, and the file depends on another file 
+     * that is not loaded as a constituent, then it will be added to the error list.
+     * 
+     * @param Map<String,Map<String,List<String>>> fileDepends <Dependent, <Dependees, Terms>>
+     * @return Map<String,Map<String,List<String>>> a TreeMap with the loaded constituent files 
+     *         as the outer key, the missing dependee constituent files as the inner key, and 
+     *         dependent terms as the list. 
+    */
+    private static Map<String,Map<String,List<String>>> missingConstituentDependencies(KB kb) {
+
+        //OuterKey = Loaded constituent with term dependency
+        //InterKey = Unloaded constituent containing term def
+        //ListValues = Terms the OuterKey uses from the InnerKey
+        Map<String,Map<String,List<String>>> missing = new TreeMap<>();
+        Map<String,Map<String,List<String>>> allDepends = Diagnostics.loadDependenciesForAllKif("term_dependency.ser");
+        List<String> kbConstituentsCopy = new ArrayList<>();
+        for (String constituent : kb.constituents) {
+            kbConstituentsCopy.add(StringUtil.removeFilePath(constituent));
+        }
+        for (String constituent : kbConstituentsCopy) {
+            Map<String,List<String>> missingFromActiveConstituent = new TreeMap();
+            for (Map.Entry<String,List<String>> dependeeKifs : allDepends.get(StringUtil.removeFilePath(constituent)).entrySet()) {
+                if (!kbConstituentsCopy.contains(dependeeKifs.getKey()) && !dependeeKifs.getKey().equals("SUMO_Cache.kif"))
+                    missingFromActiveConstituent.put(dependeeKifs.getKey (), dependeeKifs.getValue());
+            }
+            missing.put(constituent, missingFromActiveConstituent);
+        }
+        return missing;
+    }
+
+    
+    /** *****************************************************************
+     * @author Shaun Rose
+     * 
+     * This function returns a list of error messages for missing dependencies.
+     * If the user has a constituent loaded, and the file depends on another file 
+     * that is not loaded as a constituent, then it will be added to the error list.
+     * 
+     * @param Map<String,Map<String,List<String>>> fileDepends <Dependent, <Dependees, Terms>>
+     * @return Map<String,Map<String,List<String>>> a TreeMap with the loaded constituent files 
+     *         as the outer key, the missing dependee constituent files as the inner key, and 
+     *         dependent terms as the list. 
+    */
+    public static String printMissingConstituentDependencies(KB kb, String kbHref) {
+
+        StringBuilder html = new StringBuilder();
+        Map<String,Map<String, List<String>>> missing = Diagnostics.missingConstituentDependencies(kb);
+        for (Map.Entry<String,Map<String,List<String>>> constituent : missing.entrySet()) {
+            if (constituent.getValue().size() != 0) {
+                html.append("Loaded constituent " + constituent.getKey() + " uses terms defined in these unloaded constituents: ");
+                html.append("<div style=\"padding-left:20px\">");
+                for(Map.Entry<String,List<String>> missingDependee : constituent.getValue().entrySet()) {
+                    html.append(missingDependee.getKey() + " terms(" + missingDependee.getValue().size() + "): ");
+                    html.append("<a href=\"" + kbHref + "&term=" + missingDependee.getValue().get(0) + "\" target=\"_blank\">" + missingDependee.getValue().get(0) + "</a>");
+                    for(int i = 1; i < missingDependee.getValue().size(); i++) {
+                        String term = missingDependee.getValue().get(i);
+                        html.append(", " + "<a href=\"" + kbHref + "&term=" + term + "\" target=\"_blank\">" + term + "</a>");
+                        if(i > 25) {
+                            html.append(" and " + (missingDependee.getValue().size() - 25) + " more terms.");
+                            break;
+                        }
+                    }
+                    html.append("<br>");
+                }
+                html.append("</div><br>");
+            }
+        }
+        if(html.toString().isEmpty()) html.append("No missing constituent dependencies found");
+        return html.toString();
+    }
+    
+    /** *****************************************************************
+     * @author Shaun Rose
+     * 
+     * This function returns a map of mutual dependencies and the terms used
+     * by either file that are defined in the other file. 
+     * 
+     * @param Map<String,Map<String,List<String>>> fileDepends <Dependent, <Dependees, Terms>>
+     * @return Map<String,List<String>> a TreeMap of mutual term dependent files in the format of 
+     *         Key: (LessDependentFile)>(MoreDependentFile), List<String> TermsLessDependentUsesFromMoreDependent
+    */
+    private static Map<String, List<List<String>>> mutualDependency(KB kb) {
+        
+        Map<String, Map<String, List<String>>> fileDepends = Diagnostics.termDependency(kb);
+        Map<String, List<List<String>>> mutDepends = new TreeMap<>();
+        for (Map.Entry<String, Map<String, List<String>>> dependentKif : fileDepends.entrySet()) {
+            Map<String, List<String>> innerMap = dependentKif.getValue();
+            for (Map.Entry<String, List<String>> dependeeKif : innerMap.entrySet()) {
+                if(fileDepends.containsKey(dependeeKif.getKey()) 
+                && fileDepends.get(dependeeKif.getKey()).containsKey(dependentKif.getKey()) 
+                && dependeeKif.getValue().size() < fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).size()) {
+                    List<List<String>> totalTerms = new ArrayList<>();
+                    List<String> dependeeFromDependentTerms = new ArrayList<>();
+                    List<String> dependentFromDependeeTerms = new ArrayList<>();
+                    for(int i = 0; i < dependeeKif.getValue().size(); i++) {
+                        dependeeFromDependentTerms.add(dependeeKif.getValue().get(i));
+                    }
+                    totalTerms.add(dependeeFromDependentTerms);
+                    for(int i = 0; i < fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).size(); i++) {
+                        dependentFromDependeeTerms.add(fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).get(i));
+                    }
+                    totalTerms.add(dependentFromDependeeTerms);
+                    mutDepends.put(dependentKif.getKey() + ">" + dependeeKif.getKey(), totalTerms);
+                }
+            }
+        }
+        return mutDepends;
+    }
+
+    /** *****************************************************************
+     * @author Shaun Rose
+     * 
+     * This function returns HTML to display a map of mutual dependencies.
+     * The intended application of this function is to find the low hanging fruit 
+     * for removing mutual dependencies between files, which increases effeciency.
+     * 
+     * @param kb the knowledge base we are printing term dependency for.
+     * @param kbHref a helper String for creating clickable href links to KB term pages.
+    */
+    public static String printMutualDependencies(KB kb, String kbHref) {
+
+        StringBuilder html = new StringBuilder();
+        Map<String, List<List<String>>> mutDepends = Diagnostics.mutualDependency(kb);
+        for (Map.Entry<String, List<List<String>>> mutDepend : mutDepends.entrySet()) {
+            String[] fileNames = mutDepend.getKey().split(">");
+            String fileName1 = StringUtil.removeFilePath(fileNames[0]);
+            String fileName2 = StringUtil.removeFilePath(fileNames[1]);
+            if(fileName1.equals("SUMO_Cache.kif") || fileName2.equals("SUMO_Cache.kif")) continue;
+            html.append("<br/>Mutual dependency between " + fileName1 + " and " + fileName2 + ".");
+            html.append("<br/>" + fileName1 + " uses the following " + mutDepend.getValue().get(0).size() + " terms defined in " + fileName2 + "\n<br/>");
+            List<List<String>> terms = mutDepend.getValue();
+            html.append("<a href=\"" + kbHref + "&term=" + terms.get(0).get(0) + "\" target=\"_blank\">" + terms.get(0).get(0) + "</a>");
+            for(int i = 1; i < terms.get(0).size(); i++) {
+                String term = terms.get(0).get(i);
+                html.append(", <a href=\"" + kbHref + "&term=" + term + "\" target=\"_blank\">" + term + "</a>");
+                if(i > 25) {
+                    html.append(", and " + (terms.get(0).size() - i) + " more terms.");
+                    break;
+                }
+            }
+            html.append("<br/>" + fileName2 + " uses the following " + mutDepend.getValue().get(1).size() + " terms defined in " + fileName1 + "\n<br/>");
+            html.append("<a href=\"" + kbHref + "&term=" + terms.get(1).get(0) + "\" target=\"_blank\">" + terms.get(1).get(0) + "</a>");
+            for(int i = 1; i < terms.get(1).size(); i++) {
+                String term = terms.get(1).get(i);
+                html.append(", <a href=\"" + kbHref + "&term=" + term + "\" target=\"_blank\">" + term + "</a>");
+                if(i > 25) {
+                    html.append(", and " + (terms.get(1).size() - i) + " more terms.");
+                    break;
+                }
+            }
+            html.append("<br/>");
+        }
+        return html.toString();
+    }
+
+    /** *****************************************************************
+     * Check the size of the dependency list.
+     * @param depend is a map of file name keys and TreeMap values
+     *               listing file names on which the given file
+     *               depends. The interior TreeMap file name keys
+     *               index ArrayLists of terms. file -depends on->
+     *               filename -that defines-> terms
+     */
+    private static int dependencySize(Map<String,Map<String,List<String>>> depend, String f, String f2) {
+
+        Map<String,List<String>> tm = depend.get(f2);
+        List<String> al;
+        if (tm != null) {
+            al = (ArrayList) tm.get(f);
+            if (al != null)
+                return al.size();
+        }
+        return 0;
+    }
 
     /***************************************************************
      * @param termDependency a TreeMap of file name keys and an ArrayList of the
@@ -1859,8 +1912,8 @@ public class Diagnostics {
             else if (argMap.containsKey("A")) {
                 Map<String,Map<String,List<String>>> missing = Diagnostics.missingConstituentDependencies(kb);
                 for (Map.Entry<String,Map<String,List<String>>> missingDepend : missing.entrySet()) {
-                    System.out.println("\n"+missingDepend.getKey());
-                    System.out.println(missingDepend.getValue());
+                    System.out.println("\n" + missingDepend.getKey());
+                    System.out.println(missingDepend.getValue().keySet());
                 }
             }
             else if (argMap.containsKey("file") && argMap.get("file").size() == 1) {
