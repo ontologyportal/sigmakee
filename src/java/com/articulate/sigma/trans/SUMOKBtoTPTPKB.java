@@ -974,6 +974,15 @@ public class SUMOKBtoTPTPKB {
         res.formula = formula;
         Formula f = formula;
 
+        // Session isolation: skip UA formulas from other sessions during base generation.
+        // Base generation (sessionId==null) must never include session-specific assertions —
+        // they belong only in session TPTP files.  Cross-session formulas pollute the shared
+        // SUMO.tptp and corrupt any other session that reads it.
+        if (f.uaSessionId != null) {
+            res.skipEverything = true;
+            return res;
+        }
+
         // Non-reasoning formulas: skip entirely (nothing to write)
         if (isNonReasoningForATP(f.getFormula())) {
             res.skipEverything = true;

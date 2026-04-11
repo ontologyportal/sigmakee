@@ -950,6 +950,37 @@ public class SessionTPTPManager {
     }
 
     /*********************************************************************************
+     * Remove all formulas tagged with {@code sessionId} from {@code kb.formulaMap} and the
+     * {@code kb.formulas} term index.  Must be called under {@code kb.uaLock} to be safe.
+     *
+     * <p>Formulas are collected first (to avoid ConcurrentModificationException), then removed
+     * from both indexes in a single pass.  The {@code uaLock} that protects {@code tell()}
+     * also protects this removal so no concurrent tell() can observe a half-removed state.</p>
+     */
+    private static void purgeSessionFormulas(KB kb, String sessionId) {
+
+        kb.withUserAssertionLock(() -> {
+            Set<String> toRemove = new HashSet<>();
+            for (Map.Entry<String, Formula> e : kb.formulaMap.entrySet()) {
+                if (sessionId.equals(e.getValue().uaSessionId))
+                    toRemove.add(e.getKey());
+            }
+            if (toRemove.isEmpty()) return null;
+
+            // Remove from the formulas term-index (Map<String, List<String>>)
+            for (List<String> list : kb.formulas.values())
+                list.removeAll(toRemove);
+
+            // Remove from formulaMap
+            toRemove.forEach(kb.formulaMap::remove);
+
+            System.out.println("SessionTPTPManager: Purged " + toRemove.size()
+                    + " UA formula(s) for session " + sessionId + " from KB " + kb.name);
+            return null;
+        });
+    }
+
+    /*********************************************************************************
      * Clean up all session-specific files for a given session.
      * Called when a session is destroyed.
      *
@@ -968,6 +999,13 @@ public class SessionTPTPManager {
         sessionAxiomKeys.remove(sessionId);
         batchModeActive.remove(sessionId);
         precomputedRegenRequired.remove(sessionId);
+
+        // Purge UA formulas owned by this session from every KB's shared formulaMap and
+        // formulas index.  Without this, session-specific tell() assertions accumulate in
+        // the shared in-memory KB and pollute queries from other sessions indefinitely.
+        for (KB kb : KBmanager.getMgr().kbs.values()) {
+            purgeSessionFormulas(kb, sessionId);
+        }
 
         Path sessionDir = getSessionDir(sessionId);
 

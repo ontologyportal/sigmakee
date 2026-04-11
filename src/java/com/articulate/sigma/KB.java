@@ -1808,6 +1808,11 @@ public class KB implements Serializable {
                         for (Formula parsedF : parsedFormulas) { // 4. Write the formula to the user assertions file.
                             parsedF.endFilePosition = writeUserAssertion(parsedF.getFormula(), filename);
                             parsedF.sourceFile = filename;
+                            // Tag with session so generation and cleanup can isolate UA formulas per-session.
+                            // Base-KB generation skips all tagged formulas; session generation includes only
+                            // formulas tagged with the matching sessionId. cleanupSession() removes them.
+                            if (sessionId != null && !sessionId.isEmpty())
+                                parsedF.uaSessionId = sessionId;
                         }
                         result = "The formula has been added for browsing";
                         // 5. Write the formula to the kb.name_UserAssertions.tptp/tff
