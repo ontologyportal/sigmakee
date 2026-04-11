@@ -254,6 +254,9 @@ public class TPTPGenerationManager {
             SUMOKBtoTPTPKB.setLang("tff");
             SUMOformulaToTPTPformula.setLang("tff");
 
+            if (kb.kbCache != null && kb.kbCache.relations != null)
+                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
+
             // IMPORTANT: write to tmp, not target
             try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(tmp, StandardCharsets.UTF_8))) {
                 if (!kb.formulaMap.isEmpty()) {
@@ -297,6 +300,7 @@ public class TPTPGenerationManager {
             try { Files.deleteIfExists(tmp); } catch (Exception ignore) {}
         }
         finally {
+            ExprToTPTP.relationsThreadLocal.remove();
             // Clean up ThreadLocal state to prevent leaks in thread pools
             SUMOformulaToTPTPformula.clearThreadLocal();
             SUMOKBtoTPTPKB.clearThreadLocal();
@@ -696,6 +700,9 @@ public class TPTPGenerationManager {
             SUMOKBtoTPTPKB.setLang("tff");
             SUMOformulaToTPTPformula.setLang("tff");
 
+            if (kb.kbCache != null && kb.kbCache.relations != null)
+                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
+
             try (PrintWriter pw = new PrintWriter(
                     Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8))) {
 
@@ -722,6 +729,7 @@ public class TPTPGenerationManager {
             SUMOKBtoTPTPKB.logPathCounters();
 
         } finally {
+            ExprToTPTP.relationsThreadLocal.remove();
             SUMOformulaToTPTPformula.clearThreadLocal();
             SUMOKBtoTPTPKB.clearThreadLocal();
             SUMOtoTFAform.clearThreadLocal();

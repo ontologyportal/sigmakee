@@ -19,6 +19,7 @@ import org.junit.runners.Suite;
     PredVarInstExprTest.class,
     ClausifierExprTest.class,
     ExprToTPTPTest.class,
+    ExprToTFFTest.class,
     ExprToTHFTest.class,
     ModalsExprTest.class
 })
