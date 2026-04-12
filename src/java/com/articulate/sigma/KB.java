@@ -2457,9 +2457,6 @@ public class KB implements Serializable {
         return false;
     }
 
-
-
-
     /** ***************************************************************
      * Return true if the current TQ user assertions require rebuilding the base SUMO.<lang>.
      * Conservative v1: rebuild on schema changes or ground transitive facts.
@@ -2500,10 +2497,7 @@ public class KB implements Serializable {
         return requiresBaseRegenForFormulas(ua.formulaMap.values());
     }
 
-
-
-
-    /**
+    /** ***************************************************************
      * Backward-compatible wrapper for askVampireModensPonens with no session isolation.
      */
     public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers) {
@@ -2588,8 +2582,7 @@ public class KB implements Serializable {
         return vampire_pomens;
     }
 
-
-    /**
+    /** ***************************************************************
      * Executes a Vampire theorem prover query on a given TPTP problem file.
      * This method validates included files in TPTP format, processes the result
      * by running multiple configurations of Vampire, and optionally applies
@@ -2673,8 +2666,7 @@ public class KB implements Serializable {
         return vampire;
     }
 
-
-    /**
+    /** ***************************************************************
      * Executes the Vampire automated theorem prover with higher-order logic (HOL) mode
      * on a given THF problem file. This method processes the includes
      * and runs the Vampire prover with the specified parameters.
@@ -2725,7 +2717,7 @@ public class KB implements Serializable {
         return vampire;
     }
 
-    /**
+    /** ***************************************************************
      * Ask Vampire HOL using the existing <kbName>.thf axioms.
      * Input  : SUO-KIF query string (stmt).
      * Output : Vampire object with HOL proof output.
@@ -2808,8 +2800,9 @@ public class KB implements Serializable {
                     System.out.println("KB.askVampireHOL(): Original Formula: " + f.getFormula());
 
                 // 3a. Optional: expand modals and insert world args
-                if (useModals){
-                    f = Modals.processModals(f, this);
+                if (useModals) {
+                    Map<String, Set<String>> typeMap = new HashMap<>();
+                    f = Modals.processModals(f, this,typeMap);
                     if (debug) System.out.println("KB.askVampireHOL(): Modalized Formula: " + f.getFormula());
                 }
 
@@ -2907,11 +2900,9 @@ public class KB implements Serializable {
         }
     }
 
-
-
     /***************************************************************
-         * Return a SUMO-formatted proof string
-         */
+     * Return a SUMO-formatted proof string
+     */
     public String askVampireFormat(String suoKifFormula, int timeout, int maxAnswers) {
 
         StringBuilder sb = new StringBuilder();
@@ -2970,8 +2961,7 @@ public class KB implements Serializable {
         return null;
     }
 
-    /**
-     * *************************************************************
+    /**************************************************************
      * Submits a
      * query to specified InferenceEngine object. Returns an XML formatted
      * String that contains the response of the inference engine. It should be
