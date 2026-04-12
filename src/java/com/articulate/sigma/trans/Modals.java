@@ -76,6 +76,13 @@ public class Modals {
                     "hasPurposeForAgent"
             ));
 
+    // these take a modal as their second argument
+    public static final List<String> regHOL3Modalpred = new ArrayList<>(
+            Arrays.asList(
+                    "confersNorm",
+                    "deprivesNorm"
+            ));
+
     public static final List<String> deontics = new ArrayList<>(
             Arrays.asList(
                     "confersNorm",
@@ -227,10 +234,13 @@ public class Modals {
 
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1);
-        Formula arg1   = flist.get(0);
-        Formula arg2  = flist.get(1);
+        Formula arg1 = flist.get(0);
+        Formula arg2 = flist.get(1);
         worldNum = worldNum + 1;
-        fstring.append("(=> (accreln3 ").append(f.car()).append(Formula.SPACE);
+        if (regHOL3Modalpred.contains(f.car()))
+            fstring.append("(=> (accreln3norm ").append(f.car()).append(Formula.SPACE);
+        else
+            fstring.append("(=> (accreln3 ").append(f.car()).append(Formula.SPACE);
         fstring.append(arg1).append(Formula.SPACE).append(arg2).append(Formula.SPACE);
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
@@ -583,9 +593,16 @@ public class Modals {
             accreln = "s__accreln2";
         }
         if (regHOL3pred.contains(modalOp)) {
-            quantArgs = ", P1:$i, P2:$i";
-            args = " @ P1 @ P2";
-            accreln = "s__accreln3";
+            if (regHOL3Modalpred.contains(modalOp)) {
+                quantArgs = ", P1:$i, P2:m";
+                args = " @ P1 @ P2";
+                accreln = "s__accreln3norm";
+            }
+            else {
+                quantArgs = ", P1:$i, P2:$i";
+                args = " @ P1 @ P2";
+                accreln = "s__accreln3";
+            }
         }
         switch (frameAx) {
             case REFLEXIVE:
@@ -594,7 +611,7 @@ public class Modals {
             case SYMMETRIC:
                 return "thf(" + modalOp + "_symm" + ",axiom,(! [W1:w, W2:w" + quantArgs +
                         "] : ((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) => " +
-                        "(" + accreln + " @ s__" + modalOp + " @ P @ W2 @ W1)))).\n";
+                        "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W1)))).\n";
             case TRANSITIVE:
                 return "thf(" + modalOp + "_trans" + ",axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
                         "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
@@ -632,6 +649,7 @@ public class Modals {
                 "thf(accreln1_tp,type,s__accreln1 : (m > w > w > $o)).\n" +
                 "thf(accreln2_tp,type, s__accreln2: (m > $i > w > w > $o) ).\n" +
                 "thf(accreln3_tp,type, s__accreln3: (m > $i > $i > w > w > $o) ).\n" +
+                "thf(accreln3norm_tp,type, s__accreln3norm: (m > $i > m > w > w > $o) ).\n" +
                 //"thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +     // CF: This is no longer needed, we are using accreln[ |2|3] 
                 //"thf(knows_tp,type,(s__knows : m)).\n" +
                 //"thf(believes_tp,type,(s__believes : m)).\n" +
@@ -644,6 +662,25 @@ public class Modals {
 
                 genAllModalSystems() +
                 genDistinctModals();
+    }
+
+    /***************************************************************
+     */
+    public static void worldVarTest(KB kb) {
+
+        String fstr = "(=> " +
+                "(and " +
+                  "(instance ?POLICY NoChildrenPolicy) " +
+                  "(policyLocationCoverage ?POLICY ?LOC) " +
+                  "(policyOwner ?AGENT ?POLICY)) " +
+                "(deprivesNorm ?AGENT Permission " +
+                  "(exists (?CHILD) " +
+                    "(and " +
+                      "(instance ?CHILD HumanChild) " +
+                        "(located ?CHILD ?LOC)))))";
+        Formula f = new Formula(fstr);
+        System.out.println("worldVarTest()");
+        System.out.println(processModals(f, kb) + "\n\n");
     }
 
     /***************************************************************
@@ -1109,7 +1146,10 @@ public class Modals {
                 //someInitialTests(kb);
                 //doTQM10Tests(kb);
                 //deonticTests(kb);
-                System.out.println(genAllModalSystems());
+                //System.out.println(genAllModalSystems());
+                KBmanager.getMgr().initializeOnce();
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                worldVarTest(kb);
             }
             else if (argMap.containsKey("form")) {
                 SUMOformulaToTPTPformula.setHideNumbers(false);

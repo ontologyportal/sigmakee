@@ -798,6 +798,7 @@ public class THFnew {
                 pred.equals("abbreviation") ||
                 pred.equals("format") ||
                 pred.equals("externalImage") ||
+                pred.equals("codeMapping") ||
                 pred.equals("comment")) {
             out.write("% excludePred(): " + "\n");
             return true;
