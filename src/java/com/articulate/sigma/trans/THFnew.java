@@ -657,10 +657,10 @@ public class THFnew {
         }
 
         head = args.get(0);
-        if ("confersNorm".equals(head)) {
+        if (Modals.regHOL3pred.contains(head)) {
             for (String a : args) {
                 if (Modals.modalAttributes.contains(a)) {
-                    out.write("% exclude(): modal operator used as individual in confersNorm: " + a + "\n");
+                    out.write("% exclude(): modal operator used as individual in " + head + ": " + a + "\n");
                     return true;
                 }
             }
@@ -1090,6 +1090,18 @@ public class THFnew {
                 }
                 // Work on a local copy to build the THF type
                 List<String> sig = new ArrayList<>(baseSig);
+
+                // VariableArityRelations with no domain declarations get an empty string
+                // as their only sig entry (the range placeholder). copyNewPredFromVariableArity
+                // fills expanded variants with the same empty string, so sigString() skips all
+                // arg positions and produces "(w > $o)" instead of "($i > ... > w > $o)".
+                // Normalise: replace empty arg entries (index 1+) with "Entity".
+                if (variableArity(kb, t)) {
+                    for (int _si = 1; _si < sig.size(); _si++) {
+                        String _st = sig.get(_si);
+                        if (_st == null || _st.isEmpty()) sig.set(_si, "Entity");
+                    }
+                }
 
                 // ISSUE 14
                 // Check that the sigStr aligns with the __NUM of the term:
