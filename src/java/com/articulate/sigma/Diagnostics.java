@@ -224,6 +224,52 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
+     * @author Shaun Rose
+     * Returns a map of formulae and their associated type violations.
+     * 
+     * @param Kb - the knowledge base
+     * @return Map<Formula, List<String>> - each formula in the KB with its error list. 
+     */
+    private static Map<Formula, Set<String>> formulaeWithTypeViolations(KB kb) { 
+        
+        Map<Formula, Set<String>> result = new TreeMap<>();
+        KButilities.clearErrors();
+        kb.kbCache.errors.clear();
+        SUMOtoTFAform.errors.clear();
+        for (Formula f : kb.formulaMap.values()) {
+            if (!KButilities.hasCorrectTypes(kb,f)) {
+                result.put(f, new HashSet<>(KButilities.errors));
+            }
+            KButilities.clearErrors();
+            kb.kbCache.errors.clear();
+            SUMOtoTFAform.errors.clear();
+            if(result.size() > 20) break;
+        }
+        return result;
+    }
+
+    /** *****************************************************************
+     * @author Shaun Rose
+     * Returns an HTML formatted String of formulae and their associated type violations.
+     * 
+     * @param Map<Formula,List<String>> - the error list with formulae and their type violations.
+     * @return String - the formatted HTML of the error list
+     */
+    public static String printFormulaeWithTypeViolations(KB kb, String kbHref) {
+        
+        Map<Formula, Set<String>> errors = Diagnostics.formulaeWithTypeViolations(kb);
+        StringBuilder html = new StringBuilder();
+        for (Map.Entry<Formula,Set<String>> error : errors.entrySet()) {
+            for(String errorString : error.getValue()) {
+                html.append("Error found: " + errorString);
+            }
+            html.append("In Formula:<br>" + error.getKey().htmlFormat(kbHref));
+            html.append("<br><br>");
+        }
+        return html.toString();
+    }
+
+    /** *****************************************************************
      * Return a list of terms that have parents which are disjoint.
      */
     public static List<String> childrenOfDisjointParents(KB kb) {
@@ -340,7 +386,7 @@ public class Diagnostics {
             }
             result.addAll(reduce);
             if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT)
-                result.add("limited to 100 results");
+                result.add("limited to " + RESULT_LIMIT + " results");
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -359,6 +405,10 @@ public class Diagnostics {
             forms = kb.askWithRestriction(0,"format",2,rel);
             if (forms == null || forms.isEmpty())
                 result.add(rel);
+            if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT) {
+                result.add("limited to " + RESULT_LIMIT + " results");
+                break;
+            }
         }
         return result;
     }
