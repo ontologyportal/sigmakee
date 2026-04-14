@@ -280,9 +280,13 @@ public class Modals {
     public static Formula handleHOLpred(Formula f, KB kb, Map<String, Set<String>> typeMap,
                                         String worldvar, Integer worldNum) {
 
+
         Set<String> types = new HashSet<>();
         types.add("World");
         List<Formula> flist = f.complexArgumentsToArrayList(1); // args after the head
+        if (flist.size() < 2) {
+            System.out.println("Error in Modals.handleHOLpred(): too few arguments in : " + f);
+        }
         // Expect: flist.get(0) = "agent"/parameter, flist.get(1) = formula argument
         worldNum = worldNum + 1;
 
