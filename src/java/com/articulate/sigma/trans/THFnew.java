@@ -248,20 +248,20 @@ public class THFnew {
 //            System.out.println("V= "+v);
 //            System.out.println("typeMap(v)= "+typeMap.get(v));
 //        }
-        // Any variable of the form ?W<digits> is a Kripke world variable.
-        // The hardcoded ?W1/?W2 check was insufficient for formulas with 3+
-        // nested modal operators which generate ?W3, ?W4, etc.
-        if (v.matches("\\?W\\d+"))
-            return "w";
-        if (typeMap.get(v) == null)
+        if (typeMap.get(v) == null) {
+            // Fallback: ?W<n> variables introduced deep in modal recursion may
+            // not reach the typeMap (worldNum is a local int, recursive calls
+            // cannot update the caller's counter).  Treat them as world type.
+            if (v.matches("\\?W+\\d+")) return "w";
             return "$i";
+        }
+        if (typeMap.get(v).contains("World"))
+            return "w";
         if (typeMap.get(v).contains("Formula")) {
             // Treat "Formula" variables as functions from worlds to booleans,
             // as per Alex Steen / TQM10: F : w > $o, used as F @ W.
             return "(w > $o)";
         }
-        if (typeMap.get(v).contains("World"))
-            return "w";
         if (typeMap.get(v).contains("Modal"))
             return "m";
         return "$i";
@@ -614,7 +614,6 @@ public class THFnew {
             return true;
         }
 
-        // ISSUE 17, ISSUE 21, ISSUE 22
         // Generic: modal operators must not appear as non-head arguments.
         // If the head itself is not a modal relation, any occurrence of a
         // modal relation name in argument position is rejected.
@@ -668,16 +667,16 @@ public class THFnew {
             }
         }
 
-        head = args.get(0);
-        if (Modals.regHOL3pred.contains(head)) {
-            for (String a : args) {
-                if (Modals.modalAttributes.contains(a)) {
-                    if (out != null)
-                        out.write("% exclude(): modal operator used as individual in " + head + ": " + a + "\n");
-                    return true;
-                }
-            }
-        }
+//        head = args.get(0);
+//        if (Modals.regHOL3pred.contains(head)) {
+//            for (String a : args) {
+//                if (Modals.modalAttributes.contains(a)) {
+//                    if (out != null)
+//                        out.write("% exclude(): modal operator used as individual in " + head + ": " + a + "\n");
+//                    return true;
+//                }
+//            }
+//        }
 
         // TODO: Fix that in SUMO
         // Known problematic terms unrelated to the modal embedding.

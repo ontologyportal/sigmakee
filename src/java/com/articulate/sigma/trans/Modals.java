@@ -586,7 +586,9 @@ public class Modals {
     /***************************************************************
      * Expr-based equivalent of {@link #handleHOL3pred}.
      * Rewrites {@code (pred a1 a2 form)} into the Kripke implication
-     * {@code (=> (accreln3 pred a1 a2 prevWorld currWorld) form')}.
+     * {@code (=> (accreln3[norm] pred a1 a2 prevWorld currWorld) form')}.
+     * Uses {@code accreln3norm} for {@link #regHOL3Modalpred} predicates
+     * (confersNorm, deprivesNorm) where the second extra argument is Modal-typed.
      */
     private static Expr handleHOL3predExpr(Expr.SExpr se, KB kb,
                                             String worldvar, int worldNum) {
@@ -604,9 +606,12 @@ public class Modals {
                 : new Expr.Var("?" + worldvar + prevWorld);
         Expr currWorldArg = new Expr.Var("?" + worldvar + currWorld);
 
-        // (accreln3 pred a1 a2 prevWorld currWorld)
+        // Use accreln3norm for Modal-typed predicates (confersNorm, deprivesNorm),
+        // accreln3 for the rest — mirrors the string-based handleHOL3pred() distinction.
+        String accrelnName = regHOL3Modalpred.contains(se.head().toKifString())
+                ? "accreln3norm" : "accreln3";
         Expr accreln = new Expr.SExpr(
-                new Expr.Atom("accreln3"),
+                new Expr.Atom(accrelnName),
                 List.of(se.head(), a1, a2, prevWorldArg, currWorldArg));
 
         // (=> accreln form)
@@ -766,11 +771,19 @@ public class Modals {
 
         Expr result = processRecurseExpr(expr, kb, worldvar, worldNum);
 
-        // Record world variable types (mirrors processModals varTypeCache population)
+        // Collect all world variables actually introduced during recursive processing.
+        // The fixed-range loop (0..worldNum) misses ?W2, ?W3, etc. because worldNum
+        // is a local int that recursive calls cannot update.  Scanning the result tree
+        // for vars that share the worldvar prefix is the reliable alternative.
         Map<String, Set<String>> worldTypes = new HashMap<>();
         Set<String> wType = new HashSet<>(Collections.singleton("World"));
-        for (int i = 0; i <= worldNum; i++)
-            worldTypes.put("?" + worldvar + i, wType);
+        // World variables are exactly "?<worldvar><digits>" — use matches() not startsWith()
+        // to avoid falsely classifying user variables like ?WHOLE or ?WORLD as world-typed.
+        final String wPattern = "\\?" + worldvar + "\\d+";
+        for (String v : collectAllVarsExpr(result)) {
+            if (v.matches(wPattern))
+                worldTypes.put(v, wType);
+        }
 
         return new SimpleEntry<>(result, worldTypes);
     }
@@ -952,11 +965,9 @@ public class Modals {
                 //"thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__desires @ P @ W @ W))).\n" +
                 //"thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__knows @ P @ W @ W))).\n" +
                 //"thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__believes @ P @ W @ W))).\n" +
-                // ISSUE 6
                 //"thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n" +
 
-                genAllModalSystems() +
-                genDistinctModals();
+                genAllModalSystems();
     }
 
     /***************************************************************
