@@ -5,20 +5,27 @@ import com.articulate.sigma.trans.Modals;
 import org.junit.Test;
 import org.junit.Assume;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
 public class ModalsTest extends UnitTestBase {
 
+    /***************************************************************
+     */
     @Test
     public void testDualityAxiom() {
+
         String fstr =
                 "(<=> " +
                         "    (modalAttribute ?FORMULA Prohibition) " +
                         "    (not (modalAttribute ?FORMULA Permission)))";
 
         Formula f = new Formula(fstr);
-        Formula out = Modals.processModals(f, kb);
+        Map<String, Set<String>> typeMap = new HashMap<>();
+        Formula out = Modals.processModals(f, kb,typeMap);
 
         String result = out.getFormula();
         System.out.println("\nDuality Test:\n" + result);
@@ -27,8 +34,11 @@ public class ModalsTest extends UnitTestBase {
         assertTrue(result.contains("Permission"));
     }
 
+    /***************************************************************
+     */
     @Test
     public void testDeepNestedModals() {
+
         String fstr =
                 "(holdsDuring ?T " +
                         "   (knows John " +
@@ -40,7 +50,8 @@ public class ModalsTest extends UnitTestBase {
                         "                       (acquaintance Bill Jane)))))))";
 
         Formula f = new Formula(fstr);
-        Formula out = Modals.processModals(f, kb);
+        Map<String, Set<String>> typeMap = new HashMap<>();
+        Formula out = Modals.processModals(f, kb,typeMap);
 
         String result = out.getFormula();
         System.out.println("\nDeep Modal Test:\n" + result);
@@ -53,8 +64,11 @@ public class ModalsTest extends UnitTestBase {
         assertTrue(result.contains("accreln"));
     }
 
+    /***************************************************************
+     */
     @Test
     public void testPureFOLNoModals() {
+
         String fstr =
                 "(=> " +
                         "    (and " +
@@ -66,7 +80,8 @@ public class ModalsTest extends UnitTestBase {
                         "        (desires ?AGENT ?THING)))";
 
         Formula f = new Formula(fstr);
-        Formula out = Modals.processModals(f, kb);
+        Map<String, Set<String>> typeMap = new HashMap<>();
+        Formula out = Modals.processModals(f, kb,typeMap);
 
         String result = out.getFormula();
         System.out.println("\nPure FOL Test:\n" + result);
@@ -76,8 +91,11 @@ public class ModalsTest extends UnitTestBase {
         assertTrue(result.contains("desires"));
     }
 
+    /***************************************************************
+     */
     @Test
     public void testMixedWorldSensitivePredicates() {
+
         String fstr =
                 "(=> " +
                         "  (instance ?ARGUMENT Argument ?W1) " +
@@ -90,7 +108,8 @@ public class ModalsTest extends UnitTestBase {
                         "        (conclusion ?CONCLUSION ?ARGUMENT ?W1)))))";
 
         Formula f = new Formula(fstr);
-        Formula out = Modals.processModals(f, kb);
+        Map<String, Set<String>> typeMap = new HashMap<>();
+        Formula out = Modals.processModals(f, kb, typeMap);
 
         String result = out.getFormula();
         System.out.println("\nMixed World-Sensitive Test:\n" + result);

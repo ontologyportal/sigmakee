@@ -720,7 +720,8 @@ public class SUMOKBtoTPTPKB {
             if (isHOL) {
                 pw.println("% is higher order");
                 if (getLang().equals("thf")) {  // TODO create a flag for adding modals (or not)
-                    f = Modals.processModals(f,kb);
+                    Map<String, Set<String>> typeMap = new HashMap<>();
+                    f = Modals.processModals(f,kb,typeMap);
                 }
                 if (removeHOL)
                     continue;
@@ -1012,8 +1013,10 @@ public class SUMOKBtoTPTPKB {
         if (isHOL) {
             f.higherOrder = true;
             res.prologueLines.add("% is higher order");
-            if (localLang.equals("thf"))
-                f = Modals.processModals(f, kb);
+            if (localLang.equals("thf")) {
+                Map<String, Set<String>> typeMap = new HashMap<>();
+                f = Modals.processModals(f, kb,typeMap);
+            }
             if (removeHOL) {
                 res.skippedHOL = true;
                 return res;
