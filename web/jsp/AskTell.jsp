@@ -630,14 +630,7 @@
     else {
         if (stmt.trim().charAt(0) != '(') english = true;
         else {
-            // Try KIFAST (AST-based) first; fall back to legacy KIF on unexpected failure
-            String msg;
-            try {
-                msg = (new KIFAST()).parseStatement(stmt);
-            } catch (Exception kifastEx) {
-                System.err.println("AskTell.jsp: KIFAST syntax check failed, falling back to KIF: " + kifastEx.getMessage());
-                msg = (new KIF()).parseStatement(stmt);
-            }
+            String msg = (new KIF()).parseStatement(stmt);
             if (msg != null) { status.append("<font color='red'>Error: ").append(msg).append("</font><br>"); syntaxError = true; }
         }
     }
@@ -1051,31 +1044,9 @@
                                 SessionTPTPManager.endBatchTells(sid);
                             }
                             FormulaPreprocessor fp = new FormulaPreprocessor();
-                            // Try FormulaAST path first; fall back to string path on parse error or empty result
-                            Set<Formula> qs = null;
-                            try {
-                                KIFAST kifAst = new KIFAST();
-                                String parseErr = kifAst.parseStatement(itd.query);
-                                if (parseErr == null && !kifAst.formulaMap.isEmpty()) {
-                                    com.articulate.sigma.parsing.FormulaAST queryFA =
-                                            kifAst.formulaMap.values().iterator().next();
-                                    Set<com.articulate.sigma.parsing.Expr> exprQs =
-                                            SessionTPTPManager.withSessionCache(
-                                                    sid, kb, () -> fp.preProcessExpr(queryFA, true, kb));
-                                    if (exprQs != null && !exprQs.isEmpty()) {
-                                        qs = new java.util.LinkedHashSet<>();
-                                        for (com.articulate.sigma.parsing.Expr pexpr : exprQs)
-                                            qs.add(new Formula(pexpr.toKifString()));
-                                    }
-                                }
-                            } catch (Exception e) {
-                                System.err.println("AskTell.jsp: FormulaAST preprocessing failed, falling back to string path: " + e.getMessage());
-                                qs = null;
-                            }
-                            // String fallback (AST path unavailable or returned empty)
-                            if (qs == null || qs.isEmpty())
-                                qs = SessionTPTPManager.withSessionCache(
-                                        sid, kb, () -> fp.preProcess(new Formula(itd.query), true, kb));
+                            Set<Formula> qs =
+                                    SessionTPTPManager.withSessionCache(
+                                            sid, kb, () -> fp.preProcess(new Formula(itd.query), true, kb));
                             for (Formula q : qs) {
                                 String qstr = q.getFormula();
                                 if ("EProver".equals(inferenceEngine)) {
@@ -1166,7 +1137,7 @@
                     } else {
                         try {
                             setVampMode(vampireMode);
-                            Vampire vRun = kb.askVampireTPTP(testPath, tmo, maxAns);
+                            com.articulate.sigma.tp.Vampire vRun = kb.askVampireTPTP(testPath, tmo, maxAns);
 
                             // Show ATPResult panel with SZS status and diagnostics
                             if (vRun != null && vRun.getResult() != null) {
@@ -1301,7 +1272,7 @@
                             renderATPResultPanel(eProver.getResult(), out);
                         }
 
-                        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                        com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                         tpp.parseProofOutput(eProver.output, stmt, kb, eProver.qlist);
                         setGraphFormat(graphFormulaFormat,tpp);
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
@@ -1356,6 +1327,8 @@
                         renderExceptionPanel(ae, out);
                     }
                 } else if ("Vampire".equals(inferenceEngine)) {
+                    Formula f = new Formula();
+                    f.read(stmt);
                     setVampMode(vampireMode);
 //                    boolean isHOL = f.isHigherOrder(kb);
                     // Use explicit UI toggle (Translation Mode) rather than auto-detection.
@@ -1393,7 +1366,7 @@
                         if (vampire == null || vampire.output == null){
                             out.println("<font color='red'>Error. No response from Vampire.</font>");
                         } else {
-                            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                            com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                             tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
                             setGraphFormat(graphFormulaFormat,tpp);
                             publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
