@@ -169,10 +169,13 @@ public class ExprToTHF {
             }
             case "forall" -> translateQuantifierTHF("! ", se, typeMap, modalMode);
             case "exists" -> translateQuantifierTHF("? ", se, typeMap, modalMode);
-            // accreln2 / accreln3: first argument is the modal operator (type m).
+            // accreln2 / accreln3 / accreln3norm: first argument is the modal operator (type m).
             // It must be translated in head position (no __m suffix) so its type stays m,
             // not $i.  This mirrors the old processRecurse() check at THFnew.java:168.
-            case "accreln2", "accreln3" -> translateAccrelnTHF(se, typeMap, modalMode);
+            // accreln3norm is the variant used for regHOL3Modalpred predicates (confersNorm,
+            // deprivesNorm) where the second extra argument is Modal-typed; the same
+            // arg-0 = modal-operator convention applies.
+            case "accreln2", "accreln3", "accreln3norm" -> translateAccrelnTHF(se, typeMap, modalMode);
             default       -> translateApplicationTHF(se, typeMap, modalMode);
         };
     }
@@ -292,12 +295,15 @@ public class ExprToTHF {
     public static String thfType(String kifVar, Map<String, Set<String>> typeMap,
                                   boolean modalMode) {
         if (modalMode) {
-            // World variables identified by naming convention — mirrors getTHFtype()?W\d+ check
-            if (kifVar.matches("\\?W\\d+")) return "w";
             Set<String> types = typeMap.get(kifVar);
-            if (types == null) return "$i";
-            if (types.contains("Formula")) return "(w > $o)";
+            if (types == null) {
+                // Fallback: ?W<n> variables may be absent from typeMap when worldNum
+                // is not propagated back from deep recursive calls.
+                if (kifVar.matches("\\?W+\\d+")) return "w";
+                return "$i";
+            }
             if (types.contains("World"))   return "w";
+            if (types.contains("Formula")) return "(w > $o)";
             if (types.contains("Modal"))   return "m";
             return "$i";
         } else {

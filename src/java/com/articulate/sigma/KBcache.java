@@ -2627,6 +2627,12 @@ public class KBcache implements Serializable {
             if (signatures.keySet().contains(oldPred))
                 signatures.put(pred,newSig);
             String lastType = oldSig.get(oldSig.size()-1);
+            // When the base relation has no domain declarations its last sig entry is ""
+            // (the empty range placeholder).  Filling expanded args with "" causes sigString()
+            // to skip them, producing a type like (w > $o) for a 3-arg variant instead of
+            // ($i > $i > $i > w > $o).  Default to Entity — the universal SUMO type — so
+            // that each expanded argument gets typed as $i.
+            if (lastType == null || lastType.isEmpty()) lastType = "Entity";
             for (int i = oldSig.size(); i <= arity; i++) {
                 newSig.add(lastType);
             }

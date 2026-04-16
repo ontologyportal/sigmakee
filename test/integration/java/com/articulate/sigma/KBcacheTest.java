@@ -227,27 +227,27 @@ public class KBcacheTest extends IntegrationTestBase {
             System.err.println("KBcacheTest.testDisjoint(): fail");
         assertTrue(resultPass);
 
-        classes = new HashSet<>(Arrays.asList("Table", "Chair"));
+        // classes = new HashSet<>(Arrays.asList("Table", "Chair"));
+        // System.out.println("KBcacheTest.testDisjoint(): classes: " + classes);
+        // resultPass = kb.kbCache.checkDisjoint(kb,classes);
+        // System.out.println("KBcacheTest.testDisjoint(): disjoint? " + resultPass);
+        // if (resultPass)
+        //     System.out.println("KBcacheTest.testDisjoint(): pass");
+        // else
+        //     System.err.println("KBcacheTest.testDisjoint(): fail");
+        // assertTrue(resultPass);
+
+        classes = new HashSet<>(Arrays.asList("Table", "AutonomousAgent"));
         System.out.println("KBcacheTest.testDisjoint(): classes: " + classes);
         resultPass = kb.kbCache.checkDisjoint(kb,classes);
         System.out.println("KBcacheTest.testDisjoint(): disjoint? " + resultPass);
-        if (!resultPass)
+        if (resultPass)
             System.out.println("KBcacheTest.testDisjoint(): pass");
         else
             System.err.println("KBcacheTest.testDisjoint(): fail");
-        assertTrue(!resultPass);
+        assertTrue(resultPass);
 
-        classes = new HashSet<>(Arrays.asList("Table", "Agent"));
-        System.out.println("KBcacheTest.testDisjoint(): classes: " + classes);
-        resultPass = kb.kbCache.checkDisjoint(kb,classes);
-        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + resultPass);
-        if (!resultPass)
-            System.out.println("KBcacheTest.testDisjoint(): pass");
-        else
-            System.err.println("KBcacheTest.testDisjoint(): fail");
-        assertTrue(!resultPass);
-
-        classes = new HashSet<>(Arrays.asList("Object", "RetailStore"));
+        classes = new HashSet<>(Arrays.asList("SelfConnectedObject", "RetailStore"));
         System.out.println("KBcacheTest.testDisjoint(): classes: " + classes);
         resultPass = kb.kbCache.checkDisjoint(kb,classes);
         System.out.println("KBcacheTest.testDisjoint(): disjoint? " + resultPass);

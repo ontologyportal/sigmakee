@@ -176,7 +176,18 @@ public final class ValidationUtils {
      */
     public static String sanitizeSumoTerm(String s) {
         
-        return StringUtil.replaceNonIdChars(sanitizeString(s));
+        return sanitizeString(s);
+    }
+
+    /****************************************************************
+     * Returns validated SUMO term string.
+     *
+     * @param s A String
+     * @return Validated SUMO term
+     */
+    public static String sanitizeSumoTerm(String s, String defaultString) {
+        
+        return sanitizeString(s, defaultString);
     }
 
     /****************************************************************

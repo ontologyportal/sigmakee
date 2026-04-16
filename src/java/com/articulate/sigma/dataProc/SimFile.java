@@ -163,6 +163,12 @@ public class SimFile {
 
     /** ***************************************************************
      */
+    public void  instFileToSUMO(Map<String,HashMap<String,ArrayList<String>>> frames) {
+
+    }
+
+    /** ***************************************************************
+     */
     public void readTextFile(String fname) {
 
         List<String> lines = FileUtil.readLines(fname);

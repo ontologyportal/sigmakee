@@ -1836,7 +1836,7 @@ public class THF {
     }
 
     /** ***************************************************************
-     */
+
     public static List<String> transModalTHF(KB kb) {
 
         THF thf = new THF();
@@ -1852,7 +1852,7 @@ public class THF {
         List<String> kbAll2 = thf.KIF2THF(result,coll,kb);
         return kbAll2;
     }
-
+*/
     /** ***************************************************************
      */
     public static List<String> transTHF(KB kb) {
@@ -1885,7 +1885,7 @@ public class THF {
     }
 
     /** ***************************************************************
-     */
+
     public static void test(KB kb) {
 
         String fstr = "(=> " +
@@ -1903,7 +1903,7 @@ public class THF {
         String result = thf.oneKIF2THF(modal, false, kb);
         System.out.println(result);
     }
-
+*/
     /** ***************************************************************
      */
     public static void showHelp() {
@@ -1945,12 +1945,12 @@ public class THF {
             }
             else if (args != null && args.length > 0 && args[0].equals("-t")) {
                 System.out.println("THF.main(): translate to THF");
-                test(kb);
+                //test(kb);
             }
             else if (args != null && args.length > 0 && args[0].equals("-m")) {
                 System.out.println("THF.main(): translate to THF with modals");
-                List<String> kbAll2 = transModalTHF(kb);
-                writeTHF(kb, kbAll2);
+                //List<String> kbAll2 = transModalTHF(kb);
+                //writeTHF(kb, kbAll2);
             }
             else
                 showHelp();

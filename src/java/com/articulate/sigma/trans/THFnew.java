@@ -37,10 +37,10 @@ public class THFnew {
                 if (debug) System.out.println("THFnew.processQuant(): valid varlist: " + args.get(0));
                 Formula varlist = new Formula(args.get(0));
                 List<String> vars = varlist.argumentsToArrayListString(0);
-                //if (debug) System.out.println("THFnew.processRecurse(): valid vars: " + vars);
+                if (debug) System.out.println("THFnew.processRecurse(): vars: " + vars);
                 StringBuilder varStr = new StringBuilder();
                 varStr.append(generateQList(f,typeMap,new HashSet(vars)));
-                if (debug) System.out.println("THFnew.processQuant(): valid vars: " + varStr);
+                if (debug) System.out.println("THFnew.processQuant(): quantifier vars: " + varStr);
                 String opStr = " ! ";
                 if (op.equals("exists"))
                     opStr = " ? ";
@@ -248,20 +248,20 @@ public class THFnew {
 //            System.out.println("V= "+v);
 //            System.out.println("typeMap(v)= "+typeMap.get(v));
 //        }
-        // Any variable of the form ?W<digits> is a Kripke world variable.
-        // The hardcoded ?W1/?W2 check was insufficient for formulas with 3+
-        // nested modal operators which generate ?W3, ?W4, etc.
-        if (v.matches("\\?W\\d+"))
-            return "w";
-        if (typeMap.get(v) == null)
+        if (typeMap.get(v) == null) {
+            // Fallback: ?W<n> variables introduced deep in modal recursion may
+            // not reach the typeMap (worldNum is a local int, recursive calls
+            // cannot update the caller's counter).  Treat them as world type.
+            if (v.matches("\\?W+\\d+")) return "w";
             return "$i";
+        }
+        if (typeMap.get(v).contains("World"))
+            return "w";
         if (typeMap.get(v).contains("Formula")) {
             // Treat "Formula" variables as functions from worlds to booleans,
             // as per Alex Steen / TQM10: F : w > $o, used as F @ W.
             return "(w > $o)";
         }
-        if (typeMap.get(v).contains("World"))
-            return "w";
         if (typeMap.get(v).contains("Modal"))
             return "m";
         return "$i";
@@ -289,6 +289,7 @@ public class THFnew {
         String thftype, oneVar;
         for (String s : vars) {
             thftype = getTHFtype(s,typeMap);
+            if (debug) System.out.println("THFnew.generateQList(): thftype for  " + s + " : " + thftype);
             oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
             qlist.append(oneVar).append(":").append(thftype).append(",");
         }
@@ -463,21 +464,26 @@ public class THFnew {
      */
     public static void oneTrans(KB kb, Formula f, PrintWriter bw) throws IOException {
 
-        bw.write("% original: " + f.getFormula() + "\n" +
+        if (bw == null)
+            if (debug) System.out.println("% original: " + f.getFormula() + "\n" +
+                    "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
+        else
+            bw.write("% original: " + f.getFormula() + "\n" +
                 "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
 
         // 1) Modal pass on the original f, for TYPE INFO ONLY
-        Formula res = Modals.processModals(f, kb);
+        Map<String, Set<String>> typeMap = new HashMap<>();
+        Formula res = Modals.processModals(f, kb, typeMap);
         if (res != null) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
 
             // 2) IMPORTANT: preprocess ORIGINAL f, not res.
             //    So processed formulas do NOT yet contain worlds.
             Set<Formula> processed = fp.preProcess(f, false, kb);
-
+            if (debug) System.out.println("oneTrans(): preprocessed: " + processed);
             // 3) Build typeMap from res (modalised original) as before
             res.varTypeCache.clear();
-            Map<String, Set<String>> typeMap = new HashMap<>();
+
             typeMap.putAll(fp.findAllTypeRestrictions(res, kb));
             typeMap.putAll(res.varTypeCache);
 
@@ -485,24 +491,27 @@ public class THFnew {
             types.add("World");
             String worldVar = makeWorldVar(kb, f);
             typeMap.put(worldVar, types);
-
+            if (debug) System.out.println("oneTrans(): typemap: " + typeMap);
             markModalAttributeFormulaVars(f, typeMap);
+            if (debug) System.out.println("oneTrans(): formula: " + f);
 
             // 4) For each processed formula, NOW apply Modals and then THFnew
             for (Formula fnew : processed) {
                 // Single, correct modal/world pass per processed formula
-                Formula fmodal = Modals.processModals(fnew, kb);
+                Formula fmodal = Modals.processModals(fnew, kb,typeMap);
+                if (debug) System.out.println("oneTrans(): after modal processing: " + fmodal);
                 if (fmodal == null)
                     continue;
                 if (exclude(fmodal, kb, bw))
                     continue;
                 if (bw == null) {
-                    System.out.println(process(new Formula(fmodal), typeMap, false));
+                    if (debug) System.out.println("oneTrans(): processed: " +
+                            process(new Formula(fmodal), typeMap, false));
                 }
                 else {
                     String s = "thf(ax" + axNum++ + ",axiom," +
                             process(new Formula(fmodal), typeMap, false) + ").\n";
-                    //System.out.println(s);
+                    if (debug) System.out.println("oneTrans(): " + s);
                     bw.println(s);
                 }
             }
@@ -605,7 +614,6 @@ public class THFnew {
             return true;
         }
 
-        // ISSUE 17, ISSUE 21, ISSUE 22
         // Generic: modal operators must not appear as non-head arguments.
         // If the head itself is not a modal relation, any occurrence of a
         // modal relation name in argument position is rejected.
@@ -624,19 +632,21 @@ public class THFnew {
         // arguments may be modal/HOL/formula predicates or modal attributes.
         if (args != null && !args.isEmpty()) {
             head = args.get(0);
-
             if (!Modals.allowedHeads.contains(head)) {
                 for (int i = 1; i < args.size(); i++) {   // skip head
                     String a = args.get(i);
-
                     if (Modals.MODAL_RELATIONS.contains(a)
                             || Modals.modalAttributes.contains(a)
                             || Modals.RESERVED_MODAL_SYMBOLS.contains(a)
                             || Modals.regHOLpred.contains(a)
                             || Modals.formulaPreds.contains(a)) {
-
-                        out.write("% exclude(): modal/HOL symbol used as individual " +
-                                "argument of non-modal head, Symbol " + a + " head: " + head+ "\n");
+                        if (debug) {
+                            System.out.println("% exclude(): modal/HOL symbol used as individual " +
+                                    "argument of non-modal head, Symbol " + a + " head: " + head + "\n");
+                        }
+                        if (out != null)
+                            out.write("% exclude(): modal/HOL symbol used as individual " +
+                                "argument of non-modal head, Symbol " + a + " head: " + head + "\n");
                         return true;
                     }
                 }
@@ -651,27 +661,30 @@ public class THFnew {
             String p = args.get(1);
             if (Modals.formulaPreds.contains(p) ||
                     Modals.regHOLpred.contains(p)) {
-                out.write("% exclude(): domain axiom for formula/HOL predicate: " + p + "\n");
+                if (out != null)
+                    out.write("% exclude(): domain axiom for formula/HOL predicate: " + p + "\n");
                 return true;
             }
         }
 
-        head = args.get(0);
-        if ("confersNorm".equals(head)) {
-            for (String a : args) {
-                if (Modals.modalAttributes.contains(a)) {
-                    out.write("% exclude(): modal operator used as individual in confersNorm: " + a + "\n");
-                    return true;
-                }
-            }
-        }
+//        head = args.get(0);
+//        if (Modals.regHOL3pred.contains(head)) {
+//            for (String a : args) {
+//                if (Modals.modalAttributes.contains(a)) {
+//                    if (out != null)
+//                        out.write("% exclude(): modal operator used as individual in " + head + ": " + a + "\n");
+//                    return true;
+//                }
+//            }
+//        }
 
         // TODO: Fix that in SUMO
         // Known problematic terms unrelated to the modal embedding.
         List<String> problematic_terms = Arrays.asList("airTemperature", "ListFn", "AssignmentFn", "Organism");
         for (String a : args) {
             if (problematic_terms.contains(a)) {
-                out.write("% exclude(): Problematic Term encountered: "+a+"\n");
+                if (out != null)
+                    out.write("% exclude(): Problematic Term encountered: "+a+"\n");
                 return true;
             }
         }
@@ -696,7 +709,8 @@ public class THFnew {
                             System.out.println("exclude(): META-LOGIC pattern: variable as consequent of => : "
                                     + conseq + " in " + f.getFormula());
                         }
-                        out.write("% exclude(): meta-logic (variable as consequent of =>): "
+                        if (out != null)
+                            out.write("% exclude(): meta-logic (variable as consequent of =>): "
                                 + conseq + "\n");
                         return true;
                     }
@@ -710,7 +724,8 @@ public class THFnew {
                             System.out.println("exclude(): META-LOGIC pattern: variable under not/~ : "
                                     + arg0 + " in " + f.getFormula());
                         }
-                        out.write("% exclude(): meta-logic (variable under not/~): "
+                        if (out != null)
+                            out.write("% exclude(): meta-logic (variable under not/~): "
                                 + arg0 + "\n");
                         return true;
                     }
@@ -728,7 +743,8 @@ public class THFnew {
                 if (Formula.listP(s)) {
                     if (exclude(new Formula(s), kb, out)) {
                         String flat = f.toString().replace("\n", " ").replace("\r", " ");
-                        out.write("% excluded(): interior list: " + flat + "\n");
+                        if (out != null)
+                            out.write("% excluded(): interior list: " + flat + "\n");
                         return true;
                     }
                 }
@@ -738,7 +754,8 @@ public class THFnew {
             for (String sub : args) {
                 if (excludePred(sub, out)) {
                     String flat = f.toString().replace("\n", " ").replace("\r", " ");
-                    out.write("% excluded(): term from excludePred: " + flat + "\n");
+                    if (out != null)
+                        out.write("% excluded(): term from excludePred: " + flat + "\n");
                     return true;
                 }
             }
@@ -756,7 +773,8 @@ public class THFnew {
                 if (protectedRelation(args.get(0))) {
                     for (int i = 1; i < args.size(); i++) {
                         if (Modals.modalAttributes.contains(args.get(i))) {
-                            out.write("% exclude(): modal attribute in protected relation: " +
+                            if (out != null)
+                                out.write("% exclude(): modal attribute in protected relation: " +
                                     args.get(0) + " " + args.get(i) + "\n");
                             return true;
                         }
@@ -767,7 +785,8 @@ public class THFnew {
                 if (args.get(0).equals("domain") &&
                         args.size() > 1 &&
                         Modals.RESERVED_MODAL_SYMBOLS.contains(args.get(1))) {
-                    out.write("% exclude(): modal operator in domain: " + args.get(1) + "\n");
+                    if (out != null)
+                        out.write("% exclude(): modal operator in domain: " + args.get(1) + "\n");
                     return true;
                 }
 
@@ -775,7 +794,8 @@ public class THFnew {
                 // This can be revisited later if we want more general numerals.
                 for (String s : args) {
                     if (StringUtil.isNumeric(s)) {
-                        out.write("% exclude(): is numeric(2): \n");
+                        if (out != null)
+                            out.write("% exclude(): is numeric(2): \n");
                         if (s.contains(".") || s.contains("-") || s.length() > 1)
                             return true;
                         if (s.charAt(0) < '1' || s.charAt(0) > '6')
@@ -802,6 +822,7 @@ public class THFnew {
                 pred.equals("abbreviation") ||
                 pred.equals("format") ||
                 pred.equals("externalImage") ||
+                pred.equals("codeMapping") ||
                 pred.equals("comment")) {
             out.write("% excludePred(): " + "\n");
             return true;
@@ -1090,6 +1111,18 @@ public class THFnew {
                 }
                 // Work on a local copy to build the THF type
                 List<String> sig = new ArrayList<>(baseSig);
+
+                // VariableArityRelations with no domain declarations get an empty string
+                // as their only sig entry (the range placeholder). copyNewPredFromVariableArity
+                // fills expanded variants with the same empty string, so sigString() skips all
+                // arg positions and produces "(w > $o)" instead of "($i > ... > w > $o)".
+                // Normalise: replace empty arg entries (index 1+) with "Entity".
+                if (variableArity(kb, t)) {
+                    for (int _si = 1; _si < sig.size(); _si++) {
+                        String _st = sig.get(_si);
+                        if (_st == null || _st.isEmpty()) sig.set(_si, "Entity");
+                    }
+                }
 
                 // ISSUE 14
                 // Check that the sigStr aligns with the __NUM of the term:
@@ -1671,6 +1704,39 @@ public class THFnew {
                 "        (instance ?LAND2 Continent)\n" +
                 "        (instance ?LAND2 Island)))))\n";
         Formula f = new Formula(fstr);
+     //   try {
+            //oneTrans(kb,f,null);
+     //   }
+      //  catch (IOException ex) {
+      //      ex.printStackTrace();
+      //  }
+        fstr = "(=>\n" +
+                "    (instance ?J TransitwayJunction)\n" +
+                "    (exists (?W1 ?W2)\n" +
+                "        (and\n" +
+                "            (instance ?W1 Transitway)\n" +
+                "            (instance ?W2 Transitway)\n" +
+                "            (connects ?J ?W1 ?W2)\n" +
+                "            (not\n" +
+                "                (equal ?W1 ?W2)))))";
+        f = new Formula(fstr);
+        //try {
+        //    oneTrans(kb,f,null);
+        //}
+        //catch (IOException ex) {
+        //    ex.printStackTrace();
+        //}
+        fstr = "(=> " +
+                "(and " +
+                  "(instance ?POLICY NoChildrenPolicy) " +
+                  "(policyLocationCoverage ?POLICY ?LOC) " +
+                  "(policyOwner ?AGENT ?POLICY)) " +
+                "(deprivesNorm ?AGENT Permission " +
+                  "(exists (?CHILD) " +
+                    "(and " +
+                      "(instance ?CHILD HumanChild) " +
+                      "(located ?CHILD ?LOC)))))";
+        f = new Formula(fstr);
         try {
             oneTrans(kb,f,null);
         }
