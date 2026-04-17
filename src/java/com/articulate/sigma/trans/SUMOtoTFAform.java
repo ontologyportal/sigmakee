@@ -117,7 +117,7 @@ public class SUMOtoTFAform {
      * makePredFromArgTypes to always be called so the type-suffixed
      * name is used and extendRelationSig derives the sort from the name.
      */
-    private static boolean needsForcedTypeSuffix(String pred) {
+    public static boolean needsForcedTypeSuffix(String pred) {
         int under = pred.lastIndexOf("__");
         String base = (under == -1) ? pred : pred.substring(0, under);
         return base.equals(Formula.DIVIDEFN) || base.equals(Formula.FLOORFN) ||
@@ -674,7 +674,7 @@ public class SUMOtoTFAform {
      * Specify the TFF types in the name of a predicate, as given by
      * the SUMO types listed in @param argTypeMap
      */
-    private static String makePredFromArgTypes(Formula car, List<String> argTypeMap) {
+    public static String makePredFromArgTypes(Formula car, List<String> argTypeMap) {
 
         String pred = car.getFormula();
         String arityCountStr = null;
