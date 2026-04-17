@@ -696,7 +696,7 @@ public class HTMLformatter {
             printedForms.add(strForm);
             //System.out.println("INFO in HTMLformatter.formatFormulaList(): formula: " + strForm);
             f = (Formula) kb.formulaMap.get(strForm);
-            if (f.sourceFile.equals("<unknown>")) continue;
+//            if (f.sourceFile.equals("<unknown>")) continue;
             if (f == null) {
                 System.out.println("Error in HTMLformatter.formatFormulaList(): null formula object for " +
                         strForm);
