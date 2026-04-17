@@ -785,8 +785,8 @@ public class SUMOtoTFAform {
         }
         if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): newArgTypes: " + newArgTypes);
         String pred = car.getFormula();
-        List<String> sig = kb.kbCache.getSignature(pred);
-        if (!equalTFFsig(newArgTypes,sig,pred) || KButilities.isVariableArity(kb,pred) || needsForcedTypeSuffix(pred))
+        List<String> sig = kb.kbCache.getSignature(withoutSuffix(pred));
+        if (!equalTFFsig(newArgTypes,sig,pred) || KButilities.isVariableArity(kb,withoutSuffix(pred)) || needsForcedTypeSuffix(pred))
             pred = makePredFromArgTypes(car,newArgTypes);
         if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): pred: " + pred);
         List<String> processedArgs = new ArrayList<>();
@@ -825,8 +825,8 @@ public class SUMOtoTFAform {
 
         if (debug) System.out.println("SUMOtoTFAform.processListFn(): f: " + f);
         String pred = car.getFormula();
-        List<String> sig = kb.kbCache.getSignature(pred);
-        if (!equalTFFsig(argTypes,sig,pred) || KButilities.isVariableArity(kb,pred))
+        List<String> sig = kb.kbCache.getSignature(withoutSuffix(pred));
+        if (!equalTFFsig(argTypes,sig,pred) || KButilities.isVariableArity(kb,withoutSuffix(pred)))
             pred = makePredFromArgTypes(car,argTypes);
         List<String> processedArgs = new ArrayList<>();
         for (int i = 1; i < args.size(); i++) // arg 0 is ListFn
@@ -1951,7 +1951,7 @@ public class SUMOtoTFAform {
         // pick the 'best' from them - most specific down to TF0 types (so Integer is better than PositiveInteger)
 
         String suffix = "";
-        List<String> sig = kb.kbCache.getSignature(op);
+        List<String> sig = kb.kbCache.getSignature(withoutSuffix(op));
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): op sig: " + sig);
         List<String> typeFromName = relationExtractSigFromName(op); // extract type signature from the operator name
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): typeFromName: " + typeFromName);
@@ -1986,7 +1986,15 @@ public class SUMOtoTFAform {
             type = "Entity";
             if (i <= newsig.size()-1)
                 type = newsig.get(i);
-            args.set(i, constrainOp(argForm, argForm.car(), type, argForm.complexArgumentsToArrayListString(0)));
+//            args.set(i, constrainOp(argForm, argForm.car(), type, argForm.complexArgumentsToArrayListString(0)));
+            // Logical-operator sub-formulas (and, or, not, =>, forall, exists, ...) have no
+            // KB signature; calling constrainOp on them produces a spurious equalTFFsig null-sig
+            // error.  Route them through constrainFunctVarsRecurse instead, which correctly
+            // handles logical operators in its else branch.
+            if (!argForm.atom() && Formula.isLogicalOperator(argForm.car()))
+                args.set(i, constrainFunctVarsRecurse(argForm, type));
+            else
+                args.set(i, constrainOp(argForm, argForm.car(), type, argForm.complexArgumentsToArrayListString(0)));
         }
 
         List<String> newargs = new ArrayList<>();
@@ -3329,8 +3337,8 @@ public class SUMOtoTFAform {
                                             List<String> argTypes) {
         String pred = se.headName();
         List<Expr> args = se.args();
-        List<String> sig = kb.kbCache.getSignature(pred);
-        if (!equalTFFsig(argTypes, sig, pred) || KButilities.isVariableArity(kb, pred))
+        List<String> sig = kb.kbCache.getSignature(withoutSuffix(pred));
+        if (!equalTFFsig(argTypes, sig, pred) || KButilities.isVariableArity(kb, withoutSuffix(pred)))
             pred = makePredFromArgTypes(new Formula(pred), argTypes);
         List<String> processedArgs = new ArrayList<>();
         for (Expr arg : args)
@@ -3352,11 +3360,11 @@ public class SUMOtoTFAform {
         List<String> newArgTypes = new ArrayList<>(argTypes);
         if (isFunctionalExpr(se) && argTypes != null && !argTypes.isEmpty())
             newArgTypes.set(0, bestOfPair(parentType, argTypes.get(0)));
-        List<String> predTypes = kb.kbCache.getSignature(op);
+        List<String> predTypes = kb.kbCache.getSignature(withoutSuffix(op));
         newArgTypes = bestSignature(predTypes, newArgTypes);
         String pred = op;
-        List<String> sig = kb.kbCache.getSignature(pred);
-        if (!equalTFFsig(newArgTypes, sig, pred) || KButilities.isVariableArity(kb, pred) || needsForcedTypeSuffix(pred))
+        List<String> sig = kb.kbCache.getSignature(withoutSuffix(pred));
+        if (!equalTFFsig(newArgTypes, sig, pred) || KButilities.isVariableArity(kb, withoutSuffix(pred)) || needsForcedTypeSuffix(pred))
             pred = makePredFromArgTypes(new Formula(pred), newArgTypes);
         List<String> processedArgs = new ArrayList<>();
         for (int i = 0; i < args.size(); i++) {
