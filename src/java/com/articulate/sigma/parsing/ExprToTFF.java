@@ -445,6 +445,18 @@ public class ExprToTFF {
      */
     private static Expr constrainOpExpr(Expr.SExpr se, String op, String parentType,
                                          Map<String, Set<String>> varmap, KB kb) {
+        // If the operator is already type-annotated (e.g. greaterThanOrEqualTo__1In2In from
+        // a previous fixed-point pass), renaming it again is a no-op and would call
+        // equalTFFsig with a null sig (kbCache only knows the base name), printing a spurious
+        // error.  Just recurse into children using "Entity" as the arg type (the types were
+        // already propagated in the pass that produced the suffix).
+//        if (SUMOKBtoTFAKB.alreadyExtended(op)) {
+//            List<Expr> newArgs = new ArrayList<>();
+//            for (Expr arg : se.args())
+//                newArgs.add(constrainFunctVarsExpr(arg, "Entity", varmap, kb));
+//            return new Expr.SExpr(se.head(), newArgs);
+//        }
+
         // ---- Step 1-2: declared KB signature, refined with any name encoding ----
         List<String> sig        = kb.kbCache.getSignature(op);
         List<String> typeFromName = SUMOtoTFAform.relationExtractSigFromName(op);
