@@ -17,7 +17,8 @@ import org.junit.runners.Suite;
     SortalTest.class,
     TPTPWriterTest.class,
     TypeTest.class,
-    KIFEquivalenceTest.class
+    KIFEquivalenceTest.class,
+    ExprToTFFArithmeticIntegrationTest.class
 })
 public class IntegrationParsingTestSuite extends IntegrationTestBase {
 

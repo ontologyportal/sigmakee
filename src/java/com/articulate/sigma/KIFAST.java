@@ -167,7 +167,12 @@ public class KIFAST {
                 dupCount++;
                 continue; // skip duplicate
             }
-            if (filename != null && f.sourceFile == null)
+            // SuokifVisitor.visitFile() always sets f.sourceFile from the ANTLR token
+            // source name.  When parsing from a string (e.g. storeCacheAsFormulas),
+            // that name is an ANTLR-internal default (e.g. "<unknown source>", "",
+            // etc.) rather than a meaningful filename.  The caller-supplied filename
+            // field is always the authoritative name, so we unconditionally apply it.
+            if (filename != null)
                 f.sourceFile = filename;
             formulaMap.put(kifStr, f);
             // Build predicate-position keys from the Expr tree

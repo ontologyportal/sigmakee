@@ -39,7 +39,12 @@ public class TPTPutil {
      */
     private static String extractTPTPaxiom(String t) {
 
-        return t.substring(1,t.length()-1).trim();
+        String trimmed = t.trim();
+        // Old tptpParseSUOKIFString wrapped results in "( body )" — strip those outer parens.
+        // New ExprToTPTP.translateKifString stores the raw body without outer parens — return as-is.
+        if (trimmed.startsWith("(") && trimmed.endsWith(")"))
+            return trimmed.substring(1, trimmed.length() - 1).trim();
+        return trimmed;
     }
 
     /** ***************************************************************

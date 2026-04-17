@@ -1077,6 +1077,15 @@ public class SUMOKBtoTPTPKB {
                     } else { // tff
                         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % expr path tff input: "
                                 + pexpr.toKifString());
+                        // Always collect ListFn sort declarations before translating —
+                        // mirrors the unconditional missingSorts() call in the string path.
+                        // Without this, ListFn__NNFn type declarations are missing when
+                        // ExprToTFF.translate() succeeds (the fallback block is never reached).
+                        SUMOtoTFAform stfaSorts = new SUMOtoTFAform();
+                        SUMOtoTFAform.kb = kb;
+                        Set<String> exprSorts = stfaSorts.missingSortsExpr(pexpr);
+                        if (exprSorts != null && !exprSorts.isEmpty())
+                            f.tffSorts.addAll(exprSorts);
                         // Fast path: ExprToTFF translates directly from Expr tree with inline sort annotations
                         String tffResult = ExprToTFF.translate(pexpr, false, kb);
                         if (tffResult == null || tffResult.isBlank()) {
@@ -1084,9 +1093,6 @@ public class SUMOKBtoTPTPKB {
                             System.out.println("ExprToTFF.translate() fallback (expr path): " + pexpr.toKifString());
                             SUMOtoTFAform stfa = new SUMOtoTFAform();
                             SUMOtoTFAform.kb = kb;
-                            stfa.sorts = stfa.missingSortsExpr(pexpr);
-                            if (stfa.sorts != null && !stfa.sorts.isEmpty())
-                                f.tffSorts.addAll(stfa.sorts);
                             tffResult = SUMOtoTFAform.processExpr(pexpr, false);
                             collectNumericConstants(res.numConstLines);
                             SUMOtoTFAform.getNumericConstantTypes().clear();
