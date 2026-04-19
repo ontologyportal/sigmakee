@@ -911,7 +911,7 @@ public class THFnew {
                 if (formulaAsWorldFunction) {
                     // For deontic/epistemic predicates etc. we treat Formula args as
                     // functions from worlds to booleans: F : w > $o.
-//                    sb.append("(w > $o) > ");
+                    //sb.append("(w > $o) > ");
                     sb.append("$o > ");
                 }
                 else {
@@ -1084,7 +1084,8 @@ public class THFnew {
         for (String t : kb.terms) {
             // ISSUE 2
             // 1. Skip modal helper symbols – they already have correct types in the header.
-            if (Modals.RESERVED_MODAL_SYMBOLS.contains(t))
+            if (Modals.RESERVED_MODAL_SYMBOLS.contains(t) || Modals.regHOL3Modalpred.contains(t) ||
+                Modals.regHOL3pred.contains(t) || Modals.regHOLpred.contains(t))
                 continue;
             if (excludeForTypedef(t,out))
                 continue;
@@ -1113,7 +1114,7 @@ public class THFnew {
                             && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)
                             && !Modals.regHOLpred.contains(baseHead)) {
                         sig.add("World");
-                        if (suffixNum != null) suffixNum+=1;
+                        if (suffixNum != null) suffixNum += 1;
                     }
                 }
 
@@ -1162,7 +1163,7 @@ public class THFnew {
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : m)).\n"); // write relation constant
             else
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
-                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true)+ " : $i)).\n");
+                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + " : $i)).\n");
         }
     }
 
