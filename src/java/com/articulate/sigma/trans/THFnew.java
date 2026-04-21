@@ -813,45 +813,49 @@ public class THFnew {
     // Private helpers for the Expr-based exclude overload
     // -----------------------------------------------------------------------
 
-    /** Returns true if the Expr tree contains any {@link Expr.StrLiteral} node. */
-    private static boolean containsStrLiteralExpr(Expr e) {
-        if (e instanceof Expr.StrLiteral) return true;
-        if (e instanceof Expr.SExpr se) {
-            if (se.head() != null && containsStrLiteralExpr(se.head())) return true;
-            for (Expr arg : se.args())
-                if (containsStrLiteralExpr(arg)) return true;
-        }
-        return false;
-    }
-
-    /** Returns true if the Expr tree contains an {@link Expr.Atom} with the given name. */
-    private static boolean containsAtomExpr(Expr e, String name) {
-        if (e instanceof Expr.Atom a) return name.equals(a.name());
-        if (e instanceof Expr.SExpr se) {
-            if (se.head() != null && containsAtomExpr(se.head(), name)) return true;
-            for (Expr arg : se.args())
-                if (containsAtomExpr(arg, name)) return true;
-        }
-        return false;
-    }
+    // Bitmask flags for preCheckExpr
+    private static final int PC_STR_LITERAL = 1;  // any StrLiteral node
+    private static final int PC_TRUE_FALSE  = 2;  // Atom("True") or Atom("False")
+    private static final int PC_FORMULA_ARG = 4;  // Atom("Formula") as last arg of some SExpr
 
     /**
-     * Returns true if any {@link Expr.SExpr} in the tree has {@code Atom("Formula")}
-     * as its last direct argument.
+     * Single-pass pre-check: walks the Expr tree <em>once</em> and returns a
+     * bitmask of the three conditions checked at the top of
+     * {@link #exclude(Expr, KB, Writer)}.
      *
-     * <p>This mirrors the string check {@code f.getFormula().contains(" Formula)")}:
-     * the pattern {@code " Formula)"} only fires when "Formula" is the final token
-     * of some parenthesised list (i.e. the last argument of its enclosing SExpr).
+     * <p>Replacing three separate recursive helpers with one traversal avoids
+     * redundant pointer-chasing through the Java heap for every formula.
+     * An early-exit guard short-circuits as soon as all three flags are set.
+     *
+     * <p>Bit meanings: {@link #PC_STR_LITERAL}, {@link #PC_TRUE_FALSE},
+     * {@link #PC_FORMULA_ARG}.
      */
-    private static boolean containsAtomAsArgExpr(Expr e) {
-        if (!(e instanceof Expr.SExpr se)) return false;
+    private static int preCheckExpr(Expr e, int found) {
+        if (found == (PC_STR_LITERAL | PC_TRUE_FALSE | PC_FORMULA_ARG))
+            return found;                          // all flags set — early exit
+        if (e instanceof Expr.StrLiteral)
+            return found | PC_STR_LITERAL;
+        if (e instanceof Expr.Atom a) {
+            String name = a.name();
+            if (name.equals(Formula.LOG_TRUE) || name.equals(Formula.LOG_FALSE))
+                return found | PC_TRUE_FALSE;
+            return found;
+        }
+        if (!(e instanceof Expr.SExpr se)) return found;
+        if (se.head() != null)
+            found = preCheckExpr(se.head(), found);
         List<Expr> args = se.args();
-        if (!args.isEmpty() && args.get(args.size() - 1) instanceof Expr.Atom a
-                && "Formula".equals(a.name()))
-            return true;
-        for (Expr arg : args)
-            if (containsAtomAsArgExpr(arg)) return true;
-        return false;
+        // Check: Atom("Formula") as the last argument of this SExpr
+        if ((found & PC_FORMULA_ARG) == 0 && !args.isEmpty()
+                && args.get(args.size() - 1) instanceof Expr.Atom lastAtom
+                && "Formula".equals(lastAtom.name()))
+            found |= PC_FORMULA_ARG;
+        for (Expr arg : args) {
+            found = preCheckExpr(arg, found);
+            if (found == (PC_STR_LITERAL | PC_TRUE_FALSE | PC_FORMULA_ARG))
+                return found;                      // all flags set — early exit
+        }
+        return found;
     }
 
     /** Returns true if the Expr tree contains no {@link Expr.Var} or {@link Expr.RowVar} nodes. */
@@ -899,20 +903,18 @@ public class THFnew {
 
         // ── From here: e is an SExpr ────────────────────────────────────────
 
-        // 1. String literal anywhere in the tree
-        if (containsStrLiteralExpr(se)) {
+        // 1–3. Single-pass pre-check for: StrLiteral, true/false, Formula-as-last-arg.
+        //      One tree walk instead of three separate recursive calls.
+        int flags = preCheckExpr(se, 0);
+        if ((flags & PC_STR_LITERAL) != 0) {
             out.write("% exclude(): quote\n");
             return true;
         }
-
-        // 2. true / false atom anywhere in the tree
-        if (containsAtomExpr(se, Formula.LOG_TRUE) || containsAtomExpr(se, Formula.LOG_FALSE)) {
+        if ((flags & PC_TRUE_FALSE) != 0) {
             out.write("% exclude(): contains true or false constant\n");
             return true;
         }
-
-        // 3. ISSUE 16: 'Formula' as the last arg of any (possibly nested) predicate
-        if (containsAtomAsArgExpr(se)) {
+        if ((flags & PC_FORMULA_ARG) != 0) {
             if (debug)
                 System.out.println("exclude(Expr): meta-logical axiom with Formula type: "
                         + se.toKifString());
