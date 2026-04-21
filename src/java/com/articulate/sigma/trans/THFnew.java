@@ -809,6 +809,262 @@ public class THFnew {
         return excludePred(f.car(), out);
     }
 
+    // -----------------------------------------------------------------------
+    // Private helpers for the Expr-based exclude overload
+    // -----------------------------------------------------------------------
+
+    /** Returns true if the Expr tree contains any {@link Expr.StrLiteral} node. */
+    private static boolean containsStrLiteralExpr(Expr e) {
+        if (e instanceof Expr.StrLiteral) return true;
+        if (e instanceof Expr.SExpr se) {
+            if (se.head() != null && containsStrLiteralExpr(se.head())) return true;
+            for (Expr arg : se.args())
+                if (containsStrLiteralExpr(arg)) return true;
+        }
+        return false;
+    }
+
+    /** Returns true if the Expr tree contains an {@link Expr.Atom} with the given name. */
+    private static boolean containsAtomExpr(Expr e, String name) {
+        if (e instanceof Expr.Atom a) return name.equals(a.name());
+        if (e instanceof Expr.SExpr se) {
+            if (se.head() != null && containsAtomExpr(se.head(), name)) return true;
+            for (Expr arg : se.args())
+                if (containsAtomExpr(arg, name)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if any {@link Expr.SExpr} in the tree has {@code Atom("Formula")}
+     * as its last direct argument.
+     *
+     * <p>This mirrors the string check {@code f.getFormula().contains(" Formula)")}:
+     * the pattern {@code " Formula)"} only fires when "Formula" is the final token
+     * of some parenthesised list (i.e. the last argument of its enclosing SExpr).
+     */
+    private static boolean containsAtomAsArgExpr(Expr e) {
+        if (!(e instanceof Expr.SExpr se)) return false;
+        List<Expr> args = se.args();
+        if (!args.isEmpty() && args.get(args.size() - 1) instanceof Expr.Atom a
+                && "Formula".equals(a.name()))
+            return true;
+        for (Expr arg : args)
+            if (containsAtomAsArgExpr(arg)) return true;
+        return false;
+    }
+
+    /** Returns true if the Expr tree contains no {@link Expr.Var} or {@link Expr.RowVar} nodes. */
+    private static boolean isGroundExpr(Expr e) {
+        if (e instanceof Expr.Var || e instanceof Expr.RowVar) return false;
+        if (e instanceof Expr.SExpr se) {
+            if (se.head() != null && !isGroundExpr(se.head())) return false;
+            for (Expr arg : se.args())
+                if (!isGroundExpr(arg)) return false;
+        }
+        return true;
+    }
+
+    /** ***************************************************************
+     * Expr-based overload of {@link #exclude(Formula, KB, Writer)}.
+     *
+     * <p>Walks the {@link Expr} tree directly — no {@code toKifString()}
+     * round-trip, no {@code new Formula()} allocation.  Every check mirrors
+     * its counterpart in the string-based overload.
+     *
+     * <p>Call sites should prefer this overload whenever a non-null {@code Expr}
+     * is already available (e.g. in {@code oneTransExpr} and in the top-level
+     * loop of {@code transModalTHF} for {@link FormulaAST} formulas).
+     */
+    public static boolean exclude(Expr e, KB kb, Writer out) throws IOException {
+
+        if (e == null) return false;
+        if (debug) System.out.println("exclude(Expr): " + e.toKifString());
+
+        // Non-SExpr top-level nodes — handle the simple cases and return
+        if (e instanceof Expr.StrLiteral) {
+            out.write("% exclude(): quote\n");
+            return true;
+        }
+        if (e instanceof Expr.Atom a) {
+            String name = a.name();
+            if (name.equals(Formula.LOG_TRUE) || name.equals(Formula.LOG_FALSE)) {
+                out.write("% exclude(): contains true or false constant\n");
+                return true;
+            }
+            return excludePred(name, out);
+        }
+        if (!(e instanceof Expr.SExpr se))
+            return false;   // Var, RowVar, NumLiteral — not excluded at top level
+
+        // ── From here: e is an SExpr ────────────────────────────────────────
+
+        // 1. String literal anywhere in the tree
+        if (containsStrLiteralExpr(se)) {
+            out.write("% exclude(): quote\n");
+            return true;
+        }
+
+        // 2. true / false atom anywhere in the tree
+        if (containsAtomExpr(se, Formula.LOG_TRUE) || containsAtomExpr(se, Formula.LOG_FALSE)) {
+            out.write("% exclude(): contains true or false constant\n");
+            return true;
+        }
+
+        // 3. ISSUE 16: 'Formula' as the last arg of any (possibly nested) predicate
+        if (containsAtomAsArgExpr(se)) {
+            if (debug)
+                System.out.println("exclude(Expr): meta-logical axiom with Formula type: "
+                        + se.toKifString());
+            out.write("% exclude(): meta-logical axiom with Formula type\n");
+            return true;
+        }
+
+        String headName = se.headName();
+        List<Expr> args = se.args();
+
+        // 4. Generic rule: if head is NOT in allowedHeads, no direct arg may be a
+        //    modal/HOL/formula atom symbol
+        if (headName != null && !Modals.allowedHeads.contains(headName)) {
+            for (Expr arg : args) {
+                if (arg instanceof Expr.Atom argAtom) {
+                    String argName = argAtom.name();
+                    if (Modals.MODAL_RELATIONS.contains(argName)
+                            || Modals.modalAttributes.contains(argName)
+                            || Modals.RESERVED_MODAL_SYMBOLS.contains(argName)
+                            || Modals.regHOLpred.contains(argName)
+                            || Modals.formulaPreds.contains(argName)) {
+                        if (debug)
+                            System.out.println("% exclude(Expr): modal/HOL symbol used as individual "
+                                    + "argument of non-modal head, Symbol " + argName
+                                    + " head: " + headName);
+                        if (out != null)
+                            out.write("% exclude(): modal/HOL symbol used as individual "
+                                    + "argument of non-modal head, Symbol " + argName
+                                    + " head: " + headName + "\n");
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // 5. Exclude domain / subrelation axioms for formula / HOL predicates
+        if (("domain".equals(headName) || "subrelation".equals(headName)) && !args.isEmpty()) {
+            if (args.get(0) instanceof Expr.Atom firstArg) {
+                String p = firstArg.name();
+                if (Modals.formulaPreds.contains(p) || Modals.regHOLpred.contains(p)) {
+                    if (out != null)
+                        out.write("% exclude(): domain axiom for formula/HOL predicate: " + p + "\n");
+                    return true;
+                }
+            }
+        }
+
+        // 6. Known problematic terms (head or direct atom args)
+        List<String> problematic_terms = Arrays.asList(
+                "airTemperature", "ListFn", "AssignmentFn", "Organism");
+        if (headName != null && problematic_terms.contains(headName)) {
+            if (out != null)
+                out.write("% exclude(): Problematic Term encountered: " + headName + "\n");
+            return true;
+        }
+        for (Expr arg : args) {
+            if (arg instanceof Expr.Atom argAtom && problematic_terms.contains(argAtom.name())) {
+                if (out != null)
+                    out.write("% exclude(): Problematic Term encountered: " + argAtom.name() + "\n");
+                return true;
+            }
+        }
+
+        // 7. META-LOGIC FILTER: bare variable in formula position
+        //    Case 1: (=> antecedent ?VAR)
+        if ("=>".equals(headName) && args.size() >= 2 && args.get(1) instanceof Expr.Var conseqVar) {
+            if (debug)
+                System.out.println("exclude(Expr): META-LOGIC pattern: variable as consequent of => : "
+                        + conseqVar.name() + " in " + se.toKifString());
+            if (out != null)
+                out.write("% exclude(): meta-logic (variable as consequent of =>): "
+                        + conseqVar.name() + "\n");
+            return true;
+        }
+        //    Case 2: (not ?VAR) or (~ ?VAR)
+        if (("not".equals(headName) || "~".equals(headName))
+                && !args.isEmpty() && args.get(0) instanceof Expr.Var notVar) {
+            if (debug)
+                System.out.println("exclude(Expr): META-LOGIC pattern: variable under not/~ : "
+                        + notVar.name() + " in " + se.toKifString());
+            if (out != null)
+                out.write("% exclude(): meta-logic (variable under not/~): " + notVar.name() + "\n");
+            return true;
+        }
+
+        // 8. Recurse into SExpr children
+        for (Expr arg : args) {
+            if (arg instanceof Expr.SExpr) {
+                if (exclude(arg, kb, out)) {
+                    if (out != null)
+                        out.write("% excluded(): interior list: " + se.toKifString() + "\n");
+                    return true;
+                }
+            }
+        }
+
+        // 9. excludePred check on each direct atom arg
+        for (Expr arg : args) {
+            if (arg instanceof Expr.Atom argAtom) {
+                if (excludePred(argAtom.name(), out)) {
+                    if (out != null)
+                        out.write("% excluded(): term from excludePred: " + se.toKifString() + "\n");
+                    return true;
+                }
+            }
+        }
+
+        // 10. Additional checks when the formula is ground (no variables)
+        if (isGroundExpr(se)) {
+            if (debug) System.out.println("exclude(Expr): is ground: " + se.toKifString());
+
+            // ISSUE 11: modal attributes must not appear as args of protected relations
+            if (headName != null && protectedRelation(headName)) {
+                for (Expr arg : args) {
+                    if (arg instanceof Expr.Atom argAtom
+                            && Modals.modalAttributes.contains(argAtom.name())) {
+                        if (out != null)
+                            out.write("% exclude(): modal attribute in protected relation: "
+                                    + headName + " " + argAtom.name() + "\n");
+                        return true;
+                    }
+                }
+            }
+
+            // ISSUE 10: domain axioms where the first arg is a reserved modal symbol
+            if ("domain".equals(headName) && !args.isEmpty()
+                    && args.get(0) instanceof Expr.Atom firstArg
+                    && Modals.RESERVED_MODAL_SYMBOLS.contains(firstArg.name())) {
+                if (out != null)
+                    out.write("% exclude(): modal operator in domain: " + firstArg.name() + "\n");
+                return true;
+            }
+
+            // Ground numeric filtering
+            for (Expr arg : args) {
+                if (arg instanceof Expr.NumLiteral numLit) {
+                    String s = numLit.value();
+                    if (out != null)
+                        out.write("% exclude(): is numeric(2): \n");
+                    if (s.contains(".") || s.contains("-") || s.length() > 1)
+                        return true;
+                    if (s.charAt(0) < '1' || s.charAt(0) > '6')
+                        return true;
+                    if (debug) System.out.println("exclude(Expr): numeric arg not excluded: " + s);
+                }
+            }
+        }
+
+        // 11. Top-level predicate check
+        return headName != null && excludePred(headName, out);
+    }
+
     /** ***************************************************************
      * Predicates that denote formulas that shouldn't be included in
      * the translation.
