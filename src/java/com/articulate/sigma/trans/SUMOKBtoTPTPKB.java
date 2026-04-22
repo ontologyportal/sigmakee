@@ -896,7 +896,7 @@ public class SUMOKBtoTPTPKB {
      * has failed to find any KB instances for the variable's type constraint.
      * They should be skipped rather than emitted as malformed first-order axioms.
      */
-    static boolean hasUnresolvedPredVar(Expr expr) {
+    public static boolean hasUnresolvedPredVar(Expr expr) {
         return switch (expr) {
             case Expr.SExpr se -> {
                 if (se.head() instanceof Expr.Var) yield true;  // Var in predicate position

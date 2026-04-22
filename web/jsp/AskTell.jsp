@@ -293,6 +293,7 @@
             const vamp   = document.querySelector('input[name="inferenceEngine"][value="Vampire"]');
             const casc   = document.getElementById('CASC');
             const avatar = document.getElementById('Avatar');
+            const vampire_mode = document.getElementById('Vampire_mode');
             const custom = document.getElementById('Custom');
             const mp     = document.getElementById('ModensPonens');
             const drop   = document.getElementById('dropOnePremise');
@@ -313,7 +314,7 @@
 
                 // Still keep Vampire mode radios tied to Vampire on/off
                 const vampireOn = vamp && vamp.checked && !vamp.disabled;
-                [casc, avatar, custom, holModal].forEach(el => { if (el) el.disabled = !vampireOn; });
+                [casc, avatar, vampire_mode, custom, holModal].forEach(el => { if (el) el.disabled = !vampireOn; });
 
                 custom.checked = false; custom.disabled = true;
                 return; // THF overrides the rest of the logic
@@ -321,7 +322,7 @@
 
             // Original behavior when NOT in THF mode
             const vampireOn = vamp && vamp.checked && !vamp.disabled;
-            [casc, avatar, custom, mp].forEach(el => { if (el) el && (el.disabled = !vampireOn); });
+            [casc, avatar, vampire_mode, custom, mp].forEach(el => { if (el) el && (el.disabled = !vampireOn); });
 
             const mpOn = vampireOn && mp && mp.checked;
             if (drop) {
@@ -871,6 +872,7 @@
                     <span class="muted">Mode:</span>
                     <label><input type="radio" id="CASC" name="vampireMode" value="CASC" <% if ("CASC".equals(vampireMode)) { out.print(" CHECKED"); } %> > CASC</label>
                     <label><input type="radio" id="Avatar" name="vampireMode" value="Avatar" <% if ("Avatar".equals(vampireMode)) { out.print(" CHECKED"); } %> > Avatar</label>
+                    <label><input type="radio" id="Vampire_mode" name="vampireMode" value="Vampire_mode" <% if ("Vampire_mode".equals(vampireMode)) { out.print(" CHECKED"); } %> > Vampire</label>
                     <label title="Disabled until fully tested.">
                         <input type="radio" id="Custom" name="vampireMode" value="Custom" <% if ("Custom".equals(vampireMode)) { out.print(" CHECKED"); } %> > Custom
                     </label>
@@ -1639,9 +1641,10 @@
 <%!
     /** 1) One place to set Vampire mode */
     void setVampMode(String mode){
-        if ("CASC".equals(mode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CASC;
-        else if ("Avatar".equals(mode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
-        else if ("Custom".equals(mode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
+        if ("CASC".equals(mode)) Vampire.mode = Vampire.ModeType.CASC;
+        else if ("Avatar".equals(mode)) Vampire.mode = Vampire.ModeType.AVATAR;
+        else if ("Custom".equals(mode)) Vampire.mode = Vampire.ModeType.CUSTOM;
+        else if ("Vampire_mode".equals(mode)) Vampire.mode = Vampire.ModeType.VAMPIRE;
     }
 
     void setGraphFormat(String format, com.articulate.sigma.trans.TPTP3ProofProcessor tpp){
