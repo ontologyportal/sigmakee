@@ -331,7 +331,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
      * at each level
      *
      * argument : (sentence | term) ;
-     * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER ) ;
+     * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER | NUMIDENTIFIER) ;
      */
     private boolean isConstantArgument(SuokifParser.ArgumentContext c) {
 
@@ -347,7 +347,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 ptv = sc.children.iterator().next();
                 if (ptv instanceof SuokifParser.TermContext) {
                     tc = (SuokifParser.TermContext) ptv;
-                    if (tc.IDENTIFIER() != null)
+                    if (tc.IDENTIFIER() != null || tc.NUMIDENTIFIER() != null)
                         return true;
                 }
             }
@@ -361,7 +361,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
      * at each level
      *
      * argument : (sentence | term) ;
-     * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER ) ;
+     * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER | NUMIDENTIFIER) ;
      */
     private boolean isRowVarArgument(SuokifParser.ArgumentContext c) {
 
@@ -405,9 +405,9 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
     }
 
     /** ***************************************************************
-     * relsent : ('(' IDENTIFIER argument+ ')') | ('(' variable argument+ ')')  ;
+     * relsent : ('(' (IDENTIFIER | NUMIDENTIFIER) argument+ ')') | ('(' variable argument+ ')')  ;
      * argument : (sentence | term) ;
-     * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER ) ;
+     * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER | NUMIDENTIFIER) ;
      * Set the types of any variables that appear in an instance or subclass
      * declaration
      */
@@ -435,6 +435,16 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
             formast.relation = pred;
             argnum++;
             if (debug) System.out.println("identifier: " + pred);
+        }
+        else if (context.NUMIDENTIFIER() != null) {
+            pred = context.NUMIDENTIFIER().toString();
+            sb.append(pred).append(Formula.SPACE);
+            if (Formula.DOC_PREDICATES.contains(pred))
+                formast.isDoc = true;
+            formast.termCache.add(pred);
+            formast.relation = pred;
+            argnum++;
+            if (debug) System.out.println("numidentifier: " + pred);
         }
         SuokifParser.ArgumentContext ac;
         FormulaAST.RowStruct rs;
@@ -744,7 +754,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
     /** ***************************************************************
      * eqsent : '(' 'equal' term term ')' ;
      * argument : (sentence | term) ;
-     * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER ) ;
+     * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER | NUMIDENTIFIER) ;
      */
     public FormulaAST visitEqsent(SuokifParser.EqsentContext context) {
 
@@ -916,7 +926,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
     }
 
     /** ***************************************************************
-     * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER ) ;
+     * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER | NUMIDENTIFIER) ;
      */
     public FormulaAST visitTerm(SuokifParser.TermContext context) {
 
@@ -929,6 +939,12 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
         if (context.IDENTIFIER() != null) {
             String ident = context.IDENTIFIER().toString();
             if (debug) System.out.println("visitTerm() identifier: " + ident);
+            f.termCache.add(ident);
+            f.setFormula(ident);
+        }
+        if (context.NUMIDENTIFIER() != null) {
+            String ident = context.NUMIDENTIFIER().toString();
+            if (debug) System.out.println("visitTerm() numidentifier: " + ident);
             f.termCache.add(ident);
             f.setFormula(ident);
         }

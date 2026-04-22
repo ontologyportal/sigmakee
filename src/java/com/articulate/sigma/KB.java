@@ -57,8 +57,10 @@ MA  02111-1307 USA
 */
 
 import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.ExprToTHF;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.tp.ATPException;
 import com.articulate.sigma.tp.ArityException;
 import com.articulate.sigma.tp.FormulaTranslationException;
@@ -2853,9 +2855,9 @@ public class KB implements Serializable {
         List<String> cmds = new ArrayList<>(Arrays.asList(
                 "--input_syntax", "tptp",
                 "--proof", "tptp",   // <-- TSTP-style proof lines
-                "--output_axiom_names","on",
-                "--mode","portfolio",
-                "--schedule","snake_slh"
+                "--output_axiom_names","on"
+//                "--mode","portfolio"
+//                "--schedule","snake_slh"
         ));
 
         // This HOL Vampire version (4.8) does not support "-qa plain"
@@ -2941,101 +2943,89 @@ public class KB implements Serializable {
             if (debug)
                 System.out.println("KB.askVampireHOL(): Copied axioms to problem file.");
 
+            // -------- 3. Parse SUO-KIF query using FormulaAST (Expr-based) --------
+            SuokifVisitor sv = SuokifVisitor.parseSentence(stmt);
+            if (sv.result.isEmpty()) {
+                System.err.println("KB.askVampireHOL(): failed to parse query: " + stmt);
+                return v;
+            }
+            FormulaAST fa = sv.result.get(0);
+            if (fa.expr == null) {
+                System.err.println("KB.askVampireHOL(): null expr for query: " + stmt);
+                return v;
+            }
+            if (debug)
+                System.out.println("KB.askVampireHOL(): parsed expr: " + fa.expr.toKifString());
+
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            Map<String, Set<String>> typeMap = new HashMap<>();
+
+            // -------- 4. Preprocess and build typeMap --------
+            Set<Expr> processed;
+            if (useModals) {
+                // Step 4a: modal pass on the original expr for type info only
+                Map.Entry<Expr, Map<String, Set<String>>> modalResult =
+                        Modals.processModalsExpr(fa.expr, this);
+                Expr resExpr = modalResult.getKey();
+                if (resExpr == null) {
+                    System.err.println("KB.askVampireHOL(): processModalsExpr returned null for: " + stmt);
+                    return v;
+                }
+                if (debug)
+                    System.out.println("KB.askVampireHOL(): modalized expr (type-info pass): " + resExpr.toKifString());
+
+                // Step 4b: preprocess the ORIGINAL fa (not the modalized one)
+                processed = fp.preProcessExpr(fa, true, this);
+                if (processed == null || processed.isEmpty()) {
+                    System.err.println("KB.askVampireHOL(): preProcessExpr returned empty for: " + stmt);
+                    return v;
+                }
+
+                // Step 4c: build typeMap from modalized expr + world-var types
+                typeMap.putAll(fp.findTypeRestrictionsExpr(resExpr, this));
+                typeMap.putAll(modalResult.getValue());
+                String primaryWorldVar = Modals.makeWorldVarExpr(fa.expr);
+                typeMap.put(primaryWorldVar, new HashSet<>(Collections.singleton("World")));
+                Modals.markModalAttributeFormulaVarsExpr(fa.expr, typeMap);
+
+                if (debug)
+                    System.out.println("KB.askVampireHOL(): typeMap: " + typeMap);
+            } else {
+                // Non-modal path
+                processed = fp.preProcessExpr(fa, true, this);
+                if (processed == null || processed.isEmpty()) {
+                    System.err.println("KB.askVampireHOL(): preProcessExpr returned empty for: " + stmt);
+                    return v;
+                }
+                typeMap.putAll(fp.findTypeRestrictionsExpr(fa.expr, this));
+            }
+
+            if (debug)
+                System.out.println("KB.askVampireHOL(): preprocessed exprs: " + processed.size());
+
             try (BufferedWriter out = new BufferedWriter(new FileWriter(problemPath, true))) {
 
                 out.newLine();
-                out.write("% --------------------");
-                out.write("% User HOL conjecture");
-                out.write("% --------------------");
-                out.newLine();
+                out.write("% -------------------- User HOL conjecture --------------------\n");
 
-                // 2b. Translate the SUO-KIF query (stmt) into THF using Modals + THFnew.
-
-                // -------- 3. Parse SUO-KIF query --------
-                Formula f = new Formula();
-                f.read(stmt);
-
-                if (debug)
-                    System.out.println("KB.askVampireHOL(): Original Formula: " + f.getFormula());
-
-                // 3a. Optional: expand modals and insert world args
-                if (useModals) {
-                    Map<String, Set<String>> typeMap = new HashMap<>();
-                    f = Modals.processModals(f, this,typeMap);
-                    if (debug) System.out.println("KB.askVampireHOL(): Modalized Formula: " + f.getFormula());
-                }
-
-                // -------- 4. Preprocess (Skolemization, simplifications, etc.) --------
-                FormulaPreprocessor fp = new FormulaPreprocessor();
-                // second argument "true" indicates this is a query/conjecture
-                Set<Formula> processed = fp.preProcess(f, true, this);
-
-                if (debug) {
-                    System.out.println("KB.askVampireHOL(): Number of preprocessed formulas: " + processed.size());
-                    for (Formula pfDbg : processed)
-                        System.out.println("KB.askVampireHOL(): Preprocessed formula: " + pfDbg.getFormula());
-                }
-
-                // Build base type map from types in the *original* (possibly modalized) formula
-                f.varTypeCache.clear();  // force recomputation of types
-                Map<String, Set<String>> typeMap = fp.findAllTypeRestrictions(f, this);
-                typeMap.putAll(f.varTypeCache);
-
-                if (debug)
-                    System.out.println("KB.askVampireHOL(): Initial typeMap: " + typeMap);
-
-                // 4a. If using modals, add a world variable type once
-                String worldVar = null;
-                if (useModals) {
-                    worldVar = THFnew.makeWorldVar(this, f);
-                    Set<String> wTypes = new HashSet<>();
-                    wTypes.add("World");
-                    typeMap.put(worldVar, wTypes);
-
-                    if (debug) {
-                        System.out.println("KB.askVampireHOL(): worldVar: " + worldVar);
-                        System.out.println("KB.askVampireHOL(): typeMap after adding worldVar: " + typeMap);
-                    }
-                }
-
+                // -------- 5. Translate each preprocessed Expr to THF --------
                 int conjIndex = 0;
+                for (Expr e : processed) {
+                    if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(e)) continue;
 
-                /*
-                 * For each preprocessed query formula:
-                 * 1 - Fix variable-arity predicate names after adding worlds.
-                 * 2 - If it’s an (instance ?X Class) fact, make it hold in all worlds.
-                 * 3 - Translate it to THF using the same logic as axioms.
-                 * 4 - Emit it as a thf(...,conjecture,...) clause in the query file.
-                 */
-                // -------- 5. Translate each preprocessed formula to THF --------
-                for (Formula pf : processed) {
-
-                    // 5a. Modal-specific adjustments ONLY when useModals == true
+                    String thfQuery;
                     if (useModals) {
-
-                        // Handle variable-arity after worlds (if you still keep this hack)
-                        if (THFnew.variableArity(this, pf.car())) {
-                            pf = THFnew.adjustArity(this, pf);
-                        }
-
-                        // Special case: (instance ?X Class) -> forall worldVar ...
-                        if (worldVar != null &&
-                                pf.getFormula().startsWith("(instance ") &&
-                                pf.getFormula().endsWith("Class)")) {
-
-                            pf.read("(forall (" + worldVar + ") " +
-                                    pf.getFormula().substring(0, pf.getFormula().length() - 1) +
-                                    " " + worldVar + "))");
-
-                            Set<String> types = new HashSet<>();
-                            types.add("World");
-                            pf.varTypeCache.put(worldVar, types);
-                        }
+                        // Apply modal rewrite to this preprocessed expr
+                        Map.Entry<Expr, Map<String, Set<String>>> fmodalResult =
+                                Modals.processModalsExpr(e, this);
+                        Expr fmodal = fmodalResult.getKey();
+                        if (fmodal == null) continue;
+                        thfQuery = ExprToTHF.translate(fmodal, true, typeMap);
+                    } else {
+                        thfQuery = ExprToTHF.translateNonModal(e, true, typeMap);
                     }
 
-                    // 5c. Translate to THF using the same engine as axioms (query=true)
-                    String thfQuery = THFnew.process(new Formula(pf), typeMap, true);
-
+                    if (thfQuery == null || thfQuery.isEmpty()) continue;
                     String conjName = "user_conj_" + (conjIndex++);
                     String final_query = "thf(" + conjName + ",conjecture," + thfQuery + ").\n";
                     out.write(final_query);

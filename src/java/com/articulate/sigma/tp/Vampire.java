@@ -42,7 +42,7 @@ public class Vampire {
     public StringBuilder qlist = null; // quantifier list in order for answer extraction
     public List<String> output = new ArrayList<>();
     public static int axiomIndex = 0;
-    public enum ModeType {AVATAR, CASC, CUSTOM}; // Avatar is faster but doesn't provide answer variables.
+    public enum ModeType {AVATAR, CASC, CUSTOM, VAMPIRE}; // Avatar is faster but doesn't provide answer variables.
                                                  // Custom takes value from env var
     public enum Logic { FOL, HOL }
 
@@ -111,6 +111,13 @@ public class Vampire {
             }
             opts.append("-t").append(space);
         }
+        if (mode == ModeType.VAMPIRE) {
+            opts.append("--mode").append(space).append("vampire").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
+            if (askQuestion) {
+                opts.append("-qa").append(space).append("plain").append(space);
+            }
+            opts.append("-t").append(space);
+        }
         if (mode == ModeType.CUSTOM) {
             if (askQuestion) {
                 opts.append("-qa").append(space).append("plain").append(space);
@@ -136,14 +143,21 @@ public class Vampire {
         String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder();
 
-        if (mode == ModeType.AVATAR) {
-            opts.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space);
-        } else if (mode == ModeType.CASC) {
-            opts.append("--mode").append(space).append("casc").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
-        } else if (mode == ModeType.CUSTOM) {
-            opts.append(System.getenv("VAMPIRE_OPTS"));
-        } else {
-            System.err.println("Error in Vampire.createCustomCommandList(): no mode selected");
+        // If the caller already supplies --mode (e.g. askVampireTHF passes --mode portfolio),
+        // do not prepend a conflicting mode flag — Vampire takes the first --mode it sees.
+        boolean callerSuppliesMode = commands.contains("--mode");
+        if (!callerSuppliesMode) {
+            if (mode == ModeType.AVATAR) {
+                opts.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space);
+            } else if (mode == ModeType.CASC) {
+                opts.append("--mode").append(space).append("casc").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
+            } else if (mode == ModeType.CUSTOM) {
+                opts.append(System.getenv("VAMPIRE_OPTS"));
+            } else if (mode == ModeType.VAMPIRE) {
+                opts.append("--mode").append(space).append("vampire").append(space);
+            } else {
+                System.err.println("Error in Vampire.createCustomCommandList(): no mode selected");
+            }
         }
 
 
