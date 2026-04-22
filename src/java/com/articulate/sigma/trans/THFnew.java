@@ -1518,22 +1518,50 @@ public class THFnew {
         }
     }
 
-    /** ***************************************************************
+    /*****************************************************************
+     * Expr-tree equivalent of {@link #collectNumbersFromFormula}.
+     * Walks the Expr tree directly — no {@code new Formula()} allocation,
+     * no string re-scanning.  {@link Expr.NumLiteral} nodes are the only
+     * leaves that can contribute numeric literals; all other leaf types
+     * (Atom, Var, RowVar, StrLiteral) are skipped.
+     */
+    private static void collectNumbersFromExpr(Expr e, Set<String> numbers) {
+        if (e instanceof Expr.NumLiteral num) {
+            numbers.add(num.value());
+        }
+        else if (e instanceof Expr.SExpr se) {
+            if (se.head() != null)
+                collectNumbersFromExpr(se.head(), numbers);
+            for (Expr arg : se.args())
+                collectNumbersFromExpr(arg, numbers);
+        }
+        // Atom, Var, RowVar, StrLiteral: no numeric literals to collect
+    }
+
+    /*****************************************************************
      * Scan all KB formulas and return the set of every numeric literal
      * that appears (e.g. "24", "0.0", "360.0").  These will be declared
      * as thf(n__24_tp,type,(n__24 : $i)). so that hideNumbers=true
      * translations are well-typed.  Dots are normalised to underscores
      * to match the output of translateWord (0.0 -> n__0_0).
+     *
+     * <p>Uses the Expr tree directly for {@link FormulaAST} instances
+     * (no string re-scanning), and falls back to the string path for
+     * plain {@link Formula} objects.
      */
     public static Set<String> collectNumbers(KB kb) {
 
         Set<String> numbers = new TreeSet<>();
-        for (Formula f : kb.formulaMap.values())
-            collectNumbersFromFormula(f.getFormula(), numbers);
+        for (Formula f : kb.formulaMap.values()) {
+            if (f instanceof FormulaAST fa && fa.expr != null)
+                collectNumbersFromExpr(fa.expr, numbers);
+            else
+                collectNumbersFromFormula(f.getFormula(), numbers);
+        }
         return numbers;
     }
 
-    /** ***************************************************************
+    /*****************************************************************
      * Emit a THF type declaration for every numeric literal in numbers.
      * Applies the same normalisation as translateWord: '.' -> '_'.
      */
@@ -1700,10 +1728,73 @@ public class THFnew {
     // arguments are used inconsistently with their declared signatures. In particular,
     // if a predicate expects an $i argument but receives a formula (a list), it is
     // flagged as a badUsageSymbol and will later be excluded from translation.
+    //
+    // Uses the Expr tree directly for FormulaAST instances (no string re-scanning),
+    // and falls back to the string path for plain Formula objects.
     public static void analyzeBadUsages(KB kb) {
 
         for (Formula f : kb.formulaMap.values()) {
-            analyzeFormula(f, kb);
+            if (f instanceof FormulaAST fa && fa.expr != null)
+                analyzeFormulaExpr(fa.expr, kb, fa);
+            else
+                analyzeFormula(f, kb);
+        }
+    }
+
+    /*****************************************************************
+     * Expr-tree equivalent of {@link #analyzeFormula(Formula, KB)}.
+     *
+     * <p>Walks the Expr tree directly — no {@code new Formula()} allocation,
+     * no string re-parsing.  Adds {@code topLevel} to
+     * {@link #badUsageSymbols} if the given SExpr (or any sub-SExpr) has
+     * an argument position where the declared signature expects a
+     * non-Formula type but the argument is itself a compound expression
+     * ({@link Expr.SExpr}) or a predicate term.
+     *
+     * @param e        the Expr node to analyze (may be any Expr subtype)
+     * @param kb       knowledge base (used for signature look-up)
+     * @param topLevel the {@link FormulaAST} to add to badUsageSymbols on detection
+     */
+    private static void analyzeFormulaExpr(Expr e, KB kb, FormulaAST topLevel) {
+
+        if (!(e instanceof Expr.SExpr se))
+            return;  // leaf nodes have no predicate head to analyze
+
+        String headName = se.headName();
+        if (headName == null)
+            return;  // quantifier variable list (e.g. (?X ?Y)) — no predicate head
+
+        if (headName.equals("termFormat") || headName.equals("documentation") || headName.equals("format"))
+            return;
+
+        List<Expr> args = se.args();
+        if (args.isEmpty())
+            return;
+
+        // Check each arg against the declared signature, if any.
+        List<String> sig = kb.kbCache.signatures.get(headName);
+        if (debug) System.out.println("analyzeFormulaExpr(): head: " + headName + " sig: " + sig);
+        if (sig != null && sig.size() > 1) {
+            // sig[0] is "", last entry is range type; argument types at positions 1..sig.size()-2
+            int maxArgs = Math.min(args.size(), sig.size() - 1);
+            for (int i = 0; i < maxArgs; i++) {
+                String expectedType = sig.get(i + 1);
+                Expr arg = args.get(i);
+                if (debug) System.out.println("analyzeFormulaExpr(): arg " + i + " | " + arg.toKifString());
+                // Flag if a non-Formula position receives a compound expression or a predicate term.
+                if (!"Formula".equals(expectedType)
+                        && (arg instanceof Expr.SExpr
+                                || (arg instanceof Expr.Atom atom && predicateTerms.contains(atom.name())))) {
+                    THFnew.badUsageSymbols.add(topLevel);
+                    break;
+                }
+            }
+        }
+
+        // Recurse into SExpr sub-args (non-SExpr leaves cannot have sub-expressions).
+        for (Expr arg : args) {
+            if (arg instanceof Expr.SExpr)
+                analyzeFormulaExpr(arg, kb, topLevel);
         }
     }
 
