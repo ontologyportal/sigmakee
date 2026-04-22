@@ -759,14 +759,13 @@ public class SUMOKBtoTPTPKB {
                         case "tff":
                             pw.println("% tff input: " + f3.format("", "", Formula.SPACE));
                             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: " + f3.format("", "", " "));
-                            // Fast path: Expr-based TFF translation (no KB type walk, sort inference from formula only)
+                            // Fast path: Expr-based TFF translation (no KB type walk, sort inference from formula only).
+                            // Reset filterMessage so a stale value doesn't fire the else-if below
+                            // when translateKifString returns "" (formula intentionally dropped).
+                            SUMOtoTFAform.setFilterMessage("");
                             result = ExprToTFF.translateKifString(f3.getFormula(), false, kb);
-                            if (result != null && !result.isBlank()) {
-                                tffExprCount.incrementAndGet();
-                                // Sort annotations are embedded in variable lists by ExprToTFF;
-                                // no separate tff(...,type,...) declarations needed.
-                            }
-                            else {
+                            // null = parse failure → fall back; "" = intentionally dropped → no fallback.
+                            if (result == null) {
                                 // Fallback: full SUMOtoTFAform processing with KB type inference
                                 tffStringCount.incrementAndGet();
                                 stfa = new SUMOtoTFAform();
@@ -777,6 +776,10 @@ public class SUMOKBtoTPTPKB {
                                 result = SUMOtoTFAform.process(f3.getFormula(), false);
                                 printTFFNumericConstants(pw);
                                 SUMOtoTFAform.initNumericConstantTypes();
+                            } else if (!result.isBlank()) {
+                                tffExprCount.incrementAndGet();
+                                // Sort annotations are embedded in variable lists by ExprToTFF;
+                                // no separate tff(...,type,...) declarations needed.
                             }
                             if (!StringUtil.emptyString(result)) {
                                 f.theTffFormulas.add(result);
@@ -1086,9 +1089,14 @@ public class SUMOKBtoTPTPKB {
                         Set<String> exprSorts = stfaSorts.missingSortsExpr(pexpr);
                         if (exprSorts != null && !exprSorts.isEmpty())
                             f.tffSorts.addAll(exprSorts);
-                        // Fast path: ExprToTFF translates directly from Expr tree with inline sort annotations
+                        // Fast path: ExprToTFF translates directly from Expr tree with inline sort annotations.
+                        // Reset filterMessage so that if translate() returns "" (formula intentionally dropped)
+                        // the else-if below does not fire with a stale message from the previous formula.
+                        SUMOtoTFAform.setFilterMessage("");
                         String tffResult = ExprToTFF.translate(pexpr, false, kb);
-                        if (tffResult == null || tffResult.isBlank()) {
+                        // null means genuine parse/translation failure → fall back to string-based pipeline.
+                        // "" means the formula was intentionally dropped (e.g. (instance Pi Abstract)) → no fallback.
+                        if (tffResult == null) {
                             // Fallback: SUMOtoTFAform.processExpr() with full KB type inference
                             System.out.println("ExprToTFF.translate() fallback (expr path): " + pexpr.toKifString());
                             SUMOtoTFAform stfa = new SUMOtoTFAform();
@@ -1156,10 +1164,14 @@ public class SUMOKBtoTPTPKB {
                             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: "
                                     + f3.format("", "", " "));
 
-                            // Fast path: try ExprToTFF first (no heavyweight string manipulation)
+                            // Fast path: try ExprToTFF first (no heavyweight string manipulation).
+                            // Reset filterMessage so a stale value from the previous formula doesn't
+                            // fire the else-if below when translateKifString returns "" (formula dropped).
+                            SUMOtoTFAform.setFilterMessage("");
                             String tffResult = ExprToTFF.translateKifString(f3.getFormula(), false, kb);
 
-                            if (tffResult == null || tffResult.isBlank()) {
+                            // null = parse failure → fall back; "" = intentionally dropped → no fallback.
+                            if (tffResult == null) {
                                 // Fallback: full SUMOtoTFAform processing
                                 System.out.println("ExprToTFF.translateKifString() fallback (string path): " + f3.getFormula());
                                 SUMOtoTFAform stfa = new SUMOtoTFAform();

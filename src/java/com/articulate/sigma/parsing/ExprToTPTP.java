@@ -3,6 +3,7 @@ package com.articulate.sigma.parsing;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -204,9 +205,9 @@ public class ExprToTPTP {
         if (ch0 == '?' || ch0 == '@')
             return translateVarName(name);
 
-        // Numbers: numeric literals pass through (they arrive as NumLiteral, but handle here too)
-        char ch1 = name.length() > 1 ? name.charAt(1) : 'x';
-        if (Character.isDigit(ch0) || (ch0 == '-' && Character.isDigit(ch1)))
+        // Numbers: pure numeric literals pass through; mixed digit+letter tokens (e.g. 5GNetwork)
+        // must fall through so they receive the s__ prefix and become valid TPTP functors.
+        if (StringUtil.isNumeric(name))
             return translateNumber(name, lang);
 
         // Inequality predicates used as terms (not in head position) need the __m

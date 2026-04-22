@@ -195,10 +195,9 @@ public class SUMOformulaToTPTPformula {
             return (tptpOps.get(translateIndex));
         }
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here6: ");
-        //----Do nothing to numbers
-        if (type == StreamTokenizer.TT_NUMBER ||
-            (st != null && (Character.isDigit(ch0) ||
-                                 (ch0 == '-' && Character.isDigit(ch1))))) {
+        //----Do nothing to pure numeric literals; mixed digit+letter tokens (e.g. 5GNetwork)
+        // must fall through so they receive the s__ prefix and become valid TPTP functors.
+        if (type == StreamTokenizer.TT_NUMBER || StringUtil.isNumeric(st)) {
             return(st);
         }
         String term = st;
