@@ -239,6 +239,9 @@ public class FormulaPreprocessor {
      *   (=>
      *     (foo ?A B)
      *     (bar B ?A)))
+     *
+     * Note that Formula types must not be added (in HOL) as type guards since these
+     * are addressed by THF's native types (using w > $o)
      */
     public Formula addTypeRestrictions(Formula form, KB kb) {
 
@@ -262,7 +265,7 @@ public class FormulaPreprocessor {
             types = varmap.get(unquantifiedV);
             if (types != null && !types.isEmpty()) {
                 for (String t : new TreeSet<>(types)) {
-                    if (StringUtil.emptyString(t))
+                    if (StringUtil.emptyString(t) || t.equals("Formula"))  // don't include type Formula
                         continue;
                     if (begin) {
                         sb.append("(=> \n  (and \n");  // TODO: need test for singular list

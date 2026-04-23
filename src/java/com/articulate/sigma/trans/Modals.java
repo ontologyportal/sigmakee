@@ -1,15 +1,12 @@
 package com.articulate.sigma.trans;
 
-import com.articulate.sigma.CLIMapParser;
-import com.articulate.sigma.Formula;
-import com.articulate.sigma.KB;
-import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.*;
 
 import java.util.*;
 
 public class Modals {
     
-    public static boolean debug = true; // Mainly for deontic sentences 
+    public static boolean debug = false; // Mainly for deontic sentences
 
     // these are predicates that take a formula as (one of) their arguments in SUMO/KIF
     // e.g. (holdsDuring ?T ?FORMULA)
@@ -159,17 +156,30 @@ public class Modals {
                     "arcTangentFn",
                     "AverageFn",
                     "CosineFn",
+                    "CeilingFn",
+                    "DayFn",
                     "DivisionFn",
                     "ExponentiationFn",
+                    "FirstFn",
+                    "FloorFn",
+                    "FutureFn",
+                    "HourFn",
+                    "LastFn",
+                    "ListFn",
                     "ListSumFn",
                     "LogFn",
+                    "MinuteFn",
+                    "MonthFn",
                     "MultiplicationFn",
+                    "PastFn",
                     "ReciprocalFn",
                     "RoundFn",
+                    "SecondFn",
                     "SineFn",
                     "SquareRootFn",
                     "SubtractionFn",
-                    "TangentFn"
+                    "TangentFn",
+                    "YearFn"
             ));
 
     // ISSUE 1
@@ -260,7 +270,7 @@ public class Modals {
         if (!typeMap.containsKey(worldStr))
             typeMap.put(worldStr.trim(),types);
         fstring.append(worldStr).append(") ");
-        fstring.append(Formula.SPACE).append(processRecurse(flist.get(2),kb,typeMap,worldvar,worldNum));
+        fstring.append(Formula.SPACE).append(SUMOtoTFAform.elimUnitaryLogops(processRecurse(flist.get(2),kb,typeMap,worldvar,worldNum)));
         fstring.append(Formula.RP);
         Formula result = new Formula();
         result.read(fstring.toString());
@@ -291,8 +301,8 @@ public class Modals {
         worldNum = worldNum + 1;
 
         // Recursively process the “parameter” term as well
-        Formula param = processRecurse(flist.get(0), kb, typeMap, worldvar, worldNum - 1);
-        Formula embedded = processRecurse(flist.get(1), kb, typeMap, worldvar, worldNum);
+        Formula param = new Formula(SUMOtoTFAform.elimUnitaryLogops(processRecurse(flist.get(0), kb, typeMap, worldvar, worldNum - 1)));
+        Formula embedded = new Formula(SUMOtoTFAform.elimUnitaryLogops(processRecurse(flist.get(1), kb, typeMap, worldvar, worldNum)));
 
         StringBuilder fstring = new StringBuilder();
         fstring.append("(=> (accreln2 ")
@@ -367,7 +377,7 @@ public class Modals {
             typeMap.put(worldStr.trim(),types);
         fstring.append(Formula.SPACE).append("?" + worldvar).append(currWorld).append(") ");
         // Recurse once on the embedded formula at the new current world:
-        fstring.append(processRecurse(formula, kb, typeMap, worldvar, currWorld));
+        fstring.append(SUMOtoTFAform.elimUnitaryLogops(processRecurse(formula, kb, typeMap, worldvar, currWorld)));
         fstring.append(Formula.RP);
         Formula result = new Formula();
         result.read(fstring.toString());
@@ -379,6 +389,12 @@ public class Modals {
     public static Formula processRecurse(Formula f, KB kb, Map<String, Set<String>> typeMap,
                                          String worldvar, Integer worldNum) {
 
+        if (debug) System.out.println("processRecurse(): " + f);
+        if (debug) System.out.println("processRecurse(): " + typeMap);
+        if (f.isVariable() && typeMap.get(f.toString()) != null && typeMap.get(f.toString()).contains("Formula")) {
+            if (debug) System.out.println("processRecurse(): formula variable " + f);
+            return new Formula("(" + f.toString() + " ?" + worldvar + worldNum + ")");
+        }
         if (f.atom())
             return f;
         if (f.empty())
@@ -404,10 +420,16 @@ public class Modals {
             // Append quantifier variable list as-is
             if (argStart == 2)
                 fstring.append(Formula.SPACE).append(f.getStringArgument(1));
-
+            if (flist.size() == 2 && f.car().equals("instance") && flist.get(0).isVariable() &&
+                    flist.get(1).equals("Formula"))
+                return new Formula();  // TODO - need f = new Formula(elimUnitaryLogops(f)); to eliminate now empty operators
             // Recursively process arguments
             for (Formula arg : flist) {
-                fstring.append(Formula.SPACE).append(processRecurse(arg, kb, typeMap, worldvar, worldNum));
+                if (f.car().equals("instance") && arg.isVariable() &&
+                        typeMap.get(arg.toString()) != null && typeMap.get(arg.toString()).contains("Formula"))
+                    fstring.append(Formula.SPACE).append(arg);
+                else
+                    fstring.append(Formula.SPACE).append(SUMOtoTFAform.elimUnitaryLogops(processRecurse(arg, kb, typeMap, worldvar, worldNum)));
             }
             // Close the term / formula
             if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL))) {
@@ -497,13 +519,19 @@ public class Modals {
         String worldvar = "W" ;
         //System.out.println("processModals(): vars: " + f.collectAllVariables());
         //System.out.println("processModals(): world var: " + worldvar + worldNum);
+        if (debug) System.out.println("processModals(): type cache: " + f.varTypeCache);
+        if (debug) System.out.println("processModals(): formula: " + f);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        if (debug) System.out.println("processModals(): var types: " + fp.computeVariableTypes(f,kb));
+        typeMap.putAll(fp.computeVariableTypes(f,kb));
+        if (debug) System.out.println("processModals(2): " + typeMap);
         while (f.collectAllVariables().contains("?" + worldvar + worldNum))  // f might have ?W1 already
             worldvar = worldvar + "W";
         //addAccrelnDefP(kb);
         // Start at index 0 for constant world (W0 = CW)
         //if (!f.isHigherOrder(kb))
         //    return f;
-        Formula result = processRecurse(f,kb,typeMap, worldvar,worldNum);
+        Formula result = new Formula(SUMOtoTFAform.elimUnitaryLogops(processRecurse(f,kb,typeMap, worldvar,worldNum)));
         String fstring = result.getFormula();
         result.read(fstring);
         Set<String> types = new HashSet<>();
@@ -808,6 +836,7 @@ public class Modals {
      */
     public static void doTQM10Tests(KB kb) {
 
+        debug = true;
         Map<String, Set<String>> typeMap = new HashMap<>();
         // "The US government obliges Agent Smith not to enter Area 51." 
         String fstr = 
@@ -1202,14 +1231,14 @@ public class Modals {
             else if (argMap.containsKey("t")) {
                 System.out.println("Modals: run tests");
                 //someInitialTests(kb);
-                //doTQM10Tests(kb);
                 //deonticTests(kb);
                 //System.out.println(genAllModalSystems());
                 KBmanager.getMgr().initializeOnce();
                 KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
                 System.out.println("Modals,main(): init complete");
-                worldVarTest1(kb);
-                worldVarTest2(kb);
+                doTQM10Tests(kb);
+                //worldVarTest1(kb);
+                //worldVarTest2(kb);
             }
             else if (argMap.containsKey("form")) {
                 SUMOformulaToTPTPformula.setHideNumbers(false);
