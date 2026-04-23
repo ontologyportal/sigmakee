@@ -1717,8 +1717,31 @@ public class THFnew {
             String sigStr = sigStringNonModal(pred, sig, kb, isFunction);
             out.write(sigStr + "))).\n");
 
-            // Also treat the predicate symbol itself as an individual
-//            out.write("thf(" + functor + "_tp_ind,type,(" + functor + " : $i)).\n");
+            // Companion declaration: the relation/function symbol used as a $i term
+            // (mention position, e.g. "(instance PPIFn Function)"). translateWord with
+            // hasArguments=false appends TERM_MENTION_SUFFIX ("__m"), so we must declare
+            // s__PPIFn__m : $i here — mirroring what writeTypes() does for modal THF.
+            String mentionedFunctor = SUMOformulaToTPTPformula.translateWord(pred, pred.charAt(0), false);
+            out.write("thf(" + functor + "_m_tp,type,(" + mentionedFunctor + " : $i)).\n");
+        }
+
+        // Second pass: emit $i declarations for individual constants.
+        // The loop above only covers relations (from kbCache.signatures); individual
+        // constants like ElectronicsAndApplianceStores are in kb.terms but not in
+        // signatures, so they would otherwise be undeclared and cause InputError in
+        // leo-iii / Vampire HOL.
+        Set<String> alreadyDeclared = kb.kbCache.signatures.keySet();
+        for (String t : kb.terms) {
+            if (alreadyDeclared.contains(t))
+                continue;
+            if (excludeForTypedef(t, out))
+                continue;
+            if (kb.isInstanceOf(t, "Relation"))
+                continue;
+            if (StringUtil.isNumeric(t))
+                continue;
+            String functor = SUMOformulaToTPTPformula.translateWord(t, t.charAt(0), true);
+            out.write("thf(" + functor + "_tp,type,(" + functor + " : $i)).\n");
         }
     }
 
