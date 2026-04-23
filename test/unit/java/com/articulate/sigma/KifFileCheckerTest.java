@@ -266,7 +266,7 @@ public class KifFileCheckerTest extends UnitTestBase {
         String kifString = "(instance Shaun Human";
         List<ErrRec> errorList = new ArrayList<>();
         kfc.CheckSyntaxErrors(kifString, "fileName", errorList);
-        ErrRec expected = new ErrRec(ErrRec.ERROR, "fileName", 1, 21, 22,"Parse error at line:charposn 1:21: -> extraneous input '<EOF>' expecting {'(', ')', FUNWORD, IDENTIFIER, NUMBER, NUMIDENTIFIER, STRING, REGVAR, ROWVAR}");
+        ErrRec expected = new ErrRec(ErrRec.ERROR, "fileName", 1, 21, 22,"Parse error at line:charposn 1:21: -> extraneous input '<EOF>' expecting {'(', ')', FUNWORD, IDENTIFIER, NUMBER, STRING, REGVAR, ROWVAR}");
         ErrRec actual = errorList.get(0);
         if (debug) {
             System.out.println(divider + "TEST = KifFileCheckerTest.testCheckSyntaxerrorList1()");
@@ -441,7 +441,7 @@ public class KifFileCheckerTest extends UnitTestBase {
     public void testgetOffset1() {
 
         String errorLine = "Parse error at line:charposn 1:21: -> extraneous input '<EOF>' "
-            + "expecting {'(', ')', FUNWORD, IDENTIFIER, NUMBER, NUMIDENTIFIER, STRING, REGVAR, ROWVAR}";
+            + "expecting {'(', ')', FUNWORD, IDENTIFIER, NUMBER, STRING, REGVAR, ROWVAR}";
         int actual = kfc.getOffset(errorLine);
         int expected = 21;
         if (debug) {
@@ -458,7 +458,7 @@ public class KifFileCheckerTest extends UnitTestBase {
     public void testgetLineNum1() {
 
         String errorLine = "1:21: Parse error at line:charposn 1:21: -> extraneous input '<EOF>' "
-            + "expecting {'(', ')', FUNWORD, IDENTIFIER, NUMBER, NUMIDENTIFIER, STRING, REGVAR, ROWVAR}";
+            + "expecting {'(', ')', FUNWORD, IDENTIFIER, NUMBER, STRING, REGVAR, ROWVAR}";
         int actual = kfc.getLineNum(errorLine);
         int expected = 1;
         if (debug) {
