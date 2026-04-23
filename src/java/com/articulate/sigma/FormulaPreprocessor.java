@@ -1454,20 +1454,46 @@ public class FormulaPreprocessor {
         debug = true;
         System.out.println("test7(): " + fp.preProcess(f,false,kb));
     }
-
     /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("FormulaPreprocessor");
+        System.out.println("  h - show this help screen");
+        System.out.println("  t - run tests");
+        System.out.println("  --types \"<fomula>\" - translate one formula with modals");
+    }
+
+    /***************************************************************
      */
     public static void main(String[] args) {
 
-        //testOne();
-        //testTwo();
-        //testThree();
-        //testFour();
-
-        test7();
-        //testFindTypes();
-        //testAddTypes();
-        //testFindExplicit();
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.isEmpty() || argMap.containsKey("h"))
+            showHelp();
+        else {
+            if (argMap.containsKey("t")) {
+                //testOne();
+                //testTwo();
+                //testThree();
+                //testFour();
+                test7();
+                //testFindTypes();
+                //testAddTypes();
+                //testFindExplicit();
+            }
+            else if (argMap.containsKey("types")) {
+                System.out.println("------------------------------------");
+                System.out.println("Compute types for formula");
+                KBmanager.getMgr().initializeOnce();
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                System.out.println("Init complete");
+                Formula f = new Formula(StringUtil.removeEnclosingQuotes(argMap.get("types").get(0)));
+                FormulaPreprocessor fp = new FormulaPreprocessor();
+                System.out.println("Formula: " + f);
+                System.out.println("Var types: " + fp.computeVariableTypes(f, kb));
+                System.out.println("Explicit types: " + fp.findExplicitTypesInAntecedent(kb, f));
+            }
+        }
     }
-
 }
