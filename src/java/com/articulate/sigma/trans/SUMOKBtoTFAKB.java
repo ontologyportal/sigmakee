@@ -303,6 +303,13 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             return;
         }
         List<String> sig = kb.kbCache.signatures.get(t);
+        if (sig == null || sig.isEmpty()) {
+            pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
+            System.err.println("Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
+            pw.flush();
+            Thread.dumpStack();
+            return;
+        }
         int endIndex = sig.size();
         if (KButilities.isVariableArity(kb,SUMOtoTFAform.withoutSuffix(t)))
             endIndex = getVariableAritySuffix(t) + 1;
@@ -321,13 +328,6 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             while (paddedSig.size() < endIndex)
                 paddedSig.add(lastType);
             sig = paddedSig;
-        }
-        if (sig == null || sig.isEmpty()) {
-            pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
-            System.err.println("Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
-            pw.flush();
-            Thread.dumpStack();
-            return;
         }
         StringBuilder sigBuf = new StringBuilder();
         //if (kb.isFunction(t))

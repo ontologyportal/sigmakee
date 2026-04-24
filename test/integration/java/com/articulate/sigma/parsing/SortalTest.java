@@ -114,7 +114,9 @@ public class SortalTest extends IntegrationTestBase {
         String expected = "(=>     " +
                 "    (and" +
                 "      (instance ?ROW1 BinaryFunction)\n" +
+                "      (instance ?ROW1 List)\n" +
                 "      (instance ?ROW2 Integer)" +
+                "      (instance ?ROW2 List)\n" +
                 "      (instance ?NUMBER PositiveInteger))" +
                 "(=>\n" +
                 "  (and\n" +

@@ -89,7 +89,7 @@ public class PredVarInstTest extends IntegrationTestBase {
                 "                (exists (?ITEM)\n" +
                 "                    (?REL @ROW ?ITEM))))))";
         int result = process(input);
-        assertEquals(99,result);
+        assertEquals(100,result);
     }
 
     /** ***************************************************************

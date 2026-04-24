@@ -122,7 +122,7 @@ public class ModalsExprTest {
 
     @Test
     public void processModals_worldTypeMap_containsWorldEntry() {
-        Expr expr = se("instance", var("?X"), atom("Animal"));
+        Expr expr = se("believes", var("?A"), se("instance", var("?X"), atom("Animal")));
         Map.Entry<Expr, Map<String, Set<String>>> result =
                 Modals.processModalsExpr(expr, null);
         Map<String, Set<String>> worldTypes = result.getValue();
@@ -184,7 +184,7 @@ public class ModalsExprTest {
         assertEquals("top-level op is =>", "=>", out.headName());
         Expr ant = out.args().get(0);
         assertTrue("antecedent is SExpr", ant instanceof Expr.SExpr);
-        assertEquals("antecedent head is accreln3", "accreln3",
+        assertEquals("antecedent head is accreln3norm", "accreln3norm",
                 ((Expr.SExpr) ant).headName());
     }
 

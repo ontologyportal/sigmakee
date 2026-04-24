@@ -52,7 +52,7 @@ public class SUMOtoTFAform {
     private static final Pattern VAR_ARITY_PATTERN    = Pattern.compile(".*__\\d$");
     private static final Pattern SIG_PART_PATTERN     = Pattern.compile("(\\d)(In|Re|Ra|En)");
     private static final Pattern BARE_TERM_PATTERN    = Pattern.compile("^(.+)__.*");
-    private static final Pattern LIST_FN_PATTERN      = Pattern.compile("(ListFn[^ ]+)");
+    private static final Pattern LIST_FN_PATTERN      = Pattern.compile("(ListFn[A-Za-z0-9_]*)");
     private static final Pattern INSTANCE_OBJ_PATTERN = Pattern.compile("\\(instance \\?\\w+ (\\w+)\\)");
 
     public static Map<String,Set<String>> getVarmap() { return varmapTL.get(); }

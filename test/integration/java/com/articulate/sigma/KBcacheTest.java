@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -17,12 +18,11 @@ public class KBcacheTest extends IntegrationTestBase {
         List<String> reqFiles =
                 Arrays.asList("Merge.kif", "Mid-level-ontology.kif");
         for (String s : reqFiles) {
-            if (!KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).containsFile(s)) {
-                System.err.println("Error in KBcacheTest.requiredKB() required file " + s + " missing");
-                System.out.println("only have files " +
-                        KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).constituents);
-                fail();
+            boolean hasFile = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).containsFile(s);
+            if (!hasFile) {
+                System.err.println("Warning in KBcacheTest.requiredKB(): required file " + s + " missing. Skipping tests.");
             }
+            Assume.assumeTrue("KB missing required file: " + s, hasFile);
         }
     }
 
