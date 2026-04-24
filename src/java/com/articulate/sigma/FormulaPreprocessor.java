@@ -1169,6 +1169,14 @@ public class FormulaPreprocessor {
                         if (argHead != null && !Formula.isVariable(argHead) && kb.isFunction(argHead)) {
                             result = KButilities.mergeToMap(result,
                                     computeVariableTypesRecurseExpr(kb, arg, input), kb);
+                        } else if ("Formula".equals(findType(argnum, pred, kb))) {
+                            // Recurse into formula-position SExpr args so variables nested inside
+                            // HOL predicate arguments (e.g. ?INTEREST inside holdsDuring's formula arg)
+                            // receive type "Formula". addTypeRestrictionsExpr then emits an
+                            // (instance ?VAR Formula) guard, which preCheckExpr detects (PC_FORMULA_ARG)
+                            // and excludeNonModal filters the formula from SUMO_plain.thf.
+                            result = KButilities.mergeToMap(result,
+                                    computeVariableTypesRecurseExpr(kb, arg, input), kb);
                         }
                     }
                     argnum++;
