@@ -1011,20 +1011,20 @@ public class THFnew {
         }
 
         // 6. Known problematic terms (head or direct atom args)
-        List<String> problematic_terms = Arrays.asList(
-                "airTemperature", "ListFn", "AssignmentFn", "Organism");
-        if (headName != null && problematic_terms.contains(headName)) {
-            if (out != null)
-                out.write("% exclude(): Problematic Term encountered: " + headName + "\n");
-            return true;
-        }
-        for (Expr arg : args) {
-            if (arg instanceof Expr.Atom argAtom && problematic_terms.contains(argAtom.name())) {
-                if (out != null)
-                    out.write("% exclude(): Problematic Term encountered: " + argAtom.name() + "\n");
-                return true;
-            }
-        }
+//        List<String> problematic_terms = Arrays.asList(
+//                "airTemperature", "ListFn", "AssignmentFn", "Organism");
+//        if (headName != null && problematic_terms.contains(headName)) {
+//            if (out != null)
+//                out.write("% exclude(): Problematic Term encountered: " + headName + "\n");
+//            return true;
+//        }
+//        for (Expr arg : args) {
+//            if (arg instanceof Expr.Atom argAtom && problematic_terms.contains(argAtom.name())) {
+//                if (out != null)
+//                    out.write("% exclude(): Problematic Term encountered: " + argAtom.name() + "\n");
+//                return true;
+//            }
+//        }
 
         // 7. META-LOGIC FILTER: bare variable in formula position
         //    Case 1: (=> antecedent ?VAR)
@@ -1635,12 +1635,22 @@ public class THFnew {
                 //  - skip symbols with explicitly defined modal types (reserved header)
                 //  - skip modal relations
                 //  - every other relation gets a trailing "World" argument
+                // Truncate BEFORE adding World so that the world arg is never the one removed.
+                // e.g. exhaustiveAttribute__1: base sig ["","Class","Attribute"] has 2 content
+                // entries but suffixNum=1 → remove "Attribute" first, then add "World" to get
+                // ["","Class","World"] → ($i > w > $o).  With the old order (World first, then
+                // truncate) the loop removed "World" instead, yielding ($i > $i > $o).
+                if (suffixNum != null && !sig.isEmpty() && sig.size() > (suffixNum+1)) {
+                    while (sig.size() > (suffixNum+1)) {
+                        sig.remove(sig.size() - 1);   // remove from end until sizes match
+                    }
+                }
+
                 if (!Formula.isLogicalOperator(t) && !t.equals("equals")) {
                     if (!Modals.RIGID_RELATIONS.contains(baseHead)
                             && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)
                             && !Modals.regHOLpred.contains(baseHead)) {
                         sig.add("World");
-                        if (suffixNum != null) suffixNum+=1;
                     }
                 }
 
@@ -1657,12 +1667,6 @@ public class THFnew {
                 }
                 else
                     out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : "); // write signature
-
-                if (suffixNum != null && !sig.isEmpty() && sig.size() > (suffixNum+1)) {
-                    while (sig.size() > (suffixNum+1)) {
-                        sig.remove(sig.size() - 1);   // remove from end until sizes match
-                    }
-                }
 
                 String sigStr;
                 if (Modals.regHOLpred.contains(baseHead) || Modals.regHOL3pred.contains(baseHead)) {
