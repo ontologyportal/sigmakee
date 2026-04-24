@@ -224,7 +224,7 @@ public class GenPropFormulas {
         }
         if (mgr.getPref("vampire").isEmpty())
             KBmanager.getMgr().setPref("vampire","/home/apease/workspace/vampire/vampire");
-        Vampire.mode = Vampire.ModeType.CASC;
+        // Vampire.mode = Vampire.ModeType.CASC;
         System.out.println("GenPropFormulas.run(): before vampire");
         if (mgr.getPref("eprover").isEmpty())
             KBmanager.getMgr().setPref("eprover","/home/apease/workspace/eprover/PROVER/eprover");
