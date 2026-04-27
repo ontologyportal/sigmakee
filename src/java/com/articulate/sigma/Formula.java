@@ -618,7 +618,6 @@ public class Formula implements Comparable, Serializable {
      * an empty list.
      */
     public String car() {
-
         if (!this.listP()) return null;
         if (stringArgs.isEmpty()) {
             if (this.empty()) return "";

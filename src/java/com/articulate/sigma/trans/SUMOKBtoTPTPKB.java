@@ -740,7 +740,7 @@ public class SUMOKBtoTPTPKB {
                 pw.println("% " + formCount.getAndIncrement() + " of " + total +
                         " from file " + f.sourceFile + " at line " + f.startLine);
             }
-            boolean isHOL = isHigherOrderExpr(f, kb);
+            boolean isHOL = f.isHigherOrder(kb);
             if (isHOL) {
                 pw.println("% is higher order");
                 if (getLang().equals("thf")) {  // TODO create a flag for adding modals (or not)
@@ -886,32 +886,6 @@ public class SUMOKBtoTPTPKB {
      *   <li>For regular predicates: any compound non-function arg → HOL immediately.</li>
      * </ul>
      */
-    private static boolean isHigherOrderExpr(Expr expr, KB kb) {
-        if (!(expr instanceof Expr.SExpr se)) return false;
-        String head = se.headName();
-        if (head == null) return false; // var-list node inside a quantifier
-        List<String> sig = kb.kbCache.getSignature(head);
-        if (sig != null && !Formula.isVariable(head) && sig.contains("Formula"))
-            return true;
-        boolean logop = Formula.isLogicalOperator(head);
-        for (Expr arg : se.args()) {
-            if (!(arg instanceof Expr.SExpr argSe)) continue; // atom/var/literal — not HOL
-            String argHead = argSe.headName();
-            if (argHead != null && !kb.isFunction(argHead)) {
-                // compound, non-function arg
-                if (logop) {
-                    if (isHigherOrderExpr(argSe, kb)) return true; // recurse for logical ops
-                } else {
-                    return true; // compound non-function arg to non-logop predicate → HOL
-                }
-            } else {
-                // function application (or null-head var-list) — recurse
-                if (isHigherOrderExpr(argSe, kb)) return true;
-            }
-        }
-        return false;
-    }
-
     /**
      * Returns true if {@code expr} contains a {@link Expr.Var} in predicate
      * position (i.e., as the head of an {@link Expr.SExpr}).
@@ -929,20 +903,6 @@ public class SUMOKBtoTPTPKB {
             }
             default -> false;
         };
-    }
-
-    /**
-     * Dispatches to {@link #isHigherOrderExpr(Expr, KB)} when the formula
-     * has a parsed {@link Expr} tree, otherwise falls back to
-     * {@link Formula#isHigherOrder(KB)}.
-     */
-    private static boolean isHigherOrderExpr(Formula f, KB kb) {
-        if (f instanceof FormulaAST fa && fa.expr != null) {
-            boolean hol = isHigherOrderExpr(fa.expr, kb);
-            if (hol) fa.higherOrder = true;
-            return hol;
-        }
-        return f.isHigherOrder(kb);
     }
 
     private static boolean isNonReasoningForATP(String kif) {
@@ -1045,7 +1005,7 @@ public class SUMOKBtoTPTPKB {
 
         // HOL check — use Expr fast path when available (avoids findAllTypeRestrictions +
         // Formula allocation per arg in the original string-based isHigherOrder)
-        boolean isHOL = isHigherOrderExpr(f, kb);
+        boolean isHOL = f.isHigherOrder(kb);
         if (isHOL) {
             f.higherOrder = true;
             res.prologueLines.add("% is higher order");
@@ -1439,7 +1399,7 @@ public class SUMOKBtoTPTPKB {
             return true;
         }
 
-        if (isHigherOrderExpr(form, kb))
+        if (form.isHigherOrder(kb))
             if (removeHOL)
                 return true;
         if (!filterExcludePredicates(form)) {
@@ -1472,7 +1432,7 @@ public class SUMOKBtoTPTPKB {
             return true;
         }
 
-        if (isHigherOrderExpr(form, kb))
+        if (form.isHigherOrder(kb))
             if (removeHOL)
                 return true;
         if (!filterExcludePredicates(form)) {
