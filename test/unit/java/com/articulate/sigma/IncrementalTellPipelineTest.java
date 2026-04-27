@@ -87,7 +87,7 @@ public class IncrementalTellPipelineTest {
         KB kb = new KB("TestM35KB");
         kb.kbCache = new KBcache(kb);
         KBmanager.getMgr().setPref("cacheDisjoint", "true");
-        KIF kif = new KIF();
+        KIFAST kif = new KIFAST();
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);
         kb.merge(kif, "");
