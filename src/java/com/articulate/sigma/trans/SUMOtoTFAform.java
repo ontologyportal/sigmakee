@@ -972,6 +972,7 @@ public class SUMOtoTFAform {
                 return promotion + "$quotient_e(" + processRecurse(arg1,"Integer") + " ," +
                         processRecurse(arg2,"Integer") + Formula.RP + closeP;
             else {
+                System.out.println("processMathOp(): allOfType() " + args);
                 return mixedQuotient(f,op,parentType,args,argTypes);
             }
         }
@@ -2377,7 +2378,7 @@ public class SUMOtoTFAform {
             Thread.dumpStack();
             return "";
         }
-        if (f.getFormula().startsWith("(instance equal")) { // || f.theFormula.contains("ListFn"))
+        if (f.getFormula().startsWith("(instance equal ")) { // || f.theFormula.contains("ListFn"))
             System.err.println("Error in SUMOtoTFAform.process(): rejected (instance equal: " + f);
             return "";
         }

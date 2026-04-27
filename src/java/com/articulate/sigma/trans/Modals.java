@@ -225,7 +225,7 @@ public class Modals {
         REFLEXIVE, SYMMETRIC, TRANSITIVE, SERIAL, EUCLIDEAN}
 
     public enum ModalSystem {
-        K,D,T,B,S4,S5,D4}
+        K,D,T,B,S4,S5,D4,D45}
 
     public static final Set<String> noWorld = new HashSet<>(Arrays.asList(
             "instance","subclass","domain","domainSubclass","range","rangeSubclass",
@@ -415,18 +415,23 @@ public class Modals {
                 argStart = 2;
 
             List<Formula> flist = f.complexArgumentsToArrayList(argStart);
+            if (flist == null)
+                System.out.println("processRecurse(): formula argument list is null: " + f);
             StringBuilder fstring = new StringBuilder();
             fstring.append(Formula.LP).append(f.car());
             // Append quantifier variable list as-is
             if (argStart == 2)
                 fstring.append(Formula.SPACE).append(f.getStringArgument(1));
-            if (flist.size() == 2 && f.car().equals("instance") && flist.get(0).isVariable() &&
+            if (flist != null && flist.size() == 2 && f.car().equals("instance") && flist.get(0).isVariable() &&
                     flist.get(1).equals("Formula"))
-                return new Formula();  // TODO - need f = new Formula(elimUnitaryLogops(f)); to eliminate now empty operators
+                return new Formula();
             // Recursively process arguments
             for (Formula arg : flist) {
                 if (f.car().equals("instance") && arg.isVariable() &&
-                        typeMap.get(arg.toString()) != null && typeMap.get(arg.toString()).contains("Formula"))
+                        typeMap.get(arg.toString()) != null &&
+                        (typeMap.get(arg.toString()).contains("Formula") ||
+                         typeMap.get(arg.toString()).contains("ObjectiveNorm") ||
+                         typeMap.get(arg.toString()).contains( "NormativeAttribute")))
                     fstring.append(Formula.SPACE).append(arg);
                 else
                     fstring.append(Formula.SPACE).append(SUMOtoTFAform.elimUnitaryLogops(processRecurse(arg, kb, typeMap, worldvar, worldNum)));
@@ -611,6 +616,8 @@ public class Modals {
      * B := reflexive and symmetric
      * S4 := reflexive and transitive
      * S5 := reflexive and Euclidean
+     * D4 := transitive and serial
+     * D45 := serial, transitive and Euclidean
      */
     public static String genModalSystem(String modalOp, ModalSystem modalsys) {
 
@@ -628,6 +635,8 @@ public class Modals {
             case S5: return genFrameAxiom(modalOp,FrameAx.REFLEXIVE) +
                     genFrameAxiom(modalOp,FrameAx.EUCLIDEAN);
             case D4: return genFrameAxiom(modalOp,FrameAx.TRANSITIVE) +
+                    genFrameAxiom(modalOp,FrameAx.SERIAL);
+            case D45: return genFrameAxiom(modalOp,FrameAx.TRANSITIVE) +
                     genFrameAxiom(modalOp,FrameAx.SERIAL);
         }
         return result;

@@ -265,7 +265,7 @@ public class FormulaPreprocessor {
             types = varmap.get(unquantifiedV);
             if (types != null && !types.isEmpty()) {
                 for (String t : new TreeSet<>(types)) {
-                    if (StringUtil.emptyString(t) || t.equals("Formula"))  // don't include type Formula
+                    if (StringUtil.emptyString(t) || t.equals("Formula") || t.equals("ObjectiveNorm"))
                         continue;
                     if (begin) {
                         sb.append("(=> \n  (and \n");  // TODO: need test for singular list
