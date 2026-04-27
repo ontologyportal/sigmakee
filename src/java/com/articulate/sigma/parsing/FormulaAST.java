@@ -144,6 +144,66 @@ public class FormulaAST extends Formula {
     }
 
     /** ***************************************************************
+     */
+    public FormulaAST(String f) {
+        read(f);
+    }
+
+    /** ***************************************************************
+     * Set 'theFormula' to the string clear all cache and populate the expr field.
+     * @param s - the formula string
+     */
+    @Override
+    public void read(String s) {
+
+        setFormula(s);
+
+        allVarsCache = new HashSet<>();
+        allVarsPairCache = new ArrayList<>();
+        quantVarsCache = new HashSet<>();
+        unquantVarsCache = new HashSet<>();
+        existVarsCache = new HashSet<>();
+        univVarsCache = new HashSet<>();
+        termCache = new HashSet<>();
+
+        this.argMap = new HashMap<>();
+        this.eqList = new ArrayList<>();
+        this.explicitTypes = new HashMap<>();
+        this.varTypes = new HashMap<>();
+        this.rowvarLiterals = new HashSet<>();
+        this.constants = new HashMap<>();
+        this.rowVarStructs = new HashMap<>();
+        this.parsedFormula = null;
+        this.expr = null;
+        this.isDoc = false;
+        this.isRule = false;
+        this.containsNumber = false;
+        this.antecedentTerms = new HashSet<>();
+        this.consequentTerms = new HashSet<>();
+        this.strForm = null;
+
+        SuokifVisitor sv = SuokifVisitor.parseSentence(s);
+        if (sv.result.containsKey(0)) {
+            FormulaAST parsed = sv.result.get(0);
+            this.expr = parsed.expr;
+            this.parsedFormula = parsed.parsedFormula;
+            this.argMap = parsed.argMap;
+            this.eqList = parsed.eqList;
+            this.explicitTypes = parsed.explicitTypes;
+            this.varTypes = parsed.varTypes;
+            this.rowvarLiterals = parsed.rowvarLiterals;
+            this.constants = parsed.constants;
+            this.rowVarStructs = parsed.rowVarStructs;
+            this.isDoc = parsed.isDoc;
+            this.isRule = parsed.isRule;
+            this.containsNumber = parsed.containsNumber;
+        }else{
+            System.out.println("[FormulaAST - read] : SuokifVisitor couldn't parse the formula: " + s);
+        }
+    }
+    
+
+    /** ***************************************************************
      * Merge arguments to a predicate, which may themselves be complex
      * formulas, with an existing formula.
      */
