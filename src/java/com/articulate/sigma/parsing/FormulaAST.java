@@ -739,9 +739,10 @@ public class FormulaAST extends Formula {
         if (expr != null) {
             List<Expr> elements = getElements();
             if (start < 0 || start >= elements.size()) return null;
-            return elements.subList(start, elements.size()).stream()
-                    .map(Expr::toKifString)
-                    .collect(Collectors.toList());
+            List<Expr> slice = elements.subList(start, elements.size());
+            for (Expr e : slice)
+                if (e instanceof Expr.SExpr) return null;
+            return slice.stream().map(Expr::toKifString).collect(Collectors.toList());
         }
         System.out.println("Formula string-based method used: argumentsToArrayListString");
         return super.argumentsToArrayListString(start);
@@ -752,7 +753,14 @@ public class FormulaAST extends Formula {
     @Override
     public List<String> complexArgumentsToArrayListString(int start) {
 
-        if (expr != null) return argumentsToArrayListString(start);
+        if (expr != null) {
+            List<Expr> elements = getElements();
+            if (start < 0 || start >= elements.size()) return null;
+            List<String> result = elements.subList(start, elements.size()).stream()
+                    .map(Expr::toKifString)
+                    .collect(Collectors.toList());
+            return result.isEmpty() ? null : result;
+        }
         System.out.println("Formula string-based method used: complexArgumentsToArrayListString");
         return super.complexArgumentsToArrayListString(start);
     }
@@ -784,7 +792,7 @@ public class FormulaAST extends Formula {
     @Override
     public List<String> literalToArrayList() {
 
-        if (expr != null) return argumentsToArrayListString(0);
+        if (expr != null) return complexArgumentsToArrayListString(0);
         System.out.println("Formula string-based method used: literalToArrayList");
         return super.literalToArrayList();
     }
