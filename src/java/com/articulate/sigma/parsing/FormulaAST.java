@@ -182,7 +182,7 @@ public class FormulaAST extends Formula {
         this.consequentTerms = new HashSet<>();
         this.strForm = null;
 
-        SuokifVisitor sv = SuokifVisitor.parseSentence(s);
+        SuokifVisitor sv = SuokifVisitor.parseAny(s);
         if (sv.result.containsKey(0)) {
             FormulaAST parsed = sv.result.get(0);
             this.expr = parsed.expr;

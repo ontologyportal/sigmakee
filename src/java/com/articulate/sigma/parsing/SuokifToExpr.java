@@ -52,7 +52,7 @@ public class SuokifToExpr {
                 else
                     args.add(convertVariable((SuokifParser.VariableContext) c));
             } else if (c instanceof SuokifParser.ArgumentContext) {
-                args.add(convertArgument((SuokifParser.ArgumentContext) c));
+                args.add(convertAny((SuokifParser.ArgumentContext) c));
             } else {
                 // IDENTIFIER terminal (the predicate name)
                 String text = c.getText();
@@ -170,7 +170,7 @@ public class SuokifToExpr {
     // -----------------------------------------------------------------------
 
     /** argument : (sentence | term) */
-    private static Expr convertArgument(SuokifParser.ArgumentContext ctx) {
+    public static Expr convertAny(SuokifParser.ArgumentContext ctx) {
         for (ParseTree c : ctx.children) {
             if (c instanceof SuokifParser.SentenceContext)
                 return convert((SuokifParser.SentenceContext) c);
@@ -208,7 +208,7 @@ public class SuokifToExpr {
             if (head == null && ctx.FUNWORD() != null && c.getText().equals(ctx.FUNWORD().getText())) {
                 head = new Expr.Atom(c.getText());
             } else if (c instanceof SuokifParser.ArgumentContext) {
-                args.add(convertArgument((SuokifParser.ArgumentContext) c));
+                args.add(convertAny((SuokifParser.ArgumentContext) c));
             }
         }
         return new Expr.SExpr(head, args);

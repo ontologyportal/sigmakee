@@ -711,7 +711,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         Formula f = new FormulaAST(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
-//        assertTrue(result.isBlank());
+        assertTrue(result.isBlank());
         boolean inc = SUMOtoTFAform.inconsistentVarTypes();
         System.out.println("SUMOtoTFAformTest.testTypeConflict3(): varmap: " + SUMOtoTFAform.getVarmap());
         if (inc)

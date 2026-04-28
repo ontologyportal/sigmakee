@@ -147,6 +147,81 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
         return visitor;
     }
 
+    /** ***************************************************************
+     * Parse a quantifier variable list like (?X ?Y) which are not standalone
+     * valid S-expressions in the grammar but are quantifier fragments.
+     */
+    private static FormulaAST parseVariableList(String input) {
+
+        String s = input.trim();
+        if (!s.startsWith("(") || !s.endsWith(")")) return null;
+        String content = s.substring(1, s.length() - 1).trim();
+        if (content.isEmpty()) return null;
+
+        // Simple regex-based parsing for a list of variables
+        String[] parts = content.split("\\s+");
+        List<String> vars = new ArrayList<>();
+        for (String p : parts) {
+            if (p.startsWith("?") || p.startsWith("@")) vars.add(p);
+            else return null; // Not a variable list if it contains non-variables
+        }
+
+        FormulaAST f = new FormulaAST();
+        f.setFormula(s);
+        f.allVarsCache.addAll(vars);
+        f.isGround = false;
+        // Construct a dummy Expr for the variable list (SExpr with null head)
+        List<Expr> varExprs = new ArrayList<>();
+        for (String v : vars) {
+            if (v.startsWith("@")) varExprs.add(new Expr.RowVar(v));
+            else varExprs.add(new Expr.Var(v));
+        }
+        f.expr = new Expr.SExpr(null, varExprs);
+        return f;
+    }
+
+    /** ***************************************************************
+     * Parse a single SUO-KIF S-expression (sentence or term) using
+     * thread-local ANTLR instances and the {@code argument()} grammar rule.
+     *
+     * @param input the KIF string (a single top-level S-expression)
+     * @return an instance whose {@code result} map contains at most one formula
+     */
+    public static SuokifVisitor parseAny(String input) {
+
+        SuokifVisitor visitor = new SuokifVisitor();
+        try {
+            SuokifLexer lexer = LEXER_TL.get();
+            lexer.setInputStream(CharStreams.fromString(input));
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            SuokifParser parser = PARSER_TL.get();
+            parser.setInputStream(tokens);
+            parser.reset();
+            parser.removeErrorListeners();
+            parser.addErrorListener(SHARED_ERROR_LISTENER);
+            SuokifParser.ArgumentContext ctx = parser.argument();
+            FormulaAST f = visitor.visitArgument(ctx);
+            if (f != null) {
+                // FormulaAST doesn't have a field for ArgumentContext,
+                // but if it's a SentenceContext we can set parsedFormula.
+                if (ctx.sentence() != null)
+                    f.parsedFormula = ctx.sentence();
+                f.expr = SuokifToExpr.convertAny(ctx);
+                visitor.result.put(0, f);
+            }
+        } catch (IllegalArgumentException ex) {
+            // Fallback for quantifier variable lists like (?X ?Y)
+            FormulaAST f = parseVariableList(input);
+            if (f != null) {
+                visitor.result.put(0, f);
+            } else {
+                visitor.errors.add(ex.getMessage());
+                if (debug) System.err.println("SuokifVisitor.parseAny(): parse error for: " + input + " — " + ex.getMessage());
+            }
+        }
+        return visitor;
+    }
+
     /** Setup the main syntax processing of SUO-KIF
      *
      * @param inputStream the CharStream containing SUO-KIF
