@@ -55,7 +55,7 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             System.out.println("----------------------testE---------------------------");
             String query = "(subclass ?X Entity)";
-            EProver eprover = kb.askEProver(query, 30, 1);
+            EProver eprover = EProver.askEProver(kb, query, "tptp", 30, 1);
             String result;
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(eprover.output, "?X", kb, eprover.quantifierList);
@@ -140,7 +140,8 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             KBmanager.getMgr().initializeOnce();
             String query = "(subclass ?X Entity)";
-            Vampire vampire = kb.askVampire(query,30,1);
+            Vampire vampire = new Vampire(); 
+            vampire = kb.askVampire(vampire, query,30,1);
             vampire.mode = Vampire.ModeType.CASC;
             vampire.askQuestion = false;
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();

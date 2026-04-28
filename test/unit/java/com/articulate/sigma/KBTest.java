@@ -68,8 +68,8 @@ public class KBTest extends UnitTestBase {
         System.out.println("============== testDeleteUserAssertionsAndReloadWithVampire =====================");
         SigmaTestBase.kb.tell("(instance JohnJacob Human)");
         String query = "(instance JohnJacob Human)";
-
-        Vampire vamp = SigmaTestBase.kb.askVampire(query,10,1);
+        Vampire vamp = new Vampire();
+        vamp = SigmaTestBase.kb.askVampire(vamp, query,10,1);
         if (vamp != null)
             System.out.println("testDeleteUserAssertionsAndReloadWithVampire(): results: " + vamp.output);
         else
@@ -90,7 +90,7 @@ public class KBTest extends UnitTestBase {
         // This can manifest as: timeout, no proof, or ProverTimeoutException
         boolean secondQueryFailed = false;
         try {
-            vamp = SigmaTestBase.kb.askVampire(query, 10, 1);
+            vamp = SigmaTestBase.kb.askVampire(vamp, query, 10, 1);
             vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
             TPTP3ProofProcessor tpp1 = new TPTP3ProofProcessor();
             tpp1.parseProofOutput(vamp.output, query, kb, new StringBuilder());

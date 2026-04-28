@@ -66,6 +66,17 @@ public class EProver {
      * @param executable String path for the EProver executable.
      * @throws IOException
      */
+    public EProver() throws IOException {
+        this(KBmanager.getMgr().getPref("eprover"));
+    }
+
+    /***************************************************************
+     * Create a running instance of EProver based on existing batch
+     * specification file with a max answer of 1.
+     *
+     * @param executable String path for the EProver executable.
+     * @throws IOException
+     */
     public EProver(String executable) throws IOException {
 
         this(executable, 1);
@@ -186,6 +197,39 @@ public class EProver {
     }
 
     /***************************************************************
+     * Submits a
+     * query to the inference engine. Returns a list of answers from inference
+     * engine. If no proof is found, return null;vampire
+     *
+     * @param suoKifFormula The String representation of the SUO-KIF query.
+     * @return A list of answers from inference engine; If no proof or answer is
+     * found, return null;
+     */
+    public List<String> askNoProof(KB kb, String suoKifFormula, int timeout, int maxAnswers) {
+
+        if (StringUtil.isNonEmptyString(suoKifFormula)) {
+            Formula query = new Formula();
+            query.read(suoKifFormula);
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            Set<Formula> processedStmts = fp.preProcess(query, true, kb);
+            if (!processedStmts.isEmpty()) {
+                // set timeout in EBatchConfig file and reload eprover
+                EProver.addBatchConfig(null, timeout);
+                String strQuery = processedStmts.iterator().next().getFormula();
+                this.submitQuery(strQuery, kb);
+                if (this.output == null || this.output.isEmpty())
+                    System.out.println("No response from EProver!");
+                else
+                    System.out.println("Get response from EProver, start for parsing ...");
+                // System.out.println("Results returned from E = \n" + EResult);
+                TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                return tpp.parseAnswerTuples(this.output, strQuery, kb, this.quantifierList);
+            }
+        }
+        return null;
+    }
+
+    /***************************************************************
      * Returns an instance of the EProver with the KB path in the 
      * requested language in its batch config.
      * 
@@ -266,61 +310,62 @@ public class EProver {
      * for inference.
      *
      * @param inputFilename contains TPTP assertions
-     * @param timeout time limit in E
+     * @param timeout time limit in E to be added to EBatchConfig.txt
      *  */
-    // public static void addBatchConfig(String inputFilename, int timeout) {
+    public static void addBatchConfig(String inputFilename, int timeout) {
 
-    //     File initFile = new File(kbdir, "EBatchConfig.txt");
+        String kbdir = KBmanager.getMgr().getPref("kbDir");
+        File initFile = new File(kbdir, "EBatchConfig.txt");
 
-    //     Set<String> ebatchfiles = new HashSet<>();
-    //     if (inputFilename != null && !inputFilename.isEmpty())
-    //         ebatchfiles.add(inputFilename);
-    //     // Collect existing TPTP files
-    //     if (initFile.exists()) {
-    //         try (InputStream fis = new FileInputStream(initFile);
-    //             Reader isr = new InputStreamReader(fis);
-    //             BufferedReader in = new BufferedReader(isr)) {
-    //             String line = in.readLine(), split, ebatchfile;
-    //             int isEbatchFile;
-    //             while (line != null) {
-    //                 split = "include('";
-    //                 isEbatchFile = line.indexOf(split);
-    //                 if (isEbatchFile != -1) {
-    //                     ebatchfile = line.substring(split.length(), line.lastIndexOf("')"));
-    //                     ebatchfiles.add(ebatchfile);
-    //                 }
-    //                 line = in.readLine();
-    //             }
-    //         }
-    //         catch (Exception e) {
-    //             e.printStackTrace(System.err);
-    //             System.err.println("Error in EProver.addBatchConfig()");
-    //             System.err.println(e.getMessage());
-    //         }
-    //     }
-    //     // write existing TPTP files and new tptp files (inputFilename) into EBatchConfig.txt
-    //     try (PrintWriter pw = new PrintWriter(initFile)) {
-    //         pw.println("% SZS start BatchConfiguration");
-    //         pw.println("division.category LTB.SMO");
-    //         pw.println("execution.order ordered");
-    //         pw.println("output.required Assurance");
-    //         pw.println("output.desired Proof Answer");
-    //         pw.println("limit.time.problem.wc " + timeout);
-    //         pw.println("% SZS end BatchConfiguration");
-    //         pw.println("% SZS start BatchIncludes");
-    //         for (String ebatchfile : ebatchfiles) {
-    //             pw.println("include('" + ebatchfile + "').");
-    //         }
-    //         pw.println("% SZS end BatchIncludes");
-    //         pw.println("% SZS start BatchProblems");
-    //         pw.println("% SZS end BatchProblems");
-    //     }
-    //     catch (FileNotFoundException e) {
-    //         e.printStackTrace(System.err);
-    //         System.err.println("Error in EProver.addBatchConfig()");
-    //         System.err.println(e.getMessage());
-    //     }
-    // }
+        Set<String> ebatchfiles = new HashSet<>();
+        if (inputFilename != null && !inputFilename.isEmpty())
+            ebatchfiles.add(inputFilename);
+        // Collect existing TPTP files
+        if (initFile.exists()) {
+            try (InputStream fis = new FileInputStream(initFile);
+                Reader isr = new InputStreamReader(fis);
+                BufferedReader in = new BufferedReader(isr)) {
+                String line = in.readLine(), split, ebatchfile;
+                int isEbatchFile;
+                while (line != null) {
+                    split = "include('";
+                    isEbatchFile = line.indexOf(split);
+                    if (isEbatchFile != -1) {
+                        ebatchfile = line.substring(split.length(), line.lastIndexOf("')"));
+                        ebatchfiles.add(ebatchfile);
+                    }
+                    line = in.readLine();
+                }
+            }
+            catch (Exception e) {
+                e.printStackTrace(System.err);
+                System.err.println("Error in EProver.addBatchConfig()");
+                System.err.println(e.getMessage());
+            }
+        }
+        // write existing TPTP files and new tptp files (inputFilename) into EBatchConfig.txt
+        try (PrintWriter pw = new PrintWriter(initFile)) {
+            pw.println("% SZS start BatchConfiguration");
+            pw.println("division.category LTB.SMO");
+            pw.println("execution.order ordered");
+            pw.println("output.required Assurance");
+            pw.println("output.desired Proof Answer");
+            pw.println("limit.time.problem.wc " + timeout);
+            pw.println("% SZS end BatchConfiguration");
+            pw.println("% SZS start BatchIncludes");
+            for (String ebatchfile : ebatchfiles) {
+                pw.println("include('" + ebatchfile + "').");
+            }
+            pw.println("% SZS end BatchIncludes");
+            pw.println("% SZS start BatchProblems");
+            pw.println("% SZS end BatchProblems");
+        }
+        catch (FileNotFoundException e) {
+            e.printStackTrace(System.err);
+            System.err.println("Error in EProver.addBatchConfig()");
+            System.err.println(e.getMessage());
+        }
+    }
 
     /***************************************************************
      * Add an assertion for inference.

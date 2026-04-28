@@ -659,10 +659,6 @@ public class KBmanager implements Serializable {
                 if (debug) System.out.println("KBmanager.loadKBforInference(): loading Vampire");
                 kb.loadVampire();
             }
-            else if (KBmanager.getMgr().prover.equals(Prover.EPROVER)) {
-                if (debug) System.out.println("KBmanager.loadKBforInference(): loading EProver");
-                kb.loadEProver();
-            }
         }
     }
 
@@ -1087,16 +1083,6 @@ public class KBmanager implements Serializable {
         KB kb = kbs.get(name);
         if (kb == null)
             return "KB " + name + " does not exist and cannot be removed.";
-        try {
-            if (kb.eprover != null) {
-                kb.eprover.terminate();
-                kb.eprover = null;
-            }
-        }
-        catch (IOException ioe) {
-            System.err.println("Error in KBmanager.removeKB(): ");
-            System.err.println("  Error terminating inference engine: " + ioe.getMessage());
-        }
         kb = kbs.remove(name);
         return "KB " + kb.name + " successfully removed.";
     }

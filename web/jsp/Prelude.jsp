@@ -66,15 +66,9 @@ resetIdleTimer();
 <%
 }
 
-if (username != null && role != null)
-    System.out.println("Prelude.jsp: username:role  " + username + " : " + role);
-else
-    System.out.println("Prelude.jsp: null username or role");
 String welcomeString = " : Welcome guest : <a href=\"login.html\">log in</a>";
 if (!StringUtil.emptyString(username))
     welcomeString = " : Welcome " + username;
-System.out.println("Prelude.jsp: KBmanager initialized  " + KBmanager.initialized);
-System.out.println("Prelude.jsp: KBmanager initializing  " + KBmanager.initializing);
 KBmanager mgr = KBmanager.getMgr();
 
 if (StringUtil.emptyString(role)) { // role is [guest | user | admin]
@@ -82,17 +76,13 @@ if (StringUtil.emptyString(role)) { // role is [guest | user | admin]
 }
 
 if (!KBmanager.initialized) {
-    // Entry point from the web app into SigmaKEE
-    System.out.println("Prelude.jsp: SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
     mgr.initializeOnce(); // <- first call for KB initialization at startup 2/17/25 (tdn)
-    System.out.println("Prelude.jsp: initializing.  Redirecting to init.jsp.");
     response.sendRedirect("init.jsp");
     return;
 }
 
 if (role.equalsIgnoreCase("guest") && !userPages.contains(pageURLString)) {
     mgr.setError("You are not authorized to visit " + pageURLString);
-    System.out.println("Prelude.jsp: Redirecting to KBs.jsp.");
     response.sendRedirect("KBs.jsp");
     return;
 }

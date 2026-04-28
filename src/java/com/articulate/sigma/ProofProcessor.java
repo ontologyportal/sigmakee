@@ -321,7 +321,7 @@ public class ProofProcessor {
     		  KBmanager.getMgr().initializeOnce();
     		  KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
     		  String stmt = "(subclass ?X Entity)";
-    		  String result = kb.askEProver(stmt, 30, 3) + Formula.SPACE;
+    		  String result = com.articulate.sigma.tp.EProver.askEProver(kb, stmt, "tptp", 30, 3).toString() + Formula.SPACE;
                   TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
                   StringBuilder qlist = new StringBuilder();
                   qlist.append(Formula.VX);

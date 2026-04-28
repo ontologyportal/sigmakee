@@ -192,11 +192,12 @@ public class InferenceTestSuite {
 
                 switch (KBmanager.getMgr().prover) {
                     case VAMPIRE:
-                        com.articulate.sigma.tp.Vampire vampire;
+                        com.articulate.sigma.tp.Vampire vampire = new Vampire();
+
                         if (modusPonens) {
                             vampire = kb.askVampireModensPonens(q, itd.timeout, maxAnswers);
                         }else{
-                            vampire = kb.askVampire(q, itd.timeout, maxAnswers);
+                            vampire = kb.askVampire(vampire, q, itd.timeout, maxAnswers);
                         }
                         System.out.println("vampire-output");
                         System.out.println(vampire.output);
@@ -204,7 +205,7 @@ public class InferenceTestSuite {
                         itd.proof = vampire.output;
                         break;
                     case EPROVER:
-                        com.articulate.sigma.tp.EProver eprover = kb.askEProver(q, itd.timeout, maxAnswers);
+                        com.articulate.sigma.tp.EProver eprover = com.articulate.sigma.tp.EProver.askEProver(kb, q, "tptp", itd.timeout, maxAnswers);
                         tpp.parseProofOutput(eprover.output, q, kb, eprover.quantifierList);
                         itd.proof = eprover.output;
                         break;
@@ -768,9 +769,11 @@ public class InferenceTestSuite {
                     if (overrideTimeout)
                         actualTimeout = defaultTimeout;
                     if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
-                        proof = kb.askEProver(processed.getFormula(), actualTimeout, maxAnswers) + " ";
-                    if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
-                        proof = kb.askVampire(processed.getFormula(), actualTimeout, maxAnswers) + " ";
+                        proof = com.articulate.sigma.tp.EProver.askEProver(kb, processed.getFormula(), "tptp", actualTimeout, maxAnswers).toString() + " ";
+                    if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
+                        Vampire vampire = new Vampire();
+                        proof = kb.askVampire(vampire, processed.getFormula(), actualTimeout, maxAnswers) + " ";
+                    }
                     if (KBmanager.getMgr().prover == KBmanager.Prover.LEO)
                         proof = kb.askLeo(processed.getFormula(), actualTimeout, maxAnswers) + " ";
                     duration = System.currentTimeMillis() - start;
@@ -873,7 +876,7 @@ public class InferenceTestSuite {
         Set<Formula> theQueries = fp.preProcess(theQuery,true,kb);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         String processedStmt;
-        Vampire vampire;
+        Vampire vampire = new Vampire();
         com.articulate.sigma.tp.EProver eprover;
         com.articulate.sigma.tp.LEO leo;
         for (Formula f : theQueries) {
@@ -892,12 +895,12 @@ public class InferenceTestSuite {
             }
             else switch (KBmanager.getMgr().prover) {
                 case VAMPIRE:
-                    vampire = kb.askVampire(processedStmt, itd.timeout, maxAnswers);
+                    vampire = kb.askVampire(vampire, processedStmt, itd.timeout, maxAnswers);
                     System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + vampire.toString());
                     tpp.parseProofOutput(vampire.output, processedStmt, kb,vampire.qlist);
                     break;
                 case EPROVER:
-                    eprover = kb.askEProver(processedStmt, itd.timeout, maxAnswers);
+                    eprover = com.articulate.sigma.tp.EProver.askEProver(kb, processedStmt,"tptp", itd.timeout, maxAnswers);
                     System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + eprover.toString());
                     tpp.parseProofOutput(eprover.output, processedStmt, kb,eprover.quantifierList);
                     break;
@@ -1138,7 +1141,6 @@ public class InferenceTestSuite {
                 }
                 if (args[0].indexOf('e') != -1) {
                     KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
-                    kb.loadEProver();
                 }
                 if (args[0].indexOf('l') != -1) {
                     SUMOformulaToTPTPformula.setLang("thf");

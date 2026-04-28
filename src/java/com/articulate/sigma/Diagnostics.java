@@ -14,6 +14,7 @@ import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import tptp_parser.TPTPFormula;
+import com.articulate.sigma.tp.EProver;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -1325,7 +1326,7 @@ public class Diagnostics {
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.getFormula());
                     processedQuery = f.makeQuantifiersExplicit(false);
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
-                    proof = empty.askEProver(processedQuery,timeout,maxAnswers) + " ";
+                    proof = EProver.askEProver(kb, processedQuery, "tptp", timeout, maxAnswers).toString() + " ";
                     a = new StringBuilder();
                     a.append(reportAnswer(kb,proof,query,processedQuery,"Redundancy"));
                     //  if (answer.length() != 0) return answer;
@@ -1333,7 +1334,7 @@ public class Diagnostics {
 
                     negatedQuery = new StringBuilder();
                     negatedQuery.append(Formula.LP).append(Formula.NOT).append(Formula.SPACE).append(processedQuery).append(Formula.RP);
-                    proof = empty.askEProver(negatedQuery.toString(),timeout,maxAnswers) + " ";
+                    proof = EProver.askEProver(kb, negatedQuery.toString(), "tptp", timeout, maxAnswers).toString() + " ";
                     a.append(reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency"));
                     if (a.length() != 0) {
                         answer.append(a);

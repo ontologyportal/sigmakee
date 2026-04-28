@@ -738,10 +738,9 @@ public class Vampire {
      * TODO: This function might not be necessary if we find a way to
      * directly add assertion into opened inference engine (e_ltb_runner)
      */
-    public boolean assertFormula(String userAssertionTPTP, KB kb,
+    public static boolean assertFormula(String userAssertionTPTP, KB kb,
                                  List<Formula> parsedFormulas, boolean tptp) {
-
-        if (debug) System.out.println("INFO in Vampire.assertFormula(2):writing to file " + userAssertionTPTP);
+                                    
         boolean allAdded = false;
         Set<Formula> processedFormulas = new HashSet();
         FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -760,7 +759,6 @@ public class Vampire {
                         for (Formula p : processedFormulas) {
                             if (!p.isHigherOrder(kb)) {
                                 tptpStr = SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(), false);
-                                if (debug) System.out.println("INFO in Vampire.assertFormula(2): formula " + tptpStr);
                                 tptpFormulas.add(tptpStr);
                             }
                         }
@@ -771,7 +769,6 @@ public class Vampire {
                         pw.println(",axiom,(" + theTPTPFormula + ")).");
                         tptpStr = SUMOformulaToTPTPformula.getLang() + "(kb_" + kb.name + "_UserAssertion" +
                                 "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
-                        if (debug) System.out.println("INFO in Vampire.assertFormula(2): TPTP for user assertion = " + tptpStr);
                     }
                     pw.flush();
                 }
@@ -940,7 +937,7 @@ public class Vampire {
             System.out.println();
 
             System.out.println("Vampire.main(): second test");
-            System.out.println(kb.askVampire("(subclass ?X Entity)",30,1));
+            System.out.println(vampire.askVampire(kb, "(subclass ?X Entity)",30,1, "CASC"));
         }
         if (argMap.containsKey("p")) {
             vampire.run(kbFile, 60);
