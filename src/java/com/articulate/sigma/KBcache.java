@@ -939,6 +939,10 @@ public class KBcache implements Serializable {
         //    System.out.println("KBcache.extendInstance(): instance parents of: " + newTerm + " are: " + iset);
         //System.out.println("extendInstance(): new term: " + newTerm + " parents: " + iset);
         relations.add(newTerm);
+        if (newTerm.endsWith(Formula.FN_SUFF))
+            functions.add(newTerm);
+        else
+            predicates.add(newTerm);
 
         // math and logic ops are not transitive
         //transRels = new HashSet<String>();

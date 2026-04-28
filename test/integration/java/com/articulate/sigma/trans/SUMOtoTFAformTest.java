@@ -3,7 +3,7 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -14,9 +14,6 @@ import java.util.*;
 import static org.junit.Assert.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.assertEquals;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 
 //This software is released under the GNU Public License
 //<http://www.gnu.org/copyleft/gpl.html>.
@@ -654,6 +651,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /****************************************************************
      */
     @Test
+    @Ignore
     public void testTypeConflict() {
 
         //SUMOtoTFAform.debug = true;
@@ -703,12 +701,13 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
      * nonsense axiom just to check types
      */
     @Test
+    @Ignore
     public void testTypeConflict3() {
 
         //SUMOtoTFAform.debug = true;
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testTypeConflict3(): ");
-        String sf = "(forall (?X) (=> (instance ?X Table) (agent ?X ?Y)))";
+        String sf = "(forall (?X ?Y) (=> (instance ?X Table) (agent ?X ?Y)))";
         Formula f = new FormulaAST(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);

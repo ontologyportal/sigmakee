@@ -381,10 +381,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public static boolean alreadyExtended(String t) {
 
-        String patternString = "__(\\d)(In|Re|Ra|En)+";
-        Pattern pattern = Pattern.compile(patternString);
-        Matcher matcher = pattern.matcher(t);
-        return matcher.find();
+        return t.matches(".*__\\d.*");
     }
 
     /** *************************************************************
@@ -684,7 +681,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         pw.println("% SUMOKBtoTFAKB.writeSorts(): starting on toExtend sorts");
         for (String k : toExtend.keySet()) {
             bareTerm = SUMOtoTFAform.getBareTerm(k);
-            vals = toExtend.get(bareTerm);
+            vals = toExtend.get(k);
             fnSuffix = "";
             if (kb.isFunction(bareTerm) || bareTerm.endsWith(Formula.FN_SUFF))  // variable arity functions with numerical suffixes not in kb yet
                 fnSuffix = Formula.FN_SUFF;
