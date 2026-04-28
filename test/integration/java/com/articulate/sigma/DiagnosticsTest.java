@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import org.junit.Test;
 
 import com.articulate.sigma.Diagnostics;
@@ -49,7 +50,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
     @Test
     public void singleOrphanVariableTest() {
         // ?Z appears only in quantifier list but not in body
-        Formula f = new Formula("(exists (?Z) (agent ?X ?Y))");
+        Formula f = new FormulaAST("(exists (?Z) (agent ?X ?Y))");
         Map<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
 
         // ?Z should not appear at all (not even as a key)
@@ -65,7 +66,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
     @Test
     public void nestedQuantifiersTest() {
         // Multiple nested quantifiers
-        Formula f = new Formula(
+        Formula f = new FormulaAST(
             "(exists (?A) " +
             "  (and " +
             "    (agent ?A ?B) " +
@@ -92,7 +93,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
 
     @Test
     public void noVariablesTest() {
-        Formula f = new Formula("(instance Suji Human)");
+        Formula f = new FormulaAST("(instance Suji Human)");
         Map<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
 
         // Should return empty map
@@ -101,7 +102,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
 
     @Test
     public void singleVariableTest() {
-        Formula f = new Formula("(instance ?X Human)");
+        Formula f = new FormulaAST("(instance ?X Human)");
         Map<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
 
         // ?X should exist but have no neighbors (it's alone)
@@ -111,7 +112,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
 
     @Test
     public void forallQuantifierTest() {
-        Formula f = new Formula(
+        Formula f = new FormulaAST(
             "(forall (?X) " +
             "  (=> " +
             "    (instance ?X Human) " +
@@ -129,7 +130,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
 
     @Test
     public void singlePredicateTest() {
-        Formula f = new Formula("(agent ?A ?B)");
+        Formula f = new FormulaAST("(agent ?A ?B)");
         Map<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
 
         assertTrue(links.containsKey("?A"));
@@ -145,7 +146,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
 
     @Test
     public void multiplePredicateTest() {
-        Formula f = new Formula("(and (agent ?A ?B) (patient ?B ?C) (location ?C ?D))");
+        Formula f = new FormulaAST("(and (agent ?A ?B) (patient ?B ?C) (location ?C ?D))");
         Map<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
 
         assertTrue(links.containsKey("?A"));
@@ -171,7 +172,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
 
     @Test 
     public void skipVarListTest() {
-        Formula f = new Formula("(exists (?A) (and (agent ?X ?Y)))");
+        Formula f = new FormulaAST("(exists (?A) (and (agent ?X ?Y)))");
         Map<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
 
         // ?A should NOT appear
@@ -185,7 +186,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
 
     @Test
     public void existsVarListInBodyTest() {
-        Formula f = new Formula("(exists (?A) (and (agent ?A ?B) (patient ?B ?C)))");
+        Formula f = new FormulaAST("(exists (?A) (and (agent ?A ?B) (patient ?B ?C)))");
         Map<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
 
         // because ?A appears in the body, it should be present and linked
@@ -207,7 +208,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
 
     @Test
     public void equalTest() {
-        Formula f = new Formula(
+        Formula f = new FormulaAST(
             "(=>\n" +
             "  (and\n" +
             "    (instance ?LIST ConsecutiveTimeIntervalList)\n" +
@@ -249,7 +250,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
 
     @Test 
     public void HOLTest() {
-        Formula f = new Formula(
+        Formula f = new FormulaAST(
             "(<=>\n" +
             "  (and\n" +
             "    (instance ?B BodyPart)\n" +
@@ -330,9 +331,9 @@ public class DiagnosticsTest extends IntegrationTestBase {
             "        (agent ?LogIn ?User)\n" +
             "        (patient ?LogIn ?Computer))) Possibility))";
 
-        Formula f1 = new Formula(pt1);
-        Formula f2 = new Formula(pt2);
-        Formula f3 = new Formula(pt3);
+        Formula f1 = new FormulaAST(pt1);
+        Formula f2 = new FormulaAST(pt2);
+        Formula f3 = new FormulaAST(pt3);
 
         // Merge the three co-occurrence maps
         Map<String, HashSet<String>> links = new HashMap<>();
@@ -417,8 +418,8 @@ public class DiagnosticsTest extends IntegrationTestBase {
             "        (WhenFn ?COMMUNICATION)\n" +
             "        (WhenFn ?ACK)))))";
 
-        Formula f1 = new Formula(rule1);
-        Formula f2 = new Formula(rule2);
+        Formula f1 = new FormulaAST(rule1);
+        Formula f2 = new FormulaAST(rule2);
 
         Map<String, HashSet<String>> links = new HashMap<>();
         Map<String, HashSet<String>> links1 = Diagnostics.findOrphanVars(f1);
@@ -474,7 +475,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
 
     @Test
     public void orphanSingleVariableTest() {
-        Formula f = new Formula("(instance ?X Human)");
+        Formula f = new FormulaAST("(instance ?X Human)");
         Map<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
 
         // ?X exists but has no neighbors
@@ -485,7 +486,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
     @Test
     public void threeVariablesOneOrphanTest() {
         // ?X and ?Y are connected, but ?Z is alone
-        Formula f = new Formula(
+        Formula f = new FormulaAST(
             "(=> " +
             "  (and " +
             "    (agent ?X ?Y) " +
@@ -514,7 +515,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
     public void singleVariableRepeatedTest() {
         // single variable ?T appearing on both sides of implication
         // this should NOT be flagged as an orphan since it appears multiple times
-        Formula f = new Formula(
+        Formula f = new FormulaAST(
             "(=> " +
             "  (holdsDuring ?T (attribute EarthsMoon FullMoon)) " +
             "  (holdsDuring ?T (moonLitPortion 1 FullMoon)))"
@@ -530,7 +531,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
 
     @Test
     public void variablesConnectedThroughFunctionsTest() {
-        Formula f = new Formula(
+        Formula f = new FormulaAST(
             "(=> " +
             "  (and " +
             "    (equal (MeasureFn ?X HourDuration) (TimeToFailureFn ?D)) " +
