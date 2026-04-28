@@ -291,9 +291,9 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (t.endsWith(Formula.FN_SUFF) != kb.isFunction(t))
             System.err.println("Error in writeRelationSort(): is function mismatch with term name : " + t + ", " + kb.isFunction(t));
         String bareTerm = SUMOtoTFAform.getBareTerm(t);
-        boolean isLeoUnsupportedMath = bareTerm.equals(Formula.REMAINDERFN) ||
+        boolean isLeoUnsupportedMath = SUMOtoTFAform.targetLeo && (bareTerm.equals(Formula.REMAINDERFN) ||
                 bareTerm.equals(Formula.DIVIDEFN) || bareTerm.equals(Formula.FLOORFN) ||
-                bareTerm.equals(Formula.CEILINGFN) || bareTerm.equals(Formula.ROUNDFN);
+                bareTerm.equals(Formula.CEILINGFN) || bareTerm.equals(Formula.ROUNDFN));
         if (Formula.isLogicalOperator(t) || (Formula.isMathFunction(bareTerm) && !isLeoUnsupportedMath)
                 || Formula.isComparisonOperator(t)) {
             String label = translateName(t);

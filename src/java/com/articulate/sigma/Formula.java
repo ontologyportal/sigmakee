@@ -496,7 +496,6 @@ public class Formula implements Comparable, Serializable {
      * @return void 
      */
     public void read(String s) {
-        System.out.println( "String based: Formula.read()");
         theFormula = s;
         cachedHashCode = 0;
         allVarsCache = new HashSet<>();

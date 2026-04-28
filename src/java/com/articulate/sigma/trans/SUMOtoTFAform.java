@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 public class SUMOtoTFAform {
 
     public static boolean debug = false;
+    public static boolean targetLeo = true;
 
     public static KB kb;
     public static boolean initialized = false;
@@ -92,9 +93,9 @@ public class SUMOtoTFAform {
         int under = s.lastIndexOf("__");
         String base = (under == -1) ? s : s.substring(0, under);
         // These have no LEO-III-supported TPTP built-in; fall through to s__Xxx SUMO function translation
-        if (base.equals(Formula.REMAINDERFN) || base.equals(Formula.DIVIDEFN) ||
+        if (targetLeo && (base.equals(Formula.REMAINDERFN) || base.equals(Formula.DIVIDEFN) ||
                 base.equals(Formula.FLOORFN) || base.equals(Formula.CEILINGFN) ||
-                base.equals(Formula.ROUNDFN))
+                base.equals(Formula.ROUNDFN)))
             return false;
         return Formula.isMathFunction(base);
     }
@@ -1007,6 +1008,9 @@ public class SUMOtoTFAform {
                 return mixedQuotient(f,op,parentType,args,argTypes);
             }
         }
+        if (op.startsWith(Formula.REMAINDERFN))
+            return promotion + "$remainder_t(" + processRecurse(arg1, "Integer") + " ," +
+                    processRecurse(arg2, "Integer") + Formula.RP + closeP;
         System.err.println("Error in SUMOtoTFAform.processMathOp(): bad math operator " + op + " in " + f);
         return "";
     }
@@ -1271,7 +1275,27 @@ public class SUMOtoTFAform {
 
     /** Numeric promotion – mirrors numTypePromotion(Formula, String). */
     private static String numTypePromotionExpr(Expr expr, String parentType) {
-        // $to_real and $to_rat are not supported by LEO-III; skip promotion
+
+        if (targetLeo)
+            return null;
+        String fType = findTypeExpr(expr);
+        if (StringUtil.emptyString(fType) || StringUtil.emptyString(parentType))
+            return null;
+
+        String fSort = SUMOKBtoTFAKB.translateSort(kb, fType);
+        String pSort = SUMOKBtoTFAKB.translateSort(kb, parentType);
+
+        if (fSort.equals(pSort))
+            return null;
+
+        if (pSort.equals("$real")) {
+            if (fSort.equals("$int") || fSort.equals("$rat"))
+                return "$to_real(";
+        }
+        if (pSort.equals("$rat")) {
+            if (fSort.equals("$int"))
+                return "$to_rat(";
+        }
         return null;
     }
 
@@ -1290,13 +1314,28 @@ public class SUMOtoTFAform {
      */
     public static String numTypePromotion (Formula f, String parentType) {
 
+        if (targetLeo)
+            return null;
         if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): f: " + f);
         if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): parentType: " + parentType);
-        if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): isNumeric(f): " + isNumeric(f));
-        if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): isNumericType(parentType): " + isNumericType(parentType));
-        if (findType(f) != null)
-            if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): kb.compareTermDepth(findType(f),parentType): " + kb.compareTermDepth(findType(f),parentType));
-        // $to_real and $to_rat are not supported by LEO-III; skip promotion
+        String fType = findType(f);
+        if (StringUtil.emptyString(fType) || StringUtil.emptyString(parentType))
+            return null;
+
+        String fSort = SUMOKBtoTFAKB.translateSort(kb, fType);
+        String pSort = SUMOKBtoTFAKB.translateSort(kb, parentType);
+
+        if (fSort.equals(pSort))
+            return null;
+
+        if (pSort.equals("$real")) {
+            if (fSort.equals("$int") || fSort.equals("$rat"))
+                return "$to_real(";
+        }
+        if (pSort.equals("$rat")) {
+            if (fSort.equals("$int"))
+                return "$to_rat(";
+        }
         return null;
     }
 
@@ -3048,6 +3087,9 @@ public class SUMOtoTFAform {
             else
                 return mixedQuotientExpr(se, parentType, argStrings, argTypes);
         }
+        if (op.startsWith(Formula.REMAINDERFN))
+            return promotion + "$remainder_t(" + processRecurseExpr(arg1, "Integer") + " ," +
+                    processRecurseExpr(arg2, "Integer") + Formula.RP + closeP;
         System.err.println("Error in SUMOtoTFAform.processMathOpExpr(): " +
             "bad math operator " + op + " in " + se.toKifString());
         return "";
