@@ -23,6 +23,8 @@ import com.articulate.sigma.utils.StringUtil;
 import tptp_parser.TPTPFormula;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -35,24 +37,173 @@ import java.util.*;
  *     ~/workspace/Leo-III/Leo-III-1.6/bin/leo3 /home/user/.sigmakee/KBs/SUMO.thf -t 60 -p
  */
 public class LEO {
-
-    public StringBuilder qlist = null; // quantifier list in order for answer extraction
-    public List<String> output = new ArrayList<>();
-    public static int axiomIndex = 0;
+    
     public static boolean debug = false;
-
-    // === NEW: Full result structure for error handling ===
+    
+    private String executable;
+    private String requestedTptpLanguage;
+    private String inferenceFileName;
+    /**  Quantifier list in order for answer extraction */
+    public StringBuilder qlist = null;
+    /** Output */
+    public List<String> output = new ArrayList<>();
+    public int axiomIndex = 0;
     private ATPResult result;
 
-    /** *************************************************************
-     */
-    @Override
-    public String toString() {
+    public LEO () {
+        this.executable = KBmanager.getMgr().getPref("leoExecutable");
+        this.requestedTptpLanguage = "tff";
+        if ("fof".equals(SUMOKBtoTPTPKB.getLang()))
+            this.requestedTptpLanguage = "tptp";
+        else
+            SUMOtoTFAform.initOnce();
+        this.inferenceFileName = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + "." + this.requestedTptpLanguage;
+    }
 
-        StringBuilder sb = new StringBuilder();
-        for (String s : output)
-            sb.append(s).append("\n");
-        return sb.toString();
+    /***************************************************************
+     * Submits a
+     * query to the inference engine.
+     *
+     * @param suoKifFormula The String representation of the SUO-KIF query.
+     * @param timeout       The number of seconds after which the inference engine should
+     *                      give up.
+     * @param maxAnswers    The maximum number of answers (binding sets) the inference
+     *                      engine should return.
+     * @return A String indicating the status of the ask operation.
+     */
+    public void askLeo(KB kb, String suoKifFormula, int timeout, int maxAnswers) {
+
+        if (StringUtil.isNonEmptyString(suoKifFormula)) {
+            Formula query = new Formula();
+            query.read(suoKifFormula);
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            Set<Formula> processedQuery = fp.preProcess(query, true, kb);
+            if (!processedQuery.isEmpty() && this != null) {
+                this.axiomIndex = 0;
+                String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+                File s = new File(this.inferenceFileName);
+                if (!s.exists()) {
+                    kb = KBmanager.getMgr().getKB(kb.name);
+                    KBmanager.getMgr().loadKBforInference(kb);
+                }
+                Set<String> tptpquery = new HashSet<>();
+                StringBuilder combined = new StringBuilder();
+                if (processedQuery.size() > 1) {
+                    combined.append("(or ");
+                    for (Formula p : processedQuery) {
+                        combined.append(p.getFormula()).append(Formula.SPACE);
+                    }
+                    combined.append(Formula.RP);
+                    String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + this.axiomIndex++ +
+                        ",conjecture,(" +
+                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, this.requestedTptpLanguage)
+                        + ")).";
+                    tptpquery.add(theTPTPstatement);
+                }
+                else {
+                    String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + this.axiomIndex++ +
+                        ",conjecture,(" +
+                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().getFormula(), true, this.requestedTptpLanguage)
+                        + ")).";
+                    tptpquery.add(theTPTPstatement);
+                }
+                try {
+                    Set<String> tptpQuery = tptpquery;
+                    this.run(kb, s, timeout, tptpQuery);
+                    this.qlist = SUMOformulaToTPTPformula.getQlist();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                String strQuery = processedQuery.iterator().next().getFormula();
+            }
+            else
+                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
+        }
+    }
+
+    /*********************************************************************************
+     * Submit a query to LEO-III with session-specific temp file isolation.
+     * Uses the shared THF base file but writes temp-comb/temp-stmt into
+     * the session directory so concurrent sessions don't collide.
+     *
+     * @param suoKifFormula The query in SUO-KIF format
+     * @param timeout Timeout in seconds
+     * @param maxAnswers Maximum number of answers
+     * @param sessionId HTTP session ID for temp file isolation (null for shared dir)
+     * @return LEO result object
+     */
+    public void askLeo(KB kb, String suoKifFormula, int timeout, int maxAnswers, String sessionId) {
+
+        final String requestedLang = SUMOKBtoTPTPKB.getLang();
+        if (StringUtil.isNonEmptyString(suoKifFormula)) {
+            Formula query = new Formula();
+            query.read(suoKifFormula);
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            Set<Formula> processedQuery = fp.preProcess(query, true, kb);
+            if (!processedQuery.isEmpty() && this != null) {
+                this.axiomIndex = 0;
+                String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+                File s;
+                if (sessionId != null && !sessionId.isEmpty()) {
+                    Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionTPTPPath(sessionId, kb.name, this.requestedTptpLanguage);
+                    if (Files.exists(sessionPath)) {
+                        System.out.println("KB.askLeo(): using session-specific TPTP: " + sessionPath);
+                        s = sessionPath.toFile();
+                    } else {
+                        s = new File(kbDir + kb.name + "." + this.requestedTptpLanguage);
+                    }
+                } else {
+                    s = new File(kbDir + kb.name + "." + this.requestedTptpLanguage);
+                }
+
+                if (!s.exists()) {
+                    if (sessionId != null && !sessionId.isEmpty()) {
+                        try {
+                            Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, kb, this.requestedTptpLanguage);
+                            s = sessionPath.toFile();
+                        } catch (Exception e) {
+                            System.err.println("KB.askLeo(): failed to generate session TPTP: " + e.getMessage());
+                            e.printStackTrace();
+                            return;
+                        }
+                    } else {
+                        kb = KBmanager.getMgr().getKB(kb.name);
+                        KBmanager.getMgr().loadKBforInference(kb);
+                    }
+                }
+                Set<String> tptpquery = new HashSet<>();
+                StringBuilder combined = new StringBuilder();
+                if (processedQuery.size() > 1) {
+                    combined.append("(or ");
+                    for (Formula p : processedQuery) {
+                        combined.append(p.getFormula()).append(Formula.SPACE);
+                    }
+                    combined.append(Formula.RP);
+                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
+                            ",conjecture,(" +
+                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
+                            + ")).";
+                    tptpquery.add(theTPTPstatement);
+                }
+                else {
+                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
+                            ",conjecture,(" +
+                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().getFormula(), true, requestedLang)
+                            + ")).";
+                    tptpquery.add(theTPTPstatement);
+                }
+                try {
+                    Set<String> tptpQuery = tptpquery;
+                    this.run(kb, s, timeout, tptpQuery, sessionId);
+                    this.qlist = SUMOformulaToTPTPformula.getQlist();
+                    return;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            else
+                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
+        }
     }
 
     /** *************************************************************
@@ -101,7 +252,7 @@ public class LEO {
      * @param tptp convert formula to TPTP if tptp = true
      * @return true if all assertions are added for inference
      */
-    public static boolean assertFormula(String userAssertionTPTP, KB kb,
+    public boolean assertFormula(String userAssertionTPTP, KB kb,
                                         List<Formula> parsedFormulas, boolean tptp) {
 
         if (debug) System.out.println("INFO in Leo.assertFormula(2):writing to file " + userAssertionTPTP);
@@ -129,10 +280,10 @@ public class LEO {
                     }
                     // 3. Write to new tptp file
                     for (String theTPTPFormula : tptpFormulas) {
-                        pw.print(SUMOformulaToTPTPformula.getLang() + "(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
+                        pw.print(SUMOformulaToTPTPformula.getLang() + "(kb_" + kb.name + "_UserAssertion" + "_" + this.axiomIndex++);
                         pw.println(",axiom,(" + theTPTPFormula + ")).");
                         tptpStr = SUMOformulaToTPTPformula.getLang() + "(kb_" + kb.name + "_UserAssertion" +
-                                "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
+                                "_" + this.axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
                         if (debug) System.out.println("INFO in LEO.assertFormula(2): TPTP for user assertion = " + tptpStr);
                     }
                     pw.flush();
@@ -415,6 +566,130 @@ public class LEO {
         catFiles(kbFile.toString(),stmtFile,outfile);
         File comb = new File(outfile);
         run(comb,timeout);
+    }
+
+    /**************************************************************
+     * Submits a query to the LEO inference engine. Returns an XML formatted String that
+     * contains the response of the inference engine. It should be in the form
+     * "<queryResponse>...</queryResponse>".
+     *
+     * suoKifFormula The String representation of the SUO-KIF query.
+     *  timeout       The number of seconds after which the underlying inference
+     *                      engine should give up. (Time taken by axiom selection doesn't
+     *                      count.)
+     *  maxAnswers    The maximum number of answers (binding sets) the inference
+     *                      engine should return.
+     * @return A String indicating the status of the ask operation.
+
+    public String askLEOOld(String suoKifFormula, int timeout, int maxAnswers, String flag) {
+
+        String result = "";
+        try {
+            String LeoExecutable = KBmanager.getMgr().getPref("leoExecutable");
+            String LeoInput = KBmanager.getMgr().getPref("inferenceTestDir") + "prob.p";
+            String LeoProblem;
+            String responseLine;
+            String LeoOutput = "";
+            File LeoExecutableFile = new File(LeoExecutable);
+            File LeoInputFile = new File(LeoInput);
+            FileWriter LeoInputFileW = new FileWriter(LeoInput);
+
+            List<Formula> selectedQuery = new ArrayList<Formula>();
+            Formula newQ = new Formula();
+            newQ.read(suoKifFormula);
+            selectedQuery.add(newQ);
+            List<String> selFs = null;
+            if (flag.equals("LeoSine")) {
+                SInE sine = new SInE(this.formulaMap.keySet());
+                selFs = new ArrayList<String>(sine.performSelection(suoKifFormula));
+                sine.terminate();
+            }
+            else if (flag.equals("LeoLocal"))
+                selFs = new ArrayList<String>();
+            else if (flag.equals("LeoGlobal")) {
+                selFs = new ArrayList<String>();
+                Iterator<Formula> it = this.formulaMap.values().iterator();
+                while (it.hasNext()) {
+                    Formula entry = it.next();
+                    selFs.add(entry.toString());
+                }
+            }
+            try { // add user asserted formulas
+                File dir = new File(this.kbDir);
+                File file = new File(dir, (this.name + _userAssertionsString));
+                String filename = file.getCanonicalPath();
+                BufferedReader userAssertedInput = new BufferedReader(new FileReader(filename));
+
+                try {
+                    String line = null;
+                    /
+                     * readLine is a bit quirky : it returns the content of a
+                     * line MINUS the newline. it returns null only for the END
+                     * of the stream. it returns an empty String if two newlines
+                     * appear in a row.
+
+                    while ((line = userAssertedInput.readLine()) != null)
+                        selFs.add(line);
+                }
+                finally {
+                    userAssertedInput.close();
+                }
+            }
+            catch (IOException ex) {
+                System.err.println("Error in KB.askLEO(): " + ex.getMessage());
+                ex.printStackTrace();
+            }
+            List<Formula> selectedFormulas = new ArrayList();
+            Formula newF = new Formula();
+
+            Iterator<String> it = selFs.iterator();
+            while (it.hasNext()) {
+                String entry = it.next();
+                newF = new Formula();
+                newF.read(entry);
+                selectedFormulas.add(newF);
+            }
+            System.out.println(selFs.toString());
+            THF thf = new THF();
+            LeoProblem = thf.KIF2THF(selectedFormulas, selectedQuery, this);
+            LeoInputFileW.write(LeoProblem);
+            LeoInputFileW.close();
+
+            String command = LeoExecutableFile.getCanonicalPath() + " -po 1 -t " + timeout + Formula.SPACE
+                    + LeoInputFile.getCanonicalPath();
+
+            Process leo = Runtime.getRuntime().exec(command);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(leo.getInputStream()));
+            while ((responseLine = reader.readLine()) != null)
+                LeoOutput += responseLine + "\n";
+            reader.close();
+            System.out.println(LeoOutput);
+
+            if (LeoOutput.contains("SZS status Theorem")) {
+                result = "Answer 1. yes" + "<br> <br>" + LeoProblem.replaceAll("\\n", "<br>") + "<br> <br>"
+                        + LeoOutput.replaceAll("\\n", "<br>");
+            }
+            else {
+                result = "Answer 1. don't know" + "<br> <br>" + LeoProblem.replaceAll("\\n", "<br>") + "<br> <br>"
+                        + LeoOutput.replaceAll("\\n", "<br>");
+            }
+        }
+        catch (Exception ex) {
+            System.err.println("Error in KB.askLEO(): " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    /** *************************************************************
+     */
+    @Override
+    public String toString() {
+
+        StringBuilder sb = new StringBuilder();
+        for (String s : output)
+            sb.append(s).append("\n");
+        return sb.toString();
     }
 
     /** *************************************************************

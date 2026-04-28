@@ -1,5 +1,7 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.tp.EProver;
+
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -321,7 +323,9 @@ public class ProofProcessor {
     		  KBmanager.getMgr().initializeOnce();
     		  KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
     		  String stmt = "(subclass ?X Entity)";
-    		  String result = com.articulate.sigma.tp.EProver.askEProver(kb, stmt, "tptp", 30, 3).toString() + Formula.SPACE;
+			  EProver eprover = new EProver();
+			  eprover.askEProver(kb, stmt, "tptp", 30, 3);
+    		  String result = eprover.toString() + Formula.SPACE;
                   TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
                   StringBuilder qlist = new StringBuilder();
                   qlist.append(Formula.VX);

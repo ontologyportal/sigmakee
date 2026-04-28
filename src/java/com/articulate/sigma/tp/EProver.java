@@ -66,7 +66,7 @@ public class EProver {
      * @param executable String path for the EProver executable.
      * @throws IOException
      */
-    public EProver() throws IOException {
+    public EProver() {
         this(KBmanager.getMgr().getPref("eprover"));
     }
 
@@ -77,7 +77,7 @@ public class EProver {
      * @param executable String path for the EProver executable.
      * @throws IOException
      */
-    public EProver(String executable) throws IOException {
+    public EProver(String executable) {
 
         this(executable, 1);
     }
@@ -91,7 +91,7 @@ public class EProver {
      * @param maxAnswers - Limit the answers up to maxAnswers only
      * @throws IOException
      */
-    public EProver(String executable, int maxAnswers) throws IOException {
+    public EProver(String executable, int maxAnswers) {
 
         // kbFilePath = KBmanager.getMgr().getPref("kbDir");
         // String eproverPath = executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
@@ -153,7 +153,7 @@ public class EProver {
     /***************************************************************
      * Create a new EProver process with a new batch config file
      */
-    public EProver(String executable, KB kb, String requestedTptpLanguage, int timeout, int maxAnswers) throws IOException {
+    public EProver(String executable, KB kb, String requestedTptpLanguage, int timeout, int maxAnswers) {
         
         this.executablePath = executable;
         this.kbFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + kb.name + ("tff".equals(requestedTptpLanguage) ? ".tptp" : ".tff");
@@ -179,21 +179,18 @@ public class EProver {
      * @param maxAnswers    The maximum number of answers (binding sets) the inference engine should return.
      * @return an instance of the EProver with results
      */
-    public static EProver askEProver(KB kb, String suoKifFormulas, String requestedTptpLang, int timeout, int maxAnswers) {
+    public void askEProver(KB kb, String suoKifFormulas, String requestedTptpLang, int timeout, int maxAnswers) {
 
-        EProver eproverWithKb = loadEProverWithKb(kb, requestedTptpLang, timeout, maxAnswers);
         if (StringUtil.isNonEmptyString(suoKifFormulas)) {
-            if (debug) System.out.println("=====================\nEProver.askEProver()\nsuoKifFormulas:\n" + suoKifFormulas + "\nrequestedTptpLang: " + requestedTptpLang + "\ntimeout: " + timeout + "\nmaxAnswers: " + maxAnswers);
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processedStmts = fp.preProcess(new Formula(suoKifFormulas), true, kb);
-            if (!processedStmts.isEmpty() && eproverWithKb != null) {
+            if (!processedStmts.isEmpty() && this != null) {
                 String strQuery = processedStmts.iterator().next().getFormula();
-                eproverWithKb.submitQuery(strQuery, kb);
+                this.submitQuery(strQuery, kb);
             }
         } else {
             System.out.println("EProver.askEProver(): suoKifFormulas empty!");
         }
-        return eproverWithKb;
     }
 
     /***************************************************************
@@ -227,49 +224,6 @@ public class EProver {
             }
         }
         return null;
-    }
-
-    /***************************************************************
-     * Returns an instance of the EProver with the KB path in the 
-     * requested language in its batch config.
-     * 
-     * @author Shaun Rose
-     * @param kb The knowledge base to be loaded into EProver
-     * @param requestedLanguage Either fof or tff
-     * @param
-     * @return The instance of EProver with the knowledge base loaded.
-     */
-    public static EProver loadEProverWithKb(KB kb, String requestedLanguage, int timeout, int maxAnswers) {
-
-        KBmanager kbMgr = KBmanager.getMgr();
-        String eproverExecutablePath = kbMgr.getPref("eprover");
-        EProver eproverInstance = null;
-        if (kb.formulaMap.isEmpty()) {
-            System.err.println("TheoremProverController.getEProverWithKb(): kb.formulaMap is empty!");
-            return eproverInstance;
-        }
-        if (StringUtil.emptyString(eproverExecutablePath)) {
-            System.err.println("TheoremProverController.getEProverWithKb(): No path for EProver in config.xml");
-            return eproverInstance;
-        }
-        File file = new File(eproverExecutablePath);
-        if (!file.exists()) {
-            System.err.println("TheoremProverController.getEProverWithKb(): No EProver executable found at " + eproverExecutablePath + " from config.xml");
-            return eproverInstance;
-        }
-        kbMgr.prover = KBmanager.Prover.EPROVER;
-        try {
-            return new EProver(eproverExecutablePath, kb, requestedLanguage, timeout, maxAnswers);
-        }
-        catch (IOException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }
-        if (eproverInstance == null) {
-            kbMgr.setError(kbMgr.getError() + "\n<br/>No local E inference engine available\n<br/>");
-            System.err.println("Error in TheoremProverController.getEProverWithKb(): EProver not loaded");
-        }
-        return eproverInstance;
     }
 
     /***************************************************************
@@ -470,17 +424,14 @@ public class EProver {
     public String submitQuery(String formula, KB kb) {
 
         long startTime = System.currentTimeMillis();
-        
         result = new ATPResult.Builder()
             .engineName("EProver")
             .engineMode("interactive")
             .inputLanguage("FOF")
             .inputSource("custom")
             .build();
-                
         List<String> stdoutLines = new ArrayList<>();
         List<String> stderrLines = new ArrayList<>();
-        
         String resultStr = "";
         Path tempProblemFile = null;
 
@@ -763,7 +714,8 @@ public class EProver {
                 int timeout = Integer.parseInt(argMap.get("ask").get(2));
                 int maxAnswers = Integer.parseInt(argMap.get("ask").get(3));
                 try {
-                    EProver eprover = EProver.askEProver(kb, suoKifFormula, requestedTptpLang, timeout, maxAnswers);
+                    EProver eprover = new EProver();
+                    eprover.askEProver(kb, suoKifFormula, requestedTptpLang, timeout, maxAnswers);
                     System.out.println("EProver.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
                     TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
                     tpp.parseProofOutput(eprover.output, argMap.get("ask").get(0), kb, eprover.quantifierList);

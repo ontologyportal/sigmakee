@@ -98,9 +98,6 @@ public class KB implements Serializable {
 
     private boolean isVisible = true;
 
-    /** LEO-III inference engine process for this KB. */
-    public transient LEO leo;
-
     /** The name of the knowledge base. */
     public String name;
 
@@ -1811,8 +1808,8 @@ public class KB implements Serializable {
                                     break;
                                 case LEO:
                                     if (debug) System.out.println("KB.tell: using leo");
-                                    LEO.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
-                                            !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                                    LEO leo = new LEO();
+                                    leo.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                                     // nothing much to do since LEO has to load it all at query time
                                     // just create a single file
                                     result += " and inference";
@@ -1862,229 +1859,6 @@ public class KB implements Serializable {
             }
             return result;
         }
-    }
-
-    /***************************************************************
-     * Submits a query to the E inference engine.
-     *
-     * @param suoKifFormula The String representation of the SUO-KIF query.
-     * @param timeout       The number of seconds after which the inference engine should
-     *                      give up.
-     * @param maxAnswers    The maximum number of answers (binding sets) the inference
-     *                      engine should return.
-     * @return an instance of the EProver with results
-     */
-    // public EProver askEProver(String suoKifFormula, int timeout, int maxAnswers) {
-
-    //     final String requestedLang = SUMOKBtoTPTPKB.getLang();
-    //     return EProver.askEProver(this, suoKifFormula, requestedLang, timeout, maxAnswers);
-    // }
-
-    /***************************************************************
-     * Submits a
-     * query to the inference engine.
-     *
-     * @param suoKifFormula The String representation of the SUO-KIF query.
-     * @param timeout       The number of seconds after which the inference engine should
-     *                      give up.
-     * @param maxAnswers    The maximum number of answers (binding sets) the inference
-     *                      engine should return.
-     * @return A String indicating the status of the ask operation.
-     */
-    public LEO askLeo(String suoKifFormula, int timeout, int maxAnswers) {
-
-        System.out.println("KB.askLeo(): query: " + suoKifFormula);
-        // Capture the user's selected lang IMMEDIATELY at the start of this method
-        // to avoid race conditions with background TPTP generation threads
-        final String requestedLang = SUMOKBtoTPTPKB.getLang();
-        System.out.println("KB.askLeo(): captured requestedLang=" + requestedLang);
-
-        try {
-            if (leo == null) {
-                leo = new LEO();
-            }
-        }
-        catch (Exception e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-//        THF thf = new THF();
-        if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            loadLeo(requestedLang);
-            Formula query = new Formula();
-            query.read(suoKifFormula);
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedQuery = fp.preProcess(query, true, this);
-            if (!processedQuery.isEmpty() && this.leo != null) {
-                int axiomIndex = 0;
-                String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
-                String kbName = name;
-                // Use the captured requestedLang instead of reading from static field again
-                String lang = "tff";
-                if ("fof".equals(requestedLang))
-                    lang = "tptp";
-                else
-                    SUMOtoTFAform.initOnce();
-                System.out.println("KB.askLeo(): lang: " + lang);
-                File s = new File(dir + kbName + "." + lang);
-                if (!s.exists()) {
-                    System.out.println("KB.askLeo(): no such file: " + s + ". Creating it.");
-                    KB kb = KBmanager.getMgr().getKB(kbName);
-                    KBmanager.getMgr().loadKBforInference(kb);
-                }
-                Set<String> tptpquery = new HashSet<>();
-                StringBuilder combined = new StringBuilder();
-                if (processedQuery.size() > 1) {
-                    combined.append("(or ");
-                    for (Formula p : processedQuery) {
-                        combined.append(p.getFormula()).append(Formula.SPACE);
-                    }
-                    combined.append(Formula.RP);
-                    // Use captured requestedLang to avoid race conditions with background TPTP generation
-                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                            ",conjecture,(" +
-                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
-                            + ")).";
-                    tptpquery.add(theTPTPstatement);
-                }
-                else {
-                    // Use captured requestedLang to avoid race conditions with background TPTP generation
-                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                            ",conjecture,(" +
-                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().getFormula(), true, requestedLang)
-                            + ")).";
-                    tptpquery.add(theTPTPstatement);
-                }
-                try {
-                    tptpQuery = tptpquery;
-                    System.out.println("KB.askLeo(): calling with: " + s + ", " + timeout + ", " + tptpquery);
-                    System.out.println("KB.askLeo(): qlist: " + leo.qlist);
-                    LEO leo = new LEO();
-                    leo.run(this, s, timeout, tptpQuery);
-                    leo.qlist = SUMOformulaToTPTPformula.getQlist();
-                    return leo;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                String strQuery = processedQuery.iterator().next().getFormula();
-            }
-            else
-                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
-        }
-        return leo;
-    }
-
-    /*********************************************************************************
-     * Submit a query to LEO-III with session-specific temp file isolation.
-     * Uses the shared THF base file but writes temp-comb/temp-stmt into
-     * the session directory so concurrent sessions don't collide.
-     *
-     * @param suoKifFormula The query in SUO-KIF format
-     * @param timeout Timeout in seconds
-     * @param maxAnswers Maximum number of answers
-     * @param sessionId HTTP session ID for temp file isolation (null for shared dir)
-     * @return LEO result object
-     */
-    public LEO askLeo(String suoKifFormula, int timeout, int maxAnswers, String sessionId) {
-
-        System.out.println("KB.askLeo(): query (session=" + sessionId + "): " + suoKifFormula);
-        final String requestedLang = SUMOKBtoTPTPKB.getLang();
-
-        try {
-            if (leo == null) {
-                leo = new LEO();
-            }
-        }
-        catch (Exception e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-        if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            loadLeo(requestedLang);
-            Formula query = new Formula();
-            query.read(suoKifFormula);
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedQuery = fp.preProcess(query, true, this);
-            if (!processedQuery.isEmpty() && this.leo != null) {
-                int axiomIndex = 0;
-                String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
-                String kbName = name;
-                String lang = "tff";
-                if ("fof".equals(requestedLang))
-                    lang = "tptp";
-                else
-                    SUMOtoTFAform.initOnce();
-
-                // Resolve base file: prefer session-specific TPTP if it exists
-                File s;
-                if (sessionId != null && !sessionId.isEmpty()) {
-                    Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionTPTPPath(sessionId, kbName, lang);
-                    if (Files.exists(sessionPath)) {
-                        System.out.println("KB.askLeo(): using session-specific TPTP: " + sessionPath);
-                        s = sessionPath.toFile();
-                    } else {
-                        s = new File(kbDir + kbName + "." + lang);
-                    }
-                } else {
-                    s = new File(kbDir + kbName + "." + lang);
-                }
-
-                if (!s.exists()) {
-                    if (sessionId != null && !sessionId.isEmpty()) {
-                        // Generate to session dir instead of polluting shared folder
-                        // (in-memory KB may contain user assertions from tell())
-                        System.out.println("KB.askLeo(): shared base missing, generating session-specific TPTP for session " + sessionId);
-                        try {
-                            Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
-                            s = sessionPath.toFile();
-                        } catch (Exception e) {
-                            System.err.println("KB.askLeo(): failed to generate session TPTP: " + e.getMessage());
-                            e.printStackTrace();
-                            return null;
-                        }
-                    } else {
-                        System.out.println("KB.askLeo(): no such file: " + s + ". Creating it.");
-                        KB kb = KBmanager.getMgr().getKB(kbName);
-                        KBmanager.getMgr().loadKBforInference(kb);
-                    }
-                }
-                Set<String> tptpquery = new HashSet<>();
-                StringBuilder combined = new StringBuilder();
-                if (processedQuery.size() > 1) {
-                    combined.append("(or ");
-                    for (Formula p : processedQuery) {
-                        combined.append(p.getFormula()).append(Formula.SPACE);
-                    }
-                    combined.append(Formula.RP);
-                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                            ",conjecture,(" +
-                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
-                            + ")).";
-                    tptpquery.add(theTPTPstatement);
-                }
-                else {
-                    String theTPTPstatement = requestedLang + "(query" + "_" + axiomIndex++ +
-                            ",conjecture,(" +
-                            SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().getFormula(), true, requestedLang)
-                            + ")).";
-                    tptpquery.add(theTPTPstatement);
-                }
-                try {
-                    tptpQuery = tptpquery;
-                    LEO leoInst = new LEO();
-                    leoInst.run(this, s, timeout, tptpQuery, sessionId);
-                    leoInst.qlist = SUMOformulaToTPTPformula.getQlist();
-                    return leoInst;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            else
-                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
-        }
-        return leo;
     }
 
     /***************************************************************
@@ -2971,119 +2745,6 @@ public class KB implements Serializable {
             String message = ioe.getMessage().replaceAll(":", "&#58;");
             errors.add(message);
             result = ioe.getMessage();
-        }
-        return result;
-    }
-
-    /**************************************************************
-     * Submits a query to the LEO inference engine. Returns an XML formatted String that
-     * contains the response of the inference engine. It should be in the form
-     * "<queryResponse>...</queryResponse>".
-     *
-     * suoKifFormula The String representation of the SUO-KIF query.
-     *  timeout       The number of seconds after which the underlying inference
-     *                      engine should give up. (Time taken by axiom selection doesn't
-     *                      count.)
-     *  maxAnswers    The maximum number of answers (binding sets) the inference
-     *                      engine should return.
-     * @return A String indicating the status of the ask operation.
-
-    public String askLEOOld(String suoKifFormula, int timeout, int maxAnswers, String flag) {
-
-        String result = "";
-        try {
-            String LeoExecutable = KBmanager.getMgr().getPref("leoExecutable");
-            String LeoInput = KBmanager.getMgr().getPref("inferenceTestDir") + "prob.p";
-            String LeoProblem;
-            String responseLine;
-            String LeoOutput = "";
-            File LeoExecutableFile = new File(LeoExecutable);
-            File LeoInputFile = new File(LeoInput);
-            FileWriter LeoInputFileW = new FileWriter(LeoInput);
-
-            List<Formula> selectedQuery = new ArrayList<Formula>();
-            Formula newQ = new Formula();
-            newQ.read(suoKifFormula);
-            selectedQuery.add(newQ);
-            List<String> selFs = null;
-            if (flag.equals("LeoSine")) {
-                SInE sine = new SInE(this.formulaMap.keySet());
-                selFs = new ArrayList<String>(sine.performSelection(suoKifFormula));
-                sine.terminate();
-            }
-            else if (flag.equals("LeoLocal"))
-                selFs = new ArrayList<String>();
-            else if (flag.equals("LeoGlobal")) {
-                selFs = new ArrayList<String>();
-                Iterator<Formula> it = this.formulaMap.values().iterator();
-                while (it.hasNext()) {
-                    Formula entry = it.next();
-                    selFs.add(entry.toString());
-                }
-            }
-            try { // add user asserted formulas
-                File dir = new File(this.kbDir);
-                File file = new File(dir, (this.name + _userAssertionsString));
-                String filename = file.getCanonicalPath();
-                BufferedReader userAssertedInput = new BufferedReader(new FileReader(filename));
-
-                try {
-                    String line = null;
-                    /
-                     * readLine is a bit quirky : it returns the content of a
-                     * line MINUS the newline. it returns null only for the END
-                     * of the stream. it returns an empty String if two newlines
-                     * appear in a row.
-
-                    while ((line = userAssertedInput.readLine()) != null)
-                        selFs.add(line);
-                }
-                finally {
-                    userAssertedInput.close();
-                }
-            }
-            catch (IOException ex) {
-                System.err.println("Error in KB.askLEO(): " + ex.getMessage());
-                ex.printStackTrace();
-            }
-            List<Formula> selectedFormulas = new ArrayList();
-            Formula newF = new Formula();
-
-            Iterator<String> it = selFs.iterator();
-            while (it.hasNext()) {
-                String entry = it.next();
-                newF = new Formula();
-                newF.read(entry);
-                selectedFormulas.add(newF);
-            }
-            System.out.println(selFs.toString());
-            THF thf = new THF();
-            LeoProblem = thf.KIF2THF(selectedFormulas, selectedQuery, this);
-            LeoInputFileW.write(LeoProblem);
-            LeoInputFileW.close();
-
-            String command = LeoExecutableFile.getCanonicalPath() + " -po 1 -t " + timeout + Formula.SPACE
-                    + LeoInputFile.getCanonicalPath();
-
-            Process leo = Runtime.getRuntime().exec(command);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(leo.getInputStream()));
-            while ((responseLine = reader.readLine()) != null)
-                LeoOutput += responseLine + "\n";
-            reader.close();
-            System.out.println(LeoOutput);
-
-            if (LeoOutput.contains("SZS status Theorem")) {
-                result = "Answer 1. yes" + "<br> <br>" + LeoProblem.replaceAll("\\n", "<br>") + "<br> <br>"
-                        + LeoOutput.replaceAll("\\n", "<br>");
-            }
-            else {
-                result = "Answer 1. don't know" + "<br> <br>" + LeoProblem.replaceAll("\\n", "<br>") + "<br> <br>"
-                        + LeoOutput.replaceAll("\\n", "<br>");
-            }
-        }
-        catch (Exception ex) {
-            System.err.println("Error in KB.askLEO(): " + ex.getMessage());
-            ex.printStackTrace();
         }
         return result;
     }
@@ -4583,49 +4244,6 @@ public class KB implements Serializable {
         }
     }
 
-    /***************************************************************
-     * Checks for a Leo executable, preprocesses all of the constituents.
-     * This no-arg version reads from the static SUMOKBtoTPTPKB.getLang() field.
-     */
-    public void loadLeo() {
-        // Capture lang immediately to minimize race window with background generation
-        String requestedLang = SUMOKBtoTPTPKB.getLang();
-        loadLeo(requestedLang);
-    }
-
-    /***************************************************************
-     * Checks for a Leo executable, preprocesses all of the constituents.
-     * This version takes the requested language as a parameter to avoid
-     * race conditions with background TPTP generation threads.
-     *
-     * @param requestedLang The TPTP language format requested by the user ("fof" or "tff")
-     */
-    public void loadLeo(String requestedLang) {
-
-        System.out.println("INFO in KB.loadLeo(): requestedLang=" + requestedLang);
-        String leoex = KBmanager.getMgr().getPref("leoExecutable");
-        KBmanager.getMgr().prover = KBmanager.Prover.LEO;
-        if (StringUtil.emptyString(leoex)) {
-            System.err.println("Error in loadLeo(): no executable string in preferences");
-            return;
-        }
-        File executable = new File(leoex);
-        if (!executable.exists()) {
-            System.err.println("Error in loadLeo(): no executable " + leoex);
-            return;
-        }
-        // Use the passed requestedLang parameter instead of reading from static field
-        String lang = "tff";
-        if ("fof".equals(requestedLang))
-            lang = "tptp";
-        String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-
-        if (new File(infFilename).exists() && !KBmanager.getMgr().infFileOld())
-            System.out.println("INFO in KB.loadLeo(): no need to generate " + lang + " file " + infFilename);
-        else
-            loadVampire(requestedLang); // if SUMO.tptp is missing, this will generate it
-    }
-
     /*****************************************************************
      * Preprocess the knowledge base to TPTP. This includes "holds" prefixing,
      * ticking nested formulas, expanding row variables, and translating
@@ -4723,7 +4341,8 @@ public class KB implements Serializable {
 
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
-            EProver ep = EProver.askEProver(this, args[1], "tptp", timeout, 1);
+            EProver ep = new EProver();
+            ep.askEProver(this, args[1], "tptp", timeout, 1);
             System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(ep.output));
             tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(ep.output, args[1], this, ep.quantifierList);
@@ -5131,7 +4750,9 @@ public class KB implements Serializable {
                         contradictionHelp(kb,args,timeout);
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
-                        EProver eprover = EProver.askEProver(kb, argMap.get("ask").get(0), "tptp", timeout, 1);
+                        
+                        EProver eprover = new EProver();
+                        eprover.askEProver(kb, argMap.get("ask").get(0), "tptp", timeout, 1);
                         System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
                         tpp = new TPTP3ProofProcessor();
                         tpp.parseProofOutput(eprover.output, argMap.get("ask").get(0), kb, eprover.quantifierList);
@@ -5144,7 +4765,8 @@ public class KB implements Serializable {
                         tpp.parseProofOutput(vamp.output, argMap.get("ask").get(0), kb, vamp.qlist);
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
-                        LEO leo = kb.askLeo(argMap.get("ask").get(0), timeout, 1);
+                        LEO leo = new LEO();
+                        leo.askLeo(kb, argMap.get("ask").get(0), timeout, 1);
                         System.out.println("KB.main(): completed LEO query with result: " + StringUtil.arrayListToCRLFString(leo.output));
                         tpp = new TPTP3ProofProcessor();
                         tpp.parseProofOutput(leo.output, argMap.get("ask").get(0), kb, leo.qlist);

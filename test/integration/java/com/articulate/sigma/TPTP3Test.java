@@ -55,7 +55,8 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             System.out.println("----------------------testE---------------------------");
             String query = "(subclass ?X Entity)";
-            EProver eprover = EProver.askEProver(kb, query, "tptp", 30, 1);
+            EProver eprover = new EProver();
+            eprover.askEProver(kb, query, "tptp", 30, 1);
             String result;
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(eprover.output, "?X", kb, eprover.quantifierList);

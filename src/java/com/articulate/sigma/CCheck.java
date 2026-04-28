@@ -134,7 +134,8 @@ public class CCheck implements Runnable {
         try {
             switch (chosenEngine) {
                 case "EProver":
-                    EProver eprover = EProver.askEProver(kb, "(instance instance BinaryPredicate)", "tptp", 10, 1);
+                    EProver eprover = new EProver();
+                    eprover.askEProver(kb, "(instance instance BinaryPredicate)", "tptp", 10, 1);
                     result = eprover.toString();
                     inferenceEngine = "EProver";
                     return true;
@@ -143,7 +144,8 @@ public class CCheck implements Runnable {
                     inferenceEngine = "SInE";
                     return true;
                 case "LeoLocal":
-                    LEO leo = kb.askLeo("(instance instance BinaryPredicate)", 10, 1);
+                    LEO leo = new LEO();
+                    leo.askLeo(kb, "(instance instance BinaryPredicate)", 10, 1);
                     inferenceEngine = "LeoLocal";
                     return true;
                 default:
@@ -408,13 +410,16 @@ public class CCheck implements Runnable {
         try {
             switch (inferenceEngine) {
                 case "EProver":
-                    result = EProver.askEProver(kb, query, "tptp", timeOut, 1) + " ";
+                    EProver eprover = new EProver();
+                    eprover.askEProver(kb, query, "tptp", timeOut, 1);
+                    result = eprover.toString();
                     break;
                 case "SInE":
                     result = empty.askSInE(query, timeOut, 1);
                     break;
                 case "LeoLocal":
-                    LEO leo = empty.askLeo(query, timeOut, 1);
+                    LEO leo = new LEO();
+                    leo.askLeo(empty, query, timeOut, 1);
                     break;
             //result = InterfaceTPTP.queryTPTP(query, timeOut, 1, lineHtml,
             //        ieSettings.get("systemChosen"),
