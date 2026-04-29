@@ -13,54 +13,72 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 
 package com.articulate.sigma.tp;
 
+import com.articulate.sigma.CLIMapParser;
+import java.util.List;
+import java.util.Map;
+
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 
 public class TheoremProverController {
 
-    public TheoremProverController () {
-        
-    }
+    public TheoremProverController () {}
 
     public ATPResult ask (ATPQuery query) {
         switch (query.getProverType()) {
             case EPROVER:
-                return this.askEProver(query);
+                // return this.askEProver(query);
                 break;
             case VAMPIRE: 
                 return this.askVampire(query);
-                break;
             case LEO:
-                return this.askLeo(query);
+                // return this.askLeo(query);
                 break;
             default:
                 System.err.println("TheoremProverController.ask(): INVALID PROVER");
                 break;
         }
-    }
-
-    private ATPResult askEProver(ATPQuery query) {
-        
+        return null;
     }
 
     private ATPResult askVampire(ATPQuery query) {
-        Vampire vampire = new Vampire(query.getKb(), query.getLanguage(), query.getVampireMode(), query.getModusPonens(), query.getTimeout(), query.getMaxAnswers());
-        switch(query.getLanguage()) {
-            case FOF:
-                break;
-            case TFF:
-                if (query.isClosedWorldAssumption()) SUMOKBtoTPTPKB.CWA = true;
-                if (query.isDropOnePremise()) query.getKb().dropOnePremiseFormulas = true;
-                break;
-            case THF:
-                break;
+        Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers());
+        if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) {
+            if (query.isClosedWorldAssumption()) SUMOKBtoTPTPKB.CWA = true;
+            if (query.isModusPonens() && query.isDropOnePremise()) query.getKb().dropOnePremiseFormulas = true;
+            vampire.askVampire(query.getQuery());
+            return vampire.getResult();
+        } 
+        else {
+            if (query.getTestFilePath().isEmpty() || query.getTestFilePath() == null) vampire.askVampireHOL(query.getQuery(), query.isHolUseModals());
+            else vampire.askVampireTHF(query.getTestFilePath());
+            return vampire.getResult();
         }
     }
 
-    private ATPResult askLEO(ATPQuery query) {
+    // private ATPResult askEProver(ATPQuery query) {
+        
+    // }
 
+    // private ATPResult askLEO(ATPQuery query) {
+
+    // }
+
+    private static void showHelp() {
+
+        System.out.println("TheoremProverController class");
+        System.out.println("  h - show this help screen");
+        System.out.println("  --v <> <> - query vampire");
+        System.out.println("  --e <> <> - query EProver");
+        System.out.println("  --l <> <> - query LEO");
     }
     
     public static void main(String[] args) {
-
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.isEmpty() || argMap.containsKey("h")) {
+            showHelp();
+            return;
+        }
+        TheoremProverController theoremProverController = new TheoremProverController();
+        
     }
 }

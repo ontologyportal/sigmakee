@@ -7,14 +7,14 @@ public class ATPQuery {
 
     public enum RunSource {CUSTOM_QUERY, TEST_FILE}
     public enum TptpLanguage {FOF, TFF, THF}
-    private enum ATPType{EPROVER, VAMPIRE, LEO}
+    public enum ATPType{EPROVER, VAMPIRE, LEO}
     
     private KB kb;
     private String userSessionId;
     private String query;
     private String testFilePath;
     private RunSource runSource;
-    private TheoremProverController.ProverType proverType;
+    private ATPType proverType;
     private TptpLanguage language;
     private Vampire.ModeType vampireMode;
     private boolean closedWorldAssumption;
@@ -24,7 +24,7 @@ public class ATPQuery {
     private int timeout;
     private int maxAnswers;
 
-    public ATPQuery (KB kb, String userSessionId, String query, String testFilePath, RunSource runSource, TheoremProverController.ProverType proverType, TranslationMode translationMode, TptpLanguage language, Vampire.ModeType vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout, int maxAnswers) {
+    public ATPQuery (KB kb, String userSessionId, String query, String testFilePath, RunSource runSource, ATPType proverType, TptpLanguage language, Vampire.ModeType vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout, int maxAnswers) {
         
         this.kb = kb;
         this.userSessionId = userSessionId;
@@ -53,8 +53,6 @@ public class ATPQuery {
     public RunSource getRunSource() { return this.runSource; }
 
     public ATPType getProverType() { return this.proverType; }
-
-    public TranslationMode getTranslationMode() { return this.translationMode; }
 
     public TptpLanguage getLanguage() { return this.language; }
 

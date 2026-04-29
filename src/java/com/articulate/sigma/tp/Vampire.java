@@ -82,8 +82,6 @@ public class Vampire {
     /**  */
     public boolean askQuestion = true;
     /**  */
-    public boolean useModals = false;
-    /**  */
     public boolean modensPonens = false;
     /** Storage variable for the output of Vampire */
     public List<String> output = new ArrayList<>();
@@ -167,6 +165,7 @@ public class Vampire {
             }
         }
         else System.err.println("Vampire.askVampire(): no TPTP formula translation for query: " + query);
+        if (this.modensPonens) this.modensPonensPostProcess();
     }
 
     /*********************************************************************************
@@ -346,9 +345,8 @@ public class Vampire {
      * Input  : SUO-KIF query string (stmt).
      * Output : Vampire object with HOL proof output.
      */
-    public void askVampireHOL(String stmt) {
+    public void askVampireHOL(String stmt, boolean useModals) {
         
-        this.useModals = true;
         KBmanager mgr = KBmanager.getMgr();
         if (useModals)
             System.out.println("==== Using Modals/HOL mode ====");
