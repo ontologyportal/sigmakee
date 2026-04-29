@@ -37,35 +37,54 @@ import java.util.*;
  *     ~/workspace/Leo-III/Leo-III-1.6/bin/leo3 /home/user/.sigmakee/KBs/SUMO.thf -t 60 -p
  */
 public class LEO {
-    
+
+    /** Turn debugging logs on or off */
     public static boolean debug = false;
-    
+    /** Knowledge base to be used for inference */
     private KB kb;
+    /** The path where the LEO executable is found */
     private String executablePath;
+    /** The language that vampire will process [fof|tff] */
     private String requestedTptpLanguage;
+    /** Time in seconds that vampire will timeout */
     private int timeout;
+    /** Max number of output answers vampire will give */
     private int maxAnswers;
+    /** Session id to match the user to their assertions */
     private String sessionId;
+    /** Directory of the knowledge base vampire will query against */
     private String inferenceFileName;
     /**  Quantifier list in order for answer extraction */
     public StringBuilder qlist = null;
     /** Output */
     public List<String> output = new ArrayList<>();
+    /** */
     public int axiomIndex = 0;
+    /** Full result structure for error handling */
     private ATPResult result;
-
+    
+    /***************************************************************
+     * Initialize a new LEO object (Default: language=tptp, timeout=30, maxAnswers=1, sessionId=null)
+     * @param kb Knowledge base to be used for inference
+     */
     public LEO (KB kb) {
         this(kb, "tptp", 30, 1, null);
     }
 
+    /***************************************************************
+     * Initialize a new LEO object
+     * @param kb Knowledge base to be used for inference
+     * @param requestedTptpLanguage TPTP language format requested by the user ("fof" or "tff")
+     * @param timeout the time given for LEO to finish execution
+     * @param maxAnswers max number of answers to be returned
+     * @param sessionId explicit HTTP session ID for temp file isolation
+     */
     public LEO (KB kb, String requestedTptpLanguage, int timeout, int maxAnswers, String sessionId) {
         this.executablePath = KBmanager.getMgr().getPref("leoExecutable");
         this.kb = kb;
         this.requestedTptpLanguage = "tff";
-        if ("fof".equals(requestedTptpLanguage))
-            this.requestedTptpLanguage = "tptp";
-        else
-            SUMOtoTFAform.initOnce();
+        if ("fof".equals(requestedTptpLanguage)) this.requestedTptpLanguage = "tptp";
+        else SUMOtoTFAform.initOnce();
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
         this.sessionId = sessionId;
@@ -73,14 +92,8 @@ public class LEO {
     }
 
     /***************************************************************
-     * Submits a
-     * query to the inference engine.
-     *
-     * @param suoKifFormula The String representation of the SUO-KIF query.
-     * @param timeout       The number of seconds after which the inference engine should
-     *                      give up.
-     * @param maxAnswers    The maximum number of answers (binding sets) the inference
-     *                      engine should return.
+     * Submits a query to the inference engine.
+     * @param suoKifFormula String representation of the SUO-KIF query.
      * @return A String indicating the status of the ask operation.
      */
     public void askLeo(String suoKifFormula) {
@@ -94,16 +107,12 @@ public class LEO {
                 this.axiomIndex = 0;
                 String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
                 File s = new File(this.inferenceFileName);
-                if (!s.exists()) {
-                    kb = KBmanager.getMgr().getKB(this.kb.name);
-                }
+                if (!s.exists()) kb = KBmanager.getMgr().getKB(this.kb.name);
                 Set<String> tptpquery = new HashSet<>();
                 StringBuilder combined = new StringBuilder();
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
-                    for (Formula p : processedQuery) {
-                        combined.append(p.getFormula()).append(Formula.SPACE);
-                    }
+                    for (Formula p : processedQuery) combined.append(p.getFormula()).append(Formula.SPACE);
                     combined.append(Formula.RP);
                     String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + this.axiomIndex++ +
                         ",conjecture,(" +
@@ -127,8 +136,7 @@ public class LEO {
                 }
                 String strQuery = processedQuery.iterator().next().getFormula();
             }
-            else
-                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
+            else System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
         }
     }
 
@@ -136,10 +144,7 @@ public class LEO {
      * Submit a query to LEO-III with session-specific temp file isolation.
      * Uses the shared THF base file but writes temp-comb/temp-stmt into
      * the session directory so concurrent sessions don't collide.
-     *
      * @param suoKifFormula The query in SUO-KIF format
-     * @param timeout Timeout in seconds
-     * @param maxAnswers Maximum number of answers
      * @param sessionId HTTP session ID for temp file isolation (null for shared dir)
      * @return LEO result object
      */
@@ -158,7 +163,7 @@ public class LEO {
                 if (useSession) {
                     Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionTPTPPath(this.sessionId, this.kb.name, this.requestedTptpLanguage);
                     if (Files.exists(sessionPath)) {
-                        System.out.println("KB.askLeo(): using session-specific TPTP: " + sessionPath);
+                        if (debug) System.out.println("KB.askLeo(): using session-specific TPTP: " + sessionPath);
                         s = sessionPath.toFile();
                     } else {
                         s = new File(kbDir + this.kb.name + "." + this.requestedTptpLanguage);
@@ -176,17 +181,13 @@ public class LEO {
                             e.printStackTrace();
                             return;
                         }
-                    } else {
-                        this.kb = KBmanager.getMgr().getKB(this.kb.name);
-                    }
+                    } else this.kb = KBmanager.getMgr().getKB(this.kb.name);
                 }
                 Set<String> tptpquery = new HashSet<>();
                 StringBuilder combined = new StringBuilder();
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
-                    for (Formula p : processedQuery) {
-                        combined.append(p.getFormula()).append(Formula.SPACE);
-                    }
+                    for (Formula p : processedQuery) combined.append(p.getFormula()).append(Formula.SPACE);
                     combined.append(Formula.RP);
                     String theTPTPstatement = requestedLang + "(query" + "_" + this.axiomIndex++ +
                             ",conjecture,(" +
@@ -210,40 +211,33 @@ public class LEO {
                     e.printStackTrace();
                 }
             }
-            else
-                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
+            else System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
         }
     }
 
-    /** *************************************************************
+    /***************************************************************
      * Get the full ATPResult for this run.
      * This provides detailed execution metadata, SZS status, and error info.
-     *
      * @return The ATPResult, or null if run() hasn't been called
      */
-    public ATPResult getResult() {
-        return result;
-    }
+    public ATPResult getResult() {return result;}
 
-    /** *************************************************************
+    /***************************************************************
      * Check if there was an error during execution.
-     *
      * @return true if the result indicates an error
      */
-    public boolean hasError() {
-        return result != null && result.hasErrors();
-    }
+    public boolean hasError() {return result != null && result.hasErrors();}
 
-    /** *************************************************************
+    /***************************************************************
      * Get the SZS status from the last run.
-     *
      * @return The SZSStatus, or SZSStatus.NOT_RUN if not run
      */
-    public SZSStatus getSzsStatus() {
-        return result != null ? result.getSzsStatus() : SZSStatus.NOT_RUN;
-    }
+    public SZSStatus getSzsStatus() {return result != null ? result.getSzsStatus() : SZSStatus.NOT_RUN;}
 
-    /** *************************************************************
+    /***************************************************************
+     * @param executable
+     * @param timeout
+     * @param kbFile
      */
     private static String[] createCommandList(File executable, int timeout, File kbFile) {
 
@@ -252,9 +246,8 @@ public class LEO {
         return optar;
     }
 
-    /** *************************************************************
+    /***************************************************************
      * Add an assertion for inference.
-     *
      * @param userAssertionTPTP asserted formula in the TPTP/TFF/THF syntax
      * @param parsedFormulas a lit of parsed formulas in KIF syntax
      * @param tptp convert formula to TPTP if tptp = true
@@ -273,13 +266,11 @@ public class LEO {
                 processedFormulas.clear();
                 fp = new FormulaPreprocessor();
                 processedFormulas.addAll(fp.preProcess(parsedF,false, this.kb));
-                if (processedFormulas.isEmpty())
-                    allAdded = false;
+                if (processedFormulas.isEmpty()) allAdded = false;
                 else {   // 2. Translate to THF.
                     tptpFormulas = new HashSet<>();
                     if (tptp) {
                         for (Formula p : processedFormulas) {
-                            // Use THFnew.processNonModal to translate each formula; we treat assertions as non-queries
                             String formula = THFnew.processNonModal(p, new HashMap<>(), false);
                             if (debug) System.out.println("INFO in LEO.assertFormula(2): formula " + formula);
                             tptpFormulas.add(formula);
@@ -303,12 +294,9 @@ public class LEO {
         return allAdded;
     }
 
-    /** *************************************************************
-     * Creates a running instance of Leo.
-     *
-     * @param kbFile A File object denoting the initial knowledge base
-     * to be loaded by the Leo executable.
-     *
+    /***************************************************************
+     * Running this LEO instance with this initial knowledge base.
+     * @param kbFile Initial knowledge base loaded by the Leo executable.
      * @throws ExecutableNotFoundException if the LEO-III executable is not found
      * @throws ProverCrashedException if LEO-III crashes with a non-zero exit code
      * @throws ProverTimeoutException if LEO-III times out
@@ -318,8 +306,6 @@ public class LEO {
 
         long startTime = System.currentTimeMillis();
         long timeoutMs = this.timeout * 1000L;
-
-        // Initialize result structure
         result = new ATPResult.Builder()
                 .engineName("LEO-III")
                 .engineMode("default")
@@ -327,7 +313,6 @@ public class LEO {
                 .inputSource(kbFile != null ? kbFile.getName() : "unknown")
                 .timeoutMs(timeoutMs)
                 .build();
-
         String leoex = KBmanager.getMgr().getPref("leoExecutable");
         if (StringUtil.emptyString(leoex)) {
             String msg = "Error in Leo.run(): no executable string in preferences";
@@ -344,20 +329,14 @@ public class LEO {
             result.setPrimaryError(msg);
             throw new ExecutableNotFoundException("LEO-III", leoex, "leoExecutable");
         }
-
         String[] cmds = createCommandList(executable, timeout, kbFile);
         result.setCommandLine(cmds);
         System.out.println("Leo.run(): Initializing Leo with:\n" + Arrays.toString(cmds));
-
         ProcessBuilder _builder = new ProcessBuilder(cmds);
         _builder.redirectErrorStream(false);  // Keep stderr separate
-
         Process _leo = _builder.start();
-
-        // Read stdout and stderr in parallel
         List<String> stdoutLines = new ArrayList<>();
         List<String> stderrLines = new ArrayList<>();
-
         Thread stderrReader = new Thread(() -> {
             try (BufferedReader r = new BufferedReader(new InputStreamReader(_leo.getErrorStream()))) {
                 String line;
@@ -369,7 +348,6 @@ public class LEO {
             }
         });
         stderrReader.start();
-
         try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_leo.getInputStream()))) {
             String line;
             while ((line = _reader.readLine()) != null) {
@@ -377,25 +355,16 @@ public class LEO {
                 output.add(line);  // Maintain backward compatibility
             }
         }
-
         stderrReader.join(5000);
-
         int exitValue = _leo.waitFor();
         long elapsed = System.currentTimeMillis() - startTime;
-
-        // Populate result
         result.setStdout(stdoutLines);
         result.setStderr(stderrLines);
         result.finalize(exitValue, elapsed, elapsed >= timeoutMs);
-
         if (exitValue != 0) {
             System.err.println("Leo.run(): Abnormal process termination (exit code " + exitValue + ")");
-            if (!stderrLines.isEmpty()) {
-                System.err.println("Stderr: " + stderrLines);
-            }
+            if (!stderrLines.isEmpty()) System.err.println("Stderr: " + stderrLines);
             System.err.println(output);
-
-            // Throw appropriate exception
             if (result.isTimedOut() || result.getSzsStatus() == SZSStatus.TIMEOUT) {
                 throw new ProverTimeoutException("LEO-III", timeoutMs, elapsed, true, stdoutLines, stderrLines, result);
             } else if (exitValue > 128 && exitValue < 160) {
@@ -405,11 +374,11 @@ public class LEO {
         System.out.println("Leo.run() done executing");
     }
 
-
-    /** ***************************************************************
+    /*****************************************************************
      * Write the statements to the temp-stmt.<type> file.
      * When sessionId is provided, writes to the session-specific directory,
      * creating it first if it does not yet exist.
+     * @param stmts Formulas to be written to temp-stmt.<requestedTptpLanguage>
      */
     public void writeStatements(Set<String> stmts) {
 
@@ -428,14 +397,10 @@ public class LEO {
             }
             dir = sessionDir.toString();
         }
-        else {
-            dir = KBmanager.getMgr().getPref("kbDir");
-        }
+        else dir = KBmanager.getMgr().getPref("kbDir");
         String fname = "temp-stmt." + this.requestedTptpLanguage;
-
         try (FileWriter fw = new FileWriter(dir + File.separator + fname); PrintWriter pw = new PrintWriter(fw)) {
-            for (String s : stmts)
-                pw.println(s);
+            for (String s : stmts) pw.println(s);
         }
         catch (Exception e) {
             System.err.println("Error in Leo.writeStatements(): " + e.getMessage());
@@ -444,18 +409,19 @@ public class LEO {
         }
     }
 
-    /** ***************************************************************
-     * Read in two files and write their contents to a new file
+    /*****************************************************************
+     * Read in two files and write their contents to a new file.
+     * @param f1 file to concat
+     * @param f2 file to concat
+     * @param fout output of concat of f1 + f2
      */
     public void catFiles(String f1, String f2, String fout) throws IOException {
 
-        System.out.println("concatFiles(): " + f1 + " and " + f2 + " to " + fout);
+        if (debug) System.out.println("concatFiles(): " + f1 + " and " + f2 + " to " + fout);
         File f1file = new File(f1);
         File f2file = new File(f2);
-        if (!f1file.exists())
-            System.err.println("ERROR in concatFiles(): " + f1 + " does not exist");
-        if (!f2file.exists())
-            System.err.println("ERROR in concatFiles(): " + f2 + " does not exist");
+        if (!f1file.exists()) System.err.println("ERROR in concatFiles(): " + f1 + " does not exist");
+        if (!f2file.exists()) System.err.println("ERROR in concatFiles(): " + f2 + " does not exist");
         try (PrintWriter pw = new PrintWriter(fout);
             BufferedReader br = new BufferedReader(new FileReader(f1))) {
             String line = br.readLine();
@@ -473,56 +439,43 @@ public class LEO {
         }
     }
 
-    /** *************************************************************
+    /***************************************************************
      * Get user assertions with optional session isolation.
-     *
      * @param kb The knowledge base
      * @param sessionId Optional HTTP session ID for session-specific UA files.
      *                  If null or empty, uses shared UA files.
      * @return List of user assertion THF formulas
      */
     public List<String> getUserAssertions(KB kb) {
-        // thread lock safe
+
         return kb.withUserAssertionLock(() -> {
-            String userAssertionTPTP = this.kb.name + KB._userAssertionsTHF;
             File dir;
-            if (this.sessionId != null && !this.sessionId.isEmpty()) {
-                dir = SessionTPTPManager.getSessionDir(this.sessionId).toFile();
-            }
-            else {
-                dir = new File(KBmanager.getMgr().getPref("kbDir"));
-            }
-            String fname = dir + File.separator + userAssertionTPTP;
+            if (this.sessionId != null && !this.sessionId.isEmpty()) dir = SessionTPTPManager.getSessionDir(this.sessionId).toFile();
+            else dir = new File(KBmanager.getMgr().getPref("kbDir"));
+            String fname = dir + File.separator + this.kb.name + KB._userAssertionsTHF;
             File ufile = new File(fname);
-            if (ufile.exists())
-                return FileUtil.readLines(fname, false);
-            else
-                return new ArrayList<>();
+            if (ufile.exists()) return FileUtil.readLines(fname, false);
+            else return new ArrayList<>();
         });
     }
 
-    /** *************************************************************
+    /***************************************************************
      * Backward-compatible overload — delegates with null sessionId.
      * Session detection falls back to path extraction from kbFile.
+     * @param kbFile Run inference on this file
+     * @param stmts Query for inference
      */
-    public void run(File kbFile, Set<String> stmts) throws Exception {
-        run(kbFile, stmts, false);
-    }
+    public void run(File kbFile, Set<String> stmts) throws Exception {run(kbFile, stmts, false);}
 
-    /** *************************************************************
-     * Creates a running instance of LEO-III adding a set of statements
-     * in THF language to a file and then calling LEO.
+    /***************************************************************
+     * Creates a running instance of LEO-III adding a set of statements in THF language to a file and then calling LEO.
      * Note that any query must be given as a "conjecture"
-     *
-     * @param stmts should be the query but the list gets expanded here with
-     *              any other prior user assertions
-     * @param sessionId explicit HTTP session ID for temp file isolation;
-     *                  if null, falls back to extracting sessionId from kbFile path
+     * @param stmts should be the query but the list gets expanded here with any other prior user assertions
+     * @param useSession if true use user inference, otherwise falls back to extracting sessionId from kbFile path
      */
     public void run(File kbFile, Set<String> stmts, boolean useSession) throws Exception {
 
-        System.out.println("Leo.run(): query : " + stmts);
-        // Use explicit sessionId if provided; otherwise try to extract from kbFile path
+        if (debug) System.out.println("Leo.run(): query : " + stmts);
         if (useSession) {
             String kbFilePath = kbFile.getAbsolutePath();
             if (kbFilePath.contains(File.separator + "sessions" + File.separator)) {
@@ -530,36 +483,24 @@ public class LEO {
                 if (parts.length > 1) {
                     String remainder = parts[1];
                     int nextSep = remainder.indexOf(File.separator);
-                    if (nextSep > 0) {
-                        this.sessionId = remainder.substring(0, nextSep);
-                    }
+                    if (nextSep > 0) this.sessionId = remainder.substring(0, nextSep);
                 }
             }
         }
-        if (useSession) {
-            System.out.println("INFO Leo.run(): using session dir for temp files, sessionId=" + sessionId);
-        }
-        // Use session dir for temp files when session-specific, otherwise shared kbDir
+        if (useSession) System.out.println("INFO Leo.run(): using session dir for temp files, sessionId=" + sessionId);
         String dir;
-        if (useSession) {
-            dir = SessionTPTPManager.getSessionDir(sessionId).toString() + File.separator;
-        }
-        else {
-            dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
-        }
+        if (useSession) dir = SessionTPTPManager.getSessionDir(sessionId).toString() + File.separator;
+        else dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
         String outfile = dir + "temp-comb." + this.requestedTptpLanguage;
         String stmtFile = dir + "temp-stmt." + this.requestedTptpLanguage;
         File fout = new File(outfile);
-        if (fout.exists())
-            fout.delete();
+        if (fout.exists()) fout.delete();
         File fstmt = new File(stmtFile);
-        if (fstmt.exists())
-            fstmt.delete();
+        if (fstmt.exists()) fstmt.delete();
         List<String> userAsserts = getUserAssertions(this.kb);
-        if (userAsserts != null && stmts != null)
-            stmts.addAll(userAsserts);
+        if (userAsserts != null && stmts != null) stmts.addAll(userAsserts);
         else {
-            System.out.println("Error in Leo.run(): null query or user assertions set");
+            if (debug) System.out.println("Error in Leo.run(): null query or user assertions set");
             return;
         }
         writeStatements(stmts);
@@ -572,15 +513,11 @@ public class LEO {
      * Submits a query to the LEO inference engine. Returns an XML formatted String that
      * contains the response of the inference engine. It should be in the form
      * "<queryResponse>...</queryResponse>".
-     *
      * suoKifFormula The String representation of the SUO-KIF query.
-     *  timeout       The number of seconds after which the underlying inference
-     *                      engine should give up. (Time taken by axiom selection doesn't
-     *                      count.)
-     *  maxAnswers    The maximum number of answers (binding sets) the inference
-     *                      engine should return.
+     * @param timeout       Seconds after which LEO should give up.
+     * @param maxAnswers    Max number of answers (binding sets) the inference engine should return.
      * @return A String indicating the status of the ask operation.
-
+     * 
     public String askLEOOld(String suoKifFormula, int timeout, int maxAnswers, String flag) {
 
         String result = "";
@@ -593,7 +530,6 @@ public class LEO {
             File LeoExecutableFile = new File(LeoExecutable);
             File LeoInputFile = new File(LeoInput);
             FileWriter LeoInputFileW = new FileWriter(LeoInput);
-
             List<Formula> selectedQuery = new ArrayList<Formula>();
             Formula newQ = new Formula();
             newQ.read(suoKifFormula);
@@ -619,7 +555,6 @@ public class LEO {
                 File file = new File(dir, (this.name + _userAssertionsString));
                 String filename = file.getCanonicalPath();
                 BufferedReader userAssertedInput = new BufferedReader(new FileReader(filename));
-
                 try {
                     String line = null;
                     /
@@ -641,7 +576,6 @@ public class LEO {
             }
             List<Formula> selectedFormulas = new ArrayList();
             Formula newF = new Formula();
-
             Iterator<String> it = selFs.iterator();
             while (it.hasNext()) {
                 String entry = it.next();
@@ -654,17 +588,14 @@ public class LEO {
             LeoProblem = thf.KIF2THF(selectedFormulas, selectedQuery, this);
             LeoInputFileW.write(LeoProblem);
             LeoInputFileW.close();
-
             String command = LeoExecutableFile.getCanonicalPath() + " -po 1 -t " + timeout + Formula.SPACE
                     + LeoInputFile.getCanonicalPath();
-
             Process leo = Runtime.getRuntime().exec(command);
             BufferedReader reader = new BufferedReader(new InputStreamReader(leo.getInputStream()));
             while ((responseLine = reader.readLine()) != null)
                 LeoOutput += responseLine + "\n";
             reader.close();
             System.out.println(LeoOutput);
-
             if (LeoOutput.contains("SZS status Theorem")) {
                 result = "Answer 1. yes" + "<br> <br>" + LeoProblem.replaceAll("\\n", "<br>") + "<br> <br>"
                         + LeoOutput.replaceAll("\\n", "<br>");
@@ -681,18 +612,18 @@ public class LEO {
         return result;
     }
 
-    /** *************************************************************
+    /***************************************************************
+     * Return the output of the process
      */
     @Override
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
-        for (String s : output)
-            sb.append(s).append("\n");
+        for (String s : output) sb.append(s).append("\n");
         return sb.toString();
     }
 
-    /** *************************************************************
+    /***************************************************************
      */
     public static void main (String[] args) throws Exception {
 
@@ -719,8 +650,7 @@ public class LEO {
         LEO leo = new LEO(kb);
         leo.run(kbFile, query);
         System.out.println("----------------\nLeo output\n");
-        for (String l : leo.output)
-            System.out.println(l);
+        for (String l : leo.output) System.out.println(l);
         String queryStr = "(subclass ?X ?Y)";
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         tpp.parseProofOutput(leo.output,queryStr,kb,leo.qlist);
@@ -730,7 +660,6 @@ public class LEO {
             System.out.println(f.format("","  ","\n"));
         }
         System.out.println("Leo.main(): bindings: " + tpp.bindings);
-        //System.out.println("Leo.main(): proof: " + tpp.proof);
         System.out.println("-----------------\n");
         System.out.println("\n");
     }
