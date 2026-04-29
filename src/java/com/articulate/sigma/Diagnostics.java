@@ -1322,21 +1322,20 @@ public class Diagnostics {
                 //System.out.println(" processedQueries = " + processedQueries);
 
                 System.out.println("INFO in Diagnostics.kbConsistencyCheck(): size = " + processedQueries.size());
-                EProver eprover = new EProver();
+                EProver eprover = new EProver(kb, "tptp", timeout, maxAnswers);
                 for (Formula f : processedQueries) {
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.getFormula());
                     processedQuery = f.makeQuantifiersExplicit(false);
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
-                    eprover.askEProver(kb, processedQuery, "tptp", timeout, maxAnswers);
+                    eprover.askEProver(processedQuery);
                     proof = eprover.toString() + " ";
                     a = new StringBuilder();
                     a.append(reportAnswer(kb,proof,query,processedQuery,"Redundancy"));
                     //  if (answer.length() != 0) return answer;
                     answer.append(a);
-
                     negatedQuery = new StringBuilder();
                     negatedQuery.append(Formula.LP).append(Formula.NOT).append(Formula.SPACE).append(processedQuery).append(Formula.RP);
-                    eprover.askEProver(kb, negatedQuery.toString(), "tptp", timeout, maxAnswers);
+                    eprover.askEProver(negatedQuery.toString());
                     proof = eprover.toString() + " ";
                     a.append(reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency"));
                     if (a.length() != 0) {

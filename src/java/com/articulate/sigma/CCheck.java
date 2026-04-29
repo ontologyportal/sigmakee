@@ -134,8 +134,8 @@ public class CCheck implements Runnable {
         try {
             switch (chosenEngine) {
                 case "EProver":
-                    EProver eprover = new EProver();
-                    eprover.askEProver(kb, "(instance instance BinaryPredicate)", "tptp", 10, 1);
+                    EProver eprover = new EProver(kb, "tptp", 10, 1);
+                    eprover.askEProver("(instance instance BinaryPredicate)");
                     result = eprover.toString();
                     inferenceEngine = "EProver";
                     return true;
@@ -410,8 +410,8 @@ public class CCheck implements Runnable {
         try {
             switch (inferenceEngine) {
                 case "EProver":
-                    EProver eprover = new EProver();
-                    eprover.askEProver(kb, query, "tptp", timeOut, 1);
+                    EProver eprover = new EProver(kb, "tptp", timeOut, 1);
+                    eprover.askEProver(query);
                     result = eprover.toString();
                     break;
                 case "SInE":

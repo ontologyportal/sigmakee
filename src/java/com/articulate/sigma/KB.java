@@ -1787,9 +1787,9 @@ public class KB implements Serializable {
                             switch (KBmanager.getMgr().prover) {
                                 case EPROVER:
                                     try {
-                                        EProver eprover = new EProver();                                    
+                                        EProver eprover = new EProver(this, "tptp", 30, 1);                                    
                                         if (debug) System.out.println("KB.tell: using eprover: " + eprover);
-                                        eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover, parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                                        eprover.assertFormula(tptpfile.getCanonicalPath(), parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                                         EProver.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
                                         result += " and inference";
                                         break;
@@ -3561,8 +3561,8 @@ public class KB implements Serializable {
 
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
-            EProver ep = new EProver();
-            ep.askEProver(this, args[1], "tptp", timeout, 1);
+            EProver ep = new EProver(this, "tptp", timeout, 1);
+            ep.askEProver(args[1]);
             System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(ep.output));
             tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(ep.output, args[1], this, ep.quantifierList);
@@ -3968,8 +3968,8 @@ public class KB implements Serializable {
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
                         
-                        EProver eprover = new EProver();
-                        eprover.askEProver(kb, argMap.get("ask").get(0), "tptp", timeout, 1);
+                        EProver eprover = new EProver(kb, "tptp", timeout, 1);
+                        eprover.askEProver(argMap.get("ask").get(0));
                         System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
                         tpp = new TPTP3ProofProcessor();
                         tpp.parseProofOutput(eprover.output, argMap.get("ask").get(0), kb, eprover.quantifierList);

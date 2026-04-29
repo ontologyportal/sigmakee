@@ -202,8 +202,8 @@ public class InferenceTestSuite {
                         itd.proof = vampire.output;
                         break;
                     case EPROVER:
-                        com.articulate.sigma.tp.EProver eprover = new com.articulate.sigma.tp.EProver();
-                        eprover.askEProver(kb, q, "tptp", itd.timeout, maxAnswers);
+                        com.articulate.sigma.tp.EProver eprover = new com.articulate.sigma.tp.EProver(kb, "tptp", itd.timeout, maxAnswers);
+                        eprover.askEProver(q);
                         tpp.parseProofOutput(eprover.output, q, kb, eprover.quantifierList);
                         itd.proof = eprover.output;
                         break;
@@ -763,8 +763,8 @@ public class InferenceTestSuite {
                     if (overrideTimeout)
                         actualTimeout = defaultTimeout;
                     if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
-                        com.articulate.sigma.tp.EProver eprover = new  com.articulate.sigma.tp.EProver();
-                        eprover.askEProver(kb, processed.getFormula(), "tptp", actualTimeout, maxAnswers);
+                        com.articulate.sigma.tp.EProver eprover = new  com.articulate.sigma.tp.EProver(kb, "tptp", actualTimeout, maxAnswers);
+                        eprover.askEProver(processed.getFormula());
                         proof = eprover.toString();
                     }
                     if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
@@ -877,7 +877,7 @@ public class InferenceTestSuite {
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         String processedStmt;
         Vampire vampire = new Vampire(kb, "tptp", "CASC", false, itd.timeout, maxAnswers);
-        com.articulate.sigma.tp.EProver eprover = new EProver();
+        com.articulate.sigma.tp.EProver eprover = new EProver(kb, "tptp", itd.timeout, maxAnswers);
         com.articulate.sigma.tp.LEO leo = new LEO(kb, "tptp", itd.timeout, maxAnswers, null);
         for (Formula f : theQueries) {
             processedStmt = f.getFormula();
@@ -900,7 +900,7 @@ public class InferenceTestSuite {
                     tpp.parseProofOutput(vampire.output, processedStmt, kb,vampire.qlist);
                     break;
                 case EPROVER:
-                    eprover.askEProver(kb, processedStmt,"tptp", itd.timeout, maxAnswers);
+                    eprover.askEProver(processedStmt);
                     System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + eprover.toString());
                     tpp.parseProofOutput(eprover.output, processedStmt, kb,eprover.quantifierList);
                     break;

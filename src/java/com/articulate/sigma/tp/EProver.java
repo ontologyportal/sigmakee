@@ -41,6 +41,7 @@ public class EProver {
     private String executablePath;
     /** Directory of the knowledge base EProver will query against */
     private String kbFilePath;
+    private KB kb;
     /**  */
     private String requestedTptpLanguage;
     /**  */
@@ -59,16 +60,6 @@ public class EProver {
     /** Container for organizing the results of the query */
     private ATPResult result;
 
-    /***************************************************************
-     * Create a running instance of EProver based on existing batch
-     * specification file with a max answer of 1.
-     *
-     * @param executable String path for the EProver executable.
-     * @throws IOException
-     */
-    public EProver() {
-        this(KBmanager.getMgr().getPref("eprover"));
-    }
 
     /***************************************************************
      * Create a running instance of EProver based on existing batch
@@ -77,92 +68,24 @@ public class EProver {
      * @param executable String path for the EProver executable.
      * @throws IOException
      */
-    public EProver(String executable) {
+    public EProver(KB kb) {
 
-        this(executable, 1);
-    }
-
-    /***************************************************************
-     * Create a running instance of EProver based on existing batch
-     * specification file.
-     *
-     * @param executable A File object denoting the platform-specific
-     * EProver executable.
-     * @param maxAnswers - Limit the answers up to maxAnswers only
-     * @throws IOException
-     */
-    public EProver(String executable, int maxAnswers) {
-
-        // kbFilePath = KBmanager.getMgr().getPref("kbDir");
-        // String eproverPath = executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
-        // // String batchPath = kbdir + File.separator + "EBatchConfig.txt";
-        // // List<String> commands = new ArrayList<>(Arrays.asList(
-        // //         executable, batchPath, eproverPath, "-v --interactive"));
-        // List<String> commands = Arrays.asList(
-        //     executable,
-        //     "--cpu-limit=" + 30,
-        //     problemFile.toString()
-        // );
-        // _builder = new ProcessBuilder(commands);
-        // _builder.redirectErrorStream(false);
-        // _eprover = _builder.start();
-        // if (!_eprover.isAlive()) {
-        //     String stderr = new String(_eprover.getErrorStream().readAllBytes());
-        //     throw new IOException("E exited immediately with code " + _eprover.exitValue() + ": " + stderr);
-        // }
-        // System.out.println("EProver(): new process: " + _eprover);
-        
-        _builder = null;
-        _eprover = null;
-        _reader = null;
-        _writer = null;
-    }
-
-    /***************************************************************
-     * Create a new batch specification file, and create a new running
-     * instance of EProver.
-     *
-     * @param executable A File object denoting the platform-specific
-     * EProver executable.
-     * @param kbFile A File object denoting the initial knowledge base
-     * to be loaded by the EProver executable.
-     * @throws IOException should not normally be thrown unless either
-     *         EProver executable or database file name are incorrect
-     *
-     * e_ltb_runner --interactive LTBSampleInput-AP.txt
-     */
-    public EProver(String executable, String kbFile) throws IOException {
-
-        // kbdir = KBmanager.getMgr().getPref("kbDir");
-        // addBatchConfig(kbFile, 60);
-        // if (!(new File(kbFile)).exists()) {
-        //     System.out.println("EProver(): no such file: " + kbFile + ". Creating it.");
-        //     KBmanager.getMgr().getKB(kbFile);
-        // }
-        // String eproverPath = executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
-        // String batchPath = kbdir + File.separator + "EBatchConfig.txt";
-        // // List<String> commands = new ArrayList<>(Arrays.asList(
-        // //         executable, batchPath,eproverPath, "-i"));
-            
-        _builder = null;
-        _eprover = null;
-        _reader = null;
-        _writer = null;
+        this(kb, "tptp", 30, 1);
     }
 
     /***************************************************************
      * Create a new EProver process with a new batch config file
      */
-    public EProver(String executable, KB kb, String requestedTptpLanguage, int timeout, int maxAnswers) {
+    public EProver(KB kb, String requestedTptpLanguage, int timeout, int maxAnswers) {
         
-        this.executablePath = executable;
-        this.kbFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + kb.name + ("tff".equals(requestedTptpLanguage) ? ".tptp" : ".tff");
+        this.kb = kb;
         this.requestedTptpLanguage = requestedTptpLanguage;
-        this.tempProblemFilePath = kbFilePath + File.separator + "temp-eprover-problem.p";
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
+        this.executablePath = KBmanager.getMgr().getPref("eprover");
+        this.kbFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + kb.name + ("tff".equals(requestedTptpLanguage) ? ".tptp" : ".tff");
+        this.tempProblemFilePath = kbFilePath + File.separator + "temp-eprover-problem.p";
         this.commands = Arrays.asList(this.executablePath, "--cpu-limit=" + timeout);
-
         _builder = null;
         _eprover = null;
         _reader = null;
@@ -179,14 +102,14 @@ public class EProver {
      * @param maxAnswers    The maximum number of answers (binding sets) the inference engine should return.
      * @return an instance of the EProver with results
      */
-    public void askEProver(KB kb, String suoKifFormulas, String requestedTptpLang, int timeout, int maxAnswers) {
+    public void askEProver(String suoKifFormulas) {
 
         if (StringUtil.isNonEmptyString(suoKifFormulas)) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = fp.preProcess(new Formula(suoKifFormulas), true, kb);
+            Set<Formula> processedStmts = fp.preProcess(new Formula(suoKifFormulas), true, this.kb);
             if (!processedStmts.isEmpty() && this != null) {
                 String strQuery = processedStmts.iterator().next().getFormula();
-                this.submitQuery(strQuery, kb);
+                this.submitQuery(strQuery);
             }
         } else {
             System.out.println("EProver.askEProver(): suoKifFormulas empty!");
@@ -202,25 +125,23 @@ public class EProver {
      * @return A list of answers from inference engine; If no proof or answer is
      * found, return null;
      */
-    public List<String> askNoProof(KB kb, String suoKifFormula, int timeout, int maxAnswers) {
+    public List<String> askNoProof(String suoKifFormula) {
 
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = fp.preProcess(query, true, kb);
+            Set<Formula> processedStmts = fp.preProcess(query, true, this.kb);
             if (!processedStmts.isEmpty()) {
-                // set timeout in EBatchConfig file and reload eprover
-                EProver.addBatchConfig(null, timeout);
+                EProver.addBatchConfig(null, this.timeout);
                 String strQuery = processedStmts.iterator().next().getFormula();
-                this.submitQuery(strQuery, kb);
+                this.submitQuery(strQuery);
                 if (this.output == null || this.output.isEmpty())
                     System.out.println("No response from EProver!");
                 else
                     System.out.println("Get response from EProver, start for parsing ...");
-                // System.out.println("Results returned from E = \n" + EResult);
                 TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                return tpp.parseAnswerTuples(this.output, strQuery, kb, this.quantifierList);
+                return tpp.parseAnswerTuples(this.output, strQuery, this.kb, this.quantifierList);
             }
         }
         return null;
@@ -242,7 +163,6 @@ public class EProver {
     public SZSStatus getSzsStatus() {
         return result != null ? result.getSzsStatus() : SZSStatus.NOT_RUN;
     }
-
 
     /***************************************************************
      * Check if there was an error during execution.
@@ -270,10 +190,8 @@ public class EProver {
 
         String kbdir = KBmanager.getMgr().getPref("kbDir");
         File initFile = new File(kbdir, "EBatchConfig.txt");
-
         Set<String> ebatchfiles = new HashSet<>();
-        if (inputFilename != null && !inputFilename.isEmpty())
-            ebatchfiles.add(inputFilename);
+        if (inputFilename != null && !inputFilename.isEmpty()) ebatchfiles.add(inputFilename);
         // Collect existing TPTP files
         if (initFile.exists()) {
             try (InputStream fis = new FileInputStream(initFile);
@@ -371,11 +289,10 @@ public class EProver {
      * TODO: This function might not be necessary if we find a way to
      * directly add assertion into opened inference engine (e_ltb_runner)
      */
-    public boolean assertFormula(String userAssertionTPTP, KB kb, EProver eprover,
-                                 List<Formula> parsedFormulas, boolean tptp) {
+    public boolean assertFormula(String userAssertionTPTP, List<Formula> parsedFormulas, boolean tptp) {
 
         System.out.println("EProver.assertFormula(2): process: " + _eprover);
-        boolean allAdded = (eprover != null);
+        boolean allAdded = (this != null);
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
             Set<Formula> processedFormulas = new HashSet<>();
             FormulaPreprocessor fp;
@@ -384,23 +301,22 @@ public class EProver {
             for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
                 fp = new FormulaPreprocessor();
-                processedFormulas.addAll(fp.preProcess(parsedF,false, kb));
+                processedFormulas.addAll(fp.preProcess(parsedF,false, this.kb));
                 if (processedFormulas.isEmpty())
                     allAdded = false;
                 else {   // 2. Translate to TPTP.
                     tptpFormulas = new HashSet<>();
                     if (tptp) {
                         for (Formula p : processedFormulas)
-                            if (!p.isHigherOrder(kb))
+                            if (!p.isHigherOrder(this.kb))
                                 tptpFormulas.add(SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(),false));
                     }
-                    // 3. Write to new tptp file
-                    if (eprover != null) {
+                    if (this != null) { // 3. Write to new tptp file
                         int axiomIndex = 0;
                         for (String theTPTPFormula : tptpFormulas) {
-                            pw.print("fof(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
+                            pw.print("fof(kb_" + this.kb.name + "_UserAssertion" + "_" + axiomIndex++);
                             pw.println(",axiom,(" + theTPTPFormula + ")).");
-                            tptpstring = "fof(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
+                            tptpstring = "fof(kb_" + this.kb.name + "_UserAssertion" + "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
                             System.out.println("INFO in EProver.assertFormula(2): TPTP for user assertion = " + tptpstring);
                         }
                         pw.flush();
@@ -421,7 +337,7 @@ public class EProver {
      * @param kb current knowledge base
      * @return answer to the query
      */
-    public String submitQuery(String formula, KB kb) {
+    public String submitQuery(String formula) {
 
         long startTime = System.currentTimeMillis();
         result = new ATPResult.Builder()
@@ -434,21 +350,16 @@ public class EProver {
         List<String> stderrLines = new ArrayList<>();
         String resultStr = "";
         Path tempProblemFile = null;
-
         try {
             this.quantifierList = SUMOformulaToTPTPformula.getQlist();
             tempProblemFile = Files.createTempFile(this.tempProblemFilePath, ".p");
             String problem = "include('" + kbFilePath + "').\n" + "fof(conj1,conjecture, " + SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,true) + ")." + "\n";
             Files.writeString(tempProblemFile, problem);
-
             this.commands.add(tempProblemFile.toString());
-
             System.out.println("EProver.submitQuery(): commands\n" + this.commands);
-
             ProcessBuilder processBuilder = new ProcessBuilder(this.commands);
             processBuilder.redirectErrorStream(false);
             Process proc = processBuilder.start();
-
             Thread stderrReader = new Thread(() -> {
                 try (BufferedReader r = new BufferedReader(
                         new InputStreamReader(proc.getErrorStream()))) {
@@ -537,7 +448,6 @@ public class EProver {
 
         long startTime = System.currentTimeMillis();
         long timeoutMs = timeout * 1000L;
-
         // Initialize result structure
         result = new ATPResult.Builder()
                 .engineName("EProver")
@@ -546,7 +456,6 @@ public class EProver {
                 .inputSource(kbFile != null ? kbFile.getName() : "unknown")
                 .timeoutMs(timeoutMs)
                 .build();
-
         String eprover = KBmanager.getMgr().getPref("eprover");
         if (StringUtil.emptyString(eprover)) {
             String msg = "Error in Eprover.runCustom(): no executable string in preferences";
@@ -563,7 +472,6 @@ public class EProver {
             result.setPrimaryError(msg);
             throw new ExecutableNotFoundException("EProver", eprover, "eprover");
         }
-
         String[] cmds = createCustomCommandList(executable, timeout, kbFile, commands);
         System.out.println("EProver.runCustom(): Custom command list:\n" + Arrays.toString(cmds));
         ArrayList<String> moreCommands = new ArrayList<>();
@@ -572,16 +480,12 @@ public class EProver {
         cmds = moreCommands.toArray(cmds);
         result.setCommandLine(cmds);
         System.out.println("Eprover.runCustom(): Initializing Eprover with:\n" + Arrays.toString(cmds));
-
         ProcessBuilder _builder = new ProcessBuilder(cmds);
         _builder.redirectErrorStream(false);  // Keep stderr separate
-
         Process _eprover = _builder.start();
-
         // Read stdout and stderr in parallel
         List<String> stdoutLines = new ArrayList<>();
         List<String> stderrLines = new ArrayList<>();
-
         Thread stderrReader = new Thread(() -> {
             try (BufferedReader r = new BufferedReader(new InputStreamReader(_eprover.getErrorStream()))) {
                 String line;
@@ -593,7 +497,6 @@ public class EProver {
             }
         });
         stderrReader.start();
-
         try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()))) {
             String line;
             while ((line = _reader.readLine()) != null) {
@@ -601,24 +504,19 @@ public class EProver {
                 output.add(line);  // Maintain backward compatibility
             }
         }
-
         stderrReader.join(5000);
-
         int exitValue = _eprover.waitFor();
         long elapsed = System.currentTimeMillis() - startTime;
-
         // Populate result
         result.setStdout(stdoutLines);
         result.setStderr(stderrLines);
         result.finalize(exitValue, elapsed, elapsed >= timeoutMs);
-
         if (exitValue != 0) {
             System.err.println("Error in Eprover.runCustom(): Abnormal process termination (exit code " + exitValue + ")");
             if (!stderrLines.isEmpty()) {
                 System.err.println("Stderr: " + stderrLines);
             }
             System.err.println(output);
-
             // Throw appropriate exception
             if (result.isTimedOut() || result.getSzsStatus() == SZSStatus.TIMEOUT) {
                 throw new ProverTimeoutException("EProver", timeoutMs, elapsed, true, stdoutLines, stderrLines, result);
@@ -714,8 +612,8 @@ public class EProver {
                 int timeout = Integer.parseInt(argMap.get("ask").get(2));
                 int maxAnswers = Integer.parseInt(argMap.get("ask").get(3));
                 try {
-                    EProver eprover = new EProver();
-                    eprover.askEProver(kb, suoKifFormula, requestedTptpLang, timeout, maxAnswers);
+                    EProver eprover = new EProver(kb, requestedTptpLang, timeout, maxAnswers);
+                    eprover.askEProver(suoKifFormula);
                     System.out.println("EProver.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
                     TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
                     tpp.parseProofOutput(eprover.output, argMap.get("ask").get(0), kb, eprover.quantifierList);
