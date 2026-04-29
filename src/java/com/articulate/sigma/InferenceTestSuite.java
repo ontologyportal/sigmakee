@@ -175,8 +175,7 @@ public class InferenceTestSuite {
 
         try {
             // Step 2: reload KB before running queries
-            KBmanager.getMgr().loadKBforInference(kb);
-
+            // (Now done in vampire constructor)
             // Step 3: run the queries as before
             int maxAnswers = Math.max(1, itd.expectedAnswers.size());
             Formula theQuery = new Formula();
@@ -191,15 +190,16 @@ public class InferenceTestSuite {
                     System.out.println("Skipping higher-order query not in THF: " + q);
                     continue;
                 }
-
                 switch (KBmanager.getMgr().prover) {
                     case VAMPIRE:
-                        com.articulate.sigma.tp.Vampire vampire = new Vampire();
-
+                        com.articulate.sigma.tp.Vampire vampire;
                         if (modusPonens) {
-                            vampire = kb.askVampireModensPonens(q, itd.timeout, maxAnswers);
-                        }else{
-                            vampire = kb.askVampire(vampire, q, itd.timeout, maxAnswers);
+                            vampire = new Vampire(kb, "tptp", "CASC", true, itd.timeout, maxAnswers);
+                            vampire.askVampireModensPonens(q);
+                        }
+                        else {
+                            vampire = new Vampire(kb, "tptp", "CASC", false, itd.timeout, maxAnswers);
+                            vampire.askVampire(q);
                         }
                         System.out.println("vampire-output");
                         System.out.println(vampire.output);
@@ -778,8 +778,9 @@ public class InferenceTestSuite {
                         proof = eprover.toString();
                     }
                     if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
-                        Vampire vampire = new Vampire();
-                        proof = kb.askVampire(vampire, processed.getFormula(), actualTimeout, maxAnswers) + " ";
+                        Vampire vampire = new Vampire(inputKB, "tptp", "CASC", false, actualTimeout, maxAnswers);
+                        vampire.askVampire(processed.getFormula());
+                        proof = vampire.toString() + " ";
                     }
                     if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
                         LEO leo = new LEO();
@@ -877,7 +878,6 @@ public class InferenceTestSuite {
         compareFiles(itd);
         for (String formula : itd.statements)
              kb.tell(formula);
-        KBmanager.getMgr().loadKBforInference(kb);
         System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): expected answers: " + itd.expectedAnswers);
         int maxAnswers = itd.expectedAnswers.size();
         Formula theQuery = new Formula();
@@ -886,7 +886,7 @@ public class InferenceTestSuite {
         Set<Formula> theQueries = fp.preProcess(theQuery,true,kb);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         String processedStmt;
-        Vampire vampire = new Vampire();
+        Vampire vampire = new Vampire(kb, "tptp", "CASC", false, itd.timeout, maxAnswers);
         com.articulate.sigma.tp.EProver eprover = new EProver();
         com.articulate.sigma.tp.LEO leo = new LEO();
         for (Formula f : theQueries) {
@@ -905,7 +905,7 @@ public class InferenceTestSuite {
             }
             else switch (KBmanager.getMgr().prover) {
                 case VAMPIRE:
-                    vampire = kb.askVampire(vampire, processedStmt, itd.timeout, maxAnswers);
+                    vampire.askVampire(processedStmt);
                     System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + vampire.toString());
                     tpp.parseProofOutput(vampire.output, processedStmt, kb,vampire.qlist);
                     break;

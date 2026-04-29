@@ -650,19 +650,6 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     */
-    public void loadKBforInference(KB kb) {
-        
-        if (debug) System.out.println("KBmanager.loadKBforInference(): KB: " + kb.name);
-        if (KBmanager.getMgr().getPref("TPTP").equals("yes")) {
-            if (KBmanager.getMgr().prover.equals(Prover.VAMPIRE)) {
-                if (debug) System.out.println("KBmanager.loadKBforInference(): loading Vampire");
-                kb.loadVampire();
-            }
-        }
-    }
-
-    /** ***************************************************************
      * Loads the constituents of the KB from ~/.sigmakee/config.xml
      *
      * @param kbName the name of the KB
@@ -975,8 +962,6 @@ public class KBmanager implements Serializable {
                 initialized = true;
                 // Start background TPTP generation for all needed formats (FOF, TFF, THF)
                 TPTPGenerationManager.startBackgroundGeneration();
-                for (KB kb : kbs.values())  // transform to TPTP only once all other initialization complete
-                    loadKBforInference(kb);
             }
         }
         catch (Exception ex) {

@@ -102,7 +102,8 @@ public class TPTP3Test extends IntegrationTestBase {
                 TPTPGenerationManager.waitForFOF(600);
             }
             String query = "(subclass ?X Entity)";
-            Vampire vampire = new Vampire().askVampire(kb, query, 30, 1, "AVATAR");
+            Vampire vampire = new Vampire();
+            vampire.askVampire(kb, query, 30, 1, "AVATAR");
             vampire.mode = Vampire.ModeType.AVATAR;
             vampire.askQuestion = true;
 
@@ -183,7 +184,8 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             KBmanager.getMgr().initializeOnce();
             String query = "(subclass ?X Entity)";
-            Vampire vampire = new Vampire().askVampire(kb, query, 30, 1,"CASC");
+            Vampire vampire = new Vampire();
+            vampire.askVampire(kb, query, 30, 1,"CASC");
             vampire.mode = Vampire.ModeType.CASC;
             vampire.askQuestion = false;
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
@@ -214,7 +216,8 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             KBmanager.getMgr().initializeOnce();
             String query = "(subclass ?X ?Y)";
-            Vampire vampire = new Vampire().askVampire(kb, query,30,1,"CASC");
+            Vampire vampire = new Vampire();
+            vampire.askVampire(kb, query,30,1,"CASC");
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             vampire.mode = Vampire.ModeType.CASC;
             vampire.askQuestion = false;

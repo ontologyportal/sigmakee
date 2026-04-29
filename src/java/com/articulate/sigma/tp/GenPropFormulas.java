@@ -35,7 +35,7 @@ public class GenPropFormulas {
     public enum SZSonto {CONTRA, SAT, OTHER};  // theorem prover status
 
     private Random random = new Random();
-    public Vampire vamp = new Vampire();
+    public Vampire vamp = new Vampire(null);
     public ECNF ecnf = new ECNF();
     public TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 
@@ -83,7 +83,7 @@ public class GenPropFormulas {
     public void init() {
 
         random = new Random();
-        vamp = new Vampire();
+        vamp = new Vampire(null);
         ecnf = new ECNF();
         tpp = new TPTP3ProofProcessor();
 
@@ -230,7 +230,8 @@ public class GenPropFormulas {
             KBmanager.getMgr().setPref("eprover","/home/apease/workspace/eprover/PROVER/eprover");
 
         boolean sat = false;
-        vamp.run(f,5);
+        vamp.maxAnswers = 5;
+        vamp.run(f);
         boolean proof = false;
         for (String s : vamp.output) {
             if (s.contains("Refutation found"))
