@@ -144,8 +144,8 @@ public class CCheck implements Runnable {
                     inferenceEngine = "SInE";
                     return true;
                 case "LeoLocal":
-                    LEO leo = new LEO();
-                    leo.askLeo(kb, "(instance instance BinaryPredicate)", 10, 1);
+                    LEO leo = new LEO(kb, "tptp", 10, 1, null);
+                    leo.askLeo("(instance instance BinaryPredicate)");
                     inferenceEngine = "LeoLocal";
                     return true;
                 default:
@@ -418,8 +418,8 @@ public class CCheck implements Runnable {
                     result = empty.askSInE(query, timeOut, 1);
                     break;
                 case "LeoLocal":
-                    LEO leo = new LEO();
-                    leo.askLeo(empty, query, timeOut, 1);
+                    LEO leo = new LEO(empty, "tptp", timeOut, 1, null);
+                    leo.askLeo(query);
                     break;
             //result = InterfaceTPTP.queryTPTP(query, timeOut, 1, lineHtml,
             //        ieSettings.get("systemChosen"),

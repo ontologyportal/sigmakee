@@ -1808,8 +1808,8 @@ public class KB implements Serializable {
                                     break;
                                 case LEO:
                                     if (debug) System.out.println("KB.tell: using leo");
-                                    LEO leo = new LEO();
-                                    leo.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                                    LEO leo = new LEO(this, "tptp", 10, 1, null);
+                                    leo.assertFormula(tptpfile.getCanonicalPath(),parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                                     // nothing much to do since LEO has to load it all at query time
                                     // just create a single file
                                     result += " and inference";
@@ -3982,8 +3982,8 @@ public class KB implements Serializable {
                         tpp.parseProofOutput(vamp.output, argMap.get("ask").get(0), kb, vamp.qlist);
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
-                        LEO leo = new LEO();
-                        leo.askLeo(kb, argMap.get("ask").get(0), timeout, 1);
+                        LEO leo = new LEO(kb, "tptp", timeout, 1, null);
+                        leo.askLeo(argMap.get("ask").get(0));
                         System.out.println("KB.main(): completed LEO query with result: " + StringUtil.arrayListToCRLFString(leo.output));
                         tpp = new TPTP3ProofProcessor();
                         tpp.parseProofOutput(leo.output, argMap.get("ask").get(0), kb, leo.qlist);

@@ -72,19 +72,14 @@ public class InferenceTestSuite {
     // save TPTP translations of each problem as <probName>.p
     public static boolean saveTPTP =  true;
 
-    public static Set<String> metaPred = new HashSet(
-            Arrays.asList("note", "time", "query", "answer"));
-
-
+    public static Set<String> metaPred = new HashSet(Arrays.asList("note", "time", "query", "answer"));
 
     public static class OneResult {
         public boolean pass;
         public long millis;
         public String html;
-
         public java.util.List<String> expected;
         public java.util.List<String> actual;
-
         public List<String> proofText;
     }
 
@@ -213,25 +208,21 @@ public class InferenceTestSuite {
                         itd.proof = eprover.output;
                         break;
                     case LEO:
-                        com.articulate.sigma.tp.LEO leo = new com.articulate.sigma.tp.LEO();
-                        leo.askLeo(kb, q, itd.timeout, maxAnswers);
+                        com.articulate.sigma.tp.LEO leo = new com.articulate.sigma.tp.LEO(kb, "tptp", itd.timeout, maxAnswers, null);
+                        leo.askLeo(q);
                         tpp.parseProofOutput(leo.output, q, kb, leo.qlist);
                         itd.proof = leo.output;
                         break;
                     default:
                         System.err.println("Unknown prover: " + KBmanager.getMgr().prover);
                 }
-
                 if (tpp.status != null && tpp.status.startsWith("Theorem") && itd.actualAnswers.isEmpty())
                     itd.actualAnswers.add("yes");
-
                 if (tpp.inconsistency) {
                     itd.inconsistent = true;
                     itd.actualAnswers = new ArrayList<>();
                 }
-
                 if (tpp.bindings != null) itd.actualAnswers.addAll(tpp.bindings);
-
                 boolean different = true;
                 if (tpp.proof != null && (tpp.status == null || !tpp.status.startsWith("Timeout"))) {
                     different = !sameAnswers(tpp, itd.expectedAnswers);
@@ -248,7 +239,6 @@ public class InferenceTestSuite {
             }
         }
         // --- end isolation block ---
-
         return itd;
     }
 
@@ -783,8 +773,8 @@ public class InferenceTestSuite {
                         proof = vampire.toString() + " ";
                     }
                     if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
-                        LEO leo = new LEO();
-                        leo.askLeo(kb, processed.getFormula(), actualTimeout, maxAnswers);
+                        LEO leo = new LEO(kb, "tptp", 30, 1, null);
+                        leo.askLeo(processed.getFormula());
                         proof = leo.toString() + " "; 
                     }
                     duration = System.currentTimeMillis() - start;
@@ -888,7 +878,7 @@ public class InferenceTestSuite {
         String processedStmt;
         Vampire vampire = new Vampire(kb, "tptp", "CASC", false, itd.timeout, maxAnswers);
         com.articulate.sigma.tp.EProver eprover = new EProver();
-        com.articulate.sigma.tp.LEO leo = new LEO();
+        com.articulate.sigma.tp.LEO leo = new LEO(kb, "tptp", itd.timeout, maxAnswers, null);
         for (Formula f : theQueries) {
             processedStmt = f.getFormula();
             if (f.isHigherOrder(kb) && !SUMOformulaToTPTPformula.getLang().equals("thf")) {
@@ -915,9 +905,9 @@ public class InferenceTestSuite {
                     tpp.parseProofOutput(eprover.output, processedStmt, kb,eprover.quantifierList);
                     break;
                 case LEO:
-                    leo.askLeo(kb, processedStmt, itd.timeout, maxAnswers);
+                    leo.askLeo(processedStmt);
                     System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + leo.toString());
-                    tpp.parseProofOutput(leo.output, processedStmt, kb,leo.qlist);
+                    tpp.parseProofOutput(leo.output, processedStmt, kb, leo.qlist);
                     break;
                 default:
                     System.err.println("Error in InferenceTestSuite.inferenceUnitTest(): no prover or unknown prover: " + KBmanager.getMgr().prover);
