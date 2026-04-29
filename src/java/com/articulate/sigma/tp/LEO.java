@@ -43,6 +43,7 @@ public class LEO {
     private String executable;
     private String requestedTptpLanguage;
     private String inferenceFileName;
+    private KB kb;
     /**  Quantifier list in order for answer extraction */
     public StringBuilder qlist = null;
     /** Output */
@@ -84,7 +85,6 @@ public class LEO {
                 File s = new File(this.inferenceFileName);
                 if (!s.exists()) {
                     kb = KBmanager.getMgr().getKB(kb.name);
-                    KBmanager.getMgr().loadKBforInference(kb);
                 }
                 Set<String> tptpquery = new HashSet<>();
                 StringBuilder combined = new StringBuilder();
@@ -168,7 +168,6 @@ public class LEO {
                         }
                     } else {
                         kb = KBmanager.getMgr().getKB(kb.name);
-                        KBmanager.getMgr().loadKBforInference(kb);
                     }
                 }
                 Set<String> tptpquery = new HashSet<>();

@@ -102,9 +102,8 @@ public class TPTP3Test extends IntegrationTestBase {
                 TPTPGenerationManager.waitForFOF(600);
             }
             String query = "(subclass ?X Entity)";
-            Vampire vampire = new Vampire();
-            vampire.askVampire(kb, query, 30, 1, "AVATAR");
-            vampire.mode = Vampire.ModeType.AVATAR;
+            Vampire vampire = new Vampire(kb, "tptp", "AVATAR", false, 30, 1);
+            vampire.askVampire(query);
             vampire.askQuestion = true;
 
             // 1) Solver-level correctness
@@ -142,9 +141,8 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             KBmanager.getMgr().initializeOnce();
             String query = "(subclass ?X Entity)";
-            Vampire vampire = new Vampire(); 
-            vampire = kb.askVampire(vampire, query,30,1);
-            vampire.mode = Vampire.ModeType.CASC;
+            Vampire vampire = new Vampire(kb, "tptp", "CASC", false, 30, 1);
+            vampire.askVampire(query);
             vampire.askQuestion = false;
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             vampire.output = TPTP3ProofProcessor.joinNreverseInputLines(vampire.output);
@@ -184,9 +182,8 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             KBmanager.getMgr().initializeOnce();
             String query = "(subclass ?X Entity)";
-            Vampire vampire = new Vampire();
-            vampire.askVampire(kb, query, 30, 1,"CASC");
-            vampire.mode = Vampire.ModeType.CASC;
+            Vampire vampire = new Vampire(kb, "tptp", "CASC", false, 30, 1);
+            vampire.askVampire(query);
             vampire.askQuestion = false;
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(vampire.output, query,kb, vampire.qlist);
@@ -216,10 +213,9 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             KBmanager.getMgr().initializeOnce();
             String query = "(subclass ?X ?Y)";
-            Vampire vampire = new Vampire();
-            vampire.askVampire(kb, query,30,1,"CASC");
+            Vampire vampire = new Vampire(kb, "tptp", "CASC", false, 30, 1);
+            vampire.askVampire(query);
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-            vampire.mode = Vampire.ModeType.CASC;
             vampire.askQuestion = false;
             tpp.parseProofOutput(vampire.output, query, kb, vampire.qlist);
             String expected = "[]";

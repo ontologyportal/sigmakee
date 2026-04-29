@@ -685,8 +685,8 @@ public class TPTPutil {
                 tpp = new TPTP3ProofProcessor();
                 if (args[0].contains("p"))
                     tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.TPTP);
-                Vampire vamp = new Vampire();
-                vamp = kb.askVampire(vamp, args[1], timeout, 1);
+                Vampire vamp = new Vampire(kb, "tptp", "CASC", false, timeout, 1);
+                vamp.askVampire(args[1]);
                 System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
                 tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);
                 ArrayList<String> out = new ArrayList<>();
@@ -697,9 +697,8 @@ public class TPTPutil {
             else if (args != null && args.length > 1 && args[0].contains("l")) {
                 try {
                     KB.force = true;
-                    kb.loadVampire();
-                    Vampire vamp = new Vampire();
-                    vamp = kb.askVampire(vamp, args[1], 30, 1);
+                    Vampire vamp = new Vampire(kb, "tptp", "CASC", false, 30, 1);
+                    vamp.askVampire(args[1]);
                     //System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
                     tpp = new TPTP3ProofProcessor();
                     tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);

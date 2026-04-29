@@ -1914,8 +1914,8 @@ public class KB implements Serializable {
      * Conservative v1: rebuild on schema changes or ground transitive facts.
      * Defaults to checking shared UA file (backward compatible).
      */
-    public boolean tqRequiresBaseRegeneration() {
-        return tqRequiresBaseRegeneration(null);
+    public boolean testQueryRequiresBaseRegeneration() {
+        return testQueryRequiresBaseRegeneration(null);
     }
 
     /** ***************************************************************
@@ -1925,7 +1925,7 @@ public class KB implements Serializable {
      * @param sessionId Optional HTTP session ID for session-specific UA files.
      *                  If null or empty, checks shared UA file.
      */
-    public boolean tqRequiresBaseRegeneration(String sessionId) {
+    public boolean testQueryRequiresBaseRegeneration(String sessionId) {
 
         File uaKif;
         if (sessionId != null && !sessionId.isEmpty()) {
