@@ -6,6 +6,8 @@ cp -R WordNetMappings $SIGMA_HOME/KBs
 cp -R development $SIGMA_HOME/KBs
 cd $ONTOLOGYPORTAL_GIT/SigmaUtils
 git pull
+cd $ONTOLOGYPORTAL_GIT/sigma-rs
+git pull
 cd $ONTOLOGYPORTAL_GIT/sigmakee
 git pull
 cd $ONTOLOGYPORTAL_GIT/TPTP-ANTLR

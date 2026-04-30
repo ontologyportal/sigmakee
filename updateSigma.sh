@@ -6,11 +6,14 @@ cp -R WordNetMappings $SIGMA_HOME/KBs
 cp -R development $SIGMA_HOME/KBs
 cd $ONTOLOGYPORTAL_GIT/SigmaUtils
 git pull
-cd $ONTOLOGYPORTAL_GIT/sigmakee
+cd $ONTOLOGYPORTAL_GIT/sigma-rs
 git pull
+cargo build --release
 cd $ONTOLOGYPORTAL_GIT/TPTP-ANTLR
 git pull
 cd $ONTOLOGYPORTAL_GIT/sigmaAntlr
+git pull
+cd $ONTOLOGYPORTAL_GIT/sigmakee
 git pull
 $CATALINA_HOME/bin/shutdown.sh
 echo "waiting 10 seconds"
