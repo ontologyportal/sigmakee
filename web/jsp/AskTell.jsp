@@ -241,11 +241,9 @@
                 <div id="spinSub" class="spin-sub">Time limit: <span id="spinLimit">30</span>s</div>
             </div>
         </div>
-
         <div class="bar-wrap">
             <div id="spinBar" class="bar-fill"></div>
         </div>
-
         <div class="spin-meta">
             <span id="spinPct">0%</span>
             <span id="spinEta">~30s remaining</span>
@@ -269,12 +267,14 @@
     <fieldset class="step">
         <legend>Step 1 - Input</legend>
         <div class="row inline">
-            <label><input type="radio" name="runSource" value="custom"
-                <%= "test".equals(session.getAttribute("runSource")) ? "" : "checked" %> >
-                Custom query</label>
-            <label><input type="radio" name="runSource" value="test"
-                <%= "test".equals(session.getAttribute("runSource")) ? "checked" : "" %> >
-                Saved test file</label>
+            <label>
+                <input type="radio" name="runSource" value="custom"<%= "test".equals(session.getAttribute("runSource")) ? "" : "checked" %> >
+                Custom query
+            </label>
+            <label>
+                <input type="radio" name="runSource" value="test" <%= "test".equals(session.getAttribute("runSource")) ? "checked" : "" %> >
+                Saved test file
+            </label>
             <span class="pill">.tq / .tptp / .tff / .thf</span>
         </div>
         <div class="row" id="lblCustom">
@@ -283,10 +283,8 @@
         </div>
         <%
             String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
-            File[] allFiles = (testDir == null) ? new File[0]
-                    : new File(testDir).listFiles((d,n) -> n.endsWith(".tq") || n.endsWith(".tptp") || n.endsWith(".tff") || n.endsWith(".thf"));
+            File[] allFiles = (testDir == null) ? new File[0] : new File(testDir).listFiles((d,n) -> n.endsWith(".tq") || n.endsWith(".tptp") || n.endsWith(".tff") || n.endsWith(".thf"));
             if (allFiles == null) allFiles = new File[0];
-
             File[] testFiles = allFiles;
             Arrays.sort(testFiles, Comparator.comparing(File::getName));
             if (selectedTest == null && testFiles.length > 0) selectedTest = testFiles[0].getName();
@@ -303,8 +301,7 @@
                         <% } %>
                     </select>
                 </label>
-                <a href="javascript:void(0)" onclick="viewSelectedTest()"
-                   style="text-decoration:underline; color:#0073e6;">
+                <a href="javascript:void(0)" onclick="viewSelectedTest()" style="text-decoration:underline; color:#0073e6;">
                     View
                 </a>
                 <span class="muted">Applies the configuration below.</span>
@@ -484,7 +481,7 @@
     <img src='pixmaps/1pixel.gif' width=1 height=1 border=0></td></tr></table><br>
 <div id="serverResults">
 <%
-    // ===== Server-side execution for single "Run" button =====
+    // ================ Ask ======================================================================================================== Server-side execution for single "Run" button =====
     if ("Run".equalsIgnoreCase(req) && !syntaxError) {
         // Check if required TPTP format is ready (background generation may still be in progress)
         boolean isHOL = "HOL".equalsIgnoreCase(translationMode);
@@ -559,6 +556,22 @@
                                             sid, kb, () -> fp.preProcess(new Formula(itd.query), true, kb));
                             for (Formula q : qs) {
                                 String qstr = q.getFormula();
+                                ATPQuery query = new ATPQuery(
+                                    kb,
+                                    session.getId(),
+                                    runSource,
+                                    inferenceEngine,
+                                    TPTPlang,
+                                    vampireMode,
+                                    cwa,
+                                    modensPonens,
+                                    dropOnePremise,
+                                    holUseModals,
+                                    tmo,
+                                    maxAns
+                                );
+                                renderATPResultPanel(TheoremProverController.ask(query));
+                                
                                 if ("EProver".equals(inferenceEngine)) {
                                     com.articulate.sigma.tp.EProver eRun = kb.askEProver(qstr, tmo, maxAns);
                                     if (eRun != null && eRun.getResult() != null) {
@@ -570,7 +583,7 @@
                                     com.articulate.sigma.tp.Vampire vRun = kb.askVampireForTQ(qstr, tmo, maxAns, modensPonens, session.getId());
 //                                    com.articulate.sigma.tp.Vampire vRun = Boolean.TRUE.equals(modensPonens)
 //                                            ? kb.askVampireModensPonens(qstr, tmo, maxAns)
-//                                            : kb.askVampire(qstr, tmo, maxAns);
+//                                            : kb.asFkVampire(qstr, tmo, maxAns);
                                     if (vRun != null && vRun.getResult() != null) {
                                         renderATPResultPanel(vRun.getResult(), out);
                                     }
@@ -583,6 +596,10 @@
                                     }
                                     tpp.parseProofOutput(leoRun.output, qstr, kb, leoRun.qlist);
                                 }
+                            
+                            
+                            
+                            
                             }
                             setGraphFormat(graphFormulaFormat,tpp);
                             publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
@@ -754,7 +771,6 @@
                 if ("EProver".equals(inferenceEngine)) {
                     try {
                         eProver = kb.askEProver(stmt, timeout, maxAnswers);
-                        // Show ATPResult panel with SZS status and diagnostics
                         if (eProver != null && eProver.getResult() != null) {
                             renderATPResultPanel(eProver.getResult(), out);
                         }
@@ -975,7 +991,8 @@
         } // end else (generation not in progress)
     }
 
-    // ===== Server-side execution for "Tell" button =====
+
+// ==================== Tell ======================================================================================== Server-side execution for "Tell" button =====
     if ("Tell".equalsIgnoreCase(req) && !syntaxError) {
         // Check if required TPTP format is ready (background generation may still be in progress)
         boolean tellNeedsFOF = "fof".equals(TPTPlang);

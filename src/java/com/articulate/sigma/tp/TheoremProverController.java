@@ -56,6 +56,15 @@ public class TheoremProverController {
         return availableProvers;
     }
 
+    // public List<String> availableSumoTptpFiles() {
+    //     List<String> availableSumoTptpFiles = new ArrayList<>();
+    //     if(TPTPGenerationManager.isFOFReady()) availableSumoTptpFiles.add("FOF (SUMO.tptp)");
+    //     if(TPTPGenerationManager.isTFFReady()) availableSumoTptpFiles.add("TFF (SUMO.tff)");
+    //     if(TPTPGenerationManager.isTHFModalReady()) availableSumoTptpFiles.add("THF Modal (SUMO_modals.thf)");
+    //     if(TPTPGenerationManager.isTHFModalReady()) availableSumoTptpFiles.add("THF Plain (SUMO_plain.thf)");
+    //     return availableSumoTptpFiles;        
+    // }
+
     private ATPResult askVampire(ATPQuery query) {
         Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers());
         if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) {
@@ -83,7 +92,8 @@ public class TheoremProverController {
 
         System.out.println("TheoremProverController class");
         System.out.println("  h - show this help screen");
-        System.out.println("  -a - print available provers");
+        System.out.println("  -ap - print available provers");
+        System.out.println("  -ap - print available provers");
         System.out.println("  -v - query vampire");
         System.out.println("  -e - query EProver");
         System.out.println("  -l - query LEO");
@@ -114,10 +124,10 @@ public class TheoremProverController {
                 null, 
                 "(instance Chair Furniture)", 
                 null, 
-                RunSource.CUSTOM_QUERY, 
-                ATPType.VAMPIRE, 
-                TptpLanguage.FOF, 
-                Vampire.ModeType.CASC, 
+                "CUSTOM_QUERY", 
+                "VAMPIRE", 
+                "FOF", 
+                "CASC", 
                 false, 
                 false, 
                 false, 

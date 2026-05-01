@@ -51,8 +51,8 @@ public class ATPQuery {
      * @param maxAnswers the maximum number of answers to request from the prover
      */
     public ATPQuery(KB kb, String userSessionId, String query, String testFilePath,
-                    RunSource runSource, ATPType proverType, TptpLanguage language,
-                    Vampire.ModeType vampireMode, boolean closedWorldAssumption,
+                    String runSource, String proverType, String language,
+                    String vampireMode, boolean closedWorldAssumption,
                     boolean modusPonens, boolean dropOnePremise, boolean holUseModals,
                     int timeout, int maxAnswers) {
         
@@ -60,10 +60,10 @@ public class ATPQuery {
         this.userSessionId = userSessionId;
         this.query = query;
         this.testFilePath = testFilePath;
-        this.runSource = runSource;
-        this.proverType = proverType;
-        this.language = language;
-        this.vampireMode = vampireMode;
+        this.proverType = ATPType.valueOf(proverType.toUpperCase());
+        this.runSource = RunSource.valueOf(runSource.toUpperCase());
+        this.language = TptpLanguage.valueOf(language.toUpperCase());
+        this.vampireMode = Vampire.ModeType.valueOf(vampireMode);
         this.closedWorldAssumption = closedWorldAssumption;
         this.modusPonens = modusPonens;
         this.dropOnePremise = dropOnePremise;

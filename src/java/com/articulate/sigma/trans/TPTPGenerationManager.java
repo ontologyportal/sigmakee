@@ -95,14 +95,14 @@ public class TPTPGenerationManager {
         // Use 4 threads: FOF, TFF, THF Modal, THF Plain all in parallel
         executor = Executors.newFixedThreadPool(4);
 
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
         for (KB kb : KBmanager.getMgr().kbs.values()) {
+            String infFilenameBase = kbDir + File.separator + kb.name;
             // FOF on its own thread
             executor.submit(() -> {
-                String kbDir = KBmanager.getMgr().getPref("kbDir");
-                String infFilename = kbDir + File.separator + kb.name + ".tptp";
-                File infFile = new File(infFilename);
+                File infFile = new File(infFilenameBase + ".tptp");
                 if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                    System.out.println("TPTPGenerationManager: FOF file is current: " + infFilename +
+                    System.out.println("TPTPGenerationManager: FOF file is current: " + infFile.getName() +
                             "; rebuilding axiomKey in background for incremental patching");
                     // Mark FOF file ready immediately (file is current for prover use).
                     // Rebuild axiomKey asynchronously — patchSessionTPTP degrades gracefully
@@ -114,21 +114,17 @@ public class TPTPGenerationManager {
                     generateFOF(kb);
                 }
             });
-
             // TFF on its own thread (parallel with FOF)
             executor.submit(() -> {
-                String kbDir = KBmanager.getMgr().getPref("kbDir");
-                String infFilename = kbDir + File.separator + kb.name + ".tff";
-                File infFile = new File(infFilename);
+                File infFile = new File(infFilenameBase + ".tff");
                 if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                    System.out.println("TPTPGenerationManager: TFF file already exists and is current: " + infFilename);
+                    System.out.println("TPTPGenerationManager: TFF file already exists and is current: " + infFile.getName());
                     tffReady.set(true);
                     tffLatch.countDown();
                 } else {
                     generateTFF(kb);
                 }
             });
-
             // THF can run in parallel (different code path)
             executor.submit(() -> generateTHFModal(kb));
             executor.submit(() -> generateTHFPlain(kb));
