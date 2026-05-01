@@ -625,9 +625,9 @@ public class SessionTPTPManager {
                 Map<Formula, List<String>> newTranslations;
                 try {
                     retranslated    = hasAffected ? SUMOKBtoTPTPKB.retranslateFormulas(
-                            kb, affected,   normalizedLang) : Collections.emptyMap();
+                            kb, affected,   normalizedLang, sessionId) : Collections.emptyMap();
                     newTranslations = hasNewForms ? SUMOKBtoTPTPKB.retranslateFormulas(
-                            kb, newFormulas, normalizedLang) : Collections.emptyMap();
+                            kb, newFormulas, normalizedLang, sessionId) : Collections.emptyMap();
                 } finally {
                     kb.kbCache = sharedCache;
                 }

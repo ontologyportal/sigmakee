@@ -5,6 +5,8 @@ import com.articulate.sigma.*;
 import java.util.*;
 
 import static junit.framework.TestCase.assertTrue;
+
+import com.articulate.sigma.parsing.FormulaAST;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -72,7 +74,7 @@ public class SUMOtoTFAKBTest extends IntegrationTestBase {
         System.out.println("\n======================== SUMOtoTFAKBTest.testDynamicSortDef(): ");
 
         String result = SUMOtoTFAform.sortFromRelation("ListFn__2Fn__2ReFn");
-        String expectedRes = "ListFn__2Fn__2ReFn : (  $i * $real  ) > $i";
+        String expectedRes = "s__ListFn__2Fn__2ReFn : (  $i * $real  ) > $i";
         System.out.println("testDynamicSortDef(): result: " + result);
         System.out.println("testDynamicSortDef(): expect: " + expectedRes);
         if (expectedRes.equals(result))
@@ -98,8 +100,8 @@ public class SUMOtoTFAKBTest extends IntegrationTestBase {
                 "s__instance(s__intelligenceQuotient__m, s__Predicate) & " +
                 "s__intelligenceQuotient__2Re(V__ROW1, V__ROW2)) => " +
                 "s__instance(s__ListOrderFn__2InFn(s__ListFn__2ReFn(V__ROW1, V__ROW2), V__NUMBER), V__CLASS))";
-        Set<String> result = stfa.missingSorts(new Formula(f));
-        String expectedRes = "ListFn__2ReFn(V__ROW1, : (  $i * $real  ) > $o";
+        Set<String> result = stfa.missingSorts(new FormulaAST(f));
+        String expectedRes = "s__ListFn__2ReFn : (  $i * $real  ) > $i";
         String resultStr = "";
         if (result != null && !result.isEmpty())
             resultStr = result.iterator().next().trim();

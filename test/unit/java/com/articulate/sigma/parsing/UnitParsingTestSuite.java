@@ -21,7 +21,8 @@ import org.junit.runners.Suite;
     ExprToTPTPTest.class,
     ExprToTFFTest.class,
     ExprToTHFTest.class,
-    ModalsExprTest.class
+    ModalsExprTest.class,
+    FormulaASTTest.class
 })
 public class UnitParsingTestSuite  extends UnitTestBase {
 

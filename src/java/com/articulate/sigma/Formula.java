@@ -289,6 +289,7 @@ public class Formula implements Comparable, Serializable {
     /*******************************************************************
      * Empty consrtuctor that returns an empty instance of a Formula object.
      */
+    @Deprecated(since = "FormulaAST", forRemoval = false)
     public Formula() {}
 
     /*******************************************************************
@@ -297,6 +298,7 @@ public class Formula implements Comparable, Serializable {
      * variables.
      * @param Formula - the formula to copy.
      */
+    @Deprecated(since = "FormulaAST", forRemoval = false)
     public Formula(Formula f) {
 
         this.endLine = f.endLine;
@@ -333,6 +335,7 @@ public class Formula implements Comparable, Serializable {
      * Constructor that returns a Formula object with a String as input.
      * @param String - String of the formula 
      */
+    @Deprecated(since = "FormulaAST", forRemoval = false)
     public Formula(String f) {theFormula = f;}
     
     /*****************************************************************
@@ -493,7 +496,6 @@ public class Formula implements Comparable, Serializable {
      * @return void 
      */
     public void read(String s) {
-
         theFormula = s;
         cachedHashCode = 0;
         allVarsCache = new HashSet<>();
@@ -618,7 +620,6 @@ public class Formula implements Comparable, Serializable {
      * an empty list.
      */
     public String car() {
-
         if (!this.listP()) return null;
         if (stringArgs.isEmpty()) {
             if (this.empty()) return "";

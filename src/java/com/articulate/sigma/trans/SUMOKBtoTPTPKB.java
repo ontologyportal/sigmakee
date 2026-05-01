@@ -345,6 +345,30 @@ public class SUMOKBtoTPTPKB {
      */
     public static Map<Formula, List<String>> retranslateFormulas(
             KB kb, Set<Formula> formulas, String lang) {
+        return retranslateFormulas(kb, formulas, lang, null);
+    }
+
+    /** *************************************************************
+     * Retranslate a set of formulas using the current {@code kb.kbCache}.
+     *
+     * <p>The caller is responsible for swapping {@code kb.kbCache} to the desired
+     * session-specific cache <em>before</em> calling this method and restoring it
+     * afterwards.  Each formula's {@code theFofFormulas} / {@code theTffFormulas}
+     * caches are cleared and repopulated as a side-effect.
+     *
+     * <p>The returned map preserves insertion order (LinkedHashMap) so that callers
+     * can append the new axiom lines in a deterministic order.
+     *
+     * @param kb        the knowledge base (kbCache should already be the session cache)
+     * @param formulas the formulas to retranslate
+     * @param lang     "fof" or "tff"
+     * @param sessionId the HTTP session ID (optional; if provided, UA formulas tagged
+     *                  with this session will be included)
+     * @return map from each formula to its list of new TPTP body strings (sort decls
+     *         and formula axioms); if the formula produces no output the list is empty
+     */
+    public static Map<Formula, List<String>> retranslateFormulas(
+            KB kb, Set<Formula> formulas, String lang, String sessionId) {
 
         if (formulas == null || formulas.isEmpty())
             return Collections.emptyMap();
@@ -357,7 +381,7 @@ public class SUMOKBtoTPTPKB {
         Map<Formula, List<String>> result = new LinkedHashMap<>();
         int formulaIndex = 0;
         for (Formula f : formulas) {
-            FormulaResult res = translator.translateOneFormula(f, lang, total, formulaIndex++);
+            FormulaResult res = translator.translateOneFormula(f, lang, total, formulaIndex++, sessionId);
             List<String> bodies = new ArrayList<>();
             if (!res.skipEverything && !res.skippedHOL && !res.skippedCached) {
                 // Sort declarations (TFF-specific, typically empty for FOF)
@@ -716,7 +740,7 @@ public class SUMOKBtoTPTPKB {
                 pw.println("% " + formCount.getAndIncrement() + " of " + total +
                         " from file " + f.sourceFile + " at line " + f.startLine);
             }
-            boolean isHOL = isHigherOrderExpr(f, kb);
+            boolean isHOL = f.isHigherOrder(kb);
             if (isHOL) {
                 pw.println("% is higher order");
                 if (getLang().equals("thf")) {  // TODO create a flag for adding modals (or not)
@@ -862,32 +886,6 @@ public class SUMOKBtoTPTPKB {
      *   <li>For regular predicates: any compound non-function arg → HOL immediately.</li>
      * </ul>
      */
-    private static boolean isHigherOrderExpr(Expr expr, KB kb) {
-        if (!(expr instanceof Expr.SExpr se)) return false;
-        String head = se.headName();
-        if (head == null) return false; // var-list node inside a quantifier
-        List<String> sig = kb.kbCache.getSignature(head);
-        if (sig != null && !Formula.isVariable(head) && sig.contains("Formula"))
-            return true;
-        boolean logop = Formula.isLogicalOperator(head);
-        for (Expr arg : se.args()) {
-            if (!(arg instanceof Expr.SExpr argSe)) continue; // atom/var/literal — not HOL
-            String argHead = argSe.headName();
-            if (argHead != null && !kb.isFunction(argHead)) {
-                // compound, non-function arg
-                if (logop) {
-                    if (isHigherOrderExpr(argSe, kb)) return true; // recurse for logical ops
-                } else {
-                    return true; // compound non-function arg to non-logop predicate → HOL
-                }
-            } else {
-                // function application (or null-head var-list) — recurse
-                if (isHigherOrderExpr(argSe, kb)) return true;
-            }
-        }
-        return false;
-    }
-
     /**
      * Returns true if {@code expr} contains a {@link Expr.Var} in predicate
      * position (i.e., as the head of an {@link Expr.SExpr}).
@@ -905,20 +903,6 @@ public class SUMOKBtoTPTPKB {
             }
             default -> false;
         };
-    }
-
-    /**
-     * Dispatches to {@link #isHigherOrderExpr(Expr, KB)} when the formula
-     * has a parsed {@link Expr} tree, otherwise falls back to
-     * {@link Formula#isHigherOrder(KB)}.
-     */
-    private static boolean isHigherOrderExpr(Formula f, KB kb) {
-        if (f instanceof FormulaAST fa && fa.expr != null) {
-            boolean hol = isHigherOrderExpr(fa.expr, kb);
-            if (hol) fa.higherOrder = true;
-            return hol;
-        }
-        return f.isHigherOrder(kb);
     }
 
     private static boolean isNonReasoningForATP(String kif) {
@@ -973,6 +957,15 @@ public class SUMOKBtoTPTPKB {
      * fields (alreadyWrittenTPTPs, axiomKey, relationMap) are NOT touched.
      */
     private FormulaResult translateOneFormula(Formula formula, String localLang, int total, int formulaIndex) {
+        return translateOneFormula(formula, localLang, total, formulaIndex, null);
+    }
+
+    /** *************************************************************
+     * Translate a single formula into a FormulaResult (parallel-safe).
+     * All operations here use only per-formula or ThreadLocal state; shared
+     * fields (alreadyWrittenTPTPs, axiomKey, relationMap) are NOT touched.
+     */
+    private FormulaResult translateOneFormula(Formula formula, String localLang, int total, int formulaIndex, String sessionId) {
 
         FormulaResult res = new FormulaResult();
         res.formula = formula;
@@ -982,7 +975,7 @@ public class SUMOKBtoTPTPKB {
         // Base generation (sessionId==null) must never include session-specific assertions —
         // they belong only in session TPTP files.  Cross-session formulas pollute the shared
         // SUMO.tptp and corrupt any other session that reads it.
-        if (f.uaSessionId != null) {
+        if (f.uaSessionId != null && !f.uaSessionId.equals(sessionId)) {
             res.skipEverything = true;
             return res;
         }
@@ -1012,7 +1005,7 @@ public class SUMOKBtoTPTPKB {
 
         // HOL check — use Expr fast path when available (avoids findAllTypeRestrictions +
         // Formula allocation per arg in the original string-based isHigherOrder)
-        boolean isHOL = isHigherOrderExpr(f, kb);
+        boolean isHOL = f.isHigherOrder(kb);
         if (isHOL) {
             f.higherOrder = true;
             res.prologueLines.add("% is higher order");
@@ -1406,7 +1399,7 @@ public class SUMOKBtoTPTPKB {
             return true;
         }
 
-        if (isHigherOrderExpr(form, kb))
+        if (form.isHigherOrder(kb))
             if (removeHOL)
                 return true;
         if (!filterExcludePredicates(form)) {
@@ -1439,7 +1432,7 @@ public class SUMOKBtoTPTPKB {
             return true;
         }
 
-        if (isHigherOrderExpr(form, kb))
+        if (form.isHigherOrder(kb))
             if (removeHOL)
                 return true;
         if (!filterExcludePredicates(form)) {

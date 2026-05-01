@@ -291,9 +291,9 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (t.endsWith(Formula.FN_SUFF) != kb.isFunction(t))
             System.err.println("Error in writeRelationSort(): is function mismatch with term name : " + t + ", " + kb.isFunction(t));
         String bareTerm = SUMOtoTFAform.getBareTerm(t);
-        boolean isLeoUnsupportedMath = bareTerm.equals(Formula.REMAINDERFN) ||
+        boolean isLeoUnsupportedMath = SUMOtoTFAform.targetLeo && (bareTerm.equals(Formula.REMAINDERFN) ||
                 bareTerm.equals(Formula.DIVIDEFN) || bareTerm.equals(Formula.FLOORFN) ||
-                bareTerm.equals(Formula.CEILINGFN) || bareTerm.equals(Formula.ROUNDFN);
+                bareTerm.equals(Formula.CEILINGFN) || bareTerm.equals(Formula.ROUNDFN));
         if (Formula.isLogicalOperator(t) || (Formula.isMathFunction(bareTerm) && !isLeoUnsupportedMath)
                 || Formula.isComparisonOperator(t)) {
             String label = translateName(t);
@@ -303,6 +303,13 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             return;
         }
         List<String> sig = kb.kbCache.signatures.get(t);
+        if (sig == null || sig.isEmpty()) {
+            pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
+            System.err.println("Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
+            pw.flush();
+            Thread.dumpStack();
+            return;
+        }
         int endIndex = sig.size();
         if (KButilities.isVariableArity(kb,SUMOtoTFAform.withoutSuffix(t)))
             endIndex = getVariableAritySuffix(t) + 1;
@@ -321,13 +328,6 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             while (paddedSig.size() < endIndex)
                 paddedSig.add(lastType);
             sig = paddedSig;
-        }
-        if (sig == null || sig.isEmpty()) {
-            pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
-            System.err.println("Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
-            pw.flush();
-            Thread.dumpStack();
-            return;
         }
         StringBuilder sigBuf = new StringBuilder();
         //if (kb.isFunction(t))
@@ -381,10 +381,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public static boolean alreadyExtended(String t) {
 
-        String patternString = "__(\\d)(In|Re|Ra|En)+";
-        Pattern pattern = Pattern.compile(patternString);
-        Matcher matcher = pattern.matcher(t);
-        return matcher.find();
+        return t.matches(".*__\\d.*");
     }
 
     /** *************************************************************
@@ -684,7 +681,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         pw.println("% SUMOKBtoTFAKB.writeSorts(): starting on toExtend sorts");
         for (String k : toExtend.keySet()) {
             bareTerm = SUMOtoTFAform.getBareTerm(k);
-            vals = toExtend.get(bareTerm);
+            vals = toExtend.get(k);
             fnSuffix = "";
             if (kb.isFunction(bareTerm) || bareTerm.endsWith(Formula.FN_SUFF))  // variable arity functions with numerical suffixes not in kb yet
                 fnSuffix = Formula.FN_SUFF;

@@ -35,7 +35,7 @@ public class THFnew {
             if (debug) System.out.println("THFnew.processQuant(): correct # of args");
             if (args.get(0) != null) {
                 if (debug) System.out.println("THFnew.processQuant(): valid varlist: " + args.get(0));
-                Formula varlist = new Formula(args.get(0));
+                Formula varlist = new FormulaAST(args.get(0));
                 List<String> vars = varlist.argumentsToArrayListString(0);
                 if (debug) System.out.println("THFnew.processRecurse(): vars: " + vars);
                 StringBuilder varStr = new StringBuilder();
@@ -46,7 +46,7 @@ public class THFnew {
                     opStr = " ? ";
                 if (debug) System.out.println("THFnew.processQuant(): quantified formula: " + args.get(1));
                 return Formula.LP + opStr + "[" + varStr + "] : (" +
-                        processRecurse(new Formula(args.get(1)),typeMap) + "))";
+                        processRecurse(new FormulaAST(args.get(1)),typeMap) + "))";
             }
             else {
                 System.err.println("Error in THFnew.processQuant(): null arguments to " + op + " in " + f);
@@ -72,9 +72,9 @@ public class THFnew {
         if (op.equals(Formula.XOR))
             tptpOp = "<~>";
         StringBuilder sb = new StringBuilder();
-        sb.append(Formula.LP).append(processRecurse(new Formula(args.get(0)),typeMap));
+        sb.append(Formula.LP).append(processRecurse(new FormulaAST(args.get(0)),typeMap));
         for (int i = 1; i < args.size(); i++) {
-            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE).append(processRecurse(new Formula(args.get(i)),typeMap));
+            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE).append(processRecurse(new FormulaAST(args.get(i)),typeMap));
         }
         sb.append(Formula.RP);
         return sb.toString();
@@ -98,11 +98,11 @@ public class THFnew {
             }
             else {
                 if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
-                    return Formula.LP + processRecurse(new Formula(args.get(0)),typeMap) + " => " +
-                            Formula.LP + processRecurse(new Formula(args.get(1)),typeMap) + "))";
+                    return Formula.LP + processRecurse(new FormulaAST(args.get(0)),typeMap) + " => " +
+                            Formula.LP + processRecurse(new FormulaAST(args.get(1)),typeMap) + "))";
                 else
-                    return Formula.LP + processRecurse(new Formula(args.get(0)),typeMap) + " => " +
-                            processRecurse(new Formula(args.get(1)),typeMap) + Formula.RP;
+                    return Formula.LP + processRecurse(new FormulaAST(args.get(0)),typeMap) + " => " +
+                            processRecurse(new FormulaAST(args.get(1)),typeMap) + Formula.RP;
             }
         }
         if (op.equals(Formula.IFF)) {
@@ -111,10 +111,10 @@ public class THFnew {
                 return "";
             }
             else
-                return "((" + processRecurse(new Formula(args.get(0)),typeMap) + " => " +
-                        processRecurse(new Formula(args.get(1)),typeMap) + ") & (" +
-                        processRecurse(new Formula(args.get(1)),typeMap) + " => " +
-                        processRecurse(new Formula(args.get(0)),typeMap) + "))";
+                return "((" + processRecurse(new FormulaAST(args.get(0)),typeMap) + " => " +
+                        processRecurse(new FormulaAST(args.get(1)),typeMap) + ") & (" +
+                        processRecurse(new FormulaAST(args.get(1)),typeMap) + " => " +
+                        processRecurse(new FormulaAST(args.get(0)),typeMap) + "))";
         }
         if (op.equals(Formula.OR))
             return processConjDisj(f,car,args,typeMap);
@@ -126,7 +126,7 @@ public class THFnew {
                 return "";
             }
             else
-                return "~(" + processRecurse(new Formula(args.get(0)),typeMap) + Formula.RP;
+                return "~(" + processRecurse(new FormulaAST(args.get(0)),typeMap) + Formula.RP;
         }
         if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
             return processQuant(f,op,args,typeMap);
@@ -145,8 +145,8 @@ public class THFnew {
             return "";
         }
         if (op.startsWith(Formula.EQUAL)) {
-            return Formula.LP + processRecurse(new Formula(args.get(0)),typeMap) + " = " +
-                    processRecurse(new Formula(args.get(1)),typeMap) + Formula.RP;
+            return Formula.LP + processRecurse(new FormulaAST(args.get(0)),typeMap) + " = " +
+                    processRecurse(new FormulaAST(args.get(1)),typeMap) + Formula.RP;
         }
         System.err.println("Error in THFnew.processCompOp(): bad comparison operator " + op + " in " + f);
         return "";
@@ -193,10 +193,10 @@ public class THFnew {
                     if (Formula.atom(s))
                         argStr.append(SUMOformulaToTPTPformula.translateWord(s, ttype, false));
                     else
-                        argStr.append(processRecurse(new Formula(s), typeMap));
+                        argStr.append(processRecurse(new FormulaAST(s), typeMap));
                 }
                 else
-                    argStr.append(processRecurse(new Formula(s), typeMap));
+                    argStr.append(processRecurse(new FormulaAST(s), typeMap));
                 argStr.append(" @ ");
             }
 
@@ -408,7 +408,7 @@ public class THFnew {
         if (m.find()) {
             int num = Integer.parseInt(m.group(2));
             num--;
-            Formula result = new Formula(Formula.LP + m.group(1) + num + Formula.SPACE + fstr);
+            Formula result = new FormulaAST(Formula.LP + m.group(1) + num + Formula.SPACE + fstr);
             if (debug) System.out.println("adjustArity(): result: " + result);
             return result;
         }
@@ -741,7 +741,7 @@ public class THFnew {
             }
             for (String s : args) {
                 if (Formula.listP(s)) {
-                    if (exclude(new Formula(s), kb, out)) {
+                    if (exclude(new FormulaAST(s), kb, out)) {
                         String flat = f.toString().replace("\n", " ").replace("\r", " ");
                         if (out != null)
                             out.write("% excluded(): interior list: " + flat + "\n");
@@ -1011,20 +1011,20 @@ public class THFnew {
         }
 
         // 6. Known problematic terms (head or direct atom args)
-        List<String> problematic_terms = Arrays.asList(
-                "airTemperature", "ListFn", "AssignmentFn", "Organism");
-        if (headName != null && problematic_terms.contains(headName)) {
-            if (out != null)
-                out.write("% exclude(): Problematic Term encountered: " + headName + "\n");
-            return true;
-        }
-        for (Expr arg : args) {
-            if (arg instanceof Expr.Atom argAtom && problematic_terms.contains(argAtom.name())) {
-                if (out != null)
-                    out.write("% exclude(): Problematic Term encountered: " + argAtom.name() + "\n");
-                return true;
-            }
-        }
+//        List<String> problematic_terms = Arrays.asList(
+//                "airTemperature", "ListFn", "AssignmentFn", "Organism");
+//        if (headName != null && problematic_terms.contains(headName)) {
+//            if (out != null)
+//                out.write("% exclude(): Problematic Term encountered: " + headName + "\n");
+//            return true;
+//        }
+//        for (Expr arg : args) {
+//            if (arg instanceof Expr.Atom argAtom && problematic_terms.contains(argAtom.name())) {
+//                if (out != null)
+//                    out.write("% exclude(): Problematic Term encountered: " + argAtom.name() + "\n");
+//                return true;
+//            }
+//        }
 
         // 7. META-LOGIC FILTER: bare variable in formula position
         //    Case 1: (=> antecedent ?VAR)
@@ -1505,7 +1505,7 @@ public class THFnew {
      */
     private static void collectNumbersFromFormula(String fstr, Set<String> numbers) {
 
-        Formula f = new Formula(fstr);
+        Formula f = new FormulaAST(fstr);
         if (f.atom()) {
             if (StringUtil.isNumeric(fstr))
                 numbers.add(fstr);
@@ -1635,12 +1635,22 @@ public class THFnew {
                 //  - skip symbols with explicitly defined modal types (reserved header)
                 //  - skip modal relations
                 //  - every other relation gets a trailing "World" argument
+                // Truncate BEFORE adding World so that the world arg is never the one removed.
+                // e.g. exhaustiveAttribute__1: base sig ["","Class","Attribute"] has 2 content
+                // entries but suffixNum=1 → remove "Attribute" first, then add "World" to get
+                // ["","Class","World"] → ($i > w > $o).  With the old order (World first, then
+                // truncate) the loop removed "World" instead, yielding ($i > $i > $o).
+                if (suffixNum != null && !sig.isEmpty() && sig.size() > (suffixNum+1)) {
+                    while (sig.size() > (suffixNum+1)) {
+                        sig.remove(sig.size() - 1);   // remove from end until sizes match
+                    }
+                }
+
                 if (!Formula.isLogicalOperator(t) && !t.equals("equals")) {
                     if (!Modals.RIGID_RELATIONS.contains(baseHead)
                             && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)
                             && !Modals.regHOLpred.contains(baseHead)) {
                         sig.add("World");
-                        if (suffixNum != null) suffixNum+=1;
                     }
                 }
 
@@ -1657,12 +1667,6 @@ public class THFnew {
                 }
                 else
                     out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : "); // write signature
-
-                if (suffixNum != null && !sig.isEmpty() && sig.size() > (suffixNum+1)) {
-                    while (sig.size() > (suffixNum+1)) {
-                        sig.remove(sig.size() - 1);   // remove from end until sizes match
-                    }
-                }
 
                 String sigStr;
                 if (Modals.regHOLpred.contains(baseHead) || Modals.regHOL3pred.contains(baseHead)) {
@@ -1717,8 +1721,31 @@ public class THFnew {
             String sigStr = sigStringNonModal(pred, sig, kb, isFunction);
             out.write(sigStr + "))).\n");
 
-            // Also treat the predicate symbol itself as an individual
-//            out.write("thf(" + functor + "_tp_ind,type,(" + functor + " : $i)).\n");
+            // Companion declaration: the relation/function symbol used as a $i term
+            // (mention position, e.g. "(instance PPIFn Function)"). translateWord with
+            // hasArguments=false appends TERM_MENTION_SUFFIX ("__m"), so we must declare
+            // s__PPIFn__m : $i here — mirroring what writeTypes() does for modal THF.
+            String mentionedFunctor = SUMOformulaToTPTPformula.translateWord(pred, pred.charAt(0), false);
+            out.write("thf(" + functor + "_m_tp,type,(" + mentionedFunctor + " : $i)).\n");
+        }
+
+        // Second pass: emit $i declarations for individual constants.
+        // The loop above only covers relations (from kbCache.signatures); individual
+        // constants like ElectronicsAndApplianceStores are in kb.terms but not in
+        // signatures, so they would otherwise be undeclared and cause InputError in
+        // leo-iii / Vampire HOL.
+        Set<String> alreadyDeclared = kb.kbCache.signatures.keySet();
+        for (String t : kb.terms) {
+            if (alreadyDeclared.contains(t))
+                continue;
+            if (excludeForTypedef(t, out))
+                continue;
+            if (kb.isInstanceOf(t, "Relation"))
+                continue;
+            if (StringUtil.isNumeric(t))
+                continue;
+            String functor = SUMOformulaToTPTPformula.translateWord(t, t.charAt(0), true);
+            out.write("thf(" + functor + "_tp,type,(" + functor + " : $i)).\n");
         }
     }
 
@@ -1846,7 +1873,7 @@ public class THFnew {
         // Recurse on subformulas in the arguments
         for (String s : args) {
             if (Formula.listP(s))
-                analyzeFormula(new Formula(s), kb);
+                analyzeFormula(new FormulaAST(s), kb);
         }
     }
 
@@ -2213,7 +2240,7 @@ public class THFnew {
             }
             for (String s : args) {
                 if (Formula.listP(s)) {
-                    if (excludeNonModal(new Formula(s), kb, out)) {
+                    if (excludeNonModal(new FormulaAST(s), kb, out)) {
                         String flat = f.toString().replace("\n", " ").replace("\r", " ");
                         out.write("% excluded(): interior list: " + flat + "\n");
                         return true;
@@ -2267,7 +2294,7 @@ public class THFnew {
                 "      (or\n" +
                 "        (instance ?LAND2 Continent)\n" +
                 "        (instance ?LAND2 Island)))))\n";
-        Formula f = new Formula(fstr);
+        Formula f = new FormulaAST(fstr);
      //   try {
             //oneTrans(kb,f,null);
      //   }
@@ -2283,7 +2310,7 @@ public class THFnew {
                 "            (connects ?J ?W1 ?W2)\n" +
                 "            (not\n" +
                 "                (equal ?W1 ?W2)))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         //try {
         //    oneTrans(kb,f,null);
         //}
@@ -2300,7 +2327,7 @@ public class THFnew {
                     "(and " +
                       "(instance ?CHILD HumanChild) " +
                       "(located ?CHILD ?LOC)))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         try {
             oneTrans(kb,f,null);
         }
@@ -2373,7 +2400,7 @@ public class THFnew {
                         oneTransExpr(kb, fa, writer);
                     } else {
                         System.out.println("THFnew.main(): FormulaAST parse failed or expr is null — falling back to string-based translation");
-                        oneTrans(kb, new Formula(kifStr), writer);
+                        oneTrans(kb, new FormulaAST(kifStr), writer);
                     }
                 }
                 catch (Exception e) {

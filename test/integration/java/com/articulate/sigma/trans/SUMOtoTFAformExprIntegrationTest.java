@@ -399,7 +399,7 @@ public class SUMOtoTFAformExprIntegrationTest extends IntegrationTestBase {
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
         // --- String path: preProcess → process ---
-        Formula f = new Formula(kif);
+        Formula f = new FormulaAST(kif);
         Set<Formula> strExpanded = fp.preProcess(f, false, kb);
         System.out.println("\n=== STRING PATH preProcess results ===");
         Map<String, String> strResults = new TreeMap<>();
@@ -407,7 +407,7 @@ public class SUMOtoTFAformExprIntegrationTest extends IntegrationTestBase {
             String expandedKif = sf.getFormula();
             String tff = SUMOtoTFAform.process(sf, false);
             Map<String, Set<String>> varmap = new java.util.HashMap<>(
-                    fp.findAllTypeRestrictions(new Formula(expandedKif), kb));
+                    fp.findAllTypeRestrictions(new FormulaAST(expandedKif), kb));
             System.out.println("  expanded: " + expandedKif);
             System.out.println("  varmap:   " + varmap);
             System.out.println("  tff:      " + tff);
@@ -424,7 +424,7 @@ public class SUMOtoTFAformExprIntegrationTest extends IntegrationTestBase {
             String expandedKif = pexpr.toKifString();
             String tff = SUMOtoTFAform.processExpr(pexpr, false);
             Map<String, Set<String>> varmap = new java.util.HashMap<>(
-                    fp.findAllTypeRestrictions(new Formula(expandedKif), kb));
+                    fp.findAllTypeRestrictions(new FormulaAST(expandedKif), kb));
             System.out.println("  expanded: " + expandedKif);
             System.out.println("  varmap:   " + varmap);
             System.out.println("  tff:      " + tff);

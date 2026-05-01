@@ -5,6 +5,7 @@ import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.FormulaAST;
 
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
@@ -264,7 +265,7 @@ public class Modals {
         fstring.append(worldStr).append(") ");
         fstring.append(Formula.SPACE).append(processRecurse(flist.get(2),kb,typeMap,worldvar,worldNum));
         fstring.append(Formula.RP);
-        Formula result = new Formula();
+        Formula result = new FormulaAST();
         result.read(fstring.toString());
         return result;
     }
@@ -319,7 +320,7 @@ public class Modals {
                 .append(embedded.toString())
                 .append(Formula.RP);
 
-        Formula result = new Formula();
+        Formula result = new FormulaAST();
         result.read(fstring.toString());
         return result;
     }
@@ -371,7 +372,7 @@ public class Modals {
         // Recurse once on the embedded formula at the new current world:
         fstring.append(processRecurse(formula, kb, typeMap, worldvar, currWorld));
         fstring.append(Formula.RP);
-        Formula result = new Formula();
+        Formula result = new FormulaAST();
         result.read(fstring.toString());
         return result;
     }
@@ -448,7 +449,7 @@ public class Modals {
                 }
             }
 
-            Formula result = new Formula();
+            Formula result = new FormulaAST();
             result.read(fstring.toString());
             return result;
         }
@@ -984,7 +985,7 @@ public class Modals {
                     "(and " +
                       "(instance ?CHILD HumanChild) " +
                         "(located ?CHILD ?LOC)))))";
-        Formula f = new Formula(fstr);
+        Formula f = new FormulaAST(fstr);
         System.out.println("Modals.worldVarTest1()");
         Map<String, Set<String>> typeMap = new HashMap<>();
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
@@ -1003,7 +1004,7 @@ public class Modals {
                 "            (connects ?J ?W1 ?W2)\n" +
                 "            (not\n" +
                 "                (equal ?W1 ?W2)))))";
-        Formula f = new Formula(fstr);
+        Formula f = new FormulaAST(fstr);
         System.out.println("Modals.worldVarTest2()");
         Map<String, Set<String>> typeMap = new HashMap<>();
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
@@ -1019,7 +1020,7 @@ public class Modals {
                 "    (modalAttribute ?FORMULA Prohibition)\n" +
                 "    (not\n" +
                 "        (modalAttribute ?FORMULA Permission)))";
-        Formula f = new Formula(fstr);
+        Formula f = new FormulaAST(fstr);
         Map<String, Set<String>> typeMap = new HashMap<>();
         System.out.println(processModals(f,kb,typeMap) + "\n\n");
   
@@ -1031,7 +1032,7 @@ public class Modals {
                 "    (or\n" +
                 "        (wants ?AGENT ?THING)\n" +
                 "        (desires ?AGENT ?THING)))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f,kb,typeMap)+ "\n\n");
         
         fstr = "(=> " +
@@ -1043,21 +1044,21 @@ public class Modals {
                 "      (and " +
                 "        (equal (PremisesFn ?ARGUMENT ?W1) ?PREMISES) " +
                 "        (conclusion ?CONCLUSION ?ARGUMENT ?W1)))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f,kb,typeMap)+ "\n\n");
 
         // this one is wrong due to the two relations not conforming to argument order
         fstr = "(=>\n" +
                 "    (confersRight ?FORMULA ?AGENT1 ?AGENT2)\n" +
                 "    (holdsRight ?FORMULA ?AGENT2))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f,kb,typeMap)+ "\n\n");
 
         fstr = "(holdsDuring (YearFn 2025)\n" +
                 "  (knows John \n" +
                 "    (believes Sue \n" +
                 "      (acquaintance Bill Jane))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f,kb,typeMap)+ "\n\n");
 
         fstr = 
@@ -1069,7 +1070,7 @@ public class Modals {
         "                   (=> " +
         "                       (acquaintance Bill Sue) " +
         "                       (acquaintance Bill Jane)))))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f,kb,typeMap) + "\n\n");
     }
     
@@ -1089,7 +1090,7 @@ public class Modals {
         "        (instance ?E Entering)" +
         "        (agent ?E AgentSmith)" +
         "        (destination ?E Area51)))))";
-        Formula f = new Formula(fstr);
+        Formula f = new FormulaAST(fstr);
         System.out.println(processModals(f,kb,typeMap) + "\n\n");
 
         // "Agents that violate their obligations have a US government disciplinary hearing."
@@ -1104,7 +1105,7 @@ public class Modals {
         "      (instance ?H LegalAction)" +
         "      (plaintiff ?H USGovernment)" +
         "      (defendant ?H ?A))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f,kb,typeMap) + "\n\n");
         
         // "Agents that violate their obligations are fired after a US government disciplinary hearing."
@@ -1124,7 +1125,7 @@ public class Modals {
         "        (WhenFn ?H) " +
         "        (WhenFn ?FIRE))" +
         "      (patient ?FIRE ?A))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f,kb,typeMap) + "\n\n");
     }
 
@@ -1150,7 +1151,7 @@ public class Modals {
             "            (instance ?PART Proposition)" +
             "            (subProposition ?PART ?CONST)" +
             "            (modalAttribute ?FORMULA Permission))))";
-        Formula f = new Formula(fstr);
+        Formula f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
 
         if (debug) {
@@ -1167,7 +1168,7 @@ public class Modals {
             "      (and" +
             "        (entrance ?R ?F)" +
             "        (path ?E ?R))) Obligation))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
 
         if (debug) {
@@ -1183,7 +1184,7 @@ public class Modals {
             "      (names \"Bill\" ?B)\n" +
             "      (agent ?W ?B)\n" +
             "      (destination ?W ?GS))) Prohibition)";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
 
         if (debug) {
@@ -1195,7 +1196,7 @@ public class Modals {
             "    (instance ?FORMULA Formula)"+
             "    (containsInformation ?FORMULA ImmigrationAndNationalityAct_US)"+
             "    (modalAttribute ?FORMULA Law)))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
         
         if (debug) {
@@ -1210,7 +1211,7 @@ public class Modals {
             "      (holdsDuring ?TIME2" +
             "        (attribute ?TEXT LegislativeBill))" +
             "      (earlier ?TIME2 ?TIME1))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
         
         // EASY: InternationalLaw -> Law
@@ -1223,7 +1224,7 @@ public class Modals {
             "    (instance ?UNCLOS FORMULA)" +
             "    (modalAttribute ?UNCLOS InternationalLaw))" +
             "  (modalAttribute ?UNCLOS Law))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
         
         
@@ -1253,7 +1254,7 @@ public class Modals {
             "            (and" +
             "              (customer ?CUST2 ?AGENT)" +
             "              (instance ?CUST2 HumanChild))) Possibility)))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
         
         
@@ -1270,7 +1271,7 @@ public class Modals {
             "    (confersNorm ?USG Permission ?FORMULA))" +
             "  (not" +
             "    (confersNorm ?USG Prohibition ?F)))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
         
         if (debug) {
@@ -1289,7 +1290,7 @@ public class Modals {
             "      (and" +
             "        (entrance ?R ?F)" +
             "        (path ?E ?R)))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
         
         if (debug) {
@@ -1309,7 +1310,7 @@ public class Modals {
             "      (and" +
             "        (entrance ?R ?F)" +
             "        (path ?E ?R))) ))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
 
         if (debug) {
@@ -1323,7 +1324,7 @@ public class Modals {
             "        (instance ?E Entering)" +
             "        (agent ?E AgentSmith)" +
             "        (destination ?E Area51)))) )";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
 
         if (debug) {
@@ -1339,7 +1340,7 @@ public class Modals {
             "      (instance ?H LegalAction)" +
             "      (plaintiff ?H USGovernment)" +
             "      (defendant ?H ?A))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
 
         if (debug) {
@@ -1360,7 +1361,7 @@ public class Modals {
             "        (WhenFn ?H)" +
             "        (WhenFn ?FIRE))" +
             "      (patient ?FIRE ?A))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
 
         // MEDIUM: deprivesNorm -> confersNorm
@@ -1371,7 +1372,7 @@ public class Modals {
             "(=>" +
             "  (deprivesNorm ?AGENT Prohibition ?F)" +
             "  (confersNorm ?AGENT Permission ?F))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
         
         
@@ -1393,7 +1394,7 @@ public class Modals {
             "    (modalAttribute" +
             "        (confersRight ?AGENT ?CUST" +
             "            (uses ?X ?CUST)) Possibility))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
         
         if (debug) { 
@@ -1410,7 +1411,7 @@ public class Modals {
             "      (and" +
             "        (instance ?PET DomesticAnimal)" +
             "        (located ?PET ?LOC))) ))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         System.out.println(processModals(f, kb,typeMap) + "\n\n");
 
         // MEDIUM-HARD (nested): holdsDuring / Sally example
@@ -1487,7 +1488,7 @@ public class Modals {
                 KBmanager.getMgr().initializeOnce();
                 KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
                 Map<String, Set<String>> typeMap = new HashMap<>();
-                System.out.println(processModals(new Formula(argMap.get("form").get(0)),kb,typeMap));
+                System.out.println(processModals(new FormulaAST(argMap.get("form").get(0)),kb,typeMap));
             }
         }
     }
