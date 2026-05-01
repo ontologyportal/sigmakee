@@ -3,7 +3,6 @@ package com.articulate.sigma.tp;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.tp.Vampire;
 
-
 /**
  * @author Shaun Rose
  * ATPQuery is used by TheoremProverController with the following attributes:
@@ -11,7 +10,7 @@ import com.articulate.sigma.tp.Vampire;
  */
 public class ATPQuery {
 
-    public enum RunSource {CUSTOM_QUERY, TEST_FILE}
+    public enum RunSource {CUSTOM, TEST_FILE}
     public enum TptpLanguage {FOF, TFF, THF}
     public enum ATPType{EPROVER, VAMPIRE, LEO}
     
@@ -60,10 +59,11 @@ public class ATPQuery {
         this.userSessionId = userSessionId;
         this.query = query;
         this.testFilePath = testFilePath;
+        System.out.printf("\nATPQuery(%s, %s, %s, %s)", proverType, runSource, language, vampireMode);
         this.proverType = ATPType.valueOf(proverType.toUpperCase());
         this.runSource = RunSource.valueOf(runSource.toUpperCase());
         this.language = TptpLanguage.valueOf(language.toUpperCase());
-        this.vampireMode = Vampire.ModeType.valueOf(vampireMode);
+        this.vampireMode = Vampire.ModeType.valueOf(vampireMode.toUpperCase());
         this.closedWorldAssumption = closedWorldAssumption;
         this.modusPonens = modusPonens;
         this.dropOnePremise = dropOnePremise;

@@ -76,6 +76,7 @@
     // --------- STEP 3 -------------------------------------------------------------------
 
     List<String> availableProvers = com.articulate.sigma.tp.TheoremProverController.availableProvers();
+    System.out.println("AskTell: Available provers = " + availableProvers);
     
     // Max Answers
     int maxAnswers = 1;
@@ -492,17 +493,21 @@
         boolean generationInProgress = false;
         String waitingFor = "";
         if (needsFOF && !TPTPGenerationManager.isFOFReady()) {
+            System.out.println("AskTell waiting for fof");
             generationInProgress = true;
             waitingFor = "FOF (SUMO.tptp)";
         } else if (needsTFF && !TPTPGenerationManager.isTFFReady()) {
+            System.out.println("AskTell waiting for tff");
             generationInProgress = true;
             waitingFor = "TFF (SUMO.tff)";
         } else if (needsTHF) {
             boolean useModals = Boolean.TRUE.equals(holUseModals);
             if (useModals && !TPTPGenerationManager.isTHFModalReady()) {
+                System.out.println("AskTell waiting for modals");
                 generationInProgress = true;
                 waitingFor = "THF Modal (SUMO_modals.thf)";
             } else if (!useModals && !TPTPGenerationManager.isTHFPlainReady()) {
+                System.out.println("AskTell waiting for plain");
                 generationInProgress = true;
                 waitingFor = "THF Plain (SUMO_plain.thf)";
             }
@@ -518,6 +523,7 @@
 <%
         } else {
             if ("test".equals(runSource)) {
+                System.out.println("AskTell running test");
                 // ---- RUN SAVED TEST ----
                 // Clear All
                 try { InferenceTestSuite.resetAllForInference(kb, session.getId()); }
@@ -708,6 +714,8 @@
                     out.println("<font color='red'>Unsupported test file type: " + ext + "</font>");
                 }
             } else {
+                
+                System.out.println("AskTell running custom");
                 // ---- RUN CUSTOM QUERY (Ask) ----
                 // Reset spinner message to default (clear any stale "Regenerating KB..." from previous Tell)
                 out.println("<script>");
@@ -719,6 +727,7 @@
                 out.flush();
                 if (stmt.indexOf('@') != -1) throw(new IOException("Row variables not allowed in query: " + stmt));
                 String effectiveLang = "HOL".equalsIgnoreCase(translationMode) ? "thf" : TPTPlang;
+                System.out.println("AskTell running custom, creating query");
                 ATPQuery atpQuery = new ATPQuery(
                         kb,
                         session.getId(),
@@ -735,7 +744,9 @@
                         timeout,
                         maxAnswers
                 );
+                System.out.println("AskTell running custom, running query");
                 ATPResult result = theoremProverController.ask(atpQuery);
+                System.out.println("AskTell running custom, result found");
                 if (result == null) {
                     out.println("<font color='red'>No result from theorem prover.</font>");
                 }

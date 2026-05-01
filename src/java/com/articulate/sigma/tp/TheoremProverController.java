@@ -33,7 +33,7 @@ public class TheoremProverController {
     public ATPResult ask (ATPQuery query) {
         switch (query.getProverType()) {
             case EPROVER:
-                // return this.askEProver(query);
+                return this.askEProver(query);
                 break;
             case VAMPIRE: 
                 return this.askVampire(query);
@@ -56,15 +56,6 @@ public class TheoremProverController {
         return availableProvers;
     }
 
-    // public List<String> availableSumoTptpFiles() {
-    //     List<String> availableSumoTptpFiles = new ArrayList<>();
-    //     if(TPTPGenerationManager.isFOFReady()) availableSumoTptpFiles.add("FOF (SUMO.tptp)");
-    //     if(TPTPGenerationManager.isTFFReady()) availableSumoTptpFiles.add("TFF (SUMO.tff)");
-    //     if(TPTPGenerationManager.isTHFModalReady()) availableSumoTptpFiles.add("THF Modal (SUMO_modals.thf)");
-    //     if(TPTPGenerationManager.isTHFModalReady()) availableSumoTptpFiles.add("THF Plain (SUMO_plain.thf)");
-    //     return availableSumoTptpFiles;        
-    // }
-
     private ATPResult askVampire(ATPQuery query) {
         Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers());
         if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) {
@@ -73,16 +64,16 @@ public class TheoremProverController {
             vampire.askVampire(query.getQuery());
         } 
         else {
-            if (query.getTestFilePath().isEmpty() || query.getTestFilePath() == null) vampire.askVampireHOL(query.getQuery(), query.isHolUseModals());
+            if (query.getTestFilePath() == null) vampire.askVampireHOL(query.getQuery(), query.isHolUseModals());
             else vampire.askVampireTHF(query.getTestFilePath());
         }
         System.out.println(String.join("\n",vampire.output));
         return vampire.getResult();
     }
 
-    // private ATPResult askEProver(ATPQuery query) {
+    private ATPResult askEProver(ATPQuery query) {
         
-    // }
+    }
 
     // private ATPResult askLEO(ATPQuery query) {
 
@@ -124,7 +115,7 @@ public class TheoremProverController {
                 null, 
                 "(instance Chair Furniture)", 
                 null, 
-                "CUSTOM_QUERY", 
+                "CUSTOM", 
                 "VAMPIRE", 
                 "FOF", 
                 "CASC", 

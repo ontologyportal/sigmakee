@@ -132,7 +132,6 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
 	        kb.kbCache.buildCaches();
 	        kb.kbCache.writeCacheFile();
 	    }
-	    kb.loadEProver();
     }
     else if (reload != null)
         kb.reload();

@@ -61,6 +61,8 @@ public class Vampire {
     private String executablePath;
     /** Directory of the knowledge base vampire will query against */
     private String inferenceFilePath;
+    /**  */
+    private String inferenceFileExtension;
     /** Session id to match the user to their assertions */
     private String sessionId;
     /** Temporary problem file generated for inference */
@@ -97,6 +99,8 @@ public class Vampire {
      * Initialize a new Vampire Object with an Inference File and TPTP Language
      * @param kb
      * @param requestedTptpLang
+     * @param mode Mode for Vampire [CASC|AVATAR|CUSTOM]. Can also be Profile, but this is set automatically in askVampireHOL.
+     * @param modensPonens if true then Vampire will use implication
      * @param timeout
      * @param maxAnswers max number of answers to be returned 
      */
@@ -105,16 +109,26 @@ public class Vampire {
         if (debug>0) System.out.printf("\nVampire(%s, %s, %s, %b, %d, %d)", kb.name, requestedTptpLang, mode, modensPonens, timeout, maxAnswers);
         this.kb = kb;
         this.executablePath = KBmanager.getMgr().getPref("vampire");
-        if ("fof".equals(requestedTptpLang)) this.requestedTptpLanguage = "tptp";
-        else this.requestedTptpLanguage = "tff";
+        if ("fof".equalsIgnoreCase(requestedTptpLang)) {
+            this.requestedTptpLanguage = "fof";
+            this.inferenceFileExtension = "tptp";
+        }
+        else if ("tff".equalsIgnoreCase(requestedTptpLang)){
+            this.requestedTptpLanguage = "tff";
+            this.inferenceFileExtension = "tff";
+        } else {
+            this.requestedTptpLanguage = "thf";
+            this.inferenceFileExtension = "thf";
+        }
+        System.out.println("VAMPIRE LANGUAGE: " + this.requestedTptpLanguage);
         this.modensPonens = modensPonens;
-        if (mode.equals(ModeType.AVATAR.name())) this.mode = ModeType.AVATAR;
-        if (mode.equals(ModeType.CASC.name())) this.mode = ModeType.CASC;
-        if (mode.equals(ModeType.CUSTOM.name())) this.mode = ModeType.CUSTOM;
+        if (mode.equalsIgnoreCase(ModeType.AVATAR.name())) this.mode = ModeType.AVATAR;
+        if (mode.equalsIgnoreCase(ModeType.CASC.name())) this.mode = ModeType.CASC;
+        if (mode.equalsIgnoreCase(ModeType.CUSTOM.name())) this.mode = ModeType.CUSTOM;
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
-        this.inferenceFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + "." + this.requestedTptpLanguage;
-        if (!(new File(this.inferenceFilePath).exists()) || KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(this.requestedTptpLanguage)) {
+        this.inferenceFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + "." + this.inferenceFileExtension;
+        if (!(new File(this.inferenceFilePath).exists()) || KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(this.inferenceFileExtension)) {
             System.out.println("INFO in KB.loadVampire(): this.inferenceFilePath=" + !(new File(this.inferenceFilePath).exists()));
             System.out.println("INFO in KB.loadVampire(): managerInfFileOld " + KBmanager.getMgr().infFileOld());
             synchronized (kb.baseGenLock) {
@@ -266,7 +280,7 @@ public class Vampire {
                 "--input_syntax","tptp",
                 "--proof","tptp",                  // <-- TSTP-style proof lines
                 "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                "-fde","none","-updr","off","rp","off","bce","off",
+                "-fde","none","-updr","off","-rp","off","-bce","off",
                 "-qa","plain"
             );
             List<TPTPFormula> proof = TPTPutil.processProofLines(this.output);
@@ -324,7 +338,7 @@ public class Vampire {
                 "--input_syntax","tptp",
                 "--proof","tptp",
                 "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                "-fde","none","-updr","off","rp","off","bce","off"
+                "-fde","none","-updr","off","-rp","off","-bce","off"
         ));
         if (this.askQuestion){
             this.commands.add("-qa");
@@ -615,15 +629,21 @@ public class Vampire {
             System.err.println("Error in Vampire.createCustomCommandList(): no mode selected");
         }
         for (String s : commands) opts.append(s).append(space);
+        
+        System.out.println("h-1");
         if (timeout != 0) {
             opts.append("-t").append(space);
             opts.append(timeout).append(space);
         }
         opts.append(kbFile.toString());
         String[] optar = opts.toString().split(Formula.SPACE);
+        System.out.println("h0");
         this.commands = new ArrayList<>();
-        this.commands.set(0, executable.toString());
-        System.arraycopy(optar, 0, this.commands, 1, optar.length);
+        System.out.println("h01");
+        this.commands.add(executable.toString());
+        System.out.println("h1");
+        Collections.addAll(this.commands, optar);
+        System.out.println("h2");
     }
 
     /***************************************************************
@@ -731,7 +751,7 @@ public class Vampire {
 
         if (debug>0) System.out.printf("\nVampire.run(%s, %s)", kbFile.getName(), stmts);
         String lang = "tff";
-        if (SUMOKBtoTPTPKB.getLang().equals("fof"))
+        if (SUMOKBtoTPTPKB.getLang().equalsIgnoreCase("fof"))
             lang = "tptp";
         if (this.sessionId == null || this.sessionId.isEmpty()) {
             String kbFilePath = kbFile.getAbsolutePath();
@@ -756,8 +776,8 @@ public class Vampire {
         else {
             dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
         }
-        String outfile = dir + "temp-comb." + this.requestedTptpLanguage;
-        String stmtFile = dir + "temp-stmt." + this.requestedTptpLanguage;
+        String outfile = dir + "temp-comb." + this.inferenceFileExtension;
+        String stmtFile = dir + "temp-stmt." + this.inferenceFileExtension;
         File fout = new File(outfile);
         if (fout.exists())
             fout.delete();
@@ -821,16 +841,16 @@ public class Vampire {
             result.setPrimaryError(msg);
             throw new ExecutableNotFoundException("Vampire", this.executablePath, configKey);
         }
-        System.out.println("Vampire.runCustom(): vampire executable: " + this.executablePath);
         createCustomCommandList(new File(this.executablePath), this.timeout, kbFile.getAbsoluteFile(), this.commands);
-        result.setCommandLine(this.commands);
         System.out.println("Vampire.runCustom(): Custom command list:\n" + this.commands);
+        result.setCommandLine(this.commands);
         ProcessBuilder _builder = new ProcessBuilder(this.commands);
         _builder.redirectErrorStream(false);  // Keep stderr separate
         if (kbFile != null && kbFile.getParentFile() != null) {
             _builder.directory(kbFile.getParentFile());
             System.out.println("Vampire CWD: " + _builder.directory().getAbsolutePath());
         }
+        if (debug>0) System.out.println("Vampire.runCustom(): running with commands " + String.join(" ", this.commands));
         Process _vampire = _builder.start();
         List<String> stdoutLines = new ArrayList<>();
         List<String> stderrLines = new ArrayList<>();
@@ -913,7 +933,7 @@ public class Vampire {
         else {
             dir = KBmanager.getMgr().getPref("kbDir");
         }
-        String fname = "temp-stmt." + this.requestedTptpLanguage;
+        String fname = "temp-stmt." + this.inferenceFileExtension;
         try (FileWriter fw = new FileWriter(dir + File.separator + fname);
             PrintWriter pw = new PrintWriter(fw)) {
             for (String s : stmts) pw.println(s);
@@ -1080,7 +1100,7 @@ public class Vampire {
         KB kb = KBmanager.getMgr().getKB(kbName);
         String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
         String lang = "tff";
-        if (SUMOKBtoTPTPKB.getLang().equals("fof"))
+        if (SUMOKBtoTPTPKB.getLang().equalsIgnoreCase("fof"))
             lang = "tptp";
         Vampire vampire = new Vampire(kb, lang, "CASC", false, 30, 1);
         File kbFile = new File(vampire.inferenceFilePath);

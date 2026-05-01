@@ -329,7 +329,8 @@ public class ATPResult {
             html.append("<pre>");
             int total = stdout.size();
             int start = Math.max(0, total - 200);
-            for (int i = start; i < total; i++) html.append(ValidationUtils.sanitizeString((stdout.get(i))));
+            html.append(ValidationUtils.sanitizeString((stdout.get(start))));
+            for (int i = start + 1; i < total; i++) html.append("\n" + ValidationUtils.sanitizeString((stdout.get(i))));
             if (total > 200) html.append("... (" + (total - 200) + " earlier lines omitted)");
             html.append("</pre>");
             html.append("</details>");

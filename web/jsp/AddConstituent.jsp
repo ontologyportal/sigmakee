@@ -126,7 +126,6 @@ else {
 //                    kb.kbCache.writeCacheFile();
                 }
                 kb.checkArity();
-                kb.loadEProver();
                 KBmanager.getMgr().writeConfiguration();
             }
         }

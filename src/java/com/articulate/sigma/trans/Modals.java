@@ -695,8 +695,8 @@ public class Modals {
                 // ISSUE 6
                 //"thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n" +
 
-                genAllModalSystems() +
-                genDistinctModals();
+                genAllModalSystems();
+                // + genDistinctModals();
     }
 
     /***************************************************************

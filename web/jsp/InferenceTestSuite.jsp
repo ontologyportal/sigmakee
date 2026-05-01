@@ -175,14 +175,6 @@
             // FULL reload: wipe user assertions + reload base KB + rebuild inference view
             kb.deleteUserAssertionsAndReload();
             KBmanager.getMgr().loadKBforInference(kb);
-
-            // Optionally pre-load provers so first run is warm:
-            try {
-                String eproverExec = KBmanager.getMgr().getPref("eprover");
-                if (eproverExec != null && new File(eproverExec).exists()) kb.loadEProver();
-            } catch (Exception ignore) {}
-            try { kb.loadLeo(); } catch (Exception ignore) {}
-        } catch (Exception ex) {
         }
     }
 %>
