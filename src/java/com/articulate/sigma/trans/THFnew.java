@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 public class THFnew {
 
     public static boolean debug = false;
+    public static boolean writeKIF = true; // write the original SUO-KIF as a comment in the THF output file
     public static int axNum = 0;
     public static Set<Formula> badUsageSymbols = new HashSet<>();
     public static Set<String> predicateTerms = new HashSet<>(); //Terms that return $o instead of $i
@@ -586,6 +587,8 @@ public class THFnew {
     public static boolean exclude(Formula f, KB kb, Writer out) throws IOException {
 
         if (debug) System.out.println("exclude(): " + f);
+        String flatFormula = f.getFormula().replace("\n", " ").replace("\r", " ");
+        String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
 
         // Exclude strings (quotes) – THF translation does not support them.
         if (f.getFormula().contains("\"")) {
@@ -597,7 +600,7 @@ public class THFnew {
         // TPTP's $true / $false constants in this pipeline.
         if (f.getFormula().contains(Formula.LOG_FALSE) ||
                 f.getFormula().contains(Formula.LOG_TRUE)) {
-            out.write("% exclude(): contains true or false constant\n");
+            out.write("% exclude(): contains true or false constant" + stripped + "\n");
             return true;
         }
 
@@ -605,15 +608,18 @@ public class THFnew {
         // Exclude axioms that mention 'Formula' as a type/class. These are
         // meta-logical axioms about the class Formula, not about particular
         // formula-valued arguments, which we handle as (w > $o).
+        // AP - can't exclude these - any HOL axiom with a variable that's a
+        // formula would then be excluded
+        /**
         if (f.getFormula().contains(" Formula)")) {
             if (debug) {
                 System.out.println("exclude(): meta-logical axiom with Formula type: "
                         + f.getFormula());
             }
-            out.write("% exclude(): meta-logical axiom with Formula type\n");
+            out.write("% exclude(): meta-logical axiom with Formula type " + f.getFormula() + "\n");
             return true;
         }
-
+        **/
         // Generic: modal operators must not appear as non-head arguments.
         // If the head itself is not a modal relation, any occurrence of a
         // modal relation name in argument position is rejected.
@@ -646,7 +652,8 @@ public class THFnew {
                         }
                         if (out != null)
                             out.write("% exclude(): modal/HOL symbol used as individual " +
-                                "argument of non-modal head, Symbol " + a + " head: " + head + "\n");
+                                "argument of non-modal head, Symbol " + a + " head: " + head +
+                                    " " + stripped + "\n");
                         return true;
                     }
                 }
@@ -662,7 +669,8 @@ public class THFnew {
             if (Modals.formulaPreds.contains(p) ||
                     Modals.regHOLpred.contains(p)) {
                 if (out != null)
-                    out.write("% exclude(): domain axiom for formula/HOL predicate: " + p + "\n");
+                    out.write("% exclude(): domain axiom for formula/HOL predicate: " + p +
+                            " in formula: " + stripped + "\n");
                 return true;
             }
         }
@@ -680,11 +688,12 @@ public class THFnew {
 
         // TODO: Fix that in SUMO
         // Known problematic terms unrelated to the modal embedding.
-        List<String> problematic_terms = Arrays.asList("airTemperature", "ListFn", "AssignmentFn", "Organism");
+        List<String> problematic_terms = Arrays.asList("airTemperature", "ListFn", "AssignmentFn");  // , "Organism"
         for (String a : args) {
             if (problematic_terms.contains(a)) {
                 if (out != null)
-                    out.write("% exclude(): Problematic Term encountered: "+a+"\n");
+                    out.write("% exclude(): Problematic Term encountered: " + a +
+                            " in formula: " + stripped + "\n");
                 return true;
             }
         }
@@ -695,6 +704,7 @@ public class THFnew {
         //   (not ?VAR)   or  (~ ?VAR)
         // Because variables are $i, not $o.
         // This catches the PROP / FORMULA / SITUATION issues in one shot.
+        /**
         if (f.listP()) {
             String op = f.car();
             // arguments starting at position 1 (operator is at 0)
@@ -726,12 +736,13 @@ public class THFnew {
                         }
                         if (out != null)
                             out.write("% exclude(): meta-logic (variable under not/~): "
-                                + arg0 + "\n");
+                                + arg0 + " in formula: " + f + "\n");
                         return true;
                     }
                 }
             }
         }
+         **/
         // ALWAYS recurse into interior lists (this catches nested cases,
         // since exclude() is called on all sub-formulas)
         if (args != null) {
@@ -744,7 +755,8 @@ public class THFnew {
                     if (exclude(new FormulaAST(s), kb, out)) {
                         String flat = f.toString().replace("\n", " ").replace("\r", " ");
                         if (out != null)
-                            out.write("% excluded(): interior list: " + flat + "\n");
+                            out.write("% excluded(): exclude: " + flat + " in formula: " +
+                                    stripped + "\n");
                         return true;
                     }
                 }
@@ -755,7 +767,8 @@ public class THFnew {
                 if (excludePred(sub, out)) {
                     String flat = f.toString().replace("\n", " ").replace("\r", " ");
                     if (out != null)
-                        out.write("% excluded(): term from excludePred: " + flat + "\n");
+                        out.write("% excluded(): term from excludePred: " + flat +
+                                " in formula: " + stripped + "\n");
                     return true;
                 }
             }
@@ -775,7 +788,7 @@ public class THFnew {
                         if (Modals.modalAttributes.contains(args.get(i))) {
                             if (out != null)
                                 out.write("% exclude(): modal attribute in protected relation: " +
-                                    args.get(0) + " " + args.get(i) + "\n");
+                                    args.get(0) + " " + args.get(i) + " in formula: " + stripped + "\n");
                             return true;
                         }
                     }
@@ -786,16 +799,18 @@ public class THFnew {
                         args.size() > 1 &&
                         Modals.RESERVED_MODAL_SYMBOLS.contains(args.get(1))) {
                     if (out != null)
-                        out.write("% exclude(): modal operator in domain: " + args.get(1) + "\n");
+                        out.write("% exclude(): modal operator in domain: " +
+                                args.get(1) + " in formula: " + stripped + "\n");
                     return true;
                 }
 
                 // Ground numeric filtering – unrelated to the modal embedding.
                 // This can be revisited later if we want more general numerals.
+                /***
                 for (String s : args) {
                     if (StringUtil.isNumeric(s)) {
                         if (out != null)
-                            out.write("% exclude(): is numeric(2): \n");
+                            out.write("% exclude(): is numeric(2): " + " in formula: " + f + "\n");
                         if (s.contains(".") || s.contains("-") || s.length() > 1)
                             return true;
                         if (s.charAt(0) < '1' || s.charAt(0) > '6')
@@ -803,6 +818,7 @@ public class THFnew {
                         if (debug) System.out.println("exclude(): numeric arg not excluded: " + s);
                     }
                 }
+                */
             }
         }
         // TOP-LEVEL predicate check (documentation, format, etc.)
@@ -1392,7 +1408,7 @@ public class THFnew {
                 if (formulaAsWorldFunction) {
                     // For deontic/epistemic predicates etc. we treat Formula args as
                     // functions from worlds to booleans: F : w > $o.
-//                    sb.append("(w > $o) > ");
+                    //sb.append("(w > $o) > ");
                     sb.append("$o > ");
                 }
                 else {
@@ -1404,6 +1420,8 @@ public class THFnew {
             else if (kb.isInstanceOf(t, "World") || t.equals("World"))
                 // World arguments are typed as w.
                 sb.append("w > ");
+            else if (kb.isInstanceOf(t, "ObjectiveNorm"))
+                sb.append("m > ");
             else
                 // Everything else is an individual.
                 sb.append("$i > ");
@@ -1592,14 +1610,8 @@ public class THFnew {
         for (String t : kb.terms) {
             // ISSUE 2
             // 1. Skip modal helper symbols – they already have correct types in the header.
-            if (Modals.RESERVED_MODAL_SYMBOLS.contains(t))
-                continue;
-            // 2. Skip HOL-rewrite predicates (regHOLpred / regHOL3pred) – their types are
-            //    declared in the header by getTHFHeader(). Writing them again here
-            //    (possibly with a conflicting type like $i) causes a duplicate-declaration
-            //    parse error in LEO-III / Vampire. modalAttributes are NOT in the header
-            //    and are handled by the else-if branch below, so do NOT skip them here.
-            if (Modals.regHOLpred.contains(t) || Modals.regHOL3pred.contains(t))
+            if (Modals.RESERVED_MODAL_SYMBOLS.contains(t) || Modals.regHOL3Modalpred.contains(t) ||
+                Modals.regHOL3pred.contains(t) || Modals.regHOLpred.contains(t))
                 continue;
             if (excludeForTypedef(t,out))
                 continue;
@@ -1651,6 +1663,7 @@ public class THFnew {
                             && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)
                             && !Modals.regHOLpred.contains(baseHead)) {
                         sig.add("World");
+//                        if (suffixNum != null) suffixNum += 1;
                     }
                 }
 
@@ -1693,7 +1706,7 @@ public class THFnew {
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : m)).\n"); // write relation constant
             else
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
-                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true)+ " : $i)).\n");
+                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + " : $i)).\n");
         }
     }
 
@@ -2033,8 +2046,14 @@ public class THFnew {
             out.write(Modals.getTHFHeader(kb) + "\n");
             writeTypes(kb, out, numbers);
             for (Formula f : kb.formulaMap.values()) {
+                String flatFormula = f.getFormula().replace("\n", " ").replace("\r", " ");
+                String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
                 if (debug) System.out.println("THFnew.transModalTHF(): " + f);
                 boolean excluded;
+                if (writeKIF) {
+                    out.write("% original: " + stripped + "\n");
+                    out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
+                }
                 if (f instanceof FormulaAST fa && fa.expr != null) {
                     excluded = exclude(fa, kb, out);   // FormulaAST overload: fast string pre-checks
                     if (!excluded)
@@ -2048,8 +2067,6 @@ public class THFnew {
                     }
                 }
                 if (excluded) {
-                    String flatFormula = f.getFormula().replace("\n", " ").replace("\r", " ");
-                    String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
                     out.write("% excluded: " + stripped + "\n");
                     out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
                 }
@@ -2093,8 +2110,15 @@ public class THFnew {
             if (debug) System.out.println("Predicate Terms: " + predicateTerms);
 
             for (Formula f : kb.formulaMap.values()) {
+                String flatFormula = f.getFormula()
+                        .replace("\n", " ").replace("\r", " ");
+                String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
                 if (debug) System.out.println("THFnew.transPlainTHF(): " + f);
                 boolean excluded;
+                if (writeKIF) {
+                    out.write("% original: " + stripped + "\n");
+                    out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
+                }
                 if (f instanceof FormulaAST fa && fa.expr != null) {
                     excluded = excludeNonModal(fa, kb, out);  // FormulaAST overload: badUsage + fast string pre-checks
                     if (!excluded)
@@ -2108,9 +2132,6 @@ public class THFnew {
                     }
                 }
                 if (excluded) {
-                    String flatFormula = f.getFormula()
-                            .replace("\n", " ").replace("\r", " ");
-                    String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
                     out.write("% excluded (non-modal): " + stripped + "\n");
                     out.write("% from file " + f.sourceFile + " at line " +
                             f.startLine + "\n");
@@ -2128,13 +2149,16 @@ public class THFnew {
     public static boolean excludeNonModal(Formula f, KB kb, Writer out) throws IOException {
 
         if (debug) System.out.println("exclude(): " + f);
+        String flatFormula = f.getFormula()
+                .replace("\n", " ").replace("\r", " ");
+        String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
 
         // Excludes any formula whose main predicate has been flagged as a mixed-result
         // symbol or a bad-usage symbol. This prevents the generation of THF axioms that
         // Vampire would reject due to type inconsistencies discovered during analysis.
         if (THFnew.badUsageSymbols.contains(f)) {
             String flat = f.toString().replace("\n", " ").replace("\r", " ");
-            out.write("% exclude(): bad usage symbol: " + flat + "\n");
+            out.write("% exclude(): bad usage symbol: " + flat + " in formula: " + stripped + "\n");
             return true;
         }
 
@@ -2153,22 +2177,28 @@ public class THFnew {
 
         // ISSUE 16
         // Exclude formulas mentioning 'Formula' as a type (SUMO meta-logic)
+        // AP - can't exclude these - any HOL axiom with a variable that's a
+        // formula would then be excluded
+        /**
         if (f.getFormula().contains(" Formula)")) {
             if (debug) {
-                System.out.println("exclude(): meta-logical axiom with Formula type: "
+                System.out.println("exclude(): meta-logical axiom with Formula type in formula: "
                         + f.getFormula());
             }
-            out.write("% exclude(): meta-logical axiom with Formula type\n");
+            out.write("% exclude(): meta-logical axiom with Formula type in formula: " +
+                                            f.getFormula() + "\n");
             return true;
         }
+         **/
         List<String> args = f.complexArgumentsToArrayListString(0);
 
         // TODO: Fix that in SUMO
         // Problematic Terms
-        List<String> problematic_terms = Arrays.asList("airTemperature", "ListFn", "AssignmentFn", "Organism");
+        List<String> problematic_terms = Arrays.asList("airTemperature", "ListFn", "AssignmentFn");  // , "Organism"
         for (String a : args) {
             if (problematic_terms.contains(a)) {
-                out.write("% exclude(): Problematic Term encountered: \n");
+                out.write("% exclude(): Problematic Term encountered (2): " + a +
+                        " in formula: " + stripped + "\n");
                 return true;
             }
         }
@@ -2195,7 +2225,7 @@ public class THFnew {
                     String p = args.get(1);
                     if (kb.isInstanceOf(p, "Relation")) {
                         out.write("% excludeNonModal(): meta-logic domain/subrelation over relation: "
-                                + p + "\n");
+                                + p +  " in formula: " + stripped +"\n");
                         return true;
                     }
                 }
@@ -2211,7 +2241,7 @@ public class THFnew {
                                     + conseq + " in " + f.getFormula());
                         }
                         out.write("% exclude(): meta-logic (variable as consequent of =>): "
-                                + conseq + "\n");
+                                + conseq + " in formula: " + stripped +"\n");
                         return true;
                     }
                 }
@@ -2225,7 +2255,7 @@ public class THFnew {
                                     + arg0 + " in " + f.getFormula());
                         }
                         out.write("% exclude(): meta-logic (variable under not/~): "
-                                + arg0 + "\n");
+                                + arg0 + " in formula: " + stripped + "\n");
                         return true;
                     }
                 }
@@ -2242,7 +2272,8 @@ public class THFnew {
                 if (Formula.listP(s)) {
                     if (excludeNonModal(new FormulaAST(s), kb, out)) {
                         String flat = f.toString().replace("\n", " ").replace("\r", " ");
-                        out.write("% excluded(): interior list: " + flat + "\n");
+                        out.write("% excluded(): excludeNonModal: " + flat + " in formula: " +
+                                stripped + "\n");
                         return true;
                     }
                 }
@@ -2252,7 +2283,8 @@ public class THFnew {
             for (String sub : args) {
                 if (excludePred(sub, out)) {
                     String flat = f.toString().replace("\n", " ").replace("\r", " ");
-                    out.write("% excluded(): term from excludePred: " + flat + "\n");
+                    out.write("% excluded(): term from excludePred: " + flat + " in formula: " +
+                            stripped + "\n");
                     return true;
                 }
             }
