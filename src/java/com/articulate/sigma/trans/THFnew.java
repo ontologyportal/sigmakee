@@ -1420,8 +1420,8 @@ public class THFnew {
             else if (kb.isInstanceOf(t, "World") || t.equals("World"))
                 // World arguments are typed as w.
                 sb.append("w > ");
-            else if (kb.isInstanceOf(t, "ObjectiveNorm"))
-                sb.append("m > ");
+//            else if (kb.isInstanceOf(t, "ObjectiveNorm"))
+//                sb.append("m > ");
             else
                 // Everything else is an individual.
                 sb.append("$i > ");
