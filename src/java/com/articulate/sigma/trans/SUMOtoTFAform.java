@@ -2262,7 +2262,7 @@ public class SUMOtoTFAform {
         if (f.car().equals("instance")) {
             if (terms.contains(constants.get(0)) ||
                 terms.contains(constants.get(1)))
-                return new FormulaAST();
+                return new FormulaAST("");
             else
                 return f;
         }
@@ -2547,9 +2547,9 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.process(): collected quantifier list=" + f.qlist);
         // Convert Numeric names to their corresponding values
         f = instantiateNumericConstants(f);
+        if (f == null || StringUtil.emptyString(f.getFormula())) return "";
         // Removed type mapping for terms if Integer or real number
         f = new FormulaAST(modifyPrecond(f));
-        if (f == null || StringUtil.emptyString(f.getFormula())) return "";
         if (debug) System.out.println("SUMOtoTFAform.process(): f after instantiateNumericConstants() & modifyPrecond(): \n" + f);
         f = new FormulaAST(modifyTypesToConstraints(f));
         if (debug) System.out.println("SUMOtoTFAform.process(): f after modify types: \n" + f);
@@ -2743,7 +2743,7 @@ public class SUMOtoTFAform {
     protected static String modifyPrecond(Formula f) {
 
         if (f == null || StringUtil.emptyString(f.getFormula()))
-            return f.getFormula();
+            return "";
         String type = "Integer";
         Pattern p = Pattern.compile("\\(instance \\?(\\w+) " + type + "\\)");
         Matcher m = p.matcher(f.getFormula());

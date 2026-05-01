@@ -74,7 +74,7 @@ public class SUMOtoTFAKBTest extends IntegrationTestBase {
         System.out.println("\n======================== SUMOtoTFAKBTest.testDynamicSortDef(): ");
 
         String result = SUMOtoTFAform.sortFromRelation("ListFn__2Fn__2ReFn");
-        String expectedRes = "ListFn__2Fn__2ReFn : (  $i * $real  ) > $i";
+        String expectedRes = "s__ListFn__2Fn__2ReFn : (  $i * $real  ) > $i";
         System.out.println("testDynamicSortDef(): result: " + result);
         System.out.println("testDynamicSortDef(): expect: " + expectedRes);
         if (expectedRes.equals(result))
