@@ -740,8 +740,6 @@ public class FormulaAST extends Formula {
             List<Expr> elements = getElements();
             if (start < 0 || start >= elements.size()) return null;
             List<Expr> slice = elements.subList(start, elements.size());
-            for (Expr e : slice)
-                if (e instanceof Expr.SExpr) return null;
             return slice.stream().map(Expr::toKifString).collect(Collectors.toList());
         }
         System.out.println("Formula string-based method used: argumentsToArrayListString");
