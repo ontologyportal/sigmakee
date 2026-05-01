@@ -25,6 +25,7 @@ import java.io.*;
 import java.util.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class EProver {
 
@@ -110,6 +111,8 @@ public class EProver {
             System.out.println("EProver.askEProver(): suoKifFormulas empty!");
         }
     }
+    
+    public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.getMgr().getPref("eprover")));}
 
     /***************************************************************
      * Submits a query to this EProver. Returns a list of answers from inference

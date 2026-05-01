@@ -37,13 +37,6 @@ public class OllamaClient {
 
     /**
      * One-shot text generation via /api/generate (no conversation state).
-     * @param model  e.g., "llama3.2"
-     * @param prompt your prompt
-     * @return generated text (response field) or raw JSON if parsing fails
-     * @throws IOException on network errors
-     */
-    /**
-     * One-shot text generation via /api/generate (no conversation state).
      *
      * @param model     e.g., "llama3.2"
      * @param prompt    prompt
@@ -51,17 +44,14 @@ public class OllamaClient {
      * @param requestJsonFormat  if true, requests JSON-mode output when supported by Ollama/model
      */
     public String generate(String model, String prompt, Map<String, Object> options, boolean requestJsonFormat) throws IOException {
+        
         String endpoint = baseUrl + "/api/generate";
-
-        // Build JSON body
         StringBuilder body = new StringBuilder();
         body.append("{")
                 .append("\"model\":\"").append(escapeJson(model)).append("\",")
                 .append("\"prompt\":\"").append(escapeJson(prompt)).append("\",")
                 .append("\"stream\":false");
-
         if (requestJsonFormat) body.append(",\"format\":\"json\"");
-
         if (options != null && !options.isEmpty()) {
             body.append(",\"options\":{");
             boolean first = true;
@@ -77,22 +67,16 @@ public class OllamaClient {
             body.append("}");
         }
         body.append("}");
-
-        // Create Request (HttpClient handles 'Connection: keep-alive' automatically)
         java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
                 .uri(java.net.URI.create(endpoint))
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .POST(java.net.http.HttpRequest.BodyPublishers.ofString(body.toString(), StandardCharsets.UTF_8))
                 .build();
-
         try {
-            // Send request synchronously
             java.net.http.HttpResponse<String> response = HTTP_CLIENT.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
-
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 String json = response.body();
-                // Extract "response" field
                 String marker = "\"response\":\"";
                 int i = json.indexOf(marker);
                 if (i >= 0) {
@@ -103,9 +87,7 @@ public class OllamaClient {
                     }
                 }
                 return json;
-            } else {
-                throw new IOException("Ollama error: HTTP " + response.statusCode() + " - " + response.body());
-            }
+            } else throw new IOException("Ollama error: HTTP " + response.statusCode() + " - " + response.body());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new IOException("Request interrupted", e);
@@ -114,8 +96,6 @@ public class OllamaClient {
 
     public String chat(String model, String prompt, Map<String, Object> options, boolean requestJsonFormat) throws IOException {
         String endpoint = baseUrl + "/api/chat";
-
-        // Build JSON body
         StringBuilder body = new StringBuilder();
         body.append("{")
                 .append("\"model\":\"").append(escapeJson(model)).append("\",")
@@ -123,9 +103,7 @@ public class OllamaClient {
                 .append("{\"role\":\"user\",\"content\":\"").append(escapeJson(prompt)).append("\"}")
                 .append("],")
                 .append("\"stream\":false");
-
         if (requestJsonFormat) body.append(",\"format\":\"json\"");
-
         if (options != null && !options.isEmpty()) {
             body.append(",\"options\":{");
             boolean first = true;
@@ -140,25 +118,17 @@ public class OllamaClient {
             }
             body.append("}");
         }
-
         body.append("}");
-
         java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
                 .uri(java.net.URI.create(endpoint))
                 .header("Content-Type", "application/json")
                 .header("Accept", "application/json")
                 .POST(java.net.http.HttpRequest.BodyPublishers.ofString(body.toString(), StandardCharsets.UTF_8))
                 .build();
-
         try {
-            java.net.http.HttpResponse<String> response =
-                    HTTP_CLIENT.send(request, java.net.http.HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-
+            java.net.http.HttpResponse<String> response = HTTP_CLIENT.send(request, java.net.http.HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 String json = response.body();
-
-                // Extract assistant message.content from chat response
-                // Ollama chat response shape: {"message":{"role":"assistant","content":"..."} ...}
                 String marker = "\"message\":{";
                 int m = json.indexOf(marker);
                 if (m >= 0) {
@@ -171,8 +141,6 @@ public class OllamaClient {
                         }
                     }
                 }
-
-                // Fallback: try first occurrence of "content":"..."
                 String fallbackMarker = "\"content\":\"";
                 int i = json.indexOf(fallbackMarker);
                 if (i >= 0) {
@@ -182,7 +150,6 @@ public class OllamaClient {
                         return unescapeJsonString(json.substring(start, end));
                     }
                 }
-
                 return json;
             } else {
                 throw new IOException("Ollama error: HTTP " + response.statusCode() + " - " + response.body());
@@ -193,9 +160,7 @@ public class OllamaClient {
         }
     }
 
-
     // ===== Helpers =====
-
     private static String readAll(InputStream is) throws IOException {
         if (is == null) return "";
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
@@ -291,9 +256,7 @@ public class OllamaClient {
     //   java -Djava.net.preferIPv4Stack=true com.articulate.sigma.nlg.OllamaClient "http://127.0.0.1:11434" "llama3.2" "Explain SUO-KIF in one sentence."
     public static void main(String[] args) throws Exception {
         System.err.println("MAIN start, args=" + Arrays.toString(args));
-        System.err.println("Loaded from: " +
-                OllamaClient.class.getProtectionDomain().getCodeSource().getLocation());
-
+        System.err.println("Loaded from: " + OllamaClient.class.getProtectionDomain().getCodeSource().getLocation());
         System.setProperty("java.net.preferIPv4Stack", "true"); // prefer 127.0.0.1 over ::1
         if (args.length < 3) {
             System.err.println("Usage: java com.articulate.sigma.nlg.OllamaClient <baseUrl> <model> <prompt...>");
@@ -303,7 +266,6 @@ public class OllamaClient {
         String base = args[0];
         String model = args[1];
         String prompt = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-
         OllamaClient client = new OllamaClient(base);
         System.err.println("Calling generate...");
         String text;

@@ -16,6 +16,8 @@ import tptp_parser.TPTPFormula;
 
 import java.util.*;
 
+import com.articulate.sigma.security.ValidationUtils;
+
 /**
  * Generic result structure for ATP (Automated Theorem Prover) runs.
  * Captures execution metadata, SZS status, output, and proof data.
@@ -27,7 +29,6 @@ import java.util.*;
  */
 public class ATPResult {
 
-    // === Execution Context ===
     private String engineName;           // "Vampire", "EProver", "LEO-III"
     private String engineMode;           // "CASC", "AVATAR", "HOL", etc.
     private String inputLanguage;        // "FOF", "TFF", "THF"
@@ -35,29 +36,24 @@ public class ATPResult {
     private long timeoutMs;              // Configured timeout
     private List<String> commandLine;    // Actual command executed
 
-    // === Execution Outcome ===
     private int exitCode = -1;           // Process exit code (-1 if not run)
     private long elapsedTimeMs = 0;      // Wall-clock time
     private boolean timedOut = false;    // Explicit timeout flag
     private String terminationSignal;    // "SIGKILL", "SIGSEGV", etc. or null
 
-    // === Raw Output ===
     private List<String> stdout = new ArrayList<>();
     private List<String> stderr = new ArrayList<>();
 
-    // === SZS Status ===
     private SZSStatus szsStatus = SZSStatus.NOT_RUN;
-    private String szsStatusRaw;         // Raw status string from output
-    private String szsDiagnostics;       // Details after colon in status line
-    private String szsOutputType;        // "Proof", "Refutation", "Model", etc.
+    private String szsStatusRaw;
+    private String szsDiagnostics;
+    private String szsOutputType; 
 
-    // === Proof Data (populated by TPTP3ProofProcessor) ===
     private List<TPTPFormula> proofSteps;
     private Map<String, String> answerBindings;
     private boolean inconsistencyDetected;
     private List<String> parsingWarnings;
 
-    // === Error Info ===
     private List<String> errorLines = new ArrayList<>();
     private String primaryError;
     private List<String> warnings = new ArrayList<>();
@@ -68,8 +64,6 @@ public class ATPResult {
     public ATPResult() {
         this.commandLine = new ArrayList<>();
     }
-
-    // === Convenience Factory Methods ===
 
     /**
      * Create an ATPResult indicating the prover was not run
@@ -109,8 +103,7 @@ public class ATPResult {
     /**
      * Create an ATPResult for a timeout
      */
-    public static ATPResult timeout(String engineName, long timeoutMs, long elapsedMs,
-                                    List<String> stdout, List<String> stderr) {
+    public static ATPResult timeout(String engineName, long timeoutMs, long elapsedMs, List<String> stdout, List<String> stderr) {
         ATPResult result = new ATPResult();
         result.setEngineName(engineName);
         result.setTimeoutMs(timeoutMs);
@@ -124,332 +117,218 @@ public class ATPResult {
 
     // === Getters and Setters ===
 
-    public String getEngineName() {
-        return engineName;
-    }
+    public String getEngineName() {return engineName;}
 
-    public void setEngineName(String engineName) {
-        this.engineName = engineName;
-    }
+    public void setEngineName(String engineName) {this.engineName = engineName;}
 
-    public String getEngineMode() {
-        return engineMode;
-    }
+    public String getEngineMode() {return engineMode;}
 
-    public void setEngineMode(String engineMode) {
-        this.engineMode = engineMode;
-    }
+    public void setEngineMode(String engineMode) {this.engineMode = engineMode;}
 
-    public String getInputLanguage() {
-        return inputLanguage;
-    }
+    public String getInputLanguage() {return inputLanguage;}
 
-    public void setInputLanguage(String inputLanguage) {
-        this.inputLanguage = inputLanguage;
-    }
+    public void setInputLanguage(String inputLanguage) {this.inputLanguage = inputLanguage;}
 
-    public String getInputSource() {
-        return inputSource;
-    }
+    public String getInputSource() {return inputSource;}
 
-    public void setInputSource(String inputSource) {
-        this.inputSource = inputSource;
-    }
+    public void setInputSource(String inputSource) {this.inputSource = inputSource;}
 
-    public long getTimeoutMs() {
-        return timeoutMs;
-    }
+    public long getTimeoutMs() {return timeoutMs;}
 
-    public void setTimeoutMs(long timeoutMs) {
-        this.timeoutMs = timeoutMs;
-    }
+    public void setTimeoutMs(long timeoutMs) {this.timeoutMs = timeoutMs;}
 
-    public List<String> getCommandLine() {
-        return commandLine;
-    }
+    public List<String> getCommandLine() {return commandLine;}
 
-    public void setCommandLine(List<String> commandLine) {
-        this.commandLine = commandLine != null ? commandLine : new ArrayList<>();
-    }
+    public void setCommandLine(List<String> commandLine) {this.commandLine = commandLine != null ? commandLine : new ArrayList<>();}
 
-    public void setCommandLine(String[] commandLine) {
-        this.commandLine = commandLine != null ? Arrays.asList(commandLine) : new ArrayList<>();
-    }
+    public void setCommandLine(String[] commandLine) {this.commandLine = commandLine != null ? Arrays.asList(commandLine) : new ArrayList<>();}
 
-    public String getCommandLineString() {
-        return commandLine != null ? String.join(" ", commandLine) : "";
-    }
+    public String getCommandLineString() {return commandLine != null ? String.join(" ", commandLine) : "";}
 
-    public int getExitCode() {
-        return exitCode;
-    }
+    public int getExitCode() {return exitCode;}
 
-    public void setExitCode(int exitCode) {
-        this.exitCode = exitCode;
-    }
+    public void setExitCode(int exitCode) {this.exitCode = exitCode;}
 
-    public long getElapsedTimeMs() {
-        return elapsedTimeMs;
-    }
+    public long getElapsedTimeMs() {return elapsedTimeMs;}
 
-    public void setElapsedTimeMs(long elapsedTimeMs) {
-        this.elapsedTimeMs = elapsedTimeMs;
-    }
+    public void setElapsedTimeMs(long elapsedTimeMs) {this.elapsedTimeMs = elapsedTimeMs;}
 
-    public boolean isTimedOut() {
-        return timedOut;
-    }
+    public boolean isTimedOut() {return timedOut;}
 
-    public void setTimedOut(boolean timedOut) {
-        this.timedOut = timedOut;
-    }
+    public void setTimedOut(boolean timedOut) {this.timedOut = timedOut;}
 
-    public String getTerminationSignal() {
-        return terminationSignal;
-    }
+    public String getTerminationSignal() {return terminationSignal;}
 
-    public void setTerminationSignal(String terminationSignal) {
-        this.terminationSignal = terminationSignal;
-    }
+    public void setTerminationSignal(String terminationSignal) {this.terminationSignal = terminationSignal;}
 
-    public List<String> getStdout() {
-        return stdout;
-    }
+    public List<String> getStdout() {return stdout;}
 
-    public void setStdout(List<String> stdout) {
-        this.stdout = stdout != null ? stdout : new ArrayList<>();
-    }
+    public void setStdout(List<String> stdout) {this.stdout = stdout != null ? stdout : new ArrayList<>();}
 
-    public List<String> getStderr() {
-        return stderr;
-    }
+    public List<String> getStderr() {return stderr;}
 
-    public void setStderr(List<String> stderr) {
-        this.stderr = stderr != null ? stderr : new ArrayList<>();
-    }
+    public void setStderr(List<String> stderr) {this.stderr = stderr != null ? stderr : new ArrayList<>();}
 
-    public SZSStatus getSzsStatus() {
-        return szsStatus;
-    }
+    public SZSStatus getSzsStatus() {return szsStatus;}
 
-    public void setSzsStatus(SZSStatus szsStatus) {
-        this.szsStatus = szsStatus != null ? szsStatus : SZSStatus.UNKNOWN;
-    }
+    public void setSzsStatus(SZSStatus szsStatus) {this.szsStatus = szsStatus != null ? szsStatus : SZSStatus.UNKNOWN;}
 
-    public String getSzsStatusRaw() {
-        return szsStatusRaw;
-    }
+    public String getSzsStatusRaw() {return szsStatusRaw;}
 
-    public void setSzsStatusRaw(String szsStatusRaw) {
-        this.szsStatusRaw = szsStatusRaw;
-    }
+    public void setSzsStatusRaw(String szsStatusRaw) {this.szsStatusRaw = szsStatusRaw;}
 
-    public String getSzsDiagnostics() {
-        return szsDiagnostics;
-    }
+    public String getSzsDiagnostics() {return szsDiagnostics;}
 
-    public void setSzsDiagnostics(String szsDiagnostics) {
-        this.szsDiagnostics = szsDiagnostics;
-    }
+    public void setSzsDiagnostics(String szsDiagnostics) {this.szsDiagnostics = szsDiagnostics;}
 
-    public String getSzsOutputType() {
-        return szsOutputType;
-    }
+    public String getSzsOutputType() {return szsOutputType;}
 
-    public void setSzsOutputType(String szsOutputType) {
-        this.szsOutputType = szsOutputType;
-    }
+    public void setSzsOutputType(String szsOutputType) {this.szsOutputType = szsOutputType;}
 
-    public List<TPTPFormula> getProofSteps() {
-        return proofSteps;
-    }
+    public List<TPTPFormula> getProofSteps() {return proofSteps;}
 
-    public void setProofSteps(List<TPTPFormula> proofSteps) {
-        this.proofSteps = proofSteps;
-    }
+    public void setProofSteps(List<TPTPFormula> proofSteps) {this.proofSteps = proofSteps;}
 
-    public Map<String, String> getAnswerBindings() {
-        return answerBindings;
-    }
+    public Map<String, String> getAnswerBindings() {return answerBindings;}
 
-    public void setAnswerBindings(Map<String, String> answerBindings) {
-        this.answerBindings = answerBindings;
-    }
+    public void setAnswerBindings(Map<String, String> answerBindings) {this.answerBindings = answerBindings;}
 
-    public boolean isInconsistencyDetected() {
-        return inconsistencyDetected;
-    }
+    public boolean isInconsistencyDetected() {return inconsistencyDetected;}
 
-    public void setInconsistencyDetected(boolean inconsistencyDetected) {
-        this.inconsistencyDetected = inconsistencyDetected;
-    }
+    public void setInconsistencyDetected(boolean inconsistencyDetected) {this.inconsistencyDetected = inconsistencyDetected;}
 
-    public List<String> getParsingWarnings() {
-        return parsingWarnings;
-    }
+    public List<String> getParsingWarnings() {return parsingWarnings;}
 
-    public void setParsingWarnings(List<String> parsingWarnings) {
-        this.parsingWarnings = parsingWarnings;
-    }
+    public void setParsingWarnings(List<String> parsingWarnings) {this.parsingWarnings = parsingWarnings;}
 
-    public List<String> getErrorLines() {
-        return errorLines;
-    }
+    public List<String> getErrorLines() {return errorLines;}
 
-    public void setErrorLines(List<String> errorLines) {
-        this.errorLines = errorLines != null ? errorLines : new ArrayList<>();
-    }
+    public void setErrorLines(List<String> errorLines) {this.errorLines = errorLines != null ? errorLines : new ArrayList<>();}
 
-    public String getPrimaryError() {
-        return primaryError;
-    }
+    public String getPrimaryError() {return primaryError;}
 
-    public void setPrimaryError(String primaryError) {
-        this.primaryError = primaryError;
-    }
+    public void setPrimaryError(String primaryError) {this.primaryError = primaryError;}
 
-    public List<String> getWarnings() {
-        return warnings;
-    }
+    public List<String> getWarnings() {return warnings;}
 
-    public void setWarnings(List<String> warnings) {
-        this.warnings = warnings != null ? warnings : new ArrayList<>();
-    }
+    public void setWarnings(List<String> warnings) {this.warnings = warnings != null ? warnings : new ArrayList<>();}
 
-    // === Convenience Methods ===
+    public boolean isSuccess() { return szsStatus != null && szsStatus.isSuccess();}
 
-    /**
-     * @return true if the prover found a proof or determined the status successfully
-     */
-    public boolean isSuccess() {
-        return szsStatus != null && szsStatus.isSuccess();
-    }
+    public boolean hasProof() {return proofSteps != null && !proofSteps.isEmpty();}
 
-    /**
-     * @return true if proof steps are available
-     */
-    public boolean hasProof() {
-        return proofSteps != null && !proofSteps.isEmpty();
-    }
+    public boolean hasAnswers() {return answerBindings != null && !answerBindings.isEmpty();}
 
-    /**
-     * @return true if answer bindings are available
-     */
-    public boolean hasAnswers() {
-        return answerBindings != null && !answerBindings.isEmpty();
-    }
-
-    /**
-     * @return true if there were errors (exit code != 0, error status, or error lines)
-     */
     public boolean hasErrors() {
         if (exitCode != 0 && exitCode != -1) return true;
         if (szsStatus != null && szsStatus.isError()) return true;
         return !errorLines.isEmpty() || (stderr != null && !stderr.isEmpty());
     }
 
-    /**
-     * @return true if there are warnings
-     */
-    public boolean hasWarnings() {
-        return warnings != null && !warnings.isEmpty();
-    }
+    public boolean hasWarnings() {return warnings != null && !warnings.isEmpty();}
 
-    /**
-     * @return true if stderr has content
-     */
-    public boolean hasStderr() {
-        return stderr != null && !stderr.isEmpty();
-    }
+    public boolean hasStderr() {return stderr != null && !stderr.isEmpty();}
 
-    /**
-     * @return true if stdout has content
-     */
-    public boolean hasStdout() {
-        return stdout != null && !stdout.isEmpty();
-    }
+    public boolean hasStdout() {return stdout != null && !stdout.isEmpty();}
 
-    /**
-     * Get a human-readable summary of the result
-     */
     public String getSummary() {
-        StringBuilder sb = new StringBuilder();
 
-        // Engine and status
+        StringBuilder sb = new StringBuilder();
         sb.append(engineName != null ? engineName : "Prover");
-        if (engineMode != null) {
-            sb.append(" (").append(engineMode).append(")");
-        }
+        if (engineMode != null) sb.append(" (").append(engineMode).append(")");
         sb.append(": ");
         sb.append(szsStatus != null ? szsStatus.getTptpName() : "Unknown");
-
-        // Timing
-        if (elapsedTimeMs > 0) {
-            sb.append(" in ").append(elapsedTimeMs).append("ms");
-        }
-        if (timedOut) {
-            sb.append(" (timed out)");
-        }
-
-        // Proof info
-        if (hasProof()) {
-            sb.append(", ").append(proofSteps.size()).append(" proof steps");
-        }
-        if (hasAnswers()) {
-            sb.append(", ").append(answerBindings.size()).append(" answers");
-        }
-
+        if (elapsedTimeMs > 0) sb.append(" in ").append(elapsedTimeMs).append("ms");
+        if (timedOut) sb.append(" (timed out)");
+        if (hasProof()) sb.append(", ").append(proofSteps.size()).append(" proof steps");
+        if (hasAnswers()) sb.append(", ").append(answerBindings.size()).append(" answers");
         return sb.toString();
     }
 
     /**
      * Get CSS class for UI styling based on status
      */
-    public String getCssClass() {
-        if (szsStatus == null) {
-            return "szs-unknown";
-        }
-        return szsStatus.getCssClass();
-    }
+    public String getCssClass() {return (szsStatus == null) ?  "szs-unknown" : szsStatus.getCssClass();}
 
     /**
      * Get CSS class for the status badge
      */
-    public String getStatusBadgeClass() {
-        return getCssClass();
-    }
+    public String getStatusBadgeClass() {return getCssClass();}
 
     /**
      * Extract and populate SZS information from stdout
      */
     public void extractSzsFromOutput() {
-        if (stdout == null || stdout.isEmpty()) {
-            return;
-        }
-
-        // Extract SZS status
+        if (stdout == null || stdout.isEmpty()) return;
         SZSStatus extracted = SZSExtractor.extractStatus(stdout);
-        if (extracted != null) {
-            this.szsStatus = extracted;
-        }
-
-        // Extract raw status line
+        if (extracted != null) this.szsStatus = extracted;
         this.szsStatusRaw = SZSExtractor.extractStatusLine(stdout);
-
-        // Extract diagnostics
         this.szsDiagnostics = SZSExtractor.extractDiagnostics(stdout);
-
-        // Extract output type
         this.szsOutputType = SZSExtractor.extractOutputType(stdout);
-
-        // Extract error lines
         this.errorLines = SZSExtractor.extractErrorLines(stdout, stderr);
-
-        // Get primary error
         this.primaryError = SZSExtractor.getPrimaryError(stdout, stderr);
-
-        // Extract warnings
         this.warnings = SZSExtractor.extractWarnings(stdout);
+    }
+
+    /** 
+     * Render the ATPResult panel showing SZS status, timing, and diagnostics 
+     * @return html of the ATP result
+     */
+    public String atpResultPanelToHTML() {
+
+        if (this == null) return "";
+        StringBuilder html = new StringBuilder();
+        String statusName = this.getSzsStatus() != null ? this.getSzsStatus().getTptpName() : "Unknown";
+        String cssClass = this.getCssClass();
+        String szsUrl = "https://tptp.org/UserDocs/SZSOntology/";
+        String engineInfo = this.getEngineName() != null ? this.getEngineName() : "Prover";
+        if (this.getEngineMode() != null && !this.getEngineMode().isEmpty()) engineInfo += " (" + this.getEngineMode() + ")";
+        html.append("<div class='atp-result-panel'>");
+        html.append("<div class='result-header'>");
+        html.append("<a class='szs-link' href='" + szsUrl + "' target='_blank' rel='noopener noreferrer'>" + "<span class='szs-badge " + cssClass + "'>" + ValidationUtils.sanitizeString((statusName) + "</span>" + "</a>"));
+        html.append("<span class='engine-tag'>" + ValidationUtils.sanitizeString((engineInfo) + "</span>"));
+        html.append("</div>");
+        html.append("<div class='result-meta'>");
+        if (this.getInputLanguage() != null) html.append("<span>Input: " + ValidationUtils.sanitizeString((this.getInputLanguage()) + "</span>"));
+        html.append("<span>Time: " + this.getElapsedTimeMs() + "ms");
+        if (this.getTimeoutMs() > 0) html.append(" / " + this.getTimeoutMs() + "ms limit");
+        html.append("</span>");
+        if (this.getExitCode() != 0 && this.getExitCode() != -1) html.append("<span>Exit: " + this.getExitCode() + "</span>");
+        if (this.isTimedOut()) html.append("<span style='color:#856404;'>Timed out</span>");
+        html.append("</div>");
+        if (this.hasErrors() || this.hasStderr()) {
+            html.append("<details class='result-errors' open>");
+            html.append("<summary>Diagnostics</summary>");
+            html.append("<pre>");
+            if (this.getPrimaryError() != null && !this.getPrimaryError().isEmpty()) html.append(ValidationUtils.sanitizeString((this.getPrimaryError())));
+            if (this.getSzsDiagnostics() != null && !this.getSzsDiagnostics().isEmpty()) html.append("SZS: " + ValidationUtils.sanitizeString((this.getSzsDiagnostics())));
+            List<String> errorLines = this.getErrorLines();
+            if (errorLines != null && !errorLines.isEmpty()) {
+                for (int i = 0; i < Math.min(20, errorLines.size()); i++) html.append(ValidationUtils.sanitizeString((errorLines.get(i))));
+                if (errorLines.size() > 20) html.append("... (" + (errorLines.size() - 20) + " more lines)");
+            }
+            List<String> stderr = this.getStderr();
+            if (stderr != null && !stderr.isEmpty() && (errorLines == null || errorLines.isEmpty())) {
+                for (int i = 0; i < Math.min(15, stderr.size()); i++) html.append(ValidationUtils.sanitizeString((stderr.get(i))));
+                if (stderr.size() > 15) html.append("... (" + (stderr.size() - 15) + " more lines)");
+            }
+            html.append("</pre>");
+            html.append("</details>");
+        }
+        List<String> stdout = this.getStdout();
+        if (stdout != null && !stdout.isEmpty()) {
+            html.append("<details class='result-raw'>");
+            html.append("<summary>Raw Prover Output (" + stdout.size() + " lines)</summary>");
+            html.append("<pre>");
+            int total = stdout.size();
+            int start = Math.max(0, total - 200);
+            for (int i = start; i < total; i++) html.append(ValidationUtils.sanitizeString((stdout.get(i))));
+            if (total > 200) html.append("... (" + (total - 200) + " earlier lines omitted)");
+            html.append("</pre>");
+            html.append("</details>");
+        }
+        html.append("</div>");
+        return html.toString();
     }
 
     /**
@@ -460,28 +339,17 @@ public class ATPResult {
         this.exitCode = exitCode;
         this.elapsedTimeMs = elapsedMs;
         this.timedOut = timedOut;
-
         extractSzsFromOutput();
-
-        if (szsStatus == null || szsStatus == SZSStatus.NOT_RUN) {
-            szsStatus = SZSStatus.fromExitCode(exitCode, timedOut);
-        }
-
-        // ✅ If Vampire produced a solved result, it wins over any "Time limit reached!" noise
-        if (szsStatus.isSuccess()) {          // implement: Theorem/Unsat/Sat/CounterSatisfiable/…
+        if (szsStatus == null || szsStatus == SZSStatus.NOT_RUN) szsStatus = SZSStatus.fromExitCode(exitCode, timedOut);
+        if (szsStatus.isSuccess()) {
             this.timedOut = false;
             return;
         }
-
-        // Heuristics only for non-solved/unknown/gave-up runs
         if (!this.timedOut && SZSExtractor.indicatesTimeout(stdout)) {
             this.timedOut = true;
             szsStatus = SZSStatus.TIMEOUT;
         }
-
-        if (SZSExtractor.indicatesResourceOut(stdout)) {
-            szsStatus = SZSStatus.RESOURCE_OUT;
-        }
+        if (SZSExtractor.indicatesResourceOut(stdout)) szsStatus = SZSStatus.RESOURCE_OUT;
     }
 
     @Override

@@ -25,6 +25,7 @@ import tptp_parser.TPTPFormula;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -90,6 +91,8 @@ public class LEO {
         this.sessionId = sessionId;
         this.inferenceFileName = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + "." + this.requestedTptpLanguage;
     }
+
+    public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.getMgr().getPref("leoExecutable")));}
 
     /***************************************************************
      * Submits a query to the inference engine.

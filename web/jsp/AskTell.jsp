@@ -1,8 +1,3 @@
-<%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
-<%@ page import="com.articulate.sigma.utils.StringUtil" %>
-<%@ page import="com.articulate.sigma.InferenceTestSuite" %>
-<%@ page import="com.articulate.sigma.trans.TPTPGenerationManager" %>
-<%@ page import="java.io.File, java.util.Arrays, java.util.ArrayList, java.util.Comparator, java.util.List, java.util.Set" %>
 <%@include file="Prelude.jsp" %>
 <%
     /** Copyright header omitted for brevity; keep your original text **/
@@ -10,6 +5,7 @@
         response.sendRedirect("login.html");
         return;
     }
+
     String systemsDir = KBmanager.getMgr().getPref("systemsDir");
 %>
 <html>
@@ -19,66 +15,46 @@
     <script src="AskTell.js" defer></script>
 </head>
 <%
-    StringBuilder status = new StringBuilder();
-    String req = request.getParameter("request");
-    String stmt = request.getParameter("stmt");
-    String cwa = request.getParameter("CWA");
-    String isModal = request.getParameter("isModal");
-    String runSource = request.getParameter("runSource");
+    //=====================================================================================
+    // SESSION VARIABLES / REQUEST PARAMETERS
+    //=====================================================================================
 
-    // ---- Run source + persist in session ----
-    if (runSource == null) runSource = (String) session.getAttribute("runSource");
-    if (runSource == null) runSource = "custom";
+    String runSource = request.getParameter("runSource");
+    String req = request.getParameter("request");
+    // --------- STEP 1 -------------------------------------------------------------------
+
+    // Custom Query or Saved test file
+
+    runSource = (runSource == null && session.getAttribute("runSource") == null) ? "custom" : (String) session.getAttribute("runSource");
     session.setAttribute("runSource", runSource);
 
-    Boolean modensPonens = (Boolean) session.getAttribute("ModensPonens");
-    Boolean dropOnePremise = (Boolean) session.getAttribute("dropOnePremise");
-    // ---- Statement + basics ----
+    // Kif Query
+    String stmt = request.getParameter("stmt");
 
-    // ---- Modens Ponens (persist) ----
-    if (req != null) {
-        modensPonens = request.getParameter("ModensPonens") != null
-                || "yes".equalsIgnoreCase(request.getParameter("ModensPonens"))
-                || "on".equalsIgnoreCase(request.getParameter("ModensPonens"))
-                || "true".equalsIgnoreCase(request.getParameter("ModensPonens"));
-        session.setAttribute("ModensPonens", modensPonens);
-    }
-    
-    if (modensPonens == null) modensPonens = false;
-    KB.modensPonens = modensPonens;
-
-    // ---- Drop-one-premise (persist + global) ----
-    if (req != null) {
-        dropOnePremise = request.getParameter("dropOnePremise") != null;
-        session.setAttribute("dropOnePremise", dropOnePremise);
-    }
-    
-    if (dropOnePremise == null) dropOnePremise = false;
-    KB.dropOnePremiseFormulas = dropOnePremise;
-    Boolean holUseModals = (Boolean) session.getAttribute("HolUseModals");
-    
-    if (req != null) {
-        holUseModals = request.getParameter("HolUseModals") != null
-                || "yes".equalsIgnoreCase(request.getParameter("HolUseModals"))
-                || "on".equalsIgnoreCase(request.getParameter("HolUseModals"))
-                || "true".equalsIgnoreCase(request.getParameter("HolUseModals"));
-        session.setAttribute("HolUseModals", holUseModals);
-    }
-
-    if (holUseModals == null) holUseModals = false;
-    // ---- Remember selected test in session ----
+    // Test Dropdown
     String selectedTest = (String) session.getAttribute("selectedTest");
     if (req != null && request.getParameter("testName") != null) {
         selectedTest = request.getParameter("testName");
         session.setAttribute("selectedTest", selectedTest);
     }
-    // ---- CWA ----
-    if (StringUtil.emptyString(cwa)) cwa = "no";
-    SUMOKBtoTPTPKB.CWA = "yes".equals(cwa);
-    // ---- Engine / modes / language ----
-    String inferenceEngine = request.getParameter("inferenceEngine");
-    String vampireMode = request.getParameter("vampireMode");
-    if (StringUtil.emptyString(vampireMode)) vampireMode = "CASC";
+    
+    // Filter
+    String testFilter = request.getParameter("testFilter");
+    if (testFilter == null) testFilter = (String) session.getAttribute("testFilter");
+    if (testFilter == null) testFilter = "all";
+    session.setAttribute("testFilter", testFilter);
+
+
+
+    // --------- STEP 2 -------------------------------------------------------------------
+
+    // Translation Mode
+    String translationMode = request.getParameter("translationMode");
+    if (translationMode == null) translationMode = (String) session.getAttribute("translationMode");
+    if (translationMode == null) translationMode = "FOL";
+    session.setAttribute("translationMode", translationMode);
+
+    // TPTP Language
     String TPTPlang = request.getParameter("TPTPlang");
     if (StringUtil.emptyString(TPTPlang) || TPTPlang.equals("fof")) {
         TPTPlang = "fof";
@@ -89,15 +65,82 @@
         SUMOformulaToTPTPformula.setLang("tff");
         SUMOKBtoTPTPKB.setLang("tff");
     }
-    boolean syntaxError = false, english = false;
-    String englishStatement = null;
-    int maxAnswers = 1, timeout = 30;
+
+    // Closed World Assumption
+    String cwa = request.getParameter("CWA");
+    if (StringUtil.emptyString(cwa)) cwa = "no";
+    SUMOKBtoTPTPKB.CWA = "yes".equals(cwa);
+
+
+    // --------- STEP 3 -------------------------------------------------------------------
+
+    List<String> availableProvers = com.articulate.sigma.tp.TheoremProverController.availableProvers();
+    
+    // Max Answers
+    int maxAnswers = 1;
+    if (request.getParameter("maxAnswers") != null) maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));
+
+    // Timeout
+    int timeout = 30;
+    if (request.getParameter("timeout") != null) timeout = Integer.parseInt(request.getParameter("timeout"));
+
+    // Prover Type
+    String inferenceEngine = request.getParameter("inferenceEngine");
+    if (inferenceEngine == null) inferenceEngine = "Vampire";
+
+    // Vampire Options
+    
+    // Vampire Mode
+    String vampireMode = request.getParameter("vampireMode");
+    if (StringUtil.emptyString(vampireMode)) vampireMode = "CASC";
+    
+    // Modus Ponens
+    Boolean modensPonens = (Boolean) session.getAttribute("ModensPonens");
+    if (req != null) {
+        modensPonens = request.getParameter("ModensPonens") != null
+                || "yes".equalsIgnoreCase(request.getParameter("ModensPonens"))
+                || "on".equalsIgnoreCase(request.getParameter("ModensPonens"))
+                || "true".equalsIgnoreCase(request.getParameter("ModensPonens"));
+        session.setAttribute("ModensPonens", modensPonens);
+    }
+    if (modensPonens == null) modensPonens = false;
+    KB.modensPonens = modensPonens;
+
+    // Drop One Premise
+    Boolean dropOnePremise = (Boolean) session.getAttribute("dropOnePremise");
+    if (req != null) {
+        dropOnePremise = request.getParameter("dropOnePremise") != null;
+        session.setAttribute("dropOnePremise", dropOnePremise);
+    }
+    if (dropOnePremise == null) dropOnePremise = false;
+    KB.dropOnePremiseFormulas = dropOnePremise;
+
+    // HOL use modals
+    Boolean holUseModals = (Boolean) session.getAttribute("HolUseModals");
+    if (req != null) {
+        holUseModals = request.getParameter("HolUseModals") != null
+                || "yes".equalsIgnoreCase(request.getParameter("HolUseModals"))
+                || "on".equalsIgnoreCase(request.getParameter("HolUseModals"))
+                || "true".equalsIgnoreCase(request.getParameter("HolUseModals"));
+        session.setAttribute("HolUseModals", holUseModals);
+    }
+    if (holUseModals == null) holUseModals = false;
+
+    // Not used????
+    String isModal = request.getParameter("isModal");
+
+
+
+    // --------- STEP 4 -------------------------------------------------------------------
+
+    // Show English paraphrases
     Boolean showEnglish = (Boolean) session.getAttribute("showProofInEnglish");
     if (req != null) {
         showEnglish = "yes".equalsIgnoreCase(request.getParameter("showProofInEnglish"));
         session.setAttribute("showProofInEnglish", showEnglish);
     }
-    if (showEnglish == null) showEnglish = true;
+    
+    // Use LLM for paraphrasing
     Boolean llmProof = (Boolean) session.getAttribute("showProofFromLLM");
     if (req != null) {
         llmProof = "yes".equalsIgnoreCase(request.getParameter("showProofFromLLM"));
@@ -105,15 +148,19 @@
     }
     if (llmProof == null) llmProof = false;
     boolean ollamaUp = false;
-    try { ollamaUp = LanguageFormatter.checkOllamaHealth(); }
+    try { ollamaUp = com.articulate.sigma.nlg.LanguageFormatter.checkOllamaHealth(); }
     catch (Exception ignore) { ollamaUp = false; }
     if (!ollamaUp) { llmProof = false; session.setAttribute("showProofFromLLM", false); }
+
+    // Show LLM proof summary
     Boolean showProofSummary = (Boolean) session.getAttribute("showProofSummary");
     if (req != null) {
         showProofSummary = "yes".equalsIgnoreCase(request.getParameter("showProofSummary"));
         session.setAttribute("showProofSummary", showProofSummary);
     }
     if (showProofSummary == null) showProofSummary = false;
+
+    // Graph Formulas
     String graphFormulaFormat = request.getParameter("graphFormulaFormat"); // "SUO_KIF" or "TPTP"
     if (StringUtil.emptyString(graphFormulaFormat) || graphFormulaFormat.equals("SUO_KIF")) {
         graphFormulaFormat = "SUO_KIF";
@@ -121,22 +168,22 @@
         graphFormulaFormat = "TPTP";
     }
     session.setAttribute("graphFormulaFormat", graphFormulaFormat);
-    String eproverExec = KBmanager.getMgr().getPref("eprover");
-    File epFile = new File(eproverExec);
-    if (kb.eprover == null && epFile.exists())
-        kb.eprover = new com.articulate.sigma.tp.EProver(eproverExec);
-    String leoExec = KBmanager.getMgr().getPref("leoExecutable");
-    if (!StringUtil.emptyString(leoExec)) {
-        File leoFile = new File(leoExec);
-        if (kb.leo == null && leoFile.exists()) {
-            kb.leo = new com.articulate.sigma.tp.LEO();
-        }
-    }
-    if (inferenceEngine == null) inferenceEngine = "Vampire";
-    if (request.getParameter("maxAnswers") != null)
-        maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));
-    if (request.getParameter("timeout") != null)
-        timeout= Integer.parseInt(request.getParameter("timeout"));
+
+
+
+    StringBuilder status = new StringBuilder();
+
+
+
+    // ----------No idea???-----------------------------------------------------------------
+    // Use LLM for paraphrasing
+    boolean syntaxError = false;
+
+    boolean english = false;
+    String englishStatement = null;
+    if (showEnglish == null) showEnglish = true;
+
+
     if ((kbName == null) || kbName.equals("")) { System.out.println("Error: No KB specified"); return; }
     if (stmt == null || stmt.equalsIgnoreCase("null")) stmt = "(instance ?X Relation)";
     else {
@@ -158,23 +205,31 @@
         status.append("<font color='red'>Syntax Error or parsing failure in: ").append(englishStatement).append("</font><br>");
         stmt = englishStatement;
     }
-    String testFilter = request.getParameter("testFilter");
-    if (testFilter == null) testFilter = (String) session.getAttribute("testFilter");
-    if (testFilter == null) testFilter = "all";
-    session.setAttribute("testFilter", testFilter);
-    // ---- Translation mode (persist) ----
-    // FOL: standard TPTP/TFF pipeline.  HOL: THF pipeline via Vampire HOL.
-    String translationMode = request.getParameter("translationMode");
-    if (translationMode == null) translationMode = (String) session.getAttribute("translationMode");
-    if (translationMode == null) translationMode = "FOL";
-    session.setAttribute("translationMode", translationMode);
-    com.articulate.sigma.tp.EProver eProver = null;
-    com.articulate.sigma.tp.Vampire vampire = null;
+
     String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
+    
+    
+
+
+
+    
+    
+    // ==================================================================================================================
     // ---- Global flags for paraphrasing ----
     HTMLformatter.proofParaphraseInEnglish = showEnglish;
-    LanguageFormatter.paraphraseLLM = llmProof;
+    com.articulate.sigma.nlg.LanguageFormatter.paraphraseLLM = llmProof;
     boolean busy = "Run".equalsIgnoreCase(req);
+
+
+
+
+
+
+
+
+
+
+    
 %>
 <body class="<%= busy ? "busy" : "" %>" aria-busy="<%= busy %>">
 <div id="loading" class="spin-overlay" aria-live="polite" aria-atomic="true">
@@ -197,7 +252,6 @@
         </div>
     </div>
 </div>
-
 <form name="AskTell" id="AskTell" action="AskTell.jsp" method="POST">
     <%
         String pageName = "AskTell";
@@ -245,7 +299,7 @@
                             String fname = f.getName();
                             boolean sel = fname.equals(selectedTest);
                         %>
-                        <option value="<%= fname %>" <%= sel ? "selected" : "" %>><%= fname %></option>
+                            <option value="<%= fname %>" <%= sel ? "selected" : "" %>><%= fname %></option>
                         <% } %>
                     </select>
                 </label>
@@ -319,33 +373,33 @@
             </label>
         </div>
         <div class="row grid2">
-            <div class="card <%= (kb.leo == null ? "engineDisabled" : "") %>">
+            <div class="card <%= (availableProvers.contains("leo") ? "engineDisabled" : "") %>">
                 <h4>
                     <label>
                         <input type="radio" id="engineLEO" name="inferenceEngine" value="LEO" <% if ("LEO".equals(inferenceEngine)) {%>checked<%}%>
-                            <% if (kb.leo == null) { %> disabled <% } %>
+                            <% if (availableProvers.contains("leo")) { %> disabled <% } %>
                                onclick="toggleVampireOptions()">
                         LEO-III
                     </label>
                 </h4>
                 <div class="sub">Higher-order prover (available if configured).</div>
             </div>
-            <div class="card <%= (kb.eprover == null ? "engineDisabled" : "") %>">
+            <div class="card <%= (availableProvers.contains("eprover") ? "engineDisabled" : "") %>">
                 <h4>
                     <label>
                         <input type="radio" id="engineEProver" name="inferenceEngine" value="EProver" <% if ("EProver".equals(inferenceEngine)) {%>checked<%}%>
-                            <% if (kb.eprover == null) { %> disabled <% } %>
+                            <% if (availableProvers.contains("eprover")) { %> disabled <% } %>
                                onclick="toggleVampireOptions()">
                         EProver
                     </label>
                 </h4>
                 <div class="sub">First-order prover (fof/tff).</div>
             </div>
-            <div class="card <%= (KBmanager.getMgr().getPref("vampire") == null ? "engineDisabled" : "") %>">
+            <div class="card <%= (availableProvers.contains("vampire") ? "engineDisabled" : "") %>">
                 <h4>
                     <label>
                         <input type="radio" id="engineVampire" name="inferenceEngine" value="Vampire" <% if ("Vampire".equals(inferenceEngine)) {%>checked<%}%>
-                            <% if (KBmanager.getMgr().getPref("vampire") == null) { %> disabled <% } %>
+                            <% if (availableProvers.contains("vampire")) { %> disabled <% } %>
                                onclick="toggleVampireOptions()">
                         Vampire
                     </label>
@@ -465,8 +519,6 @@
 </div>
 <%
         } else {
-        // Always retrieve the proof answers
-        Vampire.askQuestion = true;
         try {
             if ("test".equals(runSource)) {
                 // ---- RUN SAVED TEST ----
@@ -1035,226 +1087,12 @@
             } catch (com.articulate.sigma.tp.ATPException atpe) {
                 renderExceptionPanel(atpe, out);
             }
-        } // end else (generation ready)
+        }
         }
     %>
 </div>
-<%!
-    /** 1) One place to set Vampire mode */
-    void setVampMode(String mode){
-        if ("CASC".equals(mode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CASC;
-        else if ("Avatar".equals(mode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
-        else if ("Custom".equals(mode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
-    }
 
-    void setGraphFormat(String format, com.articulate.sigma.trans.TPTP3ProofProcessor tpp){
-        if ("TPTP".equalsIgnoreCase(format))
-            tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.TPTP);
-        else
-            tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.SUO_KIF);
-    }
-
-    /** 2) Publish the proof graph (the big repeated block) */
-    void publishGraph(com.articulate.sigma.trans.TPTP3ProofProcessor tpp,
-                      String inferenceEngine, String vampireMode,
-                      javax.servlet.http.HttpServletRequest request,
-                      javax.servlet.ServletContext application,
-                      javax.servlet.jsp.JspWriter out) throws java.io.IOException {
-        String imgPath=null; try { imgPath = tpp.createProofDotGraph(); } catch (Exception ignore) {}
-        if (imgPath==null || tpp.proof.size()==0) return;
-        String webGraphDir = application.getRealPath("/graph"); if (webGraphDir==null) return;
-        java.io.File onDisk = new java.io.File(imgPath), webDir = new java.io.File(webGraphDir);
-        if (!webDir.exists()) webDir.mkdirs();
-        String base = onDisk.getName(), stamped = (System.currentTimeMillis()+"-"+base).replaceAll("[^A-Za-z0-9._-]","_");
-        java.io.File webImg = new java.io.File(webDir, stamped);
-        try {
-            java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            String url = request.getContextPath()+"/graph/"+webImg.getName();
-            String imgUrl = url + "?v=" + System.currentTimeMillis();
-            String badge = "Vampire".equals(inferenceEngine)? ("Vampire ("+vampireMode+")") : inferenceEngine;
-            out.println("<div class='proof-thumb-wrap'>"
-                    + "<span class='proof-badge'>" + badge + "</span>"
-                    + "<a href='" + url + "' target='_blank' title='Open full-size proof graph'>"
-                    + "<img class='proof-thumb' src='" + imgUrl + "' alt='Proof graph thumbnail'></a>"
-                    + "<div class='proof-caption'>Click to open full-size</div></div>");
-        } catch (Exception ex) {
-            out.println("<span style='color:#b00'>Could not publish proof image to /graph. Path: "+imgPath+"</span><br>");
-        }
-    }
-%>
 <%!
-    void printAnswersBlock(com.articulate.sigma.trans.TPTP3ProofProcessor tpp,
-                           String kbName, String language,
-                           javax.servlet.jsp.JspWriter out) throws java.io.IOException {
-        boolean hasMap = (tpp.bindingMap != null && !tpp.bindingMap.isEmpty());
-        boolean hasList = (tpp.bindings != null && !tpp.bindings.isEmpty());
-        out.println("<div class='answers-card'>");
-        out.println("<h3>Answers</h3>");
-        if (!hasMap && !hasList) {
-            out.println("<div class='answers-empty'>No explicit answer bindings were produced.</div>");
-            out.println("</div>");
-            return;
-        }
-        out.println("<ol class='answers-list'>");
-        if (hasMap) {
-            // Variable bindings: ?X = term
-            for (java.util.Map.Entry<String,String> e : tpp.bindingMap.entrySet()) {
-                String var = e.getKey();
-                String raw = e.getValue();
-                String term = com.articulate.sigma.trans.TPTP2SUMO.transformTerm(raw);
-                String kbHref = com.articulate.sigma.HTMLformatter.createKBHref(kbName, language);
-                out.println("<li><code>" + var + "</code> = "
-                        + "<a href='" + kbHref + "&term=" + term + "'>" + term + "</a></li>");
-            }
-        } else if (hasList) {
-            // Positional answers: 1. term
-            for (int i = 0; i < tpp.bindings.size(); i++) {
-                String raw = String.valueOf(tpp.bindings.get(i));
-                String term = com.articulate.sigma.trans.TPTP2SUMO.transformTerm(raw);
-                String kbHref = com.articulate.sigma.HTMLformatter.createKBHref(kbName, language);
-                out.println("<li>" + (i+1) + ". "
-                        + "<a href='" + kbHref + "&term=" + term + "'>" + term + "</a></li>");
-            }
-        }
-        out.println("</ol>");
-        // Handy meta line
-        int count = hasMap ? tpp.bindingMap.size() : tpp.bindings.size();
-        out.println("<div class='answers-meta'>" + count + " answer"
-                + (count==1 ? "" : "s") + " shown.</div>");
-        out.println("</div>");
-    }
-%>
-<%!
-    /** Render the ATPResult panel showing SZS status, timing, and diagnostics */
-    void renderATPResultPanel(com.articulate.sigma.tp.ATPResult r,
-                              javax.servlet.jsp.JspWriter out) throws java.io.IOException {
-        if (r == null) return;
-        out.println("<div class='atp-result-panel'>");
-        // Header with status badge
-        out.println("<div class='result-header'>");
-        String statusName = r.getSzsStatus() != null ? r.getSzsStatus().getTptpName() : "Unknown";
-        String cssClass = r.getCssClass();
-        String szsUrl = "https://tptp.org/UserDocs/SZSOntology/";
-//        out.println("<span class='szs-badge " + cssClass + "'>" + htmlEncode(statusName) + "</span>");
-        out.println("<a class='szs-link' href='" + szsUrl + "' target='_blank' rel='noopener noreferrer'>"
-                + "<span class='szs-badge " + cssClass + "'>" + htmlEncode(statusName) + "</span>"
-                + "</a>");
-        String engineInfo = r.getEngineName() != null ? r.getEngineName() : "Prover";
-        if (r.getEngineMode() != null && !r.getEngineMode().isEmpty()) {
-            engineInfo += " (" + r.getEngineMode() + ")";
-        }
-        out.println("<span class='engine-tag'>" + htmlEncode(engineInfo) + "</span>");
-        out.println("</div>");
-        // Metadata row
-        out.println("<div class='result-meta'>");
-        if (r.getInputLanguage() != null) {
-            out.println("<span>Input: " + htmlEncode(r.getInputLanguage()) + "</span>");
-        }
-        out.println("<span>Time: " + r.getElapsedTimeMs() + "ms");
-        if (r.getTimeoutMs() > 0) {
-            out.println(" / " + r.getTimeoutMs() + "ms limit");
-        }
-        out.println("</span>");
-        if (r.getExitCode() != 0 && r.getExitCode() != -1) {
-            out.println("<span>Exit: " + r.getExitCode() + "</span>");
-        }
-        if (r.isTimedOut()) {
-            out.println("<span style='color:#856404;'>Timed out</span>");
-        }
-        out.println("</div>");
-        // Error/diagnostics section (only if there are errors)
-        if (r.hasErrors() || r.hasStderr()) {
-            out.println("<details class='result-errors' open>");
-            out.println("<summary>Diagnostics</summary>");
-            out.println("<pre>");
-            // Show primary error first
-            if (r.getPrimaryError() != null && !r.getPrimaryError().isEmpty()) {
-                out.println(htmlEncode(r.getPrimaryError()));
-            }
-            // Show SZS diagnostics if available
-            if (r.getSzsDiagnostics() != null && !r.getSzsDiagnostics().isEmpty()) {
-                out.println("SZS: " + htmlEncode(r.getSzsDiagnostics()));
-            }
-            // Show error lines
-            java.util.List<String> errorLines = r.getErrorLines();
-            if (errorLines != null && !errorLines.isEmpty()) {
-                for (int i = 0; i < Math.min(20, errorLines.size()); i++) {
-                    out.println(htmlEncode(errorLines.get(i)));
-                }
-                if (errorLines.size() > 20) {
-                    out.println("... (" + (errorLines.size() - 20) + " more lines)");
-                }
-            }
-            // Show stderr if different from error lines
-            java.util.List<String> stderr = r.getStderr();
-            if (stderr != null && !stderr.isEmpty() && (errorLines == null || errorLines.isEmpty())) {
-                for (int i = 0; i < Math.min(15, stderr.size()); i++) {
-                    out.println(htmlEncode(stderr.get(i)));
-                }
-                if (stderr.size() > 15) {
-                    out.println("... (" + (stderr.size() - 15) + " more lines)");
-                }
-            }
-            out.println("</pre>");
-            out.println("</details>");
-        }
-        // Raw output (collapsible, only show if there's content)
-        java.util.List<String> stdout = r.getStdout();
-        if (stdout != null && !stdout.isEmpty()) {
-            out.println("<details class='result-raw'>");
-            out.println("<summary>Raw Prover Output (" + stdout.size() + " lines)</summary>");
-            out.println("<pre>");
-            int total = stdout.size();
-            int start = Math.max(0, total - 200);   // last 200
-            for (int i = start; i < total; i++) {
-                out.println(htmlEncode(stdout.get(i)));
-            }
-            if (total > 200) {
-                out.println("... (" + (total - 200) + " earlier lines omitted)");
-            }
-            out.println("</pre>");
-            out.println("</details>");
-        }
-        out.println("</div>");
-    }
-
-    /** Render an exception panel for ATP exceptions */
-    void renderExceptionPanel(com.articulate.sigma.tp.ATPException e,
-                              javax.servlet.jsp.JspWriter out) throws java.io.IOException {
-        if (e == null) return;
-        out.println("<div class='exception-panel'>");
-        out.println("<h4>" + htmlEncode(e.getEngineName() != null ? e.getEngineName() : "Prover") + " Error</h4>");
-        out.println("<p>" + htmlEncode(e.getMessage()) + "</p>");
-        // Show command line if available
-        if (e.getCommandLine() != null && !e.getCommandLine().isEmpty()) {
-            out.println("<div class='meta'>Command: <code>" + htmlEncode(e.getCommandLineString()) + "</code></div>");
-        }
-        // Show stderr if available
-        System.out.println(e.getStderr());
-        if (e.hasStderr()) {
-            out.println("<details open>");
-            out.println("<summary>Error Output</summary>");
-            out.println("<pre>");
-            java.util.List<String> stderr = e.getStderr();
-            for (int i = 0; i < Math.min(15, stderr.size()); i++) {
-                out.println(htmlEncode(stderr.get(i)));
-            }
-            if (stderr.size() > 15) {
-                out.println("... (" + (stderr.size() - 15) + " more lines)");
-            }
-            out.println("</pre>");
-            out.println("</details>");
-        }
-        // Show suggestion
-        String suggestion = e.getSuggestion();
-        if (suggestion != null && !suggestion.isEmpty()) {
-            out.println("<div class='suggestion'>");
-            out.println("<strong>Suggestion:</strong><br>");
-            out.println(htmlEncode(suggestion).replace("\n", "<br>"));
-            out.println("</div>");
-        }
-        out.println("</div>");
-    }
     /** HTML-encode a string to prevent XSS */
     String htmlEncode(String s) {
         if (s == null) return "";

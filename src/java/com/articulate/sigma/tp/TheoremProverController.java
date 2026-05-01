@@ -14,6 +14,13 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 package com.articulate.sigma.tp;
 
 import com.articulate.sigma.CLIMapParser;
+import com.articulate.sigma.KB;
+import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.tp.ATPQuery.ATPType;
+import com.articulate.sigma.tp.ATPQuery.RunSource;
+import com.articulate.sigma.tp.ATPQuery.TptpLanguage;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -40,19 +47,28 @@ public class TheoremProverController {
         return null;
     }
 
+    public static List<String> availableProvers() {
+        
+        List<String> availableProvers = new ArrayList<>();
+        if (EProver.isAvailable()) availableProvers.add("eprover");
+        if (LEO.isAvailable()) availableProvers.add("leo");
+        if(Vampire.isAvailable()) availableProvers.add("vampire");
+        return availableProvers;
+    }
+
     private ATPResult askVampire(ATPQuery query) {
         Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers());
         if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) {
             if (query.isClosedWorldAssumption()) SUMOKBtoTPTPKB.CWA = true;
             if (query.isModusPonens() && query.isDropOnePremise()) query.getKb().dropOnePremiseFormulas = true;
             vampire.askVampire(query.getQuery());
-            return vampire.getResult();
         } 
         else {
             if (query.getTestFilePath().isEmpty() || query.getTestFilePath() == null) vampire.askVampireHOL(query.getQuery(), query.isHolUseModals());
             else vampire.askVampireTHF(query.getTestFilePath());
-            return vampire.getResult();
         }
+        System.out.println(String.join("\n",vampire.output));
+        return vampire.getResult();
     }
 
     // private ATPResult askEProver(ATPQuery query) {
@@ -67,18 +83,50 @@ public class TheoremProverController {
 
         System.out.println("TheoremProverController class");
         System.out.println("  h - show this help screen");
-        System.out.println("  --v <> <> - query vampire");
-        System.out.println("  --e <> <> - query EProver");
-        System.out.println("  --l <> <> - query LEO");
+        System.out.println("  -a - print available provers");
+        System.out.println("  -v - query vampire");
+        System.out.println("  -e - query EProver");
+        System.out.println("  -l - query LEO");
     }
     
     public static void main(String[] args) {
         Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        TheoremProverController theoremProverController = new TheoremProverController();
         if (argMap.isEmpty() || argMap.containsKey("h")) {
             showHelp();
             return;
         }
-        TheoremProverController theoremProverController = new TheoremProverController();
-        
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        if (argMap.containsKey("a")) {
+            System.out.println("Available Provers: " + TheoremProverController.availableProvers());
+            return;
+        }
+        if (argMap.containsKey("v")) {
+            boolean closedWorldAssumption = false;
+            boolean modusPonens = false;
+            boolean dropOnePremise = false;
+            boolean holUseModals = false;
+            int timeout = 30;
+            int maxAnswers = 1;
+            ATPQuery atpQuery = new ATPQuery(
+                kb, 
+                null, 
+                "(instance Chair Furniture)", 
+                null, 
+                RunSource.CUSTOM_QUERY, 
+                ATPType.VAMPIRE, 
+                TptpLanguage.FOF, 
+                Vampire.ModeType.CASC, 
+                false, 
+                false, 
+                false, 
+                false, 
+                30, 
+                1
+            );
+            ATPResult atpResult = theoremProverController.ask(atpQuery);
+            System.out.println("TheoremProverController.main(): Result=\n" + atpResult.toString());
+        }
     }
 }
