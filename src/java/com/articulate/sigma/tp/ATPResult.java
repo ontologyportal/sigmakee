@@ -44,6 +44,8 @@ public class ATPResult {
     private List<String> stdout = new ArrayList<>();
     private List<String> stderr = new ArrayList<>();
 
+    private StringBuilder qlist = null;
+
     private SZSStatus szsStatus = SZSStatus.NOT_RUN;
     private String szsStatusRaw;
     private String szsDiagnostics;
@@ -57,6 +59,7 @@ public class ATPResult {
     private List<String> errorLines = new ArrayList<>();
     private String primaryError;
     private List<String> warnings = new ArrayList<>();
+
 
     /**
      * Default constructor
@@ -169,6 +172,10 @@ public class ATPResult {
 
     public void setStderr(List<String> stderr) {this.stderr = stderr != null ? stderr : new ArrayList<>();}
 
+    public StringBuilder getQList() {return qlist;}
+
+    public void setQList (StringBuilder qlist) {this.qlist = qlist;}
+
     public SZSStatus getSzsStatus() {return szsStatus;}
 
     public void setSzsStatus(SZSStatus szsStatus) {this.szsStatus = szsStatus != null ? szsStatus : SZSStatus.UNKNOWN;}
@@ -274,7 +281,7 @@ public class ATPResult {
      * Render the ATPResult panel showing SZS status, timing, and diagnostics 
      * @return html of the ATP result
      */
-    public String atpResultPanelToHTML() {
+    public String resultPanelToHTML() {
 
         if (this == null) return "";
         StringBuilder html = new StringBuilder();

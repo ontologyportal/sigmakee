@@ -3498,7 +3498,7 @@ public class KB implements Serializable {
             ep.askEProver(args[1]);
             System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(ep.output));
             tpp = new TPTP3ProofProcessor();
-            tpp.parseProofOutput(ep.output, args[1], this, ep.quantifierList);
+            tpp.parseProofOutput(ep.output, args[1], this, ep.qlist);
         }
         else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
             Vampire vamp = new Vampire(this, "tptp", "CASC", false, timeout, 1);
@@ -3862,7 +3862,7 @@ public class KB implements Serializable {
                         eprover.askEProver(argMap.get("ask").get(0));
                         System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
                         tpp = new TPTP3ProofProcessor();
-                        tpp.parseProofOutput(eprover.output, argMap.get("ask").get(0), kb, eprover.quantifierList);
+                        tpp.parseProofOutput(eprover.output, argMap.get("ask").get(0), kb, eprover.qlist);
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
                         Vampire vamp = new Vampire(kb, "tptp", "CASC", false, timeout, 1);

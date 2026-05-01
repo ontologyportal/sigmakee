@@ -363,6 +363,7 @@ public class LEO {
         long elapsed = System.currentTimeMillis() - startTime;
         result.setStdout(stdoutLines);
         result.setStderr(stderrLines);
+        result.setQList(this.qlist);
         result.finalize(exitValue, elapsed, elapsed >= timeoutMs);
         if (exitValue != 0) {
             System.err.println("Leo.run(): Abnormal process termination (exit code " + exitValue + ")");

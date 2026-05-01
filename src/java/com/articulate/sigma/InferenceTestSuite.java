@@ -204,7 +204,7 @@ public class InferenceTestSuite {
                     case EPROVER:
                         com.articulate.sigma.tp.EProver eprover = new com.articulate.sigma.tp.EProver(kb, "tptp", itd.timeout, maxAnswers);
                         eprover.askEProver(q);
-                        tpp.parseProofOutput(eprover.output, q, kb, eprover.quantifierList);
+                        tpp.parseProofOutput(eprover.output, q, kb, eprover.qlist);
                         itd.proof = eprover.output;
                         break;
                     case LEO:
@@ -902,7 +902,7 @@ public class InferenceTestSuite {
                 case EPROVER:
                     eprover.askEProver(processedStmt);
                     System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + eprover.toString());
-                    tpp.parseProofOutput(eprover.output, processedStmt, kb,eprover.quantifierList);
+                    tpp.parseProofOutput(eprover.output, processedStmt, kb,eprover.qlist);
                     break;
                 case LEO:
                     leo.askLeo(processedStmt);

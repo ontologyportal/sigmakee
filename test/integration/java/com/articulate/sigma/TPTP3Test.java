@@ -59,7 +59,7 @@ public class TPTP3Test extends IntegrationTestBase {
             eprover.askEProver(query);
             String result;
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-            tpp.parseProofOutput(eprover.output, "?X", kb, eprover.quantifierList);
+            tpp.parseProofOutput(eprover.output, "?X", kb, eprover.qlist);
             result = tpp.proof.toString().trim();
             File file = new File(System.getenv("SIGMA_SRC") + "/prover_out.txt");
             file.setWritable(true);

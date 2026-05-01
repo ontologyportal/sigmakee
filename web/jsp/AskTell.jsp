@@ -1,3 +1,4 @@
+<%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
 <%@include file="Prelude.jsp" %>
 <%
     /** Copyright header omitted for brevity; keep your original text **/
@@ -18,7 +19,7 @@
     //=====================================================================================
     // SESSION VARIABLES / REQUEST PARAMETERS
     //=====================================================================================
-
+    TheoremProverController theoremProverController = new TheoremProverController();
     String runSource = request.getParameter("runSource");
     String req = request.getParameter("request");
     // --------- STEP 1 -------------------------------------------------------------------
@@ -370,33 +371,33 @@
             </label>
         </div>
         <div class="row grid2">
-            <div class="card <%= (availableProvers.contains("leo") ? "engineDisabled" : "") %>">
+            <div class="card <%= (availableProvers.contains("leo") ? "" : "engineDisabled") %>">
                 <h4>
                     <label>
                         <input type="radio" id="engineLEO" name="inferenceEngine" value="LEO" <% if ("LEO".equals(inferenceEngine)) {%>checked<%}%>
-                            <% if (availableProvers.contains("leo")) { %> disabled <% } %>
+                            <% if (!availableProvers.contains("leo")) { %> disabled <% } %>
                                onclick="toggleVampireOptions()">
                         LEO-III
                     </label>
                 </h4>
                 <div class="sub">Higher-order prover (available if configured).</div>
             </div>
-            <div class="card <%= (availableProvers.contains("eprover") ? "engineDisabled" : "") %>">
+            <div class="card <%= (availableProvers.contains("eprover") ? "" : "engineDisabled") %>">
                 <h4>
                     <label>
                         <input type="radio" id="engineEProver" name="inferenceEngine" value="EProver" <% if ("EProver".equals(inferenceEngine)) {%>checked<%}%>
-                            <% if (availableProvers.contains("eprover")) { %> disabled <% } %>
+                            <% if (!availableProvers.contains("eprover")) { %> disabled <% } %>
                                onclick="toggleVampireOptions()">
                         EProver
                     </label>
                 </h4>
                 <div class="sub">First-order prover (fof/tff).</div>
             </div>
-            <div class="card <%= (availableProvers.contains("vampire") ? "engineDisabled" : "") %>">
+            <div class="card <%= (availableProvers.contains("vampire") ? "" : "engineDisabled") %>">
                 <h4>
                     <label>
                         <input type="radio" id="engineVampire" name="inferenceEngine" value="Vampire" <% if ("Vampire".equals(inferenceEngine)) {%>checked<%}%>
-                            <% if (availableProvers.contains("vampire")) { %> disabled <% } %>
+                            <% if (!availableProvers.contains("vampire")) { %> disabled <% } %>
                                onclick="toggleVampireOptions()">
                         Vampire
                     </label>
@@ -516,7 +517,6 @@
 </div>
 <%
         } else {
-        try {
             if ("test".equals(runSource)) {
                 // ---- RUN SAVED TEST ----
                 // Clear All
@@ -551,55 +551,28 @@
                                 SessionTPTPManager.endBatchTells(sid);
                             }
                             FormulaPreprocessor fp = new FormulaPreprocessor();
-                            Set<Formula> qs =
-                                    SessionTPTPManager.withSessionCache(
-                                            sid, kb, () -> fp.preProcess(new Formula(itd.query), true, kb));
+                            Set<Formula> qs = SessionTPTPManager.withSessionCache(sid, kb, () -> fp.preProcess(new Formula(itd.query), true, kb));
                             for (Formula q : qs) {
                                 String qstr = q.getFormula();
                                 ATPQuery query = new ATPQuery(
                                     kb,
                                     session.getId(),
+                                    qstr,
+                                    null,
                                     runSource,
                                     inferenceEngine,
                                     TPTPlang,
                                     vampireMode,
-                                    cwa,
+                                    "yes".equals(cwa),
                                     modensPonens,
                                     dropOnePremise,
                                     holUseModals,
                                     tmo,
                                     maxAns
                                 );
-                                renderATPResultPanel(TheoremProverController.ask(query));
-                                
-                                if ("EProver".equals(inferenceEngine)) {
-                                    com.articulate.sigma.tp.EProver eRun = kb.askEProver(qstr, tmo, maxAns);
-                                    if (eRun != null && eRun.getResult() != null) {
-                                        renderATPResultPanel(eRun.getResult(), out);
-                                    }
-                                    tpp.parseProofOutput(eRun.output, qstr, kb, eRun.qlist);
-                                } else if ("Vampire".equals(inferenceEngine)) {
-                                    setVampMode(vampireMode);
-                                    com.articulate.sigma.tp.Vampire vRun = kb.askVampireForTQ(qstr, tmo, maxAns, modensPonens, session.getId());
-//                                    com.articulate.sigma.tp.Vampire vRun = Boolean.TRUE.equals(modensPonens)
-//                                            ? kb.askVampireModensPonens(qstr, tmo, maxAns)
-//                                            : kb.asFkVampire(qstr, tmo, maxAns);
-                                    if (vRun != null && vRun.getResult() != null) {
-                                        renderATPResultPanel(vRun.getResult(), out);
-                                    }
-                                    tpp.parseProofOutput(vRun.output, qstr, kb, vRun.qlist);
-                                }
-                                else if ("LEO".equals(inferenceEngine)) {
-                                   LEO leoRun = kb.askLeo(qstr, tmo, maxAns, session.getId());
-                                    if (leoRun != null && leoRun.getResult() != null) {
-                                        renderATPResultPanel(leoRun.getResult(), out);
-                                    }
-                                    tpp.parseProofOutput(leoRun.output, qstr, kb, leoRun.qlist);
-                                }
-                            
-                            
-                            
-                            
+                                ATPResult result = theoremProverController.ask(query);
+                                if (result != null) out.println(result.resultPanelToHTML());
+                                tpp.parseProofOutput(result.getStdout(), qstr, kb, result.getQList());
                             }
                             setGraphFormat(graphFormulaFormat,tpp);
                             publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
@@ -640,12 +613,13 @@
                                     out.println(proofSummary);
                                 }
                             }
-                        } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
+                        }
+                        catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
                             renderExceptionPanel(enfe, out);
                         } catch (ProverTimeoutException | ProverCrashedException pte) {
                             renderExceptionPanel(pte, out);
                             if (pte.getResult() != null) {
-                                renderATPResultPanel(pte.getResult(), out);
+                                out.println(pte.getResult().resultPanelToHTML());
                             }
                         } catch (com.articulate.sigma.tp.ATPException ae) {
                             renderExceptionPanel(ae, out);
@@ -655,103 +629,79 @@
                     // ===== NEW .tptp / .tff FLOW via askVampireTPTP =====
                     if (!"Vampire".equals(inferenceEngine)) {
                         out.println("<span style='color:#b00'>Only Vampire is supported for .tptp/.tff tests.</span><br>");
-                    } else {
-                        try {
-                            setVampMode(vampireMode);
-                            com.articulate.sigma.tp.Vampire vRun = kb.askVampireTPTP(testPath, tmo, maxAns);
-                            // Show ATPResult panel with SZS status and diagnostics
-                            if (vRun != null && vRun.getResult() != null) {
-                                renderATPResultPanel(vRun.getResult(), out);
-                            }
-                            // Provide a friendly "query label" (TPTP problems don't have a KIF query string)
+                    } 
+                    else {
+                        String testLang = ext.endsWith(".tff") ? "tff" : "fof";
+                        ATPQuery atpQuery = new ATPQuery(
+                                kb,
+                                session.getId(),
+                                null,
+                                testPath,
+                                "test",
+                                "VAMPIRE",
+                                testLang,
+                                vampireMode,
+                                "yes".equals(cwa),
+                                modensPonens,
+                                dropOnePremise,
+                                holUseModals,
+                                tmo,
+                                maxAns
+                        );
+                        ATPResult result = theoremProverController.ask(atpQuery);
+                        if (result != null) {
+                            out.println(result.resultPanelToHTML());
                             String pseudoQuery = "TPTP file: " + new File(testPath).getName();
-                            // Parse + render just like the other flows
-                            tpp.parseProofOutput(vRun.output, pseudoQuery, kb, vRun.qlist);
-                            setGraphFormat(graphFormulaFormat,tpp);
+                            tpp.parseProofOutput(result.getStdout(), pseudoQuery, kb, result.getQList());
+                            setGraphFormat(graphFormulaFormat, tpp);
                             publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-                            tpp.processAnswersFromProof(vRun.qlist, pseudoQuery);
+                            tpp.processAnswersFromProof(result.getQList(), pseudoQuery);
                             printAnswersBlock(tpp, kbName, language, out);
-                            /* Prevent duplicate answers inside HTMLformatter */
                             if (tpp.bindingMap != null) tpp.bindingMap.clear();
-                            if (tpp.bindings   != null) tpp.bindings.clear();
+                            if (tpp.bindings != null) tpp.bindings.clear();
                             out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
-                            // Generate proof summary if requested
-                            if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
-                                // Extract proof steps as strings
-                                List<String> proofSteps = new ArrayList<>();
-                                for (Object formula : tpp.proof) {
-                                    String stepText = "";
-                                    if (formula != null) {
-                                        // Get the string representation of the formula
-                                        stepText = formula.toString();
-                                        // Try to convert to more readable format if it's in TPTP format
-                                        if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
-                                            // Extract just the formula part, skipping the TPTP wrapper
-                                            int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
-                                            int end = stepText.lastIndexOf(')');
-                                            if (start > 0 && end > start) {
-                                                stepText = stepText.substring(start, end).trim();
-                                            }
-                                        }
-                                        // Clean up the text
-                                        stepText = stepText.replaceAll("\\s+", " ").trim();
-                                    }
-                                    if (!stepText.isEmpty()) {
-                                        proofSteps.add(stepText);
-                                    }
-                                }
-                                // Generate and display the summary
-                                String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
-                                if (!proofSummary.isEmpty()) {
-                                    out.println(proofSummary);
-                                }
-                            }
-                        } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
-                            renderExceptionPanel(enfe, out);
-                        } catch (ProverTimeoutException | ProverCrashedException pte) {
-                            renderExceptionPanel(pte, out);
-                            if (pte.getResult() != null) {
-                                renderATPResultPanel(pte.getResult(), out);
-                            }
-                        } catch (com.articulate.sigma.tp.ATPException ae) {
-                            renderExceptionPanel(ae, out);
+                        }
+                        else {
+                            out.println("<font color='red'>No result from theorem prover.</font>");
                         }
                     }
                 } else if (ext.endsWith(".thf")) {
                     if (!"Vampire".equals(inferenceEngine)) {
                         out.println("<span style='color:#b00'>Only Vampire is supported for .thf tests.</span><br>");
                     } else {
-                        try {
-                            setVampMode(vampireMode);
-                            com.articulate.sigma.tp.Vampire vRun = kb.askVampireTHF(testPath, tmo, maxAns);
-                            // Show ATPResult panel with SZS status and diagnostics
-                            if (vRun != null && vRun.getResult() != null) {
-                                renderATPResultPanel(vRun.getResult(), out);
-                            }
-                            // Provide a friendly "query label" (TPTP problems don't have a KIF query string)
+                        ATPQuery atpQuery = new ATPQuery(
+                                kb,
+                                session.getId(),
+                                null,
+                                testPath,
+                                "test",
+                                "VAMPIRE",
+                                "thf",
+                                vampireMode,
+                                "yes".equals(cwa),
+                                modensPonens,
+                                dropOnePremise,
+                                holUseModals,
+                                tmo,
+                                maxAns
+                        );
+                        ATPResult result = theoremProverController.ask(atpQuery);
+                        if (result != null) {
+                            out.println(result.resultPanelToHTML());
                             String pseudoQuery = "TPTP file: " + new File(testPath).getName();
-                            List<String> cleaned = TPTPutil.clearProofFile(vRun.output);
-                            // Vampire version 4.8→5.0 reordering…
+                            List<String> cleaned = TPTPutil.clearProofFile(result.getStdout());
                             List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
                             normalized = THFutil.preprocessTHFProof(normalized);
-                            tpp.parseProofOutput(normalized, pseudoQuery, kb, vRun.qlist);
-                            setGraphFormat(graphFormulaFormat,tpp);
+                            tpp.parseProofOutput(normalized, pseudoQuery, kb, result.getQList());
+                            setGraphFormat(graphFormulaFormat, tpp);
                             publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-//                            tpp.processAnswersFromProof(vRun.qlist, pseudoQuery);
                             printAnswersBlock(tpp, kbName, language, out);
-                            /* Prevent duplicate answers inside HTMLformatter */
                             if (tpp.bindingMap != null) tpp.bindingMap.clear();
-                            if (tpp.bindings   != null) tpp.bindings.clear();
+                            if (tpp.bindings != null) tpp.bindings.clear();
                             out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
-                        } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
-                            renderExceptionPanel(enfe, out);
-                        } catch (ProverTimeoutException | ProverCrashedException pte) {
-                            renderExceptionPanel(pte, out);
-                            if (pte.getResult() != null) {
-                                renderATPResultPanel(pte.getResult(), out);
-                            }
-                        } catch (com.articulate.sigma.tp.ATPException ae) {
-                            renderExceptionPanel(ae, out);
+                        }
+                        else {
+                            out.println("<font color='red'>No result from theorem prover.</font>");
                         }
                     }
                 } else {
@@ -768,230 +718,51 @@
                 out.println("</script>");
                 out.flush();
                 if (stmt.indexOf('@') != -1) throw(new IOException("Row variables not allowed in query: " + stmt));
-                if ("EProver".equals(inferenceEngine)) {
-                    try {
-                        eProver = kb.askEProver(stmt, timeout, maxAnswers);
-                        if (eProver != null && eProver.getResult() != null) {
-                            renderATPResultPanel(eProver.getResult(), out);
-                        }
-                        com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
-                        tpp.parseProofOutput(eProver.output, stmt, kb, eProver.qlist);
-                        setGraphFormat(graphFormulaFormat,tpp);
-                        publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-                        printAnswersBlock(tpp, kbName, language, out);
-                        /* Prevent duplicate answers inside HTMLformatter */
-                        if (tpp.bindingMap != null) tpp.bindingMap.clear();
-                        if (tpp.bindings   != null) tpp.bindings.clear();
-                        out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
-                        // Generate proof summary if requested
-                        if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
-                            // Extract proof steps as strings
-                            List<String> proofSteps = new ArrayList<>();
-                            for (Object formula : tpp.proof) {
-                                String stepText = "";
-                                if (formula != null) {
-                                    // Get the string representation of the formula
-                                    stepText = formula.toString();
-                                    // Try to convert to more readable format if it's in TPTP format
-                                    if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
-                                        // Extract just the formula part, skipping the TPTP wrapper
-                                        int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
-                                        int end = stepText.lastIndexOf(')');
-                                        if (start > 0 && end > start) {
-                                            stepText = stepText.substring(start, end).trim();
-                                        }
-                                    }
-                                    // Clean up the text
-                                    stepText = stepText.replaceAll("\\s+", " ").trim();
-                                }
-                                if (!stepText.isEmpty()) {
-                                    proofSteps.add(stepText);
-                                }
-                            }
-                            // Generate and display the summary
-                            String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
-                            if (!proofSummary.isEmpty()) {
-                                out.println(proofSummary);
-                            }
-                        }
-                        if (!StringUtil.emptyString(tpp.status)) out.println("Status: " + tpp.status);
-                    } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
-                        renderExceptionPanel(enfe, out);
-                    } catch (ProverTimeoutException | ProverCrashedException pte) {
-                        renderExceptionPanel(pte, out);
-                        if (eProver != null && eProver.getResult() != null) {
-                            renderATPResultPanel(eProver.getResult(), out);
-                        }
-                    } catch (com.articulate.sigma.tp.ATPException ae) {
-                        renderExceptionPanel(ae, out);
+                String effectiveLang = "HOL".equalsIgnoreCase(translationMode) ? "thf" : TPTPlang;
+                ATPQuery atpQuery = new ATPQuery(
+                        kb,
+                        session.getId(),
+                        stmt,
+                        null,
+                        "custom",
+                        inferenceEngine,
+                        effectiveLang,
+                        vampireMode,
+                        "yes".equals(cwa),
+                        modensPonens,
+                        dropOnePremise,
+                        holUseModals,
+                        timeout,
+                        maxAnswers
+                );
+                ATPResult result = theoremProverController.ask(atpQuery);
+                if (result == null) {
+                    out.println("<font color='red'>No result from theorem prover.</font>");
+                }
+                else {
+                    out.println(result.resultPanelToHTML());
+                    TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                    List<String> proofOutput = result.getStdout();
+                    if ("Vampire".equals(inferenceEngine) && "HOL".equalsIgnoreCase(translationMode)) {
+                        List<String> cleaned = TPTPutil.clearProofFile(proofOutput);
+                        List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
+                        proofOutput = THFutil.preprocessTHFProof(normalized);
                     }
-                } else if ("Vampire".equals(inferenceEngine)) {
-                    Formula f = new Formula();
-                    f.read(stmt);
-                    setVampMode(vampireMode);
-//                    boolean isHOL = f.isHigherOrder(kb);
-                    // Use explicit UI toggle (Translation Mode) rather than auto-detection.
-                    // This makes behavior predictable for users and avoids accidental HOL attempts.
-//                    isHOL = "HOL".equalsIgnoreCase(translationMode);
-                    try {
-                        if (isHOL){ // Higher-Order Formula
-                            System.out.println(" -- Higher Order Formula Detected - Attempring to run Vampire HOL ");
-                            vampire = kb.askVampireHOL(stmt, timeout, maxAnswers, holUseModals);
-                            System.out.println("============ Vampire_HOL Output Returned =============");
-                            List<String> cleaned = TPTPutil.clearProofFile(vampire.output);
-                            System.out.println("============ Vampire-HOL Output Cleaned =============");
-                            for (String s:cleaned){
-                                System.out.println(s);
-                            }
-                            // Vampire version 4.8→5.0 reordering…
-                            List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
-                            System.out.println("============ Vampire_HOL Output Reordered =============");
-                            vampire.output = THFutil.preprocessTHFProof(normalized);
-                            System.out.println("============ Vampire_HOL Output Preprocessed =============");
-
-                        } else { // First-Order Formula
-                            System.out.println(" -- First Order Formula Detected - Attempring to run normal Vampire");
-                            String sessId = session.getId();
-                            vampire = Boolean.TRUE.equals(modensPonens)
-                                    ? kb.askVampireModensPonens(stmt, timeout, maxAnswers, sessId)
-                                    : kb.askVampire(stmt, timeout, maxAnswers, sessId);
-                        }
-                        // Show ATPResult panel with SZS status and diagnostics
-                        if (vampire != null && vampire.getResult() != null) {
-                            renderATPResultPanel(vampire.getResult(), out);
-                        }
-                        if (vampire == null || vampire.output == null){
-                            out.println("<font color='red'>Error. No response from Vampire.</font>");
-                        } else {
-                            com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
-                            tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
-                            setGraphFormat(graphFormulaFormat,tpp);
-                            publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-                            tpp.processAnswersFromProof(vampire.qlist,stmt);
-                            printAnswersBlock(tpp, kbName, language, out);
-                            /* Prevent duplicate answers inside HTMLformatter */
-                            if (tpp.bindingMap != null) tpp.bindingMap.clear();
-                            if (tpp.bindings   != null) tpp.bindings.clear();
-                            out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
-                            // Generate proof summary if requested
-                            if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
-                                // Extract proof steps as strings
-                                List<String> proofSteps = new ArrayList<>();
-                                for (Object formula : tpp.proof) {
-                                    String stepText = "";
-                                    if (formula != null) {
-                                        // Get the string representation of the formula
-                                        stepText = formula.toString();
-                                        // Try to convert to more readable format if it's in TPTP format
-                                        if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
-                                            // Extract just the formula part, skipping the TPTP wrapper
-                                            int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
-                                            int end = stepText.lastIndexOf(')');
-                                            if (start > 0 && end > start) {
-                                                stepText = stepText.substring(start, end).trim();
-                                            }
-                                        }
-                                        // Clean up the text
-                                        stepText = stepText.replaceAll("\\s+", " ").trim();
-                                    }
-                                    if (!stepText.isEmpty()) {
-                                        proofSteps.add(stepText);
-                                    }
-                                }
-                                // Generate and display the summary
-                                String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
-                                if (!proofSummary.isEmpty()) {
-                                    out.println(proofSummary);
-                                }
-                            }
-                        }
-                    } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
-                        renderExceptionPanel(enfe, out);
-                    } catch (ProverTimeoutException | ProverCrashedException pte) {
-                        renderExceptionPanel(pte, out);
-                        // Still show any partial output
-                        if (pte.getResult() != null) {
-                            renderATPResultPanel(pte.getResult(), out);
-                        }
-                    } catch (com.articulate.sigma.tp.ATPException ae) {
-                        renderExceptionPanel(ae, out);
-                    }
-                } else if ("LEO".equals(inferenceEngine)) {
-                    LEO leo = null;
-                    try {
-                        leo = kb.askLeo(stmt,timeout,maxAnswers,session.getId());
-                        // Show ATPResult panel with SZS status and diagnostics
-                        if (leo != null && leo.getResult() != null) {
-                            renderATPResultPanel(leo.getResult(), out);
-                        }
-                        if (leo == null || leo.output == null) {
-                            out.println("<font color='red'>Error. No response from LEO-III.</font>");
-                        } else {
-                            com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
-                            tpp.parseProofOutput(leo.output, stmt, kb, leo.qlist);
-                            setGraphFormat(graphFormulaFormat,tpp);
-                            publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-                            tpp.processAnswersFromProof(leo.qlist,stmt);
-                            printAnswersBlock(tpp, kbName, language, out);
-                            /* Prevent duplicate answers inside HTMLformatter */
-                            if (tpp.bindingMap != null) tpp.bindingMap.clear();
-                            if (tpp.bindings   != null) tpp.bindings.clear();
-                            System.out.println("========== PROOF LEO ===========");
-                            for(String s : leo.output){
-                                System.out.println(s);
-                            }
-                            out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
-                            // Generate proof summary if requested
-                            if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
-                                // Extract proof steps as strings
-                                List<String> proofSteps = new ArrayList<>();
-                                for (Object formula : tpp.proof) {
-                                    String stepText = "";
-                                    if (formula != null) {
-                                        // Get the string representation of the formula
-                                        stepText = formula.toString();
-                                        // Try to convert to more readable format if it's in TPTP format
-                                        if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
-                                            // Extract just the formula part, skipping the TPTP wrapper
-                                            int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
-                                            int end = stepText.lastIndexOf(')');
-                                            if (start > 0 && end > start) {
-                                                stepText = stepText.substring(start, end).trim();
-                                            }
-                                        }
-                                        // Clean up the text
-                                        stepText = stepText.replaceAll("\\s+", " ").trim();
-                                    }
-                                    if (!stepText.isEmpty()) {
-                                        proofSteps.add(stepText);
-                                    }
-                                }
-                                // Generate and display the summary
-                                String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
-                                if (!proofSummary.isEmpty()) {
-                                    out.println(proofSummary);
-                                }
-                            }
-                        }
-                    } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
-                        renderExceptionPanel(enfe, out);
-                    } catch (ProverTimeoutException | ProverCrashedException pte) {
-                        renderExceptionPanel(pte, out);
-                        if (leo != null && leo.getResult() != null) {
-                            renderATPResultPanel(leo.getResult(), out);
-                        }
-                    } catch (com.articulate.sigma.tp.ATPException ae) {
-                        renderExceptionPanel(ae, out);
+                    tpp.parseProofOutput(proofOutput, stmt, kb, result.getQList());
+                    setGraphFormat(graphFormulaFormat, tpp);
+                    publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
+                    tpp.processAnswersFromProof(result.getQList(), stmt);
+                    printAnswersBlock(tpp, kbName, language, out);
+                    if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                    if (tpp.bindings != null) tpp.bindings.clear();
+                    out.println(HTMLformatter.formatTPTP3ProofResult(tpp, stmt, lineHtml, kbName, language));
+                    if (!StringUtil.emptyString(tpp.status)) {
+                        out.println("Status: " + tpp.status);
                     }
                 }
-            }
-        } catch (IOException ioe) {
-            out.println("<font color='red'>" + ioe.getMessage() + "</font>");
-        }
+            } // end custom-query else / test-vs-custom branch
         } // end else (generation not in progress)
-    }
-
-
+    } // end Run block
 // ==================== Tell ======================================================================================== Server-side execution for "Tell" button =====
     if ("Tell".equalsIgnoreCase(req) && !syntaxError) {
         // Check if required TPTP format is ready (background generation may still be in progress)
@@ -1110,6 +881,85 @@
 </div>
 
 <%!
+    void setGraphFormat(String format, com.articulate.sigma.trans.TPTP3ProofProcessor tpp){
+        if ("TPTP".equalsIgnoreCase(format))
+            tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.TPTP);
+        else
+            tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.SUO_KIF);
+    }
+
+    /** 2) Publish the proof graph (the big repeated block) */
+    void publishGraph(com.articulate.sigma.trans.TPTP3ProofProcessor tpp,
+                      String inferenceEngine, String vampireMode,
+                      javax.servlet.http.HttpServletRequest request,
+                      javax.servlet.ServletContext application,
+                      javax.servlet.jsp.JspWriter out) throws java.io.IOException {
+
+        String imgPath=null; try { imgPath = tpp.createProofDotGraph(); } catch (Exception ignore) {}
+        if (imgPath==null || tpp.proof.size()==0) return;
+        String webGraphDir = application.getRealPath("/graph"); if (webGraphDir==null) return;
+        java.io.File onDisk = new java.io.File(imgPath), webDir = new java.io.File(webGraphDir);
+        if (!webDir.exists()) webDir.mkdirs();
+        String base = onDisk.getName(), stamped = (System.currentTimeMillis()+"-"+base).replaceAll("[^A-Za-z0-9._-]","_");
+        java.io.File webImg = new java.io.File(webDir, stamped);
+        try {
+            java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            String url = request.getContextPath()+"/graph/"+webImg.getName();
+            String imgUrl = url + "?v=" + System.currentTimeMillis();
+            String badge = "Vampire".equals(inferenceEngine)? ("Vampire ("+vampireMode+")") : inferenceEngine;
+            out.println("<div class='proof-thumb-wrap'>"
+                    + "<span class='proof-badge'>" + badge + "</span>"
+                    + "<a href='" + url + "' target='_blank' title='Open full-size proof graph'>"
+                    + "<img class='proof-thumb' src='" + imgUrl + "' alt='Proof graph thumbnail'></a>"
+                    + "<div class='proof-caption'>Click to open full-size</div></div>");
+        } catch (Exception ex) {
+            out.println("<span style='color:#b00'>Could not publish proof image to /graph. Path: "+imgPath+"</span><br>");
+        }
+    }
+
+    /** Render an exception panel for ATP exceptions */
+    void renderExceptionPanel(com.articulate.sigma.tp.ATPException e,
+                              javax.servlet.jsp.JspWriter out) throws java.io.IOException {
+        if (e == null) return;
+
+        out.println("<div class='exception-panel'>");
+        out.println("<h4>" + htmlEncode(e.getEngineName() != null ? e.getEngineName() : "Prover") + " Error</h4>");
+        out.println("<p>" + htmlEncode(e.getMessage()) + "</p>");
+
+        // Show command line if available
+        if (e.getCommandLine() != null && !e.getCommandLine().isEmpty()) {
+            out.println("<div class='meta'>Command: <code>" + htmlEncode(e.getCommandLineString()) + "</code></div>");
+        }
+
+        // Show stderr if available
+        System.out.println(e.getStderr());
+        if (e.hasStderr()) {
+            out.println("<details open>");
+            out.println("<summary>Error Output</summary>");
+            out.println("<pre>");
+            java.util.List<String> stderr = e.getStderr();
+            for (int i = 0; i < Math.min(15, stderr.size()); i++) {
+                out.println(htmlEncode(stderr.get(i)));
+            }
+            if (stderr.size() > 15) {
+                out.println("... (" + (stderr.size() - 15) + " more lines)");
+            }
+            out.println("</pre>");
+            out.println("</details>");
+        }
+
+        // Show suggestion
+        String suggestion = e.getSuggestion();
+        if (suggestion != null && !suggestion.isEmpty()) {
+            out.println("<div class='suggestion'>");
+            out.println("<strong>Suggestion:</strong><br>");
+            out.println(htmlEncode(suggestion).replace("\n", "<br>"));
+            out.println("</div>");
+        }
+
+        out.println("</div>");
+    }
+
     /** HTML-encode a string to prevent XSS */
     String htmlEncode(String s) {
         if (s == null) return "";
@@ -1118,6 +968,56 @@
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
+    }
+%>
+<%!
+    void printAnswersBlock(com.articulate.sigma.trans.TPTP3ProofProcessor tpp,
+                           String kbName, String language,
+                           javax.servlet.jsp.JspWriter out) throws java.io.IOException {
+
+        boolean hasMap = (tpp.bindingMap != null && !tpp.bindingMap.isEmpty());
+        boolean hasList = (tpp.bindings != null && !tpp.bindings.isEmpty());
+
+        out.println("<div class='answers-card'>");
+        out.println("<h3>Answers</h3>");
+
+        if (!hasMap && !hasList) {
+            out.println("<div class='answers-empty'>No explicit answer bindings were produced.</div>");
+            out.println("</div>");
+            return;
+        }
+
+        out.println("<ol class='answers-list'>");
+
+        if (hasMap) {
+            // Variable bindings: ?X = term
+            for (java.util.Map.Entry<String,String> e : tpp.bindingMap.entrySet()) {
+                String var = e.getKey();
+                String raw = e.getValue();
+                String term = com.articulate.sigma.trans.TPTP2SUMO.transformTerm(raw);
+                String kbHref = com.articulate.sigma.HTMLformatter.createKBHref(kbName, language);
+                out.println("<li><code>" + var + "</code> = "
+                        + "<a href='" + kbHref + "&term=" + term + "'>" + term + "</a></li>");
+            }
+        } else if (hasList) {
+            // Positional answers: 1. term
+            for (int i = 0; i < tpp.bindings.size(); i++) {
+                String raw = String.valueOf(tpp.bindings.get(i));
+                String term = com.articulate.sigma.trans.TPTP2SUMO.transformTerm(raw);
+                String kbHref = com.articulate.sigma.HTMLformatter.createKBHref(kbName, language);
+                out.println("<li>" + (i+1) + ". "
+                        + "<a href='" + kbHref + "&term=" + term + "'>" + term + "</a></li>");
+            }
+        }
+
+        out.println("</ol>");
+
+        // Handy meta line
+        int count = hasMap ? tpp.bindingMap.size() : tpp.bindings.size();
+        out.println("<div class='answers-meta'>" + count + " answer"
+                + (count==1 ? "" : "s") + " shown.</div>");
+
+        out.println("</div>");
     }
 %>
 <p>

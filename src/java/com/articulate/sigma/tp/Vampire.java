@@ -540,10 +540,7 @@ public class Vampire {
         this.askVampire(suoKifFormula);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         tpp.parseProofOutput(this.output, suoKifFormula, this.kb, this.qlist);
-        String result = tpp.proof.toString().trim();
-        sb.append(result).append("\n");
-        result = tpp.bindings.toString();
-        sb.append("answers: ").append(result).append("\n");
+        sb.append(tpp.proof.toString().trim()).append("\n").append("answers: ").append(tpp.bindings.toString()).append("\n");
         return sb.toString();
     }
 
@@ -678,7 +675,7 @@ public class Vampire {
             String line;
             while ((line = _reader.readLine()) != null) {
                 stdoutLines.add(line);
-                output.add(line);
+                this.output.add(line);
             }
         }
         stderrReader.join(5000);
@@ -686,6 +683,7 @@ public class Vampire {
         long elapsed = System.currentTimeMillis() - startTime;
         this.result.setStdout(stdoutLines);
         this.result.setStderr(stderrLines);
+        this.result.setQList(this.qlist);
         this.result.finalize(exitValue, elapsed, elapsed >= timeoutMs);
         if (exitValue != 0) {
             System.err.println("Error in Vampire.run(): Abnormal process termination (exit code " + exitValue + ")");

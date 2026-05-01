@@ -58,7 +58,7 @@ public class EProver {
     /** Storage for the output of the _eprover process */
     public List<String> output = new ArrayList<>();
     /** List of quantifiers found in the TPTP formulas from the KB */
-    public StringBuilder quantifierList = null;
+    public StringBuilder qlist = null;
     /** Container for organizing the results of the query */
     private ATPResult result;
 
@@ -136,7 +136,7 @@ public class EProver {
                 else
                     System.out.println("Get response from EProver, start for parsing ...");
                 TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                return tpp.parseAnswerTuples(this.output, strQuery, this.kb, this.quantifierList);
+                return tpp.parseAnswerTuples(this.output, strQuery, this.kb, this.qlist);
             }
         }
         return null;
@@ -320,7 +320,7 @@ public class EProver {
         String resultStr = "";
         Path tempProblemFile = null;
         try {
-            this.quantifierList = SUMOformulaToTPTPformula.getQlist();
+            this.qlist = SUMOformulaToTPTPformula.getQlist();
             tempProblemFile = Files.createTempFile(this.tempProblemFilePath, ".p");
             String problem = "include('" + kbFilePath + "').\n" + "fof(conj1,conjecture, " + SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,true) + ")." + "\n";
             Files.writeString(tempProblemFile, problem);
@@ -351,6 +351,7 @@ public class EProver {
             long elapsed = System.currentTimeMillis() - startTime;
             result.setStdout(stdoutLines);
             result.setStderr(stderrLines);
+            result.setQList(this.qlist);
             result.setExitCode(exitCode);
             result.setElapsedTimeMs(elapsed);
             result.extractSzsFromOutput();
@@ -510,7 +511,7 @@ public class EProver {
             _writer.flush();
             _eprover.destroy();
             output.clear();
-            quantifierList.setLength(0);
+            qlist.setLength(0);
         }
         catch (IOException ex) {
             ex.printStackTrace();
@@ -559,7 +560,7 @@ public class EProver {
                     eprover.askEProver(suoKifFormula);
                     System.out.println("EProver.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
                     TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                    tpp.parseProofOutput(eprover.output, argMap.get("ask").get(0), kb, eprover.quantifierList);
+                    tpp.parseProofOutput(eprover.output, argMap.get("ask").get(0), kb, eprover.qlist);
                     eprover.terminate();
                 }
                 catch (IOException e) {
