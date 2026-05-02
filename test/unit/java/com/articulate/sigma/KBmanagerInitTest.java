@@ -28,6 +28,7 @@ public class KBmanagerInitTest extends UnitTestBase {
     public void testInitializationTime()   {
         assertTrue("Actual time = " + UnitTestBase.totalKbMgrInitTime, UnitTestBase.totalKbMgrInitTime < 280000);
         // Just in case something whacky is going on, make sure it's greater than some minimum, too.
-        assertTrue("Actual time = " + UnitTestBase.totalKbMgrInitTime, UnitTestBase.totalKbMgrInitTime > 3000);
+        // Threshold lowered from 3000ms: KIFAST (ANTLR) is faster than the old KIF StreamTokenizer parser.
+        assertTrue("Actual time = " + UnitTestBase.totalKbMgrInitTime, UnitTestBase.totalKbMgrInitTime > 1000);
     }
 }

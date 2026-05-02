@@ -42,7 +42,7 @@ public class Vampire {
     public StringBuilder qlist = null; // quantifier list in order for answer extraction
     public List<String> output = new ArrayList<>();
     public static int axiomIndex = 0;
-    public enum ModeType {AVATAR, CASC, CUSTOM}; // Avatar is faster but doesn't provide answer variables.
+    public enum ModeType {AVATAR, CASC, CUSTOM, VAMPIRE}; // Avatar is faster but doesn't provide answer variables.
                                                  // Custom takes value from env var
     public enum Logic { FOL, HOL }
 
@@ -111,6 +111,13 @@ public class Vampire {
             }
             opts.append("-t").append(space);
         }
+        if (mode == ModeType.VAMPIRE) {
+            opts.append("--mode").append(space).append("vampire").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
+            if (askQuestion) {
+                opts.append("-qa").append(space).append("plain").append(space);
+            }
+            opts.append("-t").append(space);
+        }
         if (mode == ModeType.CUSTOM) {
             if (askQuestion) {
                 opts.append("-qa").append(space).append("plain").append(space);
@@ -136,14 +143,21 @@ public class Vampire {
         String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder();
 
-        if (mode == ModeType.AVATAR) {
-            opts.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space);
-        } else if (mode == ModeType.CASC) {
-            opts.append("--mode").append(space).append("casc").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
-        } else if (mode == ModeType.CUSTOM) {
-            opts.append(System.getenv("VAMPIRE_OPTS"));
-        } else {
-            System.err.println("Error in Vampire.createCustomCommandList(): no mode selected");
+        // If the caller already supplies --mode (e.g. askVampireTHF passes --mode portfolio),
+        // do not prepend a conflicting mode flag — Vampire takes the first --mode it sees.
+        boolean callerSuppliesMode = commands.contains("--mode");
+        if (!callerSuppliesMode) {
+            if (mode == ModeType.AVATAR) {
+                opts.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space);
+            } else if (mode == ModeType.CASC) {
+                opts.append("--mode").append(space).append("casc").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
+            } else if (mode == ModeType.CUSTOM) {
+                opts.append(System.getenv("VAMPIRE_OPTS"));
+            } else if (mode == ModeType.VAMPIRE) {
+                opts.append("--mode").append(space).append("vampire").append(space);
+            } else {
+                System.err.println("Error in Vampire.createCustomCommandList(): no mode selected");
+            }
         }
 
 
@@ -264,7 +278,7 @@ public class Vampire {
 
         String[] cmds = createCommandList(executable, timeout, kbFile);
         result.setCommandLine(cmds);
-        System.out.println("Vampire.run(): Initializing Vampire with:\n" + Arrays.toString(cmds));
+        System.out.println("[Vampire] Initializing with: " + Arrays.toString(cmds));
 
         ProcessBuilder _builder = new ProcessBuilder(cmds);
         _builder.redirectErrorStream(false);  // Keep stderr separate for better error capture
@@ -344,7 +358,6 @@ public class Vampire {
                 throw new FormulaTranslationException(msg, result.getInputLanguage(), lineNo, stdoutLines, stderrLines);
             }
         }
-        System.out.println("Vampire.run() done executing");
     }
 
     /** *************************************************************
@@ -414,14 +427,14 @@ public class Vampire {
             System.out.println("Vampire CWD: " + _builder.directory().getAbsolutePath());
         }
 
-        Process _vampire = _builder.start();
+        Process vampire = _builder.start();
 
         // Read stdout and stderr in parallel
         List<String> stdoutLines = new ArrayList<>();
         List<String> stderrLines = new ArrayList<>();
 
         Thread stderrReader = new Thread(() -> {
-            try (BufferedReader r = new BufferedReader(new InputStreamReader(_vampire.getErrorStream()))) {
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(vampire.getErrorStream()))) {
                 String line;
                 while ((line = r.readLine()) != null) {
                     stderrLines.add(line);
@@ -432,7 +445,7 @@ public class Vampire {
         });
         stderrReader.start();
 
-        try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_vampire.getInputStream()))) {
+        try (BufferedReader _reader = new BufferedReader(new InputStreamReader(vampire.getInputStream()))) {
             String line;
             while ((line = _reader.readLine()) != null) {
                 stdoutLines.add(line);
@@ -442,7 +455,7 @@ public class Vampire {
 
         stderrReader.join(5000);
 
-        int exitValue = _vampire.waitFor();
+        int exitValue = vampire.waitFor();
         long elapsed = System.currentTimeMillis() - startTime;
 
         // Populate result
@@ -502,7 +515,7 @@ public class Vampire {
             if (!java.nio.file.Files.exists(sessionDir)) {
                 try {
                     java.nio.file.Files.createDirectories(sessionDir);
-                    System.out.println("Vampire.writeStatements(): created session dir " + sessionDir);
+                    if (debug) System.out.println("Vampire.writeStatements(): created session dir " + sessionDir);
                 }
                 catch (IOException ex) {
                     System.err.println("Error in writeStatements(): could not create session dir " + sessionDir);
@@ -638,7 +651,7 @@ public class Vampire {
             }
         }
         if (sessionId != null && !sessionId.isEmpty()) {
-            System.out.println("INFO Vampire.run(): using session dir for temp files, sessionId=" + sessionId);
+            if (debug) System.out.println("INFO Vampire.run(): using session dir for temp files, sessionId=" + sessionId);
         }
 
         // Use session dir for temp files when session-specific, otherwise shared kbDir

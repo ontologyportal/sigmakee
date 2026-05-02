@@ -337,7 +337,7 @@ public class KButilities implements ServletContextListener {
 
         SUMOtoTFAform.initOnce();
         String result;
-        KIF kif = new KIF();
+        KIFAST kif = new KIFAST();
         try {
             result = kif.parseStatement(form);
         }
@@ -346,8 +346,8 @@ public class KButilities implements ServletContextListener {
             result = "";
         }
         if (!StringUtil.emptyString(result)) {
-            errors.addAll(kif.errorSet);
-            kif.errorSet.clear();
+            errors.add(result);              // KIFAST: error string is the detail; errorSet is unused
+            kif.warningSet.clear();
             if (debug) System.out.println("isValidFormula(): Error: " + result);
             return false;
         }

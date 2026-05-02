@@ -47,7 +47,7 @@ public class TPTPWriterTest  extends IntegrationTestBase {
         System.out.println("TPTPWriterTest.test1(): total preprocess time: " + ((end-start)/1000) + " seconds");
         TPTPWriter tptpW = new TPTPWriter();
         for (FormulaAST f : rules) {
-            System.out.println("fof(kb_" + FileUtil.noExt(FileUtil.noPath(f.sourceFile)) + "_" + f.startLine + ",axiom," + tptpW.visitSentence(f.parsedFormula) + ").");
+            System.out.println("fof(kb_" + FileUtil.noExt(FileUtil.noPath(f.sourceFile)) + "_" + f.startLine + ",axiom," + tptpW.translateFormula(f, false, "fof") + ").");
         }
         long end2 = System.currentTimeMillis();
         System.out.println("TPTPWriterTest.test1(): total write time: " + ((end2-end)/1000)  + " seconds");
@@ -87,7 +87,7 @@ public class TPTPWriterTest  extends IntegrationTestBase {
             System.out.println("TPTPWriterTest.test2() results too large to show");
         TPTPWriter tptpW = new TPTPWriter();
         for (FormulaAST f : rules) {
-            System.out.println("fof(kb_" + FileUtil.noExt(FileUtil.noPath(f.sourceFile)) + "_" + f.startLine + ",axiom," + tptpW.visitSentence(f.parsedFormula) + ").");
+            System.out.println("fof(kb_" + FileUtil.noExt(FileUtil.noPath(f.sourceFile)) + "_" + f.startLine + ",axiom," + tptpW.translateFormula(f, false, "fof") + ").");
         }
     }
 }

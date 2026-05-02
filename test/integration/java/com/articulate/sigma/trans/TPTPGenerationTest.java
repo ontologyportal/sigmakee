@@ -1,6 +1,10 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.ExprToTPTP;
+import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.SuokifVisitor;
 
 import org.junit.*;
 import org.junit.rules.TemporaryFolder;
@@ -8,6 +12,9 @@ import org.junit.rules.TemporaryFolder;
 import java.io.*;
 import java.nio.file.*;
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -227,6 +234,73 @@ public class TPTPGenerationTest {
         assertTrue("TFF file should be non-empty", tffSize > 0);
         assertTrue("THF Modal file should be non-empty", thfModalSize > 0);
         assertTrue("THF Plain file should be non-empty", thfPlainSize > 0);
+    }
+
+    /**
+     * Tests the full FOF pipeline for a pred-var formula:
+     *
+     *   (=>
+     *      (instance ?REL TotalOrderingRelation)
+     *      (forall (?INST1 ?INST2)
+     *         (and
+     *            (or (?REL ?INST1 ?INST2) (?REL ?INST2 ?INST1))
+     *            (or (not (?REL ?INST1 ?INST2)) (not (?REL ?INST2 ?INST1))))))
+     *
+     * Pipeline: SuokifVisitor → FormulaAST → preProcessExpr (pred-var expansion)
+     *           → ExprToTPTP.translate (FOF) for each expanded formula.
+     *
+     * The pred-var ?REL is constrained to TotalOrderingRelation instances.
+     * preProcessExpr must expand it (or keep the original if no KB instances),
+     * and each resulting Expr must translate to a non-null, non-empty FOF body.
+     */
+    @Test
+    public void testFOFPipelineTotalOrderingRelation() {
+        String kif =
+            "(=> " +
+            "   (instance ?REL TotalOrderingRelation) " +
+            "   (forall (?INST1 ?INST2) " +
+            "      (and " +
+            "         (or (?REL ?INST1 ?INST2) (?REL ?INST2 ?INST1)) " +
+            "         (or (not (?REL ?INST1 ?INST2)) (not (?REL ?INST2 ?INST1))))))";
+
+        // Parse to FormulaAST
+        SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
+        assertNotNull("SuokifVisitor result should not be null", visitor.result);
+        assertFalse("SuokifVisitor result should not be empty", visitor.result.isEmpty());
+        FormulaAST fa = visitor.result.get(0);
+        assertNotNull("FormulaAST should not be null", fa);
+        assertNotNull("FormulaAST.expr should not be null", fa.expr);
+
+        // Preprocess: pred-var ?REL → expanded instances (or original kept if none)
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        Set<Expr> processed = fp.preProcessExpr(fa, false, kb);
+        assertNotNull("preProcessExpr must not return null", processed);
+        assertFalse("preProcessExpr must not drop the formula (pred-var fallback fix)", processed.isEmpty());
+        System.out.println("testFOFPipelineTotalOrderingRelation: " + processed.size() + " formula(s) after preProcessExpr");
+
+        // Translate each preprocessed Expr to FOF, skipping unresolved pred-vars
+        List<String> fofResults = new ArrayList<>();
+        for (Expr expr : processed) {
+            // If pred-var expansion found no KB instances, the original is kept with ?REL
+            // still in predicate position — invalid FOF, must be skipped.
+            if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(expr)) {
+                System.out.println("  skipped (unresolved pred-var): " + expr.toKifString());
+                continue;
+            }
+            String fof = ExprToTPTP.translate(expr, false, "fof");
+            if (fof == null) // fallback to string path
+                fof = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expr.toKifString(), false);
+            assertNotNull("FOF translation must not be null for: " + expr.toKifString(), fof);
+            assertFalse("FOF translation must not be empty for: " + expr.toKifString(), fof.isEmpty());
+            fofResults.add(fof);
+            System.out.println("  fof: " + fof);
+        }
+
+        // If the KB has TotalOrderingRelation instances, we expect translated results.
+        // If not, all are skipped — that is also correct (no valid FOF can be produced).
+        System.out.println("testFOFPipelineTotalOrderingRelation: " + fofResults.size() + " FOF result(s) produced");
+        for (String fof : fofResults)
+            assertTrue("FOF result should contain '! [' (forall): " + fof, fof.contains("! ["));
     }
 
     // ---- Helpers ----

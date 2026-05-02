@@ -1,6 +1,10 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.ExprToTHF;
+import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -32,7 +36,7 @@ public class THFnew {
             if (debug) System.out.println("THFnew.processQuant(): correct # of args");
             if (args.get(0) != null) {
                 if (debug) System.out.println("THFnew.processQuant(): valid varlist: " + args.get(0));
-                Formula varlist = new Formula(args.get(0));
+                Formula varlist = new FormulaAST(args.get(0));
                 List<String> vars = varlist.argumentsToArrayListString(0);
                 if (debug) System.out.println("THFnew.processRecurse(): vars: " + vars);
                 StringBuilder varStr = new StringBuilder();
@@ -43,7 +47,7 @@ public class THFnew {
                     opStr = " ? ";
                 if (debug) System.out.println("THFnew.processQuant(): quantified formula: " + args.get(1));
                 return Formula.LP + opStr + "[" + varStr + "] : (" +
-                        processRecurse(new Formula(args.get(1)),typeMap) + "))";
+                        processRecurse(new FormulaAST(args.get(1)),typeMap) + "))";
             }
             else {
                 System.err.println("Error in THFnew.processQuant(): null arguments to " + op + " in " + f);
@@ -69,9 +73,9 @@ public class THFnew {
         if (op.equals(Formula.XOR))
             tptpOp = "<~>";
         StringBuilder sb = new StringBuilder();
-        sb.append(Formula.LP).append(processRecurse(new Formula(args.get(0)),typeMap));
+        sb.append(Formula.LP).append(processRecurse(new FormulaAST(args.get(0)),typeMap));
         for (int i = 1; i < args.size(); i++) {
-            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE).append(processRecurse(new Formula(args.get(i)),typeMap));
+            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE).append(processRecurse(new FormulaAST(args.get(i)),typeMap));
         }
         sb.append(Formula.RP);
         return sb.toString();
@@ -95,11 +99,11 @@ public class THFnew {
             }
             else {
                 if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
-                    return Formula.LP + processRecurse(new Formula(args.get(0)),typeMap) + " => " +
-                            Formula.LP + processRecurse(new Formula(args.get(1)),typeMap) + "))";
+                    return Formula.LP + processRecurse(new FormulaAST(args.get(0)),typeMap) + " => " +
+                            Formula.LP + processRecurse(new FormulaAST(args.get(1)),typeMap) + "))";
                 else
-                    return Formula.LP + processRecurse(new Formula(args.get(0)),typeMap) + " => " +
-                            processRecurse(new Formula(args.get(1)),typeMap) + Formula.RP;
+                    return Formula.LP + processRecurse(new FormulaAST(args.get(0)),typeMap) + " => " +
+                            processRecurse(new FormulaAST(args.get(1)),typeMap) + Formula.RP;
             }
         }
         if (op.equals(Formula.IFF)) {
@@ -108,10 +112,10 @@ public class THFnew {
                 return "";
             }
             else
-                return "((" + processRecurse(new Formula(args.get(0)),typeMap) + " => " +
-                        processRecurse(new Formula(args.get(1)),typeMap) + ") & (" +
-                        processRecurse(new Formula(args.get(1)),typeMap) + " => " +
-                        processRecurse(new Formula(args.get(0)),typeMap) + "))";
+                return "((" + processRecurse(new FormulaAST(args.get(0)),typeMap) + " => " +
+                        processRecurse(new FormulaAST(args.get(1)),typeMap) + ") & (" +
+                        processRecurse(new FormulaAST(args.get(1)),typeMap) + " => " +
+                        processRecurse(new FormulaAST(args.get(0)),typeMap) + "))";
         }
         if (op.equals(Formula.OR))
             return processConjDisj(f,car,args,typeMap);
@@ -123,7 +127,7 @@ public class THFnew {
                 return "";
             }
             else
-                return "~(" + processRecurse(new Formula(args.get(0)),typeMap) + Formula.RP;
+                return "~(" + processRecurse(new FormulaAST(args.get(0)),typeMap) + Formula.RP;
         }
         if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
             return processQuant(f,op,args,typeMap);
@@ -142,8 +146,8 @@ public class THFnew {
             return "";
         }
         if (op.startsWith(Formula.EQUAL)) {
-            return Formula.LP + processRecurse(new Formula(args.get(0)),typeMap) + " = " +
-                    processRecurse(new Formula(args.get(1)),typeMap) + Formula.RP;
+            return Formula.LP + processRecurse(new FormulaAST(args.get(0)),typeMap) + " = " +
+                    processRecurse(new FormulaAST(args.get(1)),typeMap) + Formula.RP;
         }
         System.err.println("Error in THFnew.processCompOp(): bad comparison operator " + op + " in " + f);
         return "";
@@ -190,10 +194,10 @@ public class THFnew {
                     if (Formula.atom(s))
                         argStr.append(SUMOformulaToTPTPformula.translateWord(s, ttype, false));
                     else
-                        argStr.append(processRecurse(new Formula(s), typeMap));
+                        argStr.append(processRecurse(new FormulaAST(s), typeMap));
                 }
                 else
-                    argStr.append(processRecurse(new Formula(s), typeMap));
+                    argStr.append(processRecurse(new FormulaAST(s), typeMap));
                 argStr.append(" @ ");
             }
 
@@ -245,8 +249,13 @@ public class THFnew {
 //            System.out.println("V= "+v);
 //            System.out.println("typeMap(v)= "+typeMap.get(v));
 //        }
-        if (typeMap.get(v) == null)
+        if (typeMap.get(v) == null) {
+            // Fallback: ?W<n> variables introduced deep in modal recursion may
+            // not reach the typeMap (worldNum is a local int, recursive calls
+            // cannot update the caller's counter).  Treat them as world type.
+            if (v.matches("\\?W+\\d+")) return "w";
             return "$i";
+        }
         if (typeMap.get(v).contains("World"))
             return "w";
         if (typeMap.get(v).contains("Formula")) {
@@ -400,7 +409,7 @@ public class THFnew {
         if (m.find()) {
             int num = Integer.parseInt(m.group(2));
             num--;
-            Formula result = new Formula(Formula.LP + m.group(1) + num + Formula.SPACE + fstr);
+            Formula result = new FormulaAST(Formula.LP + m.group(1) + num + Formula.SPACE + fstr);
             if (debug) System.out.println("adjustArity(): result: " + result);
             return result;
         }
@@ -610,8 +619,7 @@ public class THFnew {
             out.write("% exclude(): meta-logical axiom with Formula type " + f.getFormula() + "\n");
             return true;
         }
-**/
-        // ISSUE 17, ISSUE 21, ISSUE 22
+        **/
         // Generic: modal operators must not appear as non-head arguments.
         // If the head itself is not a modal relation, any occurrence of a
         // modal relation name in argument position is rejected.
@@ -667,17 +675,16 @@ public class THFnew {
             }
         }
 
-        head = args.get(0);
-        if ("confersNorm".equals(head)) {
-            for (String a : args) {
-                if (Modals.modalAttributes.contains(a)) {
-                    if (out != null)
-                        out.write("% exclude(): modal operator used as individual in confersNorm: " +
-                                a + " in formula: " + stripped + "\n");
-                    return true;
-                }
-            }
-        }
+//        head = args.get(0);
+//        if (Modals.regHOL3pred.contains(head)) {
+//            for (String a : args) {
+//                if (Modals.modalAttributes.contains(a)) {
+//                    if (out != null)
+//                        out.write("% exclude(): modal operator used as individual in " + head + ": " + a + "\n");
+//                    return true;
+//                }
+//            }
+//        }
 
         // TODO: Fix that in SUMO
         // Known problematic terms unrelated to the modal embedding.
@@ -745,7 +752,7 @@ public class THFnew {
             }
             for (String s : args) {
                 if (Formula.listP(s)) {
-                    if (exclude(new Formula(s), kb, out)) {
+                    if (exclude(new FormulaAST(s), kb, out)) {
                         String flat = f.toString().replace("\n", " ").replace("\r", " ");
                         if (out != null)
                             out.write("% excluded(): exclude: " + flat + " in formula: " +
@@ -816,6 +823,479 @@ public class THFnew {
         }
         // TOP-LEVEL predicate check (documentation, format, etc.)
         return excludePred(f.car(), out);
+    }
+
+    // -----------------------------------------------------------------------
+    // Private helpers for the Expr-based exclude overload
+    // -----------------------------------------------------------------------
+
+    // Bitmask flags for preCheckExpr
+    private static final int PC_STR_LITERAL = 1;  // any StrLiteral node
+    private static final int PC_TRUE_FALSE  = 2;  // Atom("True") or Atom("False")
+    private static final int PC_FORMULA_ARG = 4;  // Atom("Formula") as last arg of some SExpr
+
+    /**
+     * Single-pass pre-check: walks the Expr tree <em>once</em> and returns a
+     * bitmask of the three conditions checked at the top of
+     * {@link #exclude(Expr, KB, Writer)}.
+     *
+     * <p>Replacing three separate recursive helpers with one traversal avoids
+     * redundant pointer-chasing through the Java heap for every formula.
+     * An early-exit guard short-circuits as soon as all three flags are set.
+     *
+     * <p>Bit meanings: {@link #PC_STR_LITERAL}, {@link #PC_TRUE_FALSE},
+     * {@link #PC_FORMULA_ARG}.
+     */
+    private static int preCheckExpr(Expr e, int found) {
+        if (found == (PC_STR_LITERAL | PC_TRUE_FALSE | PC_FORMULA_ARG))
+            return found;                          // all flags set — early exit
+        if (e instanceof Expr.StrLiteral)
+            return found | PC_STR_LITERAL;
+        if (e instanceof Expr.Atom a) {
+            String name = a.name();
+            if (name.equals(Formula.LOG_TRUE) || name.equals(Formula.LOG_FALSE))
+                return found | PC_TRUE_FALSE;
+            return found;
+        }
+        if (!(e instanceof Expr.SExpr se)) return found;
+        if (se.head() != null)
+            found = preCheckExpr(se.head(), found);
+        List<Expr> args = se.args();
+        // Check: Atom("Formula") as the last argument of this SExpr
+        if ((found & PC_FORMULA_ARG) == 0 && !args.isEmpty()
+                && args.get(args.size() - 1) instanceof Expr.Atom lastAtom
+                && "Formula".equals(lastAtom.name()))
+            found |= PC_FORMULA_ARG;
+        for (Expr arg : args) {
+            found = preCheckExpr(arg, found);
+            if (found == (PC_STR_LITERAL | PC_TRUE_FALSE | PC_FORMULA_ARG))
+                return found;                      // all flags set — early exit
+        }
+        return found;
+    }
+
+    /** Returns true if the Expr tree contains no {@link Expr.Var} or {@link Expr.RowVar} nodes. */
+    private static boolean isGroundExpr(Expr e) {
+        if (e instanceof Expr.Var || e instanceof Expr.RowVar) return false;
+        if (e instanceof Expr.SExpr se) {
+            if (se.head() != null && !isGroundExpr(se.head())) return false;
+            for (Expr arg : se.args())
+                if (!isGroundExpr(arg)) return false;
+        }
+        return true;
+    }
+
+    /** ***************************************************************
+     * Expr-based overload of {@link #exclude(Formula, KB, Writer)}.
+     *
+     * <p>Walks the {@link Expr} tree directly — no {@code toKifString()}
+     * round-trip, no {@code new Formula()} allocation.  Every check mirrors
+     * its counterpart in the string-based overload.
+     *
+     * <p>Call sites should prefer this overload whenever a non-null {@code Expr}
+     * is already available (e.g. in {@code oneTransExpr} and in the top-level
+     * loop of {@code transModalTHF} for {@link FormulaAST} formulas).
+     */
+    public static boolean exclude(Expr e, KB kb, Writer out) throws IOException {
+
+        if (e == null) return false;
+        if (debug) System.out.println("exclude(Expr): " + e.toKifString());
+
+        // Non-SExpr top-level nodes — handle the simple cases and return
+        if (e instanceof Expr.StrLiteral) {
+            out.write("% exclude(): quote\n");
+            return true;
+        }
+        if (e instanceof Expr.Atom a) {
+            String name = a.name();
+            if (name.equals(Formula.LOG_TRUE) || name.equals(Formula.LOG_FALSE)) {
+                out.write("% exclude(): contains true or false constant\n");
+                return true;
+            }
+            return excludePred(name, out);
+        }
+        if (!(e instanceof Expr.SExpr se))
+            return false;   // Var, RowVar, NumLiteral — not excluded at top level
+
+        // 1–3. Single-pass pre-check for: StrLiteral, true/false, Formula-as-last-arg.
+        //      One tree walk instead of three separate recursive calls.
+        int flags = preCheckExpr(se, 0);
+        if ((flags & PC_STR_LITERAL) != 0) {
+            out.write("% exclude(): quote\n");
+            return true;
+        }
+        if ((flags & PC_TRUE_FALSE) != 0) {
+            out.write("% exclude(): contains true or false constant\n");
+            return true;
+        }
+        if ((flags & PC_FORMULA_ARG) != 0) {
+            if (debug)
+                System.out.println("exclude(Expr): meta-logical axiom with Formula type: "
+                        + se.toKifString());
+            out.write("% exclude(): meta-logical axiom with Formula type\n");
+            return true;
+        }
+
+        // Pre-checks passed — run the structural checks.
+        // excludeExprBody recurses into children via itself, not via exclude(), so
+        // preCheckExpr is never re-run on already-verified subtrees.
+        return excludeExprBody(se, kb, out);
+    }
+
+    /** ***************************************************************
+     * Fast-path overload for {@link FormulaAST} formulas.
+     *
+     * <p>Uses {@code fa.getFormula().contains()} for the three pre-checks
+     * (JVM-intrinsic / SIMD-backed string scans) instead of the recursive
+     * {@link #preCheckExpr} tree walk, then delegates to
+     * {@link #excludeExprBody} for the structural checks.
+     * Called from the main loops in {@code transModalTHF} so that
+     * {@code preCheckExpr} is not invoked for every one of the ~75 K formulas.
+     */
+    public static boolean exclude(FormulaAST fa, KB kb, Writer out) throws IOException {
+
+        String s = fa.getFormula();
+        if (s.contains("\"")) {
+            out.write("% exclude(): quote\n");
+            return true;
+        }
+        if (s.contains(Formula.LOG_FALSE) || s.contains(Formula.LOG_TRUE)) {
+            out.write("% exclude(): contains true or false constant\n");
+            return true;
+        }
+        if (s.contains(" Formula)")) {
+            if (debug)
+                System.out.println("exclude(FormulaAST): meta-logical axiom with Formula type: " + s);
+            out.write("% exclude(): meta-logical axiom with Formula type\n");
+            return true;
+        }
+        if (!(fa.expr instanceof Expr.SExpr se)) return false;
+        return excludeExprBody(se, kb, out);
+    }
+
+    /** ***************************************************************
+     * Shared structural body for both {@code exclude(Expr, …)} and
+     * {@code exclude(FormulaAST, …)}.
+     *
+     * <p>Called <em>after</em> the three pre-checks (StrLiteral /
+     * LOG_TRUE/FALSE / Formula-arg) have already passed.  Recursion into
+     * child {@code SExpr} nodes uses this method directly, so
+     * {@link #preCheckExpr} is never re-run on already-verified subtrees
+     * (eliminates the O(n²) redundancy of calling {@code exclude(Expr)}
+     * recursively).
+     */
+    private static boolean excludeExprBody(Expr.SExpr se, KB kb, Writer out) throws IOException {
+
+        String headName = se.headName();
+        List<Expr> args = se.args();
+
+        // 4. Generic rule: if head is NOT in allowedHeads, no direct arg may be a
+        //    modal/HOL/formula atom symbol
+        if (headName != null && !Modals.allowedHeads.contains(headName)) {
+            for (Expr arg : args) {
+                if (arg instanceof Expr.Atom argAtom) {
+                    String argName = argAtom.name();
+                    if (Modals.MODAL_RELATIONS.contains(argName)
+                            || Modals.modalAttributes.contains(argName)
+                            || Modals.RESERVED_MODAL_SYMBOLS.contains(argName)
+                            || Modals.regHOLpred.contains(argName)
+                            || Modals.formulaPreds.contains(argName)) {
+                        if (debug)
+                            System.out.println("% exclude(Expr): modal/HOL symbol used as individual "
+                                    + "argument of non-modal head, Symbol " + argName
+                                    + " head: " + headName);
+                        if (out != null)
+                            out.write("% exclude(): modal/HOL symbol used as individual "
+                                    + "argument of non-modal head, Symbol " + argName
+                                    + " head: " + headName + "\n");
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // 5. Exclude domain / subrelation axioms for formula / HOL predicates
+        if (("domain".equals(headName) || "subrelation".equals(headName)) && !args.isEmpty()) {
+            if (args.get(0) instanceof Expr.Atom firstArg) {
+                String p = firstArg.name();
+                if (Modals.formulaPreds.contains(p) || Modals.regHOLpred.contains(p)) {
+                    if (out != null)
+                        out.write("% exclude(): domain axiom for formula/HOL predicate: " + p + "\n");
+                    return true;
+                }
+            }
+        }
+
+        // 6. Known problematic terms (head or direct atom args)
+//        List<String> problematic_terms = Arrays.asList(
+//                "airTemperature", "ListFn", "AssignmentFn", "Organism");
+//        if (headName != null && problematic_terms.contains(headName)) {
+//            if (out != null)
+//                out.write("% exclude(): Problematic Term encountered: " + headName + "\n");
+//            return true;
+//        }
+//        for (Expr arg : args) {
+//            if (arg instanceof Expr.Atom argAtom && problematic_terms.contains(argAtom.name())) {
+//                if (out != null)
+//                    out.write("% exclude(): Problematic Term encountered: " + argAtom.name() + "\n");
+//                return true;
+//            }
+//        }
+
+        // 7. META-LOGIC FILTER: bare variable in formula position
+        //    Case 1: (=> antecedent ?VAR)
+        if ("=>".equals(headName) && args.size() >= 2 && args.get(1) instanceof Expr.Var conseqVar) {
+            if (debug)
+                System.out.println("exclude(Expr): META-LOGIC pattern: variable as consequent of => : "
+                        + conseqVar.name() + " in " + se.toKifString());
+            if (out != null)
+                out.write("% exclude(): meta-logic (variable as consequent of =>): "
+                        + conseqVar.name() + "\n");
+            return true;
+        }
+        //    Case 2: (not ?VAR) or (~ ?VAR)
+        if (("not".equals(headName) || "~".equals(headName))
+                && !args.isEmpty() && args.get(0) instanceof Expr.Var notVar) {
+            if (debug)
+                System.out.println("exclude(Expr): META-LOGIC pattern: variable under not/~ : "
+                        + notVar.name() + " in " + se.toKifString());
+            if (out != null)
+                out.write("% exclude(): meta-logic (variable under not/~): " + notVar.name() + "\n");
+            return true;
+        }
+
+        // 8. Recurse into SExpr children — call this method directly so preCheckExpr is
+        //    not re-run on subtrees that were already validated at the top level.
+        for (Expr arg : args) {
+            if (arg instanceof Expr.SExpr argSe) {
+                if (excludeExprBody(argSe, kb, out)) {
+                    if (out != null)
+                        out.write("% excluded(): interior list: " + se.toKifString() + "\n");
+                    return true;
+                }
+            }
+        }
+
+        // 9. excludePred check on each direct atom arg
+        for (Expr arg : args) {
+            if (arg instanceof Expr.Atom argAtom) {
+                if (excludePred(argAtom.name(), out)) {
+                    if (out != null)
+                        out.write("% excluded(): term from excludePred: " + se.toKifString() + "\n");
+                    return true;
+                }
+            }
+        }
+
+        // 10. Additional checks when the formula is ground (no variables)
+        if (isGroundExpr(se)) {
+            if (debug) System.out.println("exclude(Expr): is ground: " + se.toKifString());
+
+            // ISSUE 11: modal attributes must not appear as args of protected relations
+            if (headName != null && protectedRelation(headName)) {
+                for (Expr arg : args) {
+                    if (arg instanceof Expr.Atom argAtom
+                            && Modals.modalAttributes.contains(argAtom.name())) {
+                        if (out != null)
+                            out.write("% exclude(): modal attribute in protected relation: "
+                                    + headName + " " + argAtom.name() + "\n");
+                        return true;
+                    }
+                }
+            }
+
+            // ISSUE 10: domain axioms where the first arg is a reserved modal symbol
+            if ("domain".equals(headName) && !args.isEmpty()
+                    && args.get(0) instanceof Expr.Atom firstArg
+                    && Modals.RESERVED_MODAL_SYMBOLS.contains(firstArg.name())) {
+                if (out != null)
+                    out.write("% exclude(): modal operator in domain: " + firstArg.name() + "\n");
+                return true;
+            }
+
+            // Ground numeric filtering
+            for (Expr arg : args) {
+                if (arg instanceof Expr.NumLiteral numLit) {
+                    String s = numLit.value();
+                    if (out != null)
+                        out.write("% exclude(): is numeric(2): \n");
+                    if (s.contains(".") || s.contains("-") || s.length() > 1)
+                        return true;
+                    if (s.charAt(0) < '1' || s.charAt(0) > '6')
+                        return true;
+                    if (debug) System.out.println("exclude(Expr): numeric arg not excluded: " + s);
+                }
+            }
+        }
+
+        // 11. Top-level predicate check
+        return headName != null && excludePred(headName, out);
+    }
+
+    /** ***************************************************************
+     * Expr-based overload of {@link #excludeNonModal(Formula, KB, Writer)}.
+     * Used from inner loops where only an {@code Expr} is available (e.g.
+     * preprocessed formulas in {@code oneTransNonModalExpr}).
+     * Does NOT check {@code badUsageSymbols} — callers handle that.
+     */
+    public static boolean excludeNonModal(Expr e, KB kb, Writer out) throws IOException {
+
+        if (e == null) return false;
+        if (debug) System.out.println("excludeNonModal(Expr): " + e.toKifString());
+
+        // 1. Non-SExpr top-level nodes
+        if (e instanceof Expr.StrLiteral) {
+            out.write("% exclude(): quote (String Literal)\n");
+            return true;
+        }
+        if (e instanceof Expr.Atom a) {
+            String name = a.name();
+            if (name.equals(Formula.LOG_TRUE) || name.equals(Formula.LOG_FALSE)) {
+                out.write("% exclude(): contains true or false constant\n");
+                return true;
+            }
+            return excludePred(name, out);
+        }
+        if (!(e instanceof Expr.SExpr se)) return false;
+
+        // 2. Batch pre-check: StrLiteral, LOG_TRUE/FALSE, or "Formula" as arg anywhere in tree
+        int flags = preCheckExpr(se, 0);
+        if ((flags & PC_STR_LITERAL) != 0) {
+            out.write("% exclude(): quote (String Literal)\n");
+            return true;
+        }
+        if ((flags & PC_TRUE_FALSE) != 0) {
+            out.write("% exclude(): contains true or false constant\n");
+            return true;
+        }
+        if ((flags & PC_FORMULA_ARG) != 0) {
+            if (debug) System.out.println("excludeNonModal(Expr): meta-logical axiom with Formula type: " + se.toKifString());
+            out.write("% exclude(): meta-logical axiom with Formula type\n");
+            return true;
+        }
+
+        return excludeNonModalExprBody(se, kb, out);
+    }
+
+    /** ***************************************************************
+     * Fast-path overload for {@link FormulaAST} formulas in the plain-THF
+     * main loop.
+     *
+     * <p>Handles {@code badUsageSymbols} (identity-based set lookup on the
+     * original {@code FormulaAST} object), then uses
+     * {@code fa.getFormula().contains()} for the three pre-checks instead of
+     * the recursive {@link #preCheckExpr} tree walk, then delegates to
+     * {@link #excludeNonModalExprBody}.
+     */
+    public static boolean excludeNonModal(FormulaAST fa, KB kb, Writer out) throws IOException {
+
+        // badUsageSymbols stores the original FormulaAST objects; must check here.
+        if (THFnew.badUsageSymbols.contains(fa)) {
+            String flat = fa.getFormula().replace("\n", " ").replace("\r", " ");
+            out.write("% exclude(): bad usage symbol: " + flat + "\n");
+            return true;
+        }
+        String s = fa.getFormula();
+        if (s.contains("\"")) {
+            out.write("% exclude(): quote (String Literal)\n");
+            return true;
+        }
+        if (s.contains(Formula.LOG_FALSE) || s.contains(Formula.LOG_TRUE)) {
+            out.write("% exclude(): contains true or false constant\n");
+            return true;
+        }
+        if (s.contains(" Formula)")) {
+            if (debug) System.out.println("excludeNonModal(FormulaAST): meta-logical axiom with Formula type: " + s);
+            out.write("% exclude(): meta-logical axiom with Formula type\n");
+            return true;
+        }
+        if (!(fa.expr instanceof Expr.SExpr se)) return false;
+        return excludeNonModalExprBody(se, kb, out);
+    }
+
+    /** ***************************************************************
+     * Shared structural body for both {@code excludeNonModal(Expr, …)} and
+     * {@code excludeNonModal(FormulaAST, …)}.
+     *
+     * <p>Called after the three pre-checks have already passed.
+     * Recursion uses this method directly so {@link #preCheckExpr} is never
+     * re-run on already-verified subtrees.
+     */
+    private static boolean excludeNonModalExprBody(Expr.SExpr se, KB kb, Writer out) throws IOException {
+
+        List<Expr> args = se.args();
+        String headName = se.head() instanceof Expr.Atom ha ? ha.name() : null;
+
+        // 3. Problematic terms
+        List<String> problematic_terms = Arrays.asList("airTemperature", "ListFn", "AssignmentFn", "Organism");
+        if (headName != null && problematic_terms.contains(headName)) {
+            if (out != null) out.write("% exclude(): Problematic Term encountered: " + headName + "\n");
+            return true;
+        }
+        for (Expr arg : args) {
+            if (arg instanceof Expr.Atom argAtom && problematic_terms.contains(argAtom.name())) {
+                if (out != null) out.write("% exclude(): Problematic Term encountered: " + argAtom.name() + "\n");
+                return true;
+            }
+        }
+
+        // 4. Non-modal: domain/subrelation axiom whose 2nd arg is itself a Relation — drop it
+        if (("domain".equals(headName) || "subrelation".equals(headName)) && args.size() >= 2) {
+            if (args.get(1) instanceof Expr.Atom p && kb.isInstanceOf(p.name(), "Relation")) {
+                out.write("% excludeNonModal(): meta-logic domain/subrelation over relation: " + p.name() + "\n");
+                return true;
+            }
+        }
+
+        // 5. Meta-logic: variable as consequent of =>, or variable directly under not/~
+        if ("=>".equals(headName) && args.size() >= 2 && args.get(1) instanceof Expr.Var conseqVar) {
+            if (debug) System.out.println("excludeNonModal(Expr): META-LOGIC: variable as consequent of =>: " + conseqVar.name());
+            if (out != null) out.write("% exclude(): meta-logic (variable as consequent of =>): " + conseqVar.name() + "\n");
+            return true;
+        }
+        if (("not".equals(headName) || "~".equals(headName)) && !args.isEmpty() && args.get(0) instanceof Expr.Var notVar) {
+            if (debug) System.out.println("excludeNonModal(Expr): META-LOGIC: variable under not/~: " + notVar.name());
+            if (out != null) out.write("% exclude(): meta-logic (variable under not/~): " + notVar.name() + "\n");
+            return true;
+        }
+
+        // 6. Recurse into SExpr sub-args — call body directly, not excludeNonModal(),
+        //    to avoid re-running preCheckExpr on already-verified subtrees.
+        for (Expr arg : args) {
+            if (arg instanceof Expr.SExpr argSe) {
+                if (excludeNonModalExprBody(argSe, kb, out)) {
+                    if (out != null) out.write("% excluded(): interior list: " + se.toKifString() + "\n");
+                    return true;
+                }
+            }
+        }
+
+        // 7. excludePred on each direct Atom arg
+        for (Expr arg : args) {
+            if (arg instanceof Expr.Atom argAtom) {
+                if (excludePred(argAtom.name(), out)) {
+                    if (out != null) out.write("% excluded(): term from excludePred: " + se.toKifString() + "\n");
+                    return true;
+                }
+            }
+        }
+
+        // 8. Ground checks — numeric args
+        if (isGroundExpr(se)) {
+            if (debug) System.out.println("excludeNonModal(Expr): is ground: " + se.toKifString());
+            for (Expr arg : args) {
+                if (arg instanceof Expr.NumLiteral numLit) {
+                    String s = numLit.value();
+                    if (out != null) out.write("% exclude(): is numeric(2): \n");
+                    if (s.contains(".") || s.contains("-") || s.length() > 1) return true;
+                    if (s.charAt(0) < '1' || s.charAt(0) > '6') return true;
+                    if (debug) System.out.println("excludeNonModal(Expr): numeric arg not excluded: " + s);
+                }
+            }
+        }
+
+        // 9. Top-level predicate check
+        return headName != null && excludePred(headName, out);
     }
 
     /** ***************************************************************
@@ -1039,14 +1519,13 @@ public class THFnew {
 
     /** ***************************************************************
      * Recursively collect all numeric literals from a formula string.
-     * Collects integers and floats; skips negatives (rare in SUMO,
-     * and the "--" normalization produces awkward constant names).
+     * Collects integers, floats, and negatives (e.g. -1 → n___1).
      */
     private static void collectNumbersFromFormula(String fstr, Set<String> numbers) {
 
-        Formula f = new Formula(fstr);
+        Formula f = new FormulaAST(fstr);
         if (f.atom()) {
-            if (StringUtil.isNumeric(fstr) && !fstr.contains("-"))
+            if (StringUtil.isNumeric(fstr))
                 numbers.add(fstr);
             return;
         }
@@ -1057,29 +1536,57 @@ public class THFnew {
         }
     }
 
-    /** ***************************************************************
+    /*****************************************************************
+     * Expr-tree equivalent of {@link #collectNumbersFromFormula}.
+     * Walks the Expr tree directly — no {@code new Formula()} allocation,
+     * no string re-scanning.  {@link Expr.NumLiteral} nodes are the only
+     * leaves that can contribute numeric literals; all other leaf types
+     * (Atom, Var, RowVar, StrLiteral) are skipped.
+     */
+    private static void collectNumbersFromExpr(Expr e, Set<String> numbers) {
+        if (e instanceof Expr.NumLiteral num) {
+            numbers.add(num.value());
+        }
+        else if (e instanceof Expr.SExpr se) {
+            if (se.head() != null)
+                collectNumbersFromExpr(se.head(), numbers);
+            for (Expr arg : se.args())
+                collectNumbersFromExpr(arg, numbers);
+        }
+        // Atom, Var, RowVar, StrLiteral: no numeric literals to collect
+    }
+
+    /*****************************************************************
      * Scan all KB formulas and return the set of every numeric literal
      * that appears (e.g. "24", "0.0", "360.0").  These will be declared
      * as thf(n__24_tp,type,(n__24 : $i)). so that hideNumbers=true
      * translations are well-typed.  Dots are normalised to underscores
      * to match the output of translateWord (0.0 -> n__0_0).
+     *
+     * <p>Uses the Expr tree directly for {@link FormulaAST} instances
+     * (no string re-scanning), and falls back to the string path for
+     * plain {@link Formula} objects.
      */
     public static Set<String> collectNumbers(KB kb) {
 
         Set<String> numbers = new TreeSet<>();
-        for (Formula f : kb.formulaMap.values())
-            collectNumbersFromFormula(f.getFormula(), numbers);
+        for (Formula f : kb.formulaMap.values()) {
+            if (f instanceof FormulaAST fa && fa.expr != null)
+                collectNumbersFromExpr(fa.expr, numbers);
+            else
+                collectNumbersFromFormula(f.getFormula(), numbers);
+        }
         return numbers;
     }
 
-    /** ***************************************************************
+    /*****************************************************************
      * Emit a THF type declaration for every numeric literal in numbers.
      * Applies the same normalisation as translateWord: '.' -> '_'.
      */
     public static void writeIntegerTypes(Set<String> numbers, Writer out) throws IOException {
 
         for (String n : numbers) {
-            String normalized = n.replace('.', '_');
+            String normalized = n.replace('.', '_').replace('-', '_');
             out.write("thf(n__" + normalized + "_tp,type,(n__" + normalized + " : $i)).\n");
         }
     }
@@ -1118,6 +1625,18 @@ public class THFnew {
                 // Work on a local copy to build the THF type
                 List<String> sig = new ArrayList<>(baseSig);
 
+                // VariableArityRelations with no domain declarations get an empty string
+                // as their only sig entry (the range placeholder). copyNewPredFromVariableArity
+                // fills expanded variants with the same empty string, so sigString() skips all
+                // arg positions and produces "(w > $o)" instead of "($i > ... > w > $o)".
+                // Normalise: replace empty arg entries (index 1+) with "Entity".
+                if (variableArity(kb, t)) {
+                    for (int _si = 1; _si < sig.size(); _si++) {
+                        String _st = sig.get(_si);
+                        if (_st == null || _st.isEmpty()) sig.set(_si, "Entity");
+                    }
+                }
+
                 // ISSUE 14
                 // Check that the sigStr aligns with the __NUM of the term:
                 Integer suffixNum = getSuffixNumber(t);
@@ -1128,12 +1647,23 @@ public class THFnew {
                 //  - skip symbols with explicitly defined modal types (reserved header)
                 //  - skip modal relations
                 //  - every other relation gets a trailing "World" argument
+                // Truncate BEFORE adding World so that the world arg is never the one removed.
+                // e.g. exhaustiveAttribute__1: base sig ["","Class","Attribute"] has 2 content
+                // entries but suffixNum=1 → remove "Attribute" first, then add "World" to get
+                // ["","Class","World"] → ($i > w > $o).  With the old order (World first, then
+                // truncate) the loop removed "World" instead, yielding ($i > $i > $o).
+                if (suffixNum != null && !sig.isEmpty() && sig.size() > (suffixNum+1)) {
+                    while (sig.size() > (suffixNum+1)) {
+                        sig.remove(sig.size() - 1);   // remove from end until sizes match
+                    }
+                }
+
                 if (!Formula.isLogicalOperator(t) && !t.equals("equals")) {
                     if (!Modals.RIGID_RELATIONS.contains(baseHead)
                             && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)
                             && !Modals.regHOLpred.contains(baseHead)) {
                         sig.add("World");
-                        if (suffixNum != null) suffixNum += 1;
+//                        if (suffixNum != null) suffixNum += 1;
                     }
                 }
 
@@ -1150,12 +1680,6 @@ public class THFnew {
                 }
                 else
                     out.write("thf(" + SUMOtoTPTPformula + "_tp,type,(" + SUMOtoTPTPformula + " : "); // write signature
-
-                if (suffixNum != null && !sig.isEmpty() && sig.size() > (suffixNum+1)) {
-                    while (sig.size() > (suffixNum+1)) {
-                        sig.remove(sig.size() - 1);   // remove from end until sizes match
-                    }
-                }
 
                 String sigStr;
                 if (Modals.regHOLpred.contains(baseHead) || Modals.regHOL3pred.contains(baseHead)) {
@@ -1210,8 +1734,31 @@ public class THFnew {
             String sigStr = sigStringNonModal(pred, sig, kb, isFunction);
             out.write(sigStr + "))).\n");
 
-            // Also treat the predicate symbol itself as an individual
-//            out.write("thf(" + functor + "_tp_ind,type,(" + functor + " : $i)).\n");
+            // Companion declaration: the relation/function symbol used as a $i term
+            // (mention position, e.g. "(instance PPIFn Function)"). translateWord with
+            // hasArguments=false appends TERM_MENTION_SUFFIX ("__m"), so we must declare
+            // s__PPIFn__m : $i here — mirroring what writeTypes() does for modal THF.
+            String mentionedFunctor = SUMOformulaToTPTPformula.translateWord(pred, pred.charAt(0), false);
+            out.write("thf(" + functor + "_m_tp,type,(" + mentionedFunctor + " : $i)).\n");
+        }
+
+        // Second pass: emit $i declarations for individual constants.
+        // The loop above only covers relations (from kbCache.signatures); individual
+        // constants like ElectronicsAndApplianceStores are in kb.terms but not in
+        // signatures, so they would otherwise be undeclared and cause InputError in
+        // leo-iii / Vampire HOL.
+        Set<String> alreadyDeclared = kb.kbCache.signatures.keySet();
+        for (String t : kb.terms) {
+            if (alreadyDeclared.contains(t))
+                continue;
+            if (excludeForTypedef(t, out))
+                continue;
+            if (kb.isInstanceOf(t, "Relation"))
+                continue;
+            if (StringUtil.isNumeric(t))
+                continue;
+            String functor = SUMOformulaToTPTPformula.translateWord(t, t.charAt(0), true);
+            out.write("thf(" + functor + "_tp,type,(" + functor + " : $i)).\n");
         }
     }
 
@@ -1221,10 +1768,73 @@ public class THFnew {
     // arguments are used inconsistently with their declared signatures. In particular,
     // if a predicate expects an $i argument but receives a formula (a list), it is
     // flagged as a badUsageSymbol and will later be excluded from translation.
+    //
+    // Uses the Expr tree directly for FormulaAST instances (no string re-scanning),
+    // and falls back to the string path for plain Formula objects.
     public static void analyzeBadUsages(KB kb) {
 
         for (Formula f : kb.formulaMap.values()) {
-            analyzeFormula(f, kb);
+            if (f instanceof FormulaAST fa && fa.expr != null)
+                analyzeFormulaExpr(fa.expr, kb, fa);
+            else
+                analyzeFormula(f, kb);
+        }
+    }
+
+    /*****************************************************************
+     * Expr-tree equivalent of {@link #analyzeFormula(Formula, KB)}.
+     *
+     * <p>Walks the Expr tree directly — no {@code new Formula()} allocation,
+     * no string re-parsing.  Adds {@code topLevel} to
+     * {@link #badUsageSymbols} if the given SExpr (or any sub-SExpr) has
+     * an argument position where the declared signature expects a
+     * non-Formula type but the argument is itself a compound expression
+     * ({@link Expr.SExpr}) or a predicate term.
+     *
+     * @param e        the Expr node to analyze (may be any Expr subtype)
+     * @param kb       knowledge base (used for signature look-up)
+     * @param topLevel the {@link FormulaAST} to add to badUsageSymbols on detection
+     */
+    private static void analyzeFormulaExpr(Expr e, KB kb, FormulaAST topLevel) {
+
+        if (!(e instanceof Expr.SExpr se))
+            return;  // leaf nodes have no predicate head to analyze
+
+        String headName = se.headName();
+        if (headName == null)
+            return;  // quantifier variable list (e.g. (?X ?Y)) — no predicate head
+
+        if (headName.equals("termFormat") || headName.equals("documentation") || headName.equals("format"))
+            return;
+
+        List<Expr> args = se.args();
+        if (args.isEmpty())
+            return;
+
+        // Check each arg against the declared signature, if any.
+        List<String> sig = kb.kbCache.signatures.get(headName);
+        if (debug) System.out.println("analyzeFormulaExpr(): head: " + headName + " sig: " + sig);
+        if (sig != null && sig.size() > 1) {
+            // sig[0] is "", last entry is range type; argument types at positions 1..sig.size()-2
+            int maxArgs = Math.min(args.size(), sig.size() - 1);
+            for (int i = 0; i < maxArgs; i++) {
+                String expectedType = sig.get(i + 1);
+                Expr arg = args.get(i);
+                if (debug) System.out.println("analyzeFormulaExpr(): arg " + i + " | " + arg.toKifString());
+                // Flag if a non-Formula position receives a compound expression or a predicate term.
+                if (!"Formula".equals(expectedType)
+                        && (arg instanceof Expr.SExpr
+                                || (arg instanceof Expr.Atom atom && predicateTerms.contains(atom.name())))) {
+                    THFnew.badUsageSymbols.add(topLevel);
+                    break;
+                }
+            }
+        }
+
+        // Recurse into SExpr sub-args (non-SExpr leaves cannot have sub-expressions).
+        for (Expr arg : args) {
+            if (arg instanceof Expr.SExpr)
+                analyzeFormulaExpr(arg, kb, topLevel);
         }
     }
 
@@ -1276,7 +1886,126 @@ public class THFnew {
         // Recurse on subformulas in the arguments
         for (String s : args) {
             if (Formula.listP(s))
-                analyzeFormula(new Formula(s), kb);
+                analyzeFormula(new FormulaAST(s), kb);
+        }
+    }
+
+    // =======================================================================
+    // Expr-based per-formula translation (FormulaAST path)
+    // These mirror oneTrans / oneTransNonModal but operate on Expr trees.
+    // =======================================================================
+
+    /** ***************************************************************
+     * Expr-based equivalent of {@link #oneTrans}.
+     * Used when the formula is a {@link FormulaAST} with a non-null
+     * {@code expr} field.
+     *
+     * <p>Pipeline:
+     * <ol>
+     *   <li>Run {@link Modals#processModalsExpr} on the original expr for
+     *       type-info only.</li>
+     *   <li>Preprocess the original expr with
+     *       {@link FormulaPreprocessor#preProcessExpr}.</li>
+     *   <li>Build the typeMap from domain/range restrictions plus world-var
+     *       entries from step 1.</li>
+     *   <li>For each preprocessed Expr, apply modal processing again and
+     *       translate to THF via {@link ExprToTHF#translate}.</li>
+     * </ol>
+     */
+    public static void oneTransExpr(KB kb, FormulaAST fa, PrintWriter bw)
+            throws IOException {
+
+        bw.write("% original: " + fa.getFormula() + "\n" +
+                "% from file " + fa.sourceFile + " at line " + fa.startLine + "\n");
+
+        // Step 1: modal pass on the original expr for TYPE INFO only
+        Map.Entry<Expr, Map<String, Set<String>>> modalResult =
+                Modals.processModalsExpr(fa.expr, kb);
+        Expr resExpr = modalResult.getKey();
+
+        if (resExpr == null) return;
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        // Step 2: preprocess ORIGINAL fa (not the modalized one)
+        Set<Expr> processed = fp.preProcessExpr(fa, false, kb);
+        if (processed == null || processed.isEmpty()) return;
+
+        // Step 3: build typeMap from modalized expr
+        Map<String, Set<String>> typeMap = new HashMap<>();
+        typeMap.putAll(fp.findTypeRestrictionsExpr(resExpr, kb));
+        typeMap.putAll(modalResult.getValue()); // world var types (?W0, ?W1 → {"World"})
+
+        // Add primary world var explicitly (mirrors oneTrans's makeWorldVar call)
+        Set<String> worldTypes = new HashSet<>(Collections.singleton("World"));
+        String primaryWorldVar = Modals.makeWorldVarExpr(fa.expr);
+        typeMap.put(primaryWorldVar, worldTypes);
+
+        // Mark formula-typed variables from modalAttribute forms
+        Modals.markModalAttributeFormulaVarsExpr(fa.expr, typeMap);
+
+        // Step 4: for each preprocessed Expr, apply modals and translate to THF
+        for (Expr e : processed) {
+            // Skip formulas where a predicate variable was not expanded by preProcessExpr
+            // (no KB instances found for the constraining type).  Applying a $i-typed
+            // variable as a function causes a Vampire SIGSEGV during THF parsing.
+            // The string-based oneTrans() implicitly drops these via exclude() when
+            // SUMOformulaToTPTPformula.process() returns empty for pred-var formulas.
+            if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(e)) continue;
+
+            Map.Entry<Expr, Map<String, Set<String>>> fmodalResult =
+                    Modals.processModalsExpr(e, kb);
+            Expr fmodal = fmodalResult.getKey();
+            if (fmodal == null) continue;
+
+            if (exclude(fmodal, kb, bw)) continue;
+
+            String thf = ExprToTHF.translate(fmodal, false, typeMap);
+            bw.println("thf(ax" + axNum++ + ",axiom," + thf + ").\n");
+        }
+    }
+
+    /** ***************************************************************
+     * Expr-based equivalent of {@link #oneTransNonModal}.
+     * Used when the formula is a {@link FormulaAST} with a non-null
+     * {@code expr} field (plain/non-modal THF generation).
+     *
+     * <p>Pipeline:
+     * <ol>
+     *   <li>Preprocess the expr with
+     *       {@link FormulaPreprocessor#preProcessExpr}.</li>
+     *   <li>Build the typeMap from domain/range restrictions.</li>
+     *   <li>For each preprocessed Expr, translate to THF (non-modal) via
+     *       {@link ExprToTHF#translateNonModal}.</li>
+     * </ol>
+     */
+    public static void oneTransNonModalExpr(KB kb, FormulaAST fa, Writer bw)
+            throws IOException {
+
+        bw.write("% original: " + fa.getFormula() + "\n" +
+                "% from file " + fa.sourceFile + " at line " + fa.startLine + "\n");
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+
+        // Step 1: preprocess original expr
+        Set<Expr> processed = fp.preProcessExpr(fa, false, kb);
+        if (processed == null || processed.isEmpty()) return;
+
+        // Step 2: build typeMap from the original (no modal processing)
+        Map<String, Set<String>> typeMap = new HashMap<>();
+        typeMap.putAll(fp.findTypeRestrictionsExpr(fa.expr, kb));
+
+        // Step 3: translate each preprocessed Expr
+        for (Expr e : processed) {
+            if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(e)) continue;
+            if (excludeNonModal(e, kb, bw)) {
+                String flat = fa.getFormula().replace("\n", " ").replace("\r", " ");
+                bw.write("% excluded processed formula (non-modal): " + flat + "\n");
+                bw.write("% from file " + fa.sourceFile + " at line " + fa.startLine + "\n");
+                continue;
+            }
+            String thf = ExprToTHF.translateNonModal(e, false, typeMap);
+            bw.write("thf(ax" + axNum++ + ",axiom," + thf + ").\n");
         }
     }
 
@@ -1295,11 +2024,20 @@ public class THFnew {
         try (Writer fstream = new FileWriter(filename);
              PrintWriter out = new PrintWriter(new BufferedWriter(fstream))) {
             // Warm Up
+            // Use the Expr-based path for FormulaAST formulas so that row-var expansion
+            // goes up to arity 7 (matching oneTransExpr's behaviour) and all __N predicate
+            // variants are registered in kb.terms/signatures BEFORE writeTypes() runs.
+            // The string-based preProcess() only expands to RowVars.MAX_ARITY=5, so any
+            // arity-6/7 variant created later by oneTransExpr would be missing a type
+            // declaration (Vampire SIGSEGV due to undeclared predicate).
             FormulaPreprocessor fp = new FormulaPreprocessor();
             for (Formula f : kb.formulaMap.values()) {
                 // We ignore the results; we just want preProcessRecurse()
                 // to run and call copyNewPredFromVariableArity(...)
-                fp.preProcess(f, false, kb);
+                if (f instanceof FormulaAST fa && fa.expr != null)
+                    fp.preProcessExpr(fa, false, kb);
+                else
+                    fp.preProcess(f, false, kb);
             }
             // Pre-collect all integer literals so every n__N constant gets a type declaration.
             SUMOformulaToTPTPformula.setHideNumbers(true);
@@ -1311,15 +2049,24 @@ public class THFnew {
                 String flatFormula = f.getFormula().replace("\n", " ").replace("\r", " ");
                 String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
                 if (debug) System.out.println("THFnew.transModalTHF(): " + f);
+                boolean excluded;
                 if (writeKIF) {
                     out.write("% original: " + stripped + "\n");
                     out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
                 }
-                if (!exclude(f,kb,out))
-                    oneTrans(kb,f,out);
-                else {
-                    // ISSUE 8
-
+                if (f instanceof FormulaAST fa && fa.expr != null) {
+                    excluded = exclude(fa, kb, out);   // FormulaAST overload: fast string pre-checks
+                    if (!excluded)
+                        oneTransExpr(kb, fa, out);
+                } else {
+                    excluded = exclude(f, kb, out);
+                    if (!excluded) {
+                        System.out.println("THFnew.transModalTHF(): fallback to string-based translation for: "
+                                + f.sourceFile + " line " + f.startLine + ": " + f.getFormula());
+                        oneTrans(kb, f, out);
+                    }
+                }
+                if (excluded) {
                     out.write("% excluded: " + stripped + "\n");
                     out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
                 }
@@ -1343,11 +2090,16 @@ public class THFnew {
         try (Writer fstream = new FileWriter(filename);
              Writer out = new BufferedWriter(fstream)) {
 
+            // Use Expr-based expansion in the warm-up so __N predicates up to arity 7
+            // are registered before writeTypesNonModal() runs (same fix as transModalTHF).
             FormulaPreprocessor fp = new FormulaPreprocessor();
             for (Formula f : kb.formulaMap.values()) {
                 // We ignore the results; we just want preProcessRecurse()
                 // to run and call copyNewPredFromVariableArity(...)
-                fp.preProcess(f, false, kb);
+                if (f instanceof FormulaAST fa && fa.expr != null)
+                    fp.preProcessExpr(fa, false, kb);
+                else
+                    fp.preProcess(f, false, kb);
             }
 
             // For pure { $i, $o } we probably don't need a big header.
@@ -1362,13 +2114,24 @@ public class THFnew {
                         .replace("\n", " ").replace("\r", " ");
                 String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
                 if (debug) System.out.println("THFnew.transPlainTHF(): " + f);
+                boolean excluded;
                 if (writeKIF) {
                     out.write("% original: " + stripped + "\n");
                     out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
                 }
-                if (!excludeNonModal(f, kb, out))
-                    oneTransNonModal(kb, f, out);
-                else {
+                if (f instanceof FormulaAST fa && fa.expr != null) {
+                    excluded = excludeNonModal(fa, kb, out);  // FormulaAST overload: badUsage + fast string pre-checks
+                    if (!excluded)
+                        oneTransNonModalExpr(kb, fa, out);
+                } else {
+                    excluded = excludeNonModal(f, kb, out);
+                    if (!excluded) {
+                        System.out.println("THFnew.transPlainTHF(): fallback to string-based translation for: "
+                                + f.sourceFile + " line " + f.startLine + ": " + f.getFormula());
+                        oneTransNonModal(kb, f, out);
+                    }
+                }
+                if (excluded) {
                     out.write("% excluded (non-modal): " + stripped + "\n");
                     out.write("% from file " + f.sourceFile + " at line " +
                             f.startLine + "\n");
@@ -1507,7 +2270,7 @@ public class THFnew {
             }
             for (String s : args) {
                 if (Formula.listP(s)) {
-                    if (excludeNonModal(new Formula(s), kb, out)) {
+                    if (excludeNonModal(new FormulaAST(s), kb, out)) {
                         String flat = f.toString().replace("\n", " ").replace("\r", " ");
                         out.write("% excluded(): excludeNonModal: " + flat + " in formula: " +
                                 stripped + "\n");
@@ -1563,7 +2326,7 @@ public class THFnew {
                 "      (or\n" +
                 "        (instance ?LAND2 Continent)\n" +
                 "        (instance ?LAND2 Island)))))\n";
-        Formula f = new Formula(fstr);
+        Formula f = new FormulaAST(fstr);
      //   try {
             //oneTrans(kb,f,null);
      //   }
@@ -1579,7 +2342,7 @@ public class THFnew {
                 "            (connects ?J ?W1 ?W2)\n" +
                 "            (not\n" +
                 "                (equal ?W1 ?W2)))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         //try {
         //    oneTrans(kb,f,null);
         //}
@@ -1596,7 +2359,7 @@ public class THFnew {
                     "(and " +
                       "(instance ?CHILD HumanChild) " +
                       "(located ?CHILD ?LOC)))))";
-        f = new Formula(fstr);
+        f = new FormulaAST(fstr);
         try {
             oneTrans(kb,f,null);
         }
@@ -1652,10 +2415,8 @@ public class THFnew {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("THFnew.main(): KB loaded");
-            if (!kb.errors.isEmpty()) {
-                System.err.println("Errors: " + kb.errors);
-                return;
-            }
+            if (!kb.errors.isEmpty())
+                System.err.println("THFnew.main(): KB loaded with non-fatal errors: " + kb.errors);
             System.out.println("contains one : " + argMap.containsKey("one"));
             System.out.println("has one arg: " + (argMap.containsKey("one") && argMap.get("one").size() == 1));
             if (argMap.containsKey("one") && argMap.get("one").size() == 1) {
@@ -1663,7 +2424,16 @@ public class THFnew {
                 System.out.println("THFnew.main(): translate to THF (with modals)");
                 PrintWriter writer = new PrintWriter(System.out, true);
                 try {
-                    oneTrans(kb, new Formula(argMap.get("one").get(0)), writer);
+                    String kifStr = argMap.get("one").get(0);
+                    SuokifVisitor visitor = SuokifVisitor.parseString(kifStr);
+                    FormulaAST fa = visitor.result.isEmpty() ? null
+                            : visitor.result.values().iterator().next();
+                    if (fa != null && fa.expr != null) {
+                        oneTransExpr(kb, fa, writer);
+                    } else {
+                        System.out.println("THFnew.main(): FormulaAST parse failed or expr is null — falling back to string-based translation");
+                        oneTrans(kb, new FormulaAST(kifStr), writer);
+                    }
                 }
                 catch (Exception e) {
                     e.printStackTrace();

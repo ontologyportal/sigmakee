@@ -113,6 +113,11 @@ public class VarTypes {
      */
     public void findEquationType(FormulaAST f) {
 
+        // Prefer Expr-based path when available
+        if (f.expr != null) {
+            findEquationTypeFromExpr(f);
+            return;
+        }
         if (debug) System.out.println("VarTypes.findEquationType(): input: " + f);
         String var = null, type = null, funterm;
         SuokifParser.TermContext arg1;
@@ -163,6 +168,9 @@ public class VarTypes {
      */
     public FormulaAST constrainVars(String rel, String var, FormulaAST f) {
 
+        // Prefer Expr-based path when available
+        if (f.expr != null)
+            return constrainVarsFromExpr(rel, var, f);
         if (var.startsWith(Formula.R_PREF))
             return f;
         Map<Integer, Set<SuokifParser.ArgumentContext>> argsForIndex = f.argMap.get(var);
@@ -331,6 +339,235 @@ public class VarTypes {
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Expr-based type inference (Phase 3) — no ANTLR contexts required
+    // -----------------------------------------------------------------------
+
+    /**
+     * Walk {@code f.expr} to infer variable types from predicate signatures.
+     * Equivalent to {@link #findType(FormulaAST)} but operates on the {@link Expr}
+     * tree instead of the ANTLR {@code argMap}.
+     */
+    public void findTypeFromExpr(FormulaAST f) {
+
+        if (f.expr == null) return;
+        if (debug) System.out.println("VarTypes.findTypeFromExpr(): " + f);
+        processExprForTypes(f.expr, f);
+    }
+
+    /** Recursively walk {@code expr} and collect type constraints into {@code f}. */
+    private void processExprForTypes(Expr expr, FormulaAST f) {
+
+        if (f.higherOrder) return;
+        if (!(expr instanceof Expr.SExpr se)) return;
+
+        String headName = se.headName();   // null when head is not an Atom (e.g. var-list in quantifier)
+        List<Expr> args = se.args();
+
+        if (headName == null) {
+            // Quantifier variable-list node: recurse into children, no sig lookup
+            for (Expr child : args) processExprForTypes(child, f);
+            return;
+        }
+
+        if (!Formula.isVariable(headName)) {
+            List<String> sig = kb.kbCache.getSignature(headName);
+            if (sig != null) {
+                if (sig.contains("Formula")) {
+                    f.higherOrder = true;
+                    return;
+                }
+                // Arity mismatch warning (mirrors original findType behaviour)
+                if (kb.kbCache.getArity(headName) != -1 && args.size() != sig.size() - 1) {
+                    boolean hasRowVar = args.stream().anyMatch(a -> a instanceof Expr.RowVar);
+                    if (!hasRowVar) {
+                        System.err.println("Error in VarTypes.findTypeFromExpr(): mismatched arg lists:");
+                        System.err.println("  relation: " + headName + ", #args: " + args.size()
+                                + ", sig size: " + (sig.size() - 1));
+                        System.err.println("  in formula: " + f);
+                    }
+                }
+                int arity = kb.getValence(headName);
+                for (int i = 0; i < args.size(); i++) {
+                    int sigIdx = i + 1;
+                    String sigTypeAtIndex;
+                    if (arity == -1)
+                        sigTypeAtIndex = kb.kbCache.variableArityType(headName);
+                    else if (sigIdx < sig.size())
+                        sigTypeAtIndex = sig.get(sigIdx);
+                    else
+                        continue;
+                    typeCheckArgExpr(args.get(i), sigTypeAtIndex, i + 1, headName, f);
+                }
+            }
+        }
+        // Recurse into all sub-expressions
+        for (Expr child : args) processExprForTypes(child, f);
+    }
+
+    /**
+     * Check or record the type of one argument in an Expr-based predicate application.
+     * Variables get their type recorded; sentences-as-args flag higher-order; others
+     * get warning/error checks (matching the original {@link #findType} behaviour).
+     */
+    private void typeCheckArgExpr(Expr arg, String sigType, int argPos, String pred, FormulaAST f) {
+
+        switch (arg) {
+            case Expr.Var v ->
+                MapUtils.addToMap(f.varTypes, v.name(), sigType);
+            case Expr.RowVar ignored -> { /* row variables: handled by RowVar pass */ }
+            case Expr.SExpr se -> {
+                String hn = se.headName();
+                boolean isFunterm = hn != null && kb.kbCache.functions != null
+                        && kb.kbCache.functions.contains(hn);
+                if (isFunterm) {
+                    // Function application as argument: check return type compatibility
+                    String range = kb.kbCache.getRange(hn);
+                    if (range != null && !sigType.equals("SetOrClass")
+                            && !kb.isSubclass(range, sigType) && !range.equals(sigType))
+                        System.out.println("Warning in VarTypes.findTypeFromExpr(): function " + hn
+                                + " of range " + range + " may not fit arg " + argPos
+                                + " of " + pred + " requiring " + sigType);
+                } else {
+                    // Formula as argument → higher-order; variables inside get the sig type
+                    f.higherOrder = true;
+                    collectVarsForTypeExpr(se, sigType, f);
+                }
+            }
+            case Expr.Atom a -> {
+                if (kb.isInstance(a.name())) {
+                    if (!kb.kbCache.isInstanceOf(a.name(), sigType))
+                        System.out.println("Warning in VarTypes.findTypeFromExpr(): instance arg "
+                                + a.name() + " may not fit arg " + argPos
+                                + " of " + pred + " requiring " + sigType);
+                }
+            }
+            case Expr.NumLiteral n -> {
+                if (!kb.kbCache.subclassOf(sigType, "Quantity") && !sigType.equals("Quantity"))
+                    System.err.println("Error in VarTypes.findTypeFromExpr(): signature doesn't "
+                            + "allow number " + n.value() + " at arg " + argPos + " of " + pred);
+            }
+            case Expr.StrLiteral s -> {
+                if (!sigType.equals("SymbolicString"))
+                    System.err.println("Error in VarTypes.findTypeFromExpr(): signature doesn't "
+                            + "allow string " + s.value() + " at arg " + argPos + " of " + pred);
+            }
+            default -> { }
+        }
+    }
+
+    /** Collect types for {@link Expr.Var} nodes directly inside a sentence-as-arg SExpr. */
+    private void collectVarsForTypeExpr(Expr.SExpr se, String sigType, FormulaAST f) {
+
+        for (Expr child : se.args()) {
+            if (child instanceof Expr.Var v)
+                MapUtils.addToMap(f.varTypes, v.name(), sigType);
+            else if (child instanceof Expr.SExpr nested)
+                collectVarsForTypeExpr(nested, sigType, f);
+        }
+    }
+
+    /**
+     * Walk {@code f.expr} looking for {@code (equal t1 t2)} sub-expressions and
+     * infer the type of any variable from the other side of the equality.
+     * Equivalent to {@link #findEquationType(FormulaAST)} but Expr-based.
+     */
+    public void findEquationTypeFromExpr(FormulaAST f) {
+
+        if (f.expr == null) return;
+        if (debug) System.out.println("VarTypes.findEquationTypeFromExpr(): " + f);
+        collectEqualTypes(f.expr, f);
+    }
+
+    private void collectEqualTypes(Expr expr, FormulaAST f) {
+
+        if (!(expr instanceof Expr.SExpr se)) return;
+        if ("equal".equals(se.headName()) && se.args().size() == 2) {
+            String var = null, type = null;
+            for (Expr side : se.args()) {
+                switch (side) {
+                    case Expr.Var v -> var = v.name();
+                    case Expr.Atom a -> {
+                        // Identifier: use immediate parent as its type (matches original findTypeOfTerm)
+                        Set<String> parents = kb.immediateParents(a.name());
+                        if (!parents.isEmpty()) type = parents.iterator().next();
+                    }
+                    case Expr.SExpr funse -> {
+                        String hn = funse.headName();
+                        if (hn != null) {
+                            String range = kb.kbCache.getRange(hn);
+                            if (range != null) type = range;
+                        }
+                    }
+                    case Expr.StrLiteral ignored -> type = "SymbolicString";
+                    case Expr.NumLiteral ignored -> type = "Number";
+                    default -> { }
+                }
+            }
+            if (var != null && type != null) {
+                if (debug) System.out.println("findEquationTypeFromExpr(): var&type: " + var + " : " + type);
+                MapUtils.addToMap(f.varTypes, var, type);
+            }
+        }
+        for (Expr child : se.args()) collectEqualTypes(child, f);
+    }
+
+    /**
+     * Expr-based equivalent of {@link #constrainVars(String, String, FormulaAST)}.
+     * Searches {@code f.expr} for sub-expressions of the form {@code (var ...)} where
+     * {@code var} is used as the head, and records argument types from {@code rel}'s
+     * signature into {@code f.varTypes}.
+     */
+    public FormulaAST constrainVarsFromExpr(String rel, String var, FormulaAST f) {
+
+        if (f.expr == null) return f;
+        if (var.startsWith(Formula.R_PREF)) return f;
+        List<String> sig = kb.kbCache.getSignature(rel);
+        if (sig == null) return f;
+        collectConstraintTypes(f.expr, var, rel, sig, f);
+        return f;
+    }
+
+    private void collectConstraintTypes(Expr expr, String var, String rel,
+                                        List<String> sig, FormulaAST f) {
+        if (!(expr instanceof Expr.SExpr se)) return;
+        List<Expr> args = se.args();
+
+        // Check if this SExpr's head is the predicate variable we are substituting
+        boolean isVarHead = se.head() instanceof Expr.Var v && v.name().equals(var);
+        if (isVarHead) {
+            if (args.size() != sig.size() - 1) {
+                boolean hasRowVar = args.stream().anyMatch(a -> a instanceof Expr.RowVar);
+                if (!hasRowVar) {
+                    System.out.println("VarTypes.constrainVarsFromExpr(): mismatched arg type lists:");
+                    System.out.println("  when substituting " + rel + " for " + var);
+                    System.out.println("  sig: " + sig + ", args: " + args.size());
+                }
+            } else {
+                for (int i = 0; i < args.size(); i++) {
+                    int sigIdx = i + 1;
+                    if (sigIdx >= sig.size()) continue;
+                    String sigType = sig.get(sigIdx);
+                    switch (args.get(i)) {
+                        case Expr.Var v2 ->
+                            MapUtils.addToMap(f.varTypes, v2.name(), sigType);
+                        case Expr.SExpr nested -> {
+                            collectVarsForTypeExpr(nested, sigType, f);
+                            f.higherOrder = true;
+                        }
+                        default -> { }
+                    }
+                }
+            }
+        }
+        // Recurse into all args
+        for (Expr child : args) collectConstraintTypes(child, var, rel, sig, f);
+    }
+
+    // -----------------------------------------------------------------------
+    // ANTLR-context-based type inference (legacy — kept for formulas without Expr)
+    // -----------------------------------------------------------------------
+
     /** ***************************************************************
      * Go through the argument map of a formula, which consists of all
      * predicates and their arguments in each position, within this formula,
@@ -348,6 +585,11 @@ public class VarTypes {
      */
     public void findType(FormulaAST f) {
 
+        // Prefer Expr-based path when available
+        if (f.expr != null) {
+            findTypeFromExpr(f);
+            return;
+        }
         if (debug) System.out.println("VarTypes.findType(): " + f);
         Map<Integer, Set<SuokifParser.ArgumentContext>> argsForIndex;
         List<String> sig;
