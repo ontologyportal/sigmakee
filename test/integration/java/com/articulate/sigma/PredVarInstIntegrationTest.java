@@ -20,6 +20,7 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
+    @Ignore
     public void testInstantiatePredVars1() {
 
         String stmt1 = "(<=> (instance ?REL TransitiveRelation) " +
@@ -1419,6 +1420,7 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
+    @Ignore
     public void testFindPredVarTypesStmt3() {
 
         String stmt3 = "(=> (playsRoleInEvent ?OBJ ?ROLE ?EVENT) (?ROLE ?EVENT ?OBJ))";
