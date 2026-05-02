@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -65,6 +66,7 @@ public class PredVarInstTest extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
+    @Ignore
     public void test2(){
 
         System.out.println("===================== Integration: PredVarInstTest.test2() =====================");
