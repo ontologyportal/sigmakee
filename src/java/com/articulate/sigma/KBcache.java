@@ -2354,7 +2354,7 @@ public class KBcache implements Serializable {
     public void buildCaches() {
 
         clearCaches(); // ensure a clean slate
-        _p_buildCaches();
+        p_buildCaches();
     }
 
     /** ***************************************************************
@@ -2454,7 +2454,7 @@ public class KBcache implements Serializable {
      *   buildInstTransRels → addTransitiveInstances → buildTransInstOf + correctValences
      *   → buildFunctionsSet → [disjoint group] → storeCacheAsFormulas → buildSymbolTaxonomy
      */
-    private void _p_buildCaches() {
+    private void p_buildCaches() {
 
         long startMillis = System.currentTimeMillis();
         if (debug) System.out.println("INFO in KBcache._p_buildCaches(): begin");

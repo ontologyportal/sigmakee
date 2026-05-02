@@ -246,6 +246,9 @@ public class FormulaPreprocessor {
      *   (=>
      *     (foo ?A B)
      *     (bar B ?A)))
+     *
+     * Note that Formula types must not be added (in HOL) as type guards since these
+     * are addressed by THF's native types (using w > $o)
      */
     public Formula addTypeRestrictions(Formula form, KB kb) {
 
@@ -269,7 +272,7 @@ public class FormulaPreprocessor {
             types = varmap.get(unquantifiedV);
             if (types != null && !types.isEmpty()) {
                 for (String t : new TreeSet<>(types)) {
-                    if (StringUtil.emptyString(t))
+                    if (StringUtil.emptyString(t) || t.equals("Formula") || t.equals("ObjectiveNorm"))
                         continue;
                     if (begin) {
                         sb.append("(=> \n  (and \n");  // TODO: need test for singular list
@@ -700,7 +703,7 @@ public class FormulaPreprocessor {
      *               special mark.
      */
     private Map<String,Set<String>> computeVariableTypesRecurse(KB kb, Formula f,
-                                                                       Map<String,Set<String>> input) {
+                                                                Map<String,Set<String>> input) {
 
         if (kb == null)
             System.err.println("Error in FormulaPreprocessor.computeVariableTypesRecurse() kb = null found while processing: \n" + f);
@@ -711,10 +714,16 @@ public class FormulaPreprocessor {
         String carstr = f.car();
         if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr) && !carstr.equals(Formula.EQUAL)) {
             if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): logical op " + carstr);
+            if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): f.listLength() " + f.listLength());
+            if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): f.getArgument(1).isVariable() " + f.getArgument(1).isVariable());
             result.putAll(input);
             int start = 1;
             if (Formula.isQuantifier(carstr))  // skip the quantified variable list
                 start = 2;
+            if (Formula.isLogicalOperator(carstr) && f.listLength() == 2 && f.getArgument(1).isVariable()) {
+                System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): logical op with var arg " + f.getFormula());
+                MapUtils.addToMap(result,f.getArgument(1).toString(),"Formula");  // When a variable is an argument to a logical operator, it's a formula
+            }
             Formula farg;
             for (int i = start; i <= f.listLength(); i++) {
                 farg = f.getArgument(i);
@@ -1938,17 +1947,69 @@ public class FormulaPreprocessor {
 
     /** ***************************************************************
      */
-    public static void main(String[] args) {
+    public static void test7() {
 
-        //testOne();
-        //testTwo();
-        //testThree();
-        //testFour();
+        System.out.println("------------------------------------");
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
-        test6();
-        //testFindTypes();
-        //testAddTypes();
-        //testFindExplicit();
+        System.out.println();
+        System.out.println();
+        String strf = "(=>\n" +
+                "  (and\n" +
+                "    (confersObligation USGovernment ?A ?F)\n" +
+                "    (not ?F)) \n" +
+                "  (exists (?H)\n" +
+                "    (and\n" +
+                "      (instance ?H LegalAction) \n" +
+                "      (plaintiff ?H USGovernment)\n" +
+                "      (defendant ?H ?A))))";
+        Formula f = new Formula();
+        f.read(strf);
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        debug = true;
+        System.out.println("test7(): " + fp.preProcess(f,false,kb));
+    }
+    /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("FormulaPreprocessor");
+        System.out.println("  h - show this help screen");
+        System.out.println("  t - run tests");
+        System.out.println("  --types \"<fomula>\" - translate one formula with modals");
     }
 
+    /***************************************************************
+     */
+    public static void main(String[] args) {
+
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.isEmpty() || argMap.containsKey("h"))
+            showHelp();
+        else {
+            if (argMap.containsKey("t")) {
+                //testOne();
+                //testTwo();
+                //testThree();
+                //testFour();
+                test7();
+                //testFindTypes();
+                //testAddTypes();
+                //testFindExplicit();
+            }
+            else if (argMap.containsKey("types")) {
+                System.out.println("------------------------------------");
+                System.out.println("Compute types for formula");
+                KBmanager.getMgr().initializeOnce();
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                System.out.println("Init complete");
+                Formula f = new Formula(StringUtil.removeEnclosingQuotes(argMap.get("types").get(0)));
+                FormulaPreprocessor fp = new FormulaPreprocessor();
+                System.out.println("Formula: " + f);
+                System.out.println("Var types: " + fp.computeVariableTypes(f, kb));
+                System.out.println("Explicit types: " + fp.findExplicitTypesInAntecedent(kb, f));
+            }
+        }
+    }
 }

@@ -427,14 +427,14 @@ public class Vampire {
             System.out.println("Vampire CWD: " + _builder.directory().getAbsolutePath());
         }
 
-        Process _vampire = _builder.start();
+        Process vampire = _builder.start();
 
         // Read stdout and stderr in parallel
         List<String> stdoutLines = new ArrayList<>();
         List<String> stderrLines = new ArrayList<>();
 
         Thread stderrReader = new Thread(() -> {
-            try (BufferedReader r = new BufferedReader(new InputStreamReader(_vampire.getErrorStream()))) {
+            try (BufferedReader r = new BufferedReader(new InputStreamReader(vampire.getErrorStream()))) {
                 String line;
                 while ((line = r.readLine()) != null) {
                     stderrLines.add(line);
@@ -445,7 +445,7 @@ public class Vampire {
         });
         stderrReader.start();
 
-        try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_vampire.getInputStream()))) {
+        try (BufferedReader _reader = new BufferedReader(new InputStreamReader(vampire.getInputStream()))) {
             String line;
             while ((line = _reader.readLine()) != null) {
                 stdoutLines.add(line);
@@ -455,7 +455,7 @@ public class Vampire {
 
         stderrReader.join(5000);
 
-        int exitValue = _vampire.waitFor();
+        int exitValue = vampire.waitFor();
         long elapsed = System.currentTimeMillis() - startTime;
 
         // Populate result

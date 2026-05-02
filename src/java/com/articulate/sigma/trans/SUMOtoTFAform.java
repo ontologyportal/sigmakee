@@ -488,7 +488,9 @@ public class SUMOtoTFAform {
     }
 */
     /***************************************************************
+     * @deprecated replaced with {@link #processQuantExpr}
      */
+    @Deprecated
     private static String processQuant(Formula f, Formula car, String parentType, String op,
                                        List<String> args) {
 
@@ -533,7 +535,9 @@ public class SUMOtoTFAform {
     }
 
     /***************************************************************
+     * @deprecated replaced with {@link #processConjDisjExpr}
      */
+    @Deprecated
     private static String processConjDisj(Formula f, Formula car, String parentType,
                                           List<String> args) {
 
@@ -557,7 +561,9 @@ public class SUMOtoTFAform {
     }
 
     /***************************************************************
+     * @deprecated replaced with {@link #processLogOpExpr}
      */
+    @Deprecated
     private static String processLogOp(Formula f, Formula car, String parentType,
                                         List<String> args) {
         String op = car.getFormula();
@@ -745,7 +751,9 @@ public class SUMOtoTFAform {
      * Generate the TFF relation corresponding to an appearance of
      * any superclass of the TFF number types by naming the
      * type-specific relations using makePredFromArgTypes()
+     * @deprecated replaced with {@link #processNumericSuperArgsExpr}
      */
+    @Deprecated
     private static String processNumericSuperArgs(Formula f, Formula car,
                                                   String parentType,
                                                   List<String> args,
@@ -806,7 +814,9 @@ public class SUMOtoTFAform {
      *                   enclosing formula content
      * @param args are all the arguments including ListFn, the arg 0
      * @param argTypes types of all arguments including arg 0
+     * @deprecated replaced with {@link #processListFnExpr}
      */
+    @Deprecated
     private static String processListFn(Formula f, Formula car,
                                         String parentType,
                                         List<String> args,
@@ -834,8 +844,9 @@ public class SUMOtoTFAform {
      * equal is a special case since it needs translation to '='
      * regardless of argument types since it's polymorphic on $i also.
      * @param args includes the relation as arg 0
-     *
+     * @deprecated replaced with {@link #processCompOpExpr}
      */
+    @Deprecated
     private static String processCompOp(Formula f, Formula car,
                                         List<String> args,
                                         List<String> argTypes) {
@@ -951,7 +962,9 @@ public class SUMOtoTFAform {
 
     /***************************************************************
      *  PLUSFN, MINUSFN, TIMESFN, DIVIDEFN, FLOORFN
+     * @deprecated replaced with {@link #processMathOpExpr}
      */
+    @Deprecated
     private static String processMathOp(Formula f, Formula car,
                                         String parentType,
                                         List<String> args,
@@ -1005,6 +1018,7 @@ public class SUMOtoTFAform {
                 return promotion + "$quotient_e(" + processRecurse(arg1,"Integer") + " ," +
                         processRecurse(arg2,"Integer") + Formula.RP + closeP;
             else {
+                System.out.println("processMathOp(): allOfType() " + args);
                 return mixedQuotient(f,op,parentType,args,argTypes);
             }
         }
@@ -1021,7 +1035,9 @@ public class SUMOtoTFAform {
      * @param parentType is the type restriction that any enclosing formula imposes on this present formula
      * @param args are the arguments in this formula, not including the predicate position (arg 0)
      * @param argTypes are the types of the arguments
+     * @deprecated replaced with {@link #processOtherRelationExpr}
      */
+    @Deprecated
     private static String processOtherRelation(Formula f, Formula car,
                                                String parentType,
                                                List<String> args,
@@ -1344,7 +1360,9 @@ public class SUMOtoTFAform {
      * @param f the formula to process
      * @param parentType is the type restriction that applies to this
      *                   formula, if it's part of a larger formula
+     * @deprecated replaced with {@link #processRecurseExpr}
      */
+    @Deprecated
     public static String processRecurse(Formula f, String parentType) {
 
         if (debug) System.out.println("SUMOtoTFAform.processRecurse(): f: " + f);
@@ -2506,7 +2524,9 @@ public class SUMOtoTFAform {
     /***************************************************************
      * @return a list of TFF relation sort definitions to cover
      * ListFn statements that have diverse sorts
+     * @deprecated replaced with {@link #missingSortsExpr}
      */
+    @Deprecated
     public Set<String> missingSorts(Formula f) {
 
         Set<String> result = new HashSet<>();
@@ -2537,7 +2557,7 @@ public class SUMOtoTFAform {
             Thread.dumpStack();
             return "";
         }
-        if (f.getFormula().startsWith("(instance equal")) { // || f.theFormula.contains("ListFn"))
+        if (f.getFormula().startsWith("(instance equal ")) { // || f.theFormula.contains("ListFn"))
             System.err.println("Error in SUMOtoTFAform.process(): rejected (instance equal: " + f);
             return "";
         }
@@ -2611,7 +2631,9 @@ public class SUMOtoTFAform {
      * Parse a single formula into TPTP format.
      * @param suoString the formula entry to parse
      * @param query true if the suoString is a query
+     * @deprecated replaced with {@link #processExpr}
      */
+    @Deprecated
     public static String process(String suoString, boolean query) {
 
         if (!SUMOKBtoTPTPKB.rapidParsing)

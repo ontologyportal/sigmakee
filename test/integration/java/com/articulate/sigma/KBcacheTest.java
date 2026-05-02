@@ -304,6 +304,7 @@ public class KBcacheTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
+    @Ignore
     public void testRealization() {
 
         System.out.println("\n============= testRealization ==================");

@@ -5,7 +5,6 @@ import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTFF;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.parsing.FormulaAST;
-import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -670,7 +669,7 @@ public class SUMOKBtoTPTPKB {
                 /* Experimental threading of main loop writes big SUMO in half
                  * the time as the sequential method. 2/17/25 tdn
                  */
-                retVal = _tWriteFile(fileName, conjecture, isQuestion, pw);
+                retVal = tWriteFile(fileName, conjecture, isQuestion, pw);
             }
 
         }
@@ -1230,8 +1229,8 @@ public class SUMOKBtoTPTPKB {
      *
      * @return the name of the KB translation to TPTP file
      */
-    private String _tWriteFile(String fileName, Formula conjecture,
-                               boolean isQuestion, PrintWriter pw) {
+    private String tWriteFile(String fileName, Formula conjecture,
+                              boolean isQuestion, PrintWriter pw) {
 
         final String localLang = getLang(); // snapshot once from ThreadLocal
 
