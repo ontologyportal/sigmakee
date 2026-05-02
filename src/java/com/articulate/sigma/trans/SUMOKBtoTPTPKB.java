@@ -1,6 +1,10 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.ExprToTFF;
+import com.articulate.sigma.parsing.ExprToTPTP;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -31,6 +35,31 @@ public class SUMOKBtoTPTPKB {
     public static boolean rapidParsing = true;
 
     public static boolean debug = false;
+
+    // One-shot diagnostic flags (print first occurrence only, thread-safe)
+    private static final java.util.concurrent.atomic.AtomicBoolean loggedReparse =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+    private static final java.util.concurrent.atomic.AtomicBoolean loggedExprPath =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+    private static final java.util.concurrent.atomic.AtomicBoolean loggedStringPath =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    // Per-language path counters for observability (reset via resetPathCounters())
+    public static final java.util.concurrent.atomic.AtomicInteger fofExprCount   = new java.util.concurrent.atomic.AtomicInteger(0);
+    public static final java.util.concurrent.atomic.AtomicInteger fofStringCount = new java.util.concurrent.atomic.AtomicInteger(0);
+    public static final java.util.concurrent.atomic.AtomicInteger tffExprCount   = new java.util.concurrent.atomic.AtomicInteger(0);
+    public static final java.util.concurrent.atomic.AtomicInteger tffStringCount = new java.util.concurrent.atomic.AtomicInteger(0);
+
+    public static void resetPathCounters() {
+        fofExprCount.set(0); fofStringCount.set(0);
+        tffExprCount.set(0); tffStringCount.set(0);
+    }
+
+    public static void logPathCounters() {
+        System.out.println("SUMOKBtoTPTPKB path counters: " +
+            "fof-expr=" + fofExprCount + " fof-string=" + fofStringCount + " | " +
+            "tff-expr=" + tffExprCount + " tff-string=" + tffStringCount);
+    }
 
     // ThreadLocal to allow parallel FOF/TFF generation
     private static final ThreadLocal<String> langTL = ThreadLocal.withInitial(() -> "fof");
@@ -315,6 +344,30 @@ public class SUMOKBtoTPTPKB {
      */
     public static Map<Formula, List<String>> retranslateFormulas(
             KB kb, Set<Formula> formulas, String lang) {
+        return retranslateFormulas(kb, formulas, lang, null);
+    }
+
+    /** *************************************************************
+     * Retranslate a set of formulas using the current {@code kb.kbCache}.
+     *
+     * <p>The caller is responsible for swapping {@code kb.kbCache} to the desired
+     * session-specific cache <em>before</em> calling this method and restoring it
+     * afterwards.  Each formula's {@code theFofFormulas} / {@code theTffFormulas}
+     * caches are cleared and repopulated as a side-effect.
+     *
+     * <p>The returned map preserves insertion order (LinkedHashMap) so that callers
+     * can append the new axiom lines in a deterministic order.
+     *
+     * @param kb        the knowledge base (kbCache should already be the session cache)
+     * @param formulas the formulas to retranslate
+     * @param lang     "fof" or "tff"
+     * @param sessionId the HTTP session ID (optional; if provided, UA formulas tagged
+     *                  with this session will be included)
+     * @return map from each formula to its list of new TPTP body strings (sort decls
+     *         and formula axioms); if the formula produces no output the list is empty
+     */
+    public static Map<Formula, List<String>> retranslateFormulas(
+            KB kb, Set<Formula> formulas, String lang, String sessionId) {
 
         if (formulas == null || formulas.isEmpty())
             return Collections.emptyMap();
@@ -327,7 +380,7 @@ public class SUMOKBtoTPTPKB {
         Map<Formula, List<String>> result = new LinkedHashMap<>();
         int formulaIndex = 0;
         for (Formula f : formulas) {
-            FormulaResult res = translator.translateOneFormula(f, lang, total, formulaIndex++);
+            FormulaResult res = translator.translateOneFormula(f, lang, total, formulaIndex++, sessionId);
             List<String> bodies = new ArrayList<>();
             if (!res.skipEverything && !res.skippedHOL && !res.skippedCached) {
                 // Sort declarations (TFF-specific, typically empty for FOF)
@@ -447,8 +500,11 @@ public class SUMOKBtoTPTPKB {
             if (result != null) {
                 for (Formula f : result) {
                     s = f.getFormula().replace(value,key);
+                    String varArityTPTP = ExprToTPTP.translateKifString(s, false, getLang());
+                    if (varArityTPTP == null)
+                        varArityTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(s, false);
                     pr.println(getLang() + "(kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement() +
-                            ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s, false) + ")).");
+                            ",axiom,(" + varArityTPTP + ")).");
                 }
             }
         }
@@ -471,9 +527,10 @@ public class SUMOKBtoTPTPKB {
                 continue;
             type = SUMOtoTFAform.getNumericConstantTypes().get(t);
             if (debug) System.out.println("SUMOKBtoTPTPKB.printTFFNumericConstants(): term, type: " + t + ", " + type);
-            pw.println("tff(" + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)  +
-                    "_sig,type," + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)  +
-                    ":" + SUMOKBtoTFAKB.translateSort(kb,type) + ").");
+            if (isTptpArithmeticLiteral(t)) continue;
+            pw.println("tff(" + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)
+                    + "_sig,type," + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)
+                    + ":" + SUMOKBtoTFAKB.translateSort(kb,type) + ").");
         }
 //        for (String t : SUMOtoTFAform.getNumericConstantTypes().keySet()) {
 //            if (SUMOtoTFAform.numericConstantValues.keySet().contains(t))
@@ -498,9 +555,10 @@ public class SUMOKBtoTPTPKB {
                 continue;
             type = SUMOtoTFAform.getNumericConstantTypes().get(t);
             if (debug) System.out.println("SUMOKBtoTPTPKB.printTFFNumericConstants(): term, type: " + t + ", " + type);
-            fileContents.add("tff(" + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)  +
-                    "_sig,type," + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)  +
-                    ":" + SUMOKBtoTFAKB.translateSort(kb,type) + ").");
+            if (isTptpArithmeticLiteral(t)) continue;
+            fileContents.add("tff(" + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)
+                    + "_sig,type," + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)
+                    + ":" + SUMOKBtoTFAKB.translateSort(kb,type) + ").");
         }
     }
 
@@ -611,7 +669,7 @@ public class SUMOKBtoTPTPKB {
                 /* Experimental threading of main loop writes big SUMO in half
                  * the time as the sequential method. 2/17/25 tdn
                  */
-                retVal = _tWriteFile(fileName, conjecture, isQuestion, pw);
+                retVal = tWriteFile(fileName, conjecture, isQuestion, pw);
             }
 
         }
@@ -673,15 +731,16 @@ public class SUMOKBtoTPTPKB {
             f.theTptpFormulas.clear(); // Legacy compatibility
             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : source line: " + f.startLine);
             if (!f.getFormula().startsWith("(documentation")) {
-                pw.println("% f: " + f.format("", "", Formula.SPACE));
+                pw.println("% f: " + f.getFormula());
                 if (!f.derivation.parents.isEmpty()) {
                     for (Formula derivF : f.derivation.parents)
-                        pw.println("% original f: " + derivF.format("", "", Formula.SPACE));
+                        pw.println("% original f: " + derivF.getFormula());
                 }
                 pw.println("% " + formCount.getAndIncrement() + " of " + total +
                         " from file " + f.sourceFile + " at line " + f.startLine);
             }
-            if (f.isHigherOrder(kb)) {
+            boolean isHOL = f.isHigherOrder(kb);
+            if (isHOL) {
                 pw.println("% is higher order");
                 if (getLang().equals("thf")) {  // TODO create a flag for adding modals (or not)
                     Map<String, Set<String>> typeMap = new HashMap<>();
@@ -711,7 +770,9 @@ public class SUMOKBtoTPTPKB {
                     switch (getLang()) {
                         case "fof":
                             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tptp input: " + f3.format("", "", Formula.SPACE));
-                            result = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
+                            result = ExprToTPTP.translateKifString(f3.getFormula(), false, "fof");
+                            if (result == null) // fallback to legacy string-based translator
+                                result = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
                             if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
                             if (result != null) {
                                 f.theFofFormulas.add(result);
@@ -719,21 +780,35 @@ public class SUMOKBtoTPTPKB {
                             }
                             break;
                         case "tff":
-                            stfa = new SUMOtoTFAform();
-                            SUMOtoTFAform.kb = kb;
                             pw.println("% tff input: " + f3.format("", "", Formula.SPACE));
                             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: " + f3.format("", "", " "));
-                            stfa.sorts = stfa.missingSorts(f3);
-                            if (stfa.sorts != null && !stfa.sorts.isEmpty()) {
-                                f3.tffSorts.addAll(stfa.sorts);
+                            // Fast path: Expr-based TFF translation (no KB type walk, sort inference from formula only).
+                            // Reset filterMessage so a stale value doesn't fire the else-if below
+                            // when translateKifString returns "" (formula intentionally dropped).
+                            SUMOtoTFAform.setFilterMessage("");
+                            result = ExprToTFF.translateKifString(f3.getFormula(), false, kb);
+                            // null = parse failure → fall back; "" = intentionally dropped → no fallback.
+                            if (result == null) {
+                                // Fallback: full SUMOtoTFAform processing with KB type inference
+                                tffStringCount.incrementAndGet();
+                                stfa = new SUMOtoTFAform();
+                                SUMOtoTFAform.kb = kb;
+                                stfa.sorts = stfa.missingSorts(f3);
+                                if (stfa.sorts != null && !stfa.sorts.isEmpty())
+                                    f3.tffSorts.addAll(stfa.sorts);
+                                result = SUMOtoTFAform.process(f3.getFormula(), false);
+                                printTFFNumericConstants(pw);
+                                SUMOtoTFAform.initNumericConstantTypes();
+                            } else if (!result.isBlank()) {
+                                tffExprCount.incrementAndGet();
+                                // Sort annotations are embedded in variable lists by ExprToTFF;
+                                // no separate tff(...,type,...) declarations needed.
                             }
-                            result = SUMOtoTFAform.process(f3.getFormula(), false);
-                            printTFFNumericConstants(pw);
-                            SUMOtoTFAform.initNumericConstantTypes();
                             if (!StringUtil.emptyString(result)) {
                                 f.theTffFormulas.add(result);
                                 f.theTptpFormulas.add(result); // Legacy compatibility
-                            } else if (!StringUtil.emptyString(SUMOtoTFAform.getFilterMessage())) {
+                            }
+                            else if (!StringUtil.emptyString(SUMOtoTFAform.getFilterMessage())) {
                                 pw.println("% " + SUMOtoTFAform.getFilterMessage());
                             }
                             break;
@@ -752,7 +827,7 @@ public class SUMOKBtoTPTPKB {
                         !alreadyWrittenTPTPs.contains(sort)) {
                     name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
                     putAxiom(name,f);
-                    pw.println(getLang() + Formula.LP + name + ",axiom,(" + sort + ")).");
+                    pw.println(getLang() + Formula.LP + name + ",type," + sort + ").");
                     alreadyWrittenTPTPs.add(sort);
                 }
             }
@@ -798,6 +873,37 @@ public class SUMOKBtoTPTPKB {
     }
 
 
+    /**
+     * Expr-based analogue of {@link Formula#isHigherOrder(KB)}.
+     *
+     * <p>Walks the already-parsed {@link Expr} tree without constructing any
+     * {@link Formula} objects or calling {@code findAllTypeRestrictions}.
+     * The logic mirrors {@code Formula.isHigherOrder} exactly:
+     * <ul>
+     *   <li>If the predicate's signature contains {@code "Formula"} → HOL.</li>
+     *   <li>For logical operators: recurse into each compound (non-atom, non-function) arg.</li>
+     *   <li>For regular predicates: any compound non-function arg → HOL immediately.</li>
+     * </ul>
+     */
+    /**
+     * Returns true if {@code expr} contains a {@link Expr.Var} in predicate
+     * position (i.e., as the head of an {@link Expr.SExpr}).
+     *
+     * Such formulas cannot be expressed in FOF or TFF after pred-var expansion
+     * has failed to find any KB instances for the variable's type constraint.
+     * They should be skipped rather than emitted as malformed first-order axioms.
+     */
+    public static boolean hasUnresolvedPredVar(Expr expr) {
+        return switch (expr) {
+            case Expr.SExpr se -> {
+                if (se.head() instanceof Expr.Var) yield true;  // Var in predicate position
+                if (se.head() != null && hasUnresolvedPredVar(se.head())) yield true;
+                yield se.args().stream().anyMatch(SUMOKBtoTPTPKB::hasUnresolvedPredVar);
+            }
+            default -> false;
+        };
+    }
+
     private static boolean isNonReasoningForATP(String kif) {
         // keep it cheap: no parsing, just prefix checks / contains checks
         return kif.startsWith("(termFormat ")
@@ -821,11 +927,27 @@ public class SUMOKBtoTPTPKB {
             String t = e.getKey();
             if (SUMOtoTFAform.numericConstantValues.containsKey(t)) continue;
             String type = e.getValue();
+            if (isTptpArithmeticLiteral(t)) continue;
             lines.add("tff(" + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD, false)
                     + "_sig,type,"
                     + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD, false)
                     + ":" + SUMOKBtoTFAKB.translateSort(kb, type) + ").");
         }
+    }
+
+    /**
+     * Returns true if {@code name} is a TPTP arithmetic literal (integer, rational,
+     * or real) that is already typed by TFF arithmetic.  Such values cannot appear as
+     * the symbol in a {@code tff(name,type,symbol:sort)} declaration, so callers should
+     * skip generating a type signature for them.
+     *
+     * Covers:  integers  -?[0-9]+
+     *          rationals -?[0-9]+/[0-9]+
+     *          reals     -?[0-9]+\.[0-9]*  or  -?[0-9]*\.[0-9]+
+     */
+    static boolean isTptpArithmeticLiteral(String name) {
+        if (name == null || name.isEmpty()) return false;
+        return name.matches("-?[0-9]+(\\.[0-9]*|/[0-9]+)?|-?[0-9]*\\.[0-9]+");
     }
 
     /** *************************************************************
@@ -834,10 +956,28 @@ public class SUMOKBtoTPTPKB {
      * fields (alreadyWrittenTPTPs, axiomKey, relationMap) are NOT touched.
      */
     private FormulaResult translateOneFormula(Formula formula, String localLang, int total, int formulaIndex) {
+        return translateOneFormula(formula, localLang, total, formulaIndex, null);
+    }
+
+    /** *************************************************************
+     * Translate a single formula into a FormulaResult (parallel-safe).
+     * All operations here use only per-formula or ThreadLocal state; shared
+     * fields (alreadyWrittenTPTPs, axiomKey, relationMap) are NOT touched.
+     */
+    private FormulaResult translateOneFormula(Formula formula, String localLang, int total, int formulaIndex, String sessionId) {
 
         FormulaResult res = new FormulaResult();
         res.formula = formula;
         Formula f = formula;
+
+        // Session isolation: skip UA formulas from other sessions during base generation.
+        // Base generation (sessionId==null) must never include session-specific assertions —
+        // they belong only in session TPTP files.  Cross-session formulas pollute the shared
+        // SUMO.tptp and corrupt any other session that reads it.
+        if (f.uaSessionId != null && !f.uaSessionId.equals(sessionId)) {
+            res.skipEverything = true;
+            return res;
+        }
 
         // Non-reasoning formulas: skip entirely (nothing to write)
         if (isNonReasoningForATP(f.getFormula())) {
@@ -853,19 +993,20 @@ public class SUMOKBtoTPTPKB {
         }
         f.theTptpFormulas.clear(); // Legacy compatibility
 
-        // Prologue comment lines
-        if (!f.getFormula().startsWith("(documentation")) {
-            res.prologueLines.add("% f: " + f.format("", "", Formula.SPACE));
-            if (!f.derivation.parents.isEmpty()) {
-                for (Formula derivF : f.derivation.parents)
-                    res.prologueLines.add("% original f: " + derivF.format("", "", Formula.SPACE));
-            }
-            res.prologueLines.add("% " + formulaIndex + " of " + total
-                    + " from file " + f.sourceFile + " at line " + f.startLine);
+        // Prologue comment lines (getFormula() is O(1) vs format() which scans char-by-char)
+        res.prologueLines.add("% f: " + f.getFormula());
+        if (!f.derivation.parents.isEmpty()) {
+            for (Formula derivF : f.derivation.parents)
+                res.prologueLines.add("% original f: " + derivF.getFormula());
         }
+        res.prologueLines.add("% " + formulaIndex + " of " + total
+                + " from file " + f.sourceFile + " at line " + f.startLine);
 
-        // HOL check
-        if (f.isHigherOrder(kb)) {
+        // HOL check — use Expr fast path when available (avoids findAllTypeRestrictions +
+        // Formula allocation per arg in the original string-based isHigherOrder)
+        boolean isHOL = f.isHigherOrder(kb);
+        if (isHOL) {
+            f.higherOrder = true;
             res.prologueLines.add("% is higher order");
             if (localLang.equals("thf")) {
                 Map<String, Set<String>> typeMap = new HashMap<>();
@@ -887,71 +1028,180 @@ public class SUMOKBtoTPTPKB {
 
         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : process: " + f);
 
-        // ---- preprocess ----
+        // ---- preprocess + translate ----
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        Set<Formula> processed = fp.preProcess(f, false, kb);
 
-        if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : processed: " + processed);
+        // Expr fast path: FormulaAST with an Expr bypasses the string-scanning
+        // preProcessRecurse() and the parseSentence() re-parse in translateKifString().
+        // Pred-var instantiation (Phase A) and row-var expansion (Phase B) are now
+        // handled inside preProcessExpr(FormulaAST,...); variable-arity renaming
+        // and type restrictions follow in Phase C.
+        boolean usedExprPath = false;
+        if ((localLang.equals("fof") || localLang.equals("tff")) &&
+                formula instanceof FormulaAST && ((FormulaAST) formula).expr != null) {
 
-        if (processed != null && !processed.isEmpty()) {
-
-            // ---- rename ----
-            Set<Formula> withRelnRenames = new TreeSet<>();
-            for (Formula f2 : new TreeSet<>(processed))
-                withRelnRenames.add(f2.renameVariableArityRelations(kb, res.localRelationMap));
-
-            for (Formula f3 : withRelnRenames) {
-                switch (localLang) {
-                    case "fof":
-                        if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tptp input: "
-                                + f3.format("", "", " "));
-                        String fofResult = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
-                        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): result: " + fofResult);
+            FormulaAST fa = (FormulaAST) formula;
+            if (loggedExprPath.compareAndSet(false, true))
+                System.out.println("SUMOKBtoTPTPKB.translateOneFormula(): using EXPR path for formula=" + fa.getFormula());
+            Set<Expr> processedExprs = fp.preProcessExpr(fa, false, kb);
+            if (processedExprs != null && !processedExprs.isEmpty()) {
+                usedExprPath = true;
+                if (localLang.equals("fof")) fofExprCount.incrementAndGet();
+                else                         tffExprCount.incrementAndGet();
+                for (Expr pexpr : processedExprs) {
+                    // A Var in predicate position means pred-var expansion found no KB instances
+                    // and kept the original. Such a formula cannot be expressed in FOF/TFF — skip it.
+                    if (hasUnresolvedPredVar(pexpr)) {
+                        res.prologueLines.add("% skipped: unresolved pred-var (no KB instances for type constraint): "
+                                + pexpr.toKifString());
+                        continue;
+                    }
+                    if (localLang.equals("fof")) {
+                        if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % expr path fof input: "
+                                + pexpr.toKifString());
+                        String fofResult = ExprToTPTP.translate(pexpr, false, "fof");
+                        if (fofResult == null) { // fallback to legacy string-based translator
+                            String kifStr = pexpr.toKifString();
+                            fofResult = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, false);
+                        }
+                        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): fof result: " + fofResult);
                         if (fofResult != null) {
                             f.theFofFormulas.add(fofResult);
                             f.theTptpFormulas.add(fofResult); // Legacy compatibility
                         }
-                        break;
-
-                    case "tff":
-                        SUMOtoTFAform stfa = new SUMOtoTFAform();
+                    } else { // tff
+                        if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % expr path tff input: "
+                                + pexpr.toKifString());
+                        // Always collect ListFn sort declarations before translating —
+                        // mirrors the unconditional missingSorts() call in the string path.
+                        // Without this, ListFn__NNFn type declarations are missing when
+                        // ExprToTFF.translate() succeeds (the fallback block is never reached).
+                        SUMOtoTFAform stfaSorts = new SUMOtoTFAform();
                         SUMOtoTFAform.kb = kb;
-
-                        res.prologueLines.add("% tff input: " + f3.format("", "", Formula.SPACE));
-                        if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: "
-                                + f3.format("", "", " "));
-
-                        stfa.sorts = stfa.missingSorts(f3);
-
-                        if (stfa.sorts != null && !stfa.sorts.isEmpty())
-                            f3.tffSorts.addAll(stfa.sorts);
-
-                        String tffResult = SUMOtoTFAform.process(f3.getFormula(), false);
-
-                        // Collect numeric constants from this thread's TL (parallel-safe, no synchronized)
-                        collectNumericConstants(res.numConstLines);
-                        // Reset TL for the next formula processed by this thread
-                        SUMOtoTFAform.getNumericConstantTypes().clear();
-                        SUMOtoTFAform.getNumericConstantTypes().put("NumberE", "RealNumber");
-                        SUMOtoTFAform.getNumericConstantTypes().put("Pi", "RealNumber");
-
+                        Set<String> exprSorts = stfaSorts.missingSortsExpr(pexpr);
+                        if (exprSorts != null && !exprSorts.isEmpty())
+                            f.tffSorts.addAll(exprSorts);
+                        // Fast path: ExprToTFF translates directly from Expr tree with inline sort annotations.
+                        // Reset filterMessage so that if translate() returns "" (formula intentionally dropped)
+                        // the else-if below does not fire with a stale message from the previous formula.
+                        SUMOtoTFAform.setFilterMessage("");
+                        String tffResult = ExprToTFF.translate(pexpr, false, kb);
+                        // null means genuine parse/translation failure → fall back to string-based pipeline.
+                        // "" means the formula was intentionally dropped (e.g. (instance Pi Abstract)) → no fallback.
+                        if (tffResult == null) {
+                            // Fallback: SUMOtoTFAform.processExpr() with full KB type inference
+                            System.out.println("ExprToTFF.translate() fallback (expr path): " + pexpr.toKifString());
+                            SUMOtoTFAform stfa = new SUMOtoTFAform();
+                            SUMOtoTFAform.kb = kb;
+                            tffResult = SUMOtoTFAform.processExpr(pexpr, false);
+                            collectNumericConstants(res.numConstLines);
+                            SUMOtoTFAform.getNumericConstantTypes().clear();
+                            SUMOtoTFAform.getNumericConstantTypes().put("NumberE", "RealNumber");
+                            SUMOtoTFAform.getNumericConstantTypes().put("Pi", "RealNumber");
+                        }
                         if (!StringUtil.emptyString(tffResult)) {
                             f.theTffFormulas.add(tffResult);
                             f.theTptpFormulas.add(tffResult); // Legacy compatibility
-                        } else if (!StringUtil.emptyString(SUMOtoTFAform.getFilterMessage()))
+                        }
+                        else if (!StringUtil.emptyString(SUMOtoTFAform.getFilterMessage()))
                             res.prologueLines.add("% " + SUMOtoTFAform.getFilterMessage());
-                        break;
-
-                    default:
-                        res.prologueLines.add("% unhandled language option " + localLang);
-                        break;
+                    }
                 }
             }
-            processed.clear();
-        } else {
-            res.prologueLines.add("% empty result from preprocess on "
-                    + f.getFormula().replace("\\n", Formula.SPACE));
-        }
+        } // end if ((fof || tff) && FormulaAST)
+
+        // ---- string-based pre-processing ----
+        if (!usedExprPath) {
+            if (localLang.equals("fof")) fofStringCount.incrementAndGet();
+            else                         tffStringCount.incrementAndGet();
+            // Diagnose every string-path fallback for tff (only ~6 formulas — safe to log all)
+            if (localLang.equals("tff")) {
+                String reason;
+                if (!(formula instanceof FormulaAST))
+                    reason = "not FormulaAST (class=" + formula.getClass().getSimpleName() + ")";
+                else if (((FormulaAST) formula).expr == null)
+                    reason = "FormulaAST.expr == null";
+                else
+                    reason = "preProcessExpr returned empty";
+                System.out.println("SUMOKBtoTPTPKB.tff-string-fallback [" + reason + "]: " + f.getFormula());
+            }
+            // Print the first formula that fallback to string manipulation
+            if (loggedStringPath.compareAndSet(false, true))
+                System.out.println("SUMOKBtoTPTPKB.translateOneFormula(): using STRING path for formula=" + f.getFormula());
+            Set<Formula> processed = fp.preProcess(f, false, kb);
+            if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : processed: " + processed);
+            if (processed != null && !processed.isEmpty()) {
+                // ---- rename ----
+                Set<Formula> withRelnRenames = new TreeSet<>();
+                for (Formula f2 : new TreeSet<>(processed))
+                    withRelnRenames.add(f2.renameVariableArityRelations(kb, res.localRelationMap));
+
+                for (Formula f3 : withRelnRenames) {
+                    switch (localLang) {
+                        case "fof":
+                            if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tptp input: "
+                                    + f3.format("", "", " "));
+                            String fofResult = ExprToTPTP.translateKifString(f3.getFormula(), false, "fof");
+                            if (fofResult == null) // fallback to legacy string-based translator
+                                fofResult = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
+                            if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): result: " + fofResult);
+                            if (fofResult != null) {
+                                f.theFofFormulas.add(fofResult);
+                                f.theTptpFormulas.add(fofResult); // Legacy compatibility
+                            }
+                            break;
+
+                        case "tff":
+                            res.prologueLines.add("% tff input: " + f3.format("", "", Formula.SPACE));
+                            if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: "
+                                    + f3.format("", "", " "));
+
+                            // Fast path: try ExprToTFF first (no heavyweight string manipulation).
+                            // Reset filterMessage so a stale value from the previous formula doesn't
+                            // fire the else-if below when translateKifString returns "" (formula dropped).
+                            SUMOtoTFAform.setFilterMessage("");
+                            String tffResult = ExprToTFF.translateKifString(f3.getFormula(), false, kb);
+
+                            // null = parse failure → fall back; "" = intentionally dropped → no fallback.
+                            if (tffResult == null) {
+                                // Fallback: full SUMOtoTFAform processing
+                                System.out.println("ExprToTFF.translateKifString() fallback (string path): " + f3.getFormula());
+                                SUMOtoTFAform stfa = new SUMOtoTFAform();
+                                SUMOtoTFAform.kb = kb;
+
+                                stfa.sorts = stfa.missingSorts(f3);
+
+                                if (stfa.sorts != null && !stfa.sorts.isEmpty())
+                                    f3.tffSorts.addAll(stfa.sorts);
+
+                                tffResult = SUMOtoTFAform.process(f3.getFormula(), false);
+
+                                // Collect numeric constants from this thread's TL (parallel-safe, no synchronized)
+                                collectNumericConstants(res.numConstLines);
+                                // Reset TL for the next formula processed by this thread
+                                SUMOtoTFAform.getNumericConstantTypes().clear();
+                                SUMOtoTFAform.getNumericConstantTypes().put("NumberE", "RealNumber");
+                                SUMOtoTFAform.getNumericConstantTypes().put("Pi", "RealNumber");
+                            }
+
+                            if (!StringUtil.emptyString(tffResult)) {
+                                f.theTffFormulas.add(tffResult);
+                                f.theTptpFormulas.add(tffResult); // Legacy compatibility
+                            } else if (!StringUtil.emptyString(SUMOtoTFAform.getFilterMessage()))
+                                res.prologueLines.add("% " + SUMOtoTFAform.getFilterMessage());
+                            break;
+
+                        default:
+                            res.prologueLines.add("% unhandled language option " + localLang);
+                            break;
+                    }
+                }
+                processed.clear();
+            } else {
+                res.prologueLines.add("% empty result from preprocess on "
+                        + f.getFormula().replace("\\n", Formula.SPACE));
+            }
+        } // end if (!usedExprPath)
 
         // Collect sort and TPTP bodies for sequential dedup+write phase (sorted for determinism)
         for (String sort : new TreeSet<>(f.tffSorts)) {
@@ -979,8 +1229,8 @@ public class SUMOKBtoTPTPKB {
      *
      * @return the name of the KB translation to TPTP file
      */
-    private String _tWriteFile(String fileName, Formula conjecture,
-                               boolean isQuestion, PrintWriter pw) {
+    private String tWriteFile(String fileName, Formula conjecture,
+                              boolean isQuestion, PrintWriter pw) {
 
         final String localLang = getLang(); // snapshot once from ThreadLocal
 
@@ -993,6 +1243,20 @@ public class SUMOKBtoTPTPKB {
 
         // Convert to List for parallel indexed processing (TreeSet iteration order preserved)
         List<Formula> formulaList = new ArrayList<>(orderedFormulae);
+
+        // ---- Diagnostic: count how many FormulaAST entries have expr populated ----
+        if (localLang.equals("fof")) {
+            long withExpr = formulaList.stream()
+                    .filter(f -> f instanceof FormulaAST && ((FormulaAST) f).expr != null)
+                    .count();
+            long totalAST = formulaList.stream().filter(f -> f instanceof FormulaAST).count();
+            long totalASTtranslated = formulaList.stream().filter(f -> localLang.equals("fof") && f instanceof FormulaAST && ((FormulaAST) f).expr != null).count();
+
+            System.out.println("SUMOKBtoTPTPKB._tWriteFile(): FormulaAST=" + totalAST
+                    + "/" + formulaList.size() + "  expr!=null=" + withExpr
+                    + "  totalASTtranslated=" + totalASTtranslated
+                    + " (cold=" + (withExpr == totalAST) + ")");
+        }
 
         // ---- Pre-pass: populate all variable-arity signatures sequentially ----
         // Without this, parallel threads race inside copyNewPredFromVariableArity() and
@@ -1007,8 +1271,12 @@ public class SUMOKBtoTPTPKB {
         // This mirrors the warm-up pattern used by THFnew.transModalTHF() / transPlainTHF().
         if (localLang.equals("tff") && !kb.kbCache.variableArityPrePopulated) {
             FormulaPreprocessor prePassFp = new FormulaPreprocessor();
-            for (Formula prePassFormula : formulaList)
-                prePassFp.preProcess(prePassFormula, false, kb);
+            for (Formula prePassFormula : formulaList) {
+                if (prePassFormula instanceof FormulaAST fa && fa.expr != null)
+                    prePassFp.preProcessExpr(fa, false, kb);
+                else
+                    prePassFp.preProcess(prePassFormula, false, kb);
+            }
             kb.kbCache.variableArityPrePopulated = true;
         }
 
@@ -1051,7 +1319,7 @@ public class SUMOKBtoTPTPKB {
                 if (!alreadyWrittenTPTPs.contains(sort)) {
                     name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
                     putAxiom(name, res.formula);
-                    linesBuf.add(localLang + Formula.LP + name + ",axiom,(" + sort + ")).");
+                    linesBuf.add(localLang + Formula.LP + name + ",type," + sort + ").");
                     alreadyWrittenTPTPs.add(sort);
                 }
             }
@@ -1125,7 +1393,7 @@ public class SUMOKBtoTPTPKB {
             return removeNum;
         }
         if (removeStrings && (tptp.contains("'") || tptp.indexOf('"') >= 0)) {
-            pw.println("% f: " + form.format("", "", Formula.SPACE));
+            pw.println("% f: " + form.getFormula());
             pw.println("% quoted thing");
             return true;
         }
@@ -1158,7 +1426,7 @@ public class SUMOKBtoTPTPKB {
             return removeNum;
         }
         if (removeStrings && (tptp.contains("'") || tptp.indexOf('"') >= 0)) {
-            fileContents.add("% f: " + form.format("", "", Formula.SPACE));
+            fileContents.add("% f: " + form.getFormula());
             fileContents.add("% quoted thing");
             return true;
         }

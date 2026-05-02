@@ -3,6 +3,7 @@ package com.articulate.sigma.nlg;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBcache;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.wordNet.WordNet;
 
 import com.google.common.collect.ImmutableList;
@@ -89,19 +90,19 @@ public class SigmaMockTestBase {
     private static final Map<String, List<String>> signaturesMap = Maps.newHashMap();
 
     private static final ArrayList<Formula> LANG_FORMAT_MAP_COLS = Lists.newArrayList(
-            new Formula("(format EnglishLanguage agent \"%2 is %n an &%agent of %1\")"),
-            new Formula("(format EnglishLanguage attribute \"%2 is %n an &%attribute of %1\")"),
-            new Formula("(format EnglishLanguage destination \"%1 %n{doesn't} %n &%end%p{s} at %2\")"),
-            new Formula("(format EnglishLanguage instance \"%1 is %n an &%instance of %2\")"),
-            new Formula("(format EnglishLanguage instrument \"%2 is %n an &%instrument for %1\")"),
-            new Formula("(format EnglishLanguage located \"%1 is %n &%located at %2\")"),
-            new Formula("(format EnglishLanguage member \"%1 is %n a &%member of %2\")"),
-            new Formula("(format EnglishLanguage orientation \"%1 is %n %3 to %2\")"),
-            new Formula("(format EnglishLanguage names \"%2 %n{doesn't have} %p{has} &%name %1\")"),
-            new Formula("(format EnglishLanguage patient \"%2 is %n a &%patient of %1\")"),
-            new Formula("(format EnglishLanguage subCollection \"%1 is %n a proper &%sub-collection of %2\")"),
-            new Formula("(format EnglishLanguage subList \"%1 is %n a &%sublist of %2\")"),
-            new Formula("(format EnglishLanguage transported \"%2 is %n &%transported during %1\")")
+            new FormulaAST("(format EnglishLanguage agent \"%2 is %n an &%agent of %1\")"),
+            new FormulaAST("(format EnglishLanguage attribute \"%2 is %n an &%attribute of %1\")"),
+            new FormulaAST("(format EnglishLanguage destination \"%1 %n{doesn't} %n &%end%p{s} at %2\")"),
+            new FormulaAST("(format EnglishLanguage instance \"%1 is %n an &%instance of %2\")"),
+            new FormulaAST("(format EnglishLanguage instrument \"%2 is %n an &%instrument for %1\")"),
+            new FormulaAST("(format EnglishLanguage located \"%1 is %n &%located at %2\")"),
+            new FormulaAST("(format EnglishLanguage member \"%1 is %n a &%member of %2\")"),
+            new FormulaAST("(format EnglishLanguage orientation \"%1 is %n %3 to %2\")"),
+            new FormulaAST("(format EnglishLanguage names \"%2 %n{doesn't have} %p{has} &%name %1\")"),
+            new FormulaAST("(format EnglishLanguage patient \"%2 is %n a &%patient of %1\")"),
+            new FormulaAST("(format EnglishLanguage subCollection \"%1 is %n a proper &%sub-collection of %2\")"),
+            new FormulaAST("(format EnglishLanguage subList \"%1 is %n a &%sublist of %2\")"),
+            new FormulaAST("(format EnglishLanguage transported \"%2 is %n &%transported during %1\")")
             );
 
     private static final HashMap<String, String> termFormatMap = Maps.newHashMap();

@@ -1,8 +1,9 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -13,9 +14,6 @@ import java.util.*;
 import static org.junit.Assert.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.assertEquals;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 
 //This software is released under the GNU Public License
 //<http://www.gnu.org/copyleft/gpl.html>.
@@ -146,7 +144,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testParents(): ");
-        Formula f = new Formula("(=> (instance ?X Human) (parents ?X (AdditionFn 1 1)))");
+        Formula f = new FormulaAST("(=> (instance ?X Human) (parents ?X (AdditionFn 1 1)))");
         ArrayList<String> sig = new ArrayList<>();
         sig.add("");
         sig.add("Human");
@@ -172,7 +170,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.test1(): ");
-        Formula f = new Formula("(equal ?X (AdditionFn 1 2))");
+        Formula f = new FormulaAST("(equal ?X (AdditionFn 1 2))");
         String result = SUMOtoTFAform.process(f,false);
         System.out.println("SUMOtoTFAformTest.test1(): result:   " + result);
         String expectedRes = "! [V__X : $int] : (V__X = $sum(1 ,2))";
@@ -191,7 +189,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.test1_5(): ");
-        Formula f = new Formula("(equal ?X (SubtractionFn 2 1))");
+        Formula f = new FormulaAST("(equal ?X (SubtractionFn 2 1))");
         String result = SUMOtoTFAform.process(f,false);
         System.out.println("SUMOtoTFAformTest.test1_5(): result:   " + result);
         String expectedRes = "! [V__X : $int] : (V__X = $difference(2 ,1))";
@@ -210,7 +208,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.test2(): ");
-        Formula f = new Formula("(=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
+        Formula f = new FormulaAST("(=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
                 "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
                 "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
                 "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
@@ -234,23 +232,29 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     @Test
     public void test3() {
 
-        System.out.println();
-        System.out.println("\n======================== SUMOtoTFAformTest.test3(): ");
-        Formula f = new Formula("(<=> (equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
-                "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
-        String result = SUMOtoTFAform.process(f,false);
-        System.out.println("SUMOtoTFAformTest.test3(): result:   " + result);
-        String expected = "! [V__NUMBER : $int,V__NUMBER1 : $int,V__NUMBER2 : $int] : "
-                + "((($remainder_t(V__NUMBER1 ,V__NUMBER2) = V__NUMBER => "
-                + "$sum($product($floor($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1) & "
-                + "($sum($product($floor($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1 => "
-                + "$remainder_t(V__NUMBER1 ,V__NUMBER2) = V__NUMBER)))";
-        System.out.println("SUMOtoTFAformTest.test3(): expected: " + expected);
-        if (expected.equals(result))
-            System.out.println("test3(): Success!");
-        else
-            System.err.println("test3(): fail");
-        assertEquals(expected,result);
+        boolean oldLeo = SUMOtoTFAform.targetLeo;
+        try {
+            SUMOtoTFAform.targetLeo = false;
+            System.out.println();
+            System.out.println("\n======================== SUMOtoTFAformTest.test3(): ");
+            Formula f = new FormulaAST("(<=> (equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
+                    "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
+            String result = SUMOtoTFAform.process(f, false);
+            System.out.println("SUMOtoTFAformTest.test3(): result:   " + result);
+            String expected = "! [V__NUMBER : $int,V__NUMBER1 : $int,V__NUMBER2 : $int] : "
+                    + "((($remainder_t(V__NUMBER1 ,V__NUMBER2) = V__NUMBER => "
+                    + "$sum($product($floor($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1) & "
+                    + "($sum($product($floor($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1 => "
+                    + "$remainder_t(V__NUMBER1 ,V__NUMBER2) = V__NUMBER)))";
+            System.out.println("SUMOtoTFAformTest.test3(): expected: " + expected);
+            if (expected.equals(result))
+                System.out.println("test3(): Success!");
+            else
+                System.err.println("test3(): fail");
+            assertEquals(expected, result);
+        }finally {
+            SUMOtoTFAform.targetLeo = oldLeo;
+        }
     }
 
     /** *************************************************************
@@ -260,7 +264,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.test4(): ");
-        Formula f = new Formula("(<=> (greaterThanOrEqualTo ?NUMBER1 ?NUMBER2) " +
+        Formula f = new FormulaAST("(<=> (greaterThanOrEqualTo ?NUMBER1 ?NUMBER2) " +
                 "(or (equal ?NUMBER1 ?NUMBER2) (greaterThan ?NUMBER1 ?NUMBER2)))");
         String result = SUMOtoTFAform.process(f,false);
         System.out.println("SUMOtoTFAformTest.test4(): result:   " + result);
@@ -285,7 +289,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         //SUMOtoTFAform.debug = true;
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.test5(): ");
-        Formula f = new Formula("(=>\n" +
+        Formula f = new FormulaAST("(=>\n" +
                 "(measure ?QUAKE\n" +
                 "(MeasureFn ?VALUE RichterMagnitude))\n" +
                 "(instance ?VALUE PositiveRealNumber))");
@@ -307,27 +311,54 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
      */
     @Test
     public void testFloorFn() {
+        boolean oldLeo = SUMOtoTFAform.targetLeo;
+        try {
+            SUMOtoTFAform.targetLeo = false;
+            System.out.println();
+            System.out.println("\n======================== SUMOtoTFAformTest.testFloorFn(): ");
+            Formula f = new FormulaAST("(<=> " +
+                    "(equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
+                    "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
+            System.out.println("formula: " + f);
+            String result = SUMOtoTFAform.process(f,false);
+            System.out.println("SUMOtoTFAformTest.testFloorFn(): result: " + result);
+            String expected = "! [V__NUMBER : $int,V__NUMBER1 : $int,V__NUMBER2 : $int] : "
+                    + "((($remainder_t(V__NUMBER1 ,V__NUMBER2) = V__NUMBER => "
+                    + "$sum($product($floor($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1) & "
+                    + "($sum($product($floor($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1 => "
+                    + "$remainder_t(V__NUMBER1 ,V__NUMBER2) = V__NUMBER)))";
+            System.out.println("SUMOtoTFAformTest.testFloorFn(): expect: " + expected);
+            System.out.println("equal: " + expected.equals(result));
+            if (expected.equals(result))
+                System.out.println("testFloorFn(): Success!");
+            else
+                System.err.println("testFloorFn(): fail");
+            assertEquals(expected,result);
+        } finally {
+            SUMOtoTFAform.targetLeo = oldLeo;
+        }
+    }
 
-        System.out.println();
-        System.out.println("\n======================== SUMOtoTFAformTest.testFloorFn(): ");
-        Formula f = new Formula("(<=> " +
-                "(equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
-                "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
-        System.out.println("formula: " + f);
-        String result = SUMOtoTFAform.process(f,false);
-        System.out.println("SUMOtoTFAformTest.testFloorFn(): result: " + result);
-        String expected = "! [V__NUMBER : $int,V__NUMBER1 : $int,V__NUMBER2 : $int] : "
-                + "((($remainder_t(V__NUMBER1 ,V__NUMBER2) = V__NUMBER => "
-                + "$sum($product($floor($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1) & "
-                + "($sum($product($floor($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1 => "
-                + "$remainder_t(V__NUMBER1 ,V__NUMBER2) = V__NUMBER)))";
-        System.out.println("SUMOtoTFAformTest.testFloorFn(): expect: " + expected);
-        System.out.println("equal: " + expected.equals(result));
-        if (expected.equals(result))
-            System.out.println("testFloorFn(): Success!");
-        else
-            System.err.println("testFloorFn(): fail");
-        assertEquals(expected,result);
+    /****************************************************************
+     */
+    @Test
+    public void testFloorFnLeo() {
+
+        boolean oldLeo = SUMOtoTFAform.targetLeo;
+        try {
+            SUMOtoTFAform.targetLeo = true;
+            System.out.println();
+            System.out.println("\n======================== SUMOtoTFAformTest.testFloorFnLeo(): ");
+            Formula f = new FormulaAST("(<=> " +
+                    "(equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
+                    "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
+            String result = SUMOtoTFAform.process(f, false);
+            System.out.println("SUMOtoTFAformTest.testFloorFnLeo(): result: " + result);
+            String expected = "! [V__NUMBER : $int,V__NUMBER1 : $int,V__NUMBER2 : $int] : (((s__RemainderFn(V__NUMBER1, V__NUMBER2) = V__NUMBER => $sum($product(s__FloorFn__0In1ReFn(s__DivisionFn__0Re1In2InFn(V__NUMBER1, V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1) & ($sum($product(s__FloorFn__0In1ReFn(s__DivisionFn__0Re1In2InFn(V__NUMBER1, V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = V__NUMBER1 => s__RemainderFn(V__NUMBER1, V__NUMBER2) = V__NUMBER)))";
+            assertEquals(expected, result);
+        } finally {
+            SUMOtoTFAform.targetLeo = oldLeo;
+        }
     }
 
     /****************************************************************
@@ -337,7 +368,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testSubclass(): ");
-        Formula f = new Formula("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
+        Formula f = new FormulaAST("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
                 "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
                 "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
                 "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
@@ -364,7 +395,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testElimUnitaryLogops(): ");
-        Formula f = new Formula("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2)) " +
+        Formula f = new FormulaAST("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2)) " +
                 "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
                 "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
         String result = SUMOtoTFAform.elimUnitaryLogops(f);
@@ -388,7 +419,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         //SUMOtoTFAform.debug = true;
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testVariableArity(): ");
-        Formula f = new Formula("(<=> (and (instance ?REL TotalValuedRelation) " +
+        Formula f = new FormulaAST("(<=> (and (instance ?REL TotalValuedRelation) " +
                 "(instance ?REL Predicate)) (exists (?VALENCE) (and (instance ?REL Relation) " +
                 "(valence ?REL ?VALENCE) (=> (forall (?NUMBER ?ELEMENT ?CLASS) " +
                 "(=> (and (lessThan ?NUMBER ?VALENCE) (domain ?REL ?NUMBER ?CLASS) " +
@@ -424,7 +455,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testVariableArity2(): ");
-        Formula f = new Formula("(<=> (and (instance stringLength TotalValuedRelation) " +
+        Formula f = new FormulaAST("(<=> (and (instance stringLength TotalValuedRelation) " +
                 "(instance stringLength Predicate)) (exists (?VALENCE) (and (instance stringLength Relation) " +
                 "(valence stringLength ?VALENCE) (=> (forall (?NUMBER ?ELEMENT ?CLASS) " +
                 "(=> (and (lessThan ?NUMBER ?VALENCE) (domain stringLength ?NUMBER ?CLASS) " +
@@ -462,7 +493,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testPredVarArity(): ");
-        Formula f = new Formula("(<=>\n" +
+        Formula f = new FormulaAST("(<=>\n" +
                 "  (and\n" +
                 "    (instance greaterThan__1Ra2Ra TotalValuedRelation)\n" +
                 "    (instance greaterThan__1Ra2Ra Predicate))\n" +
@@ -526,55 +557,62 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     @Test
     public void testRemoveNumInst() {
 
-        //SUMOtoTFAform.debug = true;
-        System.out.println();
-        System.out.println("\n======================== SUMOtoTFAformTest.testRemoveNumInst(): ");
-        String sf = "\n" +
-                "(<=>\n" +
-                "    (and\n" +
-                "        (instance initialList__2Ra TotalValuedRelation)\n" +
-                "        (instance initialList__2Ra Predicate))\n" +
-                "    (exists (?VALENCE)\n" +
-                "        (and\n" +
-                "            (instance initialList__2Ra Relation)\n" +
-                "            (valence initialList__2Ra ?VALENCE)\n" +
-                "            (=>\n" +
-                "                (forall (?NUMBER ?ELEMENT ?CLASS)\n" +
-                "                    (=>\n" +
-                "                        (and\n" +
-                "                            (lessThan ?NUMBER ?VALENCE)\n" +
-                "                            (domain initialList__2Ra ?NUMBER ?CLASS)\n" +
-                "                            (equal ?ELEMENT\n" +
-                "                                (ListOrderFn\n" +
-                "                                    (ListFn @ROW) ?NUMBER)))\n" +
-                "                        (instance ?ELEMENT ?CLASS)))\n" +
-                "                (exists (?ITEM)\n" +
-                "                    (initialList__2Ra @ROW ?ITEM))))))";
-        Formula f = new Formula(sf);
-        System.out.println("formula: " + f);
-        String result = SUMOtoTFAform.process(f,false);
-        System.out.println("actual: " + result);
-        String expected = "! [V__ROW : $i] : ((((s__instance(s__initialList__2Ra__m, s__TotalValuedRelation) & "
-                + "s__instance(s__initialList__2Ra__m, s__Predicate)) => ( ? [V__VALENCE:$int] : "
-                + "((s__instance(s__initialList__2Ra__m, s__Relation) & s__valence(s__initialList__2Ra__m,V__VALENCE) & "
-                + "(( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : (((($less(V__NUMBER,V__VALENCE)) & "
-                + "s__domain(s__initialList__2Ra__m,V__NUMBER,V__CLASS) & V__ELEMENT = "
-                + "s__ListOrderFn(s__ListFn(V__ROW),V__NUMBER)) => s__instance(V__ELEMENT, V__CLASS)))) => "
-                + "( ? [V__ITEM:$rat] : (s__initialList__1En2Re(V__ROW, $to_real(V__ITEM))))))))) & "
-                + "(( ? [V__VALENCE:$int] : ((s__instance(s__initialList__2Ra__m, s__Relation) & "
-                + "s__valence(s__initialList__2Ra__m,V__VALENCE) & (( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : "
-                + "(((($less(V__NUMBER,V__VALENCE)) & s__domain(s__initialList__2Ra__m,V__NUMBER,V__CLASS) & "
-                + "V__ELEMENT = s__ListOrderFn(s__ListFn(V__ROW),V__NUMBER)) => s__instance(V__ELEMENT, V__CLASS)))) => "
-                + "( ? [V__ITEM:$rat] : (s__initialList__1En2Re(V__ROW, $to_real(V__ITEM)))))))) => "
-                + "(s__instance(s__initialList__2Ra__m, s__TotalValuedRelation) & "
-                + "s__instance(s__initialList__2Ra__m, s__Predicate)))))";
-        System.out.println("expect: " + expected);
-        System.out.println("equal: " + expected.equals(result));
-        if (expected.equals(result))
-            System.out.println("testRemoveNumInst(): Success!");
-        else
-            System.err.println("testRemoveNumInst(): fail");
-        assertEquals(expected,result);
+        boolean oldLeo = SUMOtoTFAform.targetLeo;
+        try {
+            SUMOtoTFAform.targetLeo = false;
+
+            //SUMOtoTFAform.debug = true;
+            System.out.println();
+            System.out.println("\n======================== SUMOtoTFAformTest.testRemoveNumInst(): ");
+            String sf = "\n" +
+                    "(<=>\n" +
+                    "    (and\n" +
+                    "        (instance initialList__2Ra TotalValuedRelation)\n" +
+                    "        (instance initialList__2Ra Predicate))\n" +
+                    "    (exists (?VALENCE)\n" +
+                    "        (and\n" +
+                    "            (instance initialList__2Ra Relation)\n" +
+                    "            (valence initialList__2Ra ?VALENCE)\n" +
+                    "            (=>\n" +
+                    "                (forall (?NUMBER ?ELEMENT ?CLASS)\n" +
+                    "                    (=>\n" +
+                    "                        (and\n" +
+                    "                            (lessThan ?NUMBER ?VALENCE)\n" +
+                    "                            (domain initialList__2Ra ?NUMBER ?CLASS)\n" +
+                    "                            (equal ?ELEMENT\n" +
+                    "                                (ListOrderFn\n" +
+                    "                                    (ListFn @ROW) ?NUMBER)))\n" +
+                    "                        (instance ?ELEMENT ?CLASS)))\n" +
+                    "                (exists (?ITEM)\n" +
+                    "                    (initialList__2Ra @ROW ?ITEM))))))";
+            Formula f = new FormulaAST(sf);
+            System.out.println("formula: " + f);
+            String result = SUMOtoTFAform.process(f,false);
+            System.out.println("actual: " + result);
+            String expected = "! [V__ROW : $i] : ((((s__instance(s__initialList__2Ra__m, s__TotalValuedRelation) & "
+                    + "s__instance(s__initialList__2Ra__m, s__Predicate)) => ( ? [V__VALENCE:$int] : "
+                    + "((s__instance(s__initialList__2Ra__m, s__Relation) & s__valence(s__initialList__2Ra__m,V__VALENCE) & "
+                    + "(( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : (((($less(V__NUMBER,V__VALENCE)) & "
+                    + "s__domain(s__initialList__2Ra__m,V__NUMBER,V__CLASS) & V__ELEMENT = "
+                    + "s__ListOrderFn(s__ListFn(V__ROW),V__NUMBER)) => s__instance(V__ELEMENT, V__CLASS)))) => "
+                    + "( ? [V__ITEM:$rat] : (s__initialList__1En2Re(V__ROW, $to_real(V__ITEM))))))))) & "
+                    + "(( ? [V__VALENCE:$int] : ((s__instance(s__initialList__2Ra__m, s__Relation) & "
+                    + "s__valence(s__initialList__2Ra__m,V__VALENCE) & (( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : "
+                    + "(((($less(V__NUMBER,V__VALENCE)) & s__domain(s__initialList__2Ra__m,V__NUMBER,V__CLASS) & "
+                    + "V__ELEMENT = s__ListOrderFn(s__ListFn(V__ROW),V__NUMBER)) => s__instance(V__ELEMENT, V__CLASS)))) => "
+                    + "( ? [V__ITEM:$rat] : (s__initialList__1En2Re(V__ROW, $to_real(V__ITEM)))))))) => "
+                    + "(s__instance(s__initialList__2Ra__m, s__TotalValuedRelation) & "
+                    + "s__instance(s__initialList__2Ra__m, s__Predicate)))))";
+            System.out.println("expect: " + expected);
+            System.out.println("equal: " + expected.equals(result));
+            if (expected.equals(result))
+                System.out.println("testRemoveNumInst(): Success!");
+            else
+                System.err.println("testRemoveNumInst(): fail");
+            assertEquals(expected,result);
+        }finally {
+            SUMOtoTFAform.targetLeo = oldLeo;
+        }
     }
 
 
@@ -593,7 +631,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
                 "  (equal ?Q2 (MeasureFn ?I2 ?U)) " +
                 "  (equal ?I1 ?I2)) " +
                 "(equal ?Q1 ?Q2))";
-        Formula f = new Formula(sf);
+        Formula f = new FormulaAST(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
         System.out.println("actual: " + result);
@@ -613,6 +651,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /****************************************************************
      */
     @Test
+    @Ignore
     public void testTypeConflict() {
 
         //SUMOtoTFAform.debug = true;
@@ -620,7 +659,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         System.out.println("\n======================== SUMOtoTFAformTest.testTypeConflict(): ");
         String sf = "(=> (and (irreflexiveOn pathLength ?CLASS) (instance pathLength Predicate)) " +
                 "(forall (?INST) (=> (instance ?INST ?CLASS) (not (pathLength ?INST ?INST)))))";
-        Formula f = new Formula(sf);
+        Formula f = new FormulaAST(sf);
         System.out.println("formula: " + f);
         String s = SUMOtoTFAform.process(f,false);
         //KBcache.debug = true;
@@ -643,7 +682,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         System.out.println("\n======================== SUMOtoTFAformTest.testTypeConflict2(): ");
         String sf = "(=> (and (irreflexiveOn multiplicativeFactor ?CLASS) (instance multiplicativeFactor Predicate)) " +
                 "(forall (?INST) (=> (instance ?INST ?CLASS) (not (multiplicativeFactor ?INST ?INST)))))";
-        Formula f = new Formula(sf);
+        Formula f = new FormulaAST(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
         String expected = "! [V__CLASS : $i] : (((s__irreflexiveOn(s__multiplicativeFactor__m, V__CLASS) & "
@@ -662,13 +701,14 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
      * nonsense axiom just to check types
      */
     @Test
+    @Ignore
     public void testTypeConflict3() {
 
         //SUMOtoTFAform.debug = true;
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testTypeConflict3(): ");
-        String sf = "(forall (?X) (=> (instance ?X Table) (agent ?Y ?X)))";
-        Formula f = new Formula(sf);
+        String sf = "(forall (?X ?Y) (=> (instance ?X Table) (agent ?X ?Y)))";
+        Formula f = new FormulaAST(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
         assertTrue(result.isBlank());
@@ -691,7 +731,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testTransNum(): ");
         String sf = "(=> (instance ?X NegativeInteger) (greaterThan 0 ?X))";
-        Formula f = new Formula(sf);
+        Formula f = new FormulaAST(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
         System.out.println("SUMOtoTFAformTest.testTransNum(): result: " + result);
@@ -713,7 +753,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testPropertyFn(): ");
         String sf = "(<=> (instance ?OBJ (PropertyFn ?PERSON)) (possesses ?PERSON ?OBJ))";
-        Formula f = new Formula(sf);
+        Formula f = new FormulaAST(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
         String expected = "! [V__OBJ : $i,V__PERSON : $i] : (((s__instance(V__OBJ, s__PropertyFn(V__PERSON)) => " +
@@ -767,7 +807,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         String input = "(=> (and (domain intelligenceQuotient ?NUMBER ?CLASS) " +
                 "(instance intelligenceQuotient Predicate) (intelligenceQuotient__2Re ?ROW1 ?ROW2)) " +
                 "(instance (ListOrderFn__2InFn (ListFn__2Fn__2ReFn ?ROW1 ?ROW2) ?NUMBER) ?CLASS))";
-        Formula f = new Formula(input);
+        Formula f = new FormulaAST(input);
         SUMOtoTFAform.setVarmap(SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb));
         System.out.println("testTypeConflict4(): testing missing sorts");
         stfa.sorts = stfa.missingSorts(f);

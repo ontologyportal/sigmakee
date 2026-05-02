@@ -86,12 +86,14 @@ public class KIF {
 
     /*****************************************************************
      */
+    @Deprecated(since = "KIFAST", forRemoval = false)
     public KIF() {
     }
 
     /*****************************************************************
      * Pre-allocate space for hashes, based on file size
      */
+    @Deprecated(since = "KIFAST", forRemoval = false)
     public KIF(String fname) {
 
         long size = getKIFFileSize(fname);

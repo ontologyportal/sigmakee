@@ -12,7 +12,17 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
     SUOKIFparseTest.class,
-    SUOKIFCacheTest.class
+    SUOKIFCacheTest.class,
+    ExprTest.class,
+    SuokifToExprTest.class,
+    KIFASTTest.class,
+    PredVarInstExprTest.class,
+    ClausifierExprTest.class,
+    ExprToTPTPTest.class,
+    ExprToTFFTest.class,
+    ExprToTHFTest.class,
+    ModalsExprTest.class,
+    FormulaASTTest.class
 })
 public class UnitParsingTestSuite  extends UnitTestBase {
 

@@ -39,7 +39,12 @@ public class TPTPutil {
      */
     private static String extractTPTPaxiom(String t) {
 
-        return t.substring(1,t.length()-1).trim();
+        String trimmed = t.trim();
+        // Old tptpParseSUOKIFString wrapped results in "( body )" — strip those outer parens.
+        // New ExprToTPTP.translateKifString stores the raw body without outer parens — return as-is.
+        if (trimmed.startsWith("(") && trimmed.endsWith(")"))
+            return trimmed.substring(1, trimmed.length() - 1).trim();
+        return trimmed;
     }
 
     /** ***************************************************************
@@ -123,8 +128,8 @@ public class TPTPutil {
                     if (inToken) {
                         if (!Character.isJavaIdentifierPart(ch)) {
                             inToken = false;
-                            tokenNoSuffix = removeTPTPSuffix(token.toString());
-                            result.append("<a href=\"").append(hyperlink).append("&term=").append(tokenNoSuffix).append("\">s__").append(token.toString()).append("</a>");
+                            tokenNoSuffix = SUMOtoTFAform.withoutSuffix(removeTPTPSuffix(token.toString()));
+                            result.append("<a href=\"").append(hyperlink).append("&term=").append(tokenNoSuffix).append("\">s__").append(tokenNoSuffix).append("</a>");
                             token = new StringBuilder();
                             result.append(ch);
                             tokenNum++;
@@ -238,11 +243,15 @@ public class TPTPutil {
                 if (!Character.isJavaIdentifierPart(ch) && ch != '_') {
                     // end of token
                     String tok = token.toString();
+                    String base = tok.startsWith(Formula.TERM_SYMBOL_PREFIX)
+                            ? tok.substring(Formula.TERM_SYMBOL_PREFIX.length()) : tok;
+                    String termForUrl = SUMOtoTFAform.withoutSuffix(base);
                     result.append("<a href=\"")
                           .append(hyperlink)
-                          .append(tok)
+                          .append("&term=")
+                          .append(termForUrl)
                           .append("\">")
-                          .append(tok)
+                          .append(Formula.TERM_SYMBOL_PREFIX).append(termForUrl)
                           .append("</a>");
                     token.setLength(0);
                     inToken = false;

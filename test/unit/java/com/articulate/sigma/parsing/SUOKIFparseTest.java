@@ -12,10 +12,8 @@ public class SUOKIFparseTest extends UnitTestBase {
     public static Map<Integer,FormulaAST> process(String input) {
 
         System.out.println("process(): input: " + input);
-        SuokifVisitor.parseString(input);
-        //System.out.println("process(): visitor: " + visitor);
-        //System.out.println("process(): visitor.result (before processing): " + visitor.result);
-        Map<Integer,FormulaAST> hm = SuokifVisitor.result;
+        SuokifVisitor visitor = SuokifVisitor.parseString(input);
+        Map<Integer,FormulaAST> hm = visitor.result;
         System.out.println("process(): result: " + hm);
         return hm;
     }

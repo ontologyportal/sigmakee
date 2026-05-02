@@ -7,6 +7,8 @@ import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.FileUtil;
 
+// ExprToTPTP is the Expr-based translator that replaces the ANTLR-context visitors in this class.
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -22,10 +24,12 @@ public class TPTPWriter {
 
     public static boolean debug = false;
 
-    /** ***************************************************************
-     * file : (sentence | comment)+ EOF ;
-     * @return a String of TPTP formulas
-     */
+    // -----------------------------------------------------------------------
+    // ANTLR-context visitor methods (deprecated — use ExprToTPTP / translateFormula instead)
+    // -----------------------------------------------------------------------
+
+    /** @deprecated Use {@link ExprToTPTP#translate(Expr, boolean, String)} instead. */
+    @Deprecated
     public String visitFile(SuokifParser.FileContext context) {
 
         StringBuilder sb = new StringBuilder();
@@ -49,6 +53,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * sentence : (relsent | logsent | quantsent | variable) ;
      */
+    @Deprecated
     public String visitSentence(SuokifParser.SentenceContext context) {
 
         if (context == null || context.children == null) return null;
@@ -75,6 +80,7 @@ public class TPTPWriter {
 
     /** ***************************************************************
      */
+    @Deprecated
     public String visitComment(SuokifParser.CommentContext context) {
 
         if (debug) System.out.println("Visiting comment: " + context.getText());
@@ -91,6 +97,7 @@ public class TPTPWriter {
      * Set the types of any variables that appear in an instance or subclass
      * declaration
      */
+    @Deprecated
     public String visitRelsent(SuokifParser.RelsentContext context) {
 
         StringBuilder sb = new StringBuilder();
@@ -133,6 +140,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * argument : (sentence | term) ;
      */
+    @Deprecated
     public String visitArgument(SuokifParser.ArgumentContext context) {
 
         if (debug) System.out.println("Visiting argument: " + context.getText());
@@ -154,6 +162,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * logsent :  (notsent | andsent | orsent | implies | iff | eqsent) ;
      */
+    @Deprecated
     public String visitLogsent(SuokifParser.LogsentContext context) {
 
         if (debug) System.out.println("Visiting logsent: " + context.getText());
@@ -186,6 +195,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * notsent : '(' 'not' sentence ')' ;
      */
+    @Deprecated
     public String visitNotsent(SuokifParser.NotsentContext context) {
 
         String f = null;
@@ -203,6 +213,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * andsent : '(' 'and' sentence sentence+ ')' ;
      */
+    @Deprecated
     public String visitAndsent(SuokifParser.AndsentContext context) {
 
         StringBuilder sb = new StringBuilder();
@@ -225,6 +236,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * orsent : '(' 'or' sentence sentence+ ')' ;
      */
+    @Deprecated
     public String visitOrsent(SuokifParser.OrsentContext context) {
 
         StringBuilder sb = new StringBuilder();
@@ -246,6 +258,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * implies :  '(' '=>' sentence sentence ')' ;
      */
+    @Deprecated
     public String visitImplies(SuokifParser.ImpliesContext context) {
 
 //        StringBuilder sb = new StringBuilder();
@@ -271,6 +284,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * iff : '(' '<=>' sentence sentence ')' ;
      */
+    @Deprecated
     public String visitIff(SuokifParser.IffContext context) {
 
         if (debug) System.out.println("Visiting Iff: " + context.getText());
@@ -297,6 +311,7 @@ public class TPTPWriter {
      * argument : (sentence | term) ;
      * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER ) ;
      */
+    @Deprecated
     public String visitEqsent(SuokifParser.EqsentContext context) {
 
         if (debug) System.out.println("Visiting Eqsent: " + context.getText());
@@ -321,6 +336,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * quantsent : (forall | exists) ;
      */
+    @Deprecated
     public String visitQuantsent(SuokifParser.QuantsentContext context) {
 
         if (debug) System.out.println("Visiting quantsent: " + context.getText());
@@ -340,6 +356,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * forall : '(' 'forall' '(' variable+ ')' sentence ')' ;
      */
+    @Deprecated
     public String visitForall(SuokifParser.ForallContext context) {
 
         if (debug) System.out.println("Visiting Forall: " + context.getText());
@@ -365,6 +382,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * exists : '(' 'exists' '(' variable+ ')' sentence ')' ;
      */
+    @Deprecated
     public String visitExists(SuokifParser.ExistsContext context) {
 
 
@@ -391,6 +409,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * variable : (REGVAR | ROWVAR) ;
      */
+    @Deprecated
     public String visitVariable(SuokifParser.VariableContext context) {
 
         if (debug) System.out.println("Visiting variable: " + context.getText());
@@ -410,6 +429,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER ) ;
      */
+    @Deprecated
     public String visitTerm(SuokifParser.TermContext context) {
 
         if (debug) System.out.println("visitTerm() Visiting Term: " + context.getText());
@@ -449,6 +469,7 @@ public class TPTPWriter {
     /** ***************************************************************
      * funterm : '(' FUNWORD argument+ ')' ;
      */
+    @Deprecated
     public String visitFunterm(SuokifParser.FuntermContext context) {
 
         StringBuilder sb = new StringBuilder();
@@ -484,6 +505,7 @@ public class TPTPWriter {
 
     /** ***************************************************************
      */
+    @Deprecated
     public String visitString(SuokifParser.StringContext context) {
 
         if (debug) System.out.println("Visiting string: " + context.getText());
@@ -496,6 +518,7 @@ public class TPTPWriter {
 
     /** ***************************************************************
      */
+    @Deprecated
     public String visitNumber(SuokifParser.NumberContext context) {
 
         if (debug) System.out.println("Visiting number: " + context.getText());
@@ -504,10 +527,30 @@ public class TPTPWriter {
         return context.getText();
     }
 
+    /**
+     * Translate a {@link FormulaAST} to a TPTP string using the {@link ExprToTPTP}
+     * Expr-based translator when {@code f.expr} is available, falling back to the
+     * ANTLR-context visitor if not.
+     *
+     * @param f     the formula to translate
+     * @param query {@code true} for query mode (free vars get existential quantifier)
+     * @param lang  "fof" or "tff"
+     * @return TPTP string, or {@code null} if both paths fail
+     */
+    public String translateFormula(FormulaAST f, boolean query, String lang) {
+        if (f.expr != null) {
+            String result = ExprToTPTP.translate(f.expr, query, lang);
+            if (!StringUtil.emptyString(result)) return result;
+        }
+        // Fallback: ANTLR-context visitor
+        return (f.parsedFormula != null) ? visitSentence(f.parsedFormula) : null;
+    }
+
     /** ***************************************************************
      */
     public String wrappedMetaFormat(FormulaAST f) {
-        return "fof(kb_" + FileUtil.noExt(FileUtil.noPath(f.sourceFile)) + "_" + f.startLine + ",axiom," + this.visitSentence(f.parsedFormula) + ").";
+        return "fof(kb_" + FileUtil.noExt(FileUtil.noPath(f.sourceFile)) + "_" + f.startLine
+                + ",axiom," + translateFormula(f, false, "fof") + ").";
     }
 
     /** ***************************************************************
@@ -543,20 +586,18 @@ public class TPTPWriter {
         start = System.currentTimeMillis();
         TPTPWriter tptpW = new TPTPWriter();
         int counter = 0;
-        System.out.println("INFO in TPTPWriter.translate(): # statements not in rules: " + SuokifVisitor.result.keySet().size());
+        System.out.println("INFO in TPTPWriter.translate(): # statements not in rules: " + sv.result.keySet().size());
         String id, tptp;
         try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(args[2])))) {
-            for (FormulaAST fast : SuokifVisitor.result.values()) {
+            for (FormulaAST fast : sv.result.values()) {
                 if (!sv.rules.contains(fast) && !fast.isDoc && !fast.comment) {
                     if (fast.parsedFormula == null) {
                         System.err.println("Error in TPTPWriter.translate(): non rules - null formula " + fast);
                         continue;
                     }
                     id = "kb_" + FileUtil.noExt(FileUtil.noPath(fast.sourceFile)) + "_" + fast.startLine + "_" + counter++;
-                    // TODO this may not fit with proof processing that uses suffix to find original formula
-                    tptp = tptpW.visitSentence(fast.parsedFormula);
+                    tptp = tptpW.translateFormula(fast, false, "fof");
                     if (!StringUtil.emptyString(tptp)) {
-    //                    System.out.println("fof(" + id + ",axiom," + tptp + ").");                                 // 3. Translate non-rules
                         pw.println("fof(" + id + ",axiom," + tptp + ").");
                     }
                     else
@@ -574,10 +615,8 @@ public class TPTPWriter {
                         continue;
                     }
                     id = "kb_" + FileUtil.noExt(FileUtil.noPath(fast.sourceFile)) + "_" + fast.startLine + "_" + counter++;
-                    // TODO this may not fit with proof processing that uses suffix to find original formula
-                    tptp = tptpW.visitSentence(fast.parsedFormula);
+                    tptp = tptpW.translateFormula(fast, false, "fof");
                     if (!StringUtil.emptyString(tptp)) {
-    //                    System.out.println("fof(" + id + ",axiom," + tptp + ").");                                 // 4. Translate rules
                         pw.println("fof(" + id + ",axiom," + tptp + ").");
                     }
                     else
