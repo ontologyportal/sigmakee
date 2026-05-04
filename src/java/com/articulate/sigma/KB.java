@@ -2662,61 +2662,201 @@ public class KB implements Serializable {
         Map<String, String> langFormatMap = getTermFormatMap(lang);
         return langFormatMap.get(term);
     }
-    /** *************************************************************
+    /*****************************************************************
+     * Delete all translated user assertion files used by theorem provers.
+     * This deletes every language variant, regardless of current TPTP language.
      */
     public void deleteUserAssertionsForInference() {
 
-        String userAssertionTPTP = this.name + KB._userAssertionsTPTP;
-        if (SUMOKBtoTPTPKB.getLang().equals("tff"))
-            userAssertionTPTP = this.name + KB._userAssertionsTFF;
         File dir = new File(KBmanager.getMgr().getPref("kbDir"));
-        String fname = dir + File.separator + userAssertionTPTP;
-        File ufile = new File(fname);
-        if (ufile.exists())
-            FileUtil.delete(dir + File.separator + userAssertionTPTP);
+
+        deleteFileIfExists(new File(dir, this.name + KB._userAssertionsTPTP));
+        deleteFileIfExists(new File(dir, this.name + KB._userAssertionsTFF));
+        deleteFileIfExists(new File(dir, this.name + KB._userAssertionsTHF));
     }
 
     /*****************************************************************
-     * Deletes user assertions, both in the files and in the constituents list.
+     * Delete temporary prover files that may contain old user assertions.
+     */
+    private void deleteStaleProverTempFiles() {
+
+        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+
+        deleteFileIfExists(new File(dir, "temp-stmt.tptp"));
+        deleteFileIfExists(new File(dir, "temp-stmt.tff"));
+        deleteFileIfExists(new File(dir, "temp-stmt.thf"));
+
+        deleteFileIfExists(new File(dir, "temp-comb.tptp"));
+        deleteFileIfExists(new File(dir, "temp-comb.tff"));
+        deleteFileIfExists(new File(dir, "temp-comb.thf"));
+
+        deleteFileIfExists(new File(dir, "hol_query_" + this.name + ".thf")); // optional if you use fixed HOL names
+    }
+
+    /*****************************************************************
+     * Delete generated base inference files so they are rebuilt cleanly
+     * after user assertions are removed and the KB is reloaded.
+     */
+    private void deleteGeneratedBaseInferenceFiles() {
+
+        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+
+        deleteFileIfExists(new File(dir, this.name + ".tptp"));
+        deleteFileIfExists(new File(dir, this.name + ".tff"));
+
+        /*
+        * Optional. Only delete these if user assertions can affect HOL generation
+        * in your current branch.
+        */
+        // deleteFileIfExists(new File(dir, this.name + "_plain.thf"));
+        // deleteFileIfExists(new File(dir, this.name + "_modals.thf"));
+    }
+
+    /*****************************************************************
+     * Delete a file if it exists. Prints a warning if deletion fails.
+     */
+    private static void deleteFileIfExists(File file) {
+
+        if (file == null)
+            return;
+
+        if (file.exists() && !file.delete()) {
+            System.err.println("Warning in KB.deleteFileIfExists(): could not delete " +
+                    file.getAbsolutePath());
+        }
+    }
+
+    /*****************************************************************
+     * Deletes user assertions from constituents and disk, but does not reload.
      */
     public void deleteUserAssertions() throws IOException {
 
-        String toRemove = null;
-        for (String nme : constituents) {
-            if (nme.endsWith(_userAssertionsString)) {
-                toRemove = nme;
-                break;
+        synchronized (uaLock) {
+            File kbDirectory = new File(KBmanager.getMgr().getPref("kbDir"));
+
+            Iterator<String> it = constituents.iterator();
+            while (it.hasNext()) {
+                String nme = it.next();
+                if (nme != null && nme.endsWith(_userAssertionsString)) {
+                    it.remove();
+                    deleteFileIfExists(new File(nme));
+                }
             }
+
+            deleteFileIfExists(new File(kbDirectory, this.name + _userAssertionsString));
+            deleteUserAssertionsForInference();
+            deleteStaleProverTempFiles();
+            deleteGeneratedBaseInferenceFiles();
         }
-        // Remove the string from the list.
-        if (toRemove != null) {
-            constituents.remove(toRemove);
+    }
+
+    private void debugCheckUserAssertionCleanup(String marker) {
+
+        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        List<String> files = Arrays.asList(
+                this.name + _userAssertionsString,
+                this.name + _userAssertionsTPTP,
+                this.name + _userAssertionsTFF,
+                this.name + _userAssertionsTHF,
+                this.name + ".tptp",
+                this.name + ".tff",
+                "temp-stmt.tptp",
+                "temp-comb.tptp"
+        );
+        System.out.println("===== " + marker + " user assertion cleanup check =====");
+        for (String fname : files) {
+            File f = new File(dir, fname);
+            System.out.println(fname + " exists: " + f.exists() + " path=" + f.getAbsolutePath());
         }
-        deleteUserAssertionsForInference();
     }
 
     /*****************************************************************
-     * Deletes the user assertions key in the constituents map, and then reloads the
-     * KBs.
+     * Deletes user assertions from memory/config/disk, reloads the KB,
+     * and regenerates clean prover base files.
      */
     public void deleteUserAssertionsAndReload() {
 
-        String cname;
-        for (int i = 0; i < constituents.size(); i++) {
-            cname = constituents.get(i);
-            if (cname.endsWith(_userAssertionsString)) {
-                try {
-                    constituents.remove(i);
-                    KBmanager.getMgr().writeConfiguration();
-                    reload();
+        synchronized (uaLock) {
+            try {
+                File kbDirectory = new File(KBmanager.getMgr().getPref("kbDir"));
+
+                /*
+                * 1. Remove user assertion constituents from the KB's constituent list
+                *    and delete their physical KIF files.
+                */
+                List<String> removedUserAssertionFiles = new ArrayList<>();
+
+                Iterator<String> it = constituents.iterator();
+                while (it.hasNext()) {
+                    String cname = it.next();
+                    if (cname != null && cname.endsWith(_userAssertionsString)) {
+                        removedUserAssertionFiles.add(cname);
+                        it.remove();
+                    }
                 }
-                catch (IOException ioe) {
-                    System.err.println(
-                            "Error in KB.deleteUserAssertionsAndReload(): writing configuration: " + ioe.getMessage());
+
+                for (String fname : removedUserAssertionFiles) {
+                    deleteFileIfExists(new File(fname));
+                }
+
+                /*
+                * 2. Also delete the default shared UserAssertions KIF file,
+                *    even if it was not present in constituents.
+                */
+                deleteFileIfExists(new File(kbDirectory, this.name + _userAssertionsString));
+
+                /*
+                * 3. Delete translated user assertion files for all prover languages.
+                */
+                deleteUserAssertionsForInference();
+
+                /*
+                * 4. Delete stale temp prover files that may still contain old assertions.
+                */
+                deleteStaleProverTempFiles();
+
+                /*
+                * 5. Delete generated base inference files.
+                *
+                * This is important because SUMO.tptp may have been generated while
+                * user assertions were loaded. Deleting it forces clean regeneration
+                * after reload.
+                */
+                deleteGeneratedBaseInferenceFiles();
+
+                /*
+                * 6. Persist config without the UserAssertions constituent.
+                */
+                KBmanager.getMgr().writeConfiguration();
+
+                /*
+                * 7. Reload KB from the cleaned constituent list.
+                */
+                debugCheckUserAssertionCleanup("after delete before reload");
+                reload();
+                debugCheckUserAssertionCleanup("after reload before regeneration");
+                
+                /*
+                * 8. Regenerate clean prover base files after reload.
+                *
+                * Since the KB has now been reloaded without UserAssertions.kif,
+                * these regenerated files should not contain deleted user assertions.
+                */
+                synchronized (baseGenLock) {
+                    TPTPGenerationManager.generateProperFile(this, "fof");
+                    TPTPGenerationManager.generateProperFile(this, "tff");
                 }
             }
+            catch (IOException ioe) {
+                System.err.println("Error in KB.deleteUserAssertionsAndReload(): " + ioe.getMessage());
+                ioe.printStackTrace();
+            }
+            catch (RuntimeException re) {
+                System.err.println("Error in KB.deleteUserAssertionsAndReload(): " + re.getMessage());
+                re.printStackTrace();
+                throw re;
+            }
         }
-        deleteUserAssertionsForInference();
     }
 
     /***************************************************************
