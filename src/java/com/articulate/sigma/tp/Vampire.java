@@ -109,7 +109,7 @@ public class Vampire {
         if (debug>0) System.out.printf("\nVampire(%s, %s, %s, %b, %d, %d)", kb.name, requestedTptpLang, mode, modensPonens, timeout, maxAnswers);
         this.kb = kb;
         this.executablePath = KBmanager.getMgr().getPref("vampire");
-        if ("fof".equalsIgnoreCase(requestedTptpLang)) {
+        if ("fof".equalsIgnoreCase(requestedTptpLang) || "tptp".equalsIgnoreCase(requestedTptpLang)) {
             this.requestedTptpLanguage = "fof";
             this.inferenceFileExtension = "tptp";
         }
