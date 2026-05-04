@@ -672,6 +672,7 @@ public class Vampire {
     public void run(File kbFile) throws Exception {
 
         if (debug>0) System.out.printf("\nVampire.run(%s)", kbFile.getName());
+        this.output.clear();
         long startTime = System.currentTimeMillis();
         long timeoutMs = this.timeout * 1000L;
         this.result = new ATPResult.Builder()
@@ -764,6 +765,7 @@ public class Vampire {
     public void run(File kbFile, Set<String> stmts) throws Exception {
 
         if (debug>0) System.out.printf("\nVampire.run(%s, %s)", kbFile.getName(), stmts);
+        this.output.clear();
         String lang = "tff";
         if (SUMOKBtoTPTPKB.getLang().equalsIgnoreCase("fof"))
             lang = "tptp";
