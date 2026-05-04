@@ -2784,8 +2784,10 @@ public class KB implements Serializable {
             cmds.add(includesPath);
         }
 
-        // First TPTP pass (main proof)
+        // First TPTP/THF pass (main proof)
         Vampire vampire = new Vampire();
+        if (test_path.endsWith(".thf"))
+            vampire.logic = Vampire.Logic.HOL;
 
         try{
             vampire.runCustom(test, timeout, cmds);
@@ -2795,8 +2797,8 @@ public class KB implements Serializable {
             throw new ATPException("Vampire TPTP execution failed: " + e.getMessage(), "Vampire");
         }
 
-        // Second TPTP pass (modus Ponens)
-        if (modensPonens) {
+        // Second TPTP pass (modus Ponens) — skipped for HOL/THF problems
+        if (modensPonens && !test_path.endsWith(".thf")) {
             List<String> cmds_modus_ponens = Arrays.asList(
                     "--input_syntax","tptp",
                     "--proof","tptp",                  // <-- TSTP-style proof lines
@@ -2823,57 +2825,6 @@ public class KB implements Serializable {
             }
 
             vampire = vampire_pomens;
-        }
-        return vampire;
-    }
-
-    /** ***************************************************************
-     * Executes the Vampire automated theorem prover with higher-order logic (HOL) mode
-     * on a given THF problem file. This method processes the includes
-     * and runs the Vampire prover with the specified parameters.
-     *
-     * @param test_path The file path of the TPTP problem to be processed.
-     * @param timeout The maximum amount of time (in seconds) that Vampire is allowed to run.
-     * @param maxAnswers The maximum number of answers that Vampire should produce (not currently used in logic).
-     * @return A Vampire instance populated with the results of the proof attempt.
-     */
-    public Vampire askVampireTHF(String test_path, int timeout, int maxAnswers) {
-
-        String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
-        String includesPath = testDir + File.separator + "includes";
-
-        File test = new File(test_path);
-        List<String> includes = TPTPutil.extractIncludesFromTPTP(test);
-
-        if (!includes.isEmpty()) {
-            String error = TPTPutil.validateIncludesInTPTPFiles(includes, includesPath);
-            if (error != null) {
-                System.err.println(error);
-            }
-        }
-
-        List<String> cmds = new ArrayList<>(Arrays.asList(
-                "--input_syntax", "tptp",
-                "--proof", "tptp",   // <-- TSTP-style proof lines
-                "--output_axiom_names","on"
-//                "--mode","portfolio"
-//                "--schedule","snake_slh"
-        ));
-
-        // This HOL Vampire version (4.8) does not support "-qa plain"
-        if (!includes.isEmpty()){
-            cmds.add("--include");
-            cmds.add(includesPath);
-        }
-
-        Vampire vampire = new Vampire();
-        vampire.logic = Vampire.Logic.HOL;
-        try{
-            vampire.runCustom(test, timeout, cmds);
-        } catch (ATPException e){
-            throw e; // Preserve type + payload for proper error handling in UI
-        } catch (Exception e){
-            throw new ATPException("Vampire THF execution failed: " + e.getMessage(), "Vampire");
         }
         return vampire;
     }
@@ -3033,10 +2984,12 @@ public class KB implements Serializable {
                         System.out.println("KB.askVampireHOL(): final query: " + final_query);
                 }
             }
-            // -------- 6. Actually call Vampire on problemPath (unchanged) --------
+            // -------- 6. Actually call Vampire on problemPath --------
             if (debug)
                 System.out.println("------ KB.askVampireHOL(): Asking Vampire");
-            v = askVampireTHF(problemPath, timeout, maxAnswers);
+            v = new Vampire();
+            v.logic = Vampire.Logic.HOL;
+            v.run(new File(problemPath), timeout);
             if (debug)
                 System.out.println("------ KB.askVampireHOL(): Vampire Finished");
             return v;

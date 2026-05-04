@@ -1210,7 +1210,7 @@
                         try {
                             setVampMode(vampireMode);
 
-                            com.articulate.sigma.tp.Vampire vRun = kb.askVampireTHF(testPath, tmo, maxAns);
+                            com.articulate.sigma.tp.Vampire vRun = kb.askVampireTPTP(testPath, tmo, maxAns);
 
                             // Show ATPResult panel with SZS status and diagnostics
                             if (vRun != null && vRun.getResult() != null) {
@@ -1221,12 +1221,7 @@
                             String pseudoQuery = "TPTP file: " + new File(testPath).getName();
 
                             List<String> cleaned = TPTPutil.clearProofFile(vRun.output);
-
-                            // Vampire version 4.8→5.0 reordering…
-                            List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
-
-                            normalized = THFutil.preprocessTHFProof(normalized);
-
+                            List<String> normalized = THFutil.preprocessTHFProof(cleaned);
                             tpp.parseProofOutput(normalized, pseudoQuery, kb, vRun.qlist);
 
                             setGraphFormat(graphFormulaFormat,tpp);
@@ -1338,20 +1333,10 @@
 //                    isHOL = "HOL".equalsIgnoreCase(translationMode);
                     try {
                         if (isHOL){ // Higher-Order Formula
-                            System.out.println(" -- Higher Order Formula Detected - Attempring to run Vampire HOL ");
+                            System.out.println(" -- Higher Order Formula Detected - Attempting to run Vampire HOL ");
                             vampire = kb.askVampireHOL(stmt, timeout, maxAnswers, holUseModals);
-                            System.out.println("============ Vampire_HOL Output Returned =============");
                             List<String> cleaned = TPTPutil.clearProofFile(vampire.output);
-                            System.out.println("============ Vampire-HOL Output Cleaned =============");
-                            for (String s:cleaned){
-                                System.out.println(s);
-                            }
-                            // Vampire version 4.8→5.0 reordering…
-                            List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
-                            System.out.println("============ Vampire_HOL Output Reordered =============");
-                            vampire.output = THFutil.preprocessTHFProof(normalized);
-                            System.out.println("============ Vampire_HOL Output Preprocessed =============");
-
+                            vampire.output = THFutil.preprocessTHFProof(cleaned);
                         }else { // First-Order Formula
                             System.out.println(" -- First Order Formula Detected - Attempring to run normal Vampire");
                             String sessId = session.getId();

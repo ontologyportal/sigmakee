@@ -96,7 +96,7 @@ public class Vampire {
     private static String[] createCommandList(File executable, int timeout, File kbFile) {
 
         String space = Formula.SPACE;
-        StringBuilder opts = new StringBuilder("--output_axiom_names").append(space).append("on").append(space);
+        StringBuilder opts = new StringBuilder("--output_axiom_names").append(space).append("on").append(space).append("--proof").append(space).append("tptp").append(space);
         if (mode == ModeType.AVATAR) {
             opts.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space);
             if (askQuestion) {
@@ -143,7 +143,7 @@ public class Vampire {
         String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder();
 
-        // If the caller already supplies --mode (e.g. askVampireTHF passes --mode portfolio),
+        // If the caller already supplies --mode (e.g. a THF caller passes --mode portfolio),
         // do not prepend a conflicting mode flag — Vampire takes the first --mode it sees.
         boolean callerSuppliesMode = commands.contains("--mode");
         if (!callerSuppliesMode) {
@@ -257,6 +257,9 @@ public class Vampire {
                 .inputSource(kbFile != null ? kbFile.getName() : "unknown")
                 .timeoutMs(timeoutMs)
                 .build();
+
+        if (logic == Logic.HOL)
+            System.out.println("[Vampire] HOL mode — running THF problem: " + (kbFile != null ? kbFile.getName() : "null"));
 
         String vampex = KBmanager.getMgr().getPref("vampire");
         if (StringUtil.emptyString(vampex)) {
@@ -383,8 +386,8 @@ public class Vampire {
         String vampex = "";
         String configKey = "vampire";
         if (logic == Logic.HOL) {
-            vampex = KBmanager.getMgr().getPref("vampire_hol");
-            configKey = "vampire_hol";
+            vampex = KBmanager.getMgr().getPref("vampire");
+            configKey = "vampire";
         } else {
             vampex = KBmanager.getMgr().getPref("vampire");
         }
