@@ -40,7 +40,7 @@ import java.util.*;
 public class LEO {
 
     /** Turn debugging logs on or off */
-    public static boolean debug = false;
+    public static int debug = 1;
     /** Knowledge base to be used for inference */
     private KB kb;
     /** The path where the LEO executable is found */
@@ -81,6 +81,8 @@ public class LEO {
      * @param sessionId explicit HTTP session ID for temp file isolation
      */
     public LEO (KB kb, String requestedTptpLanguage, int timeout, int maxAnswers, String sessionId) {
+
+        if (debug>0) System.out.printf("LEO(%s, %d, %d, %s)", kb.name, timeout, maxAnswers, sessionId);
         this.executablePath = KBmanager.getMgr().getPref("leoExecutable");
         this.kb = kb;
         this.requestedTptpLanguage = "tff";
@@ -100,7 +102,8 @@ public class LEO {
      * @return A String indicating the status of the ask operation.
      */
     public void askLeo(String suoKifFormula) {
-
+        
+        if (debug>0) System.out.printf("LEO.askLeo(%s)", suoKifFormula);
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             Formula query = new Formula();
             query.read(suoKifFormula);
@@ -153,6 +156,7 @@ public class LEO {
      */
     public void askLeo(String suoKifFormula, boolean useSession) {
 
+        if (debug>0) System.out.printf("LEO.askLeo(%s, %b)", suoKifFormula, useSession);
         final String requestedLang = SUMOKBtoTPTPKB.getLang();
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             Formula query = new Formula();
@@ -166,7 +170,6 @@ public class LEO {
                 if (useSession) {
                     Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionTPTPPath(this.sessionId, this.kb.name, this.requestedTptpLanguage);
                     if (Files.exists(sessionPath)) {
-                        if (debug) System.out.println("KB.askLeo(): using session-specific TPTP: " + sessionPath);
                         s = sessionPath.toFile();
                     } else {
                         s = new File(kbDir + this.kb.name + "." + this.requestedTptpLanguage);
@@ -243,7 +246,8 @@ public class LEO {
      * @param kbFile
      */
     private static String[] createCommandList(File executable, int timeout, File kbFile) {
-
+        
+        if (debug>0) System.out.printf("LEO.createCommandList(%s, %d, %s)", executable.getName(), timeout, kbFile.getName());
         String opts = executable.toString() + " " + kbFile.toString() + " -t " + Integer.toString(timeout) + " -p";
         String[] optar = opts.split(" ");
         return optar;
@@ -258,7 +262,7 @@ public class LEO {
      */
     public boolean assertFormula(String userAssertionTPTP, List<Formula> parsedFormulas, boolean tptp) {
 
-        if (debug) System.out.println("INFO in Leo.assertFormula(2):writing to file " + userAssertionTPTP);
+        if (debug>0) System.out.printf("LEO.assertFormula(%s, %s, %b)", userAssertionTPTP, parsedFormulas, tptp);
         boolean allAdded = false;
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
             HashSet<Formula> processedFormulas = new HashSet();
@@ -275,7 +279,6 @@ public class LEO {
                     if (tptp) {
                         for (Formula p : processedFormulas) {
                             String formula = THFnew.processNonModal(p, new HashMap<>(), false);
-                            if (debug) System.out.println("INFO in LEO.assertFormula(2): formula " + formula);
                             tptpFormulas.add(formula);
                         }
                     }
@@ -285,7 +288,6 @@ public class LEO {
                         pw.println(",axiom,(" + theTPTPFormula + ")).");
                         tptpStr = SUMOformulaToTPTPformula.getLang() + "(kb_" + this.kb.name + "_UserAssertion" +
                                 "_" + this.axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
-                        if (debug) System.out.println("INFO in LEO.assertFormula(2): TPTP for user assertion = " + tptpStr);
                     }
                     pw.flush();
                 }
@@ -307,6 +309,7 @@ public class LEO {
      */
     private void run(File kbFile) throws Exception {
 
+        if (debug>0) System.out.printf("\nLEO.run(%s)", kbFile.getName());
         long startTime = System.currentTimeMillis();
         long timeoutMs = this.timeout * 1000L;
         result = new ATPResult.Builder()
@@ -344,7 +347,7 @@ public class LEO {
             try (BufferedReader r = new BufferedReader(new InputStreamReader(_leo.getErrorStream()))) {
                 String line;
                 while ((line = r.readLine()) != null) {
-                    stderrLines.add(line);
+                    stderrLines.add(line + "\n");
                 }
             } catch (IOException e) {
                 // Ignore
@@ -386,29 +389,33 @@ public class LEO {
      */
     public void writeStatements(Set<String> stmts) {
 
-        String dir;
+        if (debug > 0) System.out.printf("\nLEO.writeStatements(%s)", stmts);
+        File dir;
         if (this.sessionId != null && !this.sessionId.isEmpty()) {
-            java.nio.file.Path sessionDir = SessionTPTPManager.getSessionDir(this.sessionId);
-            if (!java.nio.file.Files.exists(sessionDir)) {
-                try {
-                    java.nio.file.Files.createDirectories(sessionDir);
-                    System.out.println("LEO.writeStatements(): created session dir " + sessionDir);
-                }
-                catch (IOException ex) {
-                    System.err.println("Error in Leo.writeStatements(): could not create session dir " + sessionDir);
-                    ex.printStackTrace();
-                }
+            Path sessionDir = SessionTPTPManager.getSessionDir(this.sessionId);
+            try {
+                Files.createDirectories(sessionDir);
             }
-            dir = sessionDir.toString();
+            catch (IOException ex) {
+                System.err.println("Error in LEO.writeStatements(): could not create session dir " + sessionDir);
+                ex.printStackTrace();
+                return;
+            }
+            dir = sessionDir.toFile();
         }
-        else dir = KBmanager.getMgr().getPref("kbDir");
-        String fname = "temp-stmt." + this.requestedTptpLanguage;
-        try (FileWriter fw = new FileWriter(dir + File.separator + fname); PrintWriter pw = new PrintWriter(fw)) {
-            for (String s : stmts) pw.println(s);
+        else {
+            dir = new File(KBmanager.getMgr().getPref("kbDir"));
         }
-        catch (Exception e) {
-            System.err.println("Error in Leo.writeStatements(): " + e.getMessage());
-            System.err.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
+        File stmtFile = new File(dir, "temp-stmt." + this.requestedTptpLanguage);
+        System.out.println("TEMP: " + stmtFile.getAbsolutePath());
+        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(stmtFile)))) {
+            for (String s : stmts) {
+                pw.println(s);
+            }
+        }
+        catch (IOException e) {
+            System.err.println("Error in LEO.writeStatements(): " + e.getMessage());
+            System.err.println("Error writing file " + stmtFile.getAbsolutePath());
             e.printStackTrace();
         }
     }
@@ -421,7 +428,7 @@ public class LEO {
      */
     public void catFiles(String f1, String f2, String fout) throws IOException {
 
-        if (debug) System.out.println("concatFiles(): " + f1 + " and " + f2 + " to " + fout);
+        if (debug>0) System.out.printf("\nLEO.concatFiles(%s, %s, %s)", f1, f2, fout);
         File f1file = new File(f1);
         File f2file = new File(f2);
         if (!f1file.exists()) System.err.println("ERROR in concatFiles(): " + f1 + " does not exist");
@@ -452,6 +459,7 @@ public class LEO {
      */
     public List<String> getUserAssertions(KB kb) {
 
+        if (debug>0) System.out.printf("\nLEO.getUserAssertions(%s)", kb.name);
         return kb.withUserAssertionLock(() -> {
             File dir;
             if (this.sessionId != null && !this.sessionId.isEmpty()) dir = SessionTPTPManager.getSessionDir(this.sessionId).toFile();
@@ -469,7 +477,11 @@ public class LEO {
      * @param kbFile Run inference on this file
      * @param stmts Query for inference
      */
-    public void run(File kbFile, Set<String> stmts) throws Exception {run(kbFile, stmts, false);}
+    public void run(File kbFile, Set<String> stmts) throws Exception {
+
+        boolean useSession = this.sessionId != null && !this.sessionId.isEmpty();
+        run(kbFile, stmts, useSession);
+    }
 
     /***************************************************************
      * Creates a running instance of LEO-III adding a set of statements in THF language to a file and then calling LEO.
@@ -479,7 +491,7 @@ public class LEO {
      */
     public void run(File kbFile, Set<String> stmts, boolean useSession) throws Exception {
 
-        if (debug) System.out.println("Leo.run(): query : " + stmts);
+        if (debug>0) System.out.printf("\nLEO.run(%s, %s, %b)", kbFile, stmts, useSession);
         if (useSession) {
             String kbFilePath = kbFile.getAbsolutePath();
             if (kbFilePath.contains(File.separator + "sessions" + File.separator)) {
@@ -504,7 +516,6 @@ public class LEO {
         List<String> userAsserts = getUserAssertions(this.kb);
         if (userAsserts != null && stmts != null) stmts.addAll(userAsserts);
         else {
-            if (debug) System.out.println("Error in Leo.run(): null query or user assertions set");
             return;
         }
         writeStatements(stmts);

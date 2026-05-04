@@ -34,12 +34,10 @@ public class TheoremProverController {
         switch (query.getProverType()) {
             case EPROVER:
                 return this.askEProver(query);
-                break;
             case VAMPIRE: 
                 return this.askVampire(query);
             case LEO:
-                // return this.askLeo(query);
-                break;
+                return this.askLeo(query);
             default:
                 System.err.println("TheoremProverController.ask(): INVALID PROVER");
                 break;
@@ -72,12 +70,17 @@ public class TheoremProverController {
     }
 
     private ATPResult askEProver(ATPQuery query) {
-        
+        EProver eprover = new EProver(query.getKb(), query.getLanguage().name(), query.getTimeout(), query.getMaxAnswers());
+        eprover.askEProver(query.getQuery());
+        System.out.println(String.join("\n",eprover.output));
+        return eprover.getResult();
     }
 
-    // private ATPResult askLEO(ATPQuery query) {
-
-    // }
+    private ATPResult askLeo(ATPQuery query) {
+        LEO leo = new LEO(query.getKb(), query.getLanguage().name(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
+        leo.askLeo(query.getQuery());
+        return leo.getResult();
+    }
 
     private static void showHelp() {
 
@@ -104,12 +107,6 @@ public class TheoremProverController {
             return;
         }
         if (argMap.containsKey("v")) {
-            boolean closedWorldAssumption = false;
-            boolean modusPonens = false;
-            boolean dropOnePremise = false;
-            boolean holUseModals = false;
-            int timeout = 30;
-            int maxAnswers = 1;
             ATPQuery atpQuery = new ATPQuery(
                 kb, 
                 null, 
@@ -126,8 +123,26 @@ public class TheoremProverController {
                 30, 
                 1
             );
-            ATPResult atpResult = theoremProverController.ask(atpQuery);
-            System.out.println("TheoremProverController.main(): Result=\n" + atpResult.toString());
+            System.out.println("TheoremProverController.main(): Result=\n" + theoremProverController.ask(atpQuery).toString());
+        }
+        if (argMap.containsKey("e")) {
+            ATPQuery atpQuery = new ATPQuery(
+                kb, 
+                null, 
+                "(instance ?X Relation)", 
+                null, 
+                "CUSTOM",
+                "EPROVER", 
+                "FOF", 
+                null,
+                false, 
+                false, 
+                false, 
+                false, 
+                30, 
+                1
+            );
+            System.out.println("TheoremProverController.main(): Result=\n" + theoremProverController.ask(atpQuery).toString());
         }
     }
 }

@@ -30,7 +30,7 @@ import java.nio.file.Paths;
 public class EProver {
 
     /** Turn debugging on and off */
-    private static boolean debug = true;
+    private static int debug = 1;
     /** Used to create a new OS process using a command list */
     private ProcessBuilder _builder;
     /** The eprover process being built by the ProcessBuilder _builder object */
@@ -80,14 +80,19 @@ public class EProver {
      */
     public EProver(KB kb, String requestedTptpLanguage, int timeout, int maxAnswers) {
         
+        if (debug>0) System.out.printf("\nEProver(%s, %s, %d, %d)", kb.name, requestedTptpLanguage, timeout, maxAnswers);
         this.kb = kb;
         this.requestedTptpLanguage = requestedTptpLanguage;
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
         this.executablePath = KBmanager.getMgr().getPref("eprover");
-        this.kbFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + kb.name + ("tff".equals(requestedTptpLanguage) ? ".tptp" : ".tff");
-        this.tempProblemFilePath = kbFilePath + File.separator + "temp-eprover-problem.p";
-        this.commands = Arrays.asList(this.executablePath, "--cpu-limit=" + timeout);
+        this.kbFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + kb.name + ("tff".equals(requestedTptpLanguage) ? ".tff" : ".tptp");
+        this.tempProblemFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + "temp-eprover-problem.p";
+        this.commands = new ArrayList<>();
+        this.commands.add(this.executablePath);
+        this.commands.add("--cpu-limit=" + String.valueOf(timeout));
+        this.commands.add("--conjectures-are-questions");
+        this.commands.add("--answers=" + maxAnswers);
         _builder = null;
         _eprover = null;
         _reader = null;
@@ -100,12 +105,14 @@ public class EProver {
      */
     public void askEProver(String suoKifFormulas) {
 
+        if (debug>0) System.out.printf("\nEProver.askEProver(%s)", suoKifFormulas);
         if (StringUtil.isNonEmptyString(suoKifFormulas)) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processedStmts = fp.preProcess(new Formula(suoKifFormulas), true, this.kb);
             if (!processedStmts.isEmpty() && this != null) {
                 String strQuery = processedStmts.iterator().next().getFormula();
                 this.submitQuery(strQuery);
+                System.out.println("ThiNGHERE");
             }
         } else {
             System.out.println("EProver.askEProver(): suoKifFormulas empty!");
@@ -122,6 +129,7 @@ public class EProver {
      */
     public List<String> askNoProof(String suoKifFormula) {
 
+        if (debug>0) System.out.printf("\nEProver.askNoProof(%s)", suoKifFormula);
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             Formula query = new Formula();
             query.read(suoKifFormula);
@@ -149,7 +157,7 @@ public class EProver {
      */
     public String assertFormula(String formula) {
 
-        System.out.println("EProver.assertFormula(1): process: " + _eprover);
+        if (debug>0) System.out.printf("\nEProver.assertFormula(%s)", formula);
         String result = "";
         output = new ArrayList<>();
         try {
@@ -188,6 +196,7 @@ public class EProver {
      */
     public boolean assertFormula(String userAssertionTPTP, List<Formula> parsedFormulas, boolean tptp) {
 
+        if (debug>0) System.out.printf("\nEProver.assertFormula(%s, %s, %b)", userAssertionTPTP, parsedFormulas, tptp);
         System.out.println("EProver.assertFormula(2): process: " + _eprover);
         boolean allAdded = (this != null);
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
@@ -256,6 +265,7 @@ public class EProver {
      */
     public static void addBatchConfig(String inputFilename, int timeout) {
 
+        if (debug>0) System.out.printf("\nEProver.addBatchConfig(%s, %d)", inputFilename, timeout);
         String kbdir = KBmanager.getMgr().getPref("kbDir");
         File initFile = new File(kbdir, "EBatchConfig.txt");
         Set<String> ebatchfiles = new HashSet<>();
@@ -306,8 +316,9 @@ public class EProver {
      * @param formula query in the KIF syntax
      * @return answer to the query
      */
-    public String submitQuery(String formula) {
+    public void submitQuery(String formula) {
 
+        if (debug>0) System.out.printf("\nEProver.submitQuery(%s)", formula);
         long startTime = System.currentTimeMillis();
         result = new ATPResult.Builder()
             .engineName("EProver")
@@ -319,13 +330,15 @@ public class EProver {
         List<String> stderrLines = new ArrayList<>();
         String resultStr = "";
         Path tempProblemFile = null;
+        System.out.println("here0");
         try {
-            this.qlist = SUMOformulaToTPTPformula.getQlist();
-            tempProblemFile = Files.createTempFile(this.tempProblemFilePath, ".p");
+            tempProblemFile = Files.createTempFile(Paths.get(KBmanager.getMgr().getPref("kbDir")), "temp-eprover-problem", ".p");
             String problem = "include('" + kbFilePath + "').\n" + "fof(conj1,conjecture, " + SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,true) + ")." + "\n";
+            this.qlist = SUMOformulaToTPTPformula.getQlist();
+            System.out.println("\n\n\n\nEProver qlist = " + this.qlist);
             Files.writeString(tempProblemFile, problem);
             this.commands.add(tempProblemFile.toString());
-            System.out.println("EProver.submitQuery(): commands\n" + this.commands);
+            System.out.println("EProver.submitQuery(): commands\n" + String.join(" ", this.commands));
             ProcessBuilder processBuilder = new ProcessBuilder(this.commands);
             processBuilder.redirectErrorStream(false);
             Process proc = processBuilder.start();
@@ -342,12 +355,20 @@ public class EProver {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     stdoutLines.add(line);
-                    output.add(line);
+                    this.output.add(line);
                     resultStr += line + "\n";
                 }
             }
             stderrReader.join(5000);
-            int exitCode = proc.waitFor();
+            int exitCode = proc.waitFor();System.out.println("EProver exitCode = " + exitCode);
+
+            // System.out.println("EProver stdout:");
+            // for (String s : stdoutLines)
+            //     System.out.println(s);
+            System.out.println("EProver stderr:");
+            for (String s : stderrLines)
+                System.out.println(s);
+
             long elapsed = System.currentTimeMillis() - startTime;
             result.setStdout(stdoutLines);
             result.setStderr(stderrLines);
@@ -363,7 +384,6 @@ public class EProver {
                 try { Files.deleteIfExists(tempProblemFile); } catch (IOException ignored) {}
             }
         }
-        return resultStr;
     }
 
     // /***************************************************************
@@ -393,6 +413,7 @@ public class EProver {
      */
     private static String[] createCustomCommandList(File executable, int timeout, File kbFile, Collection<String> commands) {
 
+        if (debug>0) System.out.printf("\nEProver.createCustomCommandList(%s, %d, %s, %s)", executable.getName(), timeout, kbFile.getName(), commands);
         StringBuilder opts = new StringBuilder();
         for (String s : commands) opts.append(s).append(Formula.SPACE);
         if (timeout != 0) {
@@ -419,6 +440,7 @@ public class EProver {
      */
     public void runCustom(File kbFile, int timeout, Collection<String> commands) throws Exception {
 
+        if (debug>0) System.out.printf("\nEProver.runCustom(%s, %d, %s)", kbFile.getName(), timeout, commands);
         long startTime = System.currentTimeMillis();
         long timeoutMs = timeout * 1000L;
         result = new ATPResult.Builder()
@@ -503,6 +525,7 @@ public class EProver {
      */
     public void terminate() throws IOException {
 
+        if (debug>0) System.out.printf("\nEProver.terminate()");
         if (this._eprover == null) return;
         if (_eprover == null || !_eprover.isAlive()) return;
         try (_reader; _writer) {

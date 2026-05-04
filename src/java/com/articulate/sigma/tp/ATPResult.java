@@ -311,12 +311,12 @@ public class ATPResult {
             if (this.getSzsDiagnostics() != null && !this.getSzsDiagnostics().isEmpty()) html.append("SZS: " + ValidationUtils.sanitizeString((this.getSzsDiagnostics())));
             List<String> errorLines = this.getErrorLines();
             if (errorLines != null && !errorLines.isEmpty()) {
-                for (int i = 0; i < Math.min(20, errorLines.size()); i++) html.append(ValidationUtils.sanitizeString((errorLines.get(i))));
+                for (int i = 0; i < Math.min(20, errorLines.size()); i++) html.append(ValidationUtils.sanitizeString((errorLines.get(i)))).append("\n");
                 if (errorLines.size() > 20) html.append("... (" + (errorLines.size() - 20) + " more lines)");
             }
             List<String> stderr = this.getStderr();
             if (stderr != null && !stderr.isEmpty() && (errorLines == null || errorLines.isEmpty())) {
-                for (int i = 0; i < Math.min(15, stderr.size()); i++) html.append(ValidationUtils.sanitizeString((stderr.get(i))));
+                for (int i = 0; i < Math.min(15, stderr.size()); i++) html.append(ValidationUtils.sanitizeString((stderr.get(i)))).append("\n");
                 if (stderr.size() > 15) html.append("... (" + (stderr.size() - 15) + " more lines)");
             }
             html.append("</pre>");

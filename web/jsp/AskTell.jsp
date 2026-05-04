@@ -1005,6 +1005,7 @@
             for (java.util.Map.Entry<String,String> e : tpp.bindingMap.entrySet()) {
                 String var = e.getKey();
                 String raw = e.getValue();
+                System.out.println("\n\n\n\n\nAskTell Raw\n" + raw);
                 String term = com.articulate.sigma.trans.TPTP2SUMO.transformTerm(raw);
                 String kbHref = com.articulate.sigma.HTMLformatter.createKBHref(kbName, language);
                 out.println("<li><code>" + var + "</code> = "

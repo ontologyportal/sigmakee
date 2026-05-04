@@ -60,10 +60,10 @@ public class ATPQuery {
         this.query = query;
         this.testFilePath = testFilePath;
         System.out.printf("\nATPQuery(%s, %s, %s, %s)", proverType, runSource, language, vampireMode);
-        this.proverType = ATPType.valueOf(proverType.toUpperCase());
-        this.runSource = RunSource.valueOf(runSource.toUpperCase());
-        this.language = TptpLanguage.valueOf(language.toUpperCase());
-        this.vampireMode = Vampire.ModeType.valueOf(vampireMode.toUpperCase());
+        this.proverType = (proverType != null) ? ATPType.valueOf(proverType.toUpperCase()) : ATPType.VAMPIRE;
+        this.runSource = (runSource != null) ? RunSource.valueOf(runSource.toUpperCase()) : RunSource.CUSTOM;
+        this.language = (language != null) ? TptpLanguage.valueOf(language.toUpperCase()) : TptpLanguage.FOF;
+        this.vampireMode = (vampireMode != null) ? Vampire.ModeType.valueOf(vampireMode.toUpperCase()) : Vampire.ModeType.CASC;
         this.closedWorldAssumption = closedWorldAssumption;
         this.modusPonens = modusPonens;
         this.dropOnePremise = dropOnePremise;
