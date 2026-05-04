@@ -385,12 +385,7 @@ public class Vampire {
         // Determine which executable to use
         String vampex = "";
         String configKey = "vampire";
-        if (logic == Logic.HOL) {
-            vampex = KBmanager.getMgr().getPref("vampire");
-            configKey = "vampire";
-        } else {
-            vampex = KBmanager.getMgr().getPref("vampire");
-        }
+        vampex = KBmanager.getMgr().getPref("vampire");
 
         // Initialize result structure
         result = new ATPResult.Builder()

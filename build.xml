@@ -159,6 +159,9 @@
         <os family="unix"/>
     </condition>
 
+    <!-- Vampire ATP -->
+    <property name="vampire.version" value="v5.0.1"/>
+
     <!-- LEO-III (Higher-Order ATP) -->
     <property name="leo.version" value="1.7.18"/>
 
@@ -614,7 +617,6 @@ build.date=${git.commit.date}
 
         <replace file="${sigma.home}/KBs/config.xml" token="/usr/local/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests" value="${programs.dir}${file.separator}tomcat${file.separator}apache-tomcat-${tomcat.version}${file.separator}webapps${file.separator}sigma${file.separator}tests"/>
         <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/Programs/vampire/build/vampire" value="${programs.dir}${file.separator}vampire${file.separator}build${file.separator}vampire"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/Programs/vampire/build_hol/vampire" value="${programs.dir}${file.separator}vampire${file.separator}build_hol${file.separator}vampire"/>
     </target>
     <target name="sigma.config.copy.template" unless="sigma.config.exists">
         <copy tofile="${sigma.home}/KBs/config.xml"
@@ -730,6 +732,10 @@ build.date=${git.commit.date}
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
+                <arg value="--branch"/>
+                <arg value="${vampire.version}"/>
+                <arg value="--depth"/>
+                <arg value="1"/>
                 <arg value="https://github.com/vprover/vampire.git"/>
                 <arg value="${programs.dir}/vampire"/>
             </args>
@@ -757,11 +763,11 @@ build.date=${git.commit.date}
 
     <target name="build.vampire">
 
-        <echo message="=== Building HOL Vampire (branch: ahmed-new-hol) ==="/>
+        <echo message="=== Building Vampire ==="/>
 
         <exec executable="git" dir="${programs.dir}/vampire">
             <arg value="checkout"/>
-            <arg value="master"/>
+            <arg value="${vampire.version}"/>
         </exec>
 
         <!-- Normal Vampire build -->
@@ -773,46 +779,6 @@ build.date=${git.commit.date}
             <arg value="-c"/>
             <arg value="make"/>
         </exec>
-
-        <!-- Build HOL Vampire in separate directory -->
-        <echo message="=== Building HOL Vampire (branch: ahmed-new-hol) ==="/>
-
-        <!-- Switch to HOL branch -->
-        <exec executable="git" dir="${programs.dir}/vampire">
-            <arg value="checkout"/>
-            <arg value="ahmed-new-hol"/>
-        </exec>
-
-        <!-- Create HOL build directory -->
-        <mkdir dir="${programs.dir}/vampire/build_hol"/>
-
-        <!-- Configure HOL build -->
-        <!-- Configure HOL build -->
-        <exec executable="cmake" dir="${programs.dir}/vampire/build_hol" failonerror="true">
-            <arg value=".."/>
-            <arg value="-DCMAKE_BUILD_TYPE=Release"/>
-            <arg value="-DCMAKE_BUILD_HOL=On"/>
-            <arg value="-DCMAKE_DISABLE_FIND_PACKAGE_Z3=ON"/>
-        </exec>
-
-        <!-- Compile HOL Vampire -->
-        <exec executable="sh" dir="${programs.dir}/vampire/build_hol">
-            <arg value="-c"/>
-            <arg value="make"/>
-        </exec>
-
-        <!-- Copy and rename whatever is in build_hol/bin to build_hol/vampire -->
-        <copy todir="${programs.dir}/vampire/build_hol" overwrite="true">
-            <fileset dir="${programs.dir}/vampire/build_hol/bin">
-                <include name="*"/>
-            </fileset>
-            <mapper type="glob" from="*" to="vampire"/>
-        </copy>
-
-        <!-- Make sure it's executable -->
-        <chmod file="${programs.dir}/vampire/build_hol/vampire" perm="755"/>
-
-        <echo message="HOL Vampire executable created at: ${programs.dir}/vampire/build_hol/vampire"/>
 
     </target>
 
