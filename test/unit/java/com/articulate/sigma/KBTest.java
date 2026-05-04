@@ -70,22 +70,15 @@ public class KBTest extends UnitTestBase {
         String query = "(instance JohnJacob Human)";
         Vampire vamp = new Vampire(SigmaTestBase.kb, "tptp", "CASC", false, 10, 1);
         vamp.askVampire(query);
-        if (vamp != null)
-            System.out.println("testDeleteUserAssertionsAndReloadWithVampire(): results: " + vamp.output);
-        else
-            System.out.println("testDeleteUserAssertionsAndReloadWithVampire(): results: " + null);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         if (vamp != null) {
             vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
             tpp.parseProofOutput(vamp.output, query, kb, new StringBuilder());
         }
-        if (tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")))
-            System.out.println("testDeleteUserAssertionsAndReloadWithVampire(1): success");
-        else
-            System.err.println("testDeleteUserAssertionsAndReloadWithVampire(1): fail, proof size: "+ tpp.proof.size() + " '" + tpp.status + "'");
+        if (tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem"))) System.out.println("testDeleteUserAssertionsAndReloadWithVampire(1): success");
+        else System.err.println("testDeleteUserAssertionsAndReloadWithVampire(1): fail, proof size: "+ tpp.proof.size() + " '" + tpp.status + "'");
         assertTrue(tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")));
         SigmaTestBase.kb.deleteUserAssertionsAndReload();
-
         // After deleting the assertion, Vampire should NOT find a proof.
         // This can manifest as: timeout, no proof, or ProverTimeoutException
         boolean secondQueryFailed = false;
@@ -99,9 +92,7 @@ public class KBTest extends UnitTestBase {
             if (tpp1.proof == null || tpp1.proof.isEmpty() || tpp1.status.equals("Timeout")) {
                 System.out.println("testDeleteUserAssertionsAndReloadWithVampire(2): success - no proof found");
                 secondQueryFailed = true;
-            } else {
-                System.err.println("testDeleteUserAssertionsAndReloadWithVampire(2): fail, proof size: " + tpp1.proof.size() + " '" + tpp1.status + "'");
-            }
+            } else System.err.println("testDeleteUserAssertionsAndReloadWithVampire(2): fail, proof size: " + tpp1.proof.size() + " '" + tpp1.status + "'");
         } catch (ProverTimeoutException e) {
             // Expected - Vampire timed out because it can't prove something not in the KB
             System.out.println("testDeleteUserAssertionsAndReloadWithVampire(2): success - ProverTimeoutException (expected)");

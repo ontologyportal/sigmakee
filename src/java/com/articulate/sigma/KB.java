@@ -2662,6 +2662,7 @@ public class KB implements Serializable {
         Map<String, String> langFormatMap = getTermFormatMap(lang);
         return langFormatMap.get(term);
     }
+
     /*****************************************************************
      * Delete all translated user assertion files used by theorem provers.
      * This deletes every language variant, regardless of current TPTP language.
@@ -2669,7 +2670,6 @@ public class KB implements Serializable {
     public void deleteUserAssertionsForInference() {
 
         File dir = new File(KBmanager.getMgr().getPref("kbDir"));
-
         deleteFileIfExists(new File(dir, this.name + KB._userAssertionsTPTP));
         deleteFileIfExists(new File(dir, this.name + KB._userAssertionsTFF));
         deleteFileIfExists(new File(dir, this.name + KB._userAssertionsTHF));
@@ -2681,15 +2681,12 @@ public class KB implements Serializable {
     private void deleteStaleProverTempFiles() {
 
         File dir = new File(KBmanager.getMgr().getPref("kbDir"));
-
         deleteFileIfExists(new File(dir, "temp-stmt.tptp"));
         deleteFileIfExists(new File(dir, "temp-stmt.tff"));
         deleteFileIfExists(new File(dir, "temp-stmt.thf"));
-
         deleteFileIfExists(new File(dir, "temp-comb.tptp"));
         deleteFileIfExists(new File(dir, "temp-comb.tff"));
         deleteFileIfExists(new File(dir, "temp-comb.thf"));
-
         deleteFileIfExists(new File(dir, "hol_query_" + this.name + ".thf")); // optional if you use fixed HOL names
     }
 
@@ -2700,16 +2697,8 @@ public class KB implements Serializable {
     private void deleteGeneratedBaseInferenceFiles() {
 
         File dir = new File(KBmanager.getMgr().getPref("kbDir"));
-
         deleteFileIfExists(new File(dir, this.name + ".tptp"));
         deleteFileIfExists(new File(dir, this.name + ".tff"));
-
-        /*
-        * Optional. Only delete these if user assertions can affect HOL generation
-        * in your current branch.
-        */
-        // deleteFileIfExists(new File(dir, this.name + "_plain.thf"));
-        // deleteFileIfExists(new File(dir, this.name + "_modals.thf"));
     }
 
     /*****************************************************************
@@ -2717,13 +2706,9 @@ public class KB implements Serializable {
      */
     private static void deleteFileIfExists(File file) {
 
-        if (file == null)
-            return;
-
-        if (file.exists() && !file.delete()) {
-            System.err.println("Warning in KB.deleteFileIfExists(): could not delete " +
-                    file.getAbsolutePath());
-        }
+        if (file == null) return;
+        if (file.exists() && !file.delete()) 
+            System.err.println("Warning in KB.deleteFileIfExists(): could not delete " + file.getAbsolutePath());
     }
 
     /*****************************************************************
@@ -2733,7 +2718,6 @@ public class KB implements Serializable {
 
         synchronized (uaLock) {
             File kbDirectory = new File(KBmanager.getMgr().getPref("kbDir"));
-
             Iterator<String> it = constituents.iterator();
             while (it.hasNext()) {
                 String nme = it.next();
@@ -2742,7 +2726,6 @@ public class KB implements Serializable {
                     deleteFileIfExists(new File(nme));
                 }
             }
-
             deleteFileIfExists(new File(kbDirectory, this.name + _userAssertionsString));
             deleteUserAssertionsForInference();
             deleteStaleProverTempFiles();
@@ -2779,13 +2762,7 @@ public class KB implements Serializable {
         synchronized (uaLock) {
             try {
                 File kbDirectory = new File(KBmanager.getMgr().getPref("kbDir"));
-
-                /*
-                * 1. Remove user assertion constituents from the KB's constituent list
-                *    and delete their physical KIF files.
-                */
                 List<String> removedUserAssertionFiles = new ArrayList<>();
-
                 Iterator<String> it = constituents.iterator();
                 while (it.hasNext()) {
                     String cname = it.next();
@@ -2794,54 +2771,13 @@ public class KB implements Serializable {
                         it.remove();
                     }
                 }
-
-                for (String fname : removedUserAssertionFiles) {
-                    deleteFileIfExists(new File(fname));
-                }
-
-                /*
-                * 2. Also delete the default shared UserAssertions KIF file,
-                *    even if it was not present in constituents.
-                */
+                for (String fname : removedUserAssertionFiles) deleteFileIfExists(new File(fname));
                 deleteFileIfExists(new File(kbDirectory, this.name + _userAssertionsString));
-
-                /*
-                * 3. Delete translated user assertion files for all prover languages.
-                */
                 deleteUserAssertionsForInference();
-
-                /*
-                * 4. Delete stale temp prover files that may still contain old assertions.
-                */
                 deleteStaleProverTempFiles();
-
-                /*
-                * 5. Delete generated base inference files.
-                *
-                * This is important because SUMO.tptp may have been generated while
-                * user assertions were loaded. Deleting it forces clean regeneration
-                * after reload.
-                */
                 deleteGeneratedBaseInferenceFiles();
-
-                /*
-                * 6. Persist config without the UserAssertions constituent.
-                */
                 KBmanager.getMgr().writeConfiguration();
-
-                /*
-                * 7. Reload KB from the cleaned constituent list.
-                */
-                debugCheckUserAssertionCleanup("after delete before reload");
                 reload();
-                debugCheckUserAssertionCleanup("after reload before regeneration");
-                
-                /*
-                * 8. Regenerate clean prover base files after reload.
-                *
-                * Since the KB has now been reloaded without UserAssertions.kif,
-                * these regenerated files should not contain deleted user assertions.
-                */
                 synchronized (baseGenLock) {
                     TPTPGenerationManager.generateProperFile(this, "fof");
                     TPTPGenerationManager.generateProperFile(this, "tff");
