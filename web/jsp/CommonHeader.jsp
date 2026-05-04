@@ -63,23 +63,17 @@
       <TD>
         <font FACE="Arial, Helvetica" SIZE=-1><b>[&nbsp;
         <%
-            if (pageName == null || !pageName.equals("KBs"))
-                out.println("<A href=\"KBs.jsp\"><b>Home</b></A>&nbsp;|&nbsp");
-            if (kb != null && kb.eprover != null && role != null && role.equalsIgnoreCase("admin") && (pageName == null || !pageName.equals("AskTell")))
-                out.println("<a href=\"AskTell.jsp?kb=" + kbName + "&lang=" + language + "\"><b>Ask/Tell</b></a>&nbsp;|&nbsp;");
-            if (pageName == null || !pageName.equals("Graph"))
-                out.println("<A href=\"Graph.jsp?kb=" + kbName + "&term=" + term + "&inst=inst" +
-                "&lang=" + language + "\"><B>Graph</B></A>&nbsp;|&nbsp");
-            if (pageName == null || !pageName.equals("LogLearn"))
-                out.println("<A href=\"LogLearn.jsp\"><b>LogLearn</b></A>&nbsp;|&nbsp;");
-            if (role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("NLP")))
-                out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp\"><b>NLP</b></A>&nbsp;|&nbsp");
-            if (role != null && role.equalsIgnoreCase("admin") &&  (pageName == null || !pageName.equals("Prefs")))
-                out.println("<A href=\"Properties.jsp\"><b>Prefs</b></A>&nbsp;|&nbsp");
-            if (!awsMode && role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("Editor")))
-                out.println("<A href=\"Editor.jsp\"><b>Editor</b></A>&nbsp;|&nbsp;");
-            if (role != null && role.equalsIgnoreCase("admin") && (pageName == null || !pageName.equals("manageUsers"))) {
-                out.println("<A href=\"ManageUsers.jsp\"><b>Manage Users</b></A>&nbsp;|&nbsp;");
+            if (!pageName.equals("KBs")) out.println("<A href=\"KBs.jsp\"><b>Home</b></A>&nbsp;|&nbsp");
+            if (!pageName.equals("Graph")) out.println("<A href=\"Graph.jsp?kb=" + kbName + "&term=" + term + "&inst=inst" + "&lang=" + language + "\"><B>Graph</B></A>&nbsp;|&nbsp");
+            if (!pageName.equals("LogLearn")) out.println("<A href=\"LogLearn.jsp\"><b>LogLearn</b></A>&nbsp;|&nbsp;");
+            if (!pageName.equals("Editor") && !awsMode) out.println("<A href=\"Editor.jsp\"><b>Editor</b></A>&nbsp;|&nbsp;");
+            if (role.equalsIgnoreCase("user") || role.equalsIgnoreCase("admin")) {
+                if (!pageName.equals("AskTell") && kb != null) out.println("<a href=\"AskTell.jsp?kb=" + kbName + "&lang=" + language + "\"><b>Ask/Tell</b></a>&nbsp;|&nbsp;");
+                if(role.equalsIgnoreCase("admin")) {
+                    if (!pageName.equals("NLP")) out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp\"><b>NLP</b></A>&nbsp;|&nbsp");    
+                    if (!pageName.equals("Prefs")) out.println("<A href=\"Properties.jsp\"><b>Prefs</b></A>&nbsp;|&nbsp");
+                    if (!pageName.equals("manageUsers")) out.println("<A href=\"ManageUsers.jsp\"><b>Manage Users</b></A>&nbsp;|&nbsp;");
+                }
             }
         %>
         ]&nbsp;

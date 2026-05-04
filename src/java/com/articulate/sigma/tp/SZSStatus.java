@@ -58,13 +58,7 @@ public enum SZSStatus {
     /**
      * Category groupings for SZS statuses
      */
-    public enum Category {
-        SUCCESS,   // Prover successfully determined status
-        FAILURE,   // Prover did not succeed but no error occurred
-        ERROR,     // An error occurred
-        UNKNOWN    // Status could not be determined
-    }
-
+    public enum Category {SUCCESS, FAILURE, ERROR, UNKNOWN}
     private final String tptpName;
     private final Category category;
     private final String description;
@@ -78,95 +72,55 @@ public enum SZSStatus {
     /**
      * @return The TPTP standard name for this status (e.g., "Theorem", "Timeout")
      */
-    public String getTptpName() {
-        return tptpName;
-    }
+    public String getTptpName() {return tptpName;}
 
     /**
      * @return The category this status belongs to
      */
-    public Category getCategory() {
-        return category;
-    }
+    public Category getCategory() {return category;}
 
     /**
      * @return Human-readable description of this status
      */
-    public String getDescription() {
-        return description;
-    }
+    public String getDescription() {return description;}
 
     /**
      * @return true if this status indicates successful proof/determination
      */
-    public boolean isSuccess() {
-        return category == Category.SUCCESS;
-    }
+    public boolean isSuccess() {return category == Category.SUCCESS;}
 
     /**
      * @return true if this status indicates failure (timeout, resource limit, etc.)
      */
-    public boolean isFailure() {
-        return category == Category.FAILURE;
-    }
+    public boolean isFailure() {return category == Category.FAILURE;}
 
     /**
      * @return true if this status indicates an error occurred
      */
-    public boolean isError() {
-        return category == Category.ERROR;
-    }
+    public boolean isError() {return category == Category.ERROR;}
 
     /**
      * @return true if this status indicates unknown outcome
      */
-    public boolean isUnknown() {
-        return category == Category.UNKNOWN;
-    }
+    public boolean isUnknown() {return category == Category.UNKNOWN;}
 
     /**
      * Parse a string to an SZSStatus enum value.
      * Handles various formats including with/without "SZS status" prefix.
-     *
      * @param s The string to parse (case-insensitive)
      * @return The matching SZSStatus, or UNKNOWN if not recognized
      */
     public static SZSStatus fromString(String s) {
-        if (s == null || s.isEmpty()) {
-            return UNKNOWN;
-        }
 
-        // Remove common prefixes
+        if (s == null || s.isEmpty()) return UNKNOWN;
         String cleaned = s.trim();
-        if (cleaned.toLowerCase().startsWith("szs status ")) {
-            cleaned = cleaned.substring(11).trim();
-        }
-        // Handle "% SZS status Theorem for problem" format
+        if (cleaned.toLowerCase().startsWith("szs status ")) cleaned = cleaned.substring(11).trim();
         int forIndex = cleaned.toLowerCase().indexOf(" for ");
-        if (forIndex > 0) {
-            cleaned = cleaned.substring(0, forIndex).trim();
-        }
-        // Handle diagnostics after colon
+        if (forIndex > 0) cleaned = cleaned.substring(0, forIndex).trim();
         int colonIndex = cleaned.indexOf(':');
-        if (colonIndex > 0) {
-            cleaned = cleaned.substring(0, colonIndex).trim();
-        }
-
-        // Try exact match first (case-insensitive)
-        for (SZSStatus status : values()) {
-            if (status.tptpName.equalsIgnoreCase(cleaned)) {
-                return status;
-            }
-        }
-
-        // Try enum name match
-        for (SZSStatus status : values()) {
-            if (status.name().equalsIgnoreCase(cleaned)) {
-                return status;
-            }
-        }
-
-        // Handle some common variations
+        if (colonIndex > 0) cleaned = cleaned.substring(0, colonIndex).trim();
+        for (SZSStatus status : values()) if (status.tptpName.equalsIgnoreCase(cleaned)) return status;
+        for (SZSStatus status : values()) if (status.name().equalsIgnoreCase(cleaned)) return status;
         String upper = cleaned.toUpperCase().replace(" ", "_").replace("-", "_");
         switch (upper) {
             case "THM":
@@ -236,30 +190,24 @@ public enum SZSStatus {
     /**
      * Determine SZS status from process exit code and timeout flag.
      * Used when no explicit SZS status is found in output.
-     *
      * @param exitCode The process exit code
      * @param timedOut Whether the process timed out
      * @return Inferred SZSStatus
      */
     public static SZSStatus fromExitCode(int exitCode, boolean timedOut) {
-        if (timedOut) {
-            return TIMEOUT;
-        }
-        if (exitCode == 0) {
-            return UNKNOWN; // Success exit but no SZS status found
-        }
-        // Check for signal-based exit codes (128 + signal number)
-        if (exitCode > 128 && exitCode < 160) {
-            return CRASHED;
-        }
-        // Generic non-zero exit
+        
+        if (timedOut) return TIMEOUT;
+        if (exitCode == 0) return UNKNOWN;
+        if (exitCode > 128 && exitCode < 160) return CRASHED;
         return ERROR;
     }
 
     /**
-     * Get CSS class name for UI styling based on category
+     * Get CSS class name for UI styling based on category.
+     * @return The css class name for UI styling of SZS status
      */
     public String getCssClass() {
+        
         switch (category) {
             case SUCCESS:
                 return "szs-success";

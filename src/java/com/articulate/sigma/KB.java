@@ -32,7 +32,6 @@ being present in the ontology in order to function as intended.  They are:
 */
 
 /*************************************************************************************************/
-package com.articulate.sigma;
 
 /*
 Author: Adam Pease apease@articulatesoftware.com
@@ -55,6 +54,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
 
 */
+package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTHF;
@@ -102,12 +102,6 @@ import tptp_parser.TPTPFormula;
 public class KB implements Serializable {
 
     private boolean isVisible = true;
-
-    /** Eprover inference engine process for this KB. */
-    public transient EProver eprover;
-
-    /** LEO-III inference engine process for this KB. */
-    public transient LEO leo;
 
     /** The name of the knowledge base. */
     public String name;
@@ -221,6 +215,48 @@ public class KB implements Serializable {
     // Serialize any mutation of UserAssertions state (memory + disk + UA translation)
     private final Object uaLock = new Object();
 
+    /***************************************************************
+     * A HashMap for holding compiled regular expression patterns. The map is initialized
+     * by calling compilePatterns().
+     */
+    private static Map<String, List> REGEX_PATTERNS = null;
+
+    // Serialize base SUMO.<lang> regeneration decisions + generation trigger
+    // (You can also keep generation manager atomics, but this protects the policy boundary.)
+    public final Object baseGenLock = new Object();
+
+    private int counter = 0;
+
+    /****************************************************************
+     * This List is used to limit the number of warning messages logged by
+     * loadFormatMaps(lang). If an attempt to load format or termFormat values
+     * for lang is unsuccessful, the list is checked for the presence of lang.
+     * If lang is not in the list, a warning message is logged and lang is added
+     * to the list. The list is cleared whenever a constituent file is added or
+     * removed for KB, since the latter might affect the availability of format
+     * or termFormat values.
+     */
+    protected List<String> loadFormatMapsAttempted = new ArrayList<>();
+
+    private static final Set<String> TPTP_BASE_REGEN_PREDICATES = Set.of(
+        "subclass",
+        "instance",
+        "domain",
+        "domainSubclass",
+        "range",
+        "rangeSubclass",
+        "immediateInstance",
+        "immediateSubclass",
+        "subrelation",
+        "disjoint",
+        "partition",
+        "exhaustiveDecomposition",
+        "successorClass",
+        "partialOrderingOn",
+        "trichotomizingOn",
+        "totalOrderingOn",
+        "disjointDecomposition"
+    );
 
     // Helper method to expose uaLock to other classes.
     public <T> T withUserAssertionLock(java.util.concurrent.Callable<T> c) {
@@ -229,10 +265,6 @@ public class KB implements Serializable {
             catch (Exception e) { throw new RuntimeException(e); }
         }
     }
-
-    // Serialize base SUMO.<lang> regeneration decisions + generation trigger
-    // (You can also keep generation manager atomics, but this protects the policy boundary.)
-    private final Object baseGenLock = new Object();
 
     /***************************************************************
      */
@@ -278,8 +310,6 @@ public class KB implements Serializable {
     public KB(KB kbIn) throws IOException {
 
         this.isVisible = kbIn.isVisible;
-        if (kbIn.eprover != null)
-            this.eprover = kbIn.eprover;
         this.name = kbIn.name;
         if (kbIn.constituents != null)
             this.constituents = Lists.newArrayList(kbIn.constituents);
@@ -323,28 +353,6 @@ public class KB implements Serializable {
         if (kbIn.celt != null)
             this.celt = new CELT();
     }
-
-
-    private static final Set<String> TPTP_BASE_REGEN_PREDICATES = Set.of(
-            "subclass",
-            "instance",
-            "domain",
-            "domainSubclass",
-            "range",
-            "rangeSubclass",
-            "immediateInstance",
-            "immediateSubclass",
-            "subrelation",
-            "disjoint",
-            "partition",
-            "exhaustiveDecomposition",
-            "successorClass",
-            "partialOrderingOn",
-            "trichotomizingOn",
-            "totalOrderingOn",
-            "disjointDecomposition"
-    );
-
 
     /***************************************************************
      * Experimental: Utility method to perform a merge with the KB input
@@ -523,8 +531,6 @@ public class KB implements Serializable {
         returnSet.removeAll(removeSet);
         return returnSet;
     }
-
-    private int counter = 0;
 
     /** *************************************************************
      * Arity errors should already have been trapped in addConstituent() unless a
@@ -1297,7 +1303,6 @@ public class KB implements Serializable {
         else
             key = kind + "-" + term;
         List<String> alstr = formulas.get(key);
-
         tmp = keysToFormulas(alstr);
         if (tmp != null)
             result.addAll(tmp);
@@ -1327,13 +1332,8 @@ public class KB implements Serializable {
 
         List<Formula> ans = new ArrayList<>();
         Set<Formula> accumulator = new HashSet<>();
-        if (StringUtil.isNonEmptyString(relation) && StringUtil.isNonEmptyString(idxTerm) && (idxArgnum >= 0)) { // &&
-            // (idxArgnum
-            // <
-            // 7)
-
-            Set<String> relns = new HashSet<>(); // relation and
-            // subrelations
+        if (StringUtil.isNonEmptyString(relation) && StringUtil.isNonEmptyString(idxTerm) && (idxArgnum >= 0)) {
+            Set<String> relns = new HashSet<>();
             relns.add(relation);
             List<Formula> subrelForms = askWithRestriction(0, "subrelation", 2, relation);
             Formula f;
@@ -1379,8 +1379,7 @@ public class KB implements Serializable {
      * @return an ArrayList of terms (SUO-KIF constants), or an empty ArrayList
      * if no terms can be retrieved
      */
-    public List<String> getTermsViaPredicateSubsumption(String relation, int idxArgnum, String idxTerm,
-                                                             int targetArgnum, boolean useInverses, Set predicatesUsed) {
+    public List<String> getTermsViaPredicateSubsumption(String relation, int idxArgnum, String idxTerm, int targetArgnum, boolean useInverses, Set predicatesUsed) {
 
         List<String> ans = new ArrayList<>();
         if (StringUtil.isNonEmptyString(relation) && StringUtil.isNonEmptyString(idxTerm) && (idxArgnum >= 0)
@@ -1451,8 +1450,7 @@ public class KB implements Serializable {
      * @return an ArrayList of terms (SUO-KIF constants), or an empty ArrayList
      * if no terms can be retrieved
      */
-    public List<String> getTermsViaPredicateSubsumption(String relation, int idxArgnum, String idxTerm,
-                                                             int targetArgnum, boolean useInverses) {
+    public List<String> getTermsViaPredicateSubsumption(String relation, int idxArgnum, String idxTerm, int targetArgnum, boolean useInverses) {
 
         return getTermsViaPredicateSubsumption(relation, idxArgnum, idxTerm, targetArgnum, useInverses, null);
     }
@@ -1461,7 +1459,6 @@ public class KB implements Serializable {
      * Returns the
      * first SUO-KIF constant found via asks using relation and its
      * subrelations.
-     *
      * @param relation     The name of a predicate, which is assumed to be the 0th
      *                     argument of one or more atomic Formulae.
      * @param idxArgnum    The argument position occupied by term in the ground atomic
@@ -1526,8 +1523,7 @@ public class KB implements Serializable {
             working.addAll(accumulator);
             accumulator.clear();
             for (String term : working)
-                accumulator
-                        .addAll(getTermsViaPredicateSubsumption(relation, idxArgnum, term, targetArgnum, useInverses));
+                accumulator.addAll(getTermsViaPredicateSubsumption(relation, idxArgnum, term, targetArgnum, useInverses));
         }
         ans.addAll(reduced);
         return ans;
@@ -1739,6 +1735,7 @@ public class KB implements Serializable {
     public String tell(String input, String sessionId) {
 
         synchronized (uaLock) {
+
             String result = "The formula could not be added";
             KBmanager mgr = KBmanager.getMgr();
             KIFAST kif = new KIFAST(); // 1. Parse the input string via ANTLR.
@@ -1822,17 +1819,22 @@ public class KB implements Serializable {
                         else
                             switch (KBmanager.getMgr().prover) {
                                 case EPROVER:
-                                    if (debug) System.out.println("KB.tell: using eprover: " + eprover);
-                                    eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover, parsedFormulas,
-                                            !mgr.getPref("TPTP").equalsIgnoreCase("no"));
-                                    EProver.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
-                                    if (this.eprover == null)
-                                        eprover = new EProver(mgr.getPref("eprover")); // 7. Reload eprover
-                                    result += " and inference";
-                                    break;
+                                    try {
+                                        EProver eprover = new EProver(this, "tptp", 30, 1);                                    
+                                        if (debug) System.out.println("KB.tell: using eprover: " + eprover);
+                                        eprover.assertFormula(tptpfile.getCanonicalPath(), parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                                        EProver.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
+                                        result += " and inference";
+                                        break;
+                                    }
+                                    catch (IOException e) {
+                                        System.err.println(e);
+                                        return "";
+                                    }
                                 case VAMPIRE:
                                     if (debug) System.out.println("KB.tell: using vampire");
-                                    Vampire.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
+                                    Vampire vampire = new Vampire(this, "tptp", "CASC", false, 30, 1);
+                                    vampire.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
                                             !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                                     // nothing much to do since Vampire has to load it all at query time
                                     // just create a single file
@@ -1840,8 +1842,8 @@ public class KB implements Serializable {
                                     break;
                                 case LEO:
                                     if (debug) System.out.println("KB.tell: using leo");
-                                    LEO.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
-                                            !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                                    LEO leo = new LEO(this, "tptp", 10, 1, null);
+                                    leo.assertFormula(tptpfile.getCanonicalPath(),parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                                     // nothing much to do since LEO has to load it all at query time
                                     // just create a single file
                                     result += " and inference";
@@ -1893,681 +1895,6 @@ public class KB implements Serializable {
         }
     }
 
-    /***************************************************************
-     * Submits a query to the E inference engine.
-     *
-     * @param suoKifFormula The String representation of the SUO-KIF query.
-     * @param timeout       The number of seconds after which the inference engine should
-     *                      give up.
-     * @param maxAnswers    The maximum number of answers (binding sets) the inference
-     *                      engine should return.
-     * @return an instance of the EProver with results
-     */
-    public EProver askEProver(String suoKifFormula, int timeout, int maxAnswers) {
-
-        // Capture the user's selected lang IMMEDIATELY at the start of this method
-        // to avoid race conditions with background TPTP generation threads
-        final String requestedLang = SUMOKBtoTPTPKB.getLang();
-        System.out.println("KB.askEProver(): captured requestedLang=" + requestedLang);
-
-        if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            if (this.eprover == null)
-                loadEProver(requestedLang);
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-
-            // FormulaAST fast path: KIFAST → preProcessExpr → Set<Expr>
-            Set<Expr> processedExprs = null;
-            try {
-                KIFAST kifAst = new KIFAST();
-                String parseErr = kifAst.parseStatement(suoKifFormula);
-                if (parseErr == null && !kifAst.formulaMap.isEmpty()) {
-                    FormulaAST queryFA = kifAst.formulaMap.values().iterator().next();
-                    processedExprs = fp.preProcessExpr(queryFA, true, this);
-                }
-            } catch (Exception e) {
-                System.err.println("KB.askEProver(): FormulaAST path failed, using string fallback: " + e.getMessage());
-                processedExprs = null;
-            }
-            // String fallback
-            String strQuery = null;
-            if (processedExprs != null && !processedExprs.isEmpty()) {
-                strQuery = processedExprs.iterator().next().toKifString();
-            } else {
-                System.err.println("KB.askEProver(): FormulaAST path failed, using string fallback for formula: "+suoKifFormula);
-                Formula query = new Formula();
-                query.read(suoKifFormula);
-                Set<Formula> processedStmts = fp.preProcess(query, true, this);
-                if (!processedStmts.isEmpty())
-                    strQuery = processedStmts.iterator().next().getFormula();
-            }
-            if (strQuery != null && this.eprover != null) {
-                EProver.addBatchConfig(null, timeout);
-                eprover.submitQuery(strQuery, this);
-            }
-        }
-        return eprover;
-    }
-
-    /***************************************************************
-     * Submits a
-     * query to the inference engine.
-     *
-     * @param suoKifFormula The String representation of the SUO-KIF query.
-     * @param timeout       The number of seconds after which the inference engine should
-     *                      give up.
-     * @param maxAnswers    The maximum number of answers (binding sets) the inference
-     *                      engine should return.
-     * @return A String indicating the status of the ask operation.
-     */
-    public LEO askLeo(String suoKifFormula, int timeout, int maxAnswers) {
-
-        System.out.println("KB.askLeo(): query: " + suoKifFormula);
-        // Capture the user's selected lang IMMEDIATELY at the start of this method
-        // to avoid race conditions with background TPTP generation threads
-        final String requestedLang = SUMOKBtoTPTPKB.getLang();
-        System.out.println("KB.askLeo(): captured requestedLang=" + requestedLang);
-
-        try {
-            if (leo == null) {
-                leo = new LEO();
-            }
-        }
-        catch (Exception e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-//        THF thf = new THF();
-        if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            loadLeo(requestedLang);
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-
-            // FormulaAST fast path: KIFAST → preProcessExpr → Set<Expr>
-            Set<Expr> processedExprs = null;
-            try {
-                KIFAST kifAst = new KIFAST();
-                String parseErr = kifAst.parseStatement(suoKifFormula);
-                if (parseErr == null && !kifAst.formulaMap.isEmpty()) {
-                    FormulaAST queryFA = kifAst.formulaMap.values().iterator().next();
-                    processedExprs = fp.preProcessExpr(queryFA, true, this);
-                }
-            } catch (Exception e) {
-                System.err.println("KB.askLeo(): FormulaAST path failed, using string fallback: " + e.getMessage());
-                processedExprs = null;
-            }
-            // String fallback
-            Set<Formula> processedQuery = null;
-            if (processedExprs == null || processedExprs.isEmpty()) {
-                System.err.println("KB.askLeo(): FormulaAST path failed, using string fallback for formula: "+suoKifFormula);
-                Formula query = new Formula();
-                query.read(suoKifFormula);
-                processedQuery = fp.preProcess(query, true, this);
-            }
-
-            boolean hasProcessed = (processedExprs != null && !processedExprs.isEmpty())
-                    || (processedQuery != null && !processedQuery.isEmpty());
-            if (hasProcessed && this.leo != null) {
-                String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
-                String kbName = name;
-                String lang = "tff";
-                if ("fof".equals(requestedLang))
-                    lang = "tptp";
-                else
-                    SUMOtoTFAform.initOnce();
-                System.out.println("KB.askLeo(): lang: " + lang);
-                File s = new File(dir + kbName + "." + lang);
-                if (!s.exists()) {
-                    System.out.println("KB.askLeo(): no such file: " + s + ". Creating it.");
-                    KB kb = KBmanager.getMgr().getKB(kbName);
-                    KBmanager.getMgr().loadKBforInference(kb);
-                }
-                Set<String> tptpquery = new HashSet<>();
-                StringBuilder combined = new StringBuilder();
-                String lastKifStr;
-                if (processedExprs != null && !processedExprs.isEmpty()) {
-                    // FormulaAST fast path: translate Expr directly for single result
-                    if (processedExprs.size() > 1) {
-                        combined.append("(or ");
-                        for (Expr pexpr : processedExprs)
-                            combined.append(pexpr.toKifString()).append(Formula.SPACE);
-                        combined.append(Formula.RP);
-                        lastKifStr = combined.toString();
-                        String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
-                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
-                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
-                    } else {
-                        Expr pexpr = processedExprs.iterator().next();
-                        String tptpBody = ExprToTPTP.translate(pexpr, true, requestedLang);
-                        if (tptpBody == null)
-                            tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(pexpr.toKifString(), true, requestedLang);
-                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
-                        lastKifStr = pexpr.toKifString();
-                    }
-                } else {
-                    // String fallback path
-                    if (processedQuery.size() > 1) {
-                        combined.append("(or ");
-                        for (Formula p : processedQuery)
-                            combined.append(p.getFormula()).append(Formula.SPACE);
-                        combined.append(Formula.RP);
-                        lastKifStr = combined.toString();
-                        String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
-                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
-                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
-                    } else {
-                        lastKifStr = processedQuery.iterator().next().getFormula();
-                        String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
-                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
-                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
-                    }
-                }
-                StringBuilder exprQlist = ExprToTPTP.getQlist(lastKifStr);
-                try {
-                    tptpQuery = tptpquery;
-                    System.out.println("KB.askLeo(): calling with: " + s + ", " + timeout + ", " + tptpquery);
-                    System.out.println("KB.askLeo(): qlist: " + leo.qlist);
-                    LEO leo = new LEO();
-                    leo.run(this, s, timeout, tptpQuery);
-                    leo.qlist = !exprQlist.isEmpty() ? exprQlist : SUMOformulaToTPTPformula.getQlist();
-                    return leo;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            } else
-                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + suoKifFormula);
-        }
-        return leo;
-    }
-
-    /*********************************************************************************
-     * Submit a query to LEO-III with session-specific temp file isolation.
-     * Uses the shared THF base file but writes temp-comb/temp-stmt into
-     * the session directory so concurrent sessions don't collide.
-     *
-     * @param suoKifFormula The query in SUO-KIF format
-     * @param timeout Timeout in seconds
-     * @param maxAnswers Maximum number of answers
-     * @param sessionId HTTP session ID for temp file isolation (null for shared dir)
-     * @return LEO result object
-     */
-    public LEO askLeo(String suoKifFormula, int timeout, int maxAnswers, String sessionId) {
-
-        System.out.println("KB.askLeo(): query (session=" + sessionId + "): " + suoKifFormula);
-        final String requestedLang = SUMOKBtoTPTPKB.getLang();
-
-        try {
-            if (leo == null) {
-                leo = new LEO();
-            }
-        }
-        catch (Exception e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-        if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            loadLeo(requestedLang);
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-
-            // FormulaAST fast path: KIFAST → preProcessExpr → Set<Expr>
-            Set<Expr> processedExprs = null;
-            try {
-                KIFAST kifAst = new KIFAST();
-                String parseErr = kifAst.parseStatement(suoKifFormula);
-                if (parseErr == null && !kifAst.formulaMap.isEmpty()) {
-                    FormulaAST queryFA = kifAst.formulaMap.values().iterator().next();
-                    processedExprs = SessionTPTPManager.withSessionCache(
-                            sessionId, this, () -> fp.preProcessExpr(queryFA, true, this));
-                }
-            } catch (Exception e) {
-                System.err.println("KB.askLeo(): FormulaAST path failed, using string fallback: " + e.getMessage());
-                processedExprs = null;
-            }
-            // String fallback
-            Set<Formula> processedQuery = null;
-            if (processedExprs == null || processedExprs.isEmpty()) {
-                Formula query = new Formula();
-                query.read(suoKifFormula);
-                processedQuery = SessionTPTPManager.withSessionCache(
-                        sessionId, this, () -> fp.preProcess(query, true, this));
-            }
-
-            boolean hasProcessed = (processedExprs != null && !processedExprs.isEmpty())
-                    || (processedQuery != null && !processedQuery.isEmpty());
-            if (hasProcessed && this.leo != null) {
-                String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
-                String kbName = name;
-                String lang = "tff";
-                if ("fof".equals(requestedLang))
-                    lang = "tptp";
-                else
-                    SUMOtoTFAform.initOnce();
-
-                // Resolve base file: prefer session-specific TPTP if it exists
-                File s;
-                if (sessionId != null && !sessionId.isEmpty()) {
-                    Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionTPTPPath(sessionId, kbName, lang);
-                    if (Files.exists(sessionPath)) {
-                        System.out.println("KB.askLeo(): using session-specific TPTP: " + sessionPath);
-                        s = sessionPath.toFile();
-                    } else {
-                        s = new File(kbDir + kbName + "." + lang);
-                    }
-                } else {
-                    s = new File(kbDir + kbName + "." + lang);
-                }
-
-                if (!s.exists()) {
-                    if (sessionId != null && !sessionId.isEmpty()) {
-                        System.out.println("KB.askLeo(): shared base missing, generating session-specific TPTP for session " + sessionId);
-                        try {
-                            Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
-                            s = sessionPath.toFile();
-                        } catch (Exception e) {
-                            System.err.println("KB.askLeo(): failed to generate session TPTP: " + e.getMessage());
-                            e.printStackTrace();
-                            return null;
-                        }
-                    } else {
-                        System.out.println("KB.askLeo(): no such file: " + s + ". Creating it.");
-                        KB kb = KBmanager.getMgr().getKB(kbName);
-                        KBmanager.getMgr().loadKBforInference(kb);
-                    }
-                }
-                Set<String> tptpquery = new HashSet<>();
-                StringBuilder combined = new StringBuilder();
-                String lastKifStr;
-                if (processedExprs != null && !processedExprs.isEmpty()) {
-                    // FormulaAST fast path: translate Expr directly for single result
-                    if (processedExprs.size() > 1) {
-                        combined.append("(or ");
-                        for (Expr pexpr : processedExprs)
-                            combined.append(pexpr.toKifString()).append(Formula.SPACE);
-                        combined.append(Formula.RP);
-                        lastKifStr = combined.toString();
-                        String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
-                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
-                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
-                    } else {
-                        Expr pexpr = processedExprs.iterator().next();
-                        String tptpBody = ExprToTPTP.translate(pexpr, true, requestedLang);
-                        if (tptpBody == null)
-                            tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(pexpr.toKifString(), true, requestedLang);
-                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
-                        lastKifStr = pexpr.toKifString();
-                    }
-                } else {
-                    // String fallback path
-                    if (processedQuery.size() > 1) {
-                        combined.append("(or ");
-                        for (Formula p : processedQuery)
-                            combined.append(p.getFormula()).append(Formula.SPACE);
-                        combined.append(Formula.RP);
-                        lastKifStr = combined.toString();
-                        String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
-                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
-                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
-                    } else {
-                        lastKifStr = processedQuery.iterator().next().getFormula();
-                        String tptpBody = ExprToTPTP.translateKifString(lastKifStr, true, requestedLang);
-                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(lastKifStr, true, requestedLang);
-                        tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
-                    }
-                }
-                StringBuilder exprQlist = ExprToTPTP.getQlist(lastKifStr);
-                try {
-                    tptpQuery = tptpquery;
-                    LEO leoInst = new LEO();
-                    leoInst.run(this, s, timeout, tptpQuery, sessionId);
-                    leoInst.qlist = !exprQlist.isEmpty() ? exprQlist : SUMOformulaToTPTPformula.getQlist();
-                    return leoInst;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            } else
-                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + suoKifFormula);
-        }
-        return leo;
-    }
-
-    /***************************************************************
-     * Submits a
-     * query to the inference engine.
-     *
-     * @param suoKifFormula The String representation of the SUO-KIF query.
-     * @param timeout       The number of seconds after which the inference engine should
-     *                      give up.
-     * @param maxAnswers    The maximum number of answers (binding sets) the inference
-     *                      engine should return.
-     * @return A String indicating the status of the ask operation.
-     */
-    public Vampire askVampire(String suoKifFormula, int timeout, int maxAnswers) {
-
-        System.out.println("\n============ Normal Vampire Run =============");
-        // Capture the user's selected lang IMMEDIATELY at the start of this method
-        // to avoid race conditions with background TPTP generation threads
-        final String requestedLang = SUMOKBtoTPTPKB.getLang();
-        System.out.println("[Vampire] Query started | lang=" + requestedLang + " ---");
-
-        if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            loadVampire(requestedLang);
-            Formula query = new Formula();
-            query.read(suoKifFormula);
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = fp.preProcess(query, true, this);
-            if (!processedStmts.isEmpty()) {
-                String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
-                String kbName = name;
-                // Use the captured requestedLang instead of reading from static field again
-                String lang = "tff";
-                if ("fof".equals(requestedLang))
-                    lang = "tptp";
-                else
-                    SUMOtoTFAform.initOnce();
-                File s = new File(dir + kbName + "." + lang);
-                if (!s.exists()) {
-                    System.out.println("[Vampire] TPTP file missing, regenerating: " + s);
-                    KB kb = KBmanager.getMgr().getKB(kbName);
-                    KBmanager.getMgr().loadKBforInference(kb);
-                }
-                else {
-                    Set<String> tptpquery = new HashSet<>();
-                    StringBuilder combined = new StringBuilder();
-                    if (processedStmts.size() > 1) {
-                        combined.append("(or ");
-                        for (Formula p : processedStmts) {
-                            combined.append(p.getFormula()).append(Formula.SPACE);
-                        }
-                        combined.append(Formula.RP);
-                        // Use captured requestedLang to avoid race conditions with background TPTP generation
-                        String kifStr = combined.toString();
-                        String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
-                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
-                        String theTPTPstatement = requestedLang + "(query_0,conjecture,(" + tptpBody + ")).";
-                        tptpquery.add(theTPTPstatement);
-                    }
-                    else {
-                        // Use captured requestedLang to avoid race conditions with background TPTP generation
-                        String kifStr = processedStmts.iterator().next().getFormula();
-                        String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
-                        if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
-                        String theTPTPstatement = requestedLang + "(query_0,conjecture,(" + tptpBody + ")).";
-                        tptpquery.add(theTPTPstatement);
-                    }
-                    try {
-                        tptpQuery = tptpquery;
-                        Vampire vampire = new Vampire();
-                        if (Vampire.mode == null) {
-                            if (!StringUtil.emptyString(System.getenv("VAMPIRE_OPTS")))
-                                Vampire.mode = Vampire.ModeType.CUSTOM;
-                            else
-                                Vampire.mode = Vampire.ModeType.CASC;
-                        }
-                        System.out.println("[Vampire] Running | file=" + s.getName() + " | timeout=" + timeout + "s | mode=" + Vampire.mode);
-                        vampire.run(this, s, timeout, tptpquery);
-                        System.out.println("--- [Vampire] Done ---");
-                        return vampire;
-                    } catch (ATPException e) {
-                        throw e; // preserve type + payload
-                    } catch (Exception e) {
-                        throw new ATPException("Vampire execution failed", e.getMessage());
-                    }
-                    //vampire.terminate();
-                }
-            }
-            else
-                System.err.println("Error in KB.askVampire(): no TPTP formula translation for query: " + query);
-        }
-
-        return null;
-    }
-
-    /*********************************************************************************
-     * Submit a query to Vampire with session-specific temp file isolation.
-     * Uses the shared TPTP base file but writes temp-comb/temp-stmt into
-     * the session directory so concurrent sessions don't collide.
-     *
-     * @param suoKifFormula The query in SUO-KIF format
-     * @param timeout Timeout in seconds
-     * @param maxAnswers Maximum number of answers
-     * @param sessionId HTTP session ID for temp file isolation (null for shared dir)
-     * @return Vampire result object
-     */
-    public Vampire askVampire(String suoKifFormula, int timeout, int maxAnswers, String sessionId) {
-
-        final String requestedLang = SUMOKBtoTPTPKB.getLang();
-        System.out.println("[Vampire] Query started | lang=" + requestedLang + " | session=" + sessionId + " ---");
-
-        if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            loadVampire(requestedLang);
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-
-            // FormulaAST fast path: KIFAST → preProcessExpr → Set<Expr>
-            Set<Expr> processedExprs = null;
-            try {
-                KIFAST kifAst = new KIFAST();
-                String parseErr = kifAst.parseStatement(suoKifFormula);
-                if (parseErr == null && !kifAst.formulaMap.isEmpty()) {
-                    FormulaAST queryFA = kifAst.formulaMap.values().iterator().next();
-                    processedExprs = SessionTPTPManager.withSessionCache(
-                            sessionId, this, () -> fp.preProcessExpr(queryFA, true, this));
-                }
-            } catch (Exception e) {
-                System.err.println("KB.askVampire(): FormulaAST path failed, using string fallback: " + e.getMessage());
-                processedExprs = null;
-            }
-            // String fallback path (TFF mode or AST path unavailable/empty)
-            Set<Formula> processedStmts = null;
-            if (processedExprs == null || processedExprs.isEmpty()) {
-                System.err.println("KB.askVampire(): FormulaAST path failed, using string fallback, for formula: "+suoKifFormula);
-                Formula query = new Formula();
-                query.read(suoKifFormula);
-                processedStmts = SessionTPTPManager.withSessionCache(
-                        sessionId, this, () -> fp.preProcess(query, true, this));
-            }
-
-            boolean hasProcessed = (processedExprs != null && !processedExprs.isEmpty())
-                    || (processedStmts != null && !processedStmts.isEmpty());
-            if (hasProcessed) {
-                String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
-                String kbName = name;
-                String lang = "tff";
-                if ("fof".equals(requestedLang))
-                    lang = "tptp";
-                else
-                    SUMOtoTFAform.initOnce();
-
-                // Resolve base file: prefer session-specific TPTP if it exists
-                File baseFile;
-                if (sessionId != null && !sessionId.isEmpty()) {
-                    Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionTPTPPath(sessionId, kbName, lang);
-                    if (Files.exists(sessionPath)) {
-                        System.out.println("[Vampire] Using session TPTP: " + sessionPath.getFileName());
-                        baseFile = sessionPath.toFile();
-                    } else {
-                        baseFile = new File(kbDir + kbName + "." + lang);
-                    }
-                } else {
-                    baseFile = new File(kbDir + kbName + "." + lang);
-                }
-
-                if (!baseFile.exists()) {
-                    if (sessionId != null && !sessionId.isEmpty()) {
-                        // Generate to session dir instead of polluting shared folder
-                        // (in-memory KB may contain user assertions from tell())
-                        System.out.println("[Vampire] Shared base missing, generating session TPTP");
-                        try {
-                            Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
-                            baseFile = sessionPath.toFile();
-                        } catch (Exception e) {
-                            System.err.println("KB.askVampire(): failed to generate session TPTP: " + e.getMessage());
-                            e.printStackTrace();
-                            return null;
-                        }
-                    } else {
-                        System.out.println("[Vampire] TPTP file missing, regenerating: " + baseFile);
-                        KB kb = KBmanager.getMgr().getKB(kbName);
-                        KBmanager.getMgr().loadKBforInference(kb);
-                    }
-                }
-                {
-                    Set<String> tptpquery = new HashSet<>();
-                    StringBuilder combined = new StringBuilder();
-                    if (processedExprs != null && !processedExprs.isEmpty()) {
-                        // FormulaAST fast path: translate Expr directly (no re-parse for single result)
-                        if (processedExprs.size() > 1) {
-                            combined.append("(or ");
-                            for (Expr pexpr : processedExprs) {
-                                combined.append(pexpr.toKifString()).append(Formula.SPACE);
-                            }
-                            combined.append(Formula.RP);
-                            String kifStr = combined.toString();
-                            String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
-                            if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
-                            tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
-                        } else {
-                            Expr pexpr = processedExprs.iterator().next();
-                            String tptpBody = ExprToTPTP.translate(pexpr, true, requestedLang);
-                            if (tptpBody == null)
-                                tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(pexpr.toKifString(), true, requestedLang);
-                            tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
-                        }
-                    } else {
-                        // String fallback path
-                        if (processedStmts.size() > 1) {
-                            combined.append("(or ");
-                            for (Formula p : processedStmts) {
-                                combined.append(p.getFormula()).append(Formula.SPACE);
-                            }
-                            combined.append(Formula.RP);
-                            String kifStr = combined.toString();
-                            String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
-                            if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
-                            tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
-                        } else {
-                            String kifStr = processedStmts.iterator().next().getFormula();
-                            String tptpBody = ExprToTPTP.translateKifString(kifStr, true, requestedLang);
-                            if (tptpBody == null) tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, requestedLang);
-                            tptpquery.add(requestedLang + "(query_0,conjecture,(" + tptpBody + ")).");
-                        }
-                    }
-                    try {
-                        tptpQuery = tptpquery;
-                        Vampire vampire = new Vampire();
-                        if (Vampire.mode == null) {
-                            if (!StringUtil.emptyString(System.getenv("VAMPIRE_OPTS")))
-                                Vampire.mode = Vampire.ModeType.CUSTOM;
-                            else
-                                Vampire.mode = Vampire.ModeType.CASC;
-                        }
-                        System.out.println("[Vampire] Running | file=" + baseFile.getName() + " | timeout=" + timeout + "s | mode=" + Vampire.mode);
-                        vampire.run(this, baseFile, timeout, tptpquery, sessionId);
-                        System.out.println("--- [Vampire] Done ---");
-                        return vampire;
-                    } catch (ATPException e) {
-                        throw e;
-                    } catch (Exception e) {
-                        throw new ATPException("Vampire execution failed", e.getMessage());
-                    }
-                }
-            }
-            else
-                System.err.println("Error in KB.askVampire(): no TPTP formula translation for query: " + suoKifFormula);
-        }
-
-        return null;
-    }
-
-
-
-    /*********************************************************************************
-     * Ask Vampire for a TQ (test query) with session-specific TPTP file isolation.
-     *
-     * When sessionId is provided and regeneration is required (due to schema-changing
-     * assertions like subclass, domain, etc.), a session-specific TPTP file is generated
-     * instead of modifying the shared base file.
-     *
-     * @param suoKifFormula The query in SUO-KIF format
-     * @param timeout Timeout in seconds
-     * @param maxAnswers Maximum number of answers
-     * @param modensPonens Whether to use modus ponens mode
-     * @param sessionId HTTP session ID for isolation (null to use shared base)
-     * @return Vampire result object
-     */
-    public Vampire askVampireForTQ(String suoKifFormula, int timeout, int maxAnswers,
-                                   boolean modensPonens, String sessionId) {
-
-        // capture per-request to avoid races
-        final String requestedLang = SUMOKBtoTPTPKB.getLang();          // typically "fof" or "tff"
-        final String lang = "fof".equals(requestedLang) ? "tptp" : "tff";
-
-        // For session-specific TQ tests, decide whether to generate/merge session files.
-        if (sessionId != null && !sessionId.isEmpty()) {
-            // Read and clear the batch flag (one-shot): non-null → came from a batch tell loop
-            Boolean batchFlag = SessionTPTPManager.consumeBatchFlag(sessionId);
-            if (batchFlag != null) {
-                // ── Batch context ──────────────────────────────────────────────────
-                try {
-                    if (Boolean.TRUE.equals(batchFlag)) {
-                        // Case B/default tells were deferred → one full regen now
-                        System.out.println("INFO askVampireForTQ(): deferred regen (Case B/default tells present) for session " + sessionId);
-                        SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
-                    } else {
-                        // batchFlag == false → only Case A patches were applied → session TPTP is current
-                        // (calling mergeBaseWithSessionUA here would be WRONG: it would overwrite patches
-                        //  with the shared base, causing conflicting axioms for domain/range tells)
-                        System.out.println("INFO askVampireForTQ(): patches current, skipping regen for session " + sessionId);
-                    }
-                }
-                catch (Exception e) {
-                    System.err.println("ERROR askVampireForTQ(): Failed to generate session TPTP: " + e.getMessage());
-                    e.printStackTrace();
-                    // Fall back to shared base (askVampire will use shared TPTP)
-                }
-            } else {
-                // ── Non-batch context: original behaviour ──────────────────────────
-                boolean mustRegenBase = tqRequiresBaseRegeneration(sessionId);
-                Path sessionUAPath = SessionTPTPManager.getSessionUAPath(sessionId, this.name);
-                boolean hasSessionUA = java.nio.file.Files.exists(sessionUAPath);
-                if (mustRegenBase || hasSessionUA) {
-                    try {
-                        if (mustRegenBase) {
-                            // Full base regeneration required (schema/transitive changes)
-                            System.out.println("INFO askVampireForTQ(): Session-specific base regen for session " + sessionId);
-                            SessionTPTPManager.generateSessionTPTP(sessionId, this, lang);
-                        } else {
-                            // Only UA files changed - fast merge instead of full regen
-                            System.out.println("INFO askVampireForTQ(): Merging shared base with session UA for session " + sessionId);
-                            SessionTPTPManager.mergeBaseWithSessionUA(sessionId, this, lang);
-                        }
-                    }
-                    catch (Exception e) {
-                        System.err.println("ERROR askVampireForTQ(): Failed to generate/merge session TPTP: " + e.getMessage());
-                        e.printStackTrace();
-                        // Fall back to shared base (askVampire will use shared TPTP)
-                    }
-                }
-            }
-        } else {
-            // No session ID - modify shared base (old behavior)
-            boolean mustRegenBase = tqRequiresBaseRegeneration(null);
-            if (mustRegenBase) {
-                System.out.println("INFO askVampireForTQ(): FULL base regen required -> regenerating "
-                        + this.name + "." + lang
-                        + " (current TQ assertions require base retranslation)");
-                synchronized (baseGenLock) {
-                    TPTPGenerationManager.generateProperFile(this, lang);  // rebuild SUMO.<lang>
-                }
-            }
-        }
-
-        // Run prover — askVampire internally resolves session-specific TPTP files
-        return modensPonens
-                ? askVampireModensPonens(suoKifFormula, timeout, maxAnswers, sessionId)
-                : askVampire(suoKifFormula, timeout, maxAnswers, sessionId);
-    }
-
-
     /** ***************************************************************
      * Return true if THIS input (about to be told) requires base regen.
      */
@@ -2584,8 +1911,6 @@ public class KB implements Serializable {
         return requiresBaseRegenForFormulas(
                 (java.util.Collection<Formula>)(java.util.Collection<?>)kif.formulaMap.values());
     }
-
-
 
     /** ***************************************************************
      * Decide if a set of formulas requires full base regen (SUMO.<lang>).
@@ -2624,8 +1949,8 @@ public class KB implements Serializable {
      * Conservative v1: rebuild on schema changes or ground transitive facts.
      * Defaults to checking shared UA file (backward compatible).
      */
-    public boolean tqRequiresBaseRegeneration() {
-        return tqRequiresBaseRegeneration(null);
+    public boolean testQueryRequiresBaseRegeneration() {
+        return testQueryRequiresBaseRegeneration(null);
     }
 
     /** ***************************************************************
@@ -2635,7 +1960,7 @@ public class KB implements Serializable {
      * @param sessionId Optional HTTP session ID for session-specific UA files.
      *                  If null or empty, checks shared UA file.
      */
-    public boolean tqRequiresBaseRegeneration(String sessionId) {
+    public boolean testQueryRequiresBaseRegeneration(String sessionId) {
 
         File uaKif;
         if (sessionId != null && !sessionId.isEmpty()) {
@@ -2657,457 +1982,6 @@ public class KB implements Serializable {
         if (ua == null || ua.formulaMap == null || ua.formulaMap.isEmpty()) return false;
 
         return requiresBaseRegenForFormulas(ua.formulaMap.values());
-    }
-
-    /** ***************************************************************
-     * Backward-compatible wrapper for askVampireModensPonens with no session isolation.
-     */
-    public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers) {
-        return askVampireModensPonens(suoKifFormula, timeout, maxAnswers, (String) null);
-    }
-
-    /*********************************************************************************
-     * Vampire Modus Ponens with session-specific isolation.
-     *
-     * STEPS:
-     * 1 - AskVampire to get the first output
-     * 2 - Process the output to keep only the authored axioms
-     * 3 - Send new command to vampire with Modens Ponens options
-     * 4 - If wanted drop the one premise formulas.
-     * 5 - Replace the new proof's infRules with the original ones.
-     * 6 - Return Vampire object for further processing from AskTell.jsp
-     *
-     * @param suoKifFormula The query in SUO-KIF format
-     * @param timeout Timeout in seconds
-     * @param maxAnswers Maximum number of answers
-     * @param sessionId HTTP session ID for temp file isolation (null for shared dir)
-     * @return Vampire result object
-     */
-    public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers, String sessionId) {
-
-        System.out.println("\n============ Modens Ponens Vampire Run =============");
-        System.out.println("--- [Vampire+MP] Query started | session=" + sessionId + " ---");
-        // STEP 1 - use session-aware askVampire
-        Vampire vampire_initial = askVampire(suoKifFormula, timeout, maxAnswers, sessionId);
-        // STEPS 2-6
-        return modensPonensPostProcess(vampire_initial, timeout);
-    }
-
-    /*********************************************************************************
-     * Post-process an initial Vampire result with Modus Ponens reasoning.
-     * Extracts authored axioms, re-runs Vampire with MP options, optionally drops
-     * one-premise formulas, and replaces inference rules.
-     */
-    private Vampire modensPonensPostProcess(Vampire vampireInitial, int timeout) {
-
-        // STEP 2
-        List<TPTPFormula> proof = TPTPutil.processProofLines(vampireInitial.output);
-        List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
-        System.out.println("[Vampire+MP] Pass 1 complete | authored axioms: " + authored_lines.size());
-
-        // STEP 3
-        Vampire vampire_pomens = new Vampire();
-        File kb = new File("min-problem.tptp");
-
-        //vampire --mode vampire --forced_options av=off:nm=0:bce=off:updr=off:fde=none:rp=off --proof tptp -m 16384 -t %d %s
-        List<String> cmds = new ArrayList<>(Arrays.asList(
-                "--input_syntax","tptp",
-                "--proof","tptp",
-                "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                "-fde","none","-updr","off","-rp","off","-bce","off"
-        ));
-        if (Vampire.askQuestion){
-            cmds.add("-qa");
-            cmds.add("plain");
-        }
-
-        System.out.println("[Vampire+MP] Pass 2: modus ponens refinement");
-        try{
-            vampire_pomens.runCustom(kb, timeout, cmds);
-            vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
-        } catch (ATPException e){
-            throw e;
-        } catch (Exception e){
-            throw new ATPException("Vampire ModensPonens execution failed: " + e.getMessage(), "Vampire");
-        }
-
-        // STEP 4
-        if (dropOnePremiseFormulas)
-            vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
-
-        // STEP 5
-        vampire_pomens.output = TPTPutil.replaceFOFinfRule(vampire_pomens.output, authored_lines);
-        System.out.println("--- [Vampire+MP] Done ---");
-
-        // STEP 6
-        return vampire_pomens;
-    }
-
-    /** ***************************************************************
-     * Executes a Vampire theorem prover query on a given TPTP problem file.
-     * This method validates included files in TPTP format, processes the result
-     * by running multiple configurations of Vampire, and optionally applies
-     * modus ponens reasoning or drops one-premise formulas.
-     *
-     * @param test_path The file path to the TPTP problem file to be processed.
-     * @param timeout The maximum amount of time (in seconds) allowed for the inference process.
-     * @param maxAnswers The maximum number of answers to retrieve from the theorem prover.
-     * @return A Vampire object containing the results of the theorem prover execution, including output and proofs.
-     */
-    public Vampire askVampireTPTP(String test_path, int timeout, int maxAnswers){
-
-        String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
-        String includesPath = testDir + File.separator + "includes";
-
-        File test = new File(test_path);
-        List<String> includes = TPTPutil.extractIncludesFromTPTP(test);
-
-        if (!includes.isEmpty()) {
-            String error = TPTPutil.validateIncludesInTPTPFiles(includes, includesPath);
-            if (error != null) {
-                System.err.println(error);
-            }
-        }
-
-        List<String> cmds = new ArrayList<>(Arrays.asList(
-                "--input_syntax", "tptp",
-                "--proof", "tptp"   // <-- TSTP-style proof lines
-        ));
-
-        if (Vampire.askQuestion){
-            cmds.add(" -qa");
-            cmds.add("plain");
-        }
-
-        if (!includes.isEmpty()){
-            cmds.add("--include");
-            cmds.add(includesPath);
-        }
-
-        // First TPTP pass (main proof)
-        Vampire vampire = new Vampire();
-
-        try{
-            vampire.runCustom(test, timeout, cmds);
-        } catch (ATPException e){
-            throw e; // Preserve type + payload for proper error handling in UI
-        } catch (Exception e){
-            throw new ATPException("Vampire TPTP execution failed: " + e.getMessage(), "Vampire");
-        }
-
-        // Second TPTP pass (modus Ponens)
-        if (modensPonens) {
-            List<String> cmds_modus_ponens = Arrays.asList(
-                    "--input_syntax","tptp",
-                    "--proof","tptp",                  // <-- TSTP-style proof lines
-                    "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                    "-fde","none","-updr","off","-rp","off","-bce","off",
-                    "-qa","plain"
-            );
-            List<TPTPFormula> proof = TPTPutil.processProofLines(vampire.output);
-            List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
-            Vampire vampire_pomens = new Vampire();
-            File kb = new File("min-problem.tptp");
-            try{
-                vampire_pomens.runCustom(kb, timeout, cmds_modus_ponens);
-                vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
-            } catch (ATPException e){
-                throw e; // Preserve type + payload for proper error handling in UI
-            } catch (Exception e){
-                throw new ATPException("Vampire ModusPonens in TPTP execution failed: " + e.getMessage(), "Vampire");
-            }
-
-            // Drop One Premise Formulas
-            if (dropOnePremiseFormulas) {
-                vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
-            }
-
-            vampire = vampire_pomens;
-        }
-        return vampire;
-    }
-
-    /** ***************************************************************
-     * Executes the Vampire automated theorem prover with higher-order logic (HOL) mode
-     * on a given THF problem file. This method processes the includes
-     * and runs the Vampire prover with the specified parameters.
-     *
-     * @param test_path The file path of the TPTP problem to be processed.
-     * @param timeout The maximum amount of time (in seconds) that Vampire is allowed to run.
-     * @param maxAnswers The maximum number of answers that Vampire should produce (not currently used in logic).
-     * @return A Vampire instance populated with the results of the proof attempt.
-     */
-    public Vampire askVampireTHF(String test_path, int timeout, int maxAnswers) {
-
-        String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
-        String includesPath = testDir + File.separator + "includes";
-
-        File test = new File(test_path);
-        List<String> includes = TPTPutil.extractIncludesFromTPTP(test);
-
-        if (!includes.isEmpty()) {
-            String error = TPTPutil.validateIncludesInTPTPFiles(includes, includesPath);
-            if (error != null) {
-                System.err.println(error);
-            }
-        }
-
-        List<String> cmds = new ArrayList<>(Arrays.asList(
-                "--input_syntax", "tptp",
-                "--proof", "tptp",   // <-- TSTP-style proof lines
-                "--output_axiom_names","on"
-//                "--mode","portfolio"
-//                "--schedule","snake_slh"
-        ));
-
-        // This HOL Vampire version (4.8) does not support "-qa plain"
-        if (!includes.isEmpty()){
-            cmds.add("--include");
-            cmds.add(includesPath);
-        }
-
-        Vampire vampire = new Vampire();
-        vampire.logic = Vampire.Logic.HOL;
-        try{
-            vampire.runCustom(test, timeout, cmds);
-        } catch (ATPException e){
-            throw e; // Preserve type + payload for proper error handling in UI
-        } catch (Exception e){
-            throw new ATPException("Vampire THF execution failed: " + e.getMessage(), "Vampire");
-        }
-        return vampire;
-    }
-
-    /** ***************************************************************
-     * Ask Vampire HOL using the existing <kbName>.thf axioms.
-     * Input  : SUO-KIF query string (stmt).
-     * Output : Vampire object with HOL proof output.
-     */
-    public Vampire askVampireHOL(String stmt, int timeout, int maxAnswers, boolean useModals) {
-
-        KBmanager mgr = KBmanager.getMgr();
-        Vampire v = new Vampire();
-
-        if (useModals)
-            System.out.println("==== Using Modals/HOL mode ====");
-        else
-            System.out.println("==== Using plain HOL mode ====");
-
-        try {
-            String kbDir = mgr.getPref("kbDir");
-            String sep   = File.separator;
-
-            if (debug) {
-                System.out.println("KB.askVampireHOL(): kbDir: " + kbDir);
-                System.out.println("KB.askVampireHOL(): stmt: " + stmt);
-                System.out.println("KB.askVampireHOL(): timeout: " + timeout + " maxAnswers: " + maxAnswers);
-            }
-
-            // -------- 1. Ensure base <kb>.thf exists (modal vs plain) --------
-            String kbThfFile = "";
-            if (useModals) {
-                kbThfFile = this.name + "_modals.thf";
-            }else{
-                kbThfFile = this.name + "_plain.thf";
-            }
-
-            String kbThfPath = kbDir + sep + kbThfFile;
-            File thfAxioms = new File(kbThfPath);
-            if (!thfAxioms.exists()) {
-                System.out.println("KB.askVampireHOL(): no such file: " + kbThfPath + ". Waiting for background generation or creating it.");
-                // Wait for background THF generation if in progress, otherwise generate synchronously
-                if (useModals) {
-                    if (!TPTPGenerationManager.waitForTHFModal(600)) {
-                        System.out.println("KB.askVampireHOL(): Background generation not ready, generating THF Modal synchronously");
-                        THFnew.transModalTHF(this);
-                    }
-                } else {
-                    if (!TPTPGenerationManager.waitForTHFPlain(600)) {
-                        System.out.println("KB.askVampireHOL(): Background generation not ready, generating THF Plain synchronously");
-                        THFnew.transPlainTHF(this);
-                    }
-                }
-            }
-
-            // -------- 2. Create problem file: axioms + conjecture --------
-            // TODO: Remove the file after DEBUG phase
-            String problemPath = kbDir + sep + "hol_query_" + System.currentTimeMillis() + ".thf";
-            if (debug)
-                System.out.println("KB.askVampireHOL(): Problem THF file: " + problemPath);
-
-            // 1) Copy SUMO.thf to the problem file in one shot
-            Path source = Paths.get(kbThfPath);
-            Path target = Paths.get(problemPath);
-            Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-
-            if (debug)
-                System.out.println("KB.askVampireHOL(): Copied axioms to problem file.");
-
-            // -------- 3. Parse SUO-KIF query using FormulaAST (Expr-based) --------
-            SuokifVisitor sv = SuokifVisitor.parseSentence(stmt);
-            if (sv.result.isEmpty()) {
-                System.err.println("KB.askVampireHOL(): failed to parse query: " + stmt);
-                return v;
-            }
-            FormulaAST fa = sv.result.get(0);
-            if (fa.expr == null) {
-                System.err.println("KB.askVampireHOL(): null expr for query: " + stmt);
-                return v;
-            }
-            if (debug)
-                System.out.println("KB.askVampireHOL(): parsed expr: " + fa.expr.toKifString());
-
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-            Map<String, Set<String>> typeMap = new HashMap<>();
-
-            // -------- 4. Preprocess and build typeMap --------
-            Set<Expr> processed;
-            if (useModals) {
-                // Step 4a: modal pass on the original expr for type info only
-                Map.Entry<Expr, Map<String, Set<String>>> modalResult =
-                        Modals.processModalsExpr(fa.expr, this);
-                Expr resExpr = modalResult.getKey();
-                if (resExpr == null) {
-                    System.err.println("KB.askVampireHOL(): processModalsExpr returned null for: " + stmt);
-                    return v;
-                }
-                if (debug)
-                    System.out.println("KB.askVampireHOL(): modalized expr (type-info pass): " + resExpr.toKifString());
-
-                // Step 4b: preprocess the ORIGINAL fa (not the modalized one)
-                processed = fp.preProcessExpr(fa, true, this);
-                if (processed == null || processed.isEmpty()) {
-                    System.err.println("KB.askVampireHOL(): preProcessExpr returned empty for: " + stmt);
-                    return v;
-                }
-
-                // Step 4c: build typeMap from modalized expr + world-var types
-                typeMap.putAll(fp.findTypeRestrictionsExpr(resExpr, this));
-                typeMap.putAll(modalResult.getValue());
-                String primaryWorldVar = Modals.makeWorldVarExpr(fa.expr);
-                typeMap.put(primaryWorldVar, new HashSet<>(Collections.singleton("World")));
-                Modals.markModalAttributeFormulaVarsExpr(fa.expr, typeMap);
-
-                if (debug)
-                    System.out.println("KB.askVampireHOL(): typeMap: " + typeMap);
-            } else {
-                // Non-modal path
-                processed = fp.preProcessExpr(fa, true, this);
-                if (processed == null || processed.isEmpty()) {
-                    System.err.println("KB.askVampireHOL(): preProcessExpr returned empty for: " + stmt);
-                    return v;
-                }
-                typeMap.putAll(fp.findTypeRestrictionsExpr(fa.expr, this));
-            }
-
-            if (debug)
-                System.out.println("KB.askVampireHOL(): preprocessed exprs: " + processed.size());
-
-            try (BufferedWriter out = new BufferedWriter(new FileWriter(problemPath, true))) {
-
-                out.newLine();
-                out.write("% -------------------- User HOL conjecture --------------------\n");
-
-                // -------- 5. Translate each preprocessed Expr to THF --------
-                int conjIndex = 0;
-                for (Expr e : processed) {
-                    if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(e)) continue;
-
-                    String thfQuery;
-                    if (useModals) {
-                        // Apply modal rewrite to this preprocessed expr
-                        Map.Entry<Expr, Map<String, Set<String>>> fmodalResult =
-                                Modals.processModalsExpr(e, this);
-                        Expr fmodal = fmodalResult.getKey();
-                        if (fmodal == null) continue;
-                        thfQuery = ExprToTHF.translate(fmodal, true, typeMap);
-                    } else {
-                        thfQuery = ExprToTHF.translateNonModal(e, true, typeMap);
-                    }
-
-                    if (thfQuery == null || thfQuery.isEmpty()) continue;
-                    String conjName = "user_conj_" + (conjIndex++);
-                    String final_query = "thf(" + conjName + ",conjecture," + thfQuery + ").\n";
-                    out.write(final_query);
-                    if (debug)
-                        System.out.println("KB.askVampireHOL(): final query: " + final_query);
-                }
-            }
-            // -------- 6. Actually call Vampire on problemPath (unchanged) --------
-            if (debug)
-                System.out.println("------ KB.askVampireHOL(): Asking Vampire");
-            v = askVampireTHF(problemPath, timeout, maxAnswers);
-            if (debug)
-                System.out.println("------ KB.askVampireHOL(): Vampire Finished");
-            return v;
-        } catch (ATPException e) {
-            throw e; // Preserve type + payload for proper error handling in UI
-        } catch (Exception e) {
-            System.out.println("KB.askVampireHOL(): Exception: " + e.getMessage());
-            e.printStackTrace();
-            throw new ATPException("Vampire HOL execution failed: " + e.getMessage(), "Vampire");
-        }
-    }
-
-    /***************************************************************
-     * Return a SUMO-formatted proof string
-     */
-    public String askVampireFormat(String suoKifFormula, int timeout, int maxAnswers) {
-
-        StringBuilder sb = new StringBuilder();
-        if (!StringUtil.emptyString(System.getenv("VAMPIRE_OPTS")))
-            Vampire.mode = Vampire.ModeType.CUSTOM;
-        else
-            Vampire.mode = Vampire.ModeType.CASC;
-        Vampire vampire = askVampire(suoKifFormula,30,1);
-        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-        tpp.parseProofOutput(vampire.output, suoKifFormula, this, vampire.qlist);
-        String result = tpp.proof.toString().trim();
-        sb.append(result).append("\n");
-        result = tpp.bindings.toString();
-        sb.append("answers: ").append(result).append("\n");
-        return sb.toString();
-    }
-
-    /***************************************************************
-     * Submits a
-     * query to the inference engine. Returns a list of answers from inference
-     * engine. If no proof is found, return null;
-     *
-     * @param suoKifFormula The String representation of the SUO-KIF query.
-     * @return A list of answers from inference engine; If no proof or answer is
-     * found, return null;
-     */
-    public List<String> askNoProof(String suoKifFormula, int timeout, int maxAnswers) {
-
-        if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            Formula query = new Formula();
-            query.read(suoKifFormula);
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = fp.preProcess(query, true, this);
-
-            if (!processedStmts.isEmpty() && this.eprover != null) {
-                // set timeout in EBatchConfig file and reload eprover
-                try {
-                    EProver.addBatchConfig(null, timeout);
-                    if (this.eprover == null)
-                        eprover = new EProver(KBmanager.getMgr().getPref("eprover"));
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
-                String strQuery = processedStmts.iterator().next().getFormula();
-                eprover.submitQuery(strQuery, this);
-                if (eprover.output == null || eprover.output.isEmpty())
-                    System.out.println("No response from EProver!");
-                else
-                    System.out.println("Get response from EProver, start for parsing ...");
-                // System.out.println("Results returned from E = \n" + EResult);
-                TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                return tpp.parseAnswerTuples(eprover.output, strQuery, this,eprover.qlist);
-            }
-        }
-        return null;
     }
 
     /**************************************************************
@@ -3179,119 +2053,6 @@ public class KB implements Serializable {
             String message = ioe.getMessage().replaceAll(":", "&#58;");
             errors.add(message);
             result = ioe.getMessage();
-        }
-        return result;
-    }
-
-    /**************************************************************
-     * Submits a query to the LEO inference engine. Returns an XML formatted String that
-     * contains the response of the inference engine. It should be in the form
-     * "<queryResponse>...</queryResponse>".
-     *
-     * suoKifFormula The String representation of the SUO-KIF query.
-     *  timeout       The number of seconds after which the underlying inference
-     *                      engine should give up. (Time taken by axiom selection doesn't
-     *                      count.)
-     *  maxAnswers    The maximum number of answers (binding sets) the inference
-     *                      engine should return.
-     * @return A String indicating the status of the ask operation.
-
-    public String askLEOOld(String suoKifFormula, int timeout, int maxAnswers, String flag) {
-
-        String result = "";
-        try {
-            String LeoExecutable = KBmanager.getMgr().getPref("leoExecutable");
-            String LeoInput = KBmanager.getMgr().getPref("inferenceTestDir") + "prob.p";
-            String LeoProblem;
-            String responseLine;
-            String LeoOutput = "";
-            File LeoExecutableFile = new File(LeoExecutable);
-            File LeoInputFile = new File(LeoInput);
-            FileWriter LeoInputFileW = new FileWriter(LeoInput);
-
-            List<Formula> selectedQuery = new ArrayList<Formula>();
-            Formula newQ = new Formula();
-            newQ.read(suoKifFormula);
-            selectedQuery.add(newQ);
-            List<String> selFs = null;
-            if (flag.equals("LeoSine")) {
-                SInE sine = new SInE(this.formulaMap.keySet());
-                selFs = new ArrayList<String>(sine.performSelection(suoKifFormula));
-                sine.terminate();
-            }
-            else if (flag.equals("LeoLocal"))
-                selFs = new ArrayList<String>();
-            else if (flag.equals("LeoGlobal")) {
-                selFs = new ArrayList<String>();
-                Iterator<Formula> it = this.formulaMap.values().iterator();
-                while (it.hasNext()) {
-                    Formula entry = it.next();
-                    selFs.add(entry.toString());
-                }
-            }
-            try { // add user asserted formulas
-                File dir = new File(this.kbDir);
-                File file = new File(dir, (this.name + _userAssertionsString));
-                String filename = file.getCanonicalPath();
-                BufferedReader userAssertedInput = new BufferedReader(new FileReader(filename));
-
-                try {
-                    String line = null;
-                    /
-                     * readLine is a bit quirky : it returns the content of a
-                     * line MINUS the newline. it returns null only for the END
-                     * of the stream. it returns an empty String if two newlines
-                     * appear in a row.
-
-                    while ((line = userAssertedInput.readLine()) != null)
-                        selFs.add(line);
-                }
-                finally {
-                    userAssertedInput.close();
-                }
-            }
-            catch (IOException ex) {
-                System.err.println("Error in KB.askLEO(): " + ex.getMessage());
-                ex.printStackTrace();
-            }
-            List<Formula> selectedFormulas = new ArrayList();
-            Formula newF = new Formula();
-
-            Iterator<String> it = selFs.iterator();
-            while (it.hasNext()) {
-                String entry = it.next();
-                newF = new Formula();
-                newF.read(entry);
-                selectedFormulas.add(newF);
-            }
-            System.out.println(selFs.toString());
-            THF thf = new THF();
-            LeoProblem = thf.KIF2THF(selectedFormulas, selectedQuery, this);
-            LeoInputFileW.write(LeoProblem);
-            LeoInputFileW.close();
-
-            String command = LeoExecutableFile.getCanonicalPath() + " -po 1 -t " + timeout + Formula.SPACE
-                    + LeoInputFile.getCanonicalPath();
-
-            Process leo = Runtime.getRuntime().exec(command);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(leo.getInputStream()));
-            while ((responseLine = reader.readLine()) != null)
-                LeoOutput += responseLine + "\n";
-            reader.close();
-            System.out.println(LeoOutput);
-
-            if (LeoOutput.contains("SZS status Theorem")) {
-                result = "Answer 1. yes" + "<br> <br>" + LeoProblem.replaceAll("\\n", "<br>") + "<br> <br>"
-                        + LeoOutput.replaceAll("\\n", "<br>");
-            }
-            else {
-                result = "Answer 1. don't know" + "<br> <br>" + LeoProblem.replaceAll("\\n", "<br>") + "<br> <br>"
-                        + LeoOutput.replaceAll("\\n", "<br>");
-            }
-        }
-        catch (Exception ex) {
-            System.err.println("Error in KB.askLEO(): " + ex.getMessage());
-            ex.printStackTrace();
         }
         return result;
     }
@@ -3706,17 +2467,6 @@ public class KB implements Serializable {
     }
 
     /****************************************************************
-     * This List is used to limit the number of warning messages logged by
-     * loadFormatMaps(lang). If an attempt to load format or termFormat values
-     * for lang is unsuccessful, the list is checked for the presence of lang.
-     * If lang is not in the list, a warning message is logged and lang is added
-     * to the list. The list is cleared whenever a constituent file is added or
-     * removed for KB, since the latter might affect the availability of format
-     * or termFormat values.
-     */
-    protected List<String> loadFormatMapsAttempted = new ArrayList<>();
-
-    /****************************************************************
      * Populates the format maps for language lang.
      *
      * see termFormatMap is a HashMap of language keys and HashMap values. The
@@ -3912,61 +2662,137 @@ public class KB implements Serializable {
         Map<String, String> langFormatMap = getTermFormatMap(lang);
         return langFormatMap.get(term);
     }
-    /** *************************************************************
+
+    /*****************************************************************
+     * Delete all translated user assertion files used by theorem provers.
+     * This deletes every language variant, regardless of current TPTP language.
      */
     public void deleteUserAssertionsForInference() {
 
-        String userAssertionTPTP = this.name + KB._userAssertionsTPTP;
-        if (SUMOKBtoTPTPKB.getLang().equals("tff"))
-            userAssertionTPTP = this.name + KB._userAssertionsTFF;
         File dir = new File(KBmanager.getMgr().getPref("kbDir"));
-        String fname = dir + File.separator + userAssertionTPTP;
-        File ufile = new File(fname);
-        if (ufile.exists())
-            FileUtil.delete(dir + File.separator + userAssertionTPTP);
+        deleteFileIfExists(new File(dir, this.name + KB._userAssertionsTPTP));
+        deleteFileIfExists(new File(dir, this.name + KB._userAssertionsTFF));
+        deleteFileIfExists(new File(dir, this.name + KB._userAssertionsTHF));
     }
 
     /*****************************************************************
-     * Deletes user assertions, both in the files and in the constituents list.
+     * Delete temporary prover files that may contain old user assertions.
+     */
+    private void deleteStaleProverTempFiles() {
+
+        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        deleteFileIfExists(new File(dir, "temp-stmt.tptp"));
+        deleteFileIfExists(new File(dir, "temp-stmt.tff"));
+        deleteFileIfExists(new File(dir, "temp-stmt.thf"));
+        deleteFileIfExists(new File(dir, "temp-comb.tptp"));
+        deleteFileIfExists(new File(dir, "temp-comb.tff"));
+        deleteFileIfExists(new File(dir, "temp-comb.thf"));
+        deleteFileIfExists(new File(dir, "hol_query_" + this.name + ".thf")); // optional if you use fixed HOL names
+    }
+
+    /*****************************************************************
+     * Delete generated base inference files so they are rebuilt cleanly
+     * after user assertions are removed and the KB is reloaded.
+     */
+    private void deleteGeneratedBaseInferenceFiles() {
+
+        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        deleteFileIfExists(new File(dir, this.name + ".tptp"));
+        deleteFileIfExists(new File(dir, this.name + ".tff"));
+    }
+
+    /*****************************************************************
+     * Delete a file if it exists. Prints a warning if deletion fails.
+     */
+    private static void deleteFileIfExists(File file) {
+
+        if (file == null) return;
+        if (file.exists() && !file.delete()) 
+            System.err.println("Warning in KB.deleteFileIfExists(): could not delete " + file.getAbsolutePath());
+    }
+
+    /*****************************************************************
+     * Deletes user assertions from constituents and disk, but does not reload.
      */
     public void deleteUserAssertions() throws IOException {
 
-        String toRemove = null;
-        for (String nme : constituents) {
-            if (nme.endsWith(_userAssertionsString)) {
-                toRemove = nme;
-                break;
+        synchronized (uaLock) {
+            File kbDirectory = new File(KBmanager.getMgr().getPref("kbDir"));
+            Iterator<String> it = constituents.iterator();
+            while (it.hasNext()) {
+                String nme = it.next();
+                if (nme != null && nme.endsWith(_userAssertionsString)) {
+                    it.remove();
+                    deleteFileIfExists(new File(nme));
+                }
             }
+            deleteFileIfExists(new File(kbDirectory, this.name + _userAssertionsString));
+            deleteUserAssertionsForInference();
+            deleteStaleProverTempFiles();
+            deleteGeneratedBaseInferenceFiles();
         }
-        // Remove the string from the list.
-        if (toRemove != null) {
-            constituents.remove(toRemove);
+    }
+
+    private void debugCheckUserAssertionCleanup(String marker) {
+
+        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        List<String> files = Arrays.asList(
+                this.name + _userAssertionsString,
+                this.name + _userAssertionsTPTP,
+                this.name + _userAssertionsTFF,
+                this.name + _userAssertionsTHF,
+                this.name + ".tptp",
+                this.name + ".tff",
+                "temp-stmt.tptp",
+                "temp-comb.tptp"
+        );
+        System.out.println("===== " + marker + " user assertion cleanup check =====");
+        for (String fname : files) {
+            File f = new File(dir, fname);
+            System.out.println(fname + " exists: " + f.exists() + " path=" + f.getAbsolutePath());
         }
-        deleteUserAssertionsForInference();
     }
 
     /*****************************************************************
-     * Deletes the user assertions key in the constituents map, and then reloads the
-     * KBs.
+     * Deletes user assertions from memory/config/disk, reloads the KB,
+     * and regenerates clean prover base files.
      */
     public void deleteUserAssertionsAndReload() {
 
-        String cname;
-        for (int i = 0; i < constituents.size(); i++) {
-            cname = constituents.get(i);
-            if (cname.endsWith(_userAssertionsString)) {
-                try {
-                    constituents.remove(i);
-                    KBmanager.getMgr().writeConfiguration();
-                    reload();
+        synchronized (uaLock) {
+            try {
+                File kbDirectory = new File(KBmanager.getMgr().getPref("kbDir"));
+                List<String> removedUserAssertionFiles = new ArrayList<>();
+                Iterator<String> it = constituents.iterator();
+                while (it.hasNext()) {
+                    String cname = it.next();
+                    if (cname != null && cname.endsWith(_userAssertionsString)) {
+                        removedUserAssertionFiles.add(cname);
+                        it.remove();
+                    }
                 }
-                catch (IOException ioe) {
-                    System.err.println(
-                            "Error in KB.deleteUserAssertionsAndReload(): writing configuration: " + ioe.getMessage());
+                for (String fname : removedUserAssertionFiles) deleteFileIfExists(new File(fname));
+                deleteFileIfExists(new File(kbDirectory, this.name + _userAssertionsString));
+                deleteUserAssertionsForInference();
+                deleteStaleProverTempFiles();
+                deleteGeneratedBaseInferenceFiles();
+                KBmanager.getMgr().writeConfiguration();
+                reload();
+                synchronized (baseGenLock) {
+                    TPTPGenerationManager.generateProperFile(this, "fof");
+                    TPTPGenerationManager.generateProperFile(this, "tff");
                 }
             }
+            catch (IOException ioe) {
+                System.err.println("Error in KB.deleteUserAssertionsAndReload(): " + ioe.getMessage());
+                ioe.printStackTrace();
+            }
+            catch (RuntimeException re) {
+                System.err.println("Error in KB.deleteUserAssertionsAndReload(): " + re.getMessage());
+                re.printStackTrace();
+                throw re;
+            }
         }
-        deleteUserAssertionsForInference();
     }
 
     /***************************************************************
@@ -4219,10 +3045,6 @@ public class KB implements Serializable {
             // rebuilt the relation caches, and, if cache == yes, have
             // written out the _Cache.kif file. Now we reload the
             // inference engine.
-            if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
-                loadEProver();
-            if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
-                loadVampire();
         }
     }
 
@@ -4282,20 +3104,11 @@ public class KB implements Serializable {
         return se;
     }
 
-    /***************************************************************
-     * A HashMap for holding compiled regular expression patterns. The map is initialized
-     * by calling compilePatterns().
-     */
-    private static Map<String, List> REGEX_PATTERNS = null;
-
     /*****************************************************************
      * This method returns a compiled regular expression Pattern object indexed by
      * key.
-     *
-     * @param key
-     *            A String that is the retrieval key for a compiled regular
+     * @param key A String that is the retrieval key for a compiled regular
      *            expression Pattern.
-     *
      * @return A compiled regular expression Pattern instance.
      */
     public static Pattern getCompiledPattern(String key) {
@@ -4311,11 +3124,8 @@ public class KB implements Serializable {
     /*****************************************************************
      * This method returns the int value that identifies the regular expression
      * binding group to be returned when there is a match.
-     *
-     * @param key
-     *            A String that is the retrieval key for the binding group index
+     * @param key A String that is the retrieval key for the binding group index
      *            associated with a compiled regular expression Pattern.
-     *
      * @return An int that indexes a binding group.
      */
     public static int getPatternGroupIndex(String key) {
@@ -4332,7 +3142,6 @@ public class KB implements Serializable {
      * This method compiles and stores regular expression Pattern objects and binding
      * group indexes as two cell ArrayList objects. Each ArrayList is indexed by
      * a String retrieval key.
-     *
      * @return void
      */
     private static void compilePatterns() {
@@ -4340,11 +3149,9 @@ public class KB implements Serializable {
         if (REGEX_PATTERNS == null) {
             REGEX_PATTERNS = new HashMap<>();
             String[][] patternArray = { { "row_var", "\\@ROW\\d*", "0" },
-                    // { "open_lit", "\\(\\w+\\s+\\?\\w+\\s+.\\w+\\s*\\)", "0"
-                    // },
-                    { "open_lit", "\\(\\w+\\s+\\?\\w+[a-zA-Z_0-9-?\\s]+\\)", "0" },
-                    { "pred_var_1", "\\(holds\\s+(\\?\\w+)\\W", "1" }, { "pred_var_2", "\\((\\?\\w+)\\W", "1" },
-                    { "var_with_digit_suffix", "(\\D+)\\d*", "1" } };
+                { "open_lit", "\\(\\w+\\s+\\?\\w+[a-zA-Z_0-9-?\\s]+\\)", "0" },
+                { "pred_var_1", "\\(holds\\s+(\\?\\w+)\\W", "1" }, { "pred_var_2", "\\((\\?\\w+)\\W", "1" },
+                { "var_with_digit_suffix", "(\\D+)\\d*", "1" } };
             String pName;
             Pattern p;
             Integer groupN;
@@ -4367,19 +3174,12 @@ public class KB implements Serializable {
      * the ArrayList accumulator is provided, match results are added to it and
      * it is returned. If accumulator is not provided (is null), then a new
      * ArrayList is created and returned if matches are found.
-     *
-     * @param input
-     *            The input String in which matches are sought.
-     *
-     * @param patternKey
-     *            A String used as the retrieval key for a regular expression
+     * @param input The input String in which matches are sought.
+     * @param patternKey A String used as the retrieval key for a regular expression
      *            Pattern object, and an int index identifying a binding group.
-     *
-     * @param accumulator
-     *            An optional ArrayList to which matches are added. Note that if
+     * @param accumulator An optional ArrayList to which matches are added. Note that if
      *            accumulator is provided, it will be the return value even if
      *            no new matches are found in the input String.
-     *
      * @return An ArrayList, or null if no matches are found and an accumulator
      *         is not provided.
      */
@@ -4417,13 +3217,9 @@ public class KB implements Serializable {
      * compiled Pattern and binding group index retrieved with patternKey, and
      * returns the results, if any, in an ArrayList.
      *
-     * @param input
-     *            The input String in which matches are sought.
-     *
-     * @param patternKey
-     *            A String used as the retrieval key for a regular expression
+     * @param input The input String in which matches are sought.
+     * @param patternKey A String used as the retrieval key for a regular expression
      *            Pattern object, and an int index identifying a binding group.
-     *
      * @return An ArrayList, or null if no matches are found.
      */
     public static List<String> getMatches(String input, String patternKey) {
@@ -4433,14 +3229,12 @@ public class KB implements Serializable {
     /*****************************************************************
      * This method retrieves Formulas by asking the query expression queryLit, and
      * returns the results, if any, in an ArrayList.
-     *
      * @param queryLit
      *            The query, which is assumed to be a List (atomic literal)
      *            consisting of a single predicate and its arguments. The
      *            arguments could be variables, constants, or a mix of the two,
      *            but only the first constant encountered in a left to right
      *            sweep over the literal will be used in the actual query.
-     *
      * @return An ArrayList of Formula objects, or an empty ArrayList if no
      *         answers are retrieved.
      */
@@ -4506,14 +3300,11 @@ public class KB implements Serializable {
     /*****************************************************************
      * This method retrieves formulas by asking the query expression queryLit, and
      * returns the results, if any, in an ArrayList.
-     *
-     * @param queryLit
-     *            The query, which is assumed to be an atomic literal consisting
+     * @param queryLit The query, which is assumed to be an atomic literal consisting
      *            of a single predicate and its arguments. The arguments could
      *            be variables, constants, or a mix of the two, but only the
      *            first constant encountered in a left to right sweep over the
      *            literal will be used in the actual query.
-     *
      * @return An ArrayList of Formula objects, or an empty ArrayList if no
      *         answers are retrieved.
      */
@@ -4527,10 +3318,7 @@ public class KB implements Serializable {
      * This method retrieves the upward transitive closure of all Class names
      * contained in the input set. The members of the input set are not included
      * in the result set.
-     *
-     * @param classNames
-     *            A Set object containing SUO-KIF class names (Strings).
-     *
+     * @param classNames A Set object containing SUO-KIF class names (Strings).
      * @return A Set of SUO-KIF class names, which could be empty.
      */
     public Set<String> getAllSuperClasses(Set<String> classNames) {
@@ -4545,8 +3333,7 @@ public class KB implements Serializable {
     /*****************************************************************
      * This method retrieves all instances of the classes named in the input set.
      * TODO: Deprecated since it seems to do the opposite of what it should.
-     * @param classNames
-     *            A Set of String, containing SUO-KIF class names
+     * @param classNames A Set of String, containing SUO-KIF class names
      * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
      */
     @Deprecated
@@ -4554,17 +3341,14 @@ public class KB implements Serializable {
 
         Set<String> ans = new TreeSet<>();
         if ((classNames instanceof TreeSet) && !classNames.isEmpty()) {
-            for (String nme : classNames)
-                ans.addAll(kbCache.getParentClassesOfInstance(nme));
+            for (String nme : classNames) ans.addAll(kbCache.getParentClassesOfInstance(nme));
         }
         return ans;
     }
 
     /*****************************************************************
      * This method retrieves all instances of the class named in the input String.
-     *
-     * @param className
-     *            The name of a SUO-KIF Class.
+     * @param className The name of a SUO-KIF Class.
      * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
      */
     public Set<String> getAllInstances(String className) {
@@ -4579,9 +3363,7 @@ public class KB implements Serializable {
 
     /*****************************************************************
      * This method tries to find or compute a valence for the input relation.
-     *
-     * @param relnName
-     *            A String, the name of a SUO-KIF Relation.
+     * @param relnName A String, the name of a SUO-KIF Relation.
      * @return An int value. -1 means that no valence value could be found. 0
      *         means that the relation is a VariableArityRelation. 1-5 are the
      *         standard SUO-KIF valence values.
@@ -4611,11 +3393,8 @@ public class KB implements Serializable {
 
     /*****************************************************************
      *
-     * @param obj
-     *            Any object
-     *
-     * @return true if obj is a String representation of a LISP empty list, else
-     *         false.
+     * @param obj Any object
+     * @return true if obj is a String representation of a LISP empty list, else false.
      */
     public static boolean isEmptyList(Object obj) {
         return (StringUtil.isNonEmptyString(obj) && Formula.empty((String) obj));
@@ -4623,9 +3402,7 @@ public class KB implements Serializable {
 
     /*****************************************************************
      * A static utility method.
-     *
-     * @param obj
-     *            Presumably, a String.
+     * @param obj Presumably, a String.
      * @return true if obj is a SUO-KIF variable, else false.
      */
     public static boolean isVariable(String obj) {
@@ -4638,9 +3415,7 @@ public class KB implements Serializable {
 
     /*****************************************************************
      * A static utility method.
-     *
-     * @param obj
-     *            A String.
+     * @param obj A String.
      * @return true if obj is a SUO-KIF logical quantifier, else false.
      */
     public static boolean isQuantifier(String obj) {
@@ -4650,11 +3425,8 @@ public class KB implements Serializable {
 
     /*****************************************************************
      * A static utility method.
-     *
-     * @param obj
-     *            Presumably, a String.
-     * @return true if obj is a SUO-KIF commutative logical operator, else
-     *         false.
+     * @param obj Presumably, a String.
+     * @return true if obj is a SUO-KIF commutative logical operator, else false.
      */
     public static boolean isCommutative(String obj) {
 
@@ -4713,8 +3485,6 @@ public class KB implements Serializable {
                     j--;
                 }
                 if (j > i) {
-                    // formToPrint =
-                    // DocGen.getInstance(this.name).showTermName(this,term,language);
                     formToPrint = term;
                     hsb = new StringBuilder("<a href=\"");
                     hsb.append(href);
@@ -4728,7 +3498,6 @@ public class KB implements Serializable {
                 }
             }
             formatted = sb.toString();
-            //formatWikipedia(formatted);
         }
         return formatted;
     }
@@ -4809,9 +3578,7 @@ public class KB implements Serializable {
 
     /***************************************************************
      * Creates InferenceEngine and loads all of the constituents into it.
-     *
-     * @param factory
-     *            Factory object used to create new InferenceEngine.
+     * @param factory Factory object used to create new InferenceEngine.
      * @return InferenceEngine object with all constituents loaded.
      */
     public InferenceEngine createInferenceEngine(InferenceEngine.EngineFactory factory) {
@@ -4837,176 +3604,6 @@ public class KB implements Serializable {
         return res;
     }
 
-    /***************************************************************
-     * Checks for a Vampire executable, preprocesses all of the constituents.
-     * This no-arg version reads from the static SUMOKBtoTPTPKB.getLang() field.
-     * For thread-safe operation during background TPTP generation, use
-     * loadVampire(String requestedLang) instead.
-     */
-    public void loadVampire() {
-        // Capture lang immediately to minimize race window with background generation
-        String requestedLang = SUMOKBtoTPTPKB.getLang();
-        loadVampire(requestedLang);
-    }
-
-    /***************************************************************
-     * Checks for a Vampire executable, preprocesses all of the constituents.
-     * This version takes the requested language as a parameter to avoid
-     * race conditions with background TPTP generation threads that modify
-     * the static SUMOKBtoTPTPKB.getLang() field.
-     *
-     * @param requestedLang The TPTP language format requested by the user ("fof" or "tff")
-     */
-    public void loadVampire(String requestedLang) {
-
-        if (debug) System.out.println("INFO in KB.loadVampire(): requestedLang=" + requestedLang);
-        String vampex = KBmanager.getMgr().getPref("vampire");
-        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
-        if (StringUtil.emptyString(vampex)) {
-            System.err.println("Error in KB.loadVampire(): no executable string in preferences");
-            return;
-        }
-        File executable = new File(vampex);
-        if (!executable.exists()) {
-            System.err.println("Error in KB.loadVampire(): no executable " + vampex);
-            return;
-        }
-        // Use the passed requestedLang parameter instead of reading from static field
-        // This prevents race conditions with background TPTP generation
-        String lang = "tff";
-        if ("fof".equals(requestedLang))
-            lang = "tptp";
-
-        String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(lang) || force) {
-            System.out.println("INFO in KB.loadVampire(): infFilename=" + !(new File(infFilename).exists()));
-            System.out.println("INFO in KB.loadVampire(): managerInfFileOld " + KBmanager.getMgr().infFileOld());
-            System.out.println("INFO in KB.loadVampire(): force=" + force);
-            synchronized (baseGenLock) {
-                TPTPGenerationManager.generateProperFile(this, lang);
-            }
-        }
-    }
-
-    /***************************************************************
-     * Checks for a Leo executable, preprocesses all of the constituents.
-     * This no-arg version reads from the static SUMOKBtoTPTPKB.getLang() field.
-     */
-    public void loadLeo() {
-        // Capture lang immediately to minimize race window with background generation
-        String requestedLang = SUMOKBtoTPTPKB.getLang();
-        loadLeo(requestedLang);
-    }
-
-    /***************************************************************
-     * Checks for a Leo executable, preprocesses all of the constituents.
-     * This version takes the requested language as a parameter to avoid
-     * race conditions with background TPTP generation threads.
-     *
-     * @param requestedLang The TPTP language format requested by the user ("fof" or "tff")
-     */
-    public void loadLeo(String requestedLang) {
-
-        System.out.println("INFO in KB.loadLeo(): requestedLang=" + requestedLang);
-        String leoex = KBmanager.getMgr().getPref("leoExecutable");
-        KBmanager.getMgr().prover = KBmanager.Prover.LEO;
-        if (StringUtil.emptyString(leoex)) {
-            System.err.println("Error in loadLeo(): no executable string in preferences");
-            return;
-        }
-        File executable = new File(leoex);
-        if (!executable.exists()) {
-            System.err.println("Error in loadLeo(): no executable " + leoex);
-            return;
-        }
-        // Use the passed requestedLang parameter instead of reading from static field
-        String lang = "tff";
-        if ("fof".equals(requestedLang))
-            lang = "tptp";
-        String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-
-        if (new File(infFilename).exists() && !KBmanager.getMgr().infFileOld())
-            System.out.println("INFO in KB.loadLeo(): no need to generate " + lang + " file " + infFilename);
-        else
-            loadVampire(requestedLang); // if SUMO.tptp is missing, this will generate it
-    }
-
-    /***************************************************************
-     * Starts EProver and collects, preprocesses and loads all of the constituents into
-     * it. This no-arg version reads from the static SUMOKBtoTPTPKB.getLang() field.
-     * For thread-safe operation during background TPTP generation, use
-     * loadEProver(String requestedLang) instead.
-     */
-    public void loadEProver() {
-        // Capture lang immediately to minimize race window with background generation
-        String requestedLang = SUMOKBtoTPTPKB.getLang();
-        loadEProver(requestedLang);
-    }
-
-    /***************************************************************
-     * Starts EProver and collects, preprocesses and loads all of the constituents into
-     * it. This version takes the requested language as a parameter to avoid
-     * race conditions with background TPTP generation threads that modify
-     * the static SUMOKBtoTPTPKB.getLang() field.
-     *
-     * @param requestedLang The TPTP language format requested by the user ("fof" or "tff")
-     */
-    public void loadEProver(String requestedLang) {
-
-        System.out.println("INFO in KB.loadEProver(): Creating new process, requestedLang=" + requestedLang);
-        KBmanager mgr = KBmanager.getMgr();
-        String e_prover_x = mgr.getPref("eprover");
-        if (StringUtil.emptyString(e_prover_x)) {
-            System.err.println("Error in loadEProver(): no executable string in preferences");
-            return;
-        }
-        File executable = new File(e_prover_x);
-        if (!executable.exists()) {
-            System.err.println("Error in loadEProver(): no executable " + e_prover_x);
-            return;
-        }
-        mgr.prover = KBmanager.Prover.EPROVER;
-        // Use the passed requestedLang parameter instead of reading from static field
-        // This prevents race conditions with background TPTP generation
-        String lang = "tff";
-        if ("fof".equals(requestedLang))
-            lang = "tptp";
-
-        // Wait for background generation if in progress
-        if (lang.equals("tptp") && !TPTPGenerationManager.isFOFReady()) {
-            System.out.println("INFO in KB.loadEProver(): Waiting for FOF background generation...");
-            TPTPGenerationManager.waitForFOF(600);
-        } else if (lang.equals("tff") && !TPTPGenerationManager.isTFFReady()) {
-            System.out.println("INFO in KB.loadEProver(): Waiting for TFF background generation...");
-            TPTPGenerationManager.waitForTFF(600);
-        }
-
-        String infFilename = mgr.getPref("kbDir") + File.separator + this.name + "." + lang;
-        try {
-            if (!formulaMap.isEmpty()) {
-                if (eprover != null) {
-                    System.out.println("INFO in KB.loadEProver(): terminating old process first");
-                    eprover.terminate();
-                    eprover = null;
-                }
-//                if (!(new File(infFilename).exists()) || mgr.infFileOld()) {
-//                    System.out.println("INFO in KB.loadEProver(): generating TPTP file");
-//                    loadVampire(requestedLang); // if SUMO.tptp is missing, this will generate it
-//                }
-                if (StringUtil.isNonEmptyString(mgr.getPref("eprover")))
-                    eprover = new EProver(mgr.getPref("eprover"), infFilename);
-            }
-        }
-        catch (IOException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }
-        if (eprover == null) {
-            mgr.setError(mgr.getError() + "\n<br/>No local E inference engine available\n<br/>");
-            System.err.println("Error in KB.loadEProver(): EProver not loaded");
-        }
-    }
-
     /*****************************************************************
      * Preprocess the knowledge base to TPTP. This includes "holds" prefixing,
      * ticking nested formulas, expanding row variables, and translating
@@ -5024,8 +3621,7 @@ public class KB implements Serializable {
         boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
         kbCache.kb = this;
         kbCache.buildCaches();
-        if (!tptpParseP)
-            return newTreeSet;
+        if (!tptpParseP) return newTreeSet;
         Iterator<String> it = forms.iterator();
         FormulaPreprocessor fp = new FormulaPreprocessor();
         String form;
@@ -5035,7 +3631,6 @@ public class KB implements Serializable {
         while (it.hasNext()) {
             form = it.next();
             if ((counter++ % 100) == 1)
-//                System.out.print(".");
                 progressSb.append(".");
             if ((counter % 4000) == 1) {
                 System.out.print(progressSb.toString() + "x");
@@ -5074,10 +3669,7 @@ public class KB implements Serializable {
                 }
             }
         }
-        System.out.println();
-        // kbCache.clearSortalTypeCache();
-        System.out.println("INFO in KB.preProcess(): completed in " +
-                (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
+        System.out.println("INFO in KB.preProcess(): completed in " + (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
         counter = 0;
         return newTreeSet;
     }
@@ -5108,15 +3700,15 @@ public class KB implements Serializable {
 
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
-            loadEProver();
-            EProver ep = askEProver(args[1], timeout, 1);
+            EProver ep = new EProver(this, "tptp", timeout, 1);
+            ep.askEProver(args[1]);
             System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(ep.output));
             tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(ep.output, args[1], this, ep.qlist);
         }
         else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
-            loadVampire();
-            Vampire vamp = askVampire(args[1], timeout, 1);
+            Vampire vamp = new Vampire(this, "tptp", "CASC", false, timeout, 1);
+            vamp.askVampire(args[1]);
             System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
             tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(vamp.output, args[1], this, vamp.qlist);
@@ -5127,9 +3719,7 @@ public class KB implements Serializable {
     /*****************************************************************
      * Keep a count of axioms
      */
-    public static void addToAxiomCount(Map<String,Integer> currentCount,
-            Set<String> newAxioms) {
-
+    public static void addToAxiomCount(Map<String,Integer> currentCount, Set<String> newAxioms) {
         Integer i;
         for (String s : newAxioms) {
             i = 0;
@@ -5183,11 +3773,9 @@ public class KB implements Serializable {
 
         final String uaFileName = this.name + _userAssertionsString; // "_UserAssertions.kif"
         int count = 0;
-
         for (Formula f : formulaMap.values()) {
             if (f == null) continue;
             if (f.sourceFile == null) continue;
-
             // sourceFile is typically a full path; compare by basename
             String srcBase = new java.io.File(f.sourceFile).getName();
             if (uaFileName.equals(srcBase)) {
@@ -5205,7 +3793,6 @@ public class KB implements Serializable {
 
         final String uaFileName = this.name + _userAssertionsString; // e.g. SUMO_UserAssertions.kif
         java.util.Set<String> toRemove = new java.util.HashSet<>();
-
         // Collect formula strings to remove (keys in formulaMap are f.getFormula())
         for (java.util.Map.Entry<String, Formula> e : formulaMap.entrySet()) {
             Formula f = e.getValue();
@@ -5215,12 +3802,10 @@ public class KB implements Serializable {
                 toRemove.add(e.getKey());
             }
         }
-
         // Remove from formulaMap
         for (String fs : toRemove) {
             formulaMap.remove(fs);
         }
-
         // Remove from formulas index (key -> list of formula strings)
         java.util.Iterator<java.util.Map.Entry<String, java.util.List<String>>> it = formulas.entrySet().iterator();
         while (it.hasNext()) {
@@ -5237,11 +3822,8 @@ public class KB implements Serializable {
             }
             if (lst.isEmpty()) it.remove();
         }
-
         return toRemove.size();
     }
-
-
 
     /*****************************************************************
      */
@@ -5271,7 +3853,6 @@ public class KB implements Serializable {
         String prefix = KBmanager.getMgr().getPref("kbDir") + File.separator;
         String filename = prefix + "SUMO_contra.kif";
         System.out.println("KB.contradictionHelp(): prefix: " + prefix);
-
         Map<String,Formula> sourceAxioms = collectSourceAxioms(kb,tpp);
         System.out.println("KB.contradictionHelp(): source axioms: " + sourceAxioms.keySet());
         commonAxioms.addAll(sourceAxioms.keySet());
@@ -5292,7 +3873,6 @@ public class KB implements Serializable {
             display2.addAll(display.subList(0,10));
             System.out.println("KB.contradictionHelp(): minusAxioms: " +
                     StringUtil.arrayListToCRLFString(display2) + "...");
-
             deletedOldInfFiles(filename,prefix);
             FileUtil.writeLines(filename, minusAxioms);
             constituents = new ArrayList<>();
@@ -5325,13 +3905,10 @@ public class KB implements Serializable {
      */
     public static void test() {
 
-        // generateTPTPTestAssertions();
-        // testTPTP(args);
         KB kb;
         try {
             KBmanager.getMgr().initializeOnce();
             kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-
             System.out.println("Testing  kb.termFormatMapAll('EnglishLanguage')");
             Map<String, List<String>> termFormats = kb.getTermFormatMapAll("EnglishLanguage");
             List<String> motherTermFormats = termFormats.get("mother");
@@ -5344,7 +3921,6 @@ public class KB implements Serializable {
             for (String format : motherFormats) {
                 System.out.println("Format for mother: " + format);
             }
-
             System.out.println("KB.test(): " + kb.getAllSub("ColorAttribute","subAttribute"));
             String contents = "(subclass ?X Entity)";
             System.out.println("KB.test(): query Vampire with: " + contents);
@@ -5352,8 +3928,8 @@ public class KB implements Serializable {
             String type = "tptp";
             String outfile = dir + "temp-comb." + type;
             System.out.println("KB.test(): query Vampire on file: " + outfile);
-            Vampire vamp = kb.askVampire(contents,30,1);
-            //System.out.println("KB.test(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
+            Vampire vamp = new Vampire(kb, "tptp", "CASC", false, 30, 1);
+            vamp.askVampire(contents);
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(vamp.output,contents,kb,vamp.qlist);
             System.out.println("queryExp(): bindings: " + tpp.bindings);
@@ -5361,29 +3937,10 @@ public class KB implements Serializable {
             List<String> proofStepsStr = new ArrayList<>();
             for (TPTPFormula ps : tpp.proof)
                 proofStepsStr.add(ps.toString());
-            //kb.writeTerms();
-            // System.out.println("KB.main(): " + kb.isChildOf("Africa",
-            // "Region"));
-            // kb.askEProver("(subclass ?X Object)",30,1);
         }
         catch (Exception ioe) {
             System.err.println(ioe.getMessage());
         }
-
-        // kb.generateSemanticNetwork();
-        // kb.generateRandomProof();
-        // kb.instanceOfInstanceP();
-        /*
-        System.out.println("KB.main(): termDepth of Object: " + kb.termDepth("Object"));
-        System.out.println("KB.main(): termDepth of Table: " + kb.termDepth("Table"));
-        System.out.println("KB.main(): termDepth of immediateSubclass: " + kb.termDepth("immediateSubclass"));
-        System.out.println("KB.main(): termDepth of Wagon: " + kb.termDepth("Wagon"));
-        System.out.println("KB.main(): termDepth of Foo: " + kb.termDepth("Foo"));
-*/
-        /*
-         * String foo = "(rel bar \"test\")"; Formula f = new Formula();
-         * f.read(foo); System.out.println(f.getArgument(2).equals("\"test\""));
-         */
     }
 
     /** ***************************************************************
@@ -5437,20 +3994,12 @@ public class KB implements Serializable {
             showHelp();
         else {
             try {
-                // Check for "N" before initializing the KBmanager
-                if (argMap.containsKey("N"))
-                    SUMOKBtoTPTPKB.rapidParsing = false;
-
+                if (argMap.containsKey("N")) SUMOKBtoTPTPKB.rapidParsing = false;
                 System.out.println("KB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
-
                 // Clear single-threaded mode for translation (if it was set)
                 System.clearProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
-
                 // Refresh ExecutorService to use translation-optimized threading
                 KButilities.refreshExecutorService();
-
-                //KBmanager.prefOverride.put("loadLexicons","false");
-                //System.out.println("KB.main(): Note! Not loading lexicons.");
                 KBmanager.getMgr().initializeOnce();
                 String kbName = KBmanager.getMgr().getPref("sumokbname");
                 KB kb = KBmanager.getMgr().getKB(kbName);
@@ -5515,19 +4064,22 @@ public class KB implements Serializable {
                         contradictionHelp(kb,args,timeout);
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
-                        EProver eprover = kb.askEProver(argMap.get("ask").get(0), timeout, 1);
+                        EProver eprover = new EProver(kb, "tptp", timeout, 1);
+                        eprover.askEProver(argMap.get("ask").get(0));
                         System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
                         tpp = new TPTP3ProofProcessor();
                         tpp.parseProofOutput(eprover.output, argMap.get("ask").get(0), kb, eprover.qlist);
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
-                        Vampire vamp = kb.askVampire(argMap.get("ask").get(0), timeout, 1);
+                        Vampire vamp = new Vampire(kb, "tptp", "CASC", false, timeout, 1);
+                        vamp.askVampire(argMap.get("ask").get(0));
                         System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
                         tpp = new TPTP3ProofProcessor();
                         tpp.parseProofOutput(vamp.output, argMap.get("ask").get(0), kb, vamp.qlist);
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
-                        LEO leo = kb.askLeo(argMap.get("ask").get(0), timeout, 1);
+                        LEO leo = new LEO(kb, "tptp", timeout, 1, null);
+                        leo.askLeo(argMap.get("ask").get(0));
                         System.out.println("KB.main(): completed LEO query with result: " + StringUtil.arrayListToCRLFString(leo.output));
                         tpp = new TPTP3ProofProcessor();
                         tpp.parseProofOutput(leo.output, argMap.get("ask").get(0), kb, leo.qlist);
@@ -5548,8 +4100,7 @@ public class KB implements Serializable {
                         tpp.printProof(level);
                     }
                 }
-            } finally {
-                // Ensure ExecutorService is properly shut down
+            } finally { // Ensure ExecutorService is properly shut down
                 System.out.println("KB.main(): Shutting down ExecutorService");
                 KButilities.shutDownExecutorService();
                 System.out.println("KB.main(): Process complete");
