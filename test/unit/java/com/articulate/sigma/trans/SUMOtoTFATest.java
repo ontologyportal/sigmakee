@@ -9,6 +9,8 @@ import java.io.PrintWriter;
 import java.util.*;
 
 import static org.junit.Assert.*;
+
+import com.articulate.sigma.parsing.FormulaAST;
 import org.junit.Ignore;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -107,7 +109,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "        (subProcess ?S1 ?P)\n" +
                 "        (subProcess ?S2 ?P))\n" +
                 "    (relatedEvent ?S1 ?S2))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__P : $i,V__S1 : $i,V__S2 : $i] : ((s__instance(V__P, s__Process) & " +
@@ -139,7 +141,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "        (and\n" +
                 "            (instance ?R Electricity)\n" +
                 "            (resource ?EV ?R))))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__EV : $i,V__DEV : $i] : " +
@@ -170,7 +172,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "        (eventLocated ?PROC ?LOC)\n" +
                 "        (subProcess ?SUB ?PROC))\n" +
                 "    (eventLocated ?SUB ?LOC))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__PROC : $i,V__SUB : $i,V__LOC : $i] : " +
@@ -200,7 +202,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "(graphPart ?ARC2 ?PATH) (arcWeight ?ARC1 ?NUMBER1) (arcWeight ?ARC2 ?NUMBER2) " +
                 "(forall (?ARC3) (=> (graphPart ?ARC3 ?PATH) (or (equal ?ARC3 ?ARC1) (equal ?ARC3 ?ARC2))))) " +
                 "(equal (PathWeightFn ?PATH) (AdditionFn ?NUMBER1 ?NUMBER2)))\n";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__SUM : $i,V__NUMBER1 : $i,V__NUMBER2 : $i,V__ARC1 : $i,V__PATH : $i,V__ARC2 : $i] : " +
@@ -231,7 +233,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         String kifstring, expectedRes, actualRes;
         kifstring = "(exists (?ARC1 ?ARC2 ?PATH) (and (graphPart ?ARC1 ?PATH) " +
                 "(graphPart ?ARC2 ?PATH) (arcWeight ?ARC1 ?NUMBER1)))\n";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__NUMBER1 : $i] : (( ? [V__ARC1:$i, V__ARC2:$i, V__PATH:$i] : " +
@@ -276,7 +278,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "            (instance ?ELEMENT ?CLASS))) \n" +
                 "        (exists (?ITEM) \n" +
                 "          (greaterThan @ROW ?ITEM))))))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__ROW1 : $i] : (((s__instance(s__greaterThan__m, s__TotalValuedRelation) & " +
@@ -320,7 +322,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         String kifstring, expectedRes, actualRes;
         kifstring = "(=> (and (instance ?INT1 Integer) (instance ?INT2 Integer)) " +
                 "(not (and (lessThan ?INT1 ?INT2) (lessThan ?INT2 (SuccessorFn ?INT1)))))\n";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__INT2 : $int,V__INT1 : $int] : (~(($less(V__INT1 ,V__INT2) & " +
@@ -349,15 +351,15 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "      (lessThan ?INT1 ?INT2)\n" +
                 "      (lessThan ?INT2\n" +
                 "        (SuccessorFn ?INT1)))))\n";
-        actualRes = SUMOtoTFAform.elimUnitaryLogops(new Formula(kifstring));
-        Formula fActual = new Formula(actualRes);
+        actualRes = SUMOtoTFAform.elimUnitaryLogops(new FormulaAST(kifstring));
+        Formula fActual = new FormulaAST(actualRes);
 
         expectedRes = "(not\n" +
                 "    (and\n" +
                 "      (lessThan ?INT1 ?INT2)\n" +
                 "      (lessThan ?INT2\n" +
                 "        (SuccessorFn ?INT1))))";
-        Formula fExpected = new Formula(expectedRes);
+        Formula fExpected = new FormulaAST(expectedRes);
         System.out.println("actual:  " + fActual);
         System.out.println("expected:" + fExpected);
         if (fExpected.deepEquals(fActual))
@@ -377,7 +379,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         String kifstring, expectedRes, actualRes;
         kifstring = "(=> (and (instance ?MONTH Month) (duration ?MONTH (MeasureFn ?NUMBER DayDuration))) " +
                 "(equal (CardinalityFn (TemporalCompositionFn ?MONTH Day)) ?NUMBER))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__MONTH : $i,V__NUMBER : $int] : ((s__instance(V__MONTH, s__Month) & " +
                 "s__duration(V__MONTH, s__MeasureFn__1InFn(V__NUMBER, s__DayDuration))) => " +
@@ -401,7 +403,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         String kifstring, expectedRes, actualRes;
         kifstring = "(=> (and (instance ?UNIT UnitOfMeasure) (equal ?TERAUNIT (TeraFn ?UNIT))) " +
                 "(equal (MeasureFn 1 ?TERAUNIT) (MeasureFn 1000000000 (KiloFn ?UNIT))))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__TERAUNIT : $i,V__UNIT : $i] : ((s__instance(V__UNIT, s__UnitOfMeasure) & " +
                 "equal(V__TERAUNIT ,s__TeraFn(V__UNIT))) => " +
@@ -425,7 +427,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         String kifstring, expectedRes, actualRes;
         kifstring = "(=> (diameter ?CIRCLE ?LENGTH) (exists (?HALF) " +
                 "(and (radius ?CIRCLE ?HALF) (equal (MultiplicationFn ?HALF 2) ?LENGTH))))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__CIRCLE : $i,V__LENGTH : $real] : (s__instance(V__CIRCLE, s__Circle) => " +
                 "s__diameter(V__CIRCLE, V__LENGTH) => ( ? [V__HALF:$real] : " +
@@ -459,7 +461,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         String kifstring, expectedRes, actualRes;
         kifstring = "(=> (and (instance ?MONTH Month) (duration ?MONTH (MeasureFn ?NUMBER DayDuration))) " +
                 "(equal (CardinalityFn (TemporalCompositionFn ?MONTH Day)) ?NUMBER))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__MONTH : $i,V__NUMBER : $int] : ((s__instance(V__MONTH, s__Month) & " +
                 "s__duration(V__MONTH, s__MeasureFn__1InFn(V__NUMBER, s__DayDuration))) => " +
@@ -484,7 +486,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         kifstring = "(=> (equal (CeilingFn ?NUMBER) ?INT) (not (exists (?OTHERINT) " +
                 "(and (instance ?OTHERINT Integer) " +
                 "(greaterThanOrEqualTo ?OTHERINT ?NUMBER) (lessThan ?OTHERINT ?INT)))))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__NUMBER : $int,V__INT : $int] : " +
                 "(s__CeilingFn__0In1ReFn(V__NUMBER) = V__INT => " +
@@ -511,7 +513,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         kifstring = "(=> (equal (GreatestCommonDivisorFn @ROW) ?NUMBER) " +
                 "(forall (?ELEMENT) (=> (inList ?ELEMENT (ListFn @ROW)) " +
                 "(equal (RemainderFn ?ELEMENT ?NUMBER) 0))))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__ROW1 : $int,V__NUMBER : $int] : " +
                 "(s__GreatestCommonDivisorFn_1__0In1InFn(V__ROW1) = V__NUMBER => " +
@@ -537,7 +539,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         String kifstring, expectedRes, actualRes;
         kifstring = "(=> (equal (LeastCommonMultipleFn @ROW) ?NUMBER) " +
                 "(=> (inList ?ELEMENT (ListFn @ROW)) (instance ?ELEMENT Number)))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__ELEMENT : $i,V__ROW1 : $int,V__NUMBER : $int] : " +
                 "(s__LeastCommonMultipleFn_1__0In1InFn(V__ROW1) = V__NUMBER => " +
@@ -560,7 +562,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         //FormulaPreprocessor.debug = true;
         String kifstring, expectedRes, actualRes;
         kifstring = "(=> (equal (SquareRootFn ?NUMBER1) ?NUMBER2) (equal (MultiplicationFn ?NUMBER2 ?NUMBER2) ?NUMBER1))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__NUMBER1 : $real,V__NUMBER2 : $real] : " +
                 "(s__SquareRootFn__0Re1ReFn(V__NUMBER1) = V__NUMBER2 => " +
@@ -583,7 +585,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         //FormulaPreprocessor.debug = true;
         String kifstring, expectedRes, actualRes;
         kifstring = "(=> (instance ?DAY (DayFn ?NUMBER ?MONTH)) (lessThanOrEqualTo ?NUMBER 31))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__DAY : $i,V__MONTH : $i,V__NUMBER : $int] : " +
                 "(s__subclass(V__MONTH, s__Month) => " +
@@ -607,7 +609,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         String kifstring, expectedRes, actualRes;
         kifstring = "(=> (instance ?NUMBER Quantity) " +
                 "(equal (ReciprocalFn ?NUMBER) (ExponentiationFn ?NUMBER -1)))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__NUMBER : $real] : (s__ReciprocalFn__0Re1ReFn(V__NUMBER) = s__ExponentiationFn__0Re1Re2InFn(V__NUMBER, -1))";
         System.out.println("actual:  " + actualRes);
@@ -630,7 +632,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         kifstring = "(=> (instance ?SET FiniteSet) " +
                 "(exists (?NUMBER) (and (instance ?NUMBER NonnegativeInteger) " +
                 "(equal ?NUMBER (CardinalityFn ?SET)))))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__SET : $i] : (s__instance(V__SET, s__FiniteSet) => " +
                 "( ? [V__NUMBER:$int] : (($greater(V__NUMBER ,-1) & V__NUMBER = s__CardinalityFn(V__SET)))))";
@@ -655,7 +657,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         String kifstring, expectedRes, actualRes;
         kifstring = "(equal (MeasureFn ?NUMBER AngularDegree) " +
                 "(MeasureFn (MultiplicationFn ?NUMBER (DivisionFn Pi 180)) Radian))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__NUMBER : $real] : " +
                 "(equal(s__MeasureFn__1ReFn(V__NUMBER, s__AngularDegree) ," +
@@ -680,7 +682,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         String kifstring, expectedRes, actualRes;
         kifstring = "(equal (MillionYearsAgoFn ?X) (BeginFn (YearFn (FloorFn " +
                 "(AdditionFn 1950 (MultiplicationFn ?X -1000000))))))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__X : $real] : " +
                 "(equal(s__MillionYearsAgoFn(V__X) ," +
@@ -705,7 +707,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         String kifstring, expectedRes, actualRes;
         kifstring = "(=> (instance ?PRIME PrimeNumber) (forall (?NUMBER) (=> " +
                 "(equal (RemainderFn ?PRIME ?NUMBER) 0) (or (equal ?NUMBER 1) (equal ?NUMBER ?PRIME)))))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [V__PRIME : $int] : (( ! [V__NUMBER:$int] : (s__RemainderFn__0In1In2InFn(V__PRIME, V__NUMBER) = 0 => " +
                 "(V__NUMBER = 1 | V__NUMBER = V__PRIME))) => " +
@@ -741,7 +743,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         kifstring = "(=>\n" +
                 "  (avgWorkHours ?H ?N)\n" +
                 "  (lessThan ?N 70.0))";
-        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new FormulaAST(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString(),false);
         expectedRes = "! [X448 : $i, X130 : $real] : (s__instance(X448,s__Human) => " +
                 "(s__avgWorkHours__2Re(X448,X130) => $less(X130,70.0))))";

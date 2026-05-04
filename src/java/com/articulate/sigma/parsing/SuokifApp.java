@@ -38,9 +38,9 @@ public class SuokifApp {
         return SuokifVisitor.parseFile(file);
     }
 
-    private static void showResults() {
+    private static void showResults(SuokifVisitor visitor) {
 
-        Map<Integer, FormulaAST> hm = SuokifVisitor.result;
+        Map<Integer, FormulaAST> hm = visitor.result;
         StringBuilder sb = new StringBuilder();
         for (FormulaAST f : hm.values())
             sb.append(f.getFormula()).append("\n");
@@ -83,39 +83,39 @@ public class SuokifApp {
         else if (args.length == 1 && args[0].equals("-d")) {
             System.out.println();
             String input = "(likes John Mary)\n; and here's a comment\n";
-            process(input);
+            SuokifVisitor v1 = process(input);
             System.out.println("String input:\n" + input);
-            showResults();
+            showResults(v1);
             System.out.println();
 
             input = "(=> (and (minValue ?R ?ARG ?N) (?R @ARGS) (equal ?VAL (ListOrderFn (ListFn @ARGS) ?ARG))) (greaterThan ?VAL ?N))";
             Formula fast = new FormulaAST();
             fast.setFormula(input);
-            process(fast);
+            SuokifVisitor v2 = process(fast);
             System.out.println("Formula:\n " + fast);
-            showResults();
+            showResults(v2);
             System.out.println();
         }
         else if (args.length == 2 && args[0].equals("-f")) {
             File file = new File(args[1]);
             Path path = Paths.get(file.toURI());
             System.out.printf("File input: %s%n  and size: %d%n", path, file.length());
-            process(path.toFile());
+            SuokifVisitor v3 = process(path.toFile());
             if (file.length() < 500000L) // no need to show monster files
-                showResults();
+                showResults(v3);
         }
         else if (args.length == 2 && args[0].equals("-i")) {
-            process(args[1]);
+            SuokifVisitor v4 = process(args[1]);
             System.out.println("String input:\n" + args[1]);
-            showResults();
+            showResults(v4);
             System.out.println();
         }
         else if (args.length == 2 && args[0].equals("-f")) {
             Formula fast = new FormulaAST();
             fast.setFormula(args[1]);
-            process(fast);
+            SuokifVisitor v5 = process(fast);
             System.out.println("Formula:\n " + fast);
-            showResults();
+            showResults(v5);
         }
         else
             showHelp();

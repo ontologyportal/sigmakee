@@ -30,7 +30,7 @@ public class TypeTest extends IntegrationTestBase {
         System.out.println("Input: " + input);
         visitor = SuokifVisitor.parseString(input);
         if (visitor.errors.isEmpty()) {
-            Map<Integer,FormulaAST> hm = SuokifVisitor.result;
+            Map<Integer,FormulaAST> hm = visitor.result;
             VarTypes vt = new VarTypes(hm.values(),kb);
             vt.findTypes();
             f = hm.values().iterator().next();

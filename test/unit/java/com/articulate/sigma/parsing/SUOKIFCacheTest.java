@@ -14,8 +14,8 @@ public class SUOKIFCacheTest extends UnitTestBase {
     public static Map<Integer, FormulaAST> process(String input) {
 
         System.out.println(input);
-        SuokifVisitor.parseString(input);
-        Map<Integer,FormulaAST> hm = SuokifVisitor.result;
+        SuokifVisitor visitor = SuokifVisitor.parseString(input);
+        Map<Integer,FormulaAST> hm = visitor.result;
         return hm;
     }
 

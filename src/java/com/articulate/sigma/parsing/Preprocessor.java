@@ -130,9 +130,9 @@ public class Preprocessor {
                 reparseStart = System.currentTimeMillis();
                 visitor = SuokifVisitor.parseFormula(r); // need to parse a third time after sortals are added
                 reparseTimes = reparseTimes + (System.currentTimeMillis()-reparseStart);
-                if (debug) System.out.println("Preprocessor.preprocess(): parsed r: " + SuokifVisitor.result);
+                if (debug) System.out.println("Preprocessor.preprocess(): parsed r: " + visitor.result);
                 addallStart = System.currentTimeMillis();
-                finalRuleSet.addAll(SuokifVisitor.result.values());
+                finalRuleSet.addAll(visitor.result.values());
                 addallTimes = addallTimes + (System.currentTimeMillis()-addallStart);
             }
             crossCheck = crossCheck + (System.currentTimeMillis()-crossStart);
@@ -170,9 +170,9 @@ public class Preprocessor {
             }
             if (debug) System.out.println("Preprocessor.reparse(): " + f);
             visitor = SuokifVisitor.parseFormula(f);
-            if (debug) System.out.println("Preprocessor.reparse(): result " + SuokifVisitor.result);
-            if (SuokifVisitor.result != null && !SuokifVisitor.result.values().isEmpty())
-                result.add(SuokifVisitor.result.values().iterator().next());
+            if (debug) System.out.println("Preprocessor.reparse(): result " + visitor.result);
+            if (visitor.result != null && !visitor.result.values().isEmpty())
+                result.add(visitor.result.values().iterator().next());
         }
         return result;
     }

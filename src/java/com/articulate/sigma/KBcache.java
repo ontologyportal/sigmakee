@@ -38,6 +38,7 @@ import com.google.common.collect.Sets;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -148,6 +149,25 @@ public class KBcache implements Serializable {
     public Set<String> disjointRelations = new HashSet<>();
 
     public boolean initialized = false;
+
+    // -----------------------------------------------------------------------
+    // Built once after buildCaches() completes by calling buildSymbolTaxonomy().
+    // Accessors getParentsSymbol / getChildrenSymbol produce the same results
+    // as the string maps but use integer lookups to reduce String hashing overhead
+    // on hot query paths.
+    // -----------------------------------------------------------------------
+
+    /** Interning table mapping KB terms ↔ int IDs. Null until buildSymbolTaxonomy() runs.
+     *  Transient: rebuilt from parents/children after deserialization. */
+    private transient SymbolTable symbols = null;
+
+    /** Int-indexed parents map: rel → (termId → Set<parentId>). Unmodifiable after build.
+     *  Transient: rebuilt from parents/children after deserialization. */
+    private transient Map<String, Map<Integer, Set<Integer>>> parentsBySymbol = null;
+
+    /** Int-indexed children map: rel → (termId → Set<childId>). Unmodifiable after build.
+     *  Transient: rebuilt from parents/children after deserialization. */
+    private transient Map<String, Map<Integer, Set<Integer>>> childrenBySymbol = null;
 
     private static final float LOAD_FACTOR = 0.75f;
 
@@ -748,18 +768,32 @@ public class KBcache implements Serializable {
 
         if (debug) System.out.println("INFO in KBcache.childOfP(): relation, parent, child: "
                 + rel + " " + parent + " " + child);
-        if (parent.equals(child)) {
+        if (parent.equals(child))
             return false;
+
+        // Fast path: use symbol-indexed maps if available (avoids String hashing on hot query path)
+        if (childrenBySymbol != null && symbols != null) {
+            Map<Integer, Set<Integer>> relMap = childrenBySymbol.get(rel);
+            if (relMap == null) return false;
+            int parentId = symbols.lookup(parent);
+            if (parentId == -1) return false;
+            Set<Integer> childIds = relMap.get(parentId);
+            if (childIds == null) return false;
+            int childId = symbols.lookup(child);
+            if (childId == -1) return false;
+            return childIds.contains(childId);
         }
+
+        // Fallback: string map (symbol taxonomy not yet built, e.g. session caches or early init)
         Map<String,Set<String>> childMap = children.get(rel);
         if (childMap == null)
             return false;
         Set<String> childSet = childMap.get(parent);
         if (debug) System.out.println("INFO in KBcache.childOfP(): children of " + parent + " : " + childSet);
         if (childSet == null) {
-        	if (debug) System.out.println("INFO in KBcache.childOfP(): null childset for relation, parent, child: "
-                + rel + " " + parent + " " + child);
-        	return false;
+            if (debug) System.out.println("INFO in KBcache.childOfP(): null childset for relation, parent, child: "
+                    + rel + " " + parent + " " + child);
+            return false;
         }
         if (debug) System.out.println("INFO in KBcache.childOfP(): child set contains " + child + " : " + childSet.contains(child));
         return childSet.contains(child);
@@ -814,6 +848,20 @@ public class KBcache implements Serializable {
      */
     public boolean subclassOf(String child, String parent) {
 
+        if (parent.equals(child)) return false;
+        // Fast path: symbol-indexed map (avoids String hashing on hot query path)
+        if (parentsBySymbol != null && symbols != null) {
+            Map<Integer, Set<Integer>> relMap = parentsBySymbol.get("subclass");
+            if (relMap == null) return false;
+            int childId = symbols.lookup(child);
+            if (childId == -1) return false;
+            Set<Integer> parentIds = relMap.get(childId);
+            if (parentIds == null) return false;
+            int parentId = symbols.lookup(parent);
+            if (parentId == -1) return false;
+            return parentIds.contains(parentId);
+        }
+        // Fallback: string map (symbol taxonomy not yet built)
     	Map<String,Set<String>> prentsForRel = parents.get("subclass");
     	if (prentsForRel != null) {
             Set<String> prents = prentsForRel.get(child);
@@ -830,6 +878,20 @@ public class KBcache implements Serializable {
      */
     public boolean subAttributeOf(String child, String parent) {
 
+        if (parent.equals(child)) return false;
+        // Fast path: symbol-indexed map (avoids String hashing on hot query path)
+        if (parentsBySymbol != null && symbols != null) {
+            Map<Integer, Set<Integer>> relMap = parentsBySymbol.get("subAttribute");
+            if (relMap == null) return false;
+            int childId = symbols.lookup(child);
+            if (childId == -1) return false;
+            Set<Integer> parentIds = relMap.get(childId);
+            if (parentIds == null) return false;
+            int parentId = symbols.lookup(parent);
+            if (parentId == -1) return false;
+            return parentIds.contains(parentId);
+        }
+        // Fallback: string map (symbol taxonomy not yet built)
         Map<String,Set<String>> prentsForRel = parents.get("subAttribute");
         if (prentsForRel != null) {
             Set<String> prents = prentsForRel.get(child);
@@ -877,6 +939,10 @@ public class KBcache implements Serializable {
         //    System.out.println("KBcache.extendInstance(): instance parents of: " + newTerm + " are: " + iset);
         //System.out.println("extendInstance(): new term: " + newTerm + " parents: " + iset);
         relations.add(newTerm);
+        if (newTerm.endsWith(Formula.FN_SUFF))
+            functions.add(newTerm);
+        else
+            predicates.add(newTerm);
 
         // math and logic ops are not transitive
         //transRels = new HashSet<String>();
@@ -2083,7 +2149,7 @@ public class KBcache implements Serializable {
         StringBuilder sb = new StringBuilder();
         System.out.println("KBcache.storeCacheAsFormulas()");
         long cacheCount = 0;
-        KIF kif = new KIF();
+        KIFAST kif = new KIFAST();
         kif.filename = kb.name + _cacheFileSuffix;
         long millis = System.currentTimeMillis();
         Map<String,Set<String>> valSet;
@@ -2120,7 +2186,7 @@ public class KBcache implements Serializable {
             return;
         }
         if (KBmanager.getMgr().getPref("cache").equals("yes"))
-            kb.addConstituentInfo(kif);
+            kb.addConstituentInfoAST(kif);
 
         System.out.printf("KBcache.storeCacheAsFormulas(): done creating cache formulas, in %d m/s%n", (System.currentTimeMillis() - millis));
         System.out.printf("KBcache.storeCacheAsFormulas(): cached statements: %d%n", cacheCount);
@@ -2170,15 +2236,125 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
-     * Main entry point for the class.
+     * Builds int-indexed parent and child maps from the string-based
+     * {@link #parents} and {@link #children} maps.
+     *
+     * <p>Call this after {@link #buildCaches()} to enable the fast
+     * {@link #getParentsSymbol} / {@link #getChildrenSymbol} accessors.</p>
      */
+    public void buildSymbolTaxonomy() {
+
+        // Collect all distinct terms across parents and children
+        Set<String> allTerms = new HashSet<>();
+        for (Map.Entry<String, Map<String, Set<String>>> relEntry : parents.entrySet()) {
+            for (Map.Entry<String, Set<String>> termEntry : relEntry.getValue().entrySet()) {
+                allTerms.add(termEntry.getKey());
+                allTerms.addAll(termEntry.getValue());
+            }
+        }
+
+        SymbolTable st = new SymbolTable(allTerms.size());
+        for (String t : allTerms) st.intern(t);
+
+        Map<String, Map<Integer, Set<Integer>>> pSym = new HashMap<>(parents.size());
+        for (Map.Entry<String, Map<String, Set<String>>> relEntry : parents.entrySet()) {
+            String rel = relEntry.getKey();
+            Map<Integer, Set<Integer>> inner = new HashMap<>(relEntry.getValue().size());
+            for (Map.Entry<String, Set<String>> termEntry : relEntry.getValue().entrySet()) {
+                int termId = st.intern(termEntry.getKey());
+                Set<Integer> parentIds = new HashSet<>(termEntry.getValue().size());
+                for (String p : termEntry.getValue()) parentIds.add(st.intern(p));
+                inner.put(termId, Collections.unmodifiableSet(parentIds));
+            }
+            pSym.put(rel, inner);
+        }
+
+        Map<String, Map<Integer, Set<Integer>>> cSym = new HashMap<>(children.size());
+        for (Map.Entry<String, Map<String, Set<String>>> relEntry : children.entrySet()) {
+            String rel = relEntry.getKey();
+            Map<Integer, Set<Integer>> inner = new HashMap<>(relEntry.getValue().size());
+            for (Map.Entry<String, Set<String>> termEntry : relEntry.getValue().entrySet()) {
+                int termId = st.intern(termEntry.getKey());
+                Set<Integer> childIds = new HashSet<>(termEntry.getValue().size());
+                for (String c : termEntry.getValue()) childIds.add(st.intern(c));
+                inner.put(termId, Collections.unmodifiableSet(childIds));
+            }
+            cSym.put(rel, inner);
+        }
+
+        this.symbols          = st;
+        this.parentsBySymbol  = Collections.unmodifiableMap(pSym);
+        this.childrenBySymbol = Collections.unmodifiableMap(cSym);
+    }
+
+    /**
+     * Returns the set of transitive parents of {@code term} under {@code rel}
+     * using the symbol-indexed path built by {@link #buildSymbolTaxonomy}.
+     *
+     * <p>Falls back to the string map if the symbol taxonomy has not been built.</p>
+     *
+     * @param term the KB term to look up
+     * @param rel  the relation (e.g. {@code "subclass"})
+     * @return unmodifiable set of parent names; empty if none or unknown
+     */
+    public Set<String> getParentsSymbol(String term, String rel) {
+        if (parentsBySymbol == null || symbols == null) {
+            Map<String, Set<String>> relMap = parents.get(rel);
+            if (relMap == null) return Collections.emptySet();
+            Set<String> result = relMap.get(term);
+            return result != null ? result : Collections.emptySet();
+        }
+        int termId = symbols.lookup(term);
+        if (termId == -1) return Collections.emptySet();
+        Map<Integer, Set<Integer>> relMap = parentsBySymbol.get(rel);
+        if (relMap == null) return Collections.emptySet();
+        Set<Integer> parentIds = relMap.get(termId);
+        if (parentIds == null) return Collections.emptySet();
+        Set<String> result = new HashSet<>(parentIds.size());
+        for (int pid : parentIds) result.add(symbols.getName(pid));
+        return Collections.unmodifiableSet(result);
+    }
+
+    /**
+     * Returns the set of transitive children of {@code term} under {@code rel}
+     * using the symbol-indexed path built by {@link #buildSymbolTaxonomy}.
+     *
+     * <p>Falls back to the string map if the symbol taxonomy has not been built.</p>
+     *
+     * @param term the KB term to look up
+     * @param rel  the relation (e.g. {@code "subclass"})
+     * @return unmodifiable set of child names; empty if none or unknown
+     */
+    public Set<String> getChildrenSymbol(String term, String rel) {
+        if (childrenBySymbol == null || symbols == null) {
+            Map<String, Set<String>> relMap = children.get(rel);
+            if (relMap == null) return Collections.emptySet();
+            Set<String> result = relMap.get(term);
+            return result != null ? result : Collections.emptySet();
+        }
+        int termId = symbols.lookup(term);
+        if (termId == -1) return Collections.emptySet();
+        Map<Integer, Set<Integer>> relMap = childrenBySymbol.get(rel);
+        if (relMap == null) return Collections.emptySet();
+        Set<Integer> childIds = relMap.get(termId);
+        if (childIds == null) return Collections.emptySet();
+        Set<String> result = new HashSet<>(childIds.size());
+        for (int cid : childIds) result.add(symbols.getName(cid));
+        return Collections.unmodifiableSet(result);
+    }
+
+    /**
+     * Returns the {@link SymbolTable} built by {@link #buildSymbolTaxonomy},
+     * or {@code null} if the symbol taxonomy has not been built yet.
+     */
+    public SymbolTable getSymbolTable() {
+        return symbols;
+    }
+
     public void buildCaches() {
 
         clearCaches(); // ensure a clean slate
-//        if (!SUMOKBtoTPTPKB.rapidParsing)
-            _buildCaches();
-//        else
-//            _t_buildCaches();
+        p_buildCaches();
     }
 
     /** ***************************************************************
@@ -2263,7 +2439,100 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
-     * Conventional/sequential version
+     * Parallel build using CompletableFuture with a dependency-wave graph.
+     *
+     * Wave 1 (independent, parallel):
+     *   buildInsts, buildRelationsSet, buildTransitiveRelationsSet, buildDirectParentTerms
+     *
+     * Wave 2 (after Wave 1, parallel with each other):
+     *   buildParents (needs transRels), buildChildren (needs transRels)
+     *
+     * Wave 3 (after Wave 2, parallel with each other):
+     *   collectDomains (needs relations+parents), buildDirectInstances (needs parents)
+     *
+     * Wave 4 (sequential, after Wave 3):
+     *   buildInstTransRels → addTransitiveInstances → buildTransInstOf + correctValences
+     *   → buildFunctionsSet → [disjoint group] → storeCacheAsFormulas → buildSymbolTaxonomy
+     */
+    private void p_buildCaches() {
+
+        long startMillis = System.currentTimeMillis();
+        if (debug) System.out.println("INFO in KBcache._p_buildCaches(): begin");
+
+        // Pre-warm Formula.stringArgs on all formulas before parallel access.
+        // Formula.getStringArgument() lazily initialises a non-thread-safe ArrayList
+        // via loadArguments(); calling it now (single-threaded) ensures every formula
+        // is fully parsed before Wave 1 threads read argument positions concurrently.
+        for (Formula f : kb.formulaMap.values())
+            f.getStringArgument(0);
+
+        // --- Wave 1: four fully-independent methods, no shared writes ---
+        CompletableFuture<Void> f1a = CompletableFuture.runAsync(this::buildInsts,                    KButilities.EXECUTOR_SERVICE);
+        CompletableFuture<Void> f1b = CompletableFuture.runAsync(this::buildRelationsSet,             KButilities.EXECUTOR_SERVICE);
+        CompletableFuture<Void> f1c = CompletableFuture.runAsync(this::buildTransitiveRelationsSet,   KButilities.EXECUTOR_SERVICE);
+        CompletableFuture<Void> f1d = CompletableFuture.runAsync(this::buildDirectParentTerms,        KButilities.EXECUTOR_SERVICE);
+        CompletableFuture.allOf(f1a, f1b, f1c, f1d).join();
+        System.out.printf("KBcache._p_buildCaches(): Wave 1 done:                     %d m/s%n", System.currentTimeMillis() - startMillis);
+
+        // --- Wave 2: buildParents and buildChildren both need transRels; write to different maps ---
+        long w2 = System.currentTimeMillis();
+        CompletableFuture<Void> f2a = CompletableFuture.runAsync(this::buildParents,  KButilities.EXECUTOR_SERVICE);
+        CompletableFuture<Void> f2b = CompletableFuture.runAsync(this::buildChildren, KButilities.EXECUTOR_SERVICE);
+        CompletableFuture.allOf(f2a, f2b).join();
+        System.out.printf("KBcache._p_buildCaches(): Wave 2 (parents+children):       %d m/s%n", System.currentTimeMillis() - w2);
+
+        // --- Wave 3: collectDomains and buildDirectInstances write to different fields ---
+        long w3 = System.currentTimeMillis();
+        CompletableFuture<Void> f3a = CompletableFuture.runAsync(this::collectDomains,       KButilities.EXECUTOR_SERVICE);
+        CompletableFuture<Void> f3b = CompletableFuture.runAsync(this::buildDirectInstances, KButilities.EXECUTOR_SERVICE);
+        CompletableFuture.allOf(f3a, f3b).join();
+        System.out.printf("KBcache._p_buildCaches(): Wave 3 (domains+directInsts):    %d m/s%n", System.currentTimeMillis() - w3);
+
+        // --- Wave 4: sequential — each step depends on the previous ---
+        long w4 = System.currentTimeMillis();
+        buildInstTransRels();
+        System.out.printf("KBcache._p_buildCaches(): buildInstTransRels:              %d m/s%n", System.currentTimeMillis() - w4);
+        w4 = System.currentTimeMillis();
+        addTransitiveInstances();
+        System.out.printf("KBcache._p_buildCaches(): addTransitiveInstances:          %d m/s%n", System.currentTimeMillis() - w4);
+        w4 = System.currentTimeMillis();
+        buildTransInstOf();
+        correctValences();
+        System.out.printf("KBcache._p_buildCaches(): buildTransInstOf+correctValences:%d m/s%n", System.currentTimeMillis() - w4);
+        w4 = System.currentTimeMillis();
+        buildFunctionsSet();
+        System.out.printf("KBcache._p_buildCaches(): buildFunctionsSet:               %d m/s%n", System.currentTimeMillis() - w4);
+
+        // --- Wave 5: optional disjoint maps ---
+        if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
+            long wd = System.currentTimeMillis();
+            buildExplicitDisjointMap();
+            System.out.printf("KBcache._p_buildCaches(): buildExplicitDisjointMap:        %d m/s%n", System.currentTimeMillis() - wd);
+            wd = System.currentTimeMillis();
+            buildDisjointRelationsMap();
+            System.out.printf("KBcache._p_buildCaches(): buildDisjointRelationsMap:       %d m/s%n", System.currentTimeMillis() - wd);
+            wd = System.currentTimeMillis();
+            buildDisjointMap();
+            System.out.printf("KBcache._p_buildCaches(): buildDisjointMap:                %d m/s%n", System.currentTimeMillis() - wd);
+        }
+
+        long ws = System.currentTimeMillis();
+        storeCacheAsFormulas();
+        System.out.printf("KBcache._p_buildCaches(): storeCacheAsFormulas:            %d m/s%n", System.currentTimeMillis() - ws);
+
+        System.out.printf("INFO in KBcache._p_buildCaches(): size: %d%n", instanceOf.keySet().size());
+
+        // Build int-indexed symbol taxonomy (M5)
+        long wsym = System.currentTimeMillis();
+        buildSymbolTaxonomy();
+        System.out.printf("KBcache._p_buildCaches(): buildSymbolTaxonomy:             %d m/s%n", System.currentTimeMillis() - wsym);
+
+        System.out.printf("KBcache._p_buildCaches(): total:                           %d m/s%n", System.currentTimeMillis() - startMillis);
+        initialized = true;
+    }
+
+    /** ***************************************************************
+     * Conventional/sequential version (kept for reference and fallback)
      */
     private void _buildCaches() {
 
@@ -2324,6 +2593,13 @@ public class KBcache implements Serializable {
 
         System.out.printf("INFO in KBcache.buildCaches(): size: %d%n", instanceOf.keySet().size());
         System.out.printf("KBcache.buildCaches():                              %d total seconds%n", (System.currentTimeMillis() - startMillis) / KButilities.ONE_K);
+
+        // Build int-indexed symbol taxonomy (M5) so getParentsSymbol/getChildrenSymbol
+        // use integer comparisons instead of String hashing on hot query paths.
+        millis = System.currentTimeMillis();
+        buildSymbolTaxonomy();
+        System.out.printf("KBcache.buildCaches(): buildSymbolTaxonomy:         %d m/s%n", (System.currentTimeMillis() - millis));
+
         initialized = true;
     }
 
@@ -2355,6 +2631,12 @@ public class KBcache implements Serializable {
             if (signatures.keySet().contains(oldPred))
                 signatures.put(pred,newSig);
             String lastType = oldSig.get(oldSig.size()-1);
+            // When the base relation has no domain declarations its last sig entry is ""
+            // (the empty range placeholder).  Filling expanded args with "" causes sigString()
+            // to skip them, producing a type like (w > $o) for a 3-arg variant instead of
+            // ($i > $i > $i > w > $o).  Default to Entity — the universal SUMO type — so
+            // that each expanded argument gets typed as $i.
+            if (lastType == null || lastType.isEmpty()) lastType = "Entity";
             for (int i = oldSig.size(); i <= arity; i++) {
                 newSig.add(lastType);
             }

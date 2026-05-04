@@ -45,8 +45,6 @@
     if (testFilter == null) testFilter = "all";
     session.setAttribute("testFilter", testFilter);
 
-
-
     // --------- STEP 2 -------------------------------------------------------------------
 
     // Translation Mode
@@ -71,7 +69,6 @@
     String cwa = request.getParameter("CWA");
     if (StringUtil.emptyString(cwa)) cwa = "no";
     SUMOKBtoTPTPKB.CWA = "yes".equals(cwa);
-
 
     // --------- STEP 3 -------------------------------------------------------------------
 
@@ -131,8 +128,6 @@
     // Not used????
     String isModal = request.getParameter("isModal");
 
-
-
     // --------- STEP 4 -------------------------------------------------------------------
 
     // Show English paraphrases
@@ -171,13 +166,8 @@
     }
     session.setAttribute("graphFormulaFormat", graphFormulaFormat);
 
-
-
     StringBuilder status = new StringBuilder();
 
-
-
-    // ----------No idea???-----------------------------------------------------------------
     // Use LLM for paraphrasing
     boolean syntaxError = false;
 
@@ -210,27 +200,11 @@
 
     String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
     
-    
-
-
-
-    
-    
     // ==================================================================================================================
     // ---- Global flags for paraphrasing ----
     HTMLformatter.proofParaphraseInEnglish = showEnglish;
     com.articulate.sigma.nlg.LanguageFormatter.paraphraseLLM = llmProof;
     boolean busy = "Run".equalsIgnoreCase(req);
-
-
-
-
-
-
-
-
-
-
     
 %>
 <body class="<%= busy ? "busy" : "" %>" aria-busy="<%= busy %>">
@@ -407,6 +381,7 @@
                     <span class="muted">Mode:</span>
                     <label><input type="radio" id="CASC" name="vampireMode" value="CASC" <% if ("CASC".equals(vampireMode)) { out.print(" CHECKED"); } %> > CASC</label>
                     <label><input type="radio" id="Avatar" name="vampireMode" value="Avatar" <% if ("Avatar".equals(vampireMode)) { out.print(" CHECKED"); } %> > Avatar</label>
+                    <label><input type="radio" id="Vampire_mode" name="vampireMode" value="Vampire_mode" <% if ("Vampire_mode".equals(vampireMode)) { out.print(" CHECKED"); } %> > Vampire</label>
                     <label title="Disabled until fully tested.">
                         <input type="radio" id="Custom" name="vampireMode" value="Custom" <% if ("Custom".equals(vampireMode)) { out.print(" CHECKED"); } %> > Custom
                     </label>

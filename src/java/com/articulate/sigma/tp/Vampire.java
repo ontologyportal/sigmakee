@@ -52,7 +52,7 @@ public class Vampire {
     /** Turn debugging logs on or off */
     public int debug = 1;
     /** ModeTypes: AVATAR is faster but doesn't provide answers, CASC (CADE Automated System Competition) is the mode used in competition, CUSTOM takes values from the env var */
-    public enum ModeType {AVATAR, CASC, CUSTOM};    
+    public enum ModeType {AVATAR, CASC, CUSTOM, VAMPIRE};    
     /** Logic modes: FOL and HOL */
     public enum Logic { FOL, HOL }
     /** Knowledge base to be used for inference */
@@ -596,6 +596,11 @@ public class Vampire {
             if (askQuestion) options.append("-qa").append(space).append("plain").append(space);
             options.append("-t").append(space);
         }
+        if (this.mode == ModeType.VAMPIRE) {
+            options.append("--mode").append(space).append("vampire").append(space);
+            if (askQuestion) options.append("-qa").append(space).append("plain").append(space);
+            options.append("-t").append(space);
+        }
         if (this.mode == ModeType.CUSTOM) {
             if (askQuestion) options.append("-qa").append(space).append("plain").append(space);
             options.append(System.getenv("VAMPIRE_OPTS")).append(space);
@@ -619,17 +624,26 @@ public class Vampire {
         if (debug>0) System.out.printf("\nVampire.createCustomCommandList(%s, %d, %s, %s)", executable.getName(), timeout, kbFile.getName(), commands);
         String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder();
-        if (mode == ModeType.AVATAR) {
-            opts.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space);
-        } else if (mode == ModeType.CASC) {
-            opts.append("--mode").append(space).append("casc").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
-        } else if (mode == ModeType.CUSTOM) {
-            opts.append(System.getenv("VAMPIRE_OPTS"));
-        } else {
-            System.err.println("Error in Vampire.createCustomCommandList(): no mode selected");
+        boolean callerSuppliesMode = commands.contains("--mode");
+        if (!callerSuppliesMode) {
+            if (mode == ModeType.AVATAR) {
+                opts.append("-av").append(space).append("on").append(space)
+                    .append("-p").append(space).append("tptp").append(space);
+            }
+            else if (mode == ModeType.CASC) {
+                opts.append("--mode").append(space).append("casc").append(space);
+            }
+            else if (mode == ModeType.CUSTOM) {
+                opts.append(System.getenv("VAMPIRE_OPTS")).append(space);
+            }
+            else if (mode == ModeType.VAMPIRE) {
+                opts.append("--mode").append(space).append("vampire").append(space);
+            }
+            else {
+                System.err.println("Error in Vampire.createCustomCommandList(): no mode selected");
+            }
         }
         for (String s : commands) opts.append(s).append(space);
-        
         System.out.println("h-1");
         if (timeout != 0) {
             opts.append("-t").append(space);
@@ -676,6 +690,7 @@ public class Vampire {
             throw new ExecutableNotFoundException("Vampire", this.executablePath, "vampire");
         }
         createCommandList(kbFile);
+        this.result.setCommandLine(this.commands);
         if (debug>1) System.out.println("Vampire.run(): Initializing Vampire with:\n" + String.join(" ", this.commands));
         ProcessBuilder _builder = new ProcessBuilder(this.commands);
         _builder.redirectErrorStream(false);  // Keep stderr separate for better error capture
@@ -732,7 +747,6 @@ public class Vampire {
                 throw new FormulaTranslationException(msg, this.result.getInputLanguage(), lineNo, stdoutLines, stderrLines);
             }
         }
-        System.out.println("Vampire.run() done executing");
     }
 
     /***************************************************************
@@ -921,7 +935,7 @@ public class Vampire {
             if (!java.nio.file.Files.exists(sessionDir)) {
                 try {
                     java.nio.file.Files.createDirectories(sessionDir);
-                    System.out.println("Vampire.writeStatements(): created session dir " + sessionDir);
+                    if (debug>1) System.out.println("Vampire.writeStatements(): created session dir " + sessionDir);
                 }
                 catch (IOException ex) {
                     System.err.println("Error in writeStatements(): could not create session dir " + sessionDir);
@@ -1018,7 +1032,7 @@ public class Vampire {
      * TODO: This function might not be necessary if we find a way to
      * directly add assertion into opened inference engine (e_ltb_runner)
      */
-    public static boolean assertFormula(String userAssertionTPTP, KB kb, List<Formula> parsedFormulas, boolean tptp) {
+    public boolean assertFormula(String userAssertionTPTP, KB kb, List<Formula> parsedFormulas, boolean tptp) {
         
         System.out.printf("\nVampire.assertFormula(%s, %s, %s, %b)", userAssertionTPTP, kb.name, parsedFormulas, tptp);
         boolean allAdded = false;
@@ -1056,6 +1070,9 @@ public class Vampire {
         }
         catch (IOException e) {
             e.printStackTrace();
+            if (this.sessionId != null && !this.sessionId.isEmpty()) {
+                if (debug>1) System.out.println("INFO Vampire.run(): using session dir for temp files, sessionId=" + sessionId);
+            }
         }
         return allAdded;
     }

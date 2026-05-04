@@ -16,6 +16,7 @@ Infosys LTD.
 package com.articulate.sigma.tp;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;
@@ -318,28 +319,42 @@ public class EProver {
      */
     public void submitQuery(String formula) {
 
-        if (debug>0) System.out.printf("\nEProver.submitQuery(%s)", formula);
+        if (debug > 0) System.out.printf("\nEProver.submitQuery(%s)", formula);
         long startTime = System.currentTimeMillis();
+        long timeoutMs = this.timeout * 1000L;
         result = new ATPResult.Builder()
-            .engineName("EProver")
-            .engineMode("interactive")
-            .inputLanguage("FOF")
-            .inputSource("custom")
-            .build();
+                .engineName("EProver")
+                .engineMode("standalone")
+                .inputLanguage("FOF")
+                .inputSource("custom")
+                .timeoutMs(timeoutMs)
+                .build();
         List<String> stdoutLines = new ArrayList<>();
         List<String> stderrLines = new ArrayList<>();
-        String resultStr = "";
         Path tempProblemFile = null;
-        System.out.println("here0");
         try {
-            tempProblemFile = Files.createTempFile(Paths.get(KBmanager.getMgr().getPref("kbDir")), "temp-eprover-problem", ".p");
-            String problem = "include('" + kbFilePath + "').\n" + "fof(conj1,conjecture, " + SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,true) + ")." + "\n";
-            this.qlist = SUMOformulaToTPTPformula.getQlist();
-            System.out.println("\n\n\n\nEProver qlist = " + this.qlist);
+            tempProblemFile = Files.createTempFile(
+                    Paths.get(KBmanager.getMgr().getPref("kbDir")),
+                    "temp-eprover-problem",
+                    ".p"
+            );
+            String query = ExprToTPTP.translateKifString(formula, true, "fof");
+            if (query == null) {
+                query = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula, true);
+                this.qlist = SUMOformulaToTPTPformula.getQlist();
+            }
+            else {
+                this.qlist = ExprToTPTP.getQlist(formula);
+            }
+            String problem =
+                    "include('" + kbFilePath + "').\n" +
+                    "fof(conj1,conjecture, " + query + ").\n";
             Files.writeString(tempProblemFile, problem);
-            this.commands.add(tempProblemFile.toString());
-            System.out.println("EProver.submitQuery(): commands\n" + String.join(" ", this.commands));
-            ProcessBuilder processBuilder = new ProcessBuilder(this.commands);
+            List<String> runCommands = new ArrayList<>(this.commands);
+            runCommands.add(tempProblemFile.toString());
+            result.setCommandLine(runCommands);
+            System.out.println("EProver.submitQuery(): commands\n" + String.join(" ", runCommands));
+            ProcessBuilder processBuilder = new ProcessBuilder(runCommands);
             processBuilder.redirectErrorStream(false);
             Process proc = processBuilder.start();
             Thread stderrReader = new Thread(() -> {
@@ -348,40 +363,38 @@ public class EProver {
                     while ((line = r.readLine()) != null) {
                         stderrLines.add(line);
                     }
-                } catch (IOException ignored) {}
+                }
+                catch (IOException ignored) {
+                }
             });
             stderrReader.start();
-            try (BufferedReader reader = new BufferedReader( new InputStreamReader(proc.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     stdoutLines.add(line);
                     this.output.add(line);
-                    resultStr += line + "\n";
                 }
             }
             stderrReader.join(5000);
-            int exitCode = proc.waitFor();System.out.println("EProver exitCode = " + exitCode);
-
-            // System.out.println("EProver stdout:");
-            // for (String s : stdoutLines)
-            //     System.out.println(s);
-            System.out.println("EProver stderr:");
-            for (String s : stderrLines)
-                System.out.println(s);
-
+            int exitCode = proc.waitFor();
             long elapsed = System.currentTimeMillis() - startTime;
             result.setStdout(stdoutLines);
             result.setStderr(stderrLines);
             result.setQList(this.qlist);
-            result.setExitCode(exitCode);
-            result.setElapsedTimeMs(elapsed);
-            result.extractSzsFromOutput();
-        } catch (Exception ex) {
+            result.finalize(exitCode, elapsed, elapsed >= timeoutMs);
+        }
+        catch (Exception ex) {
             result.setSzsStatus(SZSStatus.OS_ERROR);
             result.setPrimaryError(ex.getMessage());
-        } finally {
+            ex.printStackTrace();
+        }
+        finally {
             if (tempProblemFile != null) {
-                try { Files.deleteIfExists(tempProblemFile); } catch (IOException ignored) {}
+                try {
+                    Files.deleteIfExists(tempProblemFile);
+                }
+                catch (IOException ignored) {
+                }
             }
         }
     }
