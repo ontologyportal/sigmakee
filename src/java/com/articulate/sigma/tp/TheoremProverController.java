@@ -55,7 +55,7 @@ public class TheoremProverController {
     }
 
     private ATPResult askVampire(ATPQuery query) {
-        Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers());
+        Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
         if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) {
             if (query.isClosedWorldAssumption()) SUMOKBtoTPTPKB.CWA = true;
             if (query.isModusPonens() && query.isDropOnePremise()) query.getKb().dropOnePremiseFormulas = true;
@@ -69,7 +69,7 @@ public class TheoremProverController {
     }
 
     private ATPResult askEProver(ATPQuery query) {
-        EProver eprover = new EProver(query.getKb(), query.getLanguage().name(), query.getTimeout(), query.getMaxAnswers());
+        EProver eprover = new EProver(query.getKb(), query.getLanguage().name(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
         eprover.askEProver(query.getQuery());
         return eprover.getResult();
     }

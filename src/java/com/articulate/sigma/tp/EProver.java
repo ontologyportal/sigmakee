@@ -18,6 +18,7 @@ package com.articulate.sigma.tp;
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.trans.SessionTPTPManager;
 import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
@@ -62,6 +63,8 @@ public class EProver {
     public StringBuilder qlist = null;
     /** Container for organizing the results of the query */
     private ATPResult result;
+    /** Session id to match the user to their assertions */
+    private String sessionId;
 
     /***************************************************************
      * Constructor for EProver. Defaults to tptp, 30 sec timeout, 1 max answer.
@@ -69,7 +72,7 @@ public class EProver {
      */
     public EProver(KB kb) {
 
-        this(kb, "tptp", 30, 1);
+        this(kb, "tptp", 30, 1, null);
     }
 
     /***************************************************************
@@ -80,15 +83,37 @@ public class EProver {
      * @param maxAnswers
      */
     public EProver(KB kb, String requestedTptpLanguage, int timeout, int maxAnswers) {
-        
-        if (debug>0) System.out.printf("\nEProver(%s, %s, %d, %d)", kb.name, requestedTptpLanguage, timeout, maxAnswers);
+
+        this(kb, requestedTptpLanguage, timeout, maxAnswers, null);
+    }
+
+    /***************************************************************
+     * Constructor for EProver. Executable defaults to eprover pref.
+     * @param kb
+     * @param requestedTptpLanguage
+     * @param timeout
+     * @param maxAnswers
+     * @param sessionId
+     */
+    public EProver(KB kb, String requestedTptpLanguage, int timeout, int maxAnswers, String sessionId) {
+
+        if (debug>0) System.out.printf("\nEProver(%s, %s, %d, %d, %s)", kb.name, requestedTptpLanguage, timeout, maxAnswers, sessionId);
         this.kb = kb;
         this.requestedTptpLanguage = requestedTptpLanguage;
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
+        this.sessionId = sessionId;
         this.executablePath = KBmanager.getMgr().getPref("eprover");
+
+        String dir;
+        if (this.sessionId != null && !this.sessionId.isEmpty()) {
+            dir = SessionTPTPManager.getSessionDir(this.sessionId).toString() + File.separator;
+        } else {
+            dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+        }
         this.kbFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + kb.name + ("tff".equals(requestedTptpLanguage) ? ".tff" : ".tptp");
-        this.tempProblemFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + "temp-eprover-problem.p";
+        this.tempProblemFilePath = dir + "temp-eprover-problem.p";
+
         this.commands = new ArrayList<>();
         this.commands.add(this.executablePath);
         this.commands.add("--cpu-limit=" + String.valueOf(timeout));
@@ -100,6 +125,9 @@ public class EProver {
         _writer = null;
     }
 
+    /** Set the sessionId */
+    public void setSessionId(String sid) { this.sessionId = sid; }
+
     /***************************************************************
      * Submits a query to this E inference engine.
      * @param suoKifFormula The String representation of the SUO-KIF query.
@@ -109,7 +137,8 @@ public class EProver {
         if (debug>0) System.out.printf("\nEProver.askEProver(%s)", suoKifFormulas);
         if (StringUtil.isNonEmptyString(suoKifFormulas)) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = fp.preProcess(new Formula(suoKifFormulas), true, this.kb);
+            Set<Formula> processedStmts = SessionTPTPManager.withSessionCache(
+                    this.sessionId, this.kb, () -> fp.preProcess(new Formula(suoKifFormulas), true, this.kb));
             if (!processedStmts.isEmpty() && this != null) {
                 String strQuery = processedStmts.iterator().next().getFormula();
                 this.submitQuery(strQuery);
@@ -135,7 +164,8 @@ public class EProver {
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = fp.preProcess(query, true, this.kb);
+            Set<Formula> processedStmts = SessionTPTPManager.withSessionCache(
+                    this.sessionId, this.kb, () -> fp.preProcess(query, true, this.kb));
             if (!processedStmts.isEmpty()) {
                 EProver.addBatchConfig(null, this.timeout);
                 String strQuery = processedStmts.iterator().next().getFormula();
@@ -333,11 +363,31 @@ public class EProver {
         List<String> stderrLines = new ArrayList<>();
         Path tempProblemFile = null;
         try {
+            Path kbDirPath;
+            if (this.sessionId != null && !this.sessionId.isEmpty()) {
+                kbDirPath = SessionTPTPManager.getSessionDir(this.sessionId);
+                Files.createDirectories(kbDirPath);
+            } else {
+                kbDirPath = Paths.get(KBmanager.getMgr().getPref("kbDir"));
+            }
+
             tempProblemFile = Files.createTempFile(
-                    Paths.get(KBmanager.getMgr().getPref("kbDir")),
+                    kbDirPath,
                     "temp-eprover-problem",
                     ".p"
             );
+
+            // Resolve actual kbFilePath: prefer session-specific TPTP if it exists
+            String actualKbFilePath = this.kbFilePath;
+            if (this.sessionId != null && !this.sessionId.isEmpty()) {
+                String lang = "tff".equals(this.requestedTptpLanguage) ? "tff" : "tptp";
+                Path sessionPath = SessionTPTPManager.getSessionTPTPPath(this.sessionId, this.kb.name, lang);
+                if (Files.exists(sessionPath)) {
+                    if (debug > 0) System.out.println("EProver.submitQuery(): Using session-specific base file: " + sessionPath);
+                    actualKbFilePath = sessionPath.toString();
+                }
+            }
+
             String query = ExprToTPTP.translateKifString(formula, true, "fof");
             if (query == null) {
                 query = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula, true);
@@ -347,7 +397,7 @@ public class EProver {
                 this.qlist = ExprToTPTP.getQlist(formula);
             }
             String problem =
-                    "include('" + kbFilePath + "').\n" +
+                    "include('" + actualKbFilePath + "').\n" +
                     "fof(conj1,conjecture, " + query + ").\n";
             Files.writeString(tempProblemFile, problem);
             List<String> runCommands = new ArrayList<>(this.commands);
