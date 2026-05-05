@@ -1,24 +1,68 @@
 package com.articulate.sigma.trans;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class THFutil {
 
 
+    /**
+     * Full preprocessing pipeline for a Vampire THF proof before it is handed to
+     * the FOF/KIF visitor (TPTPVisitor / TPTP3ProofProcessor).
+     *
+     * Step 1 — Structure: join multi-line thf() blocks and reorder to forward proof order.
+     *   Vampire may emit a single thf() formula spread over several newlines and outputs steps
+     *   in reverse dependency order.  The proof section (between SZS output start/end) is
+     *   extracted, multi-line blocks are joined until the closing ").", the DAG is trimmed to
+     *   the subgraph reachable from $false, and a topological sort ensures each formula appears
+     *   after every formula it depends on.
+     *
+     * Step 2 — Negated-quantifier wrapping: "~ ? [X] : ..." → "~(? [X] : ...)".
+     *   The ANTLR THF grammar rule for negation is  thf_unary_formula := '~' '(' logic ')'.
+     *   Without the explicit parentheses the parser cannot match the rule.
+     *
+     * Step 3 — Per-formula normalisation for the FOF visitor, applied to every thf()/tff() line:
+     *   a. wrapNegationOnBareAtoms  — "~atom" → "~(atom)",  "~f(x)" → "~(f(x))"
+     *      so bare negations become valid thf_unary_formula nodes.
+     *   b. rewriteNegatedBinders    — "~! [X] : (Φ)" → "? [X] : ~(Φ)" and vice versa,
+     *      pushing the negation inside so that the quantifier structure is visible.
+     *   c. expandAndUntypeBinders   — "! [X:$i, Y:$i] : Φ" → "! [X] : (! [Y] : Φ)",
+     *      strips HOL type annotations and splits multi-variable binders into nested ones.
+     */
     public static List<String> preprocessTHFProof(List<String> lines) {
-        List<String> out = new ArrayList<>(lines.size());
-        boolean inProof = false;
+        // Step 1: locate the SZS proof block, join multi-line blocks, prune to the
+        // proof-relevant DAG reachable from $false, and topologically sort.
+        int start = -1, end = -1;
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).contains("SZS output start")) start = i;
+            if (lines.get(i).contains("SZS output end"))   { end = i; break; }
+        }
+        if (start >= 0 && end > start) {
+            List<String> before      = start > 0            ? lines.subList(0, start)          : Collections.emptyList();
+            List<String> proofLines  = new ArrayList<>(lines.subList(start + 1, end));
+            List<String> after       = end + 1 < lines.size() ? lines.subList(end + 1, lines.size()) : Collections.emptyList();
+            List<String> rebuilt = new ArrayList<>(before);
+            rebuilt.add(lines.get(start));
+            rebuilt.addAll(reorderProofSection(proofLines));
+            rebuilt.add(lines.get(end));
+            rebuilt.addAll(after);
+            lines = rebuilt;
+        }
 
+        // Step 2: wrap bare negated quantifiers before the per-formula pass
         lines = fixNegatedQuantifiers(lines);
 
+        // Step 3: per-formula normalisation
+        List<String> out = new ArrayList<>(lines.size());
+        boolean inProof = false;
         for (String line : lines) {
             if (line.contains("SZS output start")) { inProof = true;  out.add(line); continue; }
             if (line.contains("SZS output end"))   { inProof = false; out.add(line); continue; }
             if (!inProof) { out.add(line); continue; }
 
             String work = line;
-            if (work.matches("^\\d+\\..*")) { int p = work.indexOf('.'); work = work.substring(p + 1).trim(); } // strips index number (.1) if exists
+            if (work.matches("^\\d+\\..*")) { int p = work.indexOf('.'); work = work.substring(p + 1).trim(); }
 
             if (work.trim().startsWith("thf(") || work.trim().startsWith("tff(")) {
                 work = normalizeTHFForFOFVisitor(work);
@@ -330,11 +374,170 @@ public class THFutil {
                         out.append("~(").append(s, j, k).append(")");
                         i=k; continue;
                     }
+                    // ~f(x) — negation of function application: wrap from identifier through closing paren
+                    if(s.charAt(t)=='('){
+                        int closeIdx=findMatchingBracket(s,t,'(', ')');
+                        if(closeIdx>t){
+                            out.append("~(").append(s, j, closeIdx+1).append(")");
+                            i=closeIdx+1; continue;
+                        }
+                    }
                 }
             }
             out.append(s.charAt(i++));
         }
         return out.toString();
+    }
+
+    // -------------------------------------------------------------------------
+    // Proof reordering helpers (moved from TPTP3ProofProcessor)
+    // -------------------------------------------------------------------------
+
+    private static final boolean debug = false;
+
+    /**
+     * Join multi-line thf()/tff()/fof()/cnf() blocks, prune to the subgraph
+     * reachable from $false, and topologically sort the proof steps.
+     * Input and output are the lines BETWEEN the SZS start/end markers.
+     */
+    private static List<String> reorderProofSection(List<String> lines) {
+
+        final Set<String> DIALECTS = new LinkedHashSet<>(Arrays.asList("fof(", "tff(", "thf(", "cnf("));
+        final Pattern HEAD_ID =
+                Pattern.compile("^\\s*(fof|tff|thf|cnf)\\(([^,\\s]+)\\s*,", Pattern.CASE_INSENSITIVE);
+        final Pattern PARENTS =
+                Pattern.compile("(?:inference|introduced)\\([^\\]]*\\[(.*?)\\]\\)", Pattern.CASE_INSENSITIVE);
+        final Pattern FORMULA_ID = Pattern.compile("\\bf\\d+\\b", Pattern.CASE_INSENSITIVE);
+
+        List<String> prefix = new ArrayList<>();
+        List<String> suffix = new ArrayList<>();
+        List<ProofItem> items = new ArrayList<>();
+
+        boolean seenBlock = false;
+        boolean collecting = false;
+        List<String> cur = new ArrayList<>();
+        int appearanceIdx = 0;
+
+        for (String ln : lines) {
+            String trimmed = ln.trim();
+            boolean startsBlock = DIALECTS.stream().anyMatch(d -> trimmed.startsWith(d));
+            if (!collecting && !seenBlock && !startsBlock) { prefix.add(ln); continue; }
+            if (startsBlock && !collecting) { collecting = true; seenBlock = true; cur.clear(); }
+            if (collecting) {
+                cur.add(ln);
+                if (trimmed.endsWith(").")) {
+                    String blockText = String.join("\n", cur);
+                    Matcher m = HEAD_ID.matcher(cur.get(0));
+                    String id = null;
+                    if (m.find()) id = m.group(2);
+                    if (id == null) {
+                        suffix.addAll(cur);
+                    } else {
+                        Set<String> parents = new LinkedHashSet<>();
+                        Matcher br = PARENTS.matcher(blockText);
+                        while (br.find()) {
+                            Matcher ids = FORMULA_ID.matcher(br.group(1));
+                            while (ids.find()) { String pid = ids.group(); if (!pid.equalsIgnoreCase(id)) parents.add(pid); }
+                        }
+                        items.add(new ProofItem(id, blockText, parents, appearanceIdx++, blockText.contains("$false")));
+                    }
+                    collecting = false; cur.clear();
+                }
+                continue;
+            }
+            suffix.add(ln);
+        }
+
+        if (items.isEmpty()) return new ArrayList<>(lines);
+
+        ProofItem falseItem = null;
+        for (ProofItem it : items) if (it.containsFalse) falseItem = it;
+        if (falseItem == null) return new ArrayList<>(lines);
+
+        Map<String, ProofItem> byId = new HashMap<>();
+        for (ProofItem it : items) byId.put(it.id, it);
+
+        Set<String> reachable = new LinkedHashSet<>();
+        Deque<String> stack = new ArrayDeque<>();
+        stack.push(falseItem.id);
+        while (!stack.isEmpty()) {
+            String id = stack.pop();
+            if (!reachable.add(id)) continue;
+            for (String p : byId.getOrDefault(id, ProofItem.EMPTY).parents)
+                if (byId.containsKey(p)) stack.push(p);
+        }
+
+        Map<String, Integer> indeg = new HashMap<>();
+        Map<String, Set<String>> children = new HashMap<>();
+        for (String id : reachable) { indeg.put(id, 0); children.put(id, new LinkedHashSet<>()); }
+        for (String id : reachable) {
+            ProofItem it = byId.get(id);
+            if (it == null) continue;
+            for (String p : it.parents) {
+                if (!reachable.contains(p)) continue;
+                children.get(p).add(id);
+                indeg.put(id, indeg.get(id) + 1);
+            }
+        }
+
+        Comparator<String> idCmp = (a, b) -> {
+            long na = numericTail(a), nb = numericTail(b);
+            if (na != -1 && nb != -1) return Long.compare(na, nb);
+            return Integer.compare(byId.get(a).appearance, byId.get(b).appearance);
+        };
+        PriorityQueue<String> q = new PriorityQueue<>(idCmp);
+        for (Map.Entry<String,Integer> e : indeg.entrySet()) if (e.getValue() == 0) q.add(e.getKey());
+
+        List<String> topo = new ArrayList<>();
+        while (!q.isEmpty()) {
+            String u = q.poll();
+            topo.add(u);
+            for (String v : children.getOrDefault(u, Collections.emptySet())) {
+                indeg.put(v, indeg.get(v) - 1);
+                if (indeg.get(v) == 0) q.add(v);
+            }
+        }
+
+        if (topo.size() != reachable.size()) {
+            if (debug) System.out.println("reorderProofSection: topo/reachable mismatch, keeping original order");
+            return new ArrayList<>(lines);
+        }
+
+        List<ProofItem> unreachable = new ArrayList<>();
+        for (ProofItem it : items) if (!reachable.contains(it.id)) unreachable.add(it);
+        unreachable.sort(Comparator.comparingInt(x -> x.appearance));
+
+        List<String> out = new ArrayList<>(prefix);
+        for (ProofItem it : unreachable) out.add(it.blockText);
+        for (String id : topo) out.add(byId.get(id).blockText);
+        out.addAll(suffix);
+        return joinAndSplitStable(out);
+    }
+
+    private static final class ProofItem {
+        static final ProofItem EMPTY = new ProofItem("", "", Collections.emptySet(), -1, false);
+        final String id;
+        final String blockText;
+        final Set<String> parents;
+        final int appearance;
+        final boolean containsFalse;
+        ProofItem(String id, String blockText, Set<String> parents, int appearance, boolean containsFalse) {
+            this.id = id; this.blockText = blockText; this.parents = parents;
+            this.appearance = appearance; this.containsFalse = containsFalse;
+        }
+    }
+
+    private static long numericTail(String id) {
+        int i = id.length() - 1;
+        while (i >= 0 && Character.isDigit(id.charAt(i))) i--;
+        if (i == id.length() - 1) return -1;
+        try { return Long.parseLong(id.substring(i + 1)); } catch (Exception e) { return -1; }
+    }
+
+    private static List<String> joinAndSplitStable(List<String> chunks) {
+        List<String> result = new ArrayList<>();
+        for (String ch : chunks) { Collections.addAll(result, ch.split("\\R", -1)); }
+        return result;
     }
 
 }
