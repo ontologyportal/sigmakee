@@ -91,7 +91,9 @@
 
     // Vampire Mode
     String vampireMode = request.getParameter("vampireMode");
+    if (vampireMode == null) vampireMode = (String) session.getAttribute("vampireMode");
     if (StringUtil.emptyString(vampireMode)) vampireMode = "CASC";
+    session.setAttribute("vampireMode", vampireMode);
 
     // Modus Ponens
     Boolean modensPonens = (Boolean) session.getAttribute("ModensPonens");
@@ -381,7 +383,7 @@
                     <span class="muted">Mode:</span>
                     <label><input type="radio" id="CASC" name="vampireMode" value="CASC" <% if ("CASC".equals(vampireMode)) { out.print(" CHECKED"); } %> > CASC</label>
                     <label><input type="radio" id="Avatar" name="vampireMode" value="Avatar" <% if ("Avatar".equals(vampireMode)) { out.print(" CHECKED"); } %> > Avatar</label>
-                    <label><input type="radio" id="Vampire_mode" name="vampireMode" value="Vampire_mode" <% if ("Vampire_mode".equals(vampireMode)) { out.print(" CHECKED"); } %> > Vampire</label>
+                    <label><input type="radio" id="Vampire" name="vampireMode" value="Vampire" <% if ("Vampire".equals(vampireMode)) { out.print(" CHECKED"); } %> > Vampire</label>
                     <label title="Disabled until fully tested.">
                         <input type="radio" id="Custom" name="vampireMode" value="Custom" <% if ("Custom".equals(vampireMode)) { out.print(" CHECKED"); } %> > Custom
                     </label>

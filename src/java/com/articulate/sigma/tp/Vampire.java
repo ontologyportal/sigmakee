@@ -129,6 +129,7 @@ public class Vampire {
         if (mode.equalsIgnoreCase(ModeType.AVATAR.name())) this.mode = ModeType.AVATAR;
         if (mode.equalsIgnoreCase(ModeType.CASC.name())) this.mode = ModeType.CASC;
         if (mode.equalsIgnoreCase(ModeType.CUSTOM.name())) this.mode = ModeType.CUSTOM;
+        if (mode.equalsIgnoreCase(ModeType.VAMPIRE.name())) this.mode = ModeType.VAMPIRE;
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
         this.inferenceFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + "." + this.inferenceFileExtension;
@@ -568,7 +569,7 @@ public class Vampire {
         }
         createCommandList(kbFile);
         this.result.setCommandLine(this.commands);
-        if (debug>1) System.out.println("Vampire.run(): Initializing Vampire with:\n" + String.join(" ", this.commands));
+        System.out.println("Vampire.run(): command: " + String.join(" ", this.commands));
         ProcessBuilder _builder = new ProcessBuilder(this.commands);
         _builder.redirectErrorStream(false);  // Keep stderr separate for better error capture
         Process _vampire = _builder.start();
@@ -729,7 +730,7 @@ public class Vampire {
             throw new ExecutableNotFoundException("Vampire", this.executablePath, configKey);
         }
         createCustomCommandList(new File(this.executablePath), this.timeout, kbFile.getAbsoluteFile(), this.commands);
-        System.out.println("Vampire.runCustom(): Custom command list:\n" + this.commands);
+        System.out.println("Vampire.runCustom(): command: " + String.join(" ", this.commands));
         result.setCommandLine(this.commands);
         ProcessBuilder _builder = new ProcessBuilder(this.commands);
         _builder.redirectErrorStream(false);  // Keep stderr separate

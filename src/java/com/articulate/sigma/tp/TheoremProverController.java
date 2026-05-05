@@ -65,14 +65,12 @@ public class TheoremProverController {
             if (query.getTestFilePath() == null) vampire.askVampireHOL(query.getQuery(), query.isHolUseModals());
             else vampire.askVampireTHF(query.getTestFilePath());
         }
-        System.out.println(String.join("\n",vampire.output));
         return vampire.getResult();
     }
 
     private ATPResult askEProver(ATPQuery query) {
         EProver eprover = new EProver(query.getKb(), query.getLanguage().name(), query.getTimeout(), query.getMaxAnswers());
         eprover.askEProver(query.getQuery());
-        System.out.println(String.join("\n",eprover.output));
         return eprover.getResult();
     }
 
