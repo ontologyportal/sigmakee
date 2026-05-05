@@ -34,11 +34,11 @@ public class PythonAPI {
     public String query(String q, int timeout) {
 
         TPTP3ProofProcessor tpp;
-        kb.loadVampire();
-        Vampire vamp = kb.askVampire(q, timeout, 1);
+        Vampire vamp = new Vampire(kb, "tptp", "CASC", false, timeout, 1);
+        vamp.askVampire(q);
         System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
         tpp = new TPTP3ProofProcessor();
-        tpp.parseProofOutput(vamp.output, q, kb,vamp.qlist);
+        tpp.parseProofOutput(vamp.output, q, kb, vamp.qlist);
         return tpp.bindings + "\n\n" + tpp.proof;
     }
 

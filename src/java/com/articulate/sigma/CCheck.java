@@ -1,5 +1,7 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.tp.EProver;
+
 /** This code is copyright Articulate Software (c) 2014.
  This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
  Users of this code also consent, by use of this code, to credit Articulate Software
@@ -132,7 +134,9 @@ public class CCheck implements Runnable {
         try {
             switch (chosenEngine) {
                 case "EProver":
-                    result = kb.askEProver("(instance instance BinaryPredicate)", 10, 1) + " ";
+                    EProver eprover = new EProver(kb, "tptp", 10, 1);
+                    eprover.askEProver("(instance instance BinaryPredicate)");
+                    result = eprover.toString();
                     inferenceEngine = "EProver";
                     return true;
                 case "SInE":
@@ -140,7 +144,8 @@ public class CCheck implements Runnable {
                     inferenceEngine = "SInE";
                     return true;
                 case "LeoLocal":
-                    LEO leo = kb.askLeo("(instance instance BinaryPredicate)", 10, 1);
+                    LEO leo = new LEO(kb, "tptp", 10, 1, null);
+                    leo.askLeo("(instance instance BinaryPredicate)");
                     inferenceEngine = "LeoLocal";
                     return true;
                 default:
@@ -304,7 +309,6 @@ public class CCheck implements Runnable {
             StringBuilder negatedQuery;
             while (it.hasNext()) {
                 query = (Formula) it.next();
-                System.out.println("CCheck.runConsistencyCheck: eprover: " + empty.eprover);
                 fp = new FormulaPreprocessor();
                 processedQueries = fp.preProcess(query,false, kb);
 
@@ -371,7 +375,6 @@ public class CCheck implements Runnable {
             String query;
             while (it.hasNext()) {
                 query = it.next();
-                System.out.println("CCheck.runConsistencyCheck: eprover: " + empty.eprover);
             }
             pw.println("  </entries>");
             pw.print("</ConsistencyCheck>");
@@ -407,13 +410,16 @@ public class CCheck implements Runnable {
         try {
             switch (inferenceEngine) {
                 case "EProver":
-                    result = empty.askEProver(query, timeOut, 1) + " ";
+                    EProver eprover = new EProver(kb, "tptp", timeOut, 1);
+                    eprover.askEProver(query);
+                    result = eprover.toString();
                     break;
                 case "SInE":
                     result = empty.askSInE(query, timeOut, 1);
                     break;
                 case "LeoLocal":
-                    LEO leo = empty.askLeo(query, timeOut, 1);
+                    LEO leo = new LEO(empty, "tptp", timeOut, 1, null);
+                    leo.askLeo(query);
                     break;
             //result = InterfaceTPTP.queryTPTP(query, timeOut, 1, lineHtml,
             //        ieSettings.get("systemChosen"),
