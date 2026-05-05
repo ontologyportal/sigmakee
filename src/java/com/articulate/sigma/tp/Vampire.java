@@ -25,6 +25,10 @@ import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.trans.TPTPutil;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.ExprToTHF;
+import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.SuokifVisitor;
 import tptp_parser.TPTPFormula;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -185,121 +189,6 @@ public class Vampire {
     }
 
     /*********************************************************************************
-     * Ask Vampire for a TQ (test query) with session-specific TPTP file isolation.
-     * When sessionId is provided and regeneration is required (due to schema-changing
-     * assertions like subclass, domain, etc.), a session-specific TPTP file is generated
-     * instead of modifying the shared base file.
-     * @param suoKifFormula The query in SUO-KIF format
-     * @return Vampire result object
-     */
-    public void askVampireTestQuery(String suoKifFormula) {
-
-        if (debug>0) System.out.printf("\nVampire.askVampireTestQuery(%s)", suoKifFormula);
-        // For session-specific TQ tests, decide whether to generate/merge session files.
-        if (this.sessionId != null && !this.sessionId.isEmpty()) {
-            // Read and clear the batch flag (one-shot): non-null → came from a batch tell loop
-            Boolean batchFlag = SessionTPTPManager.consumeBatchFlag(this.sessionId);
-            if (batchFlag != null) {
-                try {
-                    if (Boolean.TRUE.equals(batchFlag)) {
-                        SessionTPTPManager.generateSessionTPTP(this.sessionId, this.kb, this.requestedTptpLanguage);
-                    } else {
-                        System.out.println("INFO askVampireForTQ(): patches current, skipping regen for session " + this.sessionId);
-                    }
-                }
-                catch (Exception e) {
-                    System.err.println("ERROR askVampireForTQ(): Failed to generate session TPTP: " + e.getMessage());
-                    e.printStackTrace();
-                }
-            } else {
-                // ── Non-batch context: original behaviour ──────────────────────────
-                boolean mustRegenBase = this.kb.testQueryRequiresBaseRegeneration(this.sessionId);
-                Path sessionUAPath = SessionTPTPManager.getSessionUAPath(this.sessionId, this.kb.name);
-                boolean hasSessionUA = java.nio.file.Files.exists(sessionUAPath);
-                if (mustRegenBase || hasSessionUA) {
-                    try {
-                        if (mustRegenBase) {
-                            SessionTPTPManager.generateSessionTPTP(this.sessionId, this.kb, this.requestedTptpLanguage);
-                        } else {
-                            SessionTPTPManager.mergeBaseWithSessionUA(this.sessionId, this.kb, this.requestedTptpLanguage);
-                        }
-                    }
-                    catch (Exception e) {
-                        System.err.println("ERROR askVampireForTQ(): Failed to generate/merge session TPTP: " + e.getMessage());
-                        e.printStackTrace();
-                    }
-                }
-            }
-        } else {
-            boolean mustRegenBase = this.kb.testQueryRequiresBaseRegeneration(null);
-            if (mustRegenBase) {
-                synchronized (this.kb.baseGenLock) {
-                    TPTPGenerationManager.generateProperFile(this.kb, this.requestedTptpLanguage);  // rebuild SUMO.<lang>
-                }
-            }
-        }
-        this.askVampire(suoKifFormula);
-        if (modensPonens)
-            this.askVampireModensPonens(suoKifFormula);
-    }
-
-    /***************************************************************
-     *
-     */
-    public void askVampireTPTP(String test_path) {
-
-        if (debug>0) System.out.printf("\nVampire.askVampireTPTP(%s)", test_path);
-        String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
-        String includesPath = testDir + File.separator + "includes";
-        File test = new File(test_path);
-        List<String> includes = TPTPutil.extractIncludesFromTPTP(test);
-        if (!includes.isEmpty()) {
-            String error = TPTPutil.validateIncludesInTPTPFiles(includes, includesPath);
-            if (error != null) {
-                System.err.println(error);
-            }
-        }
-        this.commands = new ArrayList<>(Arrays.asList("--input_syntax", "tptp", "--proof", "tptp"));
-        if (this.askQuestion){
-            this.commands.add(" -qa");
-            this.commands.add("plain");
-        }
-        if (!includes.isEmpty()){
-            this.commands.add("--include");
-            this.commands.add(includesPath);
-        }
-        try {
-            this.runCustom(test);
-        } catch (ATPException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ATPException("Vampire TPTP execution failed: " + e.getMessage(), "Vampire");
-        }
-        if (this.modensPonens) { // Second TPTP pass (modus Ponens)
-            this.commands = Arrays.asList(
-                "--input_syntax","tptp",
-                "--proof","tptp",                  // <-- TSTP-style proof lines
-                "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                "-fde","none","-updr","off","-rp","off","-bce","off",
-                "-qa","plain"
-            );
-            List<TPTPFormula> proof = TPTPutil.processProofLines(this.output);
-            File minProbFile = new File("min-problem.tptp");
-            try{
-                this.runCustom(minProbFile);
-                this.output = TPTPutil.clearProofFile(this.output);
-            } catch (ATPException e){
-                throw e;
-            } catch (Exception e){
-                throw new ATPException("Vampire ModusPonens in TPTP execution failed: " + e.getMessage(), "Vampire");
-            }
-            if (this.kb.dropOnePremiseFormulas) {
-                this.output = TPTPutil.dropOnePremiseFormulasFOF(this.output);
-            }
-        }
-    }
-
-    /*********************************************************************************
      * Vampire Modus Ponens with session-specific isolation.
      * STEPS:
      * 1 - AskVampire to get the first output
@@ -408,85 +297,75 @@ public class Vampire {
             Path source = Paths.get(kbThfPath);
             Path target = Paths.get(problemPath);
             Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+
+            // -------- 3. Parse SUO-KIF query using FormulaAST --------
+            SuokifVisitor sv = SuokifVisitor.parseSentence(stmt);
+            if (sv.result.isEmpty()) {
+                System.err.println("Vampire.askVampireHOL(): failed to parse query: " + stmt);
+                return;
+            }
+            FormulaAST fa = sv.result.get(0);
+            if (fa.expr == null) {
+                System.err.println("Vampire.askVampireHOL(): null expr for query: " + stmt);
+                return;
+            }
+            if (debug>1) System.out.println("Vampire.askVampireHOL(): parsed expr: " + fa.expr.toKifString());
+            // -------- 4. Preprocess and build typeMap --------
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            Map<String, Set<String>> typeMap = new HashMap<>();
+            Set<Expr> processed;
+            if (useModals) {
+                Map.Entry<Expr, Map<String, Set<String>>> modalResult = Modals.processModalsExpr(fa.expr, this.kb);
+                Expr resExpr = modalResult.getKey();
+                if (resExpr == null) {
+                    System.err.println("Vampire.askVampireHOL(): processModalsExpr returned null for: " + stmt);
+                    return;
+                }
+                if (debug>1) System.out.println("Vampire.askVampireHOL(): modalized expr: " + resExpr.toKifString());
+                processed = fp.preProcessExpr(fa, true, this.kb);
+                if (processed == null || processed.isEmpty()) {
+                    System.err.println("Vampire.askVampireHOL(): preProcessExpr returned empty for: " + stmt);
+                    return;
+                }
+                typeMap.putAll(fp.findTypeRestrictionsExpr(resExpr, this.kb));
+                typeMap.putAll(modalResult.getValue());
+                String primaryWorldVar = Modals.makeWorldVarExpr(fa.expr);
+                typeMap.put(primaryWorldVar, new HashSet<>(Collections.singleton("World")));
+                Modals.markModalAttributeFormulaVarsExpr(fa.expr, typeMap);
+                if (debug>1) System.out.println("Vampire.askVampireHOL(): typeMap: " + typeMap);
+            } else {
+                processed = fp.preProcessExpr(fa, true, this.kb);
+                if (processed == null || processed.isEmpty()) {
+                    System.err.println("Vampire.askVampireHOL(): preProcessExpr returned empty for: " + stmt);
+                    return;
+                }
+                typeMap.putAll(fp.findTypeRestrictionsExpr(fa.expr, this.kb));
+            }
+            if (debug>1) System.out.println("Vampire.askVampireHOL(): preprocessed exprs: " + processed.size());
+            // -------- 5. Write conjectures to problem file --------
             try (BufferedWriter out = new BufferedWriter(new FileWriter(problemPath, true))) {
                 out.newLine();
-                out.write("% --------------------");
-                out.write("% User HOL conjecture");
-                out.write("% --------------------");
-                out.newLine();
-                // 2b. Translate the SUO-KIF query (stmt) into THF using Modals + THFnew.
-                // -------- 3. Parse SUO-KIF query --------
-                Formula f = new Formula();
-                f.read(stmt);
-                if (debug>1) System.out.println("KB.askVampireHOL(): Original Formula: " + f.getFormula());
-                // 3a. Optional: expand modals and insert world args
-                if (useModals) {
-                    Map<String, Set<String>> typeMap = new HashMap<>();
-                    f = Modals.processModals(f, this.kb, typeMap);
-                    if (debug>1) System.out.println("KB.askVampireHOL(): Modalized Formula: " + f.getFormula());
-                }
-                // -------- 4. Preprocess (Skolemization, simplifications, etc.) --------
-                FormulaPreprocessor fp = new FormulaPreprocessor();
-                // second argument "true" indicates this is a query/conjecture
-                Set<Formula> processed = fp.preProcess(f, true, this.kb);
-                if (debug>1) {
-                    System.out.println("KB.askVampireHOL(): Number of preprocessed formulas: " + processed.size());
-                    for (Formula pfDbg : processed)
-                        System.out.println("KB.askVampireHOL(): Preprocessed formula: " + pfDbg.getFormula());
-                }
-                // Build base type map from types in the *original* (possibly modalized) formula
-                f.varTypeCache.clear();  // force recomputation of types
-                Map<String, Set<String>> typeMap = fp.findAllTypeRestrictions(f, this.kb);
-                typeMap.putAll(f.varTypeCache);
-                if (debug>1) System.out.println("KB.askVampireHOL(): Initial typeMap: " + typeMap);
-                // 4a. If using modals, add a world variable type once
-                String worldVar = null;
-                if (useModals) {
-                    worldVar = THFnew.makeWorldVar(this.kb, f);
-                    Set<String> wTypes = new HashSet<>();
-                    wTypes.add("World");
-                    typeMap.put(worldVar, wTypes);
-                    if (debug>1) {
-                        System.out.println("KB.askVampireHOL(): worldVar: " + worldVar);
-                        System.out.println("KB.askVampireHOL(): typeMap after adding worldVar: " + typeMap);
-                    }
-                }
+                out.write("% -------------------- User HOL conjecture --------------------\n");
                 int conjIndex = 0;
-                /* For each preprocessed query formula:
-                 * 1 - Fix variable-arity predicate names after adding worlds.
-                 * 2 - If it’s an (instance ?X Class) fact, make it hold in all worlds.
-                 * 3 - Translate it to THF using the same logic as axioms.
-                 * 4 - Emit it as a thf(...,conjecture,...) clause in the query file.
-                 */
-                // -------- 5. Translate each preprocessed formula to THF --------
-                for (Formula pf : processed) {
-                    // 5a. Modal-specific adjustments ONLY when useModals == true
+                for (Expr e : processed) {
+                    if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(e)) continue;
+                    String thfQuery;
                     if (useModals) {
-                        // Handle variable-arity after worlds (if you still keep this hack)
-                        if (THFnew.variableArity(this.kb, pf.car())) {
-                            pf = THFnew.adjustArity(this.kb, pf);
-                        }
-                        // Special case: (instance ?X Class) -> forall worldVar ...
-                        if (worldVar != null &&
-                                pf.getFormula().startsWith("(instance ") &&
-                                pf.getFormula().endsWith("Class)")) {
-                            pf.read("(forall (" + worldVar + ") " +
-                                    pf.getFormula().substring(0, pf.getFormula().length() - 1) +
-                                    " " + worldVar + "))");
-                            Set<String> types = new HashSet<>();
-                            types.add("World");
-                            pf.varTypeCache.put(worldVar, types);
-                        }
+                        Map.Entry<Expr, Map<String, Set<String>>> fmodalResult = Modals.processModalsExpr(e, this.kb);
+                        Expr fmodal = fmodalResult.getKey();
+                        if (fmodal == null) continue;
+                        thfQuery = ExprToTHF.translate(fmodal, true, typeMap);
+                    } else {
+                        thfQuery = ExprToTHF.translateNonModal(e, true, typeMap);
                     }
-                    // 5c. Translate to THF using the same engine as axioms (query=true)
-                    String thfQuery = THFnew.process(new Formula(pf), typeMap, true);
+                    if (thfQuery == null || thfQuery.isEmpty()) continue;
                     String conjName = "user_conj_" + (conjIndex++);
                     String final_query = "thf(" + conjName + ",conjecture," + thfQuery + ").\n";
                     out.write(final_query);
-                    if (debug>1) System.out.println("KB.askVampireHOL(): final query: " + final_query);
+                    if (debug>1) System.out.println("Vampire.askVampireHOL(): final query: " + final_query);
                 }
             }
-            // -------- 6. Actually call Vampire on problemPath (unchanged) --------
+            // -------- 6. Actually call Vampire on problemPath --------
             if (debug>1) System.out.println("------ KB.askVampireHOL(): Asking Vampire");
             this.askVampireTHF(problemPath);
         } catch (ATPException e) {
@@ -517,11 +396,8 @@ public class Vampire {
             if (error != null) System.err.println(error);
         }
         this.commands = new ArrayList<>(Arrays.asList(
-            "--input_syntax", "tptp",
             "--proof", "tptp",
-            "--output_axiom_names","on",
-            "--mode","portfolio",
-            "--schedule","snake_slh"
+            "--output_axiom_names","on"
         ));
         // This HOL Vampire version (4.8) does not support "-qa plain"
         if (!includes.isEmpty()){
