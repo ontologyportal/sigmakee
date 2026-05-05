@@ -24,7 +24,7 @@ import="com.articulate.sigma.*, com.articulate.sigma.utils.*, java.net.URLConnec
 
 String role = (String) session.getAttribute("role");
 if (StringUtil.emptyString(role) || !role.equals("admin"))
-    response.sendRedirect("login.html");
+    response.sendRedirect("login.jsp");
 
 String user = request.getParameter("user");
 String id = request.getParameter("id");

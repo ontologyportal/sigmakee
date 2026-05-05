@@ -16,7 +16,7 @@
 */
 
 if (!role.equalsIgnoreCase("admin")) {
-    response.sendRedirect("login.html");
+    response.sendRedirect("login.jsp");
     return;
 }
   String submit = request.getParameter("submit");

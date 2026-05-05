@@ -43,7 +43,7 @@ userPages.add("Editor.jsp");
 String URLString = request.getRequestURL().toString();
 String pageURLString = URLString.substring(URLString.lastIndexOf("/") + 1);
 
-String username = (String) session.getAttribute("user");
+String username = (String) session.getAttribute("username");
 String role = (String) session.getAttribute("role");
 
 if (username != null) {
@@ -66,7 +66,7 @@ resetIdleTimer();
 <%
 }
 
-String welcomeString = " : Welcome guest : <a href=\"login.html\">log in</a>";
+String welcomeString = " : Welcome guest : <a href=\"login.jsp\">log in</a>";
 if (!StringUtil.emptyString(username))
     welcomeString = " : Welcome " + username;
 KBmanager mgr = KBmanager.getMgr();

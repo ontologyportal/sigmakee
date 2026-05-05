@@ -39,7 +39,7 @@ if (StringUtil.emptyString(firstName) ||
     StringUtil.emptyString(organization) ||
     StringUtil.emptyString(email)  ||
     StringUtil.emptyString(notRobot)) {
-	response.sendRedirect("login.html");
+	response.sendRedirect("login.jsp");
 }
 else {
     PasswordService ps = new PasswordService();

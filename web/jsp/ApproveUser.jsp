@@ -8,7 +8,6 @@ import="com.articulate.sigma.*,java.net.URLConnection, javax.servlet.http.HttpSe
 <title>Approve User</title>
 </head>
 <body>
-
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
     Infosys (c) 2017-present.
@@ -22,26 +21,18 @@ import="com.articulate.sigma.*,java.net.URLConnection, javax.servlet.http.HttpSe
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
-
 String role = (String) session.getAttribute("role");
 if (!role.equals("admin")) {
-    response.sendRedirect("login.html");
-    return;
+  response.sendRedirect("login.jsp");
+  return;
 }
-
 String user = ValidationUtils.sanitizeString(request.getParameter("user"));
-
-PasswordService ps = new PasswordService();
-User u = User.fromDB(ps.conn, user);
-u.role = "user";
-u.toDB(ps.conn);
+UserManger userManager = new UserManager();
+userManager.updateUserRole(request, username, 'user');
 %>
-
 <b>User approved.</b><P>
-
 <form method="post" action="KBs.jsp">
 <p>
-
 <table align="left" border="0" >
   <TR>
     <TD VALIGN=CENTER>
@@ -50,6 +41,5 @@ u.toDB(ps.conn);
   </TR>
 </table>
 </form>
-
 </body>
 </html>

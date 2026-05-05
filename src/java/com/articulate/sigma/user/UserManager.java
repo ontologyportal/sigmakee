@@ -51,6 +51,42 @@ public final class UserManager implements ServletContextListener {
         this.userDatabase = new UserDatabase();
     }
 
+    public boolean createUser(HttpServletRequest request,
+                          String username,
+                          String password,
+                          String email,
+                          String role,
+                          String firstName,
+                          String lastName,
+                          String organization,
+                          String notRobot) {
+
+        requireAdmin(request);
+        if (!"user".equals(role) && !"admin".equals(role) && !"guest".equals(role)) {
+            throw new IllegalArgumentException("Invalid role: " + role);
+        }
+        User user = new User(username, password, email, role, firstName, lastName, organization, notRobot);
+        return this.userDatabase.insertUser(user);
+    }
+
+    public Set<String> getAllUsernames(HttpServletRequest request) {
+
+        requireAdmin(request);
+        return this.userDatabase.getAllUsernames();
+    }
+
+    public User getUser(HttpServletRequest request, String username) {
+
+        requireAdmin(request);
+        return this.userDatabase.fromDB(username);
+    }
+
+    public boolean updateUserEmail(HttpServletRequest request, String username, String email) {
+
+        requireAdmin(request);
+        return this.userDatabase.updateEmail(username, email);
+    }
+
     /********************************************************************
      */
     private void requireAdmin(HttpServletRequest request) {
@@ -75,6 +111,8 @@ public final class UserManager implements ServletContextListener {
         if (oldSession != null) oldSession.invalidate();
         HttpSession newSession = request.getSession(true);
         newSession.setAttribute("username", username);
+        newSession.setAttribute("role", role);
+        newSession.setMaxInactiveInterval(60 * 60);
         return true;
     }
 
@@ -179,7 +217,7 @@ public final class UserManager implements ServletContextListener {
             messageobj.setRecipients(Message.RecipientType.TO,InternetAddress.parse(destmailid));
             messageobj.setSubject("SigmaKEE: Account Registration Request from " + user.getFirstName() + " " + user.getLastName());
             String manageUsersURL = "https://" + host + ":" + port + "/sigma/ManageUsers.jsp";
-            String loginURL       = "https://" + host + ":" + port + "/sigma/login.html";
+            String loginURL       = "https://" + host + ":" + port + "/sigma/login.jsp";
             String safeNotRobot = (user.getNotRobot() == null || user.getNotRobot().trim().isEmpty()) ? "(No statement provided)" : ValidationUtils.sanitizeString(user.getNotRobot());
             String htmlMsg = createHtmlForAdminApprovalEmail(user);
             messageobj.setContent(htmlMsg, "text/html; charset=utf-8");
@@ -278,14 +316,6 @@ public final class UserManager implements ServletContextListener {
         //         }
         //     }
         //     else showHelp();
-        // }
-        // finally {
-        //     try {
-        //         if (ps != null && ps.connection != null) ps.connection.close();
-        //     }
-        //     catch(SQLException se){
-        //         se.printStackTrace();
-        //     }
         // }
     }
 }

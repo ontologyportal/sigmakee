@@ -4,7 +4,6 @@
    pageEncoding="UTF-8"
    contentType="text/xml;charset=UTF-8"
 %>
-
 <%
 /** This code is copyright Articulate Software (c) 2003.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -18,17 +17,14 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
  System.out.println("in OWL.jsp");
-
  if (!KBmanager.getMgr().initialized) {
      System.out.println("OWL.jsp: kb manager not initialized, redirecting");
      response.sendRedirect("init.jsp");
      return;
  }
-
  String kbName = request.getParameter("kb");
  if (kbName == null || StringUtil.emptyString(kbName))
      KBmanager.getMgr().getPref("sumokbname");
-
  KB kb = null;
  if (!StringUtil.emptyString(kbName)) {
      kb = KBmanager.getMgr().getKB(kbName);
@@ -37,7 +33,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
  }
  else {
      System.out.println("OWL.jsp: empty kb name, redirecting");
-     response.sendRedirect("login.html");
+     response.sendRedirect("login.jsp");
  }
  String term = request.getParameter("term");
  if (term == null) term = "Process";

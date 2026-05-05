@@ -1,11 +1,14 @@
 package com.articulate.sigma.user;
 
+import static java.lang.System.console;
+
 import java.io.Console;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 
 import javax.servlet.ServletContextEvent;
@@ -47,8 +50,7 @@ public class UserDatabase {
             System.err.println("Error in PasswordService.addUser():  User " + user.getUsername() + " already exists!");
             return false;
         }
-        toDB(user);
-        return true;
+        return toDB(user);
     }
 
     /********************************************************************
@@ -57,19 +59,19 @@ public class UserDatabase {
      * @param email
      * @param firstName
      * @param lastName
-     * @param registerId
+     * @param organization
      */
-    public void insertAdmin(String username, String password, String email, String firstName, String lastName, String organization) {
+    public boolean insertAdmin(String username, String password, String email, String firstName, String lastName, String organization, String notRobot) {
 
-        User user = new User(username, password, email, "admin", firstName, lastName, organization, null);
-        insertUser(user);
+        User user = new User(username, password, email, "admin", firstName, lastName, organization, notRobot);
+        return insertUser(user);
     }
 
     /********************************************************************
      * Take a user name and an encrypted password and compare it to an
      * existing collection of users with encrypted passwords.
      * @param username username to authenicate against DB
-     * @param encryptedPassword password to authenticate against DB
+     * @param password password to authenticate against DB
      * @return User role
      */
     public String authenticateUser(String username, String password) {
@@ -131,23 +133,6 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * Update the role for this user
-     */
-    public boolean updateRole(String username, String role) {
-
-        try (Statement stmt = this.connection.createStatement()) {
-            String query = "update users set role='" + role + "' where username='" + username + "';";
-            stmt.execute(query);
-            return true;
-        }
-        catch (SQLException e) {
-            System.err.println("Error in User.updateRole(): " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    /********************************************************************
      * Update just the password for this user
      */
     public boolean updatePassword(String username, String newPassword) {
@@ -164,7 +149,39 @@ public class UserDatabase {
             return false;
         }
     }
+
+    /********************************************************************
+     * Update the role for this user
+     */
+    public boolean updateRole(String username, String role) {
+
+        try (Statement stmt = this.connection.createStatement()) {
+            String query = "update users set role='" + role + "' where username='" + username + "';";
+            stmt.execute(query);
+            return true;
+        }
+        catch (SQLException e) {
+            System.err.println("Error in User.updateRole(): " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
     
+    public boolean updateEmail(String username, String email) {
+
+        String sql = "UPDATE users SET email = ? WHERE username = ?";
+        try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
+            stmt.setString(1, email);
+            stmt.setString(2, username);
+            return stmt.executeUpdate() > 0;
+        }
+        catch (SQLException e) {
+            System.err.println("Error in UserDatabase.updateEmail(): " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     /********************************************************************
      * Deletes a user from the database.
      * @param username the username to be deleted from the DB.
@@ -184,8 +201,6 @@ public class UserDatabase {
             return false;
         }
     }
-
-    
 
     /********************************************************************
      * Check if this user already exists in the DB
@@ -214,7 +229,16 @@ public class UserDatabase {
             String query = "drop table if exists users;";
             statement = this.connection.createStatement();
             statement.execute(query);
-            query = "create table users(username varchar(20), password varchar(40), email varchar(20), role varchar(10), firstName varchar(20), lastName varchar(20), registerId varchar(20));";
+            query = "create table users(" +
+                "username varchar(50), " +
+                "password varchar(255), " +
+                "email varchar(255), " +
+                "role varchar(20), " +
+                "firstName varchar(100), " +
+                "lastName varchar(100), " +
+                "organization varchar(255), " +
+                "notRobot varchar(1000)" +
+                ");";
             statement = this.connection.createStatement();
             statement.execute(query);
             statement.close();
@@ -249,8 +273,8 @@ public class UserDatabase {
                     resultSet.getString("role"),
                     resultSet.getString("firstName"),
                     resultSet.getString("lastName"),
-                    resultSet.getString("registerId"),
-                    resultSet.getString("notRobots") 
+                    resultSet.getString("organization"),
+                    resultSet.getString("notRobot") 
                 );
             }
             resultSet.close();
@@ -267,26 +291,28 @@ public class UserDatabase {
      * Save the object in the relational DB
      * @param user 
      */
-    public void toDB(User user) {
+    public boolean toDB(User user) {
 
         try {
-            String query = "insert into users(username,password,email,role,firstName,lastName,registerId) values ('" + 
+            String query = "insert into users(username,password,email,role,firstName,lastName,organization,notRobot) values ('" + 
                 user.getUsername() + "', '" + 
                 encrypt(user.getPassword()) + "', '" + 
                 user.getEmail() + "', '" +
                 user.getRole() + "', '" +
                 user.getFirstName() + "', '" +
                 user.getLastName() + "', '" +
-                user.getRegisterId() + "', '" + 
                 user.getOrganization() + "', '" + 
+                user.getNotRobot() + 
                 "');";
             Statement statement = this.connection.createStatement();
             statement.execute(query);
             statement.close();
+            return true;
         }
         catch (SQLException e) {
-            System.err.println("Error in User.toDB(): " + e.getMessage());
+            System.err.println("Error in UserDatabase.toDB(): " + e.getMessage());
             e.printStackTrace();
+            return false;
         }
     }
     
@@ -320,5 +346,63 @@ public class UserDatabase {
             e.printStackTrace();
         }
         return sb.toString();
+    }
+
+    /********************************************************************
+     * 
+     */
+    public static void showHelp() {
+
+        System.out.println("PasswordService: ");
+        System.out.println("-h    show this help message");
+        System.out.println("-l    login");
+        System.out.println("-c    create db");
+        System.out.println("-a    create admin user");
+        System.out.println("-u    show user IDs");
+        System.out.println("-r    register a new guest username and password (fail if username taken)");
+        System.out.println("-a3 <u> <p> <e>  create admin user");
+        System.out.println("-o <id>          change user role");
+        System.out.println("-n <id>          create new user");
+        System.out.println("-f <id>          find user with given ID");
+        System.out.println("-d <id>          delete user with given ID");
+    }
+
+    public static void main(String args[]) {
+        UserDatabase db = new UserDatabase();
+        if (args != null && args.length > 0) {
+            if (args[0].equals("-h")) showHelp();
+            else if (args[0].equals("-e") && args[1] != null) System.out.println(db.encrypt(args[1]));
+            else if (args[0].equals("-c")) db.createDB();
+            else if (args[0].equals("-a")) {
+                Scanner scanner = new Scanner(System.in);
+                System.out.print("Creating a new admin:\n");
+                System.out.print("    Enter Username: ");
+                String username = scanner.nextLine();
+                if(db.userExists(username)) { System.out.println("User already exists!"); return; };
+                String password = new String(System.console().readPassword("    Enter Password: "));
+                System.out.print("    Enter email: ");
+                String email = scanner.nextLine();
+                System.out.print("    Enter First Name: ");
+                String firstName = scanner.nextLine();
+                System.out.print("    Enter Last Name: ");
+                String lastName = scanner.nextLine();
+                System.out.print("    Enter Organization: ");
+                String organization = scanner.nextLine();
+                System.out.print("    Why are you not a robot?: ");
+                String notRobot = scanner.nextLine();
+                if (db.insertAdmin(username, password, email, firstName, lastName, organization, notRobot)) System.out.println("Admin creation successful!");
+                else System.out.println("Admin creation failed!");
+            }
+            else if (args[0].equals("-l")) {
+                System.out.println("Logging in:");
+                String username = new String(System.console().readLine("    Enter Username: "));
+                String password = new String(System.console().readPassword("    Enter Password: "));
+                String role = db.authenticateUser(username, password);
+                if(role != null) System.out.println("Login successful! Role: " + role);
+                else System.out.println("Login failed!");
+            }
+        }
+        else showHelp();
+        db.shutdown();
     }
 }
