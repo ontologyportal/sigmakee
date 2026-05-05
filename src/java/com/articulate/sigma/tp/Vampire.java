@@ -405,6 +405,12 @@ public class Vampire {
             this.commands.add("--include");
             this.commands.add(includesPath);
         }
+
+        if (this.askQuestion){
+            this.commands.add("-qa");
+            this.commands.add("plain");
+        }
+
         this.logic = Vampire.Logic.HOL;
         try{
             this.runCustom(test);
