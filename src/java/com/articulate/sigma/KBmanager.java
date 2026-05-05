@@ -650,23 +650,6 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     */
-    public void loadKBforInference(KB kb) {
-        
-        if (debug) System.out.println("KBmanager.loadKBforInference(): KB: " + kb.name);
-        if (KBmanager.getMgr().getPref("TPTP").equals("yes")) {
-            if (KBmanager.getMgr().prover.equals(Prover.VAMPIRE)) {
-                if (debug) System.out.println("KBmanager.loadKBforInference(): loading Vampire");
-                kb.loadVampire();
-            }
-            else if (KBmanager.getMgr().prover.equals(Prover.EPROVER)) {
-                if (debug) System.out.println("KBmanager.loadKBforInference(): loading EProver");
-                kb.loadEProver();
-            }
-        }
-    }
-
-    /** ***************************************************************
      * Loads the constituents of the KB from ~/.sigmakee/config.xml
      *
      * @param kbName the name of the KB
@@ -987,8 +970,6 @@ public class KBmanager implements Serializable {
                 initialized = true;
                 // Start background TPTP generation for all needed formats (FOF, TFF, THF)
                 TPTPGenerationManager.startBackgroundGeneration();
-                for (KB kb : kbs.values())  // transform to TPTP only once all other initialization complete
-                    loadKBforInference(kb);
             }
         }
         catch (Exception ex) {
@@ -1095,16 +1076,6 @@ public class KBmanager implements Serializable {
         KB kb = kbs.get(name);
         if (kb == null)
             return "KB " + name + " does not exist and cannot be removed.";
-        try {
-            if (kb.eprover != null) {
-                kb.eprover.terminate();
-                kb.eprover = null;
-            }
-        }
-        catch (IOException ioe) {
-            System.err.println("Error in KBmanager.removeKB(): ");
-            System.err.println("  Error terminating inference engine: " + ioe.getMessage());
-        }
         kb = kbs.remove(name);
         return "KB " + kb.name + " successfully removed.";
     }

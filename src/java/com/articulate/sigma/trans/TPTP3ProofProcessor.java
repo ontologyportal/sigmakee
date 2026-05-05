@@ -66,7 +66,6 @@ public class TPTP3ProofProcessor {
     /* Convert bindings in list to string */
     @Override
     public String toString() {
-
         StringBuilder sb = new StringBuilder();
         sb.append("Answers:");
         if (bindingMap != null && !bindingMap.keySet().isEmpty()) {

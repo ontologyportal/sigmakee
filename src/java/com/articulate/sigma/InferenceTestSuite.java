@@ -1,5 +1,7 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.tp.EProver;
+import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.FileUtil;
@@ -70,19 +72,14 @@ public class InferenceTestSuite {
     // save TPTP translations of each problem as <probName>.p
     public static boolean saveTPTP =  true;
 
-    public static Set<String> metaPred = new HashSet(
-            Arrays.asList("note", "time", "query", "answer"));
-
-
+    public static Set<String> metaPred = new HashSet(Arrays.asList("note", "time", "query", "answer"));
 
     public static class OneResult {
         public boolean pass;
         public long millis;
         public String html;
-
         public java.util.List<String> expected;
         public java.util.List<String> actual;
-
         public List<String> proofText;
     }
 
@@ -173,8 +170,7 @@ public class InferenceTestSuite {
 
         try {
             // Step 2: reload KB before running queries
-            KBmanager.getMgr().loadKBforInference(kb);
-
+            // (Now done in vampire constructor)
             // Step 3: run the queries as before
             int maxAnswers = Math.max(1, itd.expectedAnswers.size());
             Formula theQuery = new Formula();
@@ -189,14 +185,16 @@ public class InferenceTestSuite {
                     System.out.println("Skipping higher-order query not in THF: " + q);
                     continue;
                 }
-
                 switch (KBmanager.getMgr().prover) {
                     case VAMPIRE:
                         com.articulate.sigma.tp.Vampire vampire;
                         if (modusPonens) {
-                            vampire = kb.askVampireModensPonens(q, itd.timeout, maxAnswers);
-                        }else{
-                            vampire = kb.askVampire(q, itd.timeout, maxAnswers);
+                            vampire = new Vampire(kb, "tptp", "CASC", true, itd.timeout, maxAnswers);
+                            vampire.askVampireModensPonens(q);
+                        }
+                        else {
+                            vampire = new Vampire(kb, "tptp", "CASC", false, itd.timeout, maxAnswers);
+                            vampire.askVampire(q);
                         }
                         System.out.println("vampire-output");
                         System.out.println(vampire.output);
@@ -204,29 +202,27 @@ public class InferenceTestSuite {
                         itd.proof = vampire.output;
                         break;
                     case EPROVER:
-                        com.articulate.sigma.tp.EProver eprover = kb.askEProver(q, itd.timeout, maxAnswers);
+                        com.articulate.sigma.tp.EProver eprover = new com.articulate.sigma.tp.EProver(kb, "tptp", itd.timeout, maxAnswers);
+                        eprover.askEProver(q);
                         tpp.parseProofOutput(eprover.output, q, kb, eprover.qlist);
                         itd.proof = eprover.output;
                         break;
                     case LEO:
-                        com.articulate.sigma.tp.LEO leo = kb.askLeo(q, itd.timeout, maxAnswers);
+                        com.articulate.sigma.tp.LEO leo = new com.articulate.sigma.tp.LEO(kb, "tptp", itd.timeout, maxAnswers, null);
+                        leo.askLeo(q);
                         tpp.parseProofOutput(leo.output, q, kb, leo.qlist);
                         itd.proof = leo.output;
                         break;
                     default:
                         System.err.println("Unknown prover: " + KBmanager.getMgr().prover);
                 }
-
                 if (tpp.status != null && tpp.status.startsWith("Theorem") && itd.actualAnswers.isEmpty())
                     itd.actualAnswers.add("yes");
-
                 if (tpp.inconsistency) {
                     itd.inconsistent = true;
                     itd.actualAnswers = new ArrayList<>();
                 }
-
                 if (tpp.bindings != null) itd.actualAnswers.addAll(tpp.bindings);
-
                 boolean different = true;
                 if (tpp.proof != null && (tpp.status == null || !tpp.status.startsWith("Timeout"))) {
                     different = !sameAnswers(tpp, itd.expectedAnswers);
@@ -243,7 +239,6 @@ public class InferenceTestSuite {
             }
         }
         // --- end isolation block ---
-
         return itd;
     }
 
@@ -767,12 +762,21 @@ public class InferenceTestSuite {
                     int actualTimeout = itd.timeout;
                     if (overrideTimeout)
                         actualTimeout = defaultTimeout;
-                    if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
-                        proof = kb.askEProver(processed.getFormula(), actualTimeout, maxAnswers) + " ";
-                    if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
-                        proof = kb.askVampire(processed.getFormula(), actualTimeout, maxAnswers) + " ";
-                    if (KBmanager.getMgr().prover == KBmanager.Prover.LEO)
-                        proof = kb.askLeo(processed.getFormula(), actualTimeout, maxAnswers) + " ";
+                    if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
+                        com.articulate.sigma.tp.EProver eprover = new  com.articulate.sigma.tp.EProver(kb, "tptp", actualTimeout, maxAnswers);
+                        eprover.askEProver(processed.getFormula());
+                        proof = eprover.toString();
+                    }
+                    if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
+                        Vampire vampire = new Vampire(inputKB, "tptp", "CASC", false, actualTimeout, maxAnswers);
+                        vampire.askVampire(processed.getFormula());
+                        proof = vampire.toString() + " ";
+                    }
+                    if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
+                        LEO leo = new LEO(kb, "tptp", 30, 1, null);
+                        leo.askLeo(processed.getFormula());
+                        proof = leo.toString() + " "; 
+                    }
                     duration = System.currentTimeMillis() - start;
                     System.out.print("INFO in InferenceTestSuite.test(): Duration: ");
                     System.out.println(duration);
@@ -864,7 +868,6 @@ public class InferenceTestSuite {
         compareFiles(itd);
         for (String formula : itd.statements)
              kb.tell(formula);
-        KBmanager.getMgr().loadKBforInference(kb);
         System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): expected answers: " + itd.expectedAnswers);
         int maxAnswers = itd.expectedAnswers.size();
         Formula theQuery = new Formula();
@@ -873,9 +876,9 @@ public class InferenceTestSuite {
         Set<Formula> theQueries = fp.preProcess(theQuery,true,kb);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         String processedStmt;
-        Vampire vampire;
-        com.articulate.sigma.tp.EProver eprover;
-        com.articulate.sigma.tp.LEO leo;
+        Vampire vampire = new Vampire(kb, "tptp", "CASC", false, itd.timeout, maxAnswers);
+        com.articulate.sigma.tp.EProver eprover = new EProver(kb, "tptp", itd.timeout, maxAnswers);
+        com.articulate.sigma.tp.LEO leo = new LEO(kb, "tptp", itd.timeout, maxAnswers, null);
         for (Formula f : theQueries) {
             processedStmt = f.getFormula();
             if (f.isHigherOrder(kb) && !SUMOformulaToTPTPformula.getLang().equals("thf")) {
@@ -892,19 +895,19 @@ public class InferenceTestSuite {
             }
             else switch (KBmanager.getMgr().prover) {
                 case VAMPIRE:
-                    vampire = kb.askVampire(processedStmt, itd.timeout, maxAnswers);
+                    vampire.askVampire(processedStmt);
                     System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + vampire.toString());
                     tpp.parseProofOutput(vampire.output, processedStmt, kb,vampire.qlist);
                     break;
                 case EPROVER:
-                    eprover = kb.askEProver(processedStmt, itd.timeout, maxAnswers);
+                    eprover.askEProver(processedStmt);
                     System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + eprover.toString());
                     tpp.parseProofOutput(eprover.output, processedStmt, kb,eprover.qlist);
                     break;
                 case LEO:
-                    leo = kb.askLeo(processedStmt, itd.timeout, maxAnswers);
+                    leo.askLeo(processedStmt);
                     System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + leo.toString());
-                    tpp.parseProofOutput(leo.output, processedStmt, kb,leo.qlist);
+                    tpp.parseProofOutput(leo.output, processedStmt, kb, leo.qlist);
                     break;
                 default:
                     System.err.println("Error in InferenceTestSuite.inferenceUnitTest(): no prover or unknown prover: " + KBmanager.getMgr().prover);
@@ -1138,12 +1141,10 @@ public class InferenceTestSuite {
                 }
                 if (args[0].indexOf('e') != -1) {
                     KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
-                    kb.loadEProver();
                 }
                 if (args[0].indexOf('l') != -1) {
                     SUMOformulaToTPTPformula.setLang("thf");
                     KBmanager.getMgr().prover = KBmanager.Prover.LEO;
-                    kb.loadLeo();
                 }
                 if (args[0].indexOf('f') != -1) {
                     SUMOformulaToTPTPformula.setLang("tff");

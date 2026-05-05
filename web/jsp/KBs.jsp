@@ -89,8 +89,7 @@
 
           if (isAdministrator) {
               out.println("<TD><A href=\"Diag.jsp?kb=" + kbName2 + "&lang=" + language + "\">Diagnostics</A></TD>");
-              if (kb.eprover != null)
-                  out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + language + "&page=0\">Consistency Check</A></TD>");
+              out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + language + "&page=0\">Consistency Check</A></TD>");
               out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName2 + "&lang=" + language + "\">Inference Tests</A></TD>");
               if (kb.celt != null)
                   out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName2 + "&lang=" + language + "\">CELT Tests</A></TD>");
