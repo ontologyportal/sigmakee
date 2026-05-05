@@ -6,24 +6,21 @@ and Ted Gordon in any writings, briefings, publications, presentations, or
 other representations of any software which incorporates, builds on, or uses this
 code.  
 */
-package com.articulate.sigma;
+package com.articulate.sigma.user;
 
-import com.articulate.sigma.user.User;
+// import com.articulate.sigma.user.*;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.security.ValidationUtils;
+import com.articulate.sigma.*;
 
-import java.net.PasswordAuthentication;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.*;
+import java.sql.SQLException;
 import java.util.*;
 import java.io.*;
 
 import static java.lang.System.exit;
-
-import java.com.articulate.sigma.user.CurrentUser;
-import java.com.articulate.sigma.usermanagement.UserDatabase;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
@@ -32,6 +29,9 @@ import javax.mail.internet.MimeMessage;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 /********************************************************************
  * A class that encrypts a string and checks it against another stored
@@ -60,19 +60,22 @@ public final class UserManager implements ServletContextListener {
         if (session == null) throw new SecurityException("User must be logged in.");
         String username = (String) session.getAttribute("username");
         if (username == null || username.trim().isEmpty()) throw new SecurityException("User must be logged in.");
-        CurrentUser user = userDatabase.fromDB(username);
+        User user = userDatabase.fromDB(username);
         if (user == null || !"admin".equals(user.getRole())) throw new SecurityException("Admin privileges required.");
     }
 
     /********************************************************************
      */
-    public boolean login(String username, String password) {
-        
+    public boolean login(HttpServletRequest request, String username, String password) {
+
+        if (request == null) return false;
         String role = this.userDatabase.authenticateUser(username, password);
-        if (role != null) {
-            session.setAttribute("currentUser", new CurrentUser(username, role));
-            return true;
-        } return false;
+        if (role == null) return false;
+        HttpSession oldSession = request.getSession(false);
+        if (oldSession != null) oldSession.invalidate();
+        HttpSession newSession = request.getSession(true);
+        newSession.setAttribute("username", username);
+        return true;
     }
 
     /********************************************************************
@@ -87,6 +90,11 @@ public final class UserManager implements ServletContextListener {
         if (session == null) return false;
         session.invalidate();
         return true;
+    }
+
+    public List<String> getAdminEmails(HttpServletRequest request) {
+        requireAdmin(request);
+        return this.userDatabase.getAdminEmails();
     }
 
     /********************************************************************
@@ -106,7 +114,7 @@ public final class UserManager implements ServletContextListener {
     public boolean updateUserPassword (HttpServletRequest request, String username, String newPassword) {
 
         requireAdmin(request);
-        this.passwordDatabase.updatePassword(username, newPassword);
+        return this.userDatabase.updatePassword(username, newPassword);
     }
 
     public void sendResetPasswordLink() {
@@ -128,8 +136,8 @@ public final class UserManager implements ServletContextListener {
      */
     public void mailModerator(User user) {
 
-        if (debug>0) System.out.printf("\nPasswordService.mailModerator() Admins:\n" + adminEmails);
-        List<String> adminEmails = getAdminEmails();
+        if (debug>0) System.out.printf("\nPasswordService.mailModerator(%s)", user);
+        List<String> adminEmails = this.userDatabase.getAdminEmails();
         if (adminEmails.isEmpty()) {
             System.err.println("ERROR: No admin emails found. Cannot send moderator request.");
             return;
@@ -182,7 +190,7 @@ public final class UserManager implements ServletContextListener {
         }
     }
 
-    private string createHtmlForAdminApprovalEmail(User user) {
+    private String createHtmlForAdminApprovalEmail(User user) {
         
         return """
             <h2>New SigmaKEE User Registration Request</h2>
@@ -201,6 +209,29 @@ public final class UserManager implements ServletContextListener {
             <hr>
             <p style='font-size:12px;color:#666'>This email was generated automatically by SigmaKEE.</p>
             """.formatted(user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getOrganization(), user.getNotRobots());
+    }
+
+    /********************************************************************
+     * Encrypts a string with a deterministic algorithm.  Thanks to
+     * https://howtodoinjava.com/security/how-to-generate-secure-password-hash-md5-sha-pbkdf2-bcrypt-examples/
+     * @param servletContextEvent event class used to notify listener
+     */
+    @Override
+    public void contextInitialized(ServletContextEvent servletContextEvent) {
+        System.out.println("Starting " + UserManager.class.getName() + "...");
+    }
+
+    /********************************************************************
+     * H2 shutdown guidance from: 
+     * https://github.com/spring-projects/spring-boot/issues/21221
+     * and: https://stackoverflow.com/questions/9972372/what-is-the-proper-way-to-close-h2
+     * @param servletContextEvent
+     */
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+
+        if (debug > 0) System.out.printf("UserManager.contextDestroyed() for %s", UserManager.class.getName());
+        if (this.userDatabase != null) this.userDatabase.shutdown();
     }
 
     /********************************************************************

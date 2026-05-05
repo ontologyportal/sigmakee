@@ -3,19 +3,15 @@ package com.articulate.sigma.user;
 import java.io.Console;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.articulate.sigma.User;
-import com.articulate.sigma.UserManager;
+import javax.servlet.ServletContextEvent;
+import java.sql.*;
 
+/** DO NOT USE THIS CLASS DIRECTLY IN JSP, ALWAYS USE UserManager */
 public class UserDatabase {
     int debug = 0;
     private static final String JDBC_CREATE_DB = "jdbc:h2:file:" + System.getProperty("user.home") + "/var/passwd;AUTO_SERVER=TRUE";
@@ -63,9 +59,10 @@ public class UserDatabase {
      * @param lastName
      * @param registerId
      */
-    private void insertAdmin(String username, String password, String email, String firstName, String lastName, String registerId) {
+    public void insertAdmin(String username, String password, String email, String firstName, String lastName, String organization) {
 
-        createUser(username, password, email, "admin", firstName, lastName, registerId);
+        User user = new User(username, password, email, "admin", firstName, lastName, organization, null);
+        insertUser(user);
     }
 
     /********************************************************************
@@ -73,13 +70,15 @@ public class UserDatabase {
      * existing collection of users with encrypted passwords.
      * @param username username to authenicate against DB
      * @param encryptedPassword password to authenticate against DB
+     * @return User role
      */
-    private String authenticateUser(String username, String password) {
+    public String authenticateUser(String username, String password) {
 
         //if(debug>0) System.out.printf("PasswordService.authenticate(%s, %s)", username, encryptedPassword);
         if (userExists(username)) {
-            User user = fromDB(this.connection, username);
+            User user = fromDB(username);
             if (encrypt(password).equals(user.getPassword())) return user.getRole();
+            else return null;
         }
         else return null;
     }
@@ -109,16 +108,16 @@ public class UserDatabase {
      * Return a list of all admin users' email addresses.
      * @return List of admin email strings from DB
      */
-    private List<String> getAdminEmails() {
+    public List<String> getAdminEmails() {
 
         List<String> adminEmails = new ArrayList<>();
         try (Statement query = connection.createStatement();
             ResultSet resultSet = query.executeQuery("SELECT username FROM USERS WHERE role='admin';")) {
             while (resultSet.next()) {
                 String username = resultSet.getString(1);
-                User user = User.fromDB(connection, username);
+                User user = fromDB(username);
                 if (user != null) {
-                    String adminEmail = user.attributes.get("email");
+                    String adminEmail = user.getEmail();
                     if (adminEmail != null && !adminEmail.trim().isEmpty()) adminEmails.add(adminEmail.trim());
                     else System.err.println("WARNING: Admin user " + username + " has no valid email.");
                 }
@@ -137,8 +136,8 @@ public class UserDatabase {
     public boolean updateRole(String username, String role) {
 
         try (Statement stmt = this.connection.createStatement()) {
-            String str = "update users set role='" + this.role + "' where username='" + this.username + "';";
-            stmt.execute(str);
+            String query = "update users set role='" + role + "' where username='" + username + "';";
+            stmt.execute(query);
             return true;
         }
         catch (SQLException e) {
@@ -156,11 +155,13 @@ public class UserDatabase {
         try (Statement stmt = this.connection.createStatement()) {
             String str = "update users set password='" + encrypt(newPassword) + "' where username='" + username + "';";
             stmt.execute(str);
-            System.out.println("User.updatePassword(): password updated for " + this.username);
+            System.out.println("User.updatePassword(): password updated for " + username);
+            return true;
         }
         catch (SQLException e) {
             System.err.println("Error in User.updatePassword(): " + e.getMessage());
             e.printStackTrace();
+            return false;
         }
     }
     
@@ -210,7 +211,7 @@ public class UserDatabase {
 
         Statement statement;
         try {
-            String str = "drop table if exists users;";
+            String query = "drop table if exists users;";
             statement = this.connection.createStatement();
             statement.execute(query);
             query = "create table users(username varchar(20), password varchar(40), email varchar(20), role varchar(10), firstName varchar(20), lastName varchar(20), registerId varchar(20));";
@@ -289,6 +290,17 @@ public class UserDatabase {
         }
     }
     
+    public void shutdown() {
+
+        org.h2.Driver.unload();
+        try (Statement stmt = this.connection.createStatement()) {
+            stmt.execute("SHUTDOWN");
+        }
+        catch (SQLException e) {
+            System.err.println(H2_DRIVER + " shutdown issues: " + e.getLocalizedMessage());
+        }
+    }
+
     /********************************************************************
      * Encrypts a string with a deterministic algorithm. Thanks to
      * https://howtodoinjava.com/security/how-to-generate-secure-password-hash-md5-sha-pbkdf2-bcrypt-examples/
@@ -308,34 +320,5 @@ public class UserDatabase {
             e.printStackTrace();
         }
         return sb.toString();
-    }
-
-    /********************************************************************
-     * Encrypts a string with a deterministic algorithm.  Thanks to
-     * https://howtodoinjava.com/security/how-to-generate-secure-password-hash-md5-sha-pbkdf2-bcrypt-examples/
-     * @param servletContextEvent event class used to notify listener
-     */
-    @Override
-    public void contextInitialized(ServletContextEvent servletContextEvent) {
-        System.out.println("Starting " + UserManager.class.getName() + "...");
-    }
-
-    /********************************************************************
-     * H2 shutdown guidance from: 
-     * https://github.com/spring-projects/spring-boot/issues/21221
-     * and: https://stackoverflow.com/questions/9972372/what-is-the-proper-way-to-close-h2
-     * @param servletContextEvent
-     */
-    @Override
-    public void destroyContext(ServletContextEvent servletContextEvent) {
-
-        if (debug>0) System.out.printf("PasswordService.destroyContext() for %s", UserManager.class.getName());
-        org.h2.Driver.unload();
-        try (Statement stmt = this.connection.createStatement()) {
-            stmt.execute("SHUTDOWN");
-        }
-        catch (SQLException e) {
-            System.err.println(H2_DRIVER + " shutdown issues: " + e.getLocalizedMessage());
-        }
     }
 }

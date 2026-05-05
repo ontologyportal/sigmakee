@@ -27,7 +27,7 @@ public class User {
     private String lastName;
     private String organization;
     private String registerId;
-    private String notRobots;
+    private String notRobot;
 
     /********************************************************************
      * Constructs a new User object.
@@ -40,7 +40,7 @@ public class User {
      * @param registerId
      * @param notRobot
      */
-    public User(String username, String password, String email, String role, String firstName, String lastName, String organization, String registerId, String notRobot) {
+    public User(String username, String password, String email, String role, String firstName, String lastName, String organization, String notRobot) {
         
         this.username = username;
         this.password = password;
@@ -49,7 +49,6 @@ public class User {
         this.firstName = firstName;
         this.lastName = lastName;
         this.organization = organization;
-        this.registerId = registerId;
         this.notRobot = notRobot;
     }
 
@@ -60,7 +59,7 @@ public class User {
     public String getLastName() { return lastName; }
     public String getEmail() { return email; }
     public String getOrganization() { return organization; }
-    public String getNotRobots() { return notRobots; }
+    public String getNotRobots() { return notRobot; }
     public String getRegisterId() { return registerId; }
     public String getNotRobot() { return notRobot; }
 
