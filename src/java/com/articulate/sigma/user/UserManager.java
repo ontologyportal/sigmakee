@@ -12,7 +12,6 @@ import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.security.ValidationUtils;
 import com.articulate.sigma.*;
 
-import java.net.PasswordAuthentication;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

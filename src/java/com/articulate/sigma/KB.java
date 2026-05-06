@@ -1820,7 +1820,7 @@ public class KB implements Serializable {
                             switch (KBmanager.getMgr().prover) {
                                 case EPROVER:
                                     try {
-                                        EProver eprover = new EProver(this, "tptp", 30, 1);                                    
+                                        EProver eprover = new EProver(this, "tptp", 30, 1);
                                         if (debug) System.out.println("KB.tell: using eprover: " + eprover);
                                         eprover.assertFormula(tptpfile.getCanonicalPath(), parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                                         EProver.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
@@ -2707,7 +2707,7 @@ public class KB implements Serializable {
     private static void deleteFileIfExists(File file) {
 
         if (file == null) return;
-        if (file.exists() && !file.delete()) 
+        if (file.exists() && !file.delete())
             System.err.println("Warning in KB.deleteFileIfExists(): could not delete " + file.getAbsolutePath());
     }
 

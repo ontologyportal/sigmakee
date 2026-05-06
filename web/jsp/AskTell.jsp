@@ -38,7 +38,7 @@
         selectedTest = request.getParameter("testName");
         session.setAttribute("selectedTest", selectedTest);
     }
-    
+
     // Filter
     String testFilter = request.getParameter("testFilter");
     if (testFilter == null) testFilter = (String) session.getAttribute("testFilter");
@@ -74,7 +74,7 @@
 
     List<String> availableProvers = com.articulate.sigma.tp.TheoremProverController.availableProvers();
     System.out.println("AskTell: Available provers = " + availableProvers);
-    
+
     // Max Answers
     int maxAnswers = 1;
     if (request.getParameter("maxAnswers") != null) maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));
@@ -88,11 +88,13 @@
     if (inferenceEngine == null) inferenceEngine = "Vampire";
 
     // Vampire Options
-    
+
     // Vampire Mode
     String vampireMode = request.getParameter("vampireMode");
+    if (vampireMode == null) vampireMode = (String) session.getAttribute("vampireMode");
     if (StringUtil.emptyString(vampireMode)) vampireMode = "CASC";
-    
+    session.setAttribute("vampireMode", vampireMode);
+
     // Modus Ponens
     Boolean modensPonens = (Boolean) session.getAttribute("ModensPonens");
     if (req != null) {
@@ -136,7 +138,7 @@
         showEnglish = "yes".equalsIgnoreCase(request.getParameter("showProofInEnglish"));
         session.setAttribute("showProofInEnglish", showEnglish);
     }
-    
+
     // Use LLM for paraphrasing
     Boolean llmProof = (Boolean) session.getAttribute("showProofFromLLM");
     if (req != null) {
@@ -199,13 +201,13 @@
     }
 
     String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
-    
+
     // ==================================================================================================================
     // ---- Global flags for paraphrasing ----
     HTMLformatter.proofParaphraseInEnglish = showEnglish;
     com.articulate.sigma.nlg.LanguageFormatter.paraphraseLLM = llmProof;
     boolean busy = "Run".equalsIgnoreCase(req);
-    
+
 %>
 <body class="<%= busy ? "busy" : "" %>" aria-busy="<%= busy %>">
 <div id="loading" class="spin-overlay" aria-live="polite" aria-atomic="true">
@@ -381,7 +383,7 @@
                     <span class="muted">Mode:</span>
                     <label><input type="radio" id="CASC" name="vampireMode" value="CASC" <% if ("CASC".equals(vampireMode)) { out.print(" CHECKED"); } %> > CASC</label>
                     <label><input type="radio" id="Avatar" name="vampireMode" value="Avatar" <% if ("Avatar".equals(vampireMode)) { out.print(" CHECKED"); } %> > Avatar</label>
-                    <label><input type="radio" id="Vampire_mode" name="vampireMode" value="Vampire_mode" <% if ("Vampire_mode".equals(vampireMode)) { out.print(" CHECKED"); } %> > Vampire</label>
+                    <label><input type="radio" id="Vampire" name="vampireMode" value="Vampire" <% if ("Vampire".equals(vampireMode)) { out.print(" CHECKED"); } %> > Vampire</label>
                     <label title="Disabled until fully tested.">
                         <input type="radio" id="Custom" name="vampireMode" value="Custom" <% if ("Custom".equals(vampireMode)) { out.print(" CHECKED"); } %> > Custom
                     </label>
@@ -610,7 +612,7 @@
                     // ===== NEW .tptp / .tff FLOW via askVampireTPTP =====
                     if (!"Vampire".equals(inferenceEngine)) {
                         out.println("<span style='color:#b00'>Only Vampire is supported for .tptp/.tff tests.</span><br>");
-                    } 
+                    }
                     else {
                         String testLang = ext.endsWith(".tff") ? "tff" : "fof";
                         ATPQuery atpQuery = new ATPQuery(
@@ -671,9 +673,8 @@
                             out.println(result.resultPanelToHTML());
                             String pseudoQuery = "TPTP file: " + new File(testPath).getName();
                             List<String> cleaned = TPTPutil.clearProofFile(result.getStdout());
-                            List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
-                            normalized = THFutil.preprocessTHFProof(normalized);
-                            tpp.parseProofOutput(normalized, pseudoQuery, kb, result.getQList());
+                            cleaned = THFutil.preprocessTHFProof(cleaned);
+                            tpp.parseProofOutput(cleaned, pseudoQuery, kb, result.getQList());
                             setGraphFormat(graphFormulaFormat, tpp);
                             publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                             printAnswersBlock(tpp, kbName, language, out);
@@ -689,7 +690,7 @@
                     out.println("<font color='red'>Unsupported test file type: " + ext + "</font>");
                 }
             } else {
-                
+
                 System.out.println("AskTell running custom");
                 // ---- RUN CUSTOM QUERY (Ask) ----
                 // Reset spinner message to default (clear any stale "Regenerating KB..." from previous Tell)
@@ -731,8 +732,7 @@
                     List<String> proofOutput = result.getStdout();
                     if ("Vampire".equals(inferenceEngine) && "HOL".equalsIgnoreCase(translationMode)) {
                         List<String> cleaned = TPTPutil.clearProofFile(proofOutput);
-                        List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
-                        proofOutput = THFutil.preprocessTHFProof(normalized);
+                        proofOutput = THFutil.preprocessTHFProof(cleaned);
                     }
                     tpp.parseProofOutput(proofOutput, stmt, kb, result.getQList());
                     setGraphFormat(graphFormulaFormat, tpp);
