@@ -60,10 +60,4 @@ public class User {
     public String getOrganization() { return organization; }
     public String getNotRobots() { return notRobot; }
     public String getNotRobot() { return notRobot; }
-
-    /********************************************************************
-     */
-    public static void main(String args[]) {
-
-    }
 }

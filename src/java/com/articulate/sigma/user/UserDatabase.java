@@ -16,6 +16,7 @@ import java.sql.*;
 
 /** DO NOT USE THIS CLASS DIRECTLY IN JSP, ALWAYS USE UserManager */
 public class UserDatabase {
+    
     int debug = 0;
     private static final String JDBC_CREATE_DB = "jdbc:h2:file:" + System.getProperty("user.home") + "/var/passwd;AUTO_SERVER=TRUE";
     private static final String JDBC_ACCESS_DB = JDBC_CREATE_DB;
@@ -24,7 +25,7 @@ public class UserDatabase {
     private Connection connection;
 
     /********************************************************************
-     * Create a UserDatabase object
+     * Creates a UserDatabase object and opens a database connection.
      */
     public UserDatabase() {
         if (debug>0) System.out.printf("\nUserDatabase()");
@@ -40,12 +41,9 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * Add a user to the DB
-     * @param username the user name
-     * @param password user password (will be encrypted)
-     * @param email user email
-     * @param role user role
-     * @return an instance of the user to add to the DB
+     * Inserts a new user into the database if the username is available.
+     * @param user the user to insert
+     * @return true if the user was inserted successfully
      */
     public boolean insertUser(User user) {
 
@@ -58,12 +56,15 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * @param username
-     * @param password
-     * @param email
-     * @param firstName
-     * @param lastName
-     * @param organization
+     * Inserts a new admin user into the database.
+     * @param username the admin user's username
+     * @param password the admin user's password
+     * @param email the admin user's email
+     * @param firstName the admin user's first name
+     * @param lastName the admin user's last name
+     * @param organization the admin user's organization
+     * @param notRobot the admin user's verification statement
+     * @return true if the admin user was inserted successfully
      */
     public boolean insertAdmin(String username, String password, String email, String firstName, String lastName, String organization, String notRobot) {
 
@@ -74,11 +75,10 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * Take a user name and an encrypted password and compare it to an
-     * existing collection of users with encrypted passwords.
-     * @param username username to authenicate against DB
-     * @param password password to authenticate against DB
-     * @return User role
+     * Authenticates a user and returns their role if successful.
+     * @param username the username to authenticate
+     * @param password the password to authenticate
+     * @return the user's role if authentication succeeds, or null otherwise
      */
     public String authenticateUser(String username, String password) {
 
@@ -106,8 +106,8 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * Returns all usernames in the user table of the database
-     * @return Set of usernames found in DB
+     * Returns all usernames stored in the database.
+     * @return a set of usernames
      */
     public Set<String> getAllUsernames() {
 
@@ -125,8 +125,8 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * Return a list of all admin users' email addresses.
-     * @return List of admin email strings from DB
+     * Returns the email addresses for all admin users.
+     * @return a list of admin email addresses
      */
     public List<String> getAdminEmails() {
 
@@ -151,7 +151,10 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * Update just the password for this user
+     * Updates a user's password in the database.
+     * @param username the username of the account to update
+     * @param newPassword the new password to store
+     * @return true if the password was updated successfully
      */
     public boolean updatePassword(String username, String newPassword) {
 
@@ -174,7 +177,10 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * Update the role for this user
+     * Updates a user's role in the database.
+     * @param username the username of the account to update
+     * @param role the new role to assign
+     * @return true if the role was updated successfully
      */
     public boolean updateRole(String username, String role) {
 
@@ -195,6 +201,10 @@ public class UserDatabase {
     }
     
     /********************************************************************
+     * Updates a user's email address in the database.
+     * @param username the username of the account to update
+     * @param email the new email address to store
+     * @return true if the email was updated successfully
      */
     public boolean updateEmail(String username, String email) {
         
@@ -215,8 +225,8 @@ public class UserDatabase {
 
     /********************************************************************
      * Deletes a user from the database.
-     * @param username the username to be deleted from the DB.
-     * @return true if a user row was deleted, false otherwise
+     * @param username the username of the account to delete
+     * @return true if the user was deleted successfully
      */
     public boolean deleteUser(String username) {
 
@@ -234,8 +244,9 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * Check if this user already exists in the DB
-     * @param username checks if this username exists in the DB
+     * Checks whether a username already exists in the database.
+     * @param username the username to check
+     * @return true if the username exists
      */
     public boolean userExists(String username) {
 
@@ -256,7 +267,7 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     *  Create a database with columns like this class
+     * Creates a fresh users table in the database.
      */
     public void createDB() {
 
@@ -286,9 +297,9 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * Load the object from a relational DB
-     * @param username the user name to search for
-     * @return the register user from the DB
+     * Loads a user from the database by username.
+     * @param username the username to look up
+     * @return the matching user, or null if not found
      */
     public User fromDB(String username) {
 
@@ -325,8 +336,9 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * Save the object in the relational DB
-     * @param user 
+     * Saves a user to the database.
+     * @param user the user to save
+     * @return true if the user was saved successfully
      */
     public boolean toDB(User user) {
 
@@ -359,6 +371,8 @@ public class UserDatabase {
     }
     
     /********************************************************************
+     * Shuts down the H2 database connection.
+     * @return nothing
      */
     public void shutdown() {
 
@@ -372,9 +386,9 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * Encrypts a string with a deterministic algorithm. Thanks to
-     * https://howtodoinjava.com/security/how-to-generate-secure-password-hash-md5-sha-pbkdf2-bcrypt-examples/
-     * @param password user password to be encrypted
+     * Hashes a password using SHA-1.
+     * @param password the password to hash
+     * @return the hashed password string
      */
     public synchronized String encrypt(String password) {
 
@@ -393,6 +407,9 @@ public class UserDatabase {
     }
 
     /********************************************************************
+     * Normalizes a username for consistent storage and lookup.
+     * @param username the username to normalize
+     * @return the normalized username, or null if username is null
      */
     private String normalizeUsername(String username) {
 
@@ -401,6 +418,9 @@ public class UserDatabase {
     }
 
     /********************************************************************
+     * Normalizes an email address for consistent storage.
+     * @param email the email address to normalize
+     * @return the normalized email, or null if email is null
      */
     private String normalizeEmail(String email) {
 
@@ -409,7 +429,7 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * 
+     * Prints command-line usage options for UserDatabase.
      */
     public static void showHelp() {
 
@@ -421,6 +441,8 @@ public class UserDatabase {
     }
 
     /********************************************************************
+     * Runs command-line user database operations.
+     * @param args the command-line arguments
      */
     public static void main(String args[]) {
         UserDatabase db = new UserDatabase();
