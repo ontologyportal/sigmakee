@@ -194,6 +194,8 @@ public class UserDatabase {
         }
     }
     
+    /********************************************************************
+     */
     public boolean updateEmail(String username, String email) {
         
         username = username.trim().toLowerCase();
@@ -356,6 +358,8 @@ public class UserDatabase {
         }
     }
     
+    /********************************************************************
+     */
     public void shutdown() {
 
         org.h2.Driver.unload();
@@ -388,12 +392,16 @@ public class UserDatabase {
         return sb.toString();
     }
 
+    /********************************************************************
+     */
     private String normalizeUsername(String username) {
 
         if (username == null) return null;
         return username.trim().toLowerCase(java.util.Locale.ROOT);
     }
 
+    /********************************************************************
+     */
     private String normalizeEmail(String email) {
 
         if (email == null) return null;
@@ -412,6 +420,8 @@ public class UserDatabase {
         System.out.println("-a    create admin user");
     }
 
+    /********************************************************************
+     */
     public static void main(String args[]) {
         UserDatabase db = new UserDatabase();
         if (args != null && args.length > 0) {

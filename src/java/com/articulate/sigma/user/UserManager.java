@@ -12,6 +12,7 @@ import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.security.ValidationUtils;
 import com.articulate.sigma.*;
 
+import java.net.PasswordAuthentication;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -50,6 +51,19 @@ public final class UserManager implements ServletContextListener {
         this.userDatabase = new UserDatabase();
     }
 
+    /********************************************************************
+     * Creates a new user account after confirming admin access.
+     * @param request the current HTTP request
+     * @param username the new user's username
+     * @param password the new user's password
+     * @param email the new user's email
+     * @param role the user's role: user, admin, or guest
+     * @param firstName the user's first name
+     * @param lastName the user's last name
+     * @param organization the user's organization
+     * @param notRobot the user's verification statement
+     * @return true if the user was created successfully
+     */
     public boolean createUser(HttpServletRequest request,
                           String username,
                           String password,
@@ -68,18 +82,36 @@ public final class UserManager implements ServletContextListener {
         return this.userDatabase.insertUser(user);
     }
 
+    /********************************************************************
+     * Returns all usernames after confirming admin access.
+     * @param request the current HTTP request
+     * @return a set of all usernames
+     */
     public Set<String> getAllUsernames(HttpServletRequest request) {
 
         requireAdmin(request);
         return this.userDatabase.getAllUsernames();
     }
 
+    /********************************************************************
+     * Returns a user by username after confirming admin access.
+     * @param request the current HTTP request
+     * @param username the username to look up
+     * @return the matching user, or null if not found
+     */
     public User getUser(HttpServletRequest request, String username) {
 
         requireAdmin(request);
         return this.userDatabase.fromDB(username);
     }
 
+    /********************************************************************
+     * Updates a user's email address after confirming admin access.
+     * @param request the current HTTP request
+     * @param username the username of the account to update
+     * @param email the new email address
+     * @return true if the email was updated successfully
+     */
     public boolean updateUserEmail(HttpServletRequest request, String username, String email) {
 
         requireAdmin(request);
@@ -87,6 +119,9 @@ public final class UserManager implements ServletContextListener {
     }
 
     /********************************************************************
+     * Verifies that the current request belongs to a logged-in admin user.
+     * @param request the current HTTP request
+     * @throws SecurityException if the request is invalid or the user is not an admin
      */
     private void requireAdmin(HttpServletRequest request) {
 
@@ -100,6 +135,11 @@ public final class UserManager implements ServletContextListener {
     }
 
     /********************************************************************
+     * Logs in a user and creates a new authenticated session.
+     * @param request the current HTTP request
+     * @param username the username to authenticate
+     * @param password the password to authenticate
+     * @return true if login succeeds
      */
     public boolean login(HttpServletRequest request, String username, String password) {
 
@@ -129,12 +169,27 @@ public final class UserManager implements ServletContextListener {
         return true;
     }
 
+    /********************************************************************
+     * Returns admin email addresses after confirming admin access.
+     * @param request the current HTTP request
+     * @return a list of admin email addresses
+     */
     public List<String> getAdminEmails(HttpServletRequest request) {
+
         requireAdmin(request);
         return this.userDatabase.getAdminEmails();
     }
 
     /********************************************************************
+     * Registers a new guest user account.
+     * @param username the guest user's username
+     * @param password the guest user's password
+     * @param email the guest user's email
+     * @param firstName the guest user's first name
+     * @param lastName the guest user's last name
+     * @param organization the guest user's organization
+     * @param notRobot the guest user's verification statement
+     * @return true if the guest user was registered successfully
      */
     public boolean registerGuest(String username, String password, String email, String firstName, String lastName, String organization, String notRobot) {
         
@@ -142,23 +197,44 @@ public final class UserManager implements ServletContextListener {
         return this.userDatabase.insertUser(user);
     }
 
+    /********************************************************************
+     * Updates a user's role after confirming admin access.
+     * @param request the current HTTP request
+     * @param username the username of the account to update
+     * @param newRole the new role to assign
+     * @return true if the role was updated successfully
+     */
     public boolean updateUserRole(HttpServletRequest request, String username, String newRole) {
 
         requireAdmin(request);
         return this.userDatabase.updateRole(username, newRole);
     }
 
+    /********************************************************************
+     * Updates a user's password after confirming admin access.
+     * @param request the current HTTP request
+     * @param username the username of the account to update
+     * @param newPassword the new password to assign
+     * @return true if the password was updated successfully
+     */
     public boolean updateUserPassword (HttpServletRequest request, String username, String newPassword) {
 
         requireAdmin(request);
         return this.userDatabase.updatePassword(username, newPassword);
     }
 
+    /********************************************************************
+     *
+     */
     public void sendResetPasswordLink() {
 
     }
 
     /********************************************************************
+     * Deletes a user account after confirming admin access.
+     * @param request the current HTTP request
+     * @param username the username of the account to delete
+     * @return true if the user was deleted successfully
      */
     public boolean deleteUser(HttpServletRequest request, String username) {
         
@@ -167,17 +243,17 @@ public final class UserManager implements ServletContextListener {
     }
 
     /********************************************************************
-     * Sends the moderator an email requesting a user to be registered a
-     * Sigma account
-     * @param user the user information to register an account for
+     * Sends an account registration request email to the moderators.
+     * @param user the user requesting registration
+     * @return true if the email was sent successfully
      */
-    public void mailModerator(User user) {
+    public boolean mailModerator(User user) {
 
         if (debug>0) System.out.printf("\nUserManager.mailModerator(%s)", user);
         List<String> adminEmails = this.userDatabase.getAdminEmails();
         if (adminEmails.isEmpty()) {
             System.err.println("ERROR: No admin emails found. Cannot send moderator request.");
-            return;
+            return false;
         }
         String destmailid = String.join(",", adminEmails);
         String from = KBmanager.getMgr().getPref("smtpEmailAddress");
@@ -196,6 +272,7 @@ public final class UserManager implements ServletContextListener {
         }
         catch (UnsupportedEncodingException uee) {
             uee.printStackTrace();
+            return false;
         }
         System.out.println("UserManager.mailModerator(): host: " + smtphost);
         Properties propvls = new Properties();
@@ -221,12 +298,18 @@ public final class UserManager implements ServletContextListener {
             String htmlMsg = createHtmlForAdminApprovalEmail(user);
             messageobj.setContent(htmlMsg, "text/html; charset=utf-8");
             Transport.send(messageobj);
+            return true;
         }
         catch (MessagingException exp) {
             throw new RuntimeException(exp);
         }
     }
 
+    /********************************************************************
+     * Builds the HTML body for the admin approval email.
+     * @param user the user requesting registration
+     * @return the formatted HTML email body
+     */
     private String createHtmlForAdminApprovalEmail(User user) {
         
         return """
@@ -249,9 +332,9 @@ public final class UserManager implements ServletContextListener {
     }
 
     /********************************************************************
-     * Encrypts a string with a deterministic algorithm.  Thanks to
+     * Logs that the UserManager servlet context has started.
      * https://howtodoinjava.com/security/how-to-generate-secure-password-hash-md5-sha-pbkdf2-bcrypt-examples/
-     * @param servletContextEvent event class used to notify listener
+     * @param servletContextEvent the servlet context initialization event
      */
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
@@ -259,10 +342,10 @@ public final class UserManager implements ServletContextListener {
     }
 
     /********************************************************************
-     * H2 shutdown guidance from: 
+     * Shuts down the user database when the servlet context is destroyed.
      * https://github.com/spring-projects/spring-boot/issues/21221
      * and: https://stackoverflow.com/questions/9972372/what-is-the-proper-way-to-close-h2
-     * @param servletContextEvent
+     * @param servletContextEvent the servlet context destruction event
      */
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
@@ -272,7 +355,7 @@ public final class UserManager implements ServletContextListener {
     }
 
     /********************************************************************
-     * 
+     * Prints command-line usage options for UserManager.
      */
     public static void showHelp() {
 
@@ -281,40 +364,23 @@ public final class UserManager implements ServletContextListener {
         System.out.println("-l    login");
         System.out.println("-c    create db");
         System.out.println("-a    create admin user");
-        System.out.println("-u    show user IDs");
-        System.out.println("-r    register a new guest username and password (fail if username taken)");
-        System.out.println("-a3 <u> <p> <e>  create admin user");
-        System.out.println("-o <id>          change user role");
-        System.out.println("-n <id>          create new user");
-        System.out.println("-f <id>          find user with given ID");
-        System.out.println("-d <id>          delete user with given ID");
     }
 
     /********************************************************************
-     * Command line entry point
+     * Command line entry point for UserManager
      * @param args given command line arguments
      */
     public static void main(String args[]) {
 
-        // UserManager ps = UserManager.getInstance();
-        // try {
-        //     if (args != null && args.length > 0) {
-        //         if (args[0].equals("-h")) showHelp();
-        //         else if (args[0].equals("-l")) ps.login();
-        //         else if (args[0].equals("-c")) User.createDB();
-        //         else if (args[0].equals("-a")) ps.createAdmin();
-        //         else if (args[0].equals("-r")) ps.register();
-        //         else if (args[0].equals("-u")) System.out.println(ps.userIDs());
-        //         else if (args.length > 3 && args[0].equals("-a3")) ps.createAdmin(args[1], args[2], args[3]);
-        //         else if (args.length > 1 && args[0].equals("-o")) ps.changeUserRole(args[1]);
-        //         else if (args.length > 1 && args[0].equals("-n")) ps.createUser(args[1]);
-        //         else if (args.length > 1 && args[0].equals("-d")) ps.deleteUser(args[1]);
-        //         else if (args.length > 1 && args[0].equals("-f")) {
-        //             User user = User.fromDB(ps.conn, args[1]);
-        //             System.out.println(user == null ? "" : user);
-        //         }
-        //     }
-        //     else showHelp();
-        // }
+        UserManager userManager = new UserManager();
+        if (args != null && args.length > 0) {
+            if (args[0].equals("-h")) showHelp();
+            if (args[0].equals("-m")) {
+                System.out.println("UserManager mailModerator:");
+                User user = new User("John", "321", "roseshaun01@gmail.com", "Guest", "John", "Bose", "NPS", "Does not compute");
+                userManager.mailModerator(user);
+            }
+        }
+        else showHelp();
     }
 }
