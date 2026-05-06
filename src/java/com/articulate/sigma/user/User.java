@@ -26,7 +26,6 @@ public class User {
     private String firstName;
     private String lastName;
     private String organization;
-    private String registerId;
     private String notRobot;
 
     /********************************************************************
@@ -60,7 +59,6 @@ public class User {
     public String getEmail() { return email; }
     public String getOrganization() { return organization; }
     public String getNotRobots() { return notRobot; }
-    public String getRegisterId() { return registerId; }
     public String getNotRobot() { return notRobot; }
 
     public static void main(String args[]) {

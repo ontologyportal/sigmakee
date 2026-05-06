@@ -23,6 +23,9 @@ public class UserDatabase {
     private static final String INITIAL_ADMIN_USER = "sumo";
     private Connection connection;
 
+    /********************************************************************
+     * Create a UserDatabase object
+     */
     public UserDatabase() {
         if (debug>0) System.out.printf("\nUserDatabase()");
         try {
@@ -31,7 +34,7 @@ public class UserDatabase {
             if (debug>0) System.out.println("init(): Opened PASSWD DB via: " + JDBC_ACCESS_DB);
         }
         catch (ClassNotFoundException | SQLException e) {
-            System.err.println("Error in PasswordService(): " + e.getMessage());
+            System.err.println("Error in UserDatabase(): " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -46,8 +49,9 @@ public class UserDatabase {
      */
     public boolean insertUser(User user) {
 
+        String username = user.getUsername().trim().toLowerCase();
         if (userExists(user.getUsername())) {
-            System.err.println("Error in PasswordService.addUser():  User " + user.getUsername() + " already exists!");
+            System.err.println("Error in UserDatabase.addUser():  User " + username + " already exists!");
             return false;
         }
         return toDB(user);
@@ -63,6 +67,8 @@ public class UserDatabase {
      */
     public boolean insertAdmin(String username, String password, String email, String firstName, String lastName, String organization, String notRobot) {
 
+        username = username.trim().toLowerCase();
+        email = email.trim().toLowerCase();
         User user = new User(username, password, email, "admin", firstName, lastName, organization, notRobot);
         return insertUser(user);
     }
@@ -78,8 +84,9 @@ public class UserDatabase {
 
         if (username == null || username.trim().isEmpty()) return null;
         if (password == null || password.isEmpty()) return null;
-        String query = "SELECT password, role FROM users WHERE username = ?";
-        try (PreparedStatement statement = this.connection.prepareStatement(query)) {
+        username = username.trim().toLowerCase();
+        String sql = "SELECT password, role FROM users WHERE username = ?";
+        try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
             statement.setString(1, username);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next()) return null;
@@ -105,15 +112,13 @@ public class UserDatabase {
     public Set<String> getAllUsernames() {
 
         Set<String> result = new HashSet<>();
-        try (Statement query = connection.createStatement();
-            ResultSet resultSet = query.executeQuery("SELECT username FROM USERS;")) {
-            while (!resultSet.isLast()) {
-                resultSet.next();
-                result.add(resultSet.getString(1));
-            }
+        String sql = "SELECT username FROM users";
+        try (Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql)) {
+            while (resultSet.next()) result.add(resultSet.getString("username"));
         }
         catch (SQLException e) {
-            System.err.println("Error in userIDs(): " + e.getMessage());
+            System.err.println("Error in getAllUsernames(): " + e.getMessage());
             e.printStackTrace();
         }
         return result;
@@ -150,11 +155,16 @@ public class UserDatabase {
      */
     public boolean updatePassword(String username, String newPassword) {
 
-        try (Statement stmt = this.connection.createStatement()) {
-            String str = "update users set password='" + encrypt(newPassword) + "' where username='" + username + "';";
-            stmt.execute(str);
-            System.out.println("User.updatePassword(): password updated for " + username);
-            return true;
+        username = normalizeUsername(username);
+        if (username == null || username.isEmpty()) return false;
+        if (newPassword == null || newPassword.isEmpty()) return false;
+        String sql = "UPDATE users SET password = ? WHERE username = ?";
+        try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
+            statement.setString(1, encrypt(newPassword));
+            statement.setString(2, username);
+            boolean updated = statement.executeUpdate() > 0;
+            if (updated) System.out.println("User.updatePassword(): password updated for " + username);
+            return updated;
         }
         catch (SQLException e) {
             System.err.println("Error in User.updatePassword(): " + e.getMessage());
@@ -168,10 +178,14 @@ public class UserDatabase {
      */
     public boolean updateRole(String username, String role) {
 
-        try (Statement stmt = this.connection.createStatement()) {
-            String query = "update users set role='" + role + "' where username='" + username + "';";
-            stmt.execute(query);
-            return true;
+        username = normalizeUsername(username);
+        if (username == null || username.isEmpty()) return false;
+        if (role == null || role.trim().isEmpty()) return false;
+        String sql = "UPDATE users SET role = ? WHERE username = ?";
+        try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
+            statement.setString(1, role.trim());
+            statement.setString(2, username);
+            return statement.executeUpdate() > 0;
         }
         catch (SQLException e) {
             System.err.println("Error in User.updateRole(): " + e.getMessage());
@@ -181,7 +195,9 @@ public class UserDatabase {
     }
     
     public boolean updateEmail(String username, String email) {
-
+        
+        username = username.trim().toLowerCase();
+        email = email.trim().toLowerCase();
         String sql = "UPDATE users SET email = ? WHERE username = ?";
         try (PreparedStatement stmt = this.connection.prepareStatement(sql)) {
             stmt.setString(1, email);
@@ -202,7 +218,7 @@ public class UserDatabase {
      */
     public boolean deleteUser(String username) {
 
-
+        username = username.trim().toLowerCase();
         String sql = "DELETE FROM USERS WHERE username = ?";
         try (PreparedStatement query = connection.prepareStatement(sql)) {
             query.setString(1, username);
@@ -221,9 +237,14 @@ public class UserDatabase {
      */
     public boolean userExists(String username) {
 
-        try (Statement query = connection.createStatement();
-            ResultSet resultSet = query.executeQuery("SELECT * FROM USERS where username='" + username + "';")) {
-            return resultSet.next();
+        username = normalizeUsername(username);
+        if (username == null || username.isEmpty()) return false;
+        String sql = "SELECT 1 FROM users WHERE username = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, username);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                return resultSet.next();
+            }
         }
         catch (SQLException e) {
             System.err.println("Error in userExistsDB(): " + e.getMessage());
@@ -243,9 +264,9 @@ public class UserDatabase {
             statement = this.connection.createStatement();
             statement.execute(query);
             query = "create table users(" +
-                "username varchar(50), " +
+                "username varchar(50) primary key, " +
                 "password varchar(255), " +
-                "email varchar(255), " +
+                "email varchar(255) unique, " +
                 "role varchar(20), " +
                 "firstName varchar(100), " +
                 "lastName varchar(100), " +
@@ -269,6 +290,7 @@ public class UserDatabase {
      */
     public User fromDB(String username) {
 
+        username = username.trim().toLowerCase();
         String query = """
             SELECT username, email, role, firstName, lastName, organization, notRobot
             FROM users
@@ -306,21 +328,26 @@ public class UserDatabase {
      */
     public boolean toDB(User user) {
 
-        try {
-            String query = "insert into users(username,password,email,role,firstName,lastName,organization,notRobot) values ('" + 
-                user.getUsername() + "', '" + 
-                encrypt(user.getPassword()) + "', '" + 
-                user.getEmail() + "', '" +
-                user.getRole() + "', '" +
-                user.getFirstName() + "', '" +
-                user.getLastName() + "', '" +
-                user.getOrganization() + "', '" + 
-                user.getNotRobot() + 
-                "');";
-            Statement statement = this.connection.createStatement();
-            statement.execute(query);
-            statement.close();
-            return true;
+        String username = normalizeUsername(user.getUsername());
+        String email = normalizeEmail(user.getEmail());
+        if (username == null || username.isEmpty()) return false;
+        if (email == null || email.isEmpty()) return false;
+        if (user.getPassword() == null || user.getPassword().isEmpty()) return false;
+        String sql = """
+            INSERT INTO users
+            (username, password, email, role, firstName, lastName, organization, notRobot)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """;
+        try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
+            statement.setString(1, username);
+            statement.setString(2, encrypt(user.getPassword()));
+            statement.setString(3, email);
+            statement.setString(4, user.getRole());
+            statement.setString(5, user.getFirstName());
+            statement.setString(6, user.getLastName());
+            statement.setString(7, user.getOrganization());
+            statement.setString(8, user.getNotRobot());
+            return statement.executeUpdate() > 0;
         }
         catch (SQLException e) {
             System.err.println("Error in UserDatabase.toDB(): " + e.getMessage());
@@ -347,7 +374,7 @@ public class UserDatabase {
      */
     public synchronized String encrypt(String password) {
 
-        //if(debug>0) System.out.printf("PasswordService.encrypt(%s)", password);
+        //if(debug>0) System.out.printf("UserDatabase.encrypt(%s)", password);
         StringBuilder sb = new StringBuilder();
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
@@ -361,23 +388,28 @@ public class UserDatabase {
         return sb.toString();
     }
 
+    private String normalizeUsername(String username) {
+
+        if (username == null) return null;
+        return username.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
+    private String normalizeEmail(String email) {
+
+        if (email == null) return null;
+        return email.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
     /********************************************************************
      * 
      */
     public static void showHelp() {
 
-        System.out.println("PasswordService: ");
+        System.out.println("UserDatabase: ");
         System.out.println("-h    show this help message");
         System.out.println("-l    login");
         System.out.println("-c    create db");
         System.out.println("-a    create admin user");
-        System.out.println("-u    show user IDs");
-        System.out.println("-r    register a new guest username and password (fail if username taken)");
-        System.out.println("-a3 <u> <p> <e>  create admin user");
-        System.out.println("-o <id>          change user role");
-        System.out.println("-n <id>          create new user");
-        System.out.println("-f <id>          find user with given ID");
-        System.out.println("-d <id>          delete user with given ID");
     }
 
     public static void main(String args[]) {

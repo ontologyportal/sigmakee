@@ -8,7 +8,6 @@ code.
 */
 package com.articulate.sigma.user;
 
-// import com.articulate.sigma.user.*;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.security.ValidationUtils;
 import com.articulate.sigma.*;
@@ -44,7 +43,7 @@ public final class UserManager implements ServletContextListener {
     private UserDatabase userDatabase; 
 
     /********************************************************************
-     * Constructs a new instance of PasswordService
+     * Constructs a new instance of UserManager
      */
     public UserManager() {
 
@@ -174,7 +173,7 @@ public final class UserManager implements ServletContextListener {
      */
     public void mailModerator(User user) {
 
-        if (debug>0) System.out.printf("\nPasswordService.mailModerator(%s)", user);
+        if (debug>0) System.out.printf("\nUserManager.mailModerator(%s)", user);
         List<String> adminEmails = this.userDatabase.getAdminEmails();
         if (adminEmails.isEmpty()) {
             System.err.println("ERROR: No admin emails found. Cannot send moderator request.");
@@ -192,13 +191,13 @@ public final class UserManager implements ServletContextListener {
             String https = KBmanager.getMgr().getPref("https");
             if (https == null || !https.equals("true")) https = "http";
             else https = "https";
-            appURL = "ModeratorApproval.jsp?user=" + user.getUsername() + "&id=" + URLEncoder.encode(user.getRegisterId(), "UTF-8");
+            appURL = "ApproveUser.jsp?user=" + URLEncoder.encode(user.getUsername(), "UTF-8");
             if (!StringUtil.emptyString(host) && !StringUtil.emptyString(port)) appURL = https + "://" + host + ":" + port + "/sigma/" + appURL;
         }
         catch (UnsupportedEncodingException uee) {
             uee.printStackTrace();
         }
-        System.out.println("PasswordService.mailModerator(): host: " + smtphost);
+        System.out.println("UserManager.mailModerator(): host: " + smtphost);
         Properties propvls = new Properties();
         propvls.put("mail.smtp.auth", "true");
         propvls.put("mail.smtp.starttls.enable", "true");
@@ -277,7 +276,7 @@ public final class UserManager implements ServletContextListener {
      */
     public static void showHelp() {
 
-        System.out.println("PasswordService: ");
+        System.out.println("UserManager: ");
         System.out.println("-h    show this help message");
         System.out.println("-l    login");
         System.out.println("-c    create db");
