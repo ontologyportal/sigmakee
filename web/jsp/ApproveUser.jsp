@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"
     import="com.articulate.sigma.user.User,
             com.articulate.sigma.user.UserManager,
+            com.articulate.sigma.user.EmailService,
             com.articulate.sigma.utils.StringUtil,
             com.articulate.sigma.security.ValidationUtils" %>
 
@@ -25,7 +26,7 @@ Pease A., and Benzm?ller C. (2013). Sigma: An Integrated Development Environment
 for Logical Theories. AI Communications 26, pp79-97.  See also
 http://github.com/ontologyportal
 */
-<%
+EmailService emailService = new EmailService();
 String role = (String) session.getAttribute("role");
 if (StringUtil.emptyString(role) || !"admin".equals(role)) {
     response.sendRedirect("login.jsp");
@@ -48,27 +49,27 @@ String method = request.getMethod();
 if ("POST".equalsIgnoreCase(method)) {
     boolean approved = userManager.updateUserRole(request, username, "user");
     if (approved) {
+        emailService.sendAccountApprovedNotification(user);
 %>
-        <b>User approved.</b>
+    <b>User approved.</b>
+    <p>
+    User <b><%= ValidationUtils.sanitizeString(username) %></b> now has role <b>user</b>.
+    </p>
+    <form method="post" action="KBs.jsp">
         <p>
-        User <b><%= ValidationUtils.sanitizeString(username) %></b> now has role <b>user</b>.
-        </p>
-        <form method="post" action="KBs.jsp">
-            <p>
-            <table align="left" border="0">
-                <tr>
-                    <td valign="center">
-                        <b><input value="Ok" type="submit"></b>
-                    </td>
-                </tr>
-            </table>
-        </form>
+        <table align="left" border="0">
+            <tr>
+                <td valign="center">
+                    <b><input value="Ok" type="submit"></b>
+                </td>
+            </tr>
+        </table>
+    </form>
 <%
     }
     else out.println("<b>Unable to approve user.</b>");
     return;
 }
-%>
 String safeUsername = ValidationUtils.sanitizeString(user.getUsername());
 String safeFirstName = ValidationUtils.sanitizeString(user.getFirstName());
 String safeLastName = ValidationUtils.sanitizeString(user.getLastName());

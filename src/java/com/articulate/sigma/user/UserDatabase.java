@@ -16,7 +16,7 @@ import java.sql.*;
 
 /** DO NOT USE THIS CLASS DIRECTLY IN JSP, ALWAYS USE UserManager */
 public class UserDatabase {
-    
+
     int debug = 0;
     private static final String JDBC_CREATE_DB = "jdbc:h2:file:" + System.getProperty("user.home") + "/var/passwd;AUTO_SERVER=TRUE";
     private static final String JDBC_ACCESS_DB = JDBC_CREATE_DB;
@@ -132,7 +132,7 @@ public class UserDatabase {
 
         List<String> adminEmails = new ArrayList<>();
         try (Statement query = connection.createStatement();
-            ResultSet resultSet = query.executeQuery("SELECT username FROM USERS WHERE role='admin';")) {
+            ResultSet resultSet = query.executeQuery("SELECT username FROM users WHERE role='admin';")) {
             while (resultSet.next()) {
                 String username = resultSet.getString(1);
                 User user = fromDB(username);
@@ -231,7 +231,7 @@ public class UserDatabase {
     public boolean deleteUser(String username) {
 
         username = username.trim().toLowerCase();
-        String sql = "DELETE FROM USERS WHERE username = ?";
+        String sql = "DELETE FROM users WHERE username = ?";
         try (PreparedStatement query = connection.prepareStatement(sql)) {
             query.setString(1, username);
             return query.executeUpdate() > 0;

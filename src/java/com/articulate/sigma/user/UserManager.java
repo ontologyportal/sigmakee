@@ -193,7 +193,12 @@ public final class UserManager implements ServletContextListener {
     public boolean registerGuest(String username, String password, String email, String firstName, String lastName, String organization, String notRobot) {
         
         User user = new User(username, password, email, "guest", firstName, lastName, organization, notRobot);
-        return this.userDatabase.insertUser(user);
+        if (this.userDatabase.insertUser(user)) {
+            EmailService emailService = new EmailService();
+            emailService.requestAdminApprovalForUser(user, this.userDatabase.getAdminEmails());
+            return true;
+        }
+        else return false;
     }
 
     /********************************************************************
@@ -223,13 +228,6 @@ public final class UserManager implements ServletContextListener {
     }
 
     /********************************************************************
-     *
-     */
-    public void sendResetPasswordLink() {
-
-    }
-
-    /********************************************************************
      * Deletes a user account after confirming admin access.
      * @param request the current HTTP request
      * @param username the username of the account to delete
@@ -239,95 +237,6 @@ public final class UserManager implements ServletContextListener {
         
         requireAdmin(request);
         return this.userDatabase.deleteUser(username);
-    }
-
-    /********************************************************************
-     * Sends an account registration request email to the moderators.
-     * @param user the user requesting registration
-     * @return true if the email was sent successfully
-     */
-    public boolean mailModerator(User user) {
-
-        if (debug>0) System.out.printf("\nUserManager.mailModerator(%s)", user);
-        List<String> adminEmails = this.userDatabase.getAdminEmails();
-        if (adminEmails.isEmpty()) {
-            System.err.println("ERROR: No admin emails found. Cannot send moderator request.");
-            return false;
-        }
-        String destmailid = String.join(",", adminEmails);
-        String from = KBmanager.getMgr().getPref("smtpEmailAddress");
-        final String uname = KBmanager.getMgr().getPref("smtpEmailUser");
-        final String pwd = KBmanager.getMgr().getPref("smtpEmailPassword");
-        String smtphost = KBmanager.getMgr().getPref("smtpEmailServer");
-        String host = KBmanager.getMgr().getPref("hostname");
-        String port = KBmanager.getMgr().getPref("port");
-        String appURL = "";
-        try {
-            String https = KBmanager.getMgr().getPref("https");
-            if (https == null || !https.equals("true")) https = "http";
-            else https = "https";
-            appURL = "ApproveUser.jsp?user=" + URLEncoder.encode(user.getUsername(), "UTF-8");
-            if (!StringUtil.emptyString(host) && !StringUtil.emptyString(port)) appURL = https + "://" + host + ":" + port + "/sigma/" + appURL;
-        }
-        catch (UnsupportedEncodingException uee) {
-            uee.printStackTrace();
-            return false;
-        }
-        System.out.println("UserManager.mailModerator(): host: " + smtphost);
-        Properties propvls = new Properties();
-        propvls.put("mail.smtp.auth", "true");
-        propvls.put("mail.smtp.starttls.enable", "true");
-        propvls.put("mail.smtp.host", smtphost);
-        propvls.put("mail.smtp.port", "587");
-        Session sessionobj = Session.getInstance(propvls,
-            new javax.mail.Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(uname, pwd);
-                }
-            });
-        try {
-            Message messageobj = new MimeMessage(sessionobj);
-            messageobj.setFrom(new InternetAddress(from));
-            messageobj.setRecipients(Message.RecipientType.TO,InternetAddress.parse(destmailid));
-            messageobj.setSubject("SigmaKEE: Account Registration Request from " + user.getFirstName() + " " + user.getLastName());
-            String manageUsersURL = "https://" + host + ":" + port + "/sigma/ManageUsers.jsp";
-            String loginURL       = "https://" + host + ":" + port + "/sigma/login.jsp";
-            String safeNotRobot = (user.getNotRobot() == null || user.getNotRobot().trim().isEmpty()) ? "(No statement provided)" : ValidationUtils.sanitizeString(user.getNotRobot());
-            String htmlMsg = createHtmlForAdminApprovalEmail(user);
-            messageobj.setContent(htmlMsg, "text/html; charset=utf-8");
-            Transport.send(messageobj);
-            return true;
-        }
-        catch (MessagingException exp) {
-            throw new RuntimeException(exp);
-        }
-    }
-
-    /********************************************************************
-     * Builds the HTML body for the admin approval email.
-     * @param user the user requesting registration
-     * @return the formatted HTML email body
-     */
-    private String createHtmlForAdminApprovalEmail(User user) {
-        
-        return """
-            <h2>New SigmaKEE User Registration Request</h2>
-            <p>The following user has requested access to SigmaKEE:</p>
-            <ul>
-                <li><b>First Name: </b> %s </li>
-                <li><b>Last Name: </b> %s </li>
-                <li><b>Username:</b> %s </li>
-                <li><b>Email: </b> %s </li>
-                <li><b>Organization:</b> %s </li>
-            </ul>
-            <h3>Not a Robot Verification Statement:</h3>
-            <blockquote style='border-left:3px solid #ccc;padding-left:10px;color:#444'>
-                %s
-            </blockquote>
-            <hr>
-            <p style='font-size:12px;color:#666'>This email was generated automatically by SigmaKEE.</p>
-            """.formatted(user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getOrganization(), user.getNotRobots());
     }
 
     /********************************************************************
@@ -360,9 +269,6 @@ public final class UserManager implements ServletContextListener {
 
         System.out.println("UserManager: ");
         System.out.println("-h    show this help message");
-        System.out.println("-l    login");
-        System.out.println("-c    create db");
-        System.out.println("-a    create admin user");
     }
 
     /********************************************************************
@@ -371,14 +277,12 @@ public final class UserManager implements ServletContextListener {
      */
     public static void main(String args[]) {
 
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         UserManager userManager = new UserManager();
         if (args != null && args.length > 0) {
             if (args[0].equals("-h")) showHelp();
-            if (args[0].equals("-m")) {
-                System.out.println("UserManager mailModerator:");
-                User user = new User("John", "321", "roseshaun01@gmail.com", "Guest", "John", "Bose", "NPS", "Does not compute");
-                userManager.mailModerator(user);
-            }
+            else showHelp();
         }
         else showHelp();
     }
