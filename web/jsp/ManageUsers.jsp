@@ -1,7 +1,7 @@
 <%@ page language="java"
     contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"
-    import="com.articulate.sigma.*, com.articulate.sigma.user.UserManager, com.articulate.sigma.security.*, com.articulate.sigma.utils.StringUtil, java.sql.*, java.util.*" %>
+    import="com.articulate.sigma.*, com.articulate.sigma.user.UserManager, com.articulate.sigma.user.User, com.articulate.sigma.security.*, com.articulate.sigma.utils.StringUtil, java.sql.*, java.util.*" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -62,12 +62,8 @@
                     organization,
                     notRobot
             );
-            if (success) {
-                flash = "User '" + username + "' created.";
-            }
-            else {
-                error = "Could not create user '" + username + "'. The username may already exist.";
-            }
+            if (success) flash = "User '" + username + "' created.";
+            else error = "Could not create user '" + username + "'. The username may already exist.";
         }
         catch (Exception ex) {
             error = ex.toString();
@@ -124,6 +120,7 @@
 <% if (error != null && !"".equals(error)) { %>
   <div class="notice danger"><b>Create error:</b> <%= error %></div>
 <% } %>
+
 <!-- Manage All Users Table -->
 <div class="card">
   <h2 style="margin-top:0;">Manage Users</h2>
@@ -136,6 +133,9 @@
           <th>Username</th>
           <th>Role</th>
           <th>Email</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Organization</th>
           <th>New password</th>
         </tr>
       </thead>
@@ -147,12 +147,15 @@
             if (u == null) continue;
             String email = u.getEmail();
             String role = u.getRole();
+            String firstName = u.getFirstName();
+            String lastName = u.getLastName();
+            String organization = u.getOrganization();
 %>
           <tr>
-              <td><input type="checkbox" name="deleteUser" value="<%= esc(uname) %>"></td>
+              <td><input type="checkbox" name="deleteUser" value="<%= ValidationUtils.sanitizeString(uname) %>"></td>
               <td>
-                  <b><%= esc(uname) %></b>
-                  <input type="hidden" name="u" value="<%= esc(uname) %>">
+                  <b><%= ValidationUtils.sanitizeString(uname) %></b>
+                  <input type="hidden" name="u" value="<%= ValidationUtils.sanitizeString(uname) %>">
               </td>
               <td>
                   <select name="role">
@@ -161,7 +164,10 @@
                       <option value="guest" <%= "guest".equalsIgnoreCase(role) ? "selected" : "" %>>guest</option>
                   </select>
               </td>
-              <td><input type="text" name="email" value="<%= esc(email) %>" placeholder="email"></td>
+              <td><input type="text" name="email" value="<%= ValidationUtils.sanitizeString(email) %>" placeholder="email"></td>
+              <td><input type="text" name="firstName" value="<%= ValidationUtils.sanitizeString(firstName) %>" placeholder="firstName"></td>
+              <td><input type="text" name="lastName" value="<%= ValidationUtils.sanitizeString(lastName) %>" placeholder="lastName"></td>
+              <td><input type="text" name="organization" value="<%= ValidationUtils.sanitizeString(organization) %>" placeholder="organization"></td>
               <td><input type="password" name="pass" value="" placeholder="leave blank to keep"></td>
           </tr>
 <%
@@ -170,7 +176,7 @@
     catch (Exception ex) {
 %>
     <tr>
-        <td colspan="5" class="danger"><b>Error loading users:</b> <%= esc(ex.toString()) %></td>
+        <td colspan="5" class="danger"><b>Error loading users:</b> <%= ValidationUtils.sanitizeString(ex.toString()) %></td>
     </tr>
 <%
     }
@@ -178,7 +184,7 @@
       </tbody>
       <tfoot>
         <tr>
-          <td colspan="5" style="text-align:right;">
+          <td colspan="8" style="text-align:right;">
             <button class="btn" type="submit">Apply</button>
           </td>
         </tr>
@@ -186,6 +192,7 @@
     </table>
   </form>
 </div>
+
 <!-- User Creation Table -->
 <div class="card">
   <h2 style="margin-top:0;">Create User</h2>
@@ -196,14 +203,6 @@
       <input type="text" name="username" required>
     </label>
     <label>
-      <span>Password</span>
-      <input type="password" name="password" required>
-    </label>    
-    <label>
-      <span>Email</span>
-      <input type="email" name="email" required>
-    </label>
-    <label>
       <span>Role</span>
       <select name="role">
         <option value="user">user</option>
@@ -211,6 +210,10 @@
         <option value="admin">admin</option>
       </select>
     </label>
+    <label>
+      <span>Email</span>
+      <input type="email" name="email" required>
+    </label>   
     <label>
       <span>First name</span>
       <input type="text" name="firstName" required>
@@ -223,6 +226,10 @@
       <span>Organization</span>
       <input type="text" name="organization" required>
     </label>
+    <label>
+      <span>Password</span>
+      <input type="password" name="password" required>
+    </label> 
     <input type="hidden" name="notRobot" value="yes">
     <div style="flex-basis:100%;"></div>
     <button class="btn" type="submit">Create</button>

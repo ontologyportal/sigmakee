@@ -76,13 +76,26 @@ public class UserDatabase {
      */
     public String authenticateUser(String username, String password) {
 
-        //if(debug>0) System.out.printf("PasswordService.authenticate(%s, %s)", username, encryptedPassword);
-        if (userExists(username)) {
-            User user = fromDB(username);
-            if (encrypt(password).equals(user.getPassword())) return user.getRole();
-            else return null;
+        if (username == null || username.trim().isEmpty()) return null;
+        if (password == null || password.isEmpty()) return null;
+        String query = "SELECT password, role FROM users WHERE username = ?";
+        try (PreparedStatement statement = this.connection.prepareStatement(query)) {
+            statement.setString(1, username);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) return null;
+                String storedPassword = resultSet.getString("password");
+                String role = resultSet.getString("role");
+                if (storedPassword == null || role == null) return null;
+                String encryptedPassword = encrypt(password);
+                if (encryptedPassword.equals(storedPassword)) return role;
+                return null;
+            }
         }
-        else return null;
+        catch (SQLException e) {
+            System.err.println("Error in UserDatabase.authenticateUser(): " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /********************************************************************
@@ -256,35 +269,35 @@ public class UserDatabase {
      */
     public User fromDB(String username) {
 
-        User user = null;
-        String query = "SELECT * FROM users WHERE username='" + username + "';";
-        try {
-            Statement statement = this.connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
-            if (!resultSet.next()) {
-                System.err.println("User.fromDB(): no user " + username);
-                return null;
-            }
-            else {
-                user = new User(
-                    username, 
-                    resultSet.getString("password"), 
-                    resultSet.getString("email"), 
+        String query = """
+            SELECT username, email, role, firstName, lastName, organization, notRobot
+            FROM users
+            WHERE username = ?
+            """;
+        try (PreparedStatement statement = this.connection.prepareStatement(query)) {
+            statement.setString(1, username);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) {
+                    System.err.println("User.fromDB(): no user " + username);
+                    return null;
+                }
+                return new User(
+                    resultSet.getString("username"),
+                    null,
+                    resultSet.getString("email"),
                     resultSet.getString("role"),
                     resultSet.getString("firstName"),
                     resultSet.getString("lastName"),
                     resultSet.getString("organization"),
-                    resultSet.getString("notRobot") 
+                    resultSet.getString("notRobot")
                 );
             }
-            resultSet.close();
-            statement.close();
         }
         catch (SQLException e) {
             System.err.println("Error in User.fromDB(): " + e.getMessage());
             e.printStackTrace();
         }
-        return user;
+        return null;
     }
 
     /********************************************************************
