@@ -27,8 +27,43 @@ public class LegacyUserDatabaseMigration {
 
         validateLegacySchema(connection);
         validateSafeToMigrate(connection);
+        rebuildTemporaryUsersTable(connection);
+        copyLegacyUsers(connection);
+        validateMigrationRowCount(connection);
+        replaceLegacyUsersTable(connection);
+        createPasswordResetTokenTable(connection);
+        dropLegacyTables(connection);
+    }
+
+    /********************************************************************
+     * Rebuilds the temporary users table used during migration.
+     * @param connection the database connection
+     * @throws SQLException if the temporary table cannot be rebuilt
+     */
+    private static void rebuildTemporaryUsersTable(Connection connection) throws SQLException {
+
+        dropTemporaryUsersTable(connection);
+        createTemporaryUsersTable(connection);
+    }
+
+    /********************************************************************
+     * Drops the temporary users table if it already exists.
+     * @param connection the database connection
+     * @throws SQLException if the temporary table cannot be dropped
+     */
+    private static void dropTemporaryUsersTable(Connection connection) throws SQLException {
+
+        dropTableIfExists(connection, "users_new");
+    }
+
+    /********************************************************************
+     * Creates the temporary users table using the new user schema.
+     * @param connection the database connection
+     * @throws SQLException if the temporary table cannot be created
+     */
+    private static void createTemporaryUsersTable(Connection connection) throws SQLException {
+
         try (Statement statement = connection.createStatement()) {
-            statement.execute("DROP TABLE IF EXISTS users_new");
             statement.execute(
                     "CREATE TABLE users_new (" +
                     "username VARCHAR(50) PRIMARY KEY, " +
@@ -41,6 +76,17 @@ public class LegacyUserDatabaseMigration {
                     "notRobot VARCHAR(1000)" +
                     ")"
             );
+        }
+    }
+
+    /********************************************************************
+     * Copies legacy users into the temporary users table.
+     * @param connection the database connection
+     * @throws SQLException if legacy users cannot be copied
+     */
+    private static void copyLegacyUsers(Connection connection) throws SQLException {
+
+        try (Statement statement = connection.createStatement()) {
             statement.executeUpdate(
                     "INSERT INTO users_new " +
                     "(username, password, email, role, firstName, lastName, organization, notRobot) " +
@@ -74,17 +120,48 @@ public class LegacyUserDatabaseMigration {
                     ") a " +
                     "ON LOWER(TRIM(u.username)) = a.username"
             );
-            int oldCount = countRows(connection, "users");
-            int newCount = countRows(connection, "users_new");
-            if (oldCount != newCount) {
-                statement.execute("DROP TABLE IF EXISTS users_new");
-                throw new SQLException("Migration count mismatch. Old users: " +
-                        oldCount + ", new users: " + newCount);
-            }
-            renameTableIfExists(connection, "users", "users_legacy");
-            renameTableIfExists(connection, "attributes", "attributes_legacy");
-            renameTableIfExists(connection, "projects", "projects_legacy");
+        }
+    }
+
+    /********************************************************************
+     * Verifies that every legacy user was copied into the temporary users table.
+     * @param connection the database connection
+     * @throws SQLException if the migrated row count does not match the legacy row count
+     */
+    private static void validateMigrationRowCount(Connection connection) throws SQLException {
+
+        int oldCount = countRows(connection, "users");
+        int newCount = countRows(connection, "users_new");
+        if (oldCount != newCount) {
+            dropTemporaryUsersTable(connection);
+            throw new SQLException("Migration count mismatch. Old users: " +
+                    oldCount + ", new users: " + newCount);
+        }
+    }
+
+    /********************************************************************
+     * Replaces the legacy users table with the migrated users_new table.
+     * @param connection the database connection
+     * @throws SQLException if the table replacement fails
+     */
+    private static void replaceLegacyUsersTable(Connection connection) throws SQLException {
+
+        renameTableIfExists(connection, "users", "users_legacy");
+        renameTableIfExists(connection, "attributes", "attributes_legacy");
+        renameTableIfExists(connection, "projects", "projects_legacy");
+        try (Statement statement = connection.createStatement()) {
             statement.execute("ALTER TABLE users_new RENAME TO users");
+        }
+    }
+
+    /********************************************************************
+     * Creates the password reset token table required by the new schema.
+     * @param connection the database connection
+     * @throws SQLException if the table cannot be created
+     */
+    private static void createPasswordResetTokenTable(Connection connection) throws SQLException {
+
+        try (Statement statement = connection.createStatement()) {
             statement.execute(
                     "CREATE TABLE IF NOT EXISTS password_reset_tokens (" +
                     "token_hash VARCHAR(64) PRIMARY KEY, " +
@@ -95,6 +172,31 @@ public class LegacyUserDatabaseMigration {
                     "FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE" +
                     ")"
             );
+        }
+    }
+
+    /********************************************************************
+     * Drops preserved legacy tables after migration succeeds.
+     * @param connection the database connection
+     * @throws SQLException if a legacy table cannot be dropped
+     */
+    private static void dropLegacyTables(Connection connection) throws SQLException {
+
+        dropTableIfExists(connection, "projects_legacy");
+        dropTableIfExists(connection, "attributes_legacy");
+        dropTableIfExists(connection, "users_legacy");
+    }
+
+    /********************************************************************
+     * Drops a table if it exists.
+     * @param connection the database connection
+     * @param tableName the table to drop
+     * @throws SQLException if the table cannot be dropped
+     */
+    private static void dropTableIfExists(Connection connection, String tableName) throws SQLException {
+
+        try (Statement statement = connection.createStatement()) {
+            statement.execute("DROP TABLE IF EXISTS " + tableName);
         }
     }
 
@@ -231,7 +333,7 @@ public class LegacyUserDatabaseMigration {
                 migrate(connection);
                 connection.commit();
                 System.out.println("Migration completed successfully.");
-                System.out.println("Old tables were preserved as users_legacy, attributes_legacy, and projects_legacy.");
+                System.out.println("Legacy tables were dropped after migration.");
             }
             catch (SQLException e) {
                 connection.rollback();
