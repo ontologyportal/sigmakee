@@ -339,7 +339,8 @@ public class Vampire {
             else {
                 kbThfFile = this.kb.name + "_plain.thf";
             }
-            String kbThfPath = dir + kbThfFile;
+            // Base THF axiom file is always in the shared kbDir (no session-specific THF versions exist)
+            String kbThfPath = mgr.getPref("kbDir") + File.separator + kbThfFile;
             File thfAxioms = new File(kbThfPath);
             if (!thfAxioms.exists()) {
                 System.out.println("Vampire.askVampireHOL(): no such file: " + kbThfPath + ". Waiting for background generation or creating it.");
@@ -356,13 +357,13 @@ public class Vampire {
                     }
                 }
             }
-            // -------- 2. Create problem file: axioms + conjecture --------
-            // TODO: Remove the file after DEBUG phase
-            String problemPath = dir + "hol_query_" + System.currentTimeMillis() + ".thf";
-            // 1) Copy SUMO.thf to the problem file in one shot
-            Path source = Paths.get(kbThfPath);
-            Path target = Paths.get(problemPath);
-            Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+            // -------- 2. Prepare temp-stmt.thf and temp-comb.thf (mirrors FOF/TFF run() pattern) --------
+            String stmtFile = dir + "temp-stmt." + this.inferenceFileExtension;
+            String outfile = dir + "temp-comb." + this.inferenceFileExtension;
+            File fout = new File(outfile);
+            if (fout.exists()) fout.delete();
+            File fstmt = new File(stmtFile);
+            if (fstmt.exists()) fstmt.delete();
 
             // -------- 3. Parse SUO-KIF query using FormulaAST --------
             SuokifVisitor sv = SuokifVisitor.parseSentence(stmt);
@@ -413,33 +414,32 @@ public class Vampire {
                         this.sessionId, this.kb, () -> fp.findTypeRestrictionsExpr(fa.expr, this.kb)));
             }
             if (debug>1) System.out.println("Vampire.askVampireHOL(): preprocessed exprs: " + processed.size());
-            // -------- 5. Write conjectures to problem file --------
-            try (BufferedWriter out = new BufferedWriter(new FileWriter(problemPath, true))) {
-                out.newLine();
-                out.write("% -------------------- User HOL conjecture --------------------\n");
-                int conjIndex = 0;
-                for (Expr e : processed) {
-                    if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(e)) continue;
-                    String thfQuery;
-                    if (useModals) {
-                        Map.Entry<Expr, Map<String, Set<String>>> fmodalResult = SessionTPTPManager.withSessionCache(
-                                this.sessionId, this.kb, () -> Modals.processModalsExpr(e, this.kb));
-                        Expr fmodal = fmodalResult.getKey();
-                        if (fmodal == null) continue;
-                        thfQuery = ExprToTHF.translate(fmodal, true, typeMap);
-                    } else {
-                        thfQuery = ExprToTHF.translateNonModal(e, true, typeMap);
-                    }
-                    if (thfQuery == null || thfQuery.isEmpty()) continue;
-                    String conjName = "user_conj_" + (conjIndex++);
-                    String final_query = "thf(" + conjName + ",conjecture," + thfQuery + ").\n";
-                    out.write(final_query);
-                    if (debug>1) System.out.println("Vampire.askVampireHOL(): final query: " + final_query);
+            // -------- 5. Collect conjectures into temp-stmt.thf, then concat with base --------
+            Set<String> conjectureStmts = new LinkedHashSet<>();
+            int conjIndex = 0;
+            for (Expr e : processed) {
+                if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(e)) continue;
+                String thfQuery;
+                if (useModals) {
+                    Map.Entry<Expr, Map<String, Set<String>>> fmodalResult = SessionTPTPManager.withSessionCache(
+                            this.sessionId, this.kb, () -> Modals.processModalsExpr(e, this.kb));
+                    Expr fmodal = fmodalResult.getKey();
+                    if (fmodal == null) continue;
+                    thfQuery = ExprToTHF.translate(fmodal, true, typeMap);
+                } else {
+                    thfQuery = ExprToTHF.translateNonModal(e, true, typeMap);
                 }
+                if (thfQuery == null || thfQuery.isEmpty()) continue;
+                String conjName = "user_conj_" + (conjIndex++);
+                String final_query = "thf(" + conjName + ",conjecture," + thfQuery + ").";
+                conjectureStmts.add(final_query);
+                if (debug>1) System.out.println("Vampire.askVampireHOL(): final query: " + final_query);
             }
-            // -------- 6. Actually call Vampire on problemPath --------
+            writeStatements(conjectureStmts);
+            concatFiles(kbThfPath, stmtFile, outfile);
+            // -------- 6. Actually call Vampire on temp-comb.thf --------
             if (debug>1) System.out.println("------ Vampire.askVampireHOL(): Asking Vampire");
-            this.askVampireTHF(problemPath);
+            this.askVampireTHF(outfile);
         } catch (ATPException e) {
             throw e; // Preserve type + payload for proper error handling in UI
         } catch (Exception e) {
