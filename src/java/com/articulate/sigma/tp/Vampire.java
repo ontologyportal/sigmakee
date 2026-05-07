@@ -435,7 +435,10 @@ public class Vampire {
                 conjectureStmts.add(final_query);
                 if (debug>1) System.out.println("Vampire.askVampireHOL(): final query: " + final_query);
             }
-            writeStatements(conjectureStmts);
+            List<String> userAsserts = getUserAssertions(this.kb, this.sessionId);
+            Set<String> allStmts = new LinkedHashSet<>(userAsserts);
+            allStmts.addAll(conjectureStmts);
+            writeStatements(allStmts);
             concatFiles(kbThfPath, stmtFile, outfile);
             // -------- 6. Actually call Vampire on temp-comb.thf --------
             if (debug>1) System.out.println("------ Vampire.askVampireHOL(): Asking Vampire");
@@ -965,8 +968,10 @@ public class Vampire {
         if (debug>0) System.out.printf("\nVampire.getUserAssertions(%s, %s)", kb.name, sessionId);
         return kb.withUserAssertionLock(() -> {
             String userAssertionTPTP = kb.name + KB._userAssertionsTPTP;
-            if (SUMOKBtoTPTPKB.getLang().equals("tff"))
+            if ("tff".equals(this.inferenceFileExtension))
                 userAssertionTPTP = kb.name + KB._userAssertionsTFF;
+            else if ("thf".equals(this.inferenceFileExtension))
+                userAssertionTPTP = kb.name + KB._userAssertionsTHF;
             File dir;
             if (sessionId != null && !sessionId.isEmpty()) {
                 java.nio.file.Path sessionDir = com.articulate.sigma.trans.SessionTPTPManager.getSessionDir(sessionId);
