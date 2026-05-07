@@ -10,7 +10,24 @@
   <style>
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
     h1 { margin: 0 0 16px; }
-    .card { border: 1px solid #000; padding: 16px; margin: 12px 0; }
+    .card {
+        width: fit-content;
+        max-width: 100%;
+        border: 1px solid #000;
+        padding: 16px;
+        margin: 12px 0;
+        background: #fff;
+        border-radius: 4px;
+        overflow-x: auto;
+    }
+
+    .grid {
+        width: max-content;
+        border-collapse: collapse;
+        margin-top: 12px;
+    }
+  
+    .grid th, .grid td { border: 1px solid #000; padding: 6px 8px; text-align: left;}
     .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
     .row > label { display:flex; flex-direction:column; gap:6px; min-width:220px; }
     .muted { color:#666; font-size:12px; }
@@ -20,9 +37,6 @@
     .btn { padding: 6px 10px; cursor:pointer; }
     a { text-decoration:none; }
     .toplink { margin-bottom: 12px; display:inline-block; }
-    .card { border: 1px solid #000; padding: 16px; margin: 12px 0; background: #fff; border-radius: 4px;}
-    .grid { width: 100%; border-collapse: collapse; margin-top: 12px;}
-    .grid th, .grid td { border: 1px solid #000; padding: 6px 8px; text-align: left;}
   </style>
 </head>
 <body>

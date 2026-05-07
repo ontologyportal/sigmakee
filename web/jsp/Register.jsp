@@ -6,6 +6,8 @@
 <%
     String error = null;
     String success = null;
+
+    if ("true".equals(request.getParameter("registered"))) success = "Your account creation was successful! You will receive an email upon admin approval.";
     if ("POST".equalsIgnoreCase(request.getMethod())) {
         String firstName = request.getParameter("firstName");
         String lastName = request.getParameter("lastName");
@@ -36,11 +38,12 @@
                 notRobot.trim()
             );
             if (created) {
-                success = "Registration submitted successfully.";
-                response.sendRedirect("login.jsp?registered=true");
+                response.sendRedirect("Register.jsp?registered=true");
                 return;
             }
-            else error = "That username may already be registered.";
+            else {
+                error = "That username or email may already be registered.";
+            }
         }
     }
 %>
@@ -72,10 +75,15 @@
             </div>
         <% } %>
         <% if (success != null) { %>
+            <div class="toplink">
+                <a href="KBs.jsp">&larr; Home</a>
+            </div>
             <div style="color:green;">
                 <%= ValidationUtils.sanitizeString(success) %>
             </div>
-        <% } %>
+        <% } 
+            else {
+        %>
         <form method="post" action="Register.jsp">
             <p>
             <table align="left" border="0">
@@ -92,7 +100,6 @@
                         <b><input name="firstName" type="text" maxlength="20" size="10"></b>
                     </td>
                 </tr>
-
                 <tr>
                     <td valign="top" align="right">
                         <b>last/surname:</b>
@@ -101,7 +108,6 @@
                         <b><input name="lastName" type="text" maxlength="20" size="10"></b>
                     </td>
                 </tr>
-
                 <tr>
                     <td valign="top" align="right">
                         <b>User name:</b>
@@ -119,7 +125,6 @@
                         <b><input name="password" type="password" maxlength="20" size="6"></b>
                     </td>
                 </tr>
-
                 <tr>
                     <td valign="top" align="right">
                         <b>Organization:</b>
@@ -128,7 +133,6 @@
                         <b><input name="organization" type="text" maxlength="20" size="10"></b>
                     </td>
                 </tr>
-
                 <tr>
                     <td valign="top" align="right">
                         <b>Email:</b>
@@ -137,7 +141,6 @@
                         <b><input name="email" type="text" maxlength="40" size="40"></b>
                     </td>
                 </tr>
-
                 <tr>
                     <td valign="top" align="right">
                         <b>Say briefly why you're not a robot:</b>
@@ -146,7 +149,6 @@
                         <b><input name="notRobot" type="text" maxlength="80" size="80"></b>
                     </td>
                 </tr>
-
                 <tr>
                     <td valign="center">
                         <b><input value="Register" type="submit"></b>
@@ -154,5 +156,8 @@
                 </tr>
             </table>
         </form>
+        <% 
+            } 
+        %>
     </body>
 </html>
