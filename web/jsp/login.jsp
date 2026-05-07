@@ -1,62 +1,95 @@
-<%@ page language="java" contentType="text/html; charset=US-ASCII" import="com.articulate.sigma.*, com.articulate.sigma.security.*, com.articulate.sigma.utils.*" pageEncoding="US-ASCII"%>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-    <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
-        <title>login</title>
-    </head>
-    <body>
-        <%
-        /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
-            Infosys (c) 2017-present.
+<%@ page language="java"
+         contentType="text/html; charset=US-ASCII"
+         pageEncoding="US-ASCII"
+         import="com.articulate.sigma.user.UserManager,
+                 com.articulate.sigma.security.ValidationUtils" %>
 
-            This software is released under the GNU Public License
-            <http://www.gnu.org/copyleft/gpl.html>.
-
-            Please cite the following article in any publication with references:
-
-            Pease A., and Benzm??ller C. (2013). Sigma: An Integrated Development Environment
-            for Logical Theories. AI Communications 26, pp79-97.  See also
-            http://github.com/ontologyportal
-        */
-
-        String userName = ValidationUtils.sanitizeString(request.getParameter("userName"));
+<%
+    String error = "";
+    if ("POST".equalsIgnoreCase(request.getMethod())) {
+        String username = ValidationUtils.sanitizeString(request.getParameter("username"));
         String password = ValidationUtils.sanitizeString(request.getParameter("password"));
-
-        PasswordService ps = PasswordService.getInstance();
-        if (ps.userExists(userName)) {
-            User u = User.fromDB(ps.conn,userName);
-            if (u != null && ps.encrypt(password).equals(u.password)) {
-                session.setAttribute("user",u.username);
-                session.setAttribute("role",u.role);
-                session.setMaxInactiveInterval(60 * 60);
-
-                //ServletContext siblingContext = request.getSession().getServletContext().getContext("/sigma");
-                //siblingContext.setAttribute("user",u.username);
-                //siblingContext.setAttribute("role",u.role);
-
-                System.out.println("login.jsp: Set sibling context");
-                System.out.println("login.jsp: Successful login for " + u.username + " with role " + u.role);
-                response.sendRedirect("KBs.jsp");
-            }
-                else {
-                    response.sendRedirect("login.html?error=invalid_crudentials");
-                    return;
-                }
+        UserManager userManager = new UserManager();
+        boolean loggedIn = userManager.login(request, username, password);
+        if (loggedIn) {
+            System.out.println("login.jsp: Successful login for " + username);
+            response.sendRedirect("KBs.jsp");
+            return;
         }
         else {
-            //String role = Login.validateUser(userName,password);
-            //session.setAttribute("user",userName);
-            //session.setAttribute("role",role);
-            //ServletContext siblingContext = request.getSession().getServletContext().getContext("/sigma");
-            //siblingContext.setAttribute("user",userName);
-            //siblingContext.setAttribute("role",role);
-            //System.out.println("login.jsp: Set sibling context");
-            //System.out.println("login.jsp: Successful login for " + userName + " with role " + role);
-            //response.sendRedirect("KBs.jsp");
-            System.err.println("Bad login attempt in login.jsp - no matching password for " + userName);
-            response.sendRedirect("login.html");
+            System.err.println("Bad login attempt in login.jsp for " + username);
+            error = "Incorrect username or password!";
         }
-        %>
+    }
+%>
+<html>
+    <head>
+        <title>Sigma Login</title>
+    </head>
+    <body>
+        <table width="95%" cellspacing="0" cellpadding="0">
+            <tr>
+                <td valign="top">
+                    <table cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td align="left" valign="top">
+                                <img src="pixmaps/sigmaSymbol.gif" alt="pixmaps/sigmaSymbol.gif">
+                            </td>
+                            <td>&nbsp;&nbsp;</td>
+                            <td align="left" valign="top">
+                                <img src="pixmaps/logoText.gif" alt="pixmaps/logoText.gif"><br>
+                                <b>Sigma Login</b>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <table align="left" width="80%">
+            <tr>
+                <td bgcolor="#AAAAAA">
+                    <img src="pixmaps/1pixel.gif" alt="pixmaps/1pixel.gif" width="1" height="1" border="0">
+                </td>
+            </tr>
+        </table>
+        <br>
+        <% if (!error.isEmpty()) { %>
+            <div style="color:red;"><%= error %></div>
+        <% } %>
+        <form method="POST" action="login.jsp">
+            <table>
+                <tr>
+                    <td><b>User name:</b></td>
+                    <td><b><input name="username" type="text" maxlength="20" size="10"></b></td>
+                </tr>
+                <tr>
+                    <td><b>Password:</b></td>
+                    <td><b><input name="password" type="password" maxlength="20" size="6"></b></td>
+                </tr>
+                <tr>
+                    <td><b><input value="  Log In  " type="submit"></b></td>
+                    <td></td>
+                </tr>
+            </table>
+        </form>
+        <p><a href="ForgotPassword.jsp">Forgot your password?</a></p>
+        <table align="left" width="80%">
+            <tr>
+                <td bgcolor="#AAAAAA">
+                    <img src="pixmaps/1pixel.gif" alt="pixmaps/1pixel.gif" width="1" height="1" border="0">
+                </td>
+            </tr>
+        </table>
+        <br>
+        <form method="POST" action="Register.jsp">
+            <table>
+                <tr>
+                    <td>
+                        <b><input value="Register new account" type="submit"></b>
+                        (requires moderator approval)
+                    </td>
+                </tr>
+            </table>
+        </form>
     </body>
 </html>

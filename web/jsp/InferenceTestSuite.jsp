@@ -1,7 +1,7 @@
 <%@ page import="java.io.File, java.util.*, com.articulate.sigma.*, com.articulate.sigma.utils.StringUtil" %>
 <%@ include file="Prelude.jsp" %>
 <%
-    if (!role.equalsIgnoreCase("admin")) { response.sendRedirect("login.html"); return; }
+    if (!role.equalsIgnoreCase("admin")) { response.sendRedirect("login.jsp"); return; }
 
     String inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
     String engine = Optional.ofNullable(request.getParameter("engine")).orElse("Vampire");
@@ -18,38 +18,30 @@
         cellMap = new HashMap<>();
         session.setAttribute("cellMap", cellMap);
     }
-
     if ("runAll".equalsIgnoreCase(request.getParameter("action")) && inferenceTestDir != null) {
         String type  = Optional.ofNullable(request.getParameter("runAllType")).orElse("normal"); // normal|mp|both
         String phase = Optional.ofNullable(request.getParameter("phase")).orElse("normal");       // normal|mp (current)
         int idx = 0; try { idx = Integer.parseInt(Optional.ofNullable(request.getParameter("idx")).orElse("0")); } catch(Exception ignore){}
-
         File dir = new File(inferenceTestDir);
         File[] files = dir.listFiles((d, n) -> n.toLowerCase().endsWith(".tq"));
         if (files == null) files = new File[0];
         Arrays.sort(files, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
-
         if (idx < files.length) {
             tqName = files[idx].getName();
-
             // decide mode to run this step
             String modeAll = "normal";
             if ("normal".equalsIgnoreCase(type)) modeAll = "normal";
             else if ("mp".equalsIgnoreCase(type)) modeAll = "mp";
             else /* both */ modeAll = "mp".equalsIgnoreCase(phase) ? "mp" : "normal";
-
             // ---- RUN ONE (same as your single-test block) ----
             try {
                 InferenceTestSuite its = new InferenceTestSuite();
                 String tqPath = inferenceTestDir + File.separator + tqName;
                 boolean modusPonens = "mp".equalsIgnoreCase(modeAll);
-
                 // Test RUN
                 InferenceTestSuite.OneResult r = its.runOne(kb, engine, timeout, tqPath, modusPonens);
-
                 Map<String,Object> cellMap2 = (Map<String,Object>) session.getAttribute("cellMap");
                 if (cellMap2 == null) { cellMap2 = new HashMap<>(); session.setAttribute("cellMap", cellMap2); }
-
                 Map<String,Object> cell = new HashMap<>();
                 String key = tqName + "|" + ("mp".equalsIgnoreCase(modeAll) ? "mp" : "normal");
                 cell.put("pass",   r.pass);
@@ -58,7 +50,6 @@
                 cell.put("expected", r.expected == null ? java.util.Collections.emptyList() : r.expected);
                 cell.put("actual",   r.actual   == null ? java.util.Collections.emptyList() : r.actual);
                 cell.put("html",     r.html);
-
                 // Check for Errors
                 boolean proofExists = r.proofText != null && !r.proofText.isEmpty();
                 if (proofExists){
@@ -66,13 +57,11 @@
                     if (proofsRoot == null) proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
                     File sessionProofDir = new File(proofsRoot, session.getId());
                     if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
-
                     String base = (tqName + "-" + modeAll + "-" + System.currentTimeMillis() + ".txt").replaceAll("[^A-Za-z0-9._-]", "_");
                     File proofFile = new File(sessionProofDir, base);
                     try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
                         if (r.proofText != null) for (String pl : r.proofText) pw.println(pl);
                     } catch (Exception ignore) {}
-
                     String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
                     cell.put("proofUrl", proofUrl);
                     cell.put("proofPath", proofFile.getAbsolutePath());

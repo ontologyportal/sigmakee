@@ -14,7 +14,7 @@
 */
 
      if (!role.equalsIgnoreCase("admin")) {
-         response.sendRedirect("login.html");
+         response.sendRedirect("login.jsp");
          return;
      }
 

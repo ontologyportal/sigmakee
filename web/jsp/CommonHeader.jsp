@@ -43,8 +43,6 @@
         flang = "KIF";  // for example
     }
 %>
-
-
 <TABLE width="95%" cellspacing="0" cellpadding="0">
   <TR>
       <TD align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></TD>

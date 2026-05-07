@@ -3,7 +3,7 @@
 <%
     /** Copyright header omitted for brevity; keep your original text **/
     if (!role.equalsIgnoreCase("admin")) {
-        response.sendRedirect("login.html");
+        response.sendRedirect("login.jsp");
         return;
     }
 

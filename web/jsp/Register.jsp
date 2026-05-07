@@ -1,4 +1,53 @@
 <%@ page language="java" contentType="text/html; charset=US-ASCII" pageEncoding="US-ASCII"%>
+<%@ page import="com.articulate.sigma.user.UserManager" %>
+<%@ page import="com.articulate.sigma.utils.StringUtil" %>
+<%@ page import="com.articulate.sigma.security.ValidationUtils" %>
+
+<%
+    String error = null;
+    String success = null;
+
+    if ("true".equals(request.getParameter("registered"))) success = "Your account creation was successful! You will receive an email upon admin approval.";
+    if ("POST".equalsIgnoreCase(request.getMethod())) {
+        String firstName = request.getParameter("firstName");
+        String lastName = request.getParameter("lastName");
+        String username = request.getParameter("userName");
+        String password = request.getParameter("password");
+        String organization = request.getParameter("organization");
+        String email = request.getParameter("email");
+        String notRobot = request.getParameter("notRobot");
+        if (StringUtil.emptyString(firstName) ||
+            StringUtil.emptyString(lastName) ||
+            StringUtil.emptyString(username) ||
+            StringUtil.emptyString(password) ||
+            StringUtil.emptyString(organization) ||
+            StringUtil.emptyString(email) ||
+            StringUtil.emptyString(notRobot)) {
+            error = "Please fill out all required fields.";
+        }
+        else if (!username.matches("[A-Za-z0-9_-]+")) error = "Username can only contain letters, numbers, hyphens, and underscores.";
+        else {
+            UserManager userManager = new UserManager();
+            boolean created = userManager.registerGuest(
+                username.trim(),
+                password,
+                email.trim(),
+                firstName.trim(),
+                lastName.trim(),
+                organization.trim(),
+                notRobot.trim()
+            );
+            if (created) {
+                response.sendRedirect("Register.jsp?registered=true");
+                return;
+            }
+            else {
+                error = "That username or email may already be registered.";
+            }
+        }
+    }
+%>
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
@@ -20,104 +69,95 @@
             http://github.com/ontologyportal
         */
         %>
-        <div id="errorMessage" style="color:red;"></div>
-        <script>
-            const params = new URLSearchParams(window.location.search);
-            const error = params.get("error");
-            const errorBox = document.getElementById("errorMessage");
-            if (error === "invalid_username") {
-                errorBox.textContent = "Username can only contain letters, numbers, hyphens, and underscores.";
-            } else if (error === "missing_fields") {
-                errorBox.textContent = "Please fill out all required fields.";
-            } else if (error === "user_exists") {
-                errorBox.textContent = "That username may already be registered.";
-            }
-        </script>
-        <form method="post" action="CreateUser.jsp">
+        <% if (error != null) { %>
+            <div style="color:red;">
+                <%= ValidationUtils.sanitizeString(error) %>
+            </div>
+        <% } %>
+        <% if (success != null) { %>
+            <div class="toplink">
+                <a href="KBs.jsp">&larr; Home</a>
+            </div>
+            <div style="color:green;">
+                <%= ValidationUtils.sanitizeString(success) %>
+            </div>
+        <% } 
+            else {
+        %>
+        <form method="post" action="Register.jsp">
             <p>
-            <table align="left" border="0" >
-                <TR>
-                    <TD colspan="2">
-                        All fields are required<P>
-                    </TD>
-                </TR>
+            <table align="left" border="0">
+                <tr>
+                    <td colspan="2">
+                        All fields are required<p>
+                    </td>
+                </tr>
+                <tr>
+                    <td valign="top" align="right">
+                        <b>first/given name:</b>
+                    </td>
+                    <td valign="top">
+                        <b><input name="firstName" type="text" maxlength="20" size="10"></b>
+                    </td>
+                </tr>
+                <tr>
+                    <td valign="top" align="right">
+                        <b>last/surname:</b>
+                    </td>
+                    <td valign="top">
+                        <b><input name="lastName" type="text" maxlength="20" size="10"></b>
+                    </td>
+                </tr>
+                <tr>
+                    <td valign="top" align="right">
+                        <b>User name:</b>
+                    </td>
+                    <td valign="top">
+                        <b><input name="userName" type="text" maxlength="20" size="10"></b>
+                    </td>
+                </tr>
 
-                <TR>
-                    <TD VALIGN=TOP ALIGN=RIGHT>
-                        <B>first/given name:</B>
-                    </TD>
-
-                    <TD VALIGN=TOP>
-                        <B><INPUT NAME="firstName" TYPE="TEXT" MAXLENGTH="20" SIZE="10"></B>
-                    </TD>
-                </TR>
-
-                <TR>
-                    <TD VALIGN=TOP ALIGN=RIGHT>
-                        <B>last/surname:</B>
-                    </TD>
-
-                    <TD VALIGN=TOP>
-                        <B><INPUT NAME="lastName" TYPE="TEXT" MAXLENGTH="20" SIZE="10"></B>
-                    </TD>
-                </TR>
-
-                <TR>
-                    <TD VALIGN=TOP ALIGN=RIGHT>
-                        <B>User name:</B>
-                    </TD>
-
-                    <TD VALIGN=TOP>
-                        <B><INPUT NAME="userName" TYPE="TEXT" MAXLENGTH="20" SIZE="10"></B>
-                    </TD>
-                </TR>
-
-                <TR>
-                    <TD VALIGN=TOP ALIGN=RIGHT>
-                        <B>Password:</B>
-                    </TD>
-
-                    <TD VALIGN=TOP>
-                        <B><INPUT NAME="password" TYPE="Password" MAXLENGTH="20" SIZE="6"></B>
-                    </TD>
-                </TR>
-
-                <TR>
-                    <TD VALIGN=TOP ALIGN=RIGHT>
-                        <B>Organization:</B>
-                    </TD>
-
-                    <TD VALIGN=TOP>
-                        <B><INPUT NAME="organization" TYPE="TEXT" MAXLENGTH="20" SIZE="10"></B>
-                    </TD>
-                </TR>
-
-                <TR>
-                    <TD VALIGN=TOP ALIGN=RIGHT>
-                        <B>Email:</B>
-                    </TD>
-
-                    <TD VALIGN=TOP>
-                        <B><INPUT NAME="email" TYPE="TEXT" MAXLENGTH="40" SIZE="40"></B>
-                    </TD>
-                </TR>
-
-                <TR>
-                    <TD VALIGN=TOP ALIGN=RIGHT>
-                        <B>Say briefly why you're not a robot: </B>
-                    </TD>
-
-                    <TD VALIGN=TOP>
-                        <B><INPUT NAME="notRobot" TYPE="TEXT" MAXLENGTH="80" SIZE="80"></B>
-                    </TD>
-                </TR>
-
-                <TR>
-                    <TD VALIGN=CENTER>
-                        <B><INPUT VALUE="Register" TYPE="SUBMIT"></B>
-                    </TD>
-                </TR>
+                <tr>
+                    <td valign="top" align="right">
+                        <b>Password:</b>
+                    </td>
+                    <td valign="top">
+                        <b><input name="password" type="password" maxlength="20" size="6"></b>
+                    </td>
+                </tr>
+                <tr>
+                    <td valign="top" align="right">
+                        <b>Organization:</b>
+                    </td>
+                    <td valign="top">
+                        <b><input name="organization" type="text" maxlength="20" size="10"></b>
+                    </td>
+                </tr>
+                <tr>
+                    <td valign="top" align="right">
+                        <b>Email:</b>
+                    </td>
+                    <td valign="top">
+                        <b><input name="email" type="text" maxlength="40" size="40"></b>
+                    </td>
+                </tr>
+                <tr>
+                    <td valign="top" align="right">
+                        <b>Say briefly why you're not a robot:</b>
+                    </td>
+                    <td valign="top">
+                        <b><input name="notRobot" type="text" maxlength="80" size="80"></b>
+                    </td>
+                </tr>
+                <tr>
+                    <td valign="center">
+                        <b><input value="Register" type="submit"></b>
+                    </td>
+                </tr>
             </table>
         </form>
+        <% 
+            } 
+        %>
     </body>
 </html>

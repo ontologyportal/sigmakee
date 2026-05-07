@@ -29,8 +29,13 @@ import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 public class TheoremProverController {
 
     public TheoremProverController () {}
-
+    
+    /********************************************************************
+     * Primary API for the class. Capable of asking all 3 provers.
+     * @param query ATPQuery object used to determine which prover to ask with associated options.
+     */
     public ATPResult ask (ATPQuery query) {
+
         switch (query.getProverType()) {
             case EPROVER:
                 return this.askEProver(query);
@@ -45,6 +50,10 @@ public class TheoremProverController {
         return null;
     }
 
+    /********************************************************************
+     * Returns a list of available provers based on whether their executable path is valid.
+     * @return List of available provers
+     */
     public static List<String> availableProvers() {
         
         List<String> availableProvers = new ArrayList<>();
@@ -54,6 +63,11 @@ public class TheoremProverController {
         return availableProvers;
     }
 
+    /********************************************************************
+     * Main method for querying vampire class
+     * @param query ATPQuery object containing options for Vampire [Language|ClosedWorldAssumption|ModusPonens|TestFilePath]
+     * @return ATPResult object containing the outcome of the Vampire Query
+     */
     private ATPResult askVampire(ATPQuery query) {
         Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
         if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) {
@@ -67,19 +81,32 @@ public class TheoremProverController {
         }
         return vampire.getResult();
     }
-
+    
+    /********************************************************************
+     * Main method for querying the EProver class
+     * @param query ATPQuery object containing options for EProver
+     * @return ATPResult object containing the outcome of the EProver Query
+     */
     private ATPResult askEProver(ATPQuery query) {
         EProver eprover = new EProver(query.getKb(), query.getLanguage().name(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
         eprover.askEProver(query.getQuery());
         return eprover.getResult();
     }
 
+    /********************************************************************
+     * Main method for querying the LEO class
+     * @param query ATPQuery object containing options for LEO
+     * @return ATPResult object containing the outcome of the LEO Query
+     */
     private ATPResult askLeo(ATPQuery query) {
         LEO leo = new LEO(query.getKb(), query.getLanguage().name(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
         leo.askLeo(query.getQuery());
         return leo.getResult();
     }
 
+    /********************************************************************
+     * Prints the main() console options for this class
+     */
     private static void showHelp() {
 
         System.out.println("TheoremProverController class");
@@ -91,6 +118,9 @@ public class TheoremProverController {
         System.out.println("  -l - query LEO");
     }
     
+    /********************************************************************
+     * Main method for this class used to test the different theorem provers and their options.
+     */
     public static void main(String[] args) {
         Map<String, List<String>> argMap = CLIMapParser.parse(args);
         TheoremProverController theoremProverController = new TheoremProverController();
