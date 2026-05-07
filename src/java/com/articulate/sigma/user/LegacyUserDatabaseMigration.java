@@ -27,7 +27,6 @@ public class LegacyUserDatabaseMigration {
 
         validateLegacySchema(connection);
         validateSafeToMigrate(connection);
-
         try (Statement statement = connection.createStatement()) {
             statement.execute("DROP TABLE IF EXISTS users_new");
             statement.execute(
@@ -42,7 +41,6 @@ public class LegacyUserDatabaseMigration {
                     "notRobot VARCHAR(1000)" +
                     ")"
             );
-
             statement.executeUpdate(
                     "INSERT INTO users_new " +
                     "(username, password, email, role, firstName, lastName, organization, notRobot) " +
@@ -68,11 +66,14 @@ public class LegacyUserDatabaseMigration {
                     "        LOWER(TRIM(username)) AS username, " +
                     "        MIN(NULLIF(LOWER(TRIM(email)), '')) AS email " +
                     "    FROM attributes " +
+                    "    WHERE LOWER(TRIM(id)) = 'email' " +
+                    "      AND email IS NOT NULL " +
+                    "      AND TRIM(email) <> '' " +
+                    "      AND email LIKE '%@%' " +
                     "    GROUP BY LOWER(TRIM(username)) " +
                     ") a " +
                     "ON LOWER(TRIM(u.username)) = a.username"
             );
-
             int oldCount = countRows(connection, "users");
             int newCount = countRows(connection, "users_new");
             if (oldCount != newCount) {
@@ -80,13 +81,10 @@ public class LegacyUserDatabaseMigration {
                 throw new SQLException("Migration count mismatch. Old users: " +
                         oldCount + ", new users: " + newCount);
             }
-
             renameTableIfExists(connection, "users", "users_legacy");
             renameTableIfExists(connection, "attributes", "attributes_legacy");
             renameTableIfExists(connection, "projects", "projects_legacy");
-
             statement.execute("ALTER TABLE users_new RENAME TO users");
-
             statement.execute(
                     "CREATE TABLE IF NOT EXISTS password_reset_tokens (" +
                     "token_hash VARCHAR(64) PRIMARY KEY, " +
@@ -110,11 +108,9 @@ public class LegacyUserDatabaseMigration {
         if (!tableExists(connection, "users")) {
             throw new SQLException("Legacy users table does not exist. Nothing to migrate.");
         }
-
         if (!tableExists(connection, "attributes")) {
             throw new SQLException("Legacy attributes table does not exist. Cannot migrate email addresses.");
         }
-
         if (!tableExists(connection, "projects")) {
             System.out.println("WARNING: Legacy projects table does not exist. Continuing without it.");
         }
@@ -139,7 +135,6 @@ public class LegacyUserDatabaseMigration {
                             resultSet.getString("normalized_username"));
                 }
             }
-
             try (ResultSet resultSet = statement.executeQuery(
                     "SELECT email, COUNT(*) AS count " +
                     "FROM ( " +
@@ -147,6 +142,10 @@ public class LegacyUserDatabaseMigration {
                     "        LOWER(TRIM(username)) AS username, " +
                     "        MIN(NULLIF(LOWER(TRIM(email)), '')) AS email " +
                     "    FROM attributes " +
+                    "    WHERE LOWER(TRIM(id)) = 'email' " +
+                    "      AND email IS NOT NULL " +
+                    "      AND TRIM(email) <> '' " +
+                    "      AND email LIKE '%@%' " +
                     "    GROUP BY LOWER(TRIM(username)) " +
                     ") " +
                     "WHERE email IS NOT NULL " +
@@ -188,7 +187,6 @@ public class LegacyUserDatabaseMigration {
     private static void renameTableIfExists(Connection connection, String oldName, String newName) throws SQLException {
 
         if (!tableExists(connection, oldName)) return;
-
         try (Statement statement = connection.createStatement()) {
             statement.execute("DROP TABLE IF EXISTS " + newName);
             statement.execute("ALTER TABLE " + oldName + " RENAME TO " + newName);
@@ -205,11 +203,9 @@ public class LegacyUserDatabaseMigration {
     private static boolean tableExists(Connection connection, String tableName) throws SQLException {
 
         DatabaseMetaData metadata = connection.getMetaData();
-
         try (ResultSet resultSet = metadata.getTables(null, null, tableName.toUpperCase(), null)) {
             if (resultSet.next()) return true;
         }
-
         try (ResultSet resultSet = metadata.getTables(null, null, tableName.toLowerCase(), null)) {
             return resultSet.next();
         }
@@ -229,10 +225,8 @@ public class LegacyUserDatabaseMigration {
             e.printStackTrace();
             return;
         }
-
         try (Connection connection = DriverManager.getConnection(JDBC_URL, INITIAL_ADMIN_USER, "")) {
             connection.setAutoCommit(false);
-
             try {
                 migrate(connection);
                 connection.commit();

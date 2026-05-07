@@ -85,18 +85,23 @@ public class UserDatabase {
         if (username == null || username.trim().isEmpty()) return null;
         if (password == null || password.isEmpty()) return null;
         username = username.trim().toLowerCase();
+        String storedPassword;
+        String role;
         String sql = "SELECT password, role FROM users WHERE username = ?";
         try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
             statement.setString(1, username);
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next()) return null;
-                String storedPassword = resultSet.getString("password");
-                String role = resultSet.getString("role");
-                if (storedPassword == null || role == null) return null;
-                String encryptedPassword = PasswordService.encrypt(password);
-                if (encryptedPassword.equals(storedPassword)) return role;
-                return null;
+                storedPassword = resultSet.getString("password");
+                role = resultSet.getString("role");
             }
+            if (storedPassword == null || role == null) return null;
+            if (!PasswordService.verifyPassword(password, storedPassword)) return null;
+            if (PasswordService.isLegacySha1Hash(storedPassword)) {
+                updatePassword(username, password);
+                System.out.println("UserDatabase.authenticateUser(): upgraded password hash to SHA-256 for " + username);
+            }
+            return role;
         }
         catch (SQLException e) {
             System.err.println("Error in UserDatabase.authenticateUser(): " + e.getMessage());
@@ -143,7 +148,6 @@ public class UserDatabase {
     public User getUserForValidPasswordResetToken(String tokenHash) {
 
         if (tokenHash == null || tokenHash.trim().isEmpty()) return null;
-
         String sql =
                 "SELECT u.username, u.email, u.role, u.firstName, u.lastName, u.organization, u.notRobot " +
                 "FROM password_reset_tokens prt " +
@@ -151,13 +155,10 @@ public class UserDatabase {
                 "WHERE prt.token_hash = ? " +
                 "AND prt.used_at IS NULL " +
                 "AND prt.expires_at > CURRENT_TIMESTAMP";
-
         try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
             statement.setString(1, tokenHash);
-
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next()) return null;
-
                 return new User(
                         resultSet.getString("username"),
                         null,
@@ -174,7 +175,6 @@ public class UserDatabase {
             System.err.println("Error in UserDatabase.getUserForValidPasswordResetToken(): " + e.getMessage());
             e.printStackTrace();
         }
-
         return null;
     }
 
@@ -186,7 +186,6 @@ public class UserDatabase {
     public boolean markPasswordResetTokenUsed(String tokenHash) {
 
         if (tokenHash == null || tokenHash.trim().isEmpty()) return false;
-
         String sql =
                 "UPDATE password_reset_tokens " +
                 "SET used_at = CURRENT_TIMESTAMP " +
@@ -213,13 +212,11 @@ public class UserDatabase {
 
         username = normalizeUsername(username);
         if (username == null || username.isEmpty()) return false;
-
         String sql =
                 "UPDATE password_reset_tokens " +
                 "SET used_at = CURRENT_TIMESTAMP " +
                 "WHERE username = ? " +
                 "AND used_at IS NULL";
-
         try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
             statement.setString(1, username);
             statement.executeUpdate();
@@ -326,7 +323,7 @@ public class UserDatabase {
         if (newPassword == null || newPassword.isEmpty()) return false;
         String sql = "UPDATE users SET password = ? WHERE username = ?";
         try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
-            statement.setString(1, PasswordService.encrypt(newPassword));
+            statement.setString(1, PasswordService.hashPassword(newPassword));
             statement.setString(2, username);
             boolean updated = statement.executeUpdate() > 0;
             if (updated) System.out.println("User.updatePassword(): password updated for " + username);
@@ -560,7 +557,7 @@ public class UserDatabase {
             """;
         try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
             statement.setString(1, username);
-            statement.setString(2, PasswordService.encrypt(user.getPassword()));
+            statement.setString(2, PasswordService.hashPassword(user.getPassword()));
             statement.setString(3, email);
             statement.setString(4, user.getRole());
             statement.setString(5, user.getFirstName());
@@ -634,7 +631,7 @@ public class UserDatabase {
         PasswordService ps = new PasswordService();
         if (args != null && args.length > 0) {
             if (args[0].equals("-h")) showHelp();
-            else if (args[0].equals("-e") && args[1] != null) System.out.println(PasswordService.encrypt(args[1]));
+            else if (args[0].equals("-e") && args[1] != null) System.out.println(PasswordService.hashPassword(args[1]));
             else if (args[0].equals("-c")) db.createDB();
             else if (args[0].equals("-a")) {
                 Scanner scanner = new Scanner(System.in);
