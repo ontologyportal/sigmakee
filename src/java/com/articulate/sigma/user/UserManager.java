@@ -82,17 +82,6 @@ public final class UserManager implements ServletContextListener {
     }
 
     /********************************************************************
-     * Returns all usernames after confirming admin access.
-     * @param request the current HTTP request
-     * @return a set of all usernames
-     */
-    public Set<String> getAllUsernames(HttpServletRequest request) {
-
-        requireAdmin(request);
-        return this.userDatabase.getAllUsernames();
-    }
-
-    /********************************************************************
      * Returns a user by username after confirming admin access.
      * @param request the current HTTP request
      * @param username the username to look up
@@ -102,6 +91,56 @@ public final class UserManager implements ServletContextListener {
 
         requireAdmin(request);
         return this.userDatabase.fromDB(username);
+    }
+
+    /********************************************************************
+     * Returns the user associated with a valid password reset token.
+     * @param tokenHash the hashed password reset token
+     * @return the matching user, or null if the token is invalid or expired
+     */
+    public User getUserForValidPasswordResetToken(String tokenHash) {
+
+        if (StringUtil.emptyString(tokenHash)) return null;
+        return this.userDatabase.getUserForValidPasswordResetToken(tokenHash);
+    }
+
+    /********************************************************************
+     * Resets a user's password using a valid password reset token.
+     * @param tokenHash the hashed password reset token
+     * @param username the username associated with the token
+     * @param newPassword the new plaintext password
+     * @return true if the password was reset successfully
+     */
+    public boolean resetPasswordWithToken(String tokenHash, String username, String newPassword) {
+
+        if (StringUtil.emptyString(tokenHash)) return false;
+        if (StringUtil.emptyString(username)) return false;
+        if (StringUtil.emptyString(newPassword)) return false;
+
+        User user = this.userDatabase.getUserForValidPasswordResetToken(tokenHash);
+
+        if (user == null) return false;
+        if (!username.equals(user.getUsername())) return false;
+
+        boolean updated = this.userDatabase.updatePassword(username, newPassword);
+
+        if (!updated) return false;
+
+        this.userDatabase.markPasswordResetTokenUsed(tokenHash);
+        this.userDatabase.invalidatePasswordResetTokensForUser(username);
+
+        return true;
+    }
+
+    /********************************************************************
+     * Returns all usernames after confirming admin access.
+     * @param request the current HTTP request
+     * @return a set of all usernames
+     */
+    public Set<String> getAllUsernames(HttpServletRequest request) {
+
+        requireAdmin(request);
+        return this.userDatabase.getAllUsernames();
     }
 
     /********************************************************************
@@ -199,6 +238,25 @@ public final class UserManager implements ServletContextListener {
             return true;
         }
         else return false;
+    }
+
+    /********************************************************************
+     * Requests a password reset email for a user.
+     * @param email the user's email address
+     * @return true if the request was processed
+     */
+    public boolean requestPasswordReset(String email) {
+
+        if (StringUtil.emptyString(email)) return true;
+        User user = this.userDatabase.getUserByEmail(email.trim());
+        if (user == null) return true;
+
+        String rawToken = PasswordService.generateResetToken();
+        boolean created = this.userDatabase.createPasswordResetToken(user.getUsername(), PasswordService.hashResetToken(rawToken));
+        if (!created) return true;
+        EmailService emailService = new EmailService();
+        emailService.sendPasswordResetLink(user, rawToken);
+        return true;
     }
 
     /********************************************************************

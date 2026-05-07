@@ -45,7 +45,6 @@
                 </td>
             </tr>
         </table>
-
         <table align="left" width="80%">
             <tr>
                 <td bgcolor="#AAAAAA">
@@ -63,18 +62,17 @@
                     <td><b>User name:</b></td>
                     <td><b><input name="username" type="text" maxlength="20" size="10"></b></td>
                 </tr>
-
                 <tr>
                     <td><b>Password:</b></td>
                     <td><b><input name="password" type="password" maxlength="20" size="6"></b></td>
                 </tr>
-
                 <tr>
                     <td><b><input value="  Log In  " type="submit"></b></td>
                     <td></td>
                 </tr>
             </table>
         </form>
+        <p><a href="ForgotPassword.jsp">Forgot your password?</a></p>
         <table align="left" width="80%">
             <tr>
                 <td bgcolor="#AAAAAA">

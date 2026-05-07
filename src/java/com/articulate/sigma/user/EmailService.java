@@ -121,6 +121,75 @@ public class EmailService {
     }
 
     /********************************************************************
+     * Sends a password reset link to the user's email address.
+     * @param user the user requesting a password reset
+     * @param rawToken the raw reset token to include in the email link
+     * @return true if the email was sent successfully
+     */
+    public boolean sendPasswordResetLink(User user, String rawToken) {
+
+        if (user == null) {
+            System.err.println("ERROR: Cannot send password reset email for null user.");
+            return false;
+        }
+        if (StringUtil.emptyString(user.getEmail())) {
+            System.err.println("ERROR: Cannot send password reset email. User email is empty.");
+            return false;
+        }
+        if (StringUtil.emptyString(rawToken)) {
+            System.err.println("ERROR: Cannot send password reset email. Token is empty.");
+            return false;
+        }
+        if (!isSmtpConfigured()) {
+            printSmtpConfigurationError();
+            return false;
+        }
+        try {
+            MimeMessage message = new MimeMessage(createMailSession());
+            message.setFrom(new InternetAddress(smtpEmailAddress));
+            message.setRecipient(Message.RecipientType.TO, new InternetAddress(user.getEmail()));
+            message.setSubject("SigmaKEE: Password Reset Request", StandardCharsets.UTF_8.name());
+            message.setContent(createPasswordResetEmailHtml(user, this.baseSigmaUrl + "ResetPassword.jsp?token=" + URLEncoder.encode(rawToken, StandardCharsets.UTF_8)), "text/html; charset=UTF-8");
+            Transport.send(message);
+            return true;
+        }
+        catch (MessagingException me) {
+            System.err.println("ERROR: Unable to send password reset email to " + user.getEmail());
+            me.printStackTrace();
+            return false;
+        }
+    }
+
+    /********************************************************************
+     * Builds the HTML body for a password reset email.
+     * @param user the user requesting a password reset
+     * @param resetURL the password reset URL
+     * @return the formatted HTML email body
+     */
+    private String createPasswordResetEmailHtml(User user, String resetURL) {
+
+        String safeResetURL = safe(resetURL);
+        String displayName = StringUtil.emptyString(user.getFirstName())? safe(user.getUsername()) : safe(user.getFirstName());
+        return "<h2>SigmaKEE Password Reset</h2>" +
+                "<p>Hello " + displayName + ",</p>" +
+                "<p>We received a request to reset the password for your SigmaKEE account.</p>" +
+                "<p>If you requested this reset, click the button below:</p>" +
+                "<p>" +
+                "<a href=\"" + safeResetURL + "\" " +
+                "style=\"display:inline-block;padding:10px 16px;background:#2f6feb;color:white;" +
+                "text-decoration:none;border-radius:4px;\">" +
+                "Reset Password" +
+                "</a>" +
+                "</p>" +
+                "<p>If the button does not work, copy and paste this URL into your browser:</p>" +
+                "<p>" + safeResetURL + "</p>" +
+                "<p>This link will expire soon and can only be used once.</p>" +
+                "<p>If you did not request this password reset, you can ignore this email.</p>" +
+                "<hr>" +
+                "<p style='font-size:12px;color:#666'>This email was generated automatically by SigmaKEE.</p>";
+    }
+
+    /********************************************************************
      * Builds the HTML body for the admin approval email.
      * @param user the user requesting registration
      * @param approvalURL the URL admins can use to approve the user

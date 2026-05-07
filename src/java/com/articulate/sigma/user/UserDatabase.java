@@ -93,7 +93,7 @@ public class UserDatabase {
                 String storedPassword = resultSet.getString("password");
                 String role = resultSet.getString("role");
                 if (storedPassword == null || role == null) return null;
-                String encryptedPassword = encrypt(password);
+                String encryptedPassword = PasswordService.encrypt(password);
                 if (encryptedPassword.equals(storedPassword)) return role;
                 return null;
             }
@@ -103,6 +103,133 @@ public class UserDatabase {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /********************************************************************
+     * Creates a password reset token record for a user.
+     * @param username the username associated with the reset token
+     * @param tokenHash the hashed reset token to store
+     * @param expiresAt the timestamp when the reset token expires
+     * @return true if the reset token was created successfully
+     */
+    public boolean createPasswordResetToken(String username, String tokenHash) {
+        
+        int minutesUntilExpiry = 30;
+        username = normalizeUsername(username);
+        if (username == null || username.isEmpty()) return false;
+        if (tokenHash == null || tokenHash.trim().isEmpty()) return false;
+        String sql =
+            "INSERT INTO password_reset_tokens " +
+            "(token_hash, username, expires_at) " +
+            "VALUES (?, ?, ?)";
+        try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
+            statement.setString(1, tokenHash);
+            statement.setString(2, username);
+            statement.setTimestamp(3, new Timestamp(System.currentTimeMillis() + (minutesUntilExpiry * 60 * 1000)));
+            return statement.executeUpdate() > 0;
+        }
+        catch (SQLException e) {
+            System.err.println("Error in UserDatabase.createPasswordResetToken(): " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /********************************************************************
+     * Returns the user associated with a valid, unused password reset token.
+     * @param tokenHash the hashed password reset token
+     * @return the matching user, or null if the token is invalid, used, or expired
+     */
+    public User getUserForValidPasswordResetToken(String tokenHash) {
+
+        if (tokenHash == null || tokenHash.trim().isEmpty()) return null;
+
+        String sql =
+                "SELECT u.username, u.email, u.role, u.firstName, u.lastName, u.organization, u.notRobot " +
+                "FROM password_reset_tokens prt " +
+                "JOIN users u ON u.username = prt.username " +
+                "WHERE prt.token_hash = ? " +
+                "AND prt.used_at IS NULL " +
+                "AND prt.expires_at > CURRENT_TIMESTAMP";
+
+        try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
+            statement.setString(1, tokenHash);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) return null;
+
+                return new User(
+                        resultSet.getString("username"),
+                        null,
+                        resultSet.getString("email"),
+                        resultSet.getString("role"),
+                        resultSet.getString("firstName"),
+                        resultSet.getString("lastName"),
+                        resultSet.getString("organization"),
+                        resultSet.getString("notRobot")
+                );
+            }
+        }
+        catch (SQLException e) {
+            System.err.println("Error in UserDatabase.getUserForValidPasswordResetToken(): " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /********************************************************************
+     * Marks a password reset token as used.
+     * @param tokenHash the hashed password reset token
+     * @return true if the token was marked used
+     */
+    public boolean markPasswordResetTokenUsed(String tokenHash) {
+
+        if (tokenHash == null || tokenHash.trim().isEmpty()) return false;
+
+        String sql =
+                "UPDATE password_reset_tokens " +
+                "SET used_at = CURRENT_TIMESTAMP " +
+                "WHERE token_hash = ? " +
+                "AND used_at IS NULL";
+
+        try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
+            statement.setString(1, tokenHash);
+            return statement.executeUpdate() > 0;
+        }
+        catch (SQLException e) {
+            System.err.println("Error in UserDatabase.markPasswordResetTokenUsed(): " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /********************************************************************
+     * Invalidates all unused password reset tokens for a user.
+     * @param username the username whose reset tokens should be invalidated
+     * @return true if the operation completed successfully
+     */
+    public boolean invalidatePasswordResetTokensForUser(String username) {
+
+        username = normalizeUsername(username);
+        if (username == null || username.isEmpty()) return false;
+
+        String sql =
+                "UPDATE password_reset_tokens " +
+                "SET used_at = CURRENT_TIMESTAMP " +
+                "WHERE username = ? " +
+                "AND used_at IS NULL";
+
+        try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
+            statement.setString(1, username);
+            statement.executeUpdate();
+            return true;
+        }
+        catch (SQLException e) {
+            System.err.println("Error in UserDatabase.invalidatePasswordResetTokensForUser(): " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /********************************************************************
@@ -151,6 +278,42 @@ public class UserDatabase {
     }
 
     /********************************************************************
+     * Loads a user from the database by email address.
+     * @param email the email address to look up
+     * @return the matching user, or null if not found
+     */
+    public User getUserByEmail(String email) {
+
+        email = normalizeEmail(email);
+        if (email == null || email.isEmpty()) return null;
+        String sql =
+                "SELECT username, email, role, firstName, lastName, organization, notRobot " +
+                "FROM users " +
+                "WHERE LOWER(email) = ?";
+        try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
+            statement.setString(1, email);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (!resultSet.next()) return null;
+                return new User(
+                    resultSet.getString("username"),
+                    null,
+                    resultSet.getString("email"),
+                    resultSet.getString("role"),
+                    resultSet.getString("firstName"),
+                    resultSet.getString("lastName"),
+                    resultSet.getString("organization"),
+                    resultSet.getString("notRobot")
+                );
+            }
+        }
+        catch (SQLException e) {
+            System.err.println("Error in UserDatabase.getUserByEmail(): " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /********************************************************************
      * Updates a user's password in the database.
      * @param username the username of the account to update
      * @param newPassword the new password to store
@@ -163,7 +326,7 @@ public class UserDatabase {
         if (newPassword == null || newPassword.isEmpty()) return false;
         String sql = "UPDATE users SET password = ? WHERE username = ?";
         try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
-            statement.setString(1, encrypt(newPassword));
+            statement.setString(1, PasswordService.encrypt(newPassword));
             statement.setString(2, username);
             boolean updated = statement.executeUpdate() > 0;
             if (updated) System.out.println("User.updatePassword(): password updated for " + username);
@@ -267,33 +430,76 @@ public class UserDatabase {
     }
 
     /********************************************************************
-     * Creates a fresh users table in the database.
+     * Drops user database tables in dependency-safe order.
+     */
+    private void dropTables() {
+
+        try (Statement statement = this.connection.createStatement()) {
+            statement.execute("DROP TABLE IF EXISTS password_reset_tokens");
+            statement.execute("DROP TABLE IF EXISTS users");
+        }
+        catch (SQLException e) {
+            System.err.println("Error in UserDatabase.dropTables(): " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /********************************************************************
+     * Creates the users table if it does not already exist.
+     */
+    public void createUsersTable() {
+
+        String sql =
+                "CREATE TABLE IF NOT EXISTS users (" +
+                "username VARCHAR(50) PRIMARY KEY, " +
+                "password VARCHAR(255), " +
+                "email VARCHAR(255) UNIQUE, " +
+                "role VARCHAR(20), " +
+                "firstName VARCHAR(100), " +
+                "lastName VARCHAR(100), " +
+                "organization VARCHAR(255), " +
+                "notRobot VARCHAR(1000)" +
+                ")";
+        try (Statement statement = this.connection.createStatement()) {
+            statement.execute(sql);
+        }
+        catch (SQLException e) {
+            System.err.println("Error in UserDatabase.createUsersTable(): " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /********************************************************************
+     * Creates the password reset token table if it does not already exist.
+     */
+    public void createPasswordResetTokenTable() {
+
+        String sql =
+                "CREATE TABLE IF NOT EXISTS password_reset_tokens (" +
+                "token_hash VARCHAR(64) PRIMARY KEY, " +
+                "username VARCHAR(50) NOT NULL, " +
+                "expires_at TIMESTAMP NOT NULL, " +
+                "used_at TIMESTAMP, " +
+                "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                "FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE" +
+                ")";
+        try (Statement statement = this.connection.createStatement()) {
+            statement.execute(sql);
+        }
+        catch (SQLException e) {
+            System.err.println("Error in UserDatabase.createPasswordResetTokenTable(): " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /********************************************************************
+     * Creates a fresh user database schema.
      */
     public void createDB() {
 
-        Statement statement;
-        try {
-            String query = "drop table if exists users;";
-            statement = this.connection.createStatement();
-            statement.execute(query);
-            query = "create table users(" +
-                "username varchar(50) primary key, " +
-                "password varchar(255), " +
-                "email varchar(255) unique, " +
-                "role varchar(20), " +
-                "firstName varchar(100), " +
-                "lastName varchar(100), " +
-                "organization varchar(255), " +
-                "notRobot varchar(1000)" +
-                ");";
-            statement = this.connection.createStatement();
-            statement.execute(query);
-            statement.close();
-        }
-        catch (SQLException e) {
-            System.err.println("Error in User.createDB(): " + e.getMessage());
-            e.printStackTrace();
-        }
+        dropTables();
+        createUsersTable();
+        createPasswordResetTokenTable();
     }
 
     /********************************************************************
@@ -354,7 +560,7 @@ public class UserDatabase {
             """;
         try (PreparedStatement statement = this.connection.prepareStatement(sql)) {
             statement.setString(1, username);
-            statement.setString(2, encrypt(user.getPassword()));
+            statement.setString(2, PasswordService.encrypt(user.getPassword()));
             statement.setString(3, email);
             statement.setString(4, user.getRole());
             statement.setString(5, user.getFirstName());
@@ -383,27 +589,6 @@ public class UserDatabase {
         catch (SQLException e) {
             System.err.println(H2_DRIVER + " shutdown issues: " + e.getLocalizedMessage());
         }
-    }
-
-    /********************************************************************
-     * Hashes a password using SHA-1.
-     * @param password the password to hash
-     * @return the hashed password string
-     */
-    public synchronized String encrypt(String password) {
-
-        //if(debug>0) System.out.printf("UserDatabase.encrypt(%s)", password);
-        StringBuilder sb = new StringBuilder();
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-1");
-            md.update(password.trim().getBytes());
-            byte[] bytes = md.digest();
-            for (int i = 0; i < bytes.length; i++) sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
-        }
-        catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return sb.toString();
     }
 
     /********************************************************************
@@ -446,9 +631,10 @@ public class UserDatabase {
      */
     public static void main(String args[]) {
         UserDatabase db = new UserDatabase();
+        PasswordService ps = new PasswordService();
         if (args != null && args.length > 0) {
             if (args[0].equals("-h")) showHelp();
-            else if (args[0].equals("-e") && args[1] != null) System.out.println(db.encrypt(args[1]));
+            else if (args[0].equals("-e") && args[1] != null) System.out.println(PasswordService.encrypt(args[1]));
             else if (args[0].equals("-c")) db.createDB();
             else if (args[0].equals("-a")) {
                 Scanner scanner = new Scanner(System.in);
