@@ -1620,6 +1620,7 @@ public class FormulaPreprocessor {
         return preProcessExpr(fa, isQuery, kb);
     }
 
+    @Deprecated(since = "preProcessExpr", forRemoval = false)
     public Set<Formula> preProcess(Formula form, boolean isQuery, KB kb) {
 
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): form: " + form);

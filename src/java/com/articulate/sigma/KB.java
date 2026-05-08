@@ -928,7 +928,7 @@ public class KB implements Serializable {
         List<Formula> ans = new ArrayList<>();
         Formula f;
         for(String s : strings) {
-            f = new Formula();
+            f = new FormulaAST();
             f.read(s);
             ans.add(f);
         }
@@ -969,7 +969,7 @@ public class KB implements Serializable {
         Formula f = null;
         String theFormula = literalListToString(lit);
         if (StringUtil.isNonEmptyString(theFormula)) {
-            f = new Formula();
+            f = new FormulaAST();
             f.read(theFormula);
         }
         return f;
@@ -2004,7 +2004,7 @@ public class KB implements Serializable {
         // Start by assuming that the ask is futile.
         String result = "<queryResponse>\n<answer result=\"no\" number=\"0\">\n</answer>\n<summary proofs=\"0\"/>\n</queryResponse>\n";
         if (!StringUtil.emptyString(suoKifFormula)) {
-            Formula query = new Formula();
+            Formula query = new FormulaAST();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
@@ -2069,7 +2069,7 @@ public class KB implements Serializable {
             term = term.substring(0,term.length()-1);
         if (term.startsWith(Formula.LP)) {
             System.out.println("KB.termDepth(): warning - composite term: " + term);
-            Formula f = new Formula(term);
+            Formula f = new FormulaAST(term);
             String arg1 = f.getStringArgument(1);
             String arg2 = f.getStringArgument(2);
             return Integer.max(termDepth(arg1), termDepth(arg2));
@@ -2882,6 +2882,7 @@ public class KB implements Serializable {
 
     /***************************************************************
      */
+    @Deprecated (since = "readConstituentAST")
     public KIF readConstituent(String filename) {
 
         String canonicalPath = null;
@@ -2919,6 +2920,7 @@ public class KB implements Serializable {
      *
      * @param file the KIF file to add to this KB
      */
+    @Deprecated
     public void addConstituentInfo(KIF file) {
 
         for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
@@ -2993,6 +2995,7 @@ public class KB implements Serializable {
             System.out.println("INFO in KB.addConstituent(ANTLR): " + file.filename + " loaded in: " +
                     (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
         } else {
+            System.out.println("[KB.addConstituent] Fallback to old KIF parser");
             KIF file = readConstituent(filename);
             addConstituentInfo(file);
             System.out.println("\nINFO in KB.addConstituent(KIF): added " + file.formulaMap.values().size()
@@ -3253,7 +3256,7 @@ public class KB implements Serializable {
                 while (it.hasNext()) {
                     inst = (String) it.next();
                     fStr = ("(instance " + inst + Formula.SPACE + className + Formula.RP);
-                    f = new Formula();
+                    f = new FormulaAST();
                     f.read(fStr);
                     ans.add(f);
                 }
@@ -3269,7 +3272,7 @@ public class KB implements Serializable {
                     valence = kbCache.valences.get(inst);
                     if (valence > 0) {
                         String fStr = ("(valence " + inst + Formula.SPACE + valence + Formula.RP);
-                        Formula f = new Formula();
+                        Formula f = new FormulaAST();
                         f.read(fStr);
                         ans.add(f);
                     }

@@ -571,6 +571,120 @@ public class ClausifierExpr {
     }
 
     // -----------------------------------------------------------------------
+    // Formula/String bridge methods — allow Formula-based callers to use the
+    // Expr pipeline without knowing about FormulaAST internals.
+    // -----------------------------------------------------------------------
+
+    /**
+     * Full CNF clausification, starting from a {@link Formula}.
+     * If the formula is already a {@link FormulaAST} with a populated {@code expr}
+     * field, the Expr is used directly; otherwise the formula string is parsed first.
+     */
+    public static Formula clausify(Formula f) {
+        Expr expr = exprOf(f);
+        if (expr == null) return f;
+        return new FormulaAST(clausify(expr).toKifString());
+    }
+
+    /**
+     * Normalize all variables in a KIF string (depth-first, from index 1).
+     * Equivalent to {@link com.articulate.sigma.Clausifier#normalizeVariables(String)}.
+     */
+    public static String normalizeVariables(String input) {
+        return normalizeVariables(input, false);
+    }
+
+    /**
+     * Normalize all variables in a KIF string.
+     * If {@code replaceSkolemTerms} is true, Skolem atoms/functions are also replaced.
+     * Equivalent to {@link com.articulate.sigma.Clausifier#normalizeVariables(String, boolean)}.
+     */
+    public static String normalizeVariables(String input, boolean replaceSkolemTerms) {
+        if (input == null || input.isEmpty()) return input;
+        Expr expr = exprOf(new FormulaAST(input));
+        if (expr == null) return input;
+        return normalizeVariables(expr, replaceSkolemTerms).toKifString();
+    }
+
+    /**
+     * Convert a {@link Formula} to the three-element clausal-form list expected by
+     * {@link Formula#getTheClausalForm()}.
+     *
+     * <p>The returned list contains:
+     * <ol>
+     *   <li>A {@code List<List<List<Formula>>>} — clauses; each clause is a two-element
+     *       list {@code [negLits, posLits]}.
+     *   <li>The original {@link Formula} input.
+     *   <li>An empty {@code Map<String,String>} — rename tracking is not exposed by the
+     *       Expr pipeline; the map is empty but structurally present so callers using
+     *       index-2 access ({@link Formula#getVarMap()}) receive an empty map rather
+     *       than an exception.
+     * </ol>
+     */
+    public static List toNegAndPosLitsWithRenameInfo(Formula f) {
+        List ans = new ArrayList();
+        Expr expr = exprOf(f);
+        if (expr == null) return ans;
+
+        Expr cnf = clausify(expr);
+
+        // Split top-level (and c1 c2 ...) into individual clause Exprs
+        List<Expr> clauseExprs = new ArrayList<>();
+        if (cnf instanceof Expr.SExpr se && "and".equals(se.headName())) {
+            clauseExprs.addAll(se.args());
+        } else {
+            clauseExprs.add(cnf);
+        }
+
+        List<List<List<Formula>>> newClauses = new ArrayList<>();
+        for (Expr clauseExpr : clauseExprs) {
+            List<Formula> negLits = new ArrayList<>();
+            List<Formula> posLits = new ArrayList<>();
+
+            // Collect the literals for this clause
+            List<Expr> literals = new ArrayList<>();
+            if (clauseExpr instanceof Expr.SExpr se && "or".equals(se.headName())) {
+                literals.addAll(se.args());
+            } else {
+                literals.add(clauseExpr);
+            }
+
+            for (Expr lit : literals) {
+                boolean isNegLit = false;
+                Expr litExpr = lit;
+                if (lit instanceof Expr.SExpr se
+                        && "not".equals(se.headName())
+                        && se.args().size() == 1) {
+                    litExpr = se.args().get(0);
+                    isNegLit = true;
+                }
+                String litStr = litExpr.toKifString();
+                if (Formula.LOG_FALSE.equals(litStr)) isNegLit = true;
+                Formula litF = new FormulaAST(litStr);
+                if (isNegLit) negLits.add(litF);
+                else          posLits.add(litF);
+            }
+
+            List<List<Formula>> clause = new ArrayList<>();
+            clause.add(negLits);
+            clause.add(posLits);
+            newClauses.add(clause);
+        }
+
+        ans.add(newClauses);   // index 0 — clause list
+        ans.add(f);            // index 1 — original formula
+        ans.add(new HashMap<>()); // index 2 — rename map (empty; Expr pipeline does not track)
+        return ans;
+    }
+
+    /** Extract the {@link Expr} from a formula, parsing via {@link FormulaAST} if needed. */
+    private static Expr exprOf(Formula f) {
+        if (f instanceof FormulaAST fa && fa.expr != null) return fa.expr;
+        FormulaAST parsed = new FormulaAST(f.getFormula());
+        return parsed.expr;
+    }
+
+    // -----------------------------------------------------------------------
     // Utility: normalizeVariables
     //   Rename all vars depth-first from index 1 — used for canonical form
     //   comparison.  Mirrors Clausifier.normalizeVariables().

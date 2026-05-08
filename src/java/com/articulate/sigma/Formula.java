@@ -1014,7 +1014,7 @@ public class Formula implements Comparable, Serializable {
      *  @return an empty String if there are no problems or an error message
      *  if there are.
      */
-    @Deprecated
+//    @Deprecated
     public String badQuantification() {
         return "";
     }

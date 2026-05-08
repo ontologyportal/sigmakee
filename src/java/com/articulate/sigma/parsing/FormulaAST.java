@@ -58,6 +58,9 @@ public class FormulaAST extends Formula {
 
     public String strForm = null; // a String version of this modified formula
 
+    private int formulaASTHashCode = 0;
+    private List formulaASTClausalForm = null;
+
     /** ***************************************************************
      */
     public FormulaAST() {
@@ -181,6 +184,8 @@ public class FormulaAST extends Formula {
         this.antecedentTerms = new HashSet<>();
         this.consequentTerms = new HashSet<>();
         this.strForm = null;
+        this.formulaASTHashCode = 0;
+        this.formulaASTClausalForm = null;
 
         SuokifVisitor sv = SuokifVisitor.parseAny(s);
         if (sv.result.containsKey(0)) {
@@ -1078,5 +1083,69 @@ public class FormulaAST extends Formula {
         FormulaAST wrapped = new FormulaAST();
         wrapped.setFormula(base.getFormula());
         return wrapped;
+    }
+
+    /*****************************************************************
+     * Expr-based hashCode — uses ClausifierExpr.normalizeVariables so that
+     * two formulas that differ only in variable names compare equal, matching
+     * the contract of equals().
+     */
+    @Override
+    public int hashCode() {
+        if (formulaASTHashCode == 0) {
+            String s = getFormula();
+            if (s == null) return 0;
+            String normalized = (expr != null)
+                    ? ClausifierExpr.normalizeVariables(expr).toKifString()
+                    : ClausifierExpr.normalizeVariables(s);
+            int h = normalized.trim().hashCode();
+            if (h == 0) h = 1;
+            formulaASTHashCode = h;
+        }
+        return formulaASTHashCode;
+    }
+
+    /*****************************************************************
+     * Expr-based equals — two FormulaAST objects are equal if their
+     * variable-normalized KIF strings are equal (same contract as Formula.equals).
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) return false;
+        if (!(o instanceof Formula)) return false;
+        Formula f = (Formula) o;
+        String s     = getFormula();
+        String other = f.getFormula();
+        if (other == null) return (s == null);
+        if (s == null) return false;
+        String n1 = (expr != null)
+                ? ClausifierExpr.normalizeVariables(expr).toKifString().trim()
+                : ClausifierExpr.normalizeVariables(s).trim();
+        String n2 = (f instanceof FormulaAST fa && fa.expr != null)
+                ? ClausifierExpr.normalizeVariables(fa.expr).toKifString().trim()
+                : ClausifierExpr.normalizeVariables(other).trim();
+        return n1.replaceAll("\\s+", " ").equals(n2.replaceAll("\\s+", " "));
+    }
+
+    /*****************************************************************
+     * Expr-based clausal form — uses ClausifierExpr instead of old Clausifier.
+     */
+    @Override
+    public List getTheClausalForm() {
+        if (formulaASTClausalForm == null) {
+            String s = getFormula();
+            if (s != null && !s.isEmpty())
+                formulaASTClausalForm = ClausifierExpr.toNegAndPosLitsWithRenameInfo(this);
+        }
+        return formulaASTClausalForm;
+    }
+
+    /*****************************************************************
+     */
+    @Override
+    public void clearTheClausalForm() {
+        if (formulaASTClausalForm != null)
+            formulaASTClausalForm.clear();
+        formulaASTClausalForm = null;
     }
 }

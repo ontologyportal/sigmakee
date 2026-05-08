@@ -28,6 +28,7 @@ being present in the ontology in order to function as intended.  They are:
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.StringUtil;
@@ -1186,13 +1187,13 @@ public class KBcache implements Serializable {
     public boolean checkDisjoint(KB kb, String c1, String c2) {
 
         if (!StringUtil.emptyString(c1) && Formula.listP(c1)) {
-            Formula c1f = new Formula(c1);
+            Formula c1f = new FormulaAST(c1);
             String pred = c1f.car();
             if (KButilities.isFunction(kb,pred))
                 c1 = getRange(pred);
         }
         if (!StringUtil.emptyString(c2) && Formula.listP(c2)) {
-            Formula c2f = new Formula(c2);
+            Formula c2f = new FormulaAST(c2);
             String pred = c2f.car();
             if (KButilities.isFunction(kb,pred))
                 c2 = getRange(pred);

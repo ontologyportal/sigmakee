@@ -533,7 +533,7 @@ public class Clausifier  {
      * part of a Formula, in which the original variables have been
      * replaced by normalized forms
      */
-    protected static String normalizeVariables(String input, boolean replaceSkolemTerms) {
+    public static String normalizeVariables(String input, boolean replaceSkolemTerms) {
 
         String result;
         int[] idxs = {1, 1};

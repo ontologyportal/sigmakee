@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.BiPredicate;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.*;
 
@@ -158,7 +159,7 @@ public class FormulaUtil {
         List<String> ans = new ArrayList<>();
         try {
             if (!StringUtil.emptyString(kifListAsString)) {
-                Formula f = new Formula();
+                Formula f = new FormulaAST();
                 f.read(kifListAsString);
                 ans = f.literalToArrayList();
             }
@@ -192,7 +193,7 @@ public class FormulaUtil {
                     sb.append(tree);
                 }
                 else {
-                    Formula f = new Formula();
+                    Formula f = new FormulaAST();
                     f.read(tree);
                     List tuple = f.literalToArrayList();
                     sb.append(Formula.LP);
@@ -224,7 +225,7 @@ public class FormulaUtil {
         String s = f.getFormula();
         String result = s.replaceAll("(not)?\\s*\\(ans\\d[^\\)]*\\)", "");
         result = result.replaceAll("\\(\\s*\\)","");
-        Formula fnew = new Formula(result);
+        Formula fnew = new FormulaAST(result);
         result = SUMOtoTFAform.elimUnitaryLogops(fnew);
         result = result.replaceAll("\\(\\s*\\)","");
         return result;
@@ -292,7 +293,7 @@ public class FormulaUtil {
         String s = "(or\n" +
                 "  (not  \n" +
                 "    (ans0 sK2)) spl6_1)";
-        System.out.println(removeAnswerClause(new Formula(s)));
+        System.out.println(removeAnswerClause(new FormulaAST(s)));
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("KButilities.main(): completed init");
