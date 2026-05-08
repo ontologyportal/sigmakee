@@ -1024,7 +1024,7 @@ public class InferenceTestSuite {
                 int purged = kb.purgeUserAssertionsFromMemory();
                 int after  = kb.countUserAssertionFormulasInMemory();
 
-                if (KB.debug) {
+                if (KB.debug>0) {
                     System.out.println("resetAllForInference(): UA in-memory before=" + before
                             + ", purged=" + purged
                             + ", after=" + after);
