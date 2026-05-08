@@ -69,17 +69,29 @@ public class TheoremProverController {
      * @return ATPResult object containing the outcome of the Vampire Query
      */
     private ATPResult askVampire(ATPQuery query) {
+
         Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
-        if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) {
-            if (query.isClosedWorldAssumption()) SUMOKBtoTPTPKB.CWA = true;
-            if (query.isModusPonens() && query.isDropOnePremise()) query.getKb().dropOnePremiseFormulas = true;
-            vampire.askVampire(query.getQuery());
-        } 
-        else {
-            if (query.getTestFilePath() == null) vampire.askVampireHOL(query.getQuery(), query.isHolUseModals());
-            else vampire.askVampireTHF(query.getTestFilePath());
+        boolean previousCWA = SUMOKBtoTPTPKB.CWA;
+        boolean previousModusPonens = query.getKb().modensPonens;
+        boolean previousDropOnePremise = query.getKb().dropOnePremiseFormulas;
+        try {
+            if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) {
+                SUMOKBtoTPTPKB.CWA = query.isClosedWorldAssumption();
+                query.getKb().modensPonens = query.isModusPonens();
+                query.getKb().dropOnePremiseFormulas = query.isModusPonens() && query.isDropOnePremise();
+                vampire.askVampire(query.getQuery());
+            }
+            else {
+                if (query.getTestFilePath() == null) vampire.askVampireHOL(query.getQuery(), query.isHolUseModals());
+                else vampire.askVampireTHF(query.getTestFilePath());
+            }
+            return vampire.getResult();
         }
-        return vampire.getResult();
+        finally {
+            SUMOKBtoTPTPKB.CWA = previousCWA;
+            query.getKb().modensPonens = previousModusPonens;
+            query.getKb().dropOnePremiseFormulas = previousDropOnePremise;
+        }
     }
     
     /********************************************************************

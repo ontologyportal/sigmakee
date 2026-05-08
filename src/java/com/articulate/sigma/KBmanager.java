@@ -26,7 +26,6 @@ import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
 
-import java.io.IOException;
 import java.nio.file.*;
 import com.esotericsoftware.kryo.io.*;
 
@@ -649,6 +648,21 @@ public class KBmanager implements Serializable {
         return result;
     }
 
+    /*****************************************************************
+     * Validate a list of consituent files by checking if the file exists or not.
+     * @constituentList list of constituent file paths to be validated
+     * @return validated list of constituent paths
+     */
+    public List<String> validateConstituentList(List<String> constituentList) {
+
+        List<String> validConstituents = new ArrayList<>();
+        for (String constituent : constituentList) {
+            if (Files.exists(Paths.get(constituent))) validConstituents.add(constituent);
+            else setError("ERROR: File " + constituent + " does not exist");
+        }
+        return validConstituents;
+    }
+
     /** ***************************************************************
      * Loads the constituents of the KB from ~/.sigmakee/config.xml
      *
@@ -658,10 +672,10 @@ public class KBmanager implements Serializable {
      */
     public boolean loadKB(String kbName, List<String> constituents) {
 
+        constituents = validateConstituentList(constituents);
         boolean retVal = false;
         try {
-            if (existsKB(kbName))
-                removeKB(kbName);
+            if (existsKB(kbName)) removeKB(kbName);
             addKB(kbName);
             KB kb = getKB(kbName);
             if (!constituents.isEmpty())

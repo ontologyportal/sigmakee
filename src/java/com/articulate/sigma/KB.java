@@ -78,6 +78,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -200,7 +201,7 @@ public class KB implements Serializable {
     /** force regeneration of TPTP file */
     public static boolean force = false;
 
-    public static boolean debug = false;
+    public static int debug = 0;
 
     /** Progress bar text capture */
     private StringBuilder progressSb = new StringBuilder();
@@ -758,26 +759,26 @@ public class KB implements Serializable {
     public boolean isFunctional(Formula form) {
 
         if (form == null || form.empty()) {
-            if (debug) System.out.println("Warning - KB.isFunctional(): empty");
+            if (debug>1) System.out.println("Warning - KB.isFunctional(): empty");
             return false;
         }
         if (!form.listP()) {
-            if (debug) System.out.println("Warning - KB.isFunctional(): not a list: " + form);
+            if (debug>1) System.out.println("Warning - KB.isFunctional(): not a list: " + form);
             //Thread.dumpStack();
             return false;
         }
         String pred = form.car();
-        if (debug) System.out.println("KB.isFunctional(): pred: " + pred);
-        if (debug) System.out.println("KB.isFunctional(): isFunction: " + isFunction(pred));
+        if (debug>1) System.out.println("KB.isFunctional(): pred: " + pred);
+        if (debug>1) System.out.println("KB.isFunctional(): isFunction: " + isFunction(pred));
         if (Formula.isVariable(pred)) {
             Set<String> varTypes = form.getVarType(this,pred);
             if (varTypes != null) {
                 for (String s : varTypes) {
-                    if (debug) System.out.println("KB.isFunctional(): s: " + s);
-                    if (debug) System.out.println("KB.isFunctional(): kbCache.subclassOf(s, \"Function\") " +
+                    if (debug>1) System.out.println("KB.isFunctional(): s: " + s);
+                    if (debug>1) System.out.println("KB.isFunctional(): kbCache.subclassOf(s, \"Function\") " +
                             kbCache.subclassOf(s, "Function"));
                     if (s.equals("Function") || kbCache.subclassOf(s, "Function")) {
-                        if (debug) System.out.println("KB.isFunctional(): returning true");
+                        if (debug>1) System.out.println("KB.isFunctional(): returning true");
                         return true;
                     }
                 }
@@ -1789,7 +1790,7 @@ public class KB implements Serializable {
                     String term;
                     for (Formula parsedF : kif.formulaMap.values()) { // 2. Confirm that the input has been
                         // converted into at least one Formula object and stored in this.formulaMap.
-                        if (debug) System.out.println("KB.tell(): " + parsedF.toString());
+                        if (debug>1) System.out.println("KB.tell(): " + parsedF.toString());
                         term = PredVarInst.hasCorrectArity(parsedF, this);
                         if (!StringUtil.emptyString(term)) {
                             throw new ArityException(parsedF.getFormula(), term);
@@ -1821,7 +1822,7 @@ public class KB implements Serializable {
                                 case EPROVER:
                                     try {
                                         EProver eprover = new EProver(this, "tptp", 30, 1);
-                                        if (debug) System.out.println("KB.tell: using eprover: " + eprover);
+                                        if (debug>1) System.out.println("KB.tell: using eprover: " + eprover);
                                         eprover.assertFormula(tptpfile.getCanonicalPath(), parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                                         EProver.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
                                         result += " and inference";
@@ -1832,7 +1833,7 @@ public class KB implements Serializable {
                                         return "";
                                     }
                                 case VAMPIRE:
-                                    if (debug) System.out.println("KB.tell: using vampire");
+                                    if (debug>1) System.out.println("KB.tell: using vampire");
                                     Vampire vampire = new Vampire(this, "tptp", "CASC", false, 30, 1);
                                     vampire.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
                                             !mgr.getPref("TPTP").equalsIgnoreCase("no"));
@@ -1841,7 +1842,7 @@ public class KB implements Serializable {
                                     result += " and inference";
                                     break;
                                 case LEO:
-                                    if (debug) System.out.println("KB.tell: using leo");
+                                    if (debug>1) System.out.println("KB.tell: using leo");
                                     LEO leo = new LEO(this, "tptp", 10, 1, null);
                                     leo.assertFormula(tptpfile.getCanonicalPath(),parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                                     // nothing much to do since LEO has to load it all at query time
@@ -2136,9 +2137,9 @@ public class KB implements Serializable {
      */
     public int compareTermDepth(String t1, String t2) {
 
-        if (debug) System.out.println("KB.compareTermDepth(): ");
-        if (debug) System.out.println("KB.compareTermDepth(): subattribute: " + kbCache.subAttributeOf(t1,t2));
-        if (debug) System.out.println("KB.compareTermDepth(): subclass: " + kbCache.subclassOf(t1,t2));
+        if (debug>1) System.out.println("KB.compareTermDepth(): ");
+        if (debug>1) System.out.println("KB.compareTermDepth(): subattribute: " + kbCache.subAttributeOf(t1,t2));
+        if (debug>1) System.out.println("KB.compareTermDepth(): subclass: " + kbCache.subclassOf(t1,t2));
         if (t1.equals(t2))
             return 0;
         if (kbCache.subAttributeOf(t2,t1) || kbCache.subclassOf(t2,t1))
@@ -2149,8 +2150,8 @@ public class KB implements Serializable {
         //boolean found = false;
         int depthT1 = termDepth(t1);
         int depthT2 = termDepth(t2);
-        if (debug) System.out.println("KB.compareTermDepth(): term depth of " + t1 + " is " + depthT1);
-        if (debug) System.out.println("KB.compareTermDepth(): term depth of " + t2 + " is " + depthT2);
+        if (debug>1) System.out.println("KB.compareTermDepth(): term depth of " + t1 + " is " + depthT1);
+        if (debug>1) System.out.println("KB.compareTermDepth(): term depth of " + t2 + " is " + depthT2);
         if (depthT1 == depthT2)
             return 0;
         if (depthT1 > depthT2)
@@ -2209,11 +2210,11 @@ public class KB implements Serializable {
             return null;
         String result = "";
         for (String t : terms) {
-            if (debug) System.out.println("mostSpecificTerm(): t: " + t);
-            if (debug) System.out.println("mostSpecificTerm(): depth: " + termDepth(t));
-            if (debug) System.out.println("mostSpecificTerm(): result: " + result);
-            if (debug) System.out.println("mostSpecificTerm(): result depth: " + termDepth(result));
-            if (debug) System.out.println("mostSpecificTerm(): compareTermDepth(t,result): " + compareTermDepth(t,result));
+            if (debug>1) System.out.println("mostSpecificTerm(): t: " + t);
+            if (debug>1) System.out.println("mostSpecificTerm(): depth: " + termDepth(t));
+            if (debug>1) System.out.println("mostSpecificTerm(): result: " + result);
+            if (debug>1) System.out.println("mostSpecificTerm(): result depth: " + termDepth(result));
+            if (debug>1) System.out.println("mostSpecificTerm(): compareTermDepth(t,result): " + compareTermDepth(t,result));
             if (StringUtil.emptyString(t))
                 continue;
             if (t.endsWith("+"))
@@ -2811,8 +2812,10 @@ public class KB implements Serializable {
             }
             File constituent = new File(filename);
             canonicalPath = constituent.getCanonicalPath();
-            if (constituents.contains(canonicalPath))
+            if (constituents.contains(canonicalPath)) {
                 errors.add("Error. " + canonicalPath + " already loaded.");
+                return null;
+            }
             file = new KIFAST();
             file.readFile(canonicalPath);
             warnings.addAll(file.warningSet);
@@ -2977,8 +2980,7 @@ public class KB implements Serializable {
      * Add a new KB constituent by reading in the file, and then merging the formulas with
      * the existing set of formulas.
      *
-     * @param filename
-     *            - The full path of the file being added
+     * @param filename full path of the file being added
      */
     public void addConstituent(String filename) {
 
@@ -2987,18 +2989,13 @@ public class KB implements Serializable {
         // KIFAST (ANTLR-based) is the default parser. Opt out with useAntlrParser=false in config.xml.
         if (!"false".equals(KBmanager.getMgr().getPref("useAntlrParser"))) {
             KIFAST file = readConstituentAST(filename);
+            if (file == null) return;
             addConstituentInfoAST(file);
-            System.out.println("\nINFO in KB.addConstituent(ANTLR): added " + file.formulaMap.values().size()
-                    + " formulas and " + file.terms.size() + " terms.");
-            System.out.println("INFO in KB.addConstituent(ANTLR): " + file.filename + " loaded in: " +
-                    (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
+            if (debug>1) System.out.printf("\nKB.addConstituent(%s) Loaded in %d seconds:\n    Formula#: %d\n    Term#: %d", filename, (System.currentTimeMillis()-millis)/KButilities.ONE_K, file.formulaMap.values().size(), file.terms.size());
         } else {
             KIF file = readConstituent(filename);
             addConstituentInfo(file);
-            System.out.println("\nINFO in KB.addConstituent(KIF): added " + file.formulaMap.values().size()
-                    + " formulas and " + file.terms.size() + " terms.");
-            System.out.println("INFO in KB.addConstituent(KIF): " + file.filename + " loaded in: " +
-                    (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
+            System.out.printf("\nKB.addConstituent(%s) Loaded in %d seconds:\n    Formula#: %d\n    Term#: %d", filename, (System.currentTimeMillis()-millis)/KButilities.ONE_K, file.formulaMap.values().size(), file.terms.size());
         }
     }
 
@@ -3010,8 +3007,7 @@ public class KB implements Serializable {
         List<String> newConstituents = new ArrayList<>();
         synchronized (this.getTerms()) {
             for (String cName : constituents) {
-                if (!KButilities.isCacheFile(cName)) // Recompute cached data
-                    newConstituents.add(cName);
+                if (!KButilities.isCacheFile(cName) && Files.exists(Paths.get(cName))) newConstituents.add(cName);
             }
             constituents.clear();
             formulas.clear();
@@ -3021,21 +3017,14 @@ public class KB implements Serializable {
             clearFormatMaps();
             errors.clear();
             warnings.clear();
-            Iterator<String> nci = newConstituents.iterator();
-            if (nci.hasNext())
-                System.out.println("INFO in KB.reload()");
-
-            String cName;
-            while (nci.hasNext()) {
-                cName = nci.next();
-                addConstituent(cName);
-                // addConstituent(cName, false, false, false);
-            }
+            Iterator<String> newConstituentIterator = newConstituents.iterator();
+            if (newConstituentIterator.hasNext()) System.out.println("INFO in KB.reload()");
+            while (newConstituentIterator.hasNext()) addConstituent(newConstituentIterator.next());
             // build kb cache when "cache" = "yes"
             //if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
-                kbCache = new KBcache(this);
-                kbCache.buildCaches();
-                checkArity(); // Re-perform arity checks on everything
+            kbCache = new KBcache(this);
+            kbCache.buildCaches();
+            checkArity(); // Re-perform arity checks on everything
             //}
             //else {
             //    kbCache = new KBcache(this);
@@ -3644,8 +3633,8 @@ public class KB implements Serializable {
                 warnings.add(warn);
                 continue;
             }
-            if (debug) System.out.println("INFO in KB.preProcess(): form : " + form);
-            if (debug) System.out.println("INFO in KB.preProcess(): f : " + f);
+            if (debug>1) System.out.println("INFO in KB.preProcess(): form : " + form);
+            if (debug>1) System.out.println("INFO in KB.preProcess(): f : " + f);
             processed = fp.preProcess(f, false, this); // not queries
             tptp = new HashSet<>();
             if (tptpParseP) {
