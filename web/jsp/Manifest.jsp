@@ -172,9 +172,6 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
         String pageString = "Manifest";
     %>
     <%@include file="CommonHeader.jsp" %>
-
-<table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
-
 <b>Files which are the <I>constituents</I> of the <B><%=kbName %></b> knowledge base </b>
 <%
   if (kb.constituents == null || kb.constituents.size() <= 0) {

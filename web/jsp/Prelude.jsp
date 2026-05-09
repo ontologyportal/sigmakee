@@ -1,6 +1,6 @@
 <%@ page
    language="java"
-   import="com.articulate.sigma.*,com.articulate.sigma.tp.*,com.articulate.sigma.trans.*,com.articulate.sigma.security.*,com.articulate.sigma.utils.*,com.articulate.sigma.wordNet.*,com.articulate.sigma.VerbNet.*,com.articulate.sigma.CCheckManager.*,java.text.ParseException,java.net.URLConnection, javax.servlet.http.HttpServletRequest, java.net.URL,com.oreilly.servlet.multipart.MultipartParser,com.oreilly.servlet.multipart.Part,com.oreilly.servlet.multipart.ParamPart,com.oreilly.servlet.multipart.FilePart,java.util.*,java.io.*, tptp_parser.*, TPTPWorld.*"
+   import="com.articulate.sigma.*,com.articulate.sigma.tp.*,com.articulate.sigma.trans.*,com.articulate.sigma.user.UserSessionManager,com.articulate.sigma.security.*,com.articulate.sigma.utils.*,com.articulate.sigma.wordNet.*,com.articulate.sigma.VerbNet.*,com.articulate.sigma.CCheckManager.*,java.text.ParseException,java.net.URLConnection, javax.servlet.http.HttpServletRequest, java.net.URL,com.oreilly.servlet.multipart.MultipartParser,com.oreilly.servlet.multipart.Part,com.oreilly.servlet.multipart.ParamPart,com.oreilly.servlet.multipart.FilePart,java.util.*,java.io.*, tptp_parser.*, TPTPWorld.*"
    pageEncoding="UTF-8"
    contentType="text/html;charset=UTF-8"
 %>
@@ -10,7 +10,6 @@
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
 <html xmlns="https://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
 <%
-
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
     Infosys (c) 2017-present.
 
@@ -40,6 +39,7 @@ userPages.add("TreeView.jsp");
 userPages.add("WordNet.jsp");
 userPages.add("CheckKifFile.jsp");
 userPages.add("Editor.jsp");
+
 String URLString = request.getRequestURL().toString();
 String pageURLString = URLString.substring(URLString.lastIndexOf("/") + 1);
 
@@ -51,32 +51,24 @@ if (username != null) {
 <script>
 let idleTimer;
 const timeoutMs = (60 - 15) * 60 * 1000;
-
 function resetIdleTimer() {
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => {
-        alert("You have been inactive and will be logged out in 15 minutes.");
-    }, timeoutMs);
+    idleTimer = setTimeout(() => {alert("You have been inactive and will be logged out in 15 minutes.");}, timeoutMs);
 }
-['mousemove','keydown','click','scroll'].forEach(evt =>
-    document.addEventListener(evt, resetIdleTimer)
-);
+['mousemove','keydown','click','scroll'].forEach(evt => document.addEventListener(evt, resetIdleTimer)); 
 resetIdleTimer();
 </script>
 <%
 }
 
 String welcomeString = " : Welcome guest : <a href=\"login.jsp\">log in</a>";
-if (!StringUtil.emptyString(username))
-    welcomeString = " : Welcome " + username;
+if (!StringUtil.emptyString(username)) welcomeString = " : Welcome " + username;
 KBmanager mgr = KBmanager.getMgr();
 
-if (StringUtil.emptyString(role)) { // role is [guest | user | admin]
-    role = "guest";
-}
+if (StringUtil.emptyString(role)) role = "guest";
 
 if (!KBmanager.initialized) {
-    mgr.initializeOnce(); // <- first call for KB initialization at startup 2/17/25 (tdn)
+    mgr.initializeOnce();
     response.sendRedirect("init.jsp");
     return;
 }
@@ -88,16 +80,12 @@ if (role.equalsIgnoreCase("guest") && !userPages.contains(pageURLString)) {
 }
 
 String simple = request.getParameter("simple");
-if (StringUtil.isNonEmptyString(simple) && simple.equalsIgnoreCase("yes")) {
-    out.println("");
-    out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\" />");
-}
+if (StringUtil.isNonEmptyString(simple) && simple.equalsIgnoreCase("yes")) out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\" />");
 
 String kbName = request.getParameter("kb");
 if (StringUtil.emptyString(kbName)) {
     kbName = "SUMO";
-    if (!mgr.kbs.keySet().contains("SUMO"))
-        kbName = mgr.getPref("sumokbname");
+    if (!mgr.kbs.keySet().contains("SUMO")) kbName = mgr.getPref("sumokbname");
 }
 
 boolean awsMode = "yes".equalsIgnoreCase(mgr.getPref("aws"));
@@ -109,48 +97,27 @@ if (awsMode && "Editor.jsp".equalsIgnoreCase(pageURLString)) {
 }
 
 KB kb = mgr.getKB(kbName);
-if (kb != null)
-    TaxoModel.kbName = kbName;
+if (kb != null) TaxoModel.kbName = kbName;
 
-String filename = ""; // an ontology file to edit
-String line = ""; // the line of the ontology to place a cursor
+String filename = "";
+String line = "";
 
-// --- Formal Language handling ---
-// Always prefer the session variable. Never use request parameters.
-String flang = (String) session.getAttribute("flang");
-
-// Default to SUO-KIF if unset
-if (flang == null || flang.isEmpty()) {
-    flang = "SUO-KIF";
-    session.setAttribute("flang", flang);
-}
-
-// Only process dropdown submissions (from form POST/GET)
 String flangParam = request.getParameter("flang");
-if (flangParam != null && !flangParam.isEmpty()) {
-    flang = HTMLformatter.processFormalLanguage(flangParam);
-    session.setAttribute("flang", flang);
-}
+String langParam = request.getParameter("lang");
 
-// Normalize
+UserSessionManager userSessionManager = UserSessionManager.get(request);
+if (StringUtil.isNonEmptyString(flangParam)) userSessionManager.setFormalLanguage(UserSessionManager.FormalLanguage.fromString(flangParam));
+String flang = userSessionManager.getFormalLanguage().getSigmaName();
 flang = HTMLformatter.processFormalLanguage(flang);
-
-
-String language = "EnglishLanguage"; // natural language for NL generation
-language = language = (String) session.getAttribute("lang");
-language = HTMLformatter.processNaturalLanguage(language,kb);
-if (language == null || language.isEmpty()) {
-    language = "EnglishLanguage";
-}
+if (StringUtil.isNonEmptyString(langParam)) userSessionManager.setHumanLanguage(UserSessionManager.HumanLanguage.fromString(langParam));
+String language = userSessionManager.getHumanLanguage().getSigmaName();
+language = HTMLformatter.processNaturalLanguage(language, kb);
 
 String hostname = mgr.getPref("hostname");
-if (hostname == null)
-    hostname = "localhost";
+if (hostname == null) hostname = "localhost";
 
 String port = mgr.getPref("port");
-if (port == null)
-    port = "8080";
+if (port == null) port = "8080";
 
 String term = ValidationUtils.sanitizeSumoTerm(request.getParameter("term"));
-
 %>

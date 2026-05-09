@@ -14,27 +14,23 @@
     http://github.com/ontologyportal
 */
 
-    out.println("<html>");
-    out.println("  <head>");
-    out.println("    <title>Sigma Knowledge Engineering Environment - Main</title>");
-    out.println("  </head>");
-    out.println("  <body bgcolor=\"#FFFFFF\">");
-    String baseDir = mgr.getPref("baseDir");
-    String kbDir = mgr.getPref("kbDir");
-    System.out.println("INFO in KBs.jsp: baseDir == " + baseDir);
-    System.out.println("INFO in KBs.jsp:   kbDir == " + kbDir);
-    System.out.println("KBs.jsp: username: " + username);
-    boolean isAdministrator = role.equalsIgnoreCase("admin");
-    System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
-    KBmanager.getMgr().initializeOnce();
-    String pageName = "KBs";
-    String pageString = "Knowledge Bases";
-    %>
-    <%@include file="CommonHeader.jsp" %>
-
-<table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
-<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
-
+  out.println("<html>");
+  out.println("  <head>");
+  out.println("    <title>Sigma Knowledge Engineering Environment - Main</title>");
+  out.println("  </head>");
+  out.println("  <body bgcolor=\"#FFFFFF\">");
+  String baseDir = mgr.getPref("baseDir");
+  String kbDir = mgr.getPref("kbDir");
+  System.out.println("INFO in KBs.jsp: baseDir == " + baseDir);
+  System.out.println("INFO in KBs.jsp:   kbDir == " + kbDir);
+  System.out.println("KBs.jsp: username: " + username);
+  boolean isAdministrator = role.equalsIgnoreCase("admin");
+  System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
+  KBmanager.getMgr().initializeOnce();
+  String pageName = "KBs";
+  String pageString = "Knowledge Bases";
+  %>
+  <%@include file="CommonHeader.jsp" %>
 <%
   Iterator<String> kbNames = null;
   String removeResult = "";
