@@ -208,6 +208,7 @@ document.addEventListener('DOMContentLoaded', function(){
     let clicked = null;
     let rafId = null;
     let runInFlight = false;
+    let safetyTimer = null;
 
     function clampInt(n, def) {
         const x = parseInt(n, 10);
@@ -271,6 +272,18 @@ document.addEventListener('DOMContentLoaded', function(){
         runInFlight = true;
         overlay.style.display = 'block';
         startProgress(tSec);
+
+        // Safety net: if the iframe load event never fires (incomplete server response),
+        // hide the spinner after tSec + 30s buffer so the user isn't permanently stuck.
+        if (safetyTimer) clearTimeout(safetyTimer);
+        safetyTimer = setTimeout(function() {
+            if (!runInFlight) return;
+            runInFlight = false;
+            stopProgress();
+            overlay.style.display = 'none';
+            const host = document.getElementById('resultsHost');
+            if (host) host.innerHTML = "<div class='exception-panel'><h4>Error</h4><p>The server did not return a complete response. Check the server logs for details.</p></div>";
+        }, (tSec + 30) * 1000);
     });
 
     // IMPORTANT: hide overlay when iframe finishes loading server response
@@ -278,6 +291,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if (!runInFlight) return;
         runInFlight = false;
 
+        if (safetyTimer) { clearTimeout(safetyTimer); safetyTimer = null; }
         stopProgress();
         overlay.style.display = 'none';
 

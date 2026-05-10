@@ -73,30 +73,17 @@ public class ATPQuery {
     }
 
     public KB getKb() { return this.kb; }
-
     public String getUserSessionId() { return this.userSessionId; }
-
     public String getQuery() { return this.query; }
-
     public String getTestFilePath() { return this.testFilePath; }
-
     public RunSource getRunSource() { return this.runSource; }
-
     public ATPType getProverType() { return this.proverType; }
-
     public TptpLanguage getLanguage() { return this.language; }
-
     public Vampire.ModeType getVampireMode() { return this.vampireMode; }
-
     public boolean isClosedWorldAssumption() { return this.closedWorldAssumption; }
-
     public boolean isModusPonens() { return this.modusPonens; }
-
     public boolean isDropOnePremise() { return this.dropOnePremise; }
-
     public boolean isHolUseModals() { return this.holUseModals; }
-
     public int getTimeout() { return this.timeout; }
-
     public int getMaxAnswers() { return this.maxAnswers; }
 }

@@ -290,7 +290,7 @@ public class Formula implements Comparable, Serializable {
     /*******************************************************************
      * Empty consrtuctor that returns an empty instance of a Formula object.
      */
-    @Deprecated(since = "FormulaAST", forRemoval = false)
+    //@Deprecated(since = "FormulaAST", forRemoval = false)
     public Formula() {}
 
     /*******************************************************************
@@ -299,7 +299,7 @@ public class Formula implements Comparable, Serializable {
      * variables.
      * @param Formula - the formula to copy.
      */
-    @Deprecated(since = "FormulaAST", forRemoval = false)
+    //@Deprecated(since = "FormulaAST", forRemoval = false)
     public Formula(Formula f) {
 
         this.endLine = f.endLine;
@@ -336,7 +336,7 @@ public class Formula implements Comparable, Serializable {
      * Constructor that returns a Formula object with a String as input.
      * @param String - String of the formula 
      */
-    @Deprecated(since = "FormulaAST", forRemoval = false)
+    //@Deprecated(since = "FormulaAST", forRemoval = false)
     public Formula(String f) {theFormula = f;}
     
     /*****************************************************************
@@ -1015,7 +1015,7 @@ public class Formula implements Comparable, Serializable {
      *  @return an empty String if there are no problems or an error message
      *  if there are.
      */
-    @Deprecated
+    //@Deprecated
     public String badQuantification() {
         return "";
     }
@@ -1078,7 +1078,7 @@ public class Formula implements Comparable, Serializable {
      * to (and B A C).  Note that this is a fairly time-consuming operation
      * and should not generally be used for comparing large sets of formulas.
      */
-    @Deprecated
+    //@Deprecated
     public boolean logicallyEquals(String s) {
 
         if (this.equals(s))
@@ -1220,7 +1220,7 @@ public class Formula implements Comparable, Serializable {
      *  returns a logical mapping between the variables
      *  of two formulae of one exists.
      */
-    @Deprecated
+    //@Deprecated
     public boolean unifyWith(Formula f) {
 
         if (debug) System.out.println("Formula.unifyWith(): input f : " + f);
@@ -1684,7 +1684,7 @@ public class Formula implements Comparable, Serializable {
      *
      * Deprecated - use complexArgumentsToArrayList()
      */
-    @Deprecated
+    //@Deprecated
     public List<Formula> argumentsToArrayList(int start) {
 
         List<Formula> result = new ArrayList<>();
@@ -2264,7 +2264,7 @@ public class Formula implements Comparable, Serializable {
      * Test whether a Formula is a functional term.  Note this assumes
      * the textual convention of all functions ending with "Fn".
      */
-    @Deprecated
+    //@Deprecated
     public boolean isFunctionalTerm() {
 
         System.err.println("Error in Formula.isFunctionalTerm(): must use KB.isFunction() instead");
@@ -2280,7 +2280,7 @@ public class Formula implements Comparable, Serializable {
     /*****************************************************************
      * Test whether a Formula is a functional term
      */
-    @Deprecated
+    //@Deprecated
     public static boolean isFunctionalTerm(String s) {
 
         Formula f = new Formula();
@@ -2851,7 +2851,7 @@ public class Formula implements Comparable, Serializable {
      * functions with "Fn".
      * @param term A String.
      */
-    @Deprecated
+    // @Deprecated
     public static boolean isFunction(String term) {
 
         System.err.println("Error in Formula.isFuction(): must use KB.isFunction() instead");

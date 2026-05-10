@@ -3,7 +3,7 @@
 <%
     /** Copyright header omitted for brevity; keep your original text **/
     if (!role.equalsIgnoreCase("admin")) {
-        response.sendRedirect("login.html");
+        response.sendRedirect("login.jsp");
         return;
     }
 
@@ -614,76 +614,98 @@
                         out.println("<span style='color:#b00'>Only Vampire is supported for .tptp/.tff tests.</span><br>");
                     }
                     else {
-                        String testLang = ext.endsWith(".tff") ? "tff" : "fof";
-                        ATPQuery atpQuery = new ATPQuery(
-                                kb,
-                                session.getId(),
-                                null,
-                                testPath,
-                                "test",
-                                "VAMPIRE",
-                                testLang,
-                                vampireMode,
-                                "yes".equals(cwa),
-                                modensPonens,
-                                dropOnePremise,
-                                holUseModals,
-                                tmo,
-                                maxAns
-                        );
-                        ATPResult result = theoremProverController.ask(atpQuery);
-                        if (result != null) {
-                            out.println(result.resultPanelToHTML());
-                            String pseudoQuery = "TPTP file: " + new File(testPath).getName();
-                            tpp.parseProofOutput(result.getStdout(), pseudoQuery, kb, result.getQList());
-                            setGraphFormat(graphFormulaFormat, tpp);
-                            publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-                            tpp.processAnswersFromProof(result.getQList(), pseudoQuery);
-                            printAnswersBlock(tpp, kbName, language, out);
-                            if (tpp.bindingMap != null) tpp.bindingMap.clear();
-                            if (tpp.bindings != null) tpp.bindings.clear();
-                            out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
-                        }
-                        else {
-                            out.println("<font color='red'>No result from theorem prover.</font>");
+                        try {
+                            String testLang = ext.endsWith(".tff") ? "tff" : "fof";
+                            ATPQuery atpQuery = new ATPQuery(
+                                    kb,
+                                    session.getId(),
+                                    null,
+                                    testPath,
+                                    "test",
+                                    "VAMPIRE",
+                                    testLang,
+                                    vampireMode,
+                                    "yes".equals(cwa),
+                                    modensPonens,
+                                    dropOnePremise,
+                                    holUseModals,
+                                    tmo,
+                                    maxAns
+                            );
+                            ATPResult result = theoremProverController.ask(atpQuery);
+                            if (result != null) {
+                                out.println(result.resultPanelToHTML());
+                                String pseudoQuery = "TPTP file: " + new File(testPath).getName();
+                                tpp.parseProofOutput(result.getStdout(), pseudoQuery, kb, result.getQList());
+                                setGraphFormat(graphFormulaFormat, tpp);
+                                publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
+                                tpp.processAnswersFromProof(result.getQList(), pseudoQuery);
+                                printAnswersBlock(tpp, kbName, language, out);
+                                if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                                if (tpp.bindings != null) tpp.bindings.clear();
+                                out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
+                            }
+                            else {
+                                out.println("<font color='red'>No result from theorem prover.</font>");
+                            }
+                        } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
+                            renderExceptionPanel(enfe, out);
+                        } catch (ProverTimeoutException | ProverCrashedException pte) {
+                            renderExceptionPanel(pte, out);
+                            if (pte.getResult() != null) out.println(pte.getResult().resultPanelToHTML());
+                        } catch (com.articulate.sigma.tp.ATPException ae) {
+                            renderExceptionPanel(ae, out);
+                        } catch (Exception e) {
+                            out.println("<div class='exception-panel'><h4>Unexpected Error</h4><p>" + htmlEncode(e.getMessage()) + "</p></div>");
                         }
                     }
                 } else if (ext.endsWith(".thf")) {
                     if (!"Vampire".equals(inferenceEngine)) {
                         out.println("<span style='color:#b00'>Only Vampire is supported for .thf tests.</span><br>");
                     } else {
-                        ATPQuery atpQuery = new ATPQuery(
-                                kb,
-                                session.getId(),
-                                null,
-                                testPath,
-                                "test",
-                                "VAMPIRE",
-                                "thf",
-                                vampireMode,
-                                "yes".equals(cwa),
-                                modensPonens,
-                                dropOnePremise,
-                                holUseModals,
-                                tmo,
-                                maxAns
-                        );
-                        ATPResult result = theoremProverController.ask(atpQuery);
-                        if (result != null) {
-                            out.println(result.resultPanelToHTML());
-                            String pseudoQuery = "TPTP file: " + new File(testPath).getName();
-                            List<String> cleaned = TPTPutil.clearProofFile(result.getStdout());
-                            cleaned = THFutil.preprocessTHFProof(cleaned);
-                            tpp.parseProofOutput(cleaned, pseudoQuery, kb, result.getQList());
-                            setGraphFormat(graphFormulaFormat, tpp);
-                            publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-                            printAnswersBlock(tpp, kbName, language, out);
-                            if (tpp.bindingMap != null) tpp.bindingMap.clear();
-                            if (tpp.bindings != null) tpp.bindings.clear();
-                            out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
-                        }
-                        else {
-                            out.println("<font color='red'>No result from theorem prover.</font>");
+                        try {
+                            ATPQuery atpQuery = new ATPQuery(
+                                    kb,
+                                    session.getId(),
+                                    null,
+                                    testPath,
+                                    "test",
+                                    "VAMPIRE",
+                                    "thf",
+                                    vampireMode,
+                                    "yes".equals(cwa),
+                                    modensPonens,
+                                    dropOnePremise,
+                                    holUseModals,
+                                    tmo,
+                                    maxAns
+                            );
+                            ATPResult result = theoremProverController.ask(atpQuery);
+                            if (result != null) {
+                                out.println(result.resultPanelToHTML());
+                                String pseudoQuery = "TPTP file: " + new File(testPath).getName();
+                                List<String> cleaned = TPTPutil.clearProofFile(result.getStdout());
+                                cleaned = THFutil.preprocessTHFProof(cleaned);
+                                tpp.parseProofOutput(cleaned, pseudoQuery, kb, result.getQList());
+                                setGraphFormat(graphFormulaFormat, tpp);
+                                publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
+                                printAnswersBlock(tpp, kbName, language, out);
+                                if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                                if (tpp.bindings != null) tpp.bindings.clear();
+                                out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
+                            }
+                            else {
+                                out.println("<font color='red'>No result from theorem prover.</font>");
+                            }
+                        } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
+                            renderExceptionPanel(enfe, out);
+                        } catch (ProverTimeoutException | ProverCrashedException pte) {
+                            renderExceptionPanel(pte, out);
+                            if (pte.getResult() != null) out.println(pte.getResult().resultPanelToHTML());
+                        } catch (com.articulate.sigma.tp.ATPException ae) {
+                            renderExceptionPanel(ae, out);
+                        } catch (Exception e) {
+                            out.println("<div class='exception-panel'><h4>Unexpected Error</h4><p>" + htmlEncode(e.getMessage()) + "</p></div>");
                         }
                     }
                 } else {
@@ -701,49 +723,63 @@
                 out.println("  parent.document.getElementById('spinSub').textContent='';");
                 out.println("</script>");
                 out.flush();
-                if (stmt.indexOf('@') != -1) throw(new IOException("Row variables not allowed in query: " + stmt));
-                String effectiveLang = "HOL".equalsIgnoreCase(translationMode) ? "thf" : TPTPlang;
-                System.out.println("AskTell running custom, creating query");
-                ATPQuery atpQuery = new ATPQuery(
-                        kb,
-                        session.getId(),
-                        stmt,
-                        null,
-                        "custom",
-                        inferenceEngine,
-                        effectiveLang,
-                        vampireMode,
-                        "yes".equals(cwa),
-                        modensPonens,
-                        dropOnePremise,
-                        holUseModals,
-                        timeout,
-                        maxAnswers
-                );
-                System.out.println("AskTell running custom, running query");
-                ATPResult result = theoremProverController.ask(atpQuery);
-                System.out.println("AskTell running custom, result found");
-                if (result == null) {
-                    out.println("<font color='red'>No result from theorem prover.</font>");
-                }
-                else {
-                    out.println(result.resultPanelToHTML());
-                    TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                    List<String> proofOutput = result.getStdout();
-                    if ("Vampire".equals(inferenceEngine) && "HOL".equalsIgnoreCase(translationMode)) {
-                        List<String> cleaned = TPTPutil.clearProofFile(proofOutput);
-                        proofOutput = THFutil.preprocessTHFProof(cleaned);
-                    }
-                    tpp.parseProofOutput(proofOutput, stmt, kb, result.getQList());
-                    setGraphFormat(graphFormulaFormat, tpp);
-                    publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-                    tpp.processAnswersFromProof(result.getQList(), stmt);
-                    printAnswersBlock(tpp, kbName, language, out);
-                    if (tpp.bindingMap != null) tpp.bindingMap.clear();
-                    if (tpp.bindings != null) tpp.bindings.clear();
-                    out.println(HTMLformatter.formatTPTP3ProofResult(tpp, stmt, lineHtml, kbName, language));
-                    if (!StringUtil.emptyString(tpp.status)) {
-                        out.println("Status: " + tpp.status);
+                if (stmt.indexOf('@') != -1) {
+                    out.println("<div class='exception-panel'><h4>Input Error</h4><p>Row variables (@) are not allowed in queries.</p></div>");
+                } else {
+                    try {
+                        String effectiveLang = "HOL".equalsIgnoreCase(translationMode) ? "thf" : TPTPlang;
+                        System.out.println("AskTell running custom, creating query");
+                        ATPQuery atpQuery = new ATPQuery(
+                                kb,
+                                session.getId(),
+                                stmt,
+                                null,
+                                "custom",
+                                inferenceEngine,
+                                effectiveLang,
+                                vampireMode,
+                                "yes".equals(cwa),
+                                modensPonens,
+                                dropOnePremise,
+                                holUseModals,
+                                timeout,
+                                maxAnswers
+                        );
+                        System.out.println("AskTell running custom, running query");
+                        ATPResult result = theoremProverController.ask(atpQuery);
+                        System.out.println("AskTell running custom, result found");
+                        if (result == null) {
+                            out.println("<font color='red'>No result from theorem prover.</font>");
+                        }
+                        else {
+                            out.println(result.resultPanelToHTML());
+                            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                            List<String> proofOutput = result.getStdout();
+                            if ("Vampire".equals(inferenceEngine) && "HOL".equalsIgnoreCase(translationMode)) {
+                                List<String> cleaned = TPTPutil.clearProofFile(proofOutput);
+                                proofOutput = THFutil.preprocessTHFProof(cleaned);
+                            }
+                            tpp.parseProofOutput(proofOutput, stmt, kb, result.getQList());
+                            setGraphFormat(graphFormulaFormat, tpp);
+                            publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
+                            tpp.processAnswersFromProof(result.getQList(), stmt);
+                            printAnswersBlock(tpp, kbName, language, out);
+                            if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                            if (tpp.bindings != null) tpp.bindings.clear();
+                            out.println(HTMLformatter.formatTPTP3ProofResult(tpp, stmt, lineHtml, kbName, language));
+                            if (!StringUtil.emptyString(tpp.status)) {
+                                out.println("Status: " + tpp.status);
+                            }
+                        }
+                    } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
+                        renderExceptionPanel(enfe, out);
+                    } catch (ProverTimeoutException | ProverCrashedException pte) {
+                        renderExceptionPanel(pte, out);
+                        if (pte.getResult() != null) out.println(pte.getResult().resultPanelToHTML());
+                    } catch (com.articulate.sigma.tp.ATPException ae) {
+                        renderExceptionPanel(ae, out);
+                    } catch (Exception e) {
+                        out.println("<div class='exception-panel'><h4>Unexpected Error</h4><p>" + htmlEncode(e.getMessage()) + "</p></div>");
                     }
                 }
             } // end custom-query else / test-vs-custom branch
