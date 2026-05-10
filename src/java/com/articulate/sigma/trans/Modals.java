@@ -103,6 +103,13 @@ public class Modals {
                     "disapproves","doubts","expects","holdsObligation",
                     "holdsRight","says"));
 
+    public static List<String> allModals = new ArrayList<>();
+    static {
+        allModals.addAll(regHOLpred);
+        allModals.addAll(regHOL3pred);
+        allModals.addAll(regHOL3Modalpred);
+    }
+
     // TODO: Instead of Hard Typing check that is a subclass of NormativeAttribute
     // these are the attribute constants you can pass to modalAttribute
     // (modalAttribute ?FORMULA <modalAttributes>)
@@ -239,6 +246,18 @@ public class Modals {
             "arcTangentFn","AverageFn","CosineFn","DivisionFn","ExponentiationFn",
             "ListSumFn","LogFn","MultiplicationFn","ReciprocalFn","RoundFn",
             "SineFn","SquareRootFn","SubtractionFn","TangentFn"));
+
+    // Categories of modals for KBstatistics
+    public static final Set<String> temporal = new HashSet<>(Arrays.asList(
+            "holdsDuring"));
+    public static final Set<String> deontic = new HashSet<>(Arrays.asList(
+            "confersNorm", "confersObligation", "confersRight", "deprivesNorm", "Obligation",
+            "Permission", "Prohibition", "holdsObligation", "holdsRight", "permits","prohibits",
+            "Legal", "Law", "Illegal", "Promise"));
+    public static final Set<String> epistemic = new HashSet<>(Arrays.asList(
+            "believes", "knows", "desires", "says", "describes", "expects"));
+    public static final Set<String> otherModal = new HashSet<>(Arrays.asList(
+            "hasPurpose", "Possibility", "Necessity", "Likely", "Unlikely"));
 
     /***************************************************************
      * Handle the predicates given in regHOL3pred, which have a parameter

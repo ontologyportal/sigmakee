@@ -22,6 +22,7 @@ about individual SUO-KIF formulas.
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.trans.Modals;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -2662,26 +2663,50 @@ public class Formula implements Comparable, Serializable {
     }
 
     /*****************************************************************
-     * Returns true if this formula is a modal.
+     * Returns true if this formula is an unusual modal.
      * @param kb the knowledge base
-     * @return true if this formula is higher order and contains the term "modalAttribute"
+     * @return true if this formula is higher order and contains unclassified modalities
      */
-    public boolean isModal(KB kb) {
+    public boolean isOtherModal(KB kb) {
 
-        return (this.isHigherOrder(kb) && this.getFormula().contains("modalAttribute"));
+        if (this.isHigherOrder(kb)) {
+            for (String s : Modals.otherModal)
+                if (this.termCache.contains(s))
+                    return true;
+        }
+        return false;
     }
 
     /*****************************************************************
-     * Returns true if this formula can be characterized as epistemic 
-     * by containing the terms "knows" or "believes". 
+     * Returns true if this formula can be characterized as epistemic
      * See https://plato.stanford.edu/entries/logic-epistemic/ for details about modal logic.
      * @param kb the knowledge base
-     * @return true if this formula contains the terms "knows" or "believes"
+     * @return true if this formula contains the terms "knows", "believes" etc
      */
     public boolean isEpistemic(KB kb) {
 
-        return (this.isHigherOrder(kb) &&
-                (this.getFormula().contains("knows") || this.getFormula().contains("believes")));
+        if (this.isHigherOrder(kb)) {
+            for (String s : Modals.epistemic)
+                if (this.termCache.contains(s))
+                    return true;
+        }
+        return false;
+    }
+
+    /*****************************************************************
+     * Returns true if this formula can be characterized as deontic
+     * See https://plato.stanford.edu/entries/logic-epistemic/ for details about modal logic.
+     * @param kb the knowledge base
+     * @return true if this formula contains the terms "confersNorm", "Obligation" etc
+     */
+    public boolean isDeontic(KB kb) {
+
+        if (this.isHigherOrder(kb)) {
+            for (String s : Modals.deontic)
+                if (this.termCache.contains(s))
+            return true;
+        }
+        return false;
     }
 
     /*****************************************************************
@@ -2692,7 +2717,7 @@ public class Formula implements Comparable, Serializable {
      */
     public boolean isTemporal(KB kb) {
 
-        return (this.isHigherOrder(kb) && this.getFormula().contains("holdsDuring"));
+        return (this.isHigherOrder(kb) && this.termCache.contains("holdsDuring"));
     }
 
     /*******************************************************************
@@ -2704,6 +2729,7 @@ public class Formula implements Comparable, Serializable {
      * @return this formula converted from HOL to FOL with temporal aspects removed
      */
     public static String removeTemporalRelations(String p_f, KB kb) {
+
         Formula f = new Formula(p_f);
         String newFormula = "";
         String nextCar = f.car();
@@ -2756,24 +2782,24 @@ public class Formula implements Comparable, Serializable {
      * Temporal, Epistemic, or Modal.
      * @param kb the knowledge base
      * @return true if this formula is higherOrder & !modal & !epistemic & !temporal.  
-     */
+
     public boolean isOtherHOL(KB kb) {
 
         return (this.isHigherOrder(kb) && !this.isTemporal(kb) &&
                 !this.isEpistemic(kb) && !this.isModal(kb));
     }
-    
+    */
     /*****************************************************************
      * Returns true if this formula is Typed First Order Form.
      * @param kb the knowledge base
      * @return true if this formula is higherOrder & modal & epistemic & temporal.  
-     */
+
     public boolean isTFF (KB kb) {
         isTFF = true;
         return (this.isHigherOrder(kb) && this.isModal(kb) && 
                 this.isEpistemic(kb) && this.isTemporal(kb));
     }
-
+    */
     /*****************************************************************
      * Returns true if formula is a valid formula with no variables,
      * else returns false.

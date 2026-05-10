@@ -152,14 +152,13 @@ public class FormulaUtil {
      *
      * @param kifListAsString A SUO-KIF list represented as a String
      * @return ArrayList
-     */
+     *
     public static List<String> kifListToArrayList(String kifListAsString) {
 
         List<String> ans = new ArrayList<>();
         try {
             if (!StringUtil.emptyString(kifListAsString)) {
-                Formula f = new Formula();
-                f.read(kifListAsString);
+                Formula f = Formula.read(kifListAsString);
                 ans = f.literalToArrayList();
             }
         }
@@ -168,7 +167,7 @@ public class FormulaUtil {
         }
         return ans;
     }
-
+    */
     /****************************************************************
      * Performs a depth-first search of tree, replacing all terms
      * matching oldPattern with newTerm.

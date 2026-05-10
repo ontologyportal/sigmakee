@@ -432,19 +432,21 @@ public class KButilities implements ServletContextListener {
 
         Map<String,Integer> result = new HashMap<>();
         for (Formula f : kb.formulaMap.values()) {
+            Set<String> terms = f.collectTerms();
             if (f.isRule()) {
                 MapUtils.addToFreqMap(result, "rules", 1);
                 if (f.isHorn(kb))
                     MapUtils.addToFreqMap(result, "horn", 1);
                 if (f.isHigherOrder(kb)) {
-                    if (f.isModal(kb))
-                        MapUtils.addToFreqMap(result, "modal", 1);
-                    if (f.isEpistemic(kb))
+                    MapUtils.addToFreqMap(result, "higher-order", 1);
+                    if (f.isOtherModal(kb))
+                        MapUtils.addToFreqMap(result, "otherModal", 1);
+                    else if (f.isEpistemic(kb))
                         MapUtils.addToFreqMap(result, "epistemic", 1);
-                    if (f.isTemporal(kb))
+                    else if (f.isDeontic(kb))
+                        MapUtils.addToFreqMap(result, "deontic", 1);
+                    else if (f.isTemporal(kb))
                         MapUtils.addToFreqMap(result, "temporal", 1);
-                    if (f.isOtherHOL(kb))
-                        MapUtils.addToFreqMap(result, "otherHOL", 1);
                 }
                 else
                     MapUtils.addToFreqMap(result, "first-order", 1);
@@ -1685,6 +1687,7 @@ public class KButilities implements ServletContextListener {
         System.out.println("  -f - list formulas for every documentation string term");
         System.out.println("  -v - is formula valid");
         System.out.println("  -a \"<formula>\" - show all attributes of a SUO-KIF formula");
+        System.out.println("  -S - show all statistics for the KB");
         System.out.println("  -t - generate a table of termFormat(s)");
         System.out.println("  -l - list all terms in the KB");
         System.out.println("  -doc <file> - list doc strings for all terms to a file");
@@ -1769,14 +1772,20 @@ public class KButilities implements ServletContextListener {
             else if (args != null && args.length > 1 && args[0].equals("-a")) {
                 SUMOtoTFAform.initOnce();
                 Formula f = new Formula(StringUtil.removeEnclosingQuotes(args[1]));
-                Formula.debug = true;
                 System.out.println("higherOrder : " + f.isHigherOrder(kb));
-                Formula.debug = false;
+                System.out.println("temporal : " + f.isTemporal(kb));
+                System.out.println("deontic : " + f.isDeontic(kb));
+                System.out.println("epistemic : " + f.isEpistemic(kb));
+                System.out.println("otherModal : " + f.isOtherModal(kb));
                 System.out.println("isFunctional : " + f.isFunctional);
                 System.out.println("isGround : " + f.isGround);
                 System.out.println("termCache : " + f.termCache);
                 System.out.println("predVarCache : " + f.predVarCache);
                 System.out.println("quantVarsCache : " + f.quantVarsCache);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-S")) {
+                Map<String, Integer> stats = KButilities.countFormulaTypes(kb);
+                System.out.println(stats);
             }
             else if (args != null && args.length > 0 && args[0].equals("-t")) {
                 System.out.println(termFormatIndex(kb));
