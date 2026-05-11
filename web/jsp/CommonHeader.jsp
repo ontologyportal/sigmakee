@@ -16,37 +16,21 @@
 
     welcomString should be derived from Prelude.jsp
 */
-%>
-<%
-    // --- Natural Language handling ---
-    if (request.getParameter("lang") != null && !request.getParameter("lang").isEmpty()) {
-        session.setAttribute("lang", request.getParameter("lang"));
-        language = request.getParameter("lang");
-    }
-    String sessionLang = (String) session.getAttribute("lang");
-    if (sessionLang != null && !sessionLang.isEmpty()) {
-        language = sessionLang;
-    }
-    else if (language == null || language.isEmpty()) {
-        language = "EnglishLanguage";
-    }
-    // --- Formal Language handling ---
-    if (request.getParameter("flang") != null && !request.getParameter("flang").isEmpty()) {
-        session.setAttribute("flang", request.getParameter("flang"));
-        flang = request.getParameter("flang");
-    }
-    if (flang != null && !flang.isEmpty()) {
-        flang = flang;
-    }
-    else if (flang == null || flang.isEmpty()) {
-        // Pick your default formal language
-        flang = "KIF";  // for example
-    }
+flang = userSessionManager.getFormalLanguage().getSigmaName();
+flang = HTMLformatter.processFormalLanguage(flang);
+if (StringUtil.emptyString(flang)) flang = "SUO-KIF";
+String sessionLang = (String) session.getAttribute("lang");
+if (sessionLang != null && !sessionLang.isEmpty()) language = sessionLang;
+else if (language == null || language.isEmpty()) language = "EnglishLanguage";
+if (request.getParameter("lang") != null && !request.getParameter("lang").isEmpty()) {
+    session.setAttribute("lang", request.getParameter("lang"));
+    language = request.getParameter("lang");
+}
 %>
 <TABLE width="95%" cellspacing="0" cellpadding="0">
-  <TR>
-      <TD align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></TD>
-      <TD align="left" valign="top">
+    <TR>
+        <TD align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></TD>
+        <TD align="left" valign="top">
         <img src="pixmaps/logoText-gray.gif"><br>
         <B><%=pageString %></B>
         <%=welcomeString%>
@@ -54,11 +38,11 @@
             boolean showLogout = (username != null && !username.trim().isEmpty());
             if (showLogout) {
         %>
-           &nbsp;<a href="logout.jsp"><b>logout</b></a>
+            &nbsp;<a href="logout.jsp"><b>logout</b></a>
         <% } %>
-      </TD>
-      <TD valign="bottom"></TD>
-      <TD>
+        </TD>
+        <TD valign="bottom"></TD>
+        <TD>
         <font FACE="Arial, Helvetica" SIZE=-1><b>[&nbsp;
         <%
             if (!pageName.equals("KBs")) out.println("<A href=\"KBs.jsp\"><b>Home</b></A>&nbsp;|&nbsp");
@@ -97,3 +81,4 @@
       </td>
   </TR>
 </TABLE>
+<hr>

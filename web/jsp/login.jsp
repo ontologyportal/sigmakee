@@ -1,26 +1,21 @@
-<%@ page language="java"
-         contentType="text/html; charset=US-ASCII"
-         pageEncoding="US-ASCII"
-         import="com.articulate.sigma.user.UserManager,
-                 com.articulate.sigma.security.ValidationUtils" %>
-
+<%@ page language="java" contentType="text/html; charset=US-ASCII" pageEncoding="US-ASCII" import="com.articulate.sigma.user.UserManager, com.articulate.sigma.security.ValidationUtils" %>
 <%
-    String error = "";
-    if ("POST".equalsIgnoreCase(request.getMethod())) {
-        String username = ValidationUtils.sanitizeString(request.getParameter("username"));
-        String password = ValidationUtils.sanitizeString(request.getParameter("password"));
-        UserManager userManager = new UserManager();
-        boolean loggedIn = userManager.login(request, username, password);
-        if (loggedIn) {
-            System.out.println("login.jsp: Successful login for " + username);
-            response.sendRedirect("KBs.jsp");
-            return;
-        }
-        else {
-            System.err.println("Bad login attempt in login.jsp for " + username);
-            error = "Incorrect username or password!";
-        }
+String error = "";
+if ("POST".equalsIgnoreCase(request.getMethod())) {
+    String username = ValidationUtils.sanitizeString(request.getParameter("username"));
+    String password = ValidationUtils.sanitizeString(request.getParameter("password"));
+    UserManager userManager = new UserManager();
+    boolean loggedIn = userManager.login(request, username, password);
+    if (loggedIn) {
+        System.out.println("login.jsp: Successful login for " + username);
+        response.sendRedirect("KBs.jsp");
+        return;
     }
+    else {
+        System.err.println("Bad login attempt in login.jsp for " + username);
+        error = "Incorrect username or password!";
+    }
+}
 %>
 <html>
     <head>
@@ -45,13 +40,7 @@
                 </td>
             </tr>
         </table>
-        <table align="left" width="80%">
-            <tr>
-                <td bgcolor="#AAAAAA">
-                    <img src="pixmaps/1pixel.gif" alt="pixmaps/1pixel.gif" width="1" height="1" border="0">
-                </td>
-            </tr>
-        </table>
+        <hr>
         <br>
         <% if (!error.isEmpty()) { %>
             <div style="color:red;"><%= error %></div>
@@ -73,13 +62,6 @@
             </table>
         </form>
         <p><a href="ForgotPassword.jsp">Forgot your password?</a></p>
-        <table align="left" width="80%">
-            <tr>
-                <td bgcolor="#AAAAAA">
-                    <img src="pixmaps/1pixel.gif" alt="pixmaps/1pixel.gif" width="1" height="1" border="0">
-                </td>
-            </tr>
-        </table>
         <br>
         <form method="POST" action="Register.jsp">
             <table>
@@ -91,5 +73,6 @@
                 </tr>
             </table>
         </form>
+    <%@include file="Postlude.jsp" %>
     </body>
 </html>

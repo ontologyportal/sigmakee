@@ -923,71 +923,24 @@ public class KBcache implements Serializable {
     public synchronized void extendInstance(String term, String suffix) {
 
         String sep = "__";
-        //if (suffix.matches("\\d__.*"))  // variable arity has appended single underscore before arity
-        //    sep = "_";
         String newTerm = term + sep + suffix;
-        //if (kb.terms.contains(newTerm)) {
-        //    System.out.println("Warning in KBcache.extendInstance(): term already exists: " + newTerm);
-        //    System.out.println("Warning in KBcache.extendInstance(): sig " + signatures.get(newTerm));
-        //}
-        kb.terms.add(newTerm);
-        kb.capterms.put(newTerm.toUpperCase(),newTerm);
         Set<String> iset = instanceOf.get(term);
-        if (iset != null)
-            instanceOf.put(newTerm,iset);
-        //if (newTerm.endsWith(Formula.FN_SUFF))
-        //    System.out.println("KBcache.extendInstance(): instance parents of: " + newTerm + " are: " + iset);
-        //System.out.println("extendInstance(): new term: " + newTerm + " parents: " + iset);
+        if (iset != null) instanceOf.put(newTerm, iset);
         relations.add(newTerm);
-        if (newTerm.endsWith(Formula.FN_SUFF))
-            functions.add(newTerm);
-        else
-            predicates.add(newTerm);
-
-        // math and logic ops are not transitive
-        //transRels = new HashSet<String>();
-        // all the transitive relations between instances in the kb
-        //instTransRels = new HashSet<String>();
-
-        /** All the cached "parent" relations of all transitive relations
-         * meaning the relations between all first arguments and the
-         * transitive closure of second arguments.  The external HashMap
-         * pairs relation name String keys to values that are the parent
-         * relationships.  The interior HashMap is the set of terms and
-         * their transitive closure of parents.
-         */
-        //parents = new HashMap<String, HashMap<String, HashSet<String>>>();
-
-        // all the instances of a class key, including through subrelation
-        // and subAttribute
-        //instances = new HashMap<>();
-
-        // logic, math op are not transitive so no need to update "children"
-
-        /** Relation name keys and argument types with 0th arg always ""
-         * except in the case of Functions where the 0th arg will be the
-         * function range.
-         * Note that types can be functions, rather than just terms. Note that
-         * types (when there's a domainSubclass etc) are designated by a
-         * '+' appended to the class name.
-         **/
+        if (newTerm.endsWith(Formula.FN_SUFF)) functions.add(newTerm);
+        else predicates.add(newTerm);
         List<String> sig = signatures.get(term);
-
         if (sig == null && term != null && term.equals(Formula.EQUAL)) {
             sig = new ArrayList<>();
             sig.add("Entity");
             sig.add("Entity");
         }
-        if (sig == null)
-            System.err.println("Error in KBcache.extendInstance(): no sig for term " + term);
+        if (sig == null) System.err.println("Error in KBcache.extendInstance(): no sig for term " + term);
         List<String> newsig = SUMOtoTFAform.relationExtractSigFromName(newTerm);
-        signatures.put(newTerm,newsig);
-        // The number of arguments to each relation.  Variable arity is -1
+        signatures.put(newTerm, newsig);
         Integer val = valences.get(term);
-        if (val != null)
-            valences.put(newTerm, val);
-        if (term.endsWith(Formula.FN_SUFF))
-            functions.add(newTerm);
+        if (val != null) valences.put(newTerm, val);
+        if (term.endsWith(Formula.FN_SUFF)) functions.add(newTerm);
     }
 
     /** ***************************************************************

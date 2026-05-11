@@ -462,7 +462,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (kb.isFunction(t))
             suffix = Formula.FN_SUFF;
         String newRel = t + "__" + e + suffix;
-        if (kb.terms.contains(newRel))
+        if (kb.kbCache.signatures.containsKey(newRel))
             return;
         List<String> sig = kb.kbCache.signatures.get(t);
         if (sig == null || sig.isEmpty()) {
@@ -473,13 +473,10 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         List<String> extsig = SUMOtoTFAform.relationExtractUpdateSigFromName(newRel);
         List<String> combinedSig = new ArrayList<>();
         int sigmax = sig.size();
-        if (extsig.size() > sigmax)
-            sigmax = extsig.size();
+        if (extsig.size() > sigmax) sigmax = extsig.size();
         for (int i = 0; i < sigmax; i++) {
-            if (i < extsig.size() && !StringUtil.emptyString(extsig.get(i)))
-                SUMOtoTFAform.safeSet(combinedSig,i,extsig.get(i));
-            else
-                SUMOtoTFAform.safeSet(combinedSig,i,sig.get(i));
+            if (i < extsig.size() && !StringUtil.emptyString(extsig.get(i))) SUMOtoTFAform.safeSet(combinedSig,i,extsig.get(i));
+            else SUMOtoTFAform.safeSet(combinedSig,i,sig.get(i));
         }
         kb.kbCache.signatures.put(newRel,combinedSig);
     }

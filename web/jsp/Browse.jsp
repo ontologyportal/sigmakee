@@ -12,44 +12,25 @@
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
-
-/**
- * Browse.jsp responds to several HTTPD parameters:
- * term     = <name>   - the SUMO term to browse
- * kb       = <name>   - the name of the knowledge base
- * lang     = <lang>   - the name of the language used to display axiom paraphrases
- * */
- String nonRelTerm = request.getParameter("nonrelation");
- String relTerm = request.getParameter("relation");
-
- if (StringUtil.emptyString(nonRelTerm))
-    nonRelTerm = "";
- if (StringUtil.emptyString(relTerm))
-    relTerm = "";
- if (flang.equals("OWL")) {
-    response.sendRedirect(HTMLformatter.createHrefStart() + "/sigma/OWL.jsp?" +
-                 "kb=" + kbName + "&term=" + term);
-    return;
- }
+   String nonRelTerm = request.getParameter("nonrelation");
+   String relTerm = request.getParameter("relation");
+   String parentPage = "Browse.jsp";
+   StringBuilder show = null;
+   if (StringUtil.emptyString(nonRelTerm)) nonRelTerm = "";
+   if (StringUtil.emptyString(relTerm)) relTerm = "";
+   if (flang.equals("OWL")) {
+      response.sendRedirect(HTMLformatter.createHrefStart() + "/sigma/OWL.jsp?" + "kb=" + kbName + "&term=" + term);
+      return;
+   }
 %>
 <html>
-<head><title><%=term%> - Sigma Knowledge base Browser</title></head>
-<body bgcolor="#FFFFFF">
-
-<%
- String parentPage = "Browse.jsp";
- StringBuilder show = null;
-%>
-
-<%@ include file="BrowseBody.jsp"%>
-
-<!-- show KB header and KB search input -->
-
-<%@ include file="BrowseHeader.jsp" %>
-
-<br>
- <%=show.toString() %><br>
-
-<%@ include file="Postlude.jsp" %>
-</body>
+   <head><title><%=term%> - Sigma Knowledge base Browser</title></head>
+   <body bgcolor="#FFFFFF">
+      <%@ include file="BrowseBody.jsp"%>
+      <%@ include file="BrowseHeader.jsp" %>
+      <br>
+         <%=show.toString() %>
+      <br>
+      <%@ include file="Postlude.jsp" %>
+   </body>
 </html>
