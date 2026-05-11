@@ -596,68 +596,68 @@ public class SUMOformulaToTPTPformula {
         return f.getFormula();
     }
 
-    /** ***************************************************************
-     * Parse formulae into TPTP format
-     * Result is returned in _f.theTptpFormulas
-     */
-    @Deprecated  // call tptpParseSUOKIFString() directly
-    public void tptpParse(Formula input, boolean query, KB kb, Set<Formula> preProcessedForms)
-        throws ParseException, IOException {
+    // /** ***************************************************************
+    //  * Parse formulae into TPTP format
+    //  * Result is returned in _f.theTptpFormulas
+    //  */
+    // @Deprecated  // call tptpParseSUOKIFString() directly
+    // public void tptpParse(Formula input, boolean query, KB kb, Set<Formula> preProcessedForms)
+    //     throws ParseException, IOException {
 
-        if (debug)
-            System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): input: " + input);
-        if (debug)
-            System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessedForms: " + preProcessedForms);
-        _f = input;
-        try {
-            KBmanager mgr = KBmanager.getMgr();
-            if (kb == null)
-                kb = new KB("",mgr.getPref("kbDir"));
-            if (!_f.isBalancedList()) {
-                String errStr = "Unbalanced parentheses or quotes in: " + _f.getFormula();
-                _f.errors.add(errStr);
-                return;
-            }
-            Set<Formula> processed = preProcessedForms;
-            if (processed == null) {
-                FormulaPreprocessor fp = new FormulaPreprocessor();
-                processed = fp.preProcess(_f,query, kb);
-            }
-            if (debug)
-                System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessed: " + processed);
-            if (processed != null) {
-                _f.theTptpFormulas.clear();
-                //----Performs function on each current processed axiom
-                String tptpStr;
-                for (Formula f : processed) {
-                    if (!f.getFormula().contains(Formula.R_PREF) && !f.higherOrder) {
-                        tptpStr = tptpParseSUOKIFString(f.getFormula(),query);
-                        if (StringUtil.isNonEmptyString(tptpStr))
-                            _f.theTptpFormulas.add(tptpStr);
-                    }
-                }
-            }
-        }
-        catch (Exception ex) {
-            System.err.println(ex.getMessage());
-            ex.printStackTrace();
-            if (ex instanceof ParseException)
-                throw (ParseException) ex;
-            if (ex instanceof IOException)
-                throw (IOException) ex;
-        }
-        if (query || debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): result: " + _f.theTptpFormulas);
-    }
+    //     if (debug)
+    //         System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): input: " + input);
+    //     if (debug)
+    //         System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessedForms: " + preProcessedForms);
+    //     _f = input;
+    //     try {
+    //         KBmanager mgr = KBmanager.getMgr();
+    //         if (kb == null)
+    //             kb = new KB("",mgr.getPref("kbDir"));
+    //         if (!_f.isBalancedList()) {
+    //             String errStr = "Unbalanced parentheses or quotes in: " + _f.getFormula();
+    //             _f.errors.add(errStr);
+    //             return;
+    //         }
+    //         Set<Formula> processed = preProcessedForms;
+    //         if (processed == null) {
+    //             FormulaPreprocessor fp = new FormulaPreprocessor();
+    //             processed = fp.preProcess(_f,query, kb);
+    //         }
+    //         if (debug)
+    //             System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessed: " + processed);
+    //         if (processed != null) {
+    //             _f.theTptpFormulas.clear();
+    //             //----Performs function on each current processed axiom
+    //             String tptpStr;
+    //             for (Formula f : processed) {
+    //                 if (!f.getFormula().contains(Formula.R_PREF) && !f.higherOrder) {
+    //                     tptpStr = tptpParseSUOKIFString(f.getFormula(),query);
+    //                     if (StringUtil.isNonEmptyString(tptpStr))
+    //                         _f.theTptpFormulas.add(tptpStr);
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     catch (Exception ex) {
+    //         System.err.println(ex.getMessage());
+    //         ex.printStackTrace();
+    //         if (ex instanceof ParseException)
+    //             throw (ParseException) ex;
+    //         if (ex instanceof IOException)
+    //             throw (IOException) ex;
+    //     }
+    //     if (query || debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): result: " + _f.theTptpFormulas);
+    // }
 
-    /** ***************************************************************
-     * Parse formulae into TPTP format
-     */
-    @Deprecated
-    public Set<String> tptpParse(Formula input, boolean query, KB kb) throws ParseException, IOException {
+    // /** ***************************************************************
+    //  * Parse formulae into TPTP format
+    //  */
+    // @Deprecated
+    // public Set<String> tptpParse(Formula input, boolean query, KB kb) throws ParseException, IOException {
 
-        tptpParse(input,query, kb, null);
-        return _f.theTptpFormulas;
-    }
+    //     tptpParse(input,query, kb, null);
+    //     return _f.theTptpFormulas;
+    // }
 
     /** ***************************************************************
      * A test method.
