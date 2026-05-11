@@ -12,7 +12,6 @@
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
-
    String nonRelTerm = request.getParameter("nonrelation");
    String relTerm = request.getParameter("relation");
    String parentPage = "Browse.jsp";
