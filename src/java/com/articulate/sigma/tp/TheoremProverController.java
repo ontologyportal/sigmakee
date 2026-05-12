@@ -70,17 +70,15 @@ public class TheoremProverController {
      */
     private ATPResult askVampire(ATPQuery query) {
 
-        Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
         boolean previousCWA = SUMOKBtoTPTPKB.CWA;
         boolean previousModusPonens = query.getKb().modensPonens;
         boolean previousDropOnePremise = query.getKb().dropOnePremiseFormulas;
         try {
-            if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) {
-                SUMOKBtoTPTPKB.CWA = query.isClosedWorldAssumption();
-                query.getKb().modensPonens = query.isModusPonens();
-                query.getKb().dropOnePremiseFormulas = query.isModusPonens() && query.isDropOnePremise();
-                vampire.askVampire(query.getQuery());
-            }
+            SUMOKBtoTPTPKB.CWA = query.isClosedWorldAssumption();
+            query.getKb().modensPonens = query.isModusPonens();
+            query.getKb().dropOnePremiseFormulas = query.isModusPonens() && query.isDropOnePremise();
+            Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
+            if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) vampire.askVampire(query.getQuery());
             else {
                 if (query.getTestFilePath() == null) vampire.askVampireHOL(query.getQuery(), query.isHolUseModals());
                 else vampire.askVampireTHF(query.getTestFilePath());
