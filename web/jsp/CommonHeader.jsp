@@ -16,16 +16,12 @@
 
     welcomString should be derived from Prelude.jsp
 */
-flang = userSessionManager.getFormalLanguage().getSigmaName();
-flang = HTMLformatter.processFormalLanguage(flang);
-if (StringUtil.emptyString(flang)) flang = "SUO-KIF";
-String sessionLang = (String) session.getAttribute("lang");
-if (sessionLang != null && !sessionLang.isEmpty()) language = sessionLang;
-else if (language == null || language.isEmpty()) language = "EnglishLanguage";
-if (request.getParameter("lang") != null && !request.getParameter("lang").isEmpty()) {
-    session.setAttribute("lang", request.getParameter("lang"));
-    language = request.getParameter("lang");
-}
+
+if (StringUtil.emptyString(flang))
+    flang = "SUO-KIF";
+
+if (StringUtil.emptyString(language))
+    language = "EnglishLanguage";
 %>
 <TABLE width="95%" cellspacing="0" cellpadding="0">
     <TR>
@@ -46,11 +42,11 @@ if (request.getParameter("lang") != null && !request.getParameter("lang").isEmpt
         <font FACE="Arial, Helvetica" SIZE=-1><b>[&nbsp;
         <%
             if (!pageName.equals("KBs")) out.println("<A href=\"KBs.jsp\"><b>Home</b></A>&nbsp;|&nbsp");
-            if (!pageName.equals("Graph")) out.println("<A href=\"Graph.jsp?kb=" + kbName + "&term=" + term + "&inst=inst" + "&lang=" + language + "\"><B>Graph</B></A>&nbsp;|&nbsp");
+            if (!pageName.equals("Graph")) out.println("<A href=\"Graph.jsp?kb=" + kbName + "&term=" + term + "&inst=inst" + "\"><B>Graph</B></A>&nbsp;|&nbsp");
             if (!pageName.equals("LogLearn")) out.println("<A href=\"LogLearn.jsp\"><b>LogLearn</b></A>&nbsp;|&nbsp;");
             if (!pageName.equals("Editor") && !awsMode) out.println("<A href=\"Editor.jsp\"><b>Editor</b></A>&nbsp;|&nbsp;");
             if (role.equalsIgnoreCase("user") || role.equalsIgnoreCase("admin")) {
-                if (!pageName.equals("AskTell") && kb != null) out.println("<a href=\"AskTell.jsp?kb=" + kbName + "&lang=" + language + "\"><b>Ask/Tell</b></a>&nbsp;|&nbsp;");
+                if (!pageName.equals("AskTell") && kb != null) out.println("<a href=\"AskTell.jsp?kb=" + kbName + "\"><b>Ask/Tell</b></a>&nbsp;|&nbsp;");
                 if(role.equalsIgnoreCase("admin")) {
                     if (!pageName.equals("NLP")) out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp\"><b>NLP</b></A>&nbsp;|&nbsp");    
                     if (!pageName.equals("Prefs")) out.println("<A href=\"Properties.jsp\"><b>Prefs</b></A>&nbsp;|&nbsp");
@@ -67,16 +63,25 @@ if (request.getParameter("lang") != null && !request.getParameter("lang").isEmpt
 %>
         </b>
         <b>Language:&nbsp;
-        <form method="get" action="<%=pageName%>.jsp" style="display:inline;">
+        <form method="post" action="<%=pageName%>.jsp" style="display:inline;">
             <%= HTMLformatter.createMenu("lang", language, kb.availableLanguages(), "onchange='this.form.submit()'")%>
             <input type="hidden" name="kb" value="<%=kbName%>" />
+            <input type="hidden" name="flang" value="<%=flang%>" />
+            <% if (!StringUtil.emptyString(term)) { %>
+                <input type="hidden" name="term" value="<%=term%>" />
+            <% } %>
         </form>
         </b>&nbsp;
         <b>Formal Language:&nbsp;
-        <form method="get" action="<%=pageName%>.jsp" style="display:inline;">
+        <form method="post" action="<%=pageName%>.jsp" style="display:inline;">
             <%= HTMLformatter.createMenu("flang", flang, HTMLformatter.availableFormalLanguages, "onchange='this.form.submit()'") %>
             <input type="hidden" name="kb" value="<%=kbName%>" />
+            <input type="hidden" name="lang" value="<%=language%>" />
+            <% if (!StringUtil.emptyString(term)) { %>
+                <input type="hidden" name="term" value="<%=term%>" />
+            <% } %>
         </form>
+        </b>
       <br>
       </td>
   </TR>

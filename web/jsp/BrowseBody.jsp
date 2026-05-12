@@ -13,13 +13,12 @@
 */
 
 show = new StringBuilder();
-
 filename = request.getParameter("file");
 line = request.getParameter("line");
-language = (language == null || language.isEmpty()) ? (String) session.getAttribute("lang") : "EnglishLanguage";
-flang = (flang == null || flang.isEmpty()) ? (String) session.getAttribute("flang") : "KIF";
+if (StringUtil.emptyString(language)) language = "EnglishLanguage";
+if (StringUtil.emptyString(flang)) flang = "SUO-KIF";
 nonRelTerm = request.getParameter("nonrelation");
-relTerm = (!StringUtil.emptyString(relTerm)) ? "" : request.getParameter("relation");
+relTerm = StringUtil.emptyString(relTerm) ? request.getParameter("relation") : "";
 
 // ???
 if (!StringUtil.emptyString(filename)) {
@@ -31,7 +30,7 @@ if (!StringUtil.emptyString(filename)) {
     HTMLformatter.launchEditor(filename,l);
 }
 // Base href link 
-HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName;
+HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?kb=" + kbName;
 
 // If Kb is not empty, and term is empty, and relTerm is empty, and nonRelTerm is empty, show statistics
 if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) && StringUtil.emptyString(nonRelTerm)) show.append(HTMLformatter.showStatistics(kb)).append(HTMLformatter.showLanguageStats(kb,language));
@@ -84,7 +83,7 @@ else if ((kb != null) && (term != null) && kb.containsTerm(term)) {  // Build th
             show.append("(" + tfmValue + ")");
         }
         else if (language != null && language.equals("EnglishLanguage")) System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" + term + "\" in language " + language);
-        if (role != null && role.equalsIgnoreCase("admin")) show.append(" [<a href=\"" + HTMLformatter.createHrefStart() + "/sigma/InstFiller.jsp?lang=" + language + "&flang=" + flang + "&kb=" + kbName + "&term=" + term + "\">assert facts</a>]<br>");
+        if (role != null && role.equalsIgnoreCase("admin")) show.append(" [<a href=\"" + HTMLformatter.createHrefStart() + "/sigma/InstFiller.jsp?kb=" + kbName + "&term=" + term + "\">assert facts</a>]<br>");
         show.append(HTMLformatter.showMap(kb,term));
         show.append(HTMLformatter.showPictures(kb,term));
         show.append("</td>");
@@ -110,8 +109,8 @@ else if ((kb != null) && (term != null) && kb.containsTerm(term)) {  // Build th
     show.append(HTMLformatter.browserSectionFormatLimit(term, "statement", kb, language,flang,0,limit,0,"stmt"));
     show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number 0", kb, language,flang,0,limit,0,"arg"));
     show.append("<p><table align=\"left\" width=\"50%\"><tr><td bgcolor=\"#A8BACF\">" + "<img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr>" + "</table><br>\n");
-    if (!parentPage.equals("TreeView.jsp")) show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName + "&term=" + term + "\">Show full definition with tree view</a></small><br>\n");
-    show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/SimpleBrowse.jsp" + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName + "&simple=yes" + "&term=" + term + "\">Show simplified definition (without tree view)</a></small><br>\n");
-    show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName + "&simple=yes" + "&term=" + term + "\">Show simplified definition (with tree view)</a></small><p>\n");
+    if (!parentPage.equals("TreeView.jsp")) show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" + "?kb=" + kbName + "&term=" + term + "\">Show full definition with tree view</a></small><br>\n");
+    show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/SimpleBrowse.jsp" + "?kb=" + kbName + "&simple=yes" + "&term=" + term + "\">Show simplified definition (without tree view)</a></small><br>\n");
+    show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" + "?kb=" + kbName + "&simple=yes" + "&term=" + term + "\">Show simplified definition (with tree view)</a></small><p>\n");
 }
 %>

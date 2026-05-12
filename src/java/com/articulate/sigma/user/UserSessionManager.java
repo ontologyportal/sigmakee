@@ -11,8 +11,11 @@ package com.articulate.sigma.user;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.io.Serializable;
 
-public class UserSessionManager {
+public class UserSessionManager implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     public enum FormalLanguage { 
         SUOKIF("SUO-KIF"),TPTP("TPTP"),OWL("OWL"),TRADITIONAL_LOGIC("Traditional Logic");
@@ -75,19 +78,45 @@ public class UserSessionManager {
     private static final String SESSION_KEY = UserSessionManager.class.getName();
 
     /*****************************************************************
-     * Gets the session preferences object for the current user session.
+     * Gets or creates the session preferences object for the current user session.
      * @param request the servlet request
      * @return the session preferences for this user
      */
     public static UserSessionManager get(HttpServletRequest request) {
 
-        HttpSession session = request.getSession(true);
+        return get(request, true);
+    }
+
+    /*****************************************************************
+     * Gets the session preferences object for the current user session.
+     * If create is false and no session exists, returns a temporary default manager
+     * without creating a new HttpSession.
+     * @param request the servlet request
+     * @param create whether to create a session if one does not exist
+     * @return the session preferences for this user
+     */
+    public static UserSessionManager get(HttpServletRequest request, boolean create) {
+
+        HttpSession session = request.getSession(create);
+        if (session == null) return new UserSessionManager();
         UserSessionManager preferences = (UserSessionManager) session.getAttribute(SESSION_KEY);
         if (preferences == null) {
             preferences = new UserSessionManager();
-            session.setAttribute(SESSION_KEY, preferences);
+            if (create) session.setAttribute(SESSION_KEY, preferences);
         }
         return preferences;
+    }
+
+    /*****************************************************************
+     * Updates this session manager from request parameters, if present.
+     * @param request the servlet request
+     */
+    public void updateFromRequest(HttpServletRequest request) {
+
+        String flangParam = request.getParameter("flang");
+        if (flangParam != null && !flangParam.trim().isEmpty()) setFormalLanguage(FormalLanguage.fromString(flangParam));
+        String langParam = request.getParameter("lang");
+        if (langParam != null && !langParam.trim().isEmpty()) setHumanLanguage(HumanLanguage.fromString(langParam));
     }
 
     /*****************************************************************
@@ -113,12 +142,12 @@ public class UserSessionManager {
     public HumanLanguage getHumanLanguage() {return humanLanguage;}
 
     /*****************************************************************
-     * Sets the selected formal language.
-     * @param formalLanguage the selected formal language
+     * Sets the selected human language.
+     * @param humanLanguage the selected human language
      */
     public void setHumanLanguage(HumanLanguage humanLanguage) {
 
-        if (humanLanguage == null) throw new IllegalArgumentException("formalLanguage cannot be null");
+        if (humanLanguage == null) throw new IllegalArgumentException("humanLanguage cannot be null");
         this.humanLanguage = humanLanguage;
     }
 }
