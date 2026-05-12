@@ -678,11 +678,7 @@ public class KBmanager implements Serializable {
             if (existsKB(kbName)) removeKB(kbName);
             addKB(kbName);
             KB kb = getKB(kbName);
-            if (!constituents.isEmpty())
-//                if (!SUMOKBtoTPTPKB.rapidParsing)
-                retVal = _loadKB(kbName, constituents, kb);
-//                else
-//                    retVal = _t_loadKB(kbName, constituents, kb);
+            if (!constituents.isEmpty()) retVal = _loadKB(kbName, constituents, kb);
             long millis = System.currentTimeMillis();
             kb.kbCache = new KBcache(kb);
             kb.kbCache.buildCaches();
@@ -694,7 +690,6 @@ public class KBmanager implements Serializable {
             e.printStackTrace(System.err);
             retVal = false;
         }
-
         return retVal;
     }
 
@@ -801,12 +796,12 @@ public class KBmanager implements Serializable {
                         }
                         loadKB(kbName, constituentsToAdd);
                     }
-                    else
-                    	System.err.println("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
+                    else System.err.println("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
                 }
             }
             preferences.putAll(prefOverride);
         }
+        KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).warnings.add(Diagnostics.printMissingConstituentDependencies(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")), ""));
     }
 
     /** ***************************************************************
@@ -846,8 +841,7 @@ public class KBmanager implements Serializable {
             String kbDirStr = configDirPath;
             if (StringUtil.emptyString(kbDirStr)) {
                 kbDirStr = preferences.get("kbDir");
-                if (StringUtil.emptyString(kbDirStr))
-                    kbDirStr = System.getProperty("user.dir");
+                if (StringUtil.emptyString(kbDirStr)) kbDirStr = System.getProperty("user.dir");
             }
             File kbDir = new File(kbDirStr);
             if (!kbDir.exists()) {
@@ -862,8 +856,7 @@ public class KBmanager implements Serializable {
                     copyFile(global_config, configFile);
                     configFile = global_config;
                 }
-                else
-                    writeConfiguration();
+                else writeConfiguration();
             }
             try (Reader br = new BufferedReader(new FileReader(configFile))) {
                 SimpleDOMParser sdp = new SimpleDOMParser();
@@ -919,16 +912,12 @@ public class KBmanager implements Serializable {
         }
         initializing = true;
         KBmanager.getMgr().setPref("kbDir",configFileDir);
-        if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
-                preferences.keySet().size());
+        if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " + preferences.keySet().size());
         try {
             if (debug) System.out.println("Info in KBmanager.initializeOnce(): initializing with " + configFileDir);
             SimpleElement configuration = readConfiguration(configFileDir);
-            if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
-                    preferences.keySet().size());
-            if (configuration == null)
-                throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
-
+            if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " + preferences.keySet().size());
+            if (configuration == null) throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
             if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists() && !serializedOld(configuration)) {
                 if (debug) System.out.println("KBmanager.initializeOnce(): serialized exists and is not old");
                 loaded = loadSerialized();
@@ -973,10 +962,8 @@ public class KBmanager implements Serializable {
                         preferences.keySet().size());
                 manager = this;
                 KBmanager.getMgr().setPref("kbDir",configFileDir); // need to restore config file path
-                if (StringUtil.isNonEmptyString(configFileDir))
-                    setConfiguration(configuration); // preferences are set here as well
-                else
-                    setDefaultAttributes();
+                if (StringUtil.isNonEmptyString(configFileDir)) setConfiguration(configuration); // preferences are set here as well
+                else setDefaultAttributes();
                 if (debug) System.out.println("Info in KBmanager.initializeOnce(): completed initialization");
                 if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
                 serialize();
@@ -991,13 +978,10 @@ public class KBmanager implements Serializable {
             ex.printStackTrace();
             return;
         }
-
         // Clean up orphaned session directories from previous runs
         cleanupOrphanedSessionDirectories();
-
         if (debug) System.out.println("Info in KBmanager.initializeOnce(): initialized is " + initialized);
-        if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
-                preferences.keySet().size());
+        if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " + preferences.keySet().size());
         if (debug) System.out.println("KBmanager.initializeOnce(): total init time in seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
     }
 

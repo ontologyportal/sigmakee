@@ -1,12 +1,10 @@
 <%@ include file="Prelude.jsp" %>
 <%@ page import="java.net.URLEncoder, java.nio.charset.Charset, java.io.*, com.articulate.sigma.tp.GenPropFormulas, com.articulate.sigma.security.*" %>
-
 <html>
 <head>
   <title>Sigma KB Browse - Learning Logic</title>
 </head>
 <body BGCOLOR=#FFFFFF>
-
 <%
 /**
  * This software is released under the GNU Public License
@@ -21,12 +19,10 @@
 // ======================================================
 // SECURITY AND ENVIRONMENT
 // ======================================================
-
 GenPropFormulas gpf = new GenPropFormulas();
 String kbDir = KBmanager.getMgr().getPref("kbDir");
 String genDir = kbDir + File.separator + "GeneratedFormulas";
 new File(genDir).mkdirs();
-
 // ======================================================
 // PARAMETERS
 // ======================================================
@@ -36,25 +32,17 @@ String action = request.getParameter("submit");
 String erase = request.getParameter("erase");
 String generate = request.getParameter("generate");
 String populate = request.getParameter("populate");
-
 if(numVars == null) numVars = "3";
 if(depth == null) depth = "5";
-
 int numVarsInt = ValidationUtils.sanitizeInteger(numVars);
 int depthInt = ValidationUtils.sanitizeInteger(depth);
 %>
-
 <form action="LogLearn.jsp" method="get">
   <%
       String pageName = "LogLearn";
       String pageString = "LogLearn";
   %>
   <%@ include file="CommonHeader.jsp" %>
-
-  <table align="left" width="80%">
-    <tr><td bgcolor="#AAAAAA"><img src="pixmaps/1pixel.gif" width="1" height="1"></td></tr>
-  </table><br>
-
   <p><a href="/sigma/TableauxWorksheet.jsp">Blank Tableau Worksheet</a></p>
   <h2><b>Create logic problem with solutions</b></h2>
   <table>
@@ -66,7 +54,6 @@ int depthInt = ValidationUtils.sanitizeInteger(depth);
       <td align="right">Formula depth:&nbsp;</td>
       <td><input type="number" name="depth" min="1" max="7" value="<%=depth%>"></td>
     </tr>
-
     <% if ("admin".equalsIgnoreCase(role)) { %>
     <tr>
       <td align="right">Generate new formulas:&nbsp;</td>
@@ -104,9 +91,7 @@ if ("admin".equalsIgnoreCase(role) && populate != null) {
    SUBMIT HANDLER (User/Admin)
    ====================================================== */
 if ("submit".equalsIgnoreCase(action)) {
-
     boolean admin = "admin".equalsIgnoreCase(role);
-
     // ---------------------------
     // ADMIN: Generate new cache entries
     // ---------------------------
@@ -114,10 +99,8 @@ if ("submit".equalsIgnoreCase(action)) {
         out.println("<b>Generating and caching new formulas...</b><br>");
         gpf.init();
         gpf.generateFormulas(10, numVarsInt, depthInt);
-
         String filePath = genDir + File.separator + "numvar" + numVarsInt + "_depth" + depthInt + ".html";
         try (PrintWriter pw = new PrintWriter(new FileWriter(filePath, true))) {
-
             pw.println("<hr><br>");
             pw.println("<b>Contradiction</b>:<br>");
             out.println("<hr><br><b>Contradiction</b>:<br>");
@@ -126,7 +109,6 @@ if ("submit".equalsIgnoreCase(action)) {
                 String tt = gpf.truthTables.get(s);
                 String tb = gpf.tableaux.get(s);
                 String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
-
                 out.println(s + "<br>CNF: " + cnf + "<br>");
                 pw.println(s + "<br>CNF: " + cnf + "<br>");
                 out.println("<a href=\"" + tt + "\">truth table</a><br>");
@@ -136,7 +118,6 @@ if ("submit".equalsIgnoreCase(action)) {
                 out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
                 pw.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
             }
-
             pw.println("<hr><br><b>Tautology</b>:<br>");
             out.println("<hr><br><b>Tautology</b>:<br>");
             for (String s : gpf.tautResults) {
@@ -144,7 +125,6 @@ if ("submit".equalsIgnoreCase(action)) {
                 String tt = gpf.truthTables.get(s);
                 String tb = gpf.tableaux.get(s);
                 String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
-
                 out.println(s + "<br>CNF: " + cnf + "<br>");
                 pw.println(s + "<br>CNF: " + cnf + "<br>");
                 out.println("<a href=\"" + tt + "\">truth table</a><br>");
@@ -154,7 +134,6 @@ if ("submit".equalsIgnoreCase(action)) {
                 out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
                 pw.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
             }
-
             pw.println("<hr><br><b>Satisfiable</b>:<br>");
             out.println("<hr><br><b>Satisfiable</b>:<br>");
             for (String s : gpf.satResults) {
@@ -162,7 +141,6 @@ if ("submit".equalsIgnoreCase(action)) {
                 String tt = gpf.truthTables.get(s);
                 String tb = gpf.tableaux.get(s);
                 String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
-
                 out.println(s + "<br>CNF: " + cnf + "<br>");
                 pw.println(s + "<br>CNF: " + cnf + "<br>");
                 out.println("<a href=\"" + tt + "\">truth table</a><br>");
@@ -172,7 +150,6 @@ if ("submit".equalsIgnoreCase(action)) {
                 out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
                 pw.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
             }
-
             pw.println("<!--DELIMITER-->");
             out.println("<p>Saved formulas to: " + filePath + "</p>");
         } catch (Exception e) {
@@ -186,11 +163,8 @@ if ("submit".equalsIgnoreCase(action)) {
     else {
         out.println("<b>Retrieved cached formula:</b><br>");
         String formulaHtml = GenPropFormulas.getRandomGeneratedFormula(numVarsInt, depthInt);
-        if (formulaHtml != null)
-            out.println(formulaHtml);
-        else
-            out.println("<p>No cached formulas found for numVars=" + numVarsInt +
-                        ", depth=" + depthInt + "</p>");
+        if (formulaHtml != null) out.println(formulaHtml);
+        else out.println("<p>No cached formulas found for numVars=" + numVarsInt + ", depth=" + depthInt + "</p>");
     }
 }
 
@@ -202,7 +176,6 @@ if (erase != null && erase.equalsIgnoreCase("erase")) {
     out.println("<p>Reset generator state.</p>");
 }
 %>
-
 <%@ include file="Postlude.jsp" %>
 </body>
 </html>

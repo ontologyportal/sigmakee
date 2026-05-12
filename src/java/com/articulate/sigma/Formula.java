@@ -290,7 +290,7 @@ public class Formula implements Comparable, Serializable {
     /*******************************************************************
      * Empty consrtuctor that returns an empty instance of a Formula object.
      */
-    //@Deprecated(since = "FormulaAST", forRemoval = false)
+    // @Deprecated(since = "FormulaAST", forRemoval = false)
     public Formula() {}
 
     /*******************************************************************
@@ -299,7 +299,7 @@ public class Formula implements Comparable, Serializable {
      * variables.
      * @param Formula - the formula to copy.
      */
-    //@Deprecated(since = "FormulaAST", forRemoval = false)
+    // @Deprecated(since = "FormulaAST", forRemoval = false)
     public Formula(Formula f) {
 
         this.endLine = f.endLine;

@@ -1279,34 +1279,28 @@ public class KB implements Serializable {
      * @param argnum The argument position of the term being asked for. The first
      *               argument after the predicate is "1". This parameter is ignored
      *               if the kind is "ant", "cons" or "stmt".
-     * @return An ArrayList of Formula(s), which will be empty if no match
-     * found.
+     * @return An ArrayList of Formula(s), which will be empty if no match found.
      * see KIF.createKey()
      */
+    //@Deprecated(since = "FormulaAST", forRemoval = false)
     public List<Formula> ask(String kind, int argnum, String term) {
 
         List<Formula> result = new ArrayList<>();
         String msg;
         if (StringUtil.emptyString(term)) {
-            msg = ("Error in KB.ask(\"" + kind + "\", " + argnum + ", \"" + term + "\"), "
-                    + "search term is null, or an empty string");
+            msg = ("Error in KB.ask(\"" + kind + "\", " + argnum + ", \"" + term + "\"), " + "search term is null, or an empty string");
             errors.add(msg);
         }
         if (term.length() > 1 && term.charAt(0) == '"' && term.charAt(term.length() - 1) == '"') {
             msg = ("Error in KB.ask(), Strings are not indexed.  No results for " + term);
-            // Strings are not indexed; do not pollute kb.errors
-//            errors.add(msg);
         }
         List<Formula> tmp;
         String key;
-        if (kind.equals("arg"))
-            key = kind + "-" + argnum + "-" + term;
-        else
-            key = kind + "-" + term;
+        if (kind.equals("arg")) key = kind + "-" + argnum + "-" + term;
+        else key = kind + "-" + term;
         List<String> alstr = formulas.get(key);
         tmp = keysToFormulas(alstr);
-        if (tmp != null)
-            result.addAll(tmp);
+        if (tmp != null) result.addAll(tmp);
         return result;
     }
 

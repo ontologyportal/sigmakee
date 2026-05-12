@@ -70,17 +70,15 @@ public class TheoremProverController {
      */
     private ATPResult askVampire(ATPQuery query) {
 
-        Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
         boolean previousCWA = SUMOKBtoTPTPKB.CWA;
         boolean previousModusPonens = query.getKb().modensPonens;
         boolean previousDropOnePremise = query.getKb().dropOnePremiseFormulas;
         try {
-            if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) {
-                SUMOKBtoTPTPKB.CWA = query.isClosedWorldAssumption();
-                query.getKb().modensPonens = query.isModusPonens();
-                query.getKb().dropOnePremiseFormulas = query.isModusPonens() && query.isDropOnePremise();
-                vampire.askVampire(query.getQuery());
-            }
+            SUMOKBtoTPTPKB.CWA = query.isClosedWorldAssumption();
+            query.getKb().modensPonens = query.isModusPonens();
+            query.getKb().dropOnePremiseFormulas = query.isModusPonens() && query.isDropOnePremise();
+            Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
+            if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) vampire.askVampire(query.getQuery());
             else {
                 if (query.getTestFilePath() == null) vampire.askVampireHOL(query.getQuery(), query.isHolUseModals());
                 else vampire.askVampireTHF(query.getTestFilePath());
@@ -123,8 +121,7 @@ public class TheoremProverController {
 
         System.out.println("TheoremProverController class");
         System.out.println("  h - show this help screen");
-        System.out.println("  -ap - print available provers");
-        System.out.println("  -ap - print available provers");
+        System.out.println("  -a - print available provers");
         System.out.println("  -v - query vampire");
         System.out.println("  -e - query EProver");
         System.out.println("  -l - query LEO");
@@ -135,6 +132,7 @@ public class TheoremProverController {
      */
     public static void main(String[] args) {
         Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        System.out.printf("TheoremProverController.main(%s)", argMap);
         TheoremProverController theoremProverController = new TheoremProverController();
         if (argMap.isEmpty() || argMap.containsKey("h")) {
             showHelp();
@@ -150,7 +148,7 @@ public class TheoremProverController {
             ATPQuery atpQuery = new ATPQuery(
                 kb, 
                 null, 
-                "(instance Chair Furniture)", 
+                "(instance ?X Relation)", 
                 null, 
                 "CUSTOM", 
                 "VAMPIRE", 

@@ -96,6 +96,27 @@ public class Vampire {
     /** Full result structure for error handling */
     private ATPResult result;
 
+    /*****************************************************************
+     * This constructor is for cases like GenPropFormulas where there is
+     * no SUMO KB and no inference file generation is needed.
+     */
+    public Vampire() {
+
+        this.kb = null;
+        this.sessionId = null;
+        this.executablePath = KBmanager.getMgr().getPref("vampire");
+
+        this.requestedTptpLanguage = "fof";
+        this.inferenceFileExtension = "tptp";
+
+        this.mode = ModeType.CASC;
+        this.timeout = 30;
+        this.maxAnswers = 1;
+        this.askQuestion = true;
+        this.logic = Logic.FOL;
+        this.output = new ArrayList<>();
+    }
+
     public Vampire(KB kb) {
 
         this(kb, "tptp", "CASC", false, 30, 1);

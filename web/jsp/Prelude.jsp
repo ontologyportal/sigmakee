@@ -102,16 +102,18 @@ if (kb != null) TaxoModel.kbName = kbName;
 String filename = "";
 String line = "";
 
-String flangParam = request.getParameter("flang");
-String langParam = request.getParameter("lang");
-
 UserSessionManager userSessionManager = UserSessionManager.get(request);
-if (StringUtil.isNonEmptyString(flangParam)) userSessionManager.setFormalLanguage(UserSessionManager.FormalLanguage.fromString(flangParam));
+userSessionManager.updateFromRequest(request);
+
 String flang = userSessionManager.getFormalLanguage().getSigmaName();
 flang = HTMLformatter.processFormalLanguage(flang);
-if (StringUtil.isNonEmptyString(langParam)) userSessionManager.setHumanLanguage(UserSessionManager.HumanLanguage.fromString(langParam));
+if (StringUtil.emptyString(flang))
+    flang = "SUO-KIF";
+
 String language = userSessionManager.getHumanLanguage().getSigmaName();
 language = HTMLformatter.processNaturalLanguage(language, kb);
+if (StringUtil.emptyString(language))
+    language = "EnglishLanguage";
 
 String hostname = mgr.getPref("hostname");
 if (hostname == null) hostname = "localhost";
