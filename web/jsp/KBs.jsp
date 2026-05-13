@@ -65,7 +65,7 @@
               first = false;
           }
           kb = (KB) KBmanager.getMgr().getKB(kbName2);
-          HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + language;
+          HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + lang;
 %>
           <TR VALIGN="center" <%= odd==false? "bgcolor=#eeeeee":""%>>
             <TD><%=kbName2%></TD>
@@ -79,18 +79,17 @@
               out.println("<A href=\"Manifest.jsp?kb=" + kbName2 + "\">Manifest</A>");
           }
           out.println("</TD>");
-          out.println("<TD><A href=\"Browse.jsp?kb=" + kbName2 + "&lang=" + language + "\">Browse</A></TD>");
-          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName2 + "&lang=" + language + "\">Graph</A></TD>");
-          out.println("<TD><A href=\"TestStmnt.jsp?kb=" + kbName2 + "&lang=" + language + "\">Test Stmt</A></TD>");
-
+          out.println("<TD><A href=\"Browse.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Browse</A></TD>");
+          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Graph</A></TD>");
+          out.println("<TD><A href=\"TestStmnt.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Test Stmt</A></TD>");
           if (isAdministrator) {
-              out.println("<TD><A href=\"Diag.jsp?kb=" + kbName2 + "&lang=" + language + "\">Diagnostics</A></TD>");
-              out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + language + "&page=0\">Consistency Check</A></TD>");
-              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName2 + "&lang=" + language + "\">Inference Tests</A></TD>");
+              out.println("<TD><A href=\"Diag.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Diagnostics</A></TD>");
+              out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang +  "&page=0\">Consistency Check</A></TD>");
+              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Inference Tests</A></TD>");
               if (kb.celt != null)
-                  out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName2 + "&lang=" + language + "\">CELT Tests</A></TD>");
-              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName2 + "&lang=" + language + "\">WordNet Check</A></TD>");
-              out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName2 + "\">Ask/Tell</A>&nbsp;</TD>");
+                  out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang +  "\">CELT Tests</A></TD>");
+              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">WordNet Check</A></TD>");
+              out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Ask/Tell</A>&nbsp;</TD>");
               out.println("<TD><A href=\"KBs.jsp?remove=true&kb=" + kbName2 + "\">Remove</A></TD></TR>");
           }
       }
@@ -132,7 +131,7 @@
                   + kbName
                   + "\">More Output Utilities</a>");
       out.println(" | <a href=\"Mapping.jsp\">Ontology Mappings</a>");
-      out.println(" | <a href=\"WordSense.jsp?lang=" + language + "\">Sense/Sentiment Analysis</a>");
+      out.println(" | <a href=\"WordSense.jsp?lang=" + lang + "\">Sense/Sentiment Analysis</a>");
       out.println("<p>");
 
       kbNames = KBmanager.getMgr().getKBnames().iterator();

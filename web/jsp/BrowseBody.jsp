@@ -15,7 +15,7 @@
 show = new StringBuilder();
 filename = request.getParameter("file");
 line = request.getParameter("line");
-if (StringUtil.emptyString(language)) language = "EnglishLanguage";
+if (StringUtil.emptyString(lang)) lang = "EnglishLanguage";
 if (StringUtil.emptyString(flang)) flang = "SUO-KIF";
 nonRelTerm = request.getParameter("nonrelation");
 relTerm = StringUtil.emptyString(relTerm) ? request.getParameter("relation") : "";
@@ -30,10 +30,10 @@ if (!StringUtil.emptyString(filename)) {
     HTMLformatter.launchEditor(filename,l);
 }
 // Base href link 
-HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?kb=" + kbName;
+HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?kb=" + kbName + "&flang=" + flang + "&lang=" + lang;
 
 // If Kb is not empty, and term is empty, and relTerm is empty, and nonRelTerm is empty, show statistics
-if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) && StringUtil.emptyString(nonRelTerm)) show.append(HTMLformatter.showStatistics(kb)).append(HTMLformatter.showLanguageStats(kb,language));
+if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) && StringUtil.emptyString(nonRelTerm)) show.append(HTMLformatter.showStatistics(kb)).append(HTMLformatter.showLanguageStats(kb,lang));
 
 // Else, if KB doesn't contain term, Show termList
 else if (kb != null && term != null && !kb.containsTerm(term)) {
@@ -67,23 +67,23 @@ else if ((kb != null) && (term != null) && kb.containsTerm(term)) {  // Build th
     term = term.intern();
     show.append(term);
     show.append("</b></font>");
-    boolean isArabic = (language.matches(".*(?i)arabic.*") || language.equalsIgnoreCase("ar"));
+    boolean isArabic = (lang.matches(".*(?i)arabic.*") || lang.equalsIgnoreCase("ar"));
     if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
-        Map<String, String> fm = kb.getFormatMap(language);
+        Map<String, String> fm = kb.getFormatMap(lang);
         String fmValue = null;
         if (fm != null) fmValue = fm.get(term);
-        if (fmValue == null) System.out.println("INFO in BrowseBody.jsp: No format map entry for \"" + term + "\" in language " + language);
+        if (fmValue == null) System.out.println("INFO in BrowseBody.jsp: No format map entry for \"" + term + "\" in language " + lang);
     }
     else {
-        Map<String, String> tfm = kb.getTermFormatMap(language);
+        Map<String, String> tfm = kb.getTermFormatMap(lang);
         String tfmValue = null;
         if (tfm != null) tfmValue = tfm.get(term);
         if (tfmValue != null) {
             if (isArabic) tfmValue = "<span dir=\"rtl\">" + tfmValue + "</span>";
             show.append("(" + tfmValue + ")");
         }
-        else if (language != null && language.equals("EnglishLanguage")) System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" + term + "\" in language " + language);
-        if (role != null && role.equalsIgnoreCase("admin")) show.append(" [<a href=\"" + HTMLformatter.createHrefStart() + "/sigma/InstFiller.jsp?kb=" + kbName + "&term=" + term + "\">assert facts</a>]<br>");
+        else if (lang != null && lang.equals("EnglishLanguage")) System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" + term + "\" in language " + lang);
+        if (role != null && role.equalsIgnoreCase("admin")) show.append(" [<a href=\"" + HTMLformatter.createHrefStart() + "/sigma/InstFiller.jsp?kb=" + kbName + "&flang=" + flang + "&lang=" + lang + "&term=" + term + "\">assert facts</a>]<br>");
         show.append(HTMLformatter.showMap(kb,term));
         show.append(HTMLformatter.showPictures(kb,term));
         show.append("</td>");
@@ -91,8 +91,8 @@ else if ((kb != null) && (term != null) && kb.containsTerm(term)) {  // Build th
         if (tm != null) {
             show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
             show.append("<td width=\"40%\"><small>");
-            if (language.equals("EnglishLanguage")) show.append(WordNetUtilities.formatWords(tm,kbName));
-            else show.append(OMWordnet.formatWords(term,kbName,language,HTMLformatter.createHrefStart() + "/sigma/"));
+            if (lang.equals("EnglishLanguage")) show.append(WordNetUtilities.formatWords(tm,kbName));
+            else show.append(OMWordnet.formatWords(term,kbName,lang,HTMLformatter.createHrefStart() + "/sigma/"));
             String verbs = VerbNet.formatVerbs(tm);
             if (!StringUtil.emptyString(verbs)) show.append("<P>" + verbs);
             show.append("</small></td>");
@@ -103,14 +103,14 @@ else if ((kb != null) && (term != null) && kb.containsTerm(term)) {  // Build th
     show.append ("</b></font></td></tr></table>\n");
     int limit = Integer.decode(KBmanager.getMgr().getPref("userBrowserLimit")).intValue();
     if (role != null && !role.equalsIgnoreCase("guest")) limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
-    for (int arg = 1; arg < 6; arg++) show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number " + arg, kb, language,flang,0,limit,arg,"arg"));
-    show.append(HTMLformatter.browserSectionFormatLimit(term, "antecedent", kb, language,flang,0,limit,0,"ant"));
-    show.append(HTMLformatter.browserSectionFormatLimit(term, "consequent", kb, language,flang,0,limit,0,"cons"));
-    show.append(HTMLformatter.browserSectionFormatLimit(term, "statement", kb, language,flang,0,limit,0,"stmt"));
-    show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number 0", kb, language,flang,0,limit,0,"arg"));
+    for (int arg = 1; arg < 6; arg++) show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number " + arg, kb, lang,flang,0,limit,arg,"arg"));
+    show.append(HTMLformatter.browserSectionFormatLimit(term, "antecedent", kb, lang,flang,0,limit,0,"ant"));
+    show.append(HTMLformatter.browserSectionFormatLimit(term, "consequent", kb, lang,flang,0,limit,0,"cons"));
+    show.append(HTMLformatter.browserSectionFormatLimit(term, "statement", kb, lang,flang,0,limit,0,"stmt"));
+    show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number 0", kb, lang,flang,0,limit,0,"arg"));
     show.append("<p><table align=\"left\" width=\"50%\"><tr><td bgcolor=\"#A8BACF\">" + "<img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr>" + "</table><br>\n");
-    if (!parentPage.equals("TreeView.jsp")) show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" + "?kb=" + kbName + "&term=" + term + "\">Show full definition with tree view</a></small><br>\n");
-    show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/SimpleBrowse.jsp" + "?kb=" + kbName + "&simple=yes" + "&term=" + term + "\">Show simplified definition (without tree view)</a></small><br>\n");
-    show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" + "?kb=" + kbName + "&simple=yes" + "&term=" + term + "\">Show simplified definition (with tree view)</a></small><p>\n");
+    if (!parentPage.equals("TreeView.jsp")) show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" + "?kb=" + kbName + "&flang=" + flang + "&lang=" + lang + "&term=" + term + "\">Show full definition with tree view</a></small><br>\n");
+    show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/SimpleBrowse.jsp" + "?kb=" + kbName + "&flang=" + flang + "&lang=" + lang + "&simple=yes" + "&term=" + term + "\">Show simplified definition (without tree view)</a></small><br>\n");
+    show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" + "?kb=" + kbName + "&flang=" + flang + "&lang=" + lang + "&simple=yes" + "&term=" + term + "\">Show simplified definition (with tree view)</a></small><p>\n");
 }
 %>

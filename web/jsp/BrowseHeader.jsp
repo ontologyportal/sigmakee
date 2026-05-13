@@ -20,22 +20,25 @@
     String pageString = "Browsing Interface";
 %>
 <%@include file="CommonHeader.jsp" %>
-<form action="<%=parentPage%>">
+<form method="GET" action="<%=parentPage%>">
+    <input type="hidden" name="simple" value="<%=simple%>">
+    <input type="hidden" name="kb" value="<%=kbName%>">
+    <input type="hidden" name="lang" value="<%=lang%>">
+    <input type="hidden" name="flang" value="<%=flang%>">
+
     <table cellspacing="0" cellpadding="0">
         <tr>
             <td align="right"><b>KB Term:&nbsp;</b></td>
             <td align="left" valign="top" colspan="2">
-                <input type="text" size="38"  name="term" value=<%= "\"" + (term==null?"":term) + "\"" %>>
+                <input type="text" size="38" name="term" value="<%=term == null ? "" : term%>">
             </td>
             <td align="left" valign="top">
                 <input type="submit" value="Show">
-                <img src="pixmaps/1pixel.gif" width="10"><a href="Intersect.jsp?kb=<%=kbName %>&lang=<%=language %>&flang=<%=flang %>&term1=<%=java.net.URLEncoder.encode(term, "UTF-8") %>">Term intersection</a>              
+                <img src="pixmaps/1pixel.gif" width="10">
+                <a href="Intersect.jsp?kb=<%=kbName%>&lang=<%=lang%>&flang=<%=flang%>&term1=<%=java.net.URLEncoder.encode(term, "UTF-8")%>">Term intersection</a>
             </td>
-            <br> 
         </tr>
-        <tr>
-            <td><img src="pixmaps/1pixel.gif" height="3"></td>
-        </tr>
+    </table>
 </form>
 <!-- show WordNet search input -->
 <form method="GET" action="WordNet.jsp">
@@ -43,7 +46,7 @@
         <td align="right"><b>English Word:&nbsp;</b></td>
         <input type="hidden" name="simple" value=<%=simple%>>
         <input type="hidden" name="kb" value=<%=kbName%>>
-        <input type="hidden" name="lang" value=<%=language%>>
+        <input type="hidden" name="lang" value=<%=lang%>>
         <input type="hidden" name="flang" value=<%=flang%>>      
         <td align="left" valign="top">
             <input type="text" size="27" name="word" value="<%= word %>">

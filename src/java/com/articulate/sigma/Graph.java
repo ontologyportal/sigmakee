@@ -187,7 +187,7 @@ public class Graph {
      * relation. creatGraphBody() does most of the work.
      */
     public Set<String> createBoundedSizeGraph(KB kb, String term, String relation,
-                                        int size, boolean instances, String language) {
+                                        int size, boolean instances, String language, String flang) {
 
         if (debug) System.out.println("Graph.createBoundedSizeGraph(" + kb.name + ", " + term + ", " + relation + ", " + 
                                       size + ", " + instances + ", " + language + ")");
@@ -202,8 +202,8 @@ public class Graph {
             oldresult = result;
             checkAbove = new HashSet<>();
             checkBelow = new HashSet<>();
-            result = createGraphBody(kb,checkAbove,term,relation,above,0,above,true,instances,language);
-            result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,instances,language));
+            result = createGraphBody(kb,checkAbove,term,relation,above,0,above,true,instances,language,flang);
+            result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,instances,language,flang));
             above++;
             below++;
         }
@@ -224,7 +224,7 @@ public class Graph {
      * @param instances whether to display instances below subclass relations
      */
     public Set<String> createGraph(KB kb, String term, String relation,
-                                 int above, int below, int termLimit, boolean instances, String language) {
+                                 int above, int below, int termLimit, boolean instances, String language, String flang) {
 
         if (debug) System.out.println("Graph.createGraph(" + kb.name + ", " + term + ", " + relation + ", " + 
                                       above + ", " + below + ", " + termLimit + ", " + instances + ", " + language + ")");
@@ -233,8 +233,8 @@ public class Graph {
         Set<String> checkAbove = new HashSet<>();
         Set<String> checkBelow = new HashSet<>();
         result.add(createColumnHeader());
-        result.addAll(createGraphBody(kb,checkAbove,term,relation,above,0,above,true,instances,language));
-        result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,instances,language));
+        result.addAll(createGraphBody(kb,checkAbove,term,relation,above,0,above,true,instances,language, flang));
+        result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,instances,language, flang));
         if (graphsize == 100)
             result.add("<P>Graph size limited to 100 terms.<P>\n");
         return result;
@@ -248,7 +248,7 @@ public class Graph {
      */
     private Set<String> createGraphBody(KB kb, Set<String> check, String term, String relation,
                                       int above, int below, int level,
-                                      boolean show, boolean instances, String language) {
+                                      boolean show, boolean instances, String language, String flang) {
 
         if (debug) System.out.println("Graph.createGraphBody(" + kb.name + ", " + check + ", " + term + ", " + relation + ", " + 
                                       above + ", " + below + ", " + level + ", " + show + ", " + instances + ", " + language + ")");
@@ -268,7 +268,7 @@ public class Graph {
                     f = stmtAbove.get(i);
                     newTerm = f.getStringArgument(2);
                     if (!newTerm.equals(term) && !KButilities.isCacheFile(f.sourceFile))
-                        result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,level-1,true,instances,language));
+                        result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,level-1,true,instances,language, flang));
                     check.add(term);
                 }
             }
@@ -288,7 +288,7 @@ public class Graph {
                 https = "http";
             else
                 https = "https";
-            String kbHref = https + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kb.name;
+            String kbHref = https + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&flang=" + flang + "&kb=" + kb.name;
             if (show) {
                 graphsize++;
                 if (graphsize < 100)
@@ -308,7 +308,7 @@ public class Graph {
                     f = stmtBelow.get(i);
                     newTerm = f.getStringArgument(1);
                     if (!newTerm.equals(term) && !KButilities.isCacheFile(f.sourceFile))
-                        result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language));
+                        result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language, flang));
                     check.add(term);
                 }
                 if (instances && stmtBelow.isEmpty() && relation.equals("subclass")) {
@@ -317,7 +317,7 @@ public class Graph {
                         f = stmtBelow.get(i);
                         newTerm = f.getStringArgument(1);
                         if (!newTerm.equals(term) && !KButilities.isCacheFile(f.sourceFile))
-                            result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language));
+                            result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language, flang));
                         check.add(term);
                     }
                 }

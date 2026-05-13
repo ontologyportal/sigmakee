@@ -20,8 +20,8 @@
 if (StringUtil.emptyString(flang))
     flang = "SUO-KIF";
 
-if (StringUtil.emptyString(language))
-    language = "EnglishLanguage";
+if (StringUtil.emptyString(lang))
+    lang = "EnglishLanguage";
 %>
 <TABLE width="95%" cellspacing="0" cellpadding="0">
     <TR>
@@ -41,16 +41,16 @@ if (StringUtil.emptyString(language))
         <TD>
         <font FACE="Arial, Helvetica" SIZE=-1><b>[&nbsp;
         <%
-            if (!pageName.equals("KBs")) out.println("<A href=\"KBs.jsp\"><b>Home</b></A>&nbsp;|&nbsp");
-            if (!pageName.equals("Graph")) out.println("<A href=\"Graph.jsp?kb=" + kbName + "&term=" + term + "&inst=inst" + "\"><B>Graph</B></A>&nbsp;|&nbsp");
-            if (!pageName.equals("LogLearn")) out.println("<A href=\"LogLearn.jsp\"><b>LogLearn</b></A>&nbsp;|&nbsp;");
-            if (!pageName.equals("Editor") && !awsMode) out.println("<A href=\"Editor.jsp\"><b>Editor</b></A>&nbsp;|&nbsp;");
+            if (!pageName.equals("KBs")) out.println("<A href=\"KBs.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Home</b></A>&nbsp;|&nbsp");
+            if (!pageName.equals("Graph")) out.println("<A href=\"Graph.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "&inst=inst" + "\"><B>Graph</B></A>&nbsp;|&nbsp");
+            if (!pageName.equals("LogLearn")) out.println("<A href=\"LogLearn.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>LogLearn</b></A>&nbsp;|&nbsp;");
+            if (!pageName.equals("Editor") && !awsMode) out.println("<A href=\"Editor.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Editor</b></A>&nbsp;|&nbsp;");
             if (role.equalsIgnoreCase("user") || role.equalsIgnoreCase("admin")) {
-                if (!pageName.equals("AskTell") && kb != null) out.println("<a href=\"AskTell.jsp?kb=" + kbName + "\"><b>Ask/Tell</b></a>&nbsp;|&nbsp;");
+                if (!pageName.equals("AskTell") && kb != null) out.println("<a href=\"AskTell.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Ask/Tell</b></a>&nbsp;|&nbsp;");
                 if(role.equalsIgnoreCase("admin")) {
-                    if (!pageName.equals("NLP")) out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp\"><b>NLP</b></A>&nbsp;|&nbsp");    
-                    if (!pageName.equals("Prefs")) out.println("<A href=\"Properties.jsp\"><b>Prefs</b></A>&nbsp;|&nbsp");
-                    if (!pageName.equals("manageUsers")) out.println("<A href=\"ManageUsers.jsp\"><b>Manage Users</b></A>&nbsp;|&nbsp;");
+                    if (!pageName.equals("NLP")) out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>NLP</b></A>&nbsp;|&nbsp");    
+                    if (!pageName.equals("Prefs")) out.println("<A href=\"Properties.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Prefs</b></A>&nbsp;|&nbsp");
+                    if (!pageName.equals("manageUsers")) out.println("<A href=\"ManageUsers.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Manage Users</b></A>&nbsp;|&nbsp;");
                 }
             }
         %>
@@ -64,7 +64,7 @@ if (StringUtil.emptyString(language))
         </b>
         <b>Language:&nbsp;
         <form method="post" action="<%=pageName%>.jsp" style="display:inline;">
-            <%= HTMLformatter.createMenu("lang", language, kb.availableLanguages(), "onchange='this.form.submit()'")%>
+            <%= HTMLformatter.createMenu("lang", lang, kb.availableLanguages(), "onchange='this.form.submit()'")%>
             <input type="hidden" name="kb" value="<%=kbName%>" />
             <input type="hidden" name="flang" value="<%=flang%>" />
             <% if (!StringUtil.emptyString(term)) { %>
@@ -76,7 +76,7 @@ if (StringUtil.emptyString(language))
         <form method="post" action="<%=pageName%>.jsp" style="display:inline;">
             <%= HTMLformatter.createMenu("flang", flang, HTMLformatter.availableFormalLanguages, "onchange='this.form.submit()'") %>
             <input type="hidden" name="kb" value="<%=kbName%>" />
-            <input type="hidden" name="lang" value="<%=language%>" />
+            <input type="hidden" name="lang" value="<%=lang%>" />
             <% if (!StringUtil.emptyString(term)) { %>
                 <input type="hidden" name="term" value="<%=term%>" />
             <% } %>
