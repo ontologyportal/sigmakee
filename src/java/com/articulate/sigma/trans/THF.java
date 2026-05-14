@@ -3,12 +3,15 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.FormulaAST;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,6 +24,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /** ************************************************************
  * This class handles the conversion of problems (= axioms + queries)
@@ -234,9 +238,9 @@ public class THF {
             //result.addAll(rv.expandRowVars(kb,ax));
             forms = fp.preProcess(ax,isQuery,kb);
             for (Formula form : forms)
-                if (!hasMathOp(form,kb))
+                if (!hasMathOp(form, kb))
                     result.add(form);
-        }
+            }
         return result;
     }
 
@@ -1859,7 +1863,11 @@ public class THF {
 
         THF thf = new THF();
         Collection coll = Collections.EMPTY_LIST;
-        List<String> kbAll2 = thf.KIF2THF(kb.formulaMap.values(),coll,kb);
+        List<Formula> formulas = kb.formulaMap.values()
+                .stream()
+                .map(ast -> new Formula(ast.getFormula()))
+                .collect(Collectors.toList());
+        List<String> kbAll2 = thf.KIF2THF(formulas,coll,kb);
         return kbAll2;
     }
 

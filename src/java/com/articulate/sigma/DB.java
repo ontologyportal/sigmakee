@@ -13,6 +13,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net.
 package com.articulate.sigma;
 
 import com.articulate.sigma.dataProc.Hotel;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WSD;
@@ -607,7 +608,7 @@ public class DB {
             if (!statements.isEmpty()) {
                 System.out.println("  writing ");
                 String stmt;
-                Formula printF = new Formula();
+                FormulaAST printF = new FormulaAST();
                 for (Iterator it = statements.iterator(); it.hasNext(); n++) {
                     stmt = StringUtil.normalizeSpaceChars((String) it.next());
                     if (stmt.startsWith("(contentRegexPattern"))
@@ -652,7 +653,7 @@ public class DB {
             File sourceFile = new File(sourceFilePath);
             String canonicalPath = sourceFile.getCanonicalPath();
             System.out.print("  writing " + canonicalPath + " ");
-            Formula printF = new Formula();
+            FormulaAST printF = new FormulaAST();
             Formula f;
             String stmt, pathname;
             for (Iterator it = kb.formulaMap.values().iterator(); it.hasNext();) {

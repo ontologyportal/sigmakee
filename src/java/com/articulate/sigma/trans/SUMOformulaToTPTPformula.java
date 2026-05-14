@@ -1,6 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.IOException;
@@ -468,19 +469,21 @@ public class SUMOformulaToTPTPformula {
     /** *************************************************************
      */
     /** Backward-compatible overload — reads lang from ThreadLocal. */
-    public static void generateQList(Formula f) {
+    public static void generateQList(FormulaAST f) {
         generateQList(f, getLang());
     }
 
     /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
-    public static void generateQList(Formula f, String lang) {
+    public static void generateQList(FormulaAST f, String lang) {
         Set<String> UqVars = f.collectUnquantifiedVariables();
+        List<String> sortedVars = new ArrayList<>(UqVars);
+        Collections.sort(sortedVars);
         StringBuilder qlist = new StringBuilder();
         qlist.setLength(0); // reset
         String oneVar;
-        int sizeUqVars = UqVars.size();
+        int sizeUqVars = sortedVars.size();
         int count = 0;
-        for (String s : UqVars) {
+        for (String s : sortedVars) {
             oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false,lang);
             qlist.append(oneVar); // don't write a final comma
             if (count < sizeUqVars-1 && sizeUqVars > 1)
@@ -519,12 +522,7 @@ public class SUMOformulaToTPTPformula {
      * @param requestedLang the TPTP language format to use ("fof", "tff", or "thf")
      */
     public static String tptpParseSUOKIFString(String suoString, boolean query, String requestedLang) {
-
-        if (!SUMOKBtoTPTPKB.rapidParsing)
             return _tptpParseSUOKIFString(suoString, query, requestedLang);
-        else
-            // This must be used for threaded parsing to keep axiom variables synchronized
-            return _tTptpParseSUOKIFString(suoString, query, requestedLang);
     }
 
     private static String _tptpParseSUOKIFString(String s, boolean q, String requestedLang) {
@@ -536,19 +534,15 @@ public class SUMOformulaToTPTPformula {
         if ("tff".equals(requestedLang))
             return "( " + SUMOtoTFAform.process(s,q) + " )";
         if ("thf".equals(requestedLang)) {
-            THF thf = new THF();
-            Collection<Formula> stmts = new ArrayList<>();
-            Collection<Formula> queries = new ArrayList<>();
-            if (q)
-                queries.add(new Formula(s));
-            else
-                stmts.add(new Formula(s));
-            return "( " + thf.KIF2THF(stmts,queries,kb) + " )";
+            FormulaAST fa = new FormulaAST(s);
+            Map<String, Set<String>> typeMap = new HashMap<>();
+            FormulaAST modalized = Modals.processModals(fa, kb, typeMap);
+            return "( " + THFnew.process(new FormulaAST(modalized.getFormula()), typeMap, q) + " )";
         }
         if ("fof".equals(requestedLang))
-            return "( " + process(new Formula(s),q,requestedLang) + " )";
+            return "( " + process(new Formula(s), q, requestedLang) + " )";
         System.err.println("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): unknown language type: " + requestedLang);
-        return "( " + process(new Formula(s),q,requestedLang) + " )";
+        return "( " + process(new Formula(s), q, requestedLang) + " )";
     }
 
     /** ***************************************************************
@@ -582,13 +576,13 @@ public class SUMOformulaToTPTPformula {
         if (f.listP()) {
             String result = processRecurse(f, lang);
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): result 1: " + result);
-            generateQList(f, lang);
-            if (debug) System.out.println("SUMOformulaToTPTPformula.process(): qlist: " + f.qlist);
-            if (f.qlist.length() > 1) {
+            generateQList(new FormulaAST(f.getFormula()), lang);
+            if (debug) System.out.println("SUMOformulaToTPTPformula.process(): qlist: " + getQlist());
+            if (getQlist().length() > 1) {
                 String quantification = "! [";
                 if (query)
                     quantification = "? [";
-                result = "( " + quantification + f.qlist + "] : (" + result + " ) )";
+                result = "( " + quantification + getQlist() + "] : (" + result + " ) )";
             }
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): result 2: " + result);
             return result;

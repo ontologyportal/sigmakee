@@ -45,7 +45,7 @@ public class IncrementalTellPipelineTest {
     private static final AtomicInteger sessionCounter = new AtomicInteger(0);
 
     /** Saved copy of the global axiomKey — restored after each test. */
-    private Map<String, Formula> savedAxiomKey;
+    private Map<String, FormulaAST> savedAxiomKey;
 
     // ------------------------------------------------------------------
     // Setup / teardown
@@ -92,7 +92,7 @@ public class IncrementalTellPipelineTest {
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);
         kb.merge(kif, "");
-        for (Formula f : kb.formulaMap.values())
+        for (FormulaAST f : kb.formulaMap.values())
             f.sourceFile = "test";
         kb.kbCache.buildCaches();
         return kb;
@@ -133,7 +133,7 @@ public class IncrementalTellPipelineTest {
     @Test
     public void testApplyIncrementalUpdate_subclass_cacheUpdated() {
         KB kb = buildKB(concat(CORE, "(subclass Agent Entity)"));
-        Formula formula = new FormulaAST("(subclass Robot Agent)");
+        FormulaAST formula = new FormulaAST("(subclass Robot Agent)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -161,7 +161,7 @@ public class IncrementalTellPipelineTest {
         KB kb = buildKB(concat(CORE,
                 "(subclass Agent Entity)",
                 "(subclass Robot Agent)"));
-        Formula formula = new FormulaAST("(instance myRobot Robot)");
+        FormulaAST formula = new FormulaAST("(instance myRobot Robot)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -187,7 +187,7 @@ public class IncrementalTellPipelineTest {
         KB kb = buildKB(concat(CORE,
                 "(subclass Vehicle Entity)",
                 "(instance drives BinaryRelation)"));
-        Formula formula = new FormulaAST("(domain drives 1 Vehicle)");
+        FormulaAST formula = new FormulaAST("(domain drives 1 Vehicle)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -215,7 +215,7 @@ public class IncrementalTellPipelineTest {
         KB kb = buildKB(concat(CORE,
                 "(subclass PositiveInteger Entity)",
                 "(instance age UnaryFunction)"));
-        Formula formula = new FormulaAST("(range age PositiveInteger)");
+        FormulaAST formula = new FormulaAST("(range age PositiveInteger)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -243,7 +243,7 @@ public class IncrementalTellPipelineTest {
         KB kb = buildKB(concat(CORE,
                 "(instance controls BinaryRelation)",
                 "(instance directlyControls BinaryRelation)"));
-        Formula formula = new FormulaAST("(subrelation directlyControls controls)");
+        FormulaAST formula = new FormulaAST("(subrelation directlyControls controls)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -272,7 +272,7 @@ public class IncrementalTellPipelineTest {
         KB kb = buildKB(concat(CORE,
                 "(subclass Animal Entity)",
                 "(subclass Plant Entity)"));
-        Formula formula = new FormulaAST("(disjoint Animal Plant)");
+        FormulaAST formula = new FormulaAST("(disjoint Animal Plant)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -307,11 +307,11 @@ public class IncrementalTellPipelineTest {
                 "(subclass Fungus Entity)"));
 
         // Provide a non-empty axiomKey so the fallback guard in patchSessionTPTP passes
-        Formula existing = kb.formulaMap.values().iterator().next();
+        FormulaAST existing = kb.formulaMap.values().iterator().next();
         SUMOKBtoTPTPKB.axiomKey.put("kb_TestM35KB_1", existing);
         writeSharedBase("tptp", "fof(kb_TestM35KB_1,axiom,(placeholder)).");
 
-        Formula formula = new FormulaAST("(partition Entity Animal Plant Fungus)");
+        FormulaAST formula = new FormulaAST("(partition Entity Animal Plant Fungus)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -332,7 +332,7 @@ public class IncrementalTellPipelineTest {
     @Test
     public void testApplyIncrementalUpdate_nullSessionId_returnsNull() {
         KB kb = buildKB(CORE);
-        Formula formula = new FormulaAST("(subclass Robot Entity)");
+        FormulaAST formula = new FormulaAST("(subclass Robot Entity)");
         formula.sourceFile = "test";
 
         Path result = SessionTPTPManager.applyIncrementalUpdate(kb, null, formula, "fof");
@@ -345,7 +345,7 @@ public class IncrementalTellPipelineTest {
     @Test
     public void testApplyIncrementalUpdate_emptySessionId_returnsNull() {
         KB kb = buildKB(CORE);
-        Formula formula = new FormulaAST("(subclass Robot Entity)");
+        FormulaAST formula = new FormulaAST("(subclass Robot Entity)");
         formula.sourceFile = "test";
 
         Path result = SessionTPTPManager.applyIncrementalUpdate(kb, "", formula, "fof");
@@ -362,11 +362,11 @@ public class IncrementalTellPipelineTest {
                 "(subclass Agent Entity)",
                 "(subclass Vehicle Entity)"));
 
-        Formula f1 = new FormulaAST("(subclass Robot Agent)");
+        FormulaAST f1 = new FormulaAST("(subclass Robot Agent)");
         f1.sourceFile = "test";
         kb.formulaMap.put(f1.getFormula(), f1);
 
-        Formula f2 = new FormulaAST("(subclass Car Vehicle)");
+        FormulaAST f2 = new FormulaAST("(subclass Car Vehicle)");
         f2.sourceFile = "test";
         kb.formulaMap.put(f2.getFormula(), f2);
 
@@ -402,11 +402,11 @@ public class IncrementalTellPipelineTest {
         KB kb = buildKB(concat(CORE, "(subclass Agent Entity)"));
 
         // Provide axiomKey and a shared base file so patchSessionTPTP doesn't fall back
-        Formula existing = kb.formulaMap.values().iterator().next();
+        FormulaAST existing = kb.formulaMap.values().iterator().next();
         SUMOKBtoTPTPKB.axiomKey.put("kb_TestM35KB_1", existing);
         writeSharedBase("tptp", "fof(kb_TestM35KB_1,axiom,(placeholder)).");
 
-        Formula formula = new FormulaAST("(subclass Robot Agent)");
+        FormulaAST formula = new FormulaAST("(subclass Robot Agent)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 

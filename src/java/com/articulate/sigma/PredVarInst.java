@@ -15,6 +15,7 @@ package com.articulate.sigma;
  and this depends on double underscore in the names of those predicates
  */
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.StringUtil;
 
@@ -74,7 +75,7 @@ public class PredVarInst {
      *
      * @return add explicit type condition into types
      */
-    protected static Map<String,Set<String>> addExplicitTypes(KB kb, Formula input, Map<String,Set<String>> types) {
+    protected static Map<String,Set<String>> addExplicitTypes(KB kb, FormulaAST input, Map<String,Set<String>> types) {
 
         Map<String,Set<String>> result = new TreeMap<>();
         FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -112,15 +113,15 @@ public class PredVarInst {
      *   (not
      *     (?REL2 @ROW2)))
      */
-    private static Set<Formula> handleDouble1(KB kb) {
+    private static Set<FormulaAST> handleDouble1(KB kb) {
 
         String origForm = DOUBLE_PREDICATE_AXIOM;
         if (debug) System.out.println("PredVarInst.handleDouble1(): " + origForm);
-        Set<Formula> result = new HashSet<>();
+        Set<FormulaAST> result = new HashSet<>();
         String arg1, arg2;
         int arity1, arity2;
         StringBuilder vars = new StringBuilder();
-        Formula newf, orig;
+        FormulaAST newf, orig;
         for (String s : kb.kbCache.disjointRelations) {
             arg1 = s.substring(0,s.indexOf("\t"));
             arg2 = s.substring(s.indexOf("\t")+1);
@@ -131,7 +132,7 @@ public class PredVarInst {
             vars.setLength(0);
             for (int i = 1; i <= arity1; i++)
                 vars.append(" ?ROW").append(i);
-            newf = new Formula("(=> (" + arg1 + vars + ") (not (" + arg2 + vars + ")))");
+            newf = new FormulaAST("(=> (" + arg1 + vars + ") (not (" + arg2 + vars + ")))");
             newf.sourceFile = "Merge.kif";
             orig = kb.formulaMap.get(origForm);
             if (orig != null) {
@@ -154,15 +155,15 @@ public class PredVarInst {
      *     (?REL1 @ROW))
      *   (?REL2 @ROW))
      */
-    private static Set<Formula> handleDouble2(KB kb) {
+    private static Set<FormulaAST> handleDouble2(KB kb) {
 
         String origForm = "(=> (and (subrelation ?REL1 ?REL2) (instance ?REL1 Predicate) " +
                 "(instance ?REL2 Predicate) (?REL1 @ROW)) (?REL2 @ROW))";
         if (debug) System.out.println("PredVarInst.handleDouble2(): " + origForm);
-        Set<Formula> result = new HashSet<>();
+        Set<FormulaAST> result = new HashSet<>();
         int arity1, arity2;
         StringBuilder vars = new StringBuilder();
-        Formula newf, orig;
+        FormulaAST newf, orig;
         for (String r1 : kb.kbCache.relations) {
             if (debug) System.out.println("handleDouble2(): relation: " + r1);
             if (debug) System.out.println("handleDouble2(): subrelation children: " + kb.kbCache.children.get("subrelation"));
@@ -180,7 +181,7 @@ public class PredVarInst {
                     vars.setLength(0);
                     for (int i = 1; i <= arity1; i++)
                         vars.append(" ?ROW").append(i);
-                    newf = new Formula("(=> (" + r2 + vars + ") (" + r1 + vars + "))");
+                    newf = new FormulaAST("(=> (" + r2 + vars + ") (" + r1 + vars + "))");
                     newf.sourceFile = "Merge.kif";
                     orig = kb.formulaMap.get(origForm);
                     if (orig != null) {
@@ -200,13 +201,13 @@ public class PredVarInst {
      * A bit of a hack to produce the statements that would result from
      * the only two axioms in SUMO with two predicate variables
      */
-    protected static Set<Formula> handleDoubles(KB kb) {
+    protected static Set<FormulaAST> handleDoubles(KB kb) {
 
-        Set<Formula> result = new TreeSet<>();
-        Set<Formula> result1 = handleDouble1(kb);
+        Set<FormulaAST> result = new TreeSet<>();
+        Set<FormulaAST> result1 = handleDouble1(kb);
         if (result1 != null)
             result.addAll(result1);
-        Set<Formula> result2 = handleDouble2(kb);
+        Set<FormulaAST> result2 = handleDouble2(kb);
         if (result2 != null)
             result.addAll(result2);
         if (result1 != null && result2 != null)
@@ -224,10 +225,10 @@ public class PredVarInst {
      *         return empty if input contains no predicate variables;
      *         return a list of instantiated formulas if the predicate variables are instantiated;
      */
-    public static Set<Formula> instantiatePredVars(Formula input, KB kb) {
+    public static Set<FormulaAST> instantiatePredVars(FormulaAST input, KB kb) {
 
         if (debug) System.out.println("instantiatePredVars(): input: " + input);
-        Set<Formula> result = new TreeSet<>();
+        Set<FormulaAST> result = new TreeSet<>();
         Set<String> predVars = gatherPredVars(kb,input);
         if (predVars.size() > 1) {
             if (rejectDoubles) {
@@ -262,7 +263,7 @@ public class PredVarInst {
         Collection<String> rels;
         Integer arityInteger;
         boolean ok;
-        Formula f, f2;
+        FormulaAST f, f2;
         int arity;
         for (String var : varTypes.keySet()) {
             if (var == null || predVarArityTL.get().get(var) == null)
@@ -334,17 +335,17 @@ public class PredVarInst {
     /** ***************************************************************
      * @return null if correct arity, otherwise return a message
      */
-    private static String hasCorrectArityRecurse(Formula f, KB kb)
+    private static String hasCorrectArityRecurse(FormulaAST f, KB kb)
             throws IllegalArgumentException, TypeNotPresentException {
 
         StringBuffer result = new StringBuffer();
         if (debug) System.out.println("INFO in PredVarInst.hasCorrectArityRecurse(): " + f);
         if (f == null || StringUtil.emptyString(f.getFormula()) || f.empty() ||
-                Formula.atom(f.getFormula()) || f.isVariable())
+                FormulaAST.atom(f.getFormula()) || f.isVariable())
             return null;
 
         String rel = f.getStringArgument(0);
-        List<Formula> argList = f.complexArgumentsToArrayList(1);
+        List<FormulaAST> argList = f.complexArgumentsToArrayList(1);
         if (debug) System.out.println("INFO in PredVarInst.hasCorrectArityRecurse(): rel: " + rel);
         if (debug) System.out.println("INFO in PredVarInst.hasCorrectArityRecurse(): args: " + argList);
         if (argList == null || argList.isEmpty()) {
@@ -372,7 +373,7 @@ public class PredVarInst {
                 throw new IllegalArgumentException();
             }
         }
-        for (Formula tempf : argList) {
+        for (FormulaAST tempf : argList) {
             String res = hasCorrectArityRecurse(tempf,kb);
             if (!StringUtil.emptyString(res))
                 result.append(res);
@@ -399,7 +400,7 @@ public class PredVarInst {
      * If arity is correct, return null, otherwise, return the predicate
      * that has its arity violated in the given formula.
      */
-    public static String hasCorrectArity(Formula f, KB kb) {
+    public static String hasCorrectArity(FormulaAST f, KB kb) {
 
         String res;
         try {
@@ -414,9 +415,9 @@ public class PredVarInst {
 
     /** ***************************************************************
      */
-    private static boolean containsRowVariable(List<Formula> arglist) {
+    private static boolean containsRowVariable(List<FormulaAST> arglist) {
 
-        for (Formula s : arglist)
+        for (FormulaAST s : arglist)
             if (s.isRowVar())
                 return true;
         return false;
@@ -427,17 +428,17 @@ public class PredVarInst {
      * the argument list has a row variable, return 0 as the value, meaning
      * any possible arity of 1 - maxArity
      */
-    protected static Set<String> gatherPredVarRecurse(KB kb, Formula f) {
+    protected static Set<String> gatherPredVarRecurse(KB kb, FormulaAST f) {
 
         Set<String> ans = new HashSet<>();
         if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): " + f);
-        if (f == null || f.empty() || Formula.atom(f.getFormula()) || f.isVariable())
+        if (f == null || f.empty() || FormulaAST.atom(f.getFormula()) || f.isVariable())
             return ans;
         if (f.isSimpleClause(kb)) {
-            Formula arg0 = f.getArgument(0);
+            FormulaAST arg0 = f.getArgument(0);
             if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): simple clause with: " + arg0);
             if (arg0.isRegularVariable()) {
-                List<Formula> arglist = f.complexArgumentsToArrayList(1);
+                List<FormulaAST> arglist = f.complexArgumentsToArrayList(1);
                 if (arglist != null && !arglist.isEmpty()) {// a variable could be an argument to a higher-order formula
                     if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): adding: " + arg0 +
                             " with arglist: " + arglist);
@@ -452,9 +453,9 @@ public class PredVarInst {
                 }
             }
         }
-        else if (Formula.isQuantifier(f.car())) {
+        else if (FormulaAST.isQuantifier(f.car())) {
             if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): found quantifier: " + f);
-            Formula f2 = f.cddrAsFormula();
+            FormulaAST f2 = f.cddrAsFormula();
             ans.addAll(gatherPredVarRecurse(kb,f2));
         }
         else {
@@ -476,7 +477,7 @@ public class PredVarInst {
      * Formula, the HashMap will be empty.  Note that predicate variables
      * must logically be instances (of class Relation).
      */
-    protected static Map<String, Set<String>> findPredVarTypes(Formula f, KB kb) {
+    protected static Map<String, Set<String>> findPredVarTypes(FormulaAST f, KB kb) {
 
         Set<String> predVars = gatherPredVars(kb,f);
         if (debug) System.out.println("findPredVarTypes(): predVars: " + predVars);
@@ -497,7 +498,7 @@ public class PredVarInst {
     /** ***************************************************************
      * Collect and return all predicate variables for the given formula
      */
-    public static Set<String> gatherPredVars(KB kb, Formula f) {
+    public static Set<String> gatherPredVars(KB kb, FormulaAST f) {
 
         if (debug) System.out.println("INFO in PredVarInst.gatherPredVars(): " + f);
         if (f.predVarCache != null) {
@@ -534,7 +535,7 @@ public class PredVarInst {
         "(agent ?HEAR ?HUMAN) " +
         "(destination ?HEAR ?HUMAN) " +
         "(origin ?HEAR ?OBJ))) agent ?HUMAN)))) ";
-        Formula f = new Formula(formStr);
+        FormulaAST f = new FormulaAST(formStr);
         if (debug) System.out.println("INFO in PredVarInst.arityTest(): formula: " + f);
         if (debug) System.out.println("INFO in PredVarInst.arityTest(): correct arity: " + hasCorrectArity(f,kb));
     }
@@ -559,7 +560,7 @@ public class PredVarInst {
         "(=> (and (?REL ?INST1 ?INST2) " +
         "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
         //Formula f = kb.formulaMap.get(formStr);
-        Formula f = new Formula(formStr);
+        FormulaAST f = new FormulaAST(formStr);
         if (debug) System.out.println("Formula: " + f);
         if (debug) System.out.println("Pred vars: " + gatherPredVars(kb,f));
         if (debug) System.out.println("Pred vars with types: " + findPredVarTypes(f,kb));
@@ -576,7 +577,7 @@ public class PredVarInst {
         "(instance ?DECISION LegalDecision) " +
         "(agent ?DECISION ?JURY))) ?JURY))";
         //f = kb.formulaMap.get(formStr);
-        f = new Formula(formStr);
+        f = new FormulaAST(formStr);
         if (debug) System.out.println("Formula: " + f);
         if (debug) System.out.println("Pred vars: " + gatherPredVars(kb,f));
         if (debug) System.out.println("Instantiated: " + instantiatePredVars(f,kb));

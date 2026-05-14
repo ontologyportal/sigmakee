@@ -184,14 +184,14 @@ public class Vampire {
                         this.sessionId, this.kb, () -> fp.preProcessExpr(queryFA, true, this.kb));
             }
         } catch (Exception e) {
-            if (debug > 0) System.err.println("Vampire.askVampire(): FormulaAST path failed, using string fallback: " + e.getMessage());
+            System.err.println("Vampire.askVampire(): FormulaAST path failed, using string fallback: " + e.getMessage());
             processedExprs = null;
         }
 
         // String fallback path (TFF mode or AST path unavailable/empty)
         Set<Formula> processedStmts = null;
         if (processedExprs == null || processedExprs.isEmpty()) {
-            if (debug > 0) System.err.println("Vampire.askVampire(): FormulaAST path failed or empty, using string fallback, for formula: " + suoKifFormula);
+            System.err.println("Vampire.askVampire(): FormulaAST path failed or empty, using string fallback, for formula: " + suoKifFormula);
             Formula query = new Formula();
             query.read(suoKifFormula);
             processedStmts = SessionTPTPManager.withSessionCache(
@@ -210,8 +210,8 @@ public class Vampire {
                 for (Expr e : processedExprs) {
                     String kifStr = e.toKifString();
                     String tptpBody = ExprToTPTP.translateKifString(kifStr, true, this.requestedTptpLanguage);
-                    if (tptpBody == null)
-                        tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, this.requestedTptpLanguage);
+//                    if (tptpBody == null)
+//                        tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, this.requestedTptpLanguage);
                     String theTPTPstatement = this.requestedTptpLanguage + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
                     tptpQuery.add(theTPTPstatement);
                 }
@@ -999,27 +999,31 @@ public class Vampire {
      * TODO: This function might not be necessary if we find a way to
      * directly add assertion into opened inference engine (e_ltb_runner)
      */
-    public boolean assertFormula(String userAssertionTPTP, KB kb, List<Formula> parsedFormulas, boolean tptp) {
+    public boolean assertFormula(String userAssertionTPTP, KB kb, List<FormulaAST> parsedFormulas, boolean tptp) {
 
         System.out.printf("\nVampire.assertFormula(%s, %s, %s, %b)", userAssertionTPTP, kb.name, parsedFormulas, tptp);
         boolean allAdded = false;
-        Set<Formula> processedFormulas = new HashSet();
+//        Set<FormulaAST> processedFormulas = new HashSet();
+        Set<Expr> processedFormulas = new HashSet();
         FormulaPreprocessor fp = new FormulaPreprocessor();
         Set<String> tptpFormulas = new HashSet<>();
         String tptpStr;
         int axiomIndex = 0;
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
-            for (Formula parsedF : parsedFormulas) {
+            for (FormulaAST parsedF : parsedFormulas) {
                 processedFormulas.clear();
-                processedFormulas.addAll(fp.preProcess(parsedF,false, kb));
+                processedFormulas.addAll(fp.preProcessExpr(parsedF,false, kb));
                 if (processedFormulas.isEmpty())
                     allAdded = false;
                 else {   // 2. Translate to TPTP/TFF.
                     tptpFormulas.clear();
                     if (tptp) {
-                        for (Formula p : processedFormulas) {
+                        for (Expr ex : processedFormulas) {
+                            FormulaAST p = new FormulaAST();
+                            p.expr = ex;
+                            p.setFormula(ex.toKifString());
                             if (!p.isHigherOrder(kb)) {
-                                tptpStr = SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(), false);
+                                tptpStr = ExprToTPTP.translate(ex, false, this.requestedTptpLanguage);
                                 tptpFormulas.add(tptpStr);
                             }
                         }

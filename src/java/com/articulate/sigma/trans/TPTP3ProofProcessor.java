@@ -15,6 +15,7 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.nlg.LanguageFormatter;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 
@@ -432,11 +433,8 @@ public class TPTP3ProofProcessor {
      * ***************************************************************
      * Return the answer clause, or null if not present
      */
-    public Formula extractAnswerClause(Formula ax) {
+    public FormulaAST extractAnswerClause(FormulaAST ax) {
 
-        if (debug) {
-            System.out.println("extractAnswerClause(): " + ax.getFormula());
-        }
         if (!ax.listP()) {
             return null;
         }
@@ -452,7 +450,7 @@ public class TPTP3ProofProcessor {
                 return ax;
             }
         } else {
-            Formula predF = extractAnswerClause(ax.carAsFormula());
+            FormulaAST predF = extractAnswerClause(ax.carAsFormula());
             if (debug) {
                 System.out.println("extractAnswerClause(): predF: " + predF);
             }
@@ -460,7 +458,7 @@ public class TPTP3ProofProcessor {
                 return predF;
             }
         }
-        List<Formula> args = ax.complexArgumentsToArrayList(1);
+        List<FormulaAST> args = ax.complexArgumentsToArrayList(1);
         if (debug) {
             System.out.println("extractAnswerClause(): args: " + args);
         }
@@ -471,8 +469,8 @@ public class TPTP3ProofProcessor {
         if (debug) {
             System.out.println("extractAnswerClause(): args size: " + args.size());
         }
-        Formula argF;
-        for (Formula f : args) {
+        FormulaAST argF;
+        for (FormulaAST f : args) {
             if (debug) {
                 System.out.println("extractAnswerClause(): check arg: " + f);
             }
@@ -543,7 +541,7 @@ public class TPTP3ProofProcessor {
         if (debug) {
             System.out.println("processAnswersFromProof(): proof: " + proof);
         }
-        Formula answerClause;
+        FormulaAST answerClause;
         for (TPTPFormula ps : proof) {
             if (debug) {
                 System.out.println("processAnswersFromProof(): ps: " + ps);
@@ -553,7 +551,7 @@ public class TPTP3ProofProcessor {
                 if (debug) {
                     System.out.println("processAnswersFromProof(): has ans clause: " + ps);
                 }
-                answerClause = extractAnswerClause(new Formula(ps.sumo));
+                answerClause = extractAnswerClause(new FormulaAST(ps.sumo));
                 if (debug) {
                     System.out.println("processAnswersFromProof(): answerClause: " + answerClause);
                 }
@@ -1508,7 +1506,7 @@ public class TPTP3ProofProcessor {
             if (debug)  System.out.println("TPTP3ProofProcessor.simpPara(): step: " + step);
             if (debug) System.out.println("TPTP3ProofProcessor.simpPara(): step sumo : " + step.sumo);
             if (Pattern.compile("\\(ans\\d").matcher(step.sumo).find()) {
-                step.sumo = FormulaUtil.removeAnswerClause(new Formula(step.sumo));
+                step.sumo = FormulaUtil.removeAnswerClause(new FormulaAST(step.sumo));
                 if (debug) System.out.println("TPTP3ProofProcessor.simpPara(): after remove answer : " + step.sumo);
             }
             System.out.print(step.name + ".  ");
@@ -1615,7 +1613,7 @@ public class TPTP3ProofProcessor {
                     tpp.parseProofOutput(lines, query, kb, answerVars);
                     tpp.createProofDotGraph();
                     System.out.println("TPTP3ProofProcessor.main(): " + tpp.proof.size() + " steps ");
-                    Formula f = new Formula();
+                    FormulaAST f = new FormulaAST();
                     for (TPTPFormula step : tpp.proof) {
                         System.out.println(":: " + step);
                         f.setFormula(step.sumo);

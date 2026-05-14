@@ -27,13 +27,13 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
                 "(forall (?INST1 ?INST2 ?INST3) " +
                 "(=> (and (?REL ?INST1 ?INST2) " +
                 "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
-        Formula f = new FormulaAST();
+        FormulaAST f = new FormulaAST();
         f.read(stmt1);
 
-        Set<Formula> actual = PredVarInst.instantiatePredVars(f, kb);
+        Set<FormulaAST> actual = PredVarInst.instantiatePredVars(f, kb);
 
         // Prep the expected set of formula objects.
-        Set<Formula> expected = Sets.newHashSet();
+        Set<FormulaAST> expected = Sets.newHashSet();
 
         String formulaStr = "(<=>\n" +
                 "  (instance time TransitiveRelation)\n" +
@@ -1424,7 +1424,7 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
     public void testFindPredVarTypesStmt3() {
 
         String stmt3 = "(=> (playsRoleInEvent ?OBJ ?ROLE ?EVENT) (?ROLE ?EVENT ?OBJ))";
-        Formula f = new FormulaAST();
+        FormulaAST f = new FormulaAST();
         f.read(stmt3);
 
         Map<String, Set<String>> actual = PredVarInst.findPredVarTypes(f, kb);

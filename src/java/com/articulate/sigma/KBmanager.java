@@ -20,6 +20,7 @@ package com.articulate.sigma;
 import com.articulate.sigma.CCheckManager.CCheckStatus;
 import com.articulate.sigma.VerbNet.VerbNet;
 import com.articulate.sigma.nlg.NLGUtils;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;
@@ -744,7 +745,6 @@ public class KBmanager implements Serializable {
     /** ***************************************************************
      * @deprecated
      */ // TODO: Not used
-    @Deprecated(forRemoval = true)
     private void fromXML(SimpleElement configuration) {
 
         if (!configuration.getTagName().equals("configuration"))
@@ -1355,10 +1355,10 @@ public class KBmanager implements Serializable {
                 System.err.println(e.getMessage());
             }
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            Formula f = new Formula();
+            FormulaAST f = new FormulaAST();
             f.read("(=> (and (wears ?A ?C) (part ?P ?C)) (wears ?A ?P))");
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            System.out.println(fp.preProcess(f, false, kb));
+            System.out.println(fp.preProcessExpr(f, false, kb));
         }
         else {
             if (args.length > 0 && args[0].equals("-p")) {

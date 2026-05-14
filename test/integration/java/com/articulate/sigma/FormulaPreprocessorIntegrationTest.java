@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.junit.Ignore;
@@ -26,11 +27,11 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
                             "(typicalPart ?X ?Y) " +
                             "(subclass ?Y Object))";
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("Class", "Object+");
@@ -57,11 +58,11 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
                 "(instance ?Y ?WHOLE) (part ?X ?Y))))) (equal ?NOTPARTPROB " +
                 "(ProbabilityFn (not (exists (?Z) (and (instance ?Z ?WHOLE) " +
                 "(part ?X ?Z))))))) (greaterThan ?PARTPROB ?NOTPARTPROB))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(strf);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
-        Map<String, Set<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actualMap = fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         assertEquals(expected, actualMap);
     }

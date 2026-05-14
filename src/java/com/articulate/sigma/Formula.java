@@ -22,6 +22,7 @@ about individual SUO-KIF formulas.
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -289,7 +290,7 @@ public class Formula implements Comparable, Serializable {
     /*******************************************************************
      * Empty consrtuctor that returns an empty instance of a Formula object.
      */
-    @Deprecated(since = "FormulaAST", forRemoval = false)
+//    @Deprecated(since = "FormulaAST", forRemoval = false)
     public Formula() {}
 
     /*******************************************************************
@@ -298,7 +299,7 @@ public class Formula implements Comparable, Serializable {
      * variables.
      * @param Formula - the formula to copy.
      */
-    @Deprecated(since = "FormulaAST", forRemoval = false)
+//    @Deprecated(since = "FormulaAST", forRemoval = false)
     public Formula(Formula f) {
 
         this.endLine = f.endLine;
@@ -335,7 +336,7 @@ public class Formula implements Comparable, Serializable {
      * Constructor that returns a Formula object with a String as input.
      * @param String - String of the formula 
      */
-    @Deprecated(since = "FormulaAST", forRemoval = false)
+//    @Deprecated(since = "FormulaAST", forRemoval = false)
     public Formula(String f) {theFormula = f;}
     
     /*****************************************************************
@@ -1077,7 +1078,7 @@ public class Formula implements Comparable, Serializable {
      * to (and B A C).  Note that this is a fairly time-consuming operation
      * and should not generally be used for comparing large sets of formulas.
      */
-    @Deprecated
+//    @Deprecated
     public boolean logicallyEquals(String s) {
 
         if (this.equals(s))
@@ -1219,7 +1220,7 @@ public class Formula implements Comparable, Serializable {
      *  returns a logical mapping between the variables
      *  of two formulae of one exists.
      */
-    @Deprecated
+//    @Deprecated
     public boolean unifyWith(Formula f) {
 
         if (debug) System.out.println("Formula.unifyWith(): input f : " + f);
@@ -1683,7 +1684,6 @@ public class Formula implements Comparable, Serializable {
      *
      * Deprecated - use complexArgumentsToArrayList()
      */
-    @Deprecated
     public List<Formula> argumentsToArrayList(int start) {
 
         List<Formula> result = new ArrayList<>();
@@ -2262,8 +2262,9 @@ public class Formula implements Comparable, Serializable {
     /*****************************************************************
      * Test whether a Formula is a functional term.  Note this assumes
      * the textual convention of all functions ending with "Fn".
+     *
+     * @deprecated
      */
-    @Deprecated
     public boolean isFunctionalTerm() {
 
         System.err.println("Error in Formula.isFunctionalTerm(): must use KB.isFunction() instead");
@@ -2278,8 +2279,9 @@ public class Formula implements Comparable, Serializable {
 
     /*****************************************************************
      * Test whether a Formula is a functional term
+     *
+     * @deprecated
      */
-    @Deprecated
     public static boolean isFunctionalTerm(String s) {
 
         Formula f = new Formula();
@@ -2298,7 +2300,7 @@ public class Formula implements Comparable, Serializable {
         if (debug) System.out.println("Formula.isHigherOrder(): " + this);
         if (varTypeCache == null || varTypeCache.keySet().isEmpty()) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            varTypeCache = fp.findAllTypeRestrictions(this,kb);
+            varTypeCache = fp.findAllTypeRestrictions(new FormulaAST(getFormula()),kb);
         }
         if (!KBmanager.initialized)
             return false;
@@ -2323,8 +2325,8 @@ public class Formula implements Comparable, Serializable {
                 if (debug) System.out.println("Formula.isHigherOrder(): varTypeCache: " + varTypeCache);
                 if (debug) System.out.println("Formula.isHigherOrder(): arg: " + arg);
                 if (debug) System.out.println("Formula.isHigherOrder(): atom: " + atom(arg));
-                if (debug) System.out.println("Formula.isHigherOrder(): isFunctional: " + kb.isFunctional(f));
-                if (!atom(arg) && !kb.isFunctional(f)) {
+                if (debug) System.out.println("Formula.isHigherOrder(): isFunctional: " + kb.isFunctional(new FormulaAST(f.getFormula())));
+                if (!atom(arg) && !kb.isFunctional(new FormulaAST(f.getFormula()))) {
                     if (logop) {
                         if (f.isHigherOrder(kb)) {
                             higherOrder = true;
@@ -2824,8 +2826,9 @@ public class Formula implements Comparable, Serializable {
      * functions that do not adhere to the convention of ending all
      * functions with "Fn".
      * @param term A String.
+     *
+     * @deprecated
      */
-     @Deprecated
     public static boolean isFunction(String term) {
 
         System.err.println("Error in Formula.isFuction(): must use KB.isFunction() instead");

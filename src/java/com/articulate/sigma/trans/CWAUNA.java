@@ -7,6 +7,7 @@ import com.articulate.sigma.CLIMapParser;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.IOException;
@@ -46,15 +47,15 @@ public class CWAUNA {
         String name = "cwa_ex_" + axiomIndex++;
         sb.append("fof(").append(name).append(",axiom,");
         sb.append("![X,Y] : (\ns__").append(rel).append("(X,Y) => (");
-        List<Formula> forms = kb.ask("arg", 0, rel);
+        List<FormulaAST> forms = kb.ask("arg", 0, rel);
         System.out.println("buildExclusions(): # formulas: " + forms.size());
         if (forms == null || forms.isEmpty())
             return "";
 
         List<String> args;
-        for (Formula f : forms) {
+        for (FormulaAST f : forms) {
             args = f.argumentsToArrayListString(1);
-            if (Formula.atom(args.get(0)) && Formula.atom(args.get(1))) {
+            if (FormulaAST.atom(args.get(0)) && FormulaAST.atom(args.get(1))) {
                 sb.append(" ( X = s__").append(args.get(0)).append(" & Y = s__").append(args.get(1)).append(" )");
                 sb.append(" | \n");
             }
@@ -74,14 +75,14 @@ public class CWAUNA {
         List<String> result = new ArrayList<>();
         Set<String> rels = kb.kbCache.getInstancesForType("ClosedWorldPredicate");
         System.out.println("CWAUNA.run(): rels: " + rels);
-        List<Formula> forms;
+        List<FormulaAST> forms;
         Set<String> allArgs;
         List<String> args;
         for (String rel : rels) {
             forms = kb.ask("arg", 0, rel);
             System.out.println("CWAUNA.run(): forms: " + forms);
             allArgs = new HashSet<>();
-            for (Formula form : forms) {
+            for (FormulaAST form : forms) {
                 if (form.isGround()) {
                     args = form.argumentsToArrayListString(1);
                     if (args != null)

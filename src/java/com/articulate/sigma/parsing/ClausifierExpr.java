@@ -580,7 +580,7 @@ public class ClausifierExpr {
      * If the formula is already a {@link FormulaAST} with a populated {@code expr}
      * field, the Expr is used directly; otherwise the formula string is parsed first.
      */
-    public static Formula clausify(Formula f) {
+    public static FormulaAST clausify(FormulaAST f) {
         Expr expr = exprOf(f);
         if (expr == null) return f;
         return new FormulaAST(clausify(expr).toKifString());
@@ -621,7 +621,7 @@ public class ClausifierExpr {
      *       than an exception.
      * </ol>
      */
-    public static List toNegAndPosLitsWithRenameInfo(Formula f) {
+    public static List toNegAndPosLitsWithRenameInfo(FormulaAST f) {
         List ans = new ArrayList();
         Expr expr = exprOf(f);
         if (expr == null) return ans;
@@ -636,10 +636,10 @@ public class ClausifierExpr {
             clauseExprs.add(cnf);
         }
 
-        List<List<List<Formula>>> newClauses = new ArrayList<>();
+        List<List<List<FormulaAST>>> newClauses = new ArrayList<>();
         for (Expr clauseExpr : clauseExprs) {
-            List<Formula> negLits = new ArrayList<>();
-            List<Formula> posLits = new ArrayList<>();
+            List<FormulaAST> negLits = new ArrayList<>();
+            List<FormulaAST> posLits = new ArrayList<>();
 
             // Collect the literals for this clause
             List<Expr> literals = new ArrayList<>();
@@ -660,12 +660,12 @@ public class ClausifierExpr {
                 }
                 String litStr = litExpr.toKifString();
                 if (Formula.LOG_FALSE.equals(litStr)) isNegLit = true;
-                Formula litF = new FormulaAST(litStr);
+                FormulaAST litF = new FormulaAST(litStr);
                 if (isNegLit) negLits.add(litF);
                 else          posLits.add(litF);
             }
 
-            List<List<Formula>> clause = new ArrayList<>();
+            List<List<FormulaAST>> clause = new ArrayList<>();
             clause.add(negLits);
             clause.add(posLits);
             newClauses.add(clause);
@@ -678,7 +678,7 @@ public class ClausifierExpr {
     }
 
     /** Extract the {@link Expr} from a formula, parsing via {@link FormulaAST} if needed. */
-    private static Expr exprOf(Formula f) {
+    private static Expr exprOf(FormulaAST f) {
         if (f instanceof FormulaAST fa && fa.expr != null) return fa.expr;
         FormulaAST parsed = new FormulaAST(f.getFormula());
         return parsed.expr;

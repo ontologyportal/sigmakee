@@ -10,6 +10,7 @@ import java.io.Reader;
 import java.io.Writer;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
@@ -177,7 +178,7 @@ public class OWLtranslator {
         while (it.hasNext()) {
             String functionTerm = (String) it.next();
             String term = (String) functionTable.get(functionTerm);
-            Formula f = new Formula();
+            FormulaAST f = new FormulaAST();
             f.read(functionTerm);
             String func = f.getStringArgument(0);
             List ranges = kb.askWithRestriction(0,"range",1,func);
@@ -610,14 +611,14 @@ public class OWLtranslator {
      */
     private void writeAxioms(PrintWriter pw) {
 
-        Set<Formula> ts = new TreeSet();
+        Set<FormulaAST> ts = new TreeSet();
         ts.addAll(kb.formulaMap.values());
         String form;
-        for (Formula f : ts) {
+        for (FormulaAST f : ts) {
             if (f.isRule()) {
                 form = f.toString();
-                form = form.replaceAll(Formula.IFF,"iff");
-                form = form.replaceAll(Formula.IF,"implies");
+                form = form.replaceAll(FormulaAST.IFF,"iff");
+                form = form.replaceAll(FormulaAST.IF,"implies");
                 form = processDoc(form);
                 pw.println("<owl:Thing rdf:about=\"#axiom-" + f.createID() + "\">");
                 pw.println("  <rdfs:comment xml:lang=\"en\">A SUO-KIF axiom that may not be directly expressible in OWL. " +

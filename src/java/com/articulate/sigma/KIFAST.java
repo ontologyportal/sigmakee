@@ -191,7 +191,7 @@ public class KIFAST {
                     + "detected in " + (filename != null ? filename : "<string>");
             warningSet.add(warning);
         }
-        warningSet.addAll(visitor.errors);
+        errorSet.addAll(visitor.errors);
     }
 
     // -----------------------------------------------------------------------

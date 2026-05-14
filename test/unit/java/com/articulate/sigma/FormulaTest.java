@@ -42,7 +42,7 @@ public class FormulaTest {
 
         String car = f.car();
         assertEquals("exists", car);
-        Formula cdrF = f.cdrAsFormula();
+        FormulaAST cdrF = f.cdrAsFormula();
         assertEquals("((?M))", cdrF.getFormula());
 
         car = cdrF.car();
@@ -72,7 +72,7 @@ public class FormulaTest {
 
         String car = f.car();
         assertEquals("time", car);
-        Formula cdrF = f.cdrAsFormula();
+        FormulaAST cdrF = f.cdrAsFormula();
         assertEquals("(JohnsBirth (MonthFn ?M (YearFn 2000)))", cdrF.getFormula());
 
         car = cdrF.car();
@@ -692,7 +692,7 @@ public class FormulaTest {
         String stmt = "(termFormat EnglishLanguage WestMakianLanguage \"west makian language\")";
         FormulaAST f = new FormulaAST(stmt);
         String expected = "";
-        List<Formula> l = f.complexArgumentsToArrayList(1);
+        List<FormulaAST> l = f.complexArgumentsToArrayList(1);
         System.out.println("testComplexArgumentsToArrayList2(): actual: " + l.size());
         System.out.println("testComplexArgumentsToArrayList2(): expected: " + 3);
         assertEquals(l.size(),3);
@@ -714,7 +714,7 @@ public class FormulaTest {
         }
         System.out.println("testGetArg(): actual: " + actual);
         System.out.println("testGetArg(): expected: " + expected);
-        Formula a = f1.getArgument(1);  // test caching of argument list
+        FormulaAST a = f1.getArgument(1);  // test caching of argument list
         String e = "?Y";
         System.out.println("testGetArg(): a: " + a.getFormula());
         System.out.println("testGetArg(): e: " + e);
@@ -730,7 +730,7 @@ public class FormulaTest {
         FormulaAST expected = null;
         FormulaAST f1 = new FormulaAST();
         f1.read("(during ?Y (WhenFn ?H))");
-        Formula actual = f1.getArgument(3);
+        FormulaAST actual = f1.getArgument(3);
         System.out.println("testGetArg(): actual: " + actual);
         System.out.println("testGetArg(): expected: " + expected);
         assertEquals(expected, actual);
@@ -793,7 +793,7 @@ public class FormulaTest {
 
         List<String> vars = new ArrayList<>();
         vars.add("Drosophila");
-        Formula actual = f.replaceQuantifierVars(FormulaAST.EQUANT, vars);
+        FormulaAST actual = f.replaceQuantifierVars(FormulaAST.EQUANT, vars);
         assertTrue(actual.logicallyEquals(exp));
 
         stmt = "(exists (?JOHN ?KICKS ?CART)\n" +

@@ -16,7 +16,9 @@ Infosys LTD.
 package com.articulate.sigma.tp;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.SessionTPTPManager;
 import com.articulate.sigma.trans.TPTPGenerationManager;
@@ -161,14 +163,14 @@ public class EProver {
 
         if (debug>0) System.out.printf("\nEProver.askNoProof(%s)", suoKifFormula);
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            Formula query = new Formula();
+            FormulaAST query = new FormulaAST();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = SessionTPTPManager.withSessionCache(
-                    this.sessionId, this.kb, () -> fp.preProcess(query, true, this.kb));
+            Set<Expr> processedStmts = SessionTPTPManager.withSessionCache(
+                    this.sessionId, this.kb, () -> fp.preProcessExpr(query, true, this.kb));
             if (!processedStmts.isEmpty()) {
                 EProver.addBatchConfig(null, this.timeout);
-                String strQuery = processedStmts.iterator().next().getFormula();
+                String strQuery = processedStmts.iterator().next().toKifString();
                 this.submitQuery(strQuery);
                 if (this.output == null || this.output.isEmpty())
                     System.out.println("No response from EProver!");
@@ -225,28 +227,31 @@ public class EProver {
      * TODO: This function might not be necessary if we find a way to
      * directly add assertion into opened inference engine (e_ltb_runner)
      */
-    public boolean assertFormula(String userAssertionTPTP, List<Formula> parsedFormulas, boolean tptp) {
+    public boolean assertFormula(String userAssertionTPTP, List<FormulaAST> parsedFormulas, boolean tptp) {
 
         if (debug>0) System.out.printf("\nEProver.assertFormula(%s, %s, %b)", userAssertionTPTP, parsedFormulas, tptp);
         System.out.println("EProver.assertFormula(2): process: " + _eprover);
         boolean allAdded = (this != null);
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
-            Set<Formula> processedFormulas = new HashSet<>();
+//            Set<Formula> processedFormulas = new HashSet<>();
+            Set<Expr> processedFormulas = new HashSet<>();
             FormulaPreprocessor fp;
             Set<String> tptpFormulas;
             String tptpstring;
-            for (Formula parsedF : parsedFormulas) {
+            for (FormulaAST parsedF : parsedFormulas) {
                 processedFormulas.clear();
                 fp = new FormulaPreprocessor();
-                processedFormulas.addAll(fp.preProcess(parsedF,false, this.kb));
+                processedFormulas.addAll(fp.preProcessExpr(parsedF,false, this.kb));
                 if (processedFormulas.isEmpty())
                     allAdded = false;
                 else {   // 2. Translate to TPTP.
                     tptpFormulas = new HashSet<>();
                     if (tptp) {
-                        for (Formula p : processedFormulas)
+                        for (Expr ex : processedFormulas) {
+                            FormulaAST p = new FormulaAST(ex.toKifString());
                             if (!p.isHigherOrder(this.kb))
-                                tptpFormulas.add(SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(),false));
+                                tptpFormulas.add(SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(), false));
+                        }
                     }
                     if (this != null) { // 3. Write to new tptp file
                         int axiomIndex = 0;

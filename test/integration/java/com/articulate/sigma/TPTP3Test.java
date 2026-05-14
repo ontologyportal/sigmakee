@@ -419,7 +419,7 @@ public class TPTP3Test extends IntegrationTestBase {
         System.out.println(label);
         String input = "(forall (?X0) (or (not (instance ?X0 Relation)) (not (ans0 ?X0))))";
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-        Formula ans = tpp.extractAnswerClause(new FormulaAST(input));
+        FormulaAST ans = tpp.extractAnswerClause(new FormulaAST(input));
         String result = ans.toString();
         System.out.println("result: " + ans);
         String expected = "(ans0 ?X0)";
@@ -440,7 +440,7 @@ public class TPTP3Test extends IntegrationTestBase {
         System.out.println(label);
         String input = "(forall (?VAR1) (or (not (subclass ?VAR1 Object)) (answer (?VAR1))))";
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-        Formula ans = tpp.extractAnswerClause(new FormulaAST(input));
+        FormulaAST ans = tpp.extractAnswerClause(new FormulaAST(input));
         String result = ans.getFormula();
         System.out.println("result: " + ans);
         String expected = "(answer (?VAR1))";

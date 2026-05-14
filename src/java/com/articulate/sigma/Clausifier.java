@@ -48,9 +48,22 @@ public class Clausifier  {
 
     public static boolean resetSkolem = false;
 
+    private static final System.Logger LOG = System.getLogger(Clausifier.class.getName());
+
+    private static void warnDeprecatedCall(String method) {
+        String caller = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+                .walk(frames -> frames
+                        .skip(2)  // skip warnDeprecatedCall + the Clausifier method itself
+                        .limit(5)
+                        .map(f -> f.getClassName() + "." + f.getMethodName() + ":" + f.getLineNumber())
+                        .collect(java.util.stream.Collectors.joining(" → ")));
+        System.err.println("[DEPRECATED Clausifier." + method + "] called from: " + caller);
+    }
+
     /** ***************************************************************
      */
     public Clausifier(String s) {
+        warnDeprecatedCall("<init>");
 
         thisFormula = new Formula();
         thisFormula.read(s);
@@ -70,7 +83,6 @@ public class Clausifier  {
      *  Turn a conjunction into an ArrayList of separate statements
      */
     public List<Formula> separateConjunctions() {
-
         if (!thisFormula.car().equals(Formula.AND)) {
             System.err.println("Error Formula.separateConjunctions(): not a conjunction " + thisFormula);
             return null;
@@ -101,7 +113,7 @@ public class Clausifier  {
      *  convenience method
      */
     public static Formula clausify(Formula f) {
-
+        warnDeprecatedCall("clausify");
         Clausifier temp = new Clausifier(f.getFormula());
         return temp.clausify();
     }
@@ -271,7 +283,7 @@ public class Clausifier  {
      *  convenience method
      */
     public static List toNegAndPosLitsWithRenameInfo(Formula f) {
-
+        warnDeprecatedCall("toNegAndPosLitsWithRenameInfo");
         Clausifier temp = new Clausifier(f.getFormula());
         return temp.toNegAndPosLitsWithRenameInfo();
     }
@@ -534,7 +546,7 @@ public class Clausifier  {
      * replaced by normalized forms
      */
     public static String normalizeVariables(String input, boolean replaceSkolemTerms) {
-
+        warnDeprecatedCall("normalizeVariables");
         String result;
         int[] idxs = {1, 1};
         Map vmap = new HashMap();

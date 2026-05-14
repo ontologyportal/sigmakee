@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.Modals;
 
 import org.junit.Test;
@@ -23,9 +24,9 @@ public class ModalsTest extends UnitTestBase {
                         "    (modalAttribute ?FORMULA Prohibition) " +
                         "    (not (modalAttribute ?FORMULA Permission)))";
 
-        Formula f = new Formula(fstr);
+        FormulaAST f = new FormulaAST(fstr);
         Map<String, Set<String>> typeMap = new HashMap<>();
-        Formula out = Modals.processModals(f, kb,typeMap);
+        FormulaAST out = Modals.processModals(f, kb,typeMap);
 
         String result = out.getFormula();
         System.out.println("\nDuality Test:\n" + result);
@@ -49,9 +50,9 @@ public class ModalsTest extends UnitTestBase {
                         "                       (acquaintance Bill Sue) " +
                         "                       (acquaintance Bill Jane)))))))";
 
-        Formula f = new Formula(fstr);
+        FormulaAST f = new FormulaAST(fstr);
         Map<String, Set<String>> typeMap = new HashMap<>();
-        Formula out = Modals.processModals(f, kb,typeMap);
+        FormulaAST out = Modals.processModals(f, kb,typeMap);
 
         String result = out.getFormula();
         System.out.println("\nDeep Modal Test:\n" + result);
@@ -79,9 +80,9 @@ public class ModalsTest extends UnitTestBase {
                         "        (wants ?AGENT ?THING) " +
                         "        (desires ?AGENT ?THING)))";
 
-        Formula f = new Formula(fstr);
+        FormulaAST f = new FormulaAST(fstr);
         Map<String, Set<String>> typeMap = new HashMap<>();
-        Formula out = Modals.processModals(f, kb,typeMap);
+        FormulaAST out = Modals.processModals(f, kb,typeMap);
 
         String result = out.getFormula();
         System.out.println("\nPure FOL Test:\n" + result);
@@ -107,9 +108,9 @@ public class ModalsTest extends UnitTestBase {
                         "        (equal (PremisesFn ?ARGUMENT ?W1) ?PREMISES) " +
                         "        (conclusion ?CONCLUSION ?ARGUMENT ?W1)))))";
 
-        Formula f = new Formula(fstr);
+        FormulaAST f = new FormulaAST(fstr);
         Map<String, Set<String>> typeMap = new HashMap<>();
-        Formula out = Modals.processModals(f, kb, typeMap);
+        FormulaAST out = Modals.processModals(f, kb, typeMap);
 
         String result = out.getFormula();
         System.out.println("\nMixed World-Sensitive Test:\n" + result);

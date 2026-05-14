@@ -14,6 +14,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 package com.articulate.sigma;
 
 import com.articulate.sigma.nlg.NLGUtils;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.SetUtil;
 import com.articulate.sigma.utils.StringUtil;
@@ -468,9 +469,9 @@ public class DocGen {
                 if (candidates.isEmpty()) {
                     // Next, we check for explicit
                     // ontologyNamespace statements.
-                    List<Formula> formulae = kb.ask("arg", 0, "ontologyNamespace");
+                    List<FormulaAST> formulae = kb.ask("arg", 0, "ontologyNamespace");
                     if ((formulae != null) && !formulae.isEmpty()) {
-                        for (Formula f : formulae) {
+                        for (FormulaAST f : formulae) {
                             candidates.add(f.getStringArgument(1));
                         }
                     }
@@ -1076,7 +1077,7 @@ public class DocGen {
                                                                     ontology,
                                                                     2);
                 if (StringUtil.isNonEmptyString(flist)) {
-                    Formula f = new Formula();
+                    FormulaAST f = new FormulaAST();
                     f.read(flist);
                     if (f.listP()) {
                         List pathnameComponents = new ArrayList();
@@ -1434,7 +1435,7 @@ public class DocGen {
                 String kifList = range.get(0);
                 if (StringUtil.isNonEmptyString(kifList)) {
                     kifList = StringUtil.removeEnclosingQuotes(kifList);
-                    Formula f = new Formula();
+                    FormulaAST f = new FormulaAST();
                     f.read(kifList);
                     String term;
                     for (int i = 0; f.listP() && !f.empty(); i++) {
@@ -3655,7 +3656,7 @@ public class DocGen {
             if (StringUtil.emptyString(kbHref))
                 suffix = ".html";
             // System.out.println("4. forms == " + forms);
-            List<Formula> forms = new ArrayList();
+            List<FormulaAST> forms = new ArrayList();
             Set<String> parents = new HashSet<>();
             List<String> relations = Arrays.asList("subclass",
                                                    "subrelation",
@@ -3759,9 +3760,9 @@ public class DocGen {
             suffix = ".html";
         StringBuilder result = new StringBuilder();
         String[] relns = {"subclass", "subrelation", "subAttribute", "subentity"};
-        List<Formula> forms = new ArrayList();
+        List<FormulaAST> forms = new ArrayList();
         if (StringUtil.isNonEmptyString(term)) {
-            List<Formula> tmp;
+            List<FormulaAST> tmp;
             for (String reln : relns) {
                 tmp = kb.askWithPredicateSubsumption(reln, 2, term);
                 if ((tmp != null) && !tmp.isEmpty()) {
@@ -3772,9 +3773,9 @@ public class DocGen {
         // System.out.println("5. forms == " + forms);
         if (forms != null && !forms.isEmpty()) {
             List kids = new ArrayList();
-            Formula f;
+            FormulaAST f;
             String s;
-            for (Iterator<Formula> it = forms.iterator(); it.hasNext();) {
+            for (Iterator<FormulaAST> it = forms.iterator(); it.hasNext();) {
                 f = it.next();
                 if (!KButilities.isCacheFile(f.sourceFile)) {
                     s = f.getStringArgument(1);
@@ -3866,10 +3867,10 @@ public class DocGen {
                 }
                 List<String> instances = new ArrayList();
                 String inst;
-                List<Formula> forms;
+                List<FormulaAST> forms;
                 for (String subent : working) {
                     forms = kb.askWithPredicateSubsumption("instance", 2, subent);
-                    for (Formula f : forms) {
+                    for (FormulaAST f : forms) {
                         if (!KButilities.isCacheFile(f.sourceFile)) {
                             inst = f.getStringArgument(1);
                             if (!excluded.contains(inst) && isLegalForDisplay(inst)) {
@@ -3989,12 +3990,12 @@ public class DocGen {
                 previousTerm = previousTerm.trim();
             if (currentTerm.matches(".*\\w+.*"))
                 currentTerm = currentTerm.trim();
-            if (Formula.listP(currentTerm)) {
-                if (Formula.empty(currentTerm)) {
+            if (FormulaAST.listP(currentTerm)) {
+                if (FormulaAST.empty(currentTerm)) {
                     sb.append(currentTerm);
                 }
                 else {
-                    Formula f = new Formula();
+                    FormulaAST f = new FormulaAST();
                     f.read(currentTerm);
                     List tuple = f.literalToArrayList();
                     boolean isQuantifiedVarlist = Formula.isQuantifier(previousTerm);

@@ -44,9 +44,9 @@ public class FormulaASTTest {
 
         // Chain: walk cdrAsFormula until the list is exhausted
         FormulaAST fa = parse("(instance John Human)");
-        Formula cdr   = fa.cdrAsFormula();   // (John Human)
-        Formula cddr  = cdr.cdrAsFormula();  // (Human)
-        Formula cdddr = cddr.cdrAsFormula(); // ()
+        FormulaAST cdr   = fa.cdrAsFormula();   // (John Human)
+        FormulaAST cddr  = cdr.cdrAsFormula();  // (Human)
+        FormulaAST cdddr = cddr.cdrAsFormula(); // ()
         assertFalse(cdr.empty());
         assertFalse(cddr.empty());
         assertTrue(cdddr.empty());
@@ -103,7 +103,7 @@ public class FormulaASTTest {
         FormulaAST fa = parse(s);
         Formula f = legacy(s);
 
-        Formula carFa = fa.carAsFormula(); // expr = Atom("instance")
+        FormulaAST carFa = fa.carAsFormula(); // expr = Atom("instance")
         Formula carF  = f.carAsFormula();  // theFormula = "instance"
 
         assertEquals(carF.atom(),  carFa.atom());   // both true
@@ -113,7 +113,7 @@ public class FormulaASTTest {
         assertEquals(carF.cdr(),   carFa.cdr());    // both null (not a list)
 
         // getArgument(1) — "John"
-        Formula arg1Fa = fa.getArgument(1);
+        FormulaAST arg1Fa = fa.getArgument(1);
         Formula arg1F  = f.getArgument(1);
         assertEquals(arg1F.getFormula(), arg1Fa.getFormula());
         assertEquals(arg1F.atom(),  arg1Fa.atom());   // both true
@@ -121,7 +121,7 @@ public class FormulaASTTest {
         assertEquals(arg1F.car(),   arg1Fa.car());    // both null
 
         // getArgument(2) — "Human"
-        Formula arg2Fa = fa.getArgument(2);
+        FormulaAST arg2Fa = fa.getArgument(2);
         Formula arg2F  = f.getArgument(2);
         assertEquals(arg2F.getFormula(), arg2Fa.getFormula());
         assertEquals(arg2F.atom(), arg2Fa.atom());
@@ -145,7 +145,7 @@ public class FormulaASTTest {
         assertEquals(f.complexArgumentsToArrayListString(0), fa.complexArgumentsToArrayListString(0));
 
         List<Formula> fList = f.complexArgumentsToArrayList(1);
-        List<Formula> faList = fa.complexArgumentsToArrayList(1);
+        List<FormulaAST> faList = fa.complexArgumentsToArrayList(1);
         assertEquals(fList.size(), faList.size());
         for (int i = 0; i < fList.size(); i++) {
             assertEquals(fList.get(i).getFormula(), faList.get(i).getFormula());
@@ -172,7 +172,7 @@ public class FormulaASTTest {
         assertEquals(f.complexArgumentsToArrayListString(0), fa.complexArgumentsToArrayListString(0));
 
         List<Formula> fList = f.complexArgumentsToArrayList(0);
-        List<Formula> faList = fa.complexArgumentsToArrayList(0);
+        List<FormulaAST> faList = fa.complexArgumentsToArrayList(0);
         assertEquals(fList.size(), faList.size());
         for (int i = 0; i < fList.size(); i++) {
             assertEquals(fList.get(i).getFormula(), faList.get(i).getFormula());

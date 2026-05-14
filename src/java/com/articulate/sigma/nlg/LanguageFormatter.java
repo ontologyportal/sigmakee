@@ -18,6 +18,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -221,10 +222,10 @@ public class LanguageFormatter {
         LanguageFormatter.kb = kb;
         this.language = language;
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(statement);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        variableTypes = fp.computeVariableTypes(f, kb);
+        variableTypes = fp.computeVariableTypesExpr(f.expr, kb);
         variableToInstanceMap = fp.findExplicitTypes(kb,f);
         init();
     }
@@ -302,13 +303,13 @@ public class LanguageFormatter {
 
             // Replace any variables in the template.
             if (StringUtil.isNonEmptyString(template)) {
-                Formula f = new Formula();
+                FormulaAST f = new FormulaAST();
                 f.read(statement);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 //HashMap varMap = fp.computeVariableTypes(kb);
                 Map<String, Set<String>> instanceMap = new HashMap<>();
                 Map<String, Set<String>> classMap = new HashMap<>();
-                Map<String, Set<String>> types = fp.computeVariableTypes(f, kb);
+                Map<String, Set<String>> types = fp.computeVariableTypesExpr(f.expr, kb);
                 Iterator<String> it = types.keySet().iterator();
                 String var;
                 Set<String> typeList;
@@ -990,7 +991,7 @@ public class LanguageFormatter {
                 return null;
             }
             List<String> args = new ArrayList<>();
-            Formula f = new Formula();
+            FormulaAST f = new FormulaAST();
             f.read(stmt);
             String pred = f.getStringArgument(0);
             f.read(f.cdr());
@@ -1333,7 +1334,7 @@ public class LanguageFormatter {
 
         if (debug) System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + stmt);
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         String pred = f.car();
         String strFormat = phraseMap.get(pred);
@@ -1883,7 +1884,7 @@ public class LanguageFormatter {
                 "       (instance ?D Driving)\n" +
                 "       (instance ?H Human)\n" +
                 "       (agent ?D ?H)))";
-        Formula f = new Formula(stmt);
+        FormulaAST f = new FormulaAST(stmt);
         System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         //LanguageFormatter lf = new LanguageFormatter(stmt, kb.getFormatMap("EnglishLanguage"),
@@ -1897,7 +1898,7 @@ public class LanguageFormatter {
                 "       (instance ?H Human)\n" +
                 "       (names ?H \"John\")\n" +
                 "       (agent ?D ?H)))";
-        f = new Formula();
+        f = new FormulaAST();
         f.read(stmt);
         System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
@@ -1911,7 +1912,7 @@ public class LanguageFormatter {
                 "       (instance ?Car Automobile)\n" +
                 "       (agent ?D ?H)\n" +
                 "       (patient ?D ?Car)))";
-        f = new Formula();
+        f = new FormulaAST();
         f.read(stmt);
         System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
@@ -1927,7 +1928,7 @@ public class LanguageFormatter {
                 "       (agent ?D ?H)\n" +
                 "       (destination ?D ?A)\n" +
                 "       (patient ?D ?C)))";
-        f = new Formula();
+        f = new FormulaAST();
         f.read(stmt);
         System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));

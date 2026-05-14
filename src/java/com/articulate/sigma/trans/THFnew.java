@@ -17,12 +17,12 @@ public class THFnew {
     public static boolean debug = false;
     public static boolean writeKIF = true; // write the original SUO-KIF as a comment in the THF output file
     public static int axNum = 0;
-    public static Set<Formula> badUsageSymbols = new HashSet<>();
+    public static Set<FormulaAST> badUsageSymbols = new HashSet<>();
     public static Set<String> predicateTerms = new HashSet<>(); //Terms that return $o instead of $i
 
     /** *************************************************************
      */
-    private static String processQuant(Formula f, String op,
+    private static String processQuant(FormulaAST f, String op,
                                        List<String> args,
                                        Map<String, Set<String>> typeMap) {
 
@@ -36,7 +36,7 @@ public class THFnew {
             if (debug) System.out.println("THFnew.processQuant(): correct # of args");
             if (args.get(0) != null) {
                 if (debug) System.out.println("THFnew.processQuant(): valid varlist: " + args.get(0));
-                Formula varlist = new FormulaAST(args.get(0));
+                FormulaAST varlist = new FormulaAST(args.get(0));
                 List<String> vars = varlist.argumentsToArrayListString(0);
                 if (debug) System.out.println("THFnew.processRecurse(): vars: " + vars);
                 StringBuilder varStr = new StringBuilder();
@@ -58,7 +58,7 @@ public class THFnew {
 
     /** *************************************************************
      */
-    private static String processConjDisj(Formula f, Formula car,
+    private static String processConjDisj(FormulaAST f, FormulaAST car,
                                           List<String> args,
                                           Map<String, Set<String>> typeMap) {
 
@@ -83,7 +83,7 @@ public class THFnew {
 
     /** *************************************************************
      */
-    public static String processLogOp(Formula f, Formula car, List<String> args,
+    public static String processLogOp(FormulaAST f, FormulaAST car, List<String> args,
                                       Map<String, Set<String>> typeMap) {
 
         String op = car.getFormula();
@@ -137,7 +137,7 @@ public class THFnew {
 
     /** *************************************************************
      */
-    public static String processEquals(Formula f, Formula car, List<String> args,
+    public static String processEquals(FormulaAST f, FormulaAST car, List<String> args,
                                        Map<String, Set<String>> typeMap) {
 
         String op = car.getFormula();
@@ -155,7 +155,7 @@ public class THFnew {
 
     /** *************************************************************
      */
-    public static String processRecurse(Formula f, Map<String, Set<String>> typeMap) {
+    public static String processRecurse(FormulaAST f, Map<String, Set<String>> typeMap) {
 
         if (debug) System.out.println("THFnew.processRecurse(): " + f);
         if (debug) System.out.println("THFnew.processRecurse(): typeMap: " + typeMap);
@@ -172,14 +172,14 @@ public class THFnew {
             return SUMOformulaToTPTPformula.translateWord(f.getFormula(), ttype, hasArguments);
         }
 
-        Formula car = f.carAsFormula();
+        FormulaAST car = f.carAsFormula();
         List<String> args = f.complexArgumentsToArrayListString(1);
         if (car.listP()) {
             System.err.println("Error in THFnew.processRecurse(): formula " + f);
             return "";
         }
 
-        if (Formula.isLogicalOperator(car.getFormula()))
+        if (FormulaAST.isLogicalOperator(car.getFormula()))
             return processLogOp(f, car, args, typeMap);
         else if (car.getFormula().equals(Formula.EQUAL))
             return processEquals(f, car, args, typeMap);
@@ -282,7 +282,7 @@ public class THFnew {
 
     /** *************************************************************
      */
-    public static String generateQList(Formula f, Map<String,
+    public static String generateQList(FormulaAST f, Map<String,
             Set<String>> typeMap, Set<String> vars) {
 
         if (debug) System.out.println("THFnew.generateQList(): typeMap: " + typeMap);
@@ -301,7 +301,7 @@ public class THFnew {
 
     /** ***************************************************************
      */
-    public static String generateQListNonModal(Formula f,
+    public static String generateQListNonModal(FormulaAST f,
                                                Map<String, Set<String>> typeMap,
                                                Set<String> vars) {
 
@@ -321,7 +321,7 @@ public class THFnew {
      * This is the primary method of the class.  It takes a SUO-KIF
      * formula and returns a THF formula.
      */
-    public static String process(Formula f, Map<String, Set<String>> typeMap, boolean query) {
+    public static String process(FormulaAST f, Map<String, Set<String>> typeMap, boolean query) {
 
         if (debug) System.out.println("THFnew.process(): typeMap: " + typeMap);
         if (f == null) {
@@ -354,7 +354,7 @@ public class THFnew {
 
     /** ***************************************************************
      */
-    public static String processNonModal(Formula f,
+    public static String processNonModal(FormulaAST f,
                                          Map<String, Set<String>> typeMap,
                                          boolean query) {
 
@@ -399,7 +399,7 @@ public class THFnew {
      * (s__partition__4 @ s__PsychologicalAttribute @ s__StateOfMind @ s__TraitAttribute @ V__W1) )
      * needs to be s__partition__3
      */
-    public static Formula adjustArity(KB kb, Formula f) {
+    public static FormulaAST adjustArity(KB kb, FormulaAST f) {
 
         if (debug) System.out.println("adjustArity(): f: " + f);
         String fstr = f.cdr().substring(1);
@@ -409,7 +409,7 @@ public class THFnew {
         if (m.find()) {
             int num = Integer.parseInt(m.group(2));
             num--;
-            Formula result = new FormulaAST(Formula.LP + m.group(1) + num + Formula.SPACE + fstr);
+            FormulaAST result = new FormulaAST(Formula.LP + m.group(1) + num + Formula.SPACE + fstr);
             if (debug) System.out.println("adjustArity(): result: " + result);
             return result;
         }
@@ -461,9 +461,10 @@ public class THFnew {
         }
     }
 
-    /** ***************************************************************
+    /***************************************************************
+     * @deprecated replaced with {@link #oneTransExpr(KB, FormulaAST, PrintWriter)}
      */
-    public static void oneTrans(KB kb, Formula f, PrintWriter bw) throws IOException {
+    public static void oneTrans(KB kb, FormulaAST f, PrintWriter bw) throws IOException {
 
         if (bw == null)
             if (debug) System.out.println("% original: " + f.getFormula() + "\n" +
@@ -474,32 +475,32 @@ public class THFnew {
 
         // 1) Modal pass on the original f, for TYPE INFO ONLY
         Map<String, Set<String>> typeMap = new HashMap<>();
-        Formula res = Modals.processModals(f, kb, typeMap);
+        FormulaAST res = Modals.processModals(f, kb, typeMap);
         if (res != null) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
 
             // 2) IMPORTANT: preprocess ORIGINAL f, not res.
             //    So processed formulas do NOT yet contain worlds.
-            Set<Formula> processed = fp.preProcess(f, false, kb);
+            Set<Formula> processed = fp.preProcess(new Formula(f.getFormula()), false, kb);
             if (debug) System.out.println("oneTrans(): preprocessed: " + processed);
             // 3) Build typeMap from res (modalised original) as before
             res.varTypeCache.clear();
 
-            typeMap.putAll(fp.findAllTypeRestrictions(res, kb));
+            typeMap.putAll(fp.findAllTypeRestrictions(new FormulaAST(res.getFormula()), kb));
             typeMap.putAll(res.varTypeCache);
 
             Set<String> types = new HashSet<>();
             types.add("World");
-            String worldVar = makeWorldVar(kb, f);
+            String worldVar = makeWorldVar(kb, new Formula(f.getFormula()));
             typeMap.put(worldVar, types);
             if (debug) System.out.println("oneTrans(): typemap: " + typeMap);
-            markModalAttributeFormulaVars(f, typeMap);
+            markModalAttributeFormulaVars(new Formula(f.getFormula()), typeMap);
             if (debug) System.out.println("oneTrans(): formula: " + f);
 
             // 4) For each processed formula, NOW apply Modals and then THFnew
             for (Formula fnew : processed) {
                 // Single, correct modal/world pass per processed formula
-                Formula fmodal = Modals.processModals(fnew, kb,typeMap);
+                FormulaAST fmodal = Modals.processModals(new FormulaAST(fnew.getFormula()), kb,typeMap);
                 if (debug) System.out.println("oneTrans(): after modal processing: " + fmodal);
                 if (fmodal == null)
                     continue;
@@ -507,11 +508,11 @@ public class THFnew {
                     continue;
                 if (bw == null) {
                     if (debug) System.out.println("oneTrans(): processed: " +
-                            process(new Formula(fmodal), typeMap, false));
+                            process(new FormulaAST(fmodal.getFormula()), typeMap, false));
                 }
                 else {
                     String s = "thf(ax" + axNum++ + ",axiom," +
-                            process(new Formula(fmodal), typeMap, false) + ").\n";
+                            process(new FormulaAST(fmodal.getFormula()), typeMap, false) + ").\n";
                     if (debug) System.out.println("oneTrans(): " + s);
                     bw.println(s);
                 }
@@ -519,7 +520,8 @@ public class THFnew {
         }
     }
 
-    /** ***************************************************************
+    /***************************************************************
+     * @deprecated replaced with {@link #oneTransNonModalExpr(KB, FormulaAST, Writer)}
      */
     public static void oneTransNonModal(KB kb, Formula f, Writer bw)
             throws IOException {
@@ -535,7 +537,7 @@ public class THFnew {
         res.varTypeCache.clear();
 
         Map<String, Set<String>> typeMap = new HashMap<>();
-        typeMap.putAll(fp.findAllTypeRestrictions(res, kb));
+        typeMap.putAll(fp.findAllTypeRestrictions(new FormulaAST(res.getFormula()), kb));
         typeMap.putAll(res.varTypeCache);
 
         for (Formula fnew : processed) {
@@ -551,12 +553,12 @@ public class THFnew {
             }
 
             if (bw == null) {
-                System.out.println(processNonModal(new Formula(fnew),
+                System.out.println(processNonModal(new FormulaAST(fnew.getFormula()),
                         typeMap, false));
             }
             else {
                 bw.write("thf(ax" + axNum++ + ",axiom," +
-                        processNonModal(new Formula(fnew),
+                        processNonModal(new FormulaAST(fnew.getFormula()),
                                 typeMap, false) + ").\n");
             }
         }
@@ -1523,7 +1525,7 @@ public class THFnew {
      */
     private static void collectNumbersFromFormula(String fstr, Set<String> numbers) {
 
-        Formula f = new FormulaAST(fstr);
+        FormulaAST f = new FormulaAST(fstr);
         if (f.atom()) {
             if (StringUtil.isNumeric(fstr))
                 numbers.add(fstr);
@@ -1570,7 +1572,7 @@ public class THFnew {
     public static Set<String> collectNumbers(KB kb) {
 
         Set<String> numbers = new TreeSet<>();
-        for (Formula f : kb.formulaMap.values()) {
+        for (FormulaAST f : kb.formulaMap.values()) {
             if (f instanceof FormulaAST fa && fa.expr != null)
                 collectNumbersFromExpr(fa.expr, numbers);
             else
@@ -1773,11 +1775,9 @@ public class THFnew {
     // and falls back to the string path for plain Formula objects.
     public static void analyzeBadUsages(KB kb) {
 
-        for (Formula f : kb.formulaMap.values()) {
+        for (FormulaAST f : kb.formulaMap.values()) {
             if (f instanceof FormulaAST fa && fa.expr != null)
                 analyzeFormulaExpr(fa.expr, kb, fa);
-            else
-                analyzeFormula(f, kb);
         }
     }
 
@@ -1838,7 +1838,8 @@ public class THFnew {
         }
     }
 
-    /** ***************************************************************
+    /***************************************************************
+     * @deprecated replaced with {@link #analyzeFormulaExpr(Expr, KB, FormulaAST)}
      */
     // Recursively analyzes a single formula for typing mismatches: if a predicate's
     // argument position expects a non-Formula type (e.g., Entity/$i) but the argument
@@ -1877,7 +1878,7 @@ public class THFnew {
                 // If we expect a non-Formula type but the argument is itself a formula (list),
                 // this symbol is being used as if that position were a formula.
                 if ((!"Formula".equals(expectedType) && (Formula.listP(arg) || (predicateTerms.contains(arg))))){
-                    THFnew.badUsageSymbols.add(f);
+                    THFnew.badUsageSymbols.add(new FormulaAST(f.getFormula()));
                     break;
                 }
             }
@@ -1886,7 +1887,7 @@ public class THFnew {
         // Recurse on subformulas in the arguments
         for (String s : args) {
             if (Formula.listP(s))
-                analyzeFormula(new FormulaAST(s), kb);
+                analyzeFormula(new Formula(s), kb);
         }
     }
 
@@ -2031,13 +2032,13 @@ public class THFnew {
             // arity-6/7 variant created later by oneTransExpr would be missing a type
             // declaration (Vampire SIGSEGV due to undeclared predicate).
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            for (Formula f : kb.formulaMap.values()) {
+            for (FormulaAST f : kb.formulaMap.values()) {
                 // We ignore the results; we just want preProcessRecurse()
                 // to run and call copyNewPredFromVariableArity(...)
                 if (f instanceof FormulaAST fa && fa.expr != null)
                     fp.preProcessExpr(fa, false, kb);
                 else
-                    fp.preProcess(f, false, kb);
+                    System.out.println("[THFnew.transModalTHF] There was an error in parsing FormulaAST");
             }
             // Pre-collect all integer literals so every n__N constant gets a type declaration.
             SUMOformulaToTPTPformula.setHideNumbers(true);
@@ -2045,7 +2046,7 @@ public class THFnew {
             // Write at the end of the header the hard coded types because they use some from the auto-generated ones.
             out.write(Modals.getTHFHeader(kb) + "\n");
             writeTypes(kb, out, numbers);
-            for (Formula f : kb.formulaMap.values()) {
+            for (FormulaAST f : kb.formulaMap.values()) {
                 String flatFormula = f.getFormula().replace("\n", " ").replace("\r", " ");
                 String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
                 if (debug) System.out.println("THFnew.transModalTHF(): " + f);
@@ -2059,12 +2060,13 @@ public class THFnew {
                     if (!excluded)
                         oneTransExpr(kb, fa, out);
                 } else {
+                    System.out.println("[THFnew.transModalTHF] There was an error in parsing FormulaAST");
                     excluded = exclude(f, kb, out);
-                    if (!excluded) {
-                        System.out.println("THFnew.transModalTHF(): fallback to string-based translation for: "
-                                + f.sourceFile + " line " + f.startLine + ": " + f.getFormula());
-                        oneTrans(kb, f, out);
-                    }
+//                    if (!excluded) {
+//                        System.out.println("THFnew.transModalTHF(): fallback to string-based translation for: "
+//                                + f.sourceFile + " line " + f.startLine + ": " + f.getFormula());
+//                        oneTrans(kb, f, out);
+//                    }
                 }
                 if (excluded) {
                     out.write("% excluded: " + stripped + "\n");
@@ -2093,13 +2095,14 @@ public class THFnew {
             // Use Expr-based expansion in the warm-up so __N predicates up to arity 7
             // are registered before writeTypesNonModal() runs (same fix as transModalTHF).
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            for (Formula f : kb.formulaMap.values()) {
+            for (FormulaAST f : kb.formulaMap.values()) {
                 // We ignore the results; we just want preProcessRecurse()
                 // to run and call copyNewPredFromVariableArity(...)
                 if (f instanceof FormulaAST fa && fa.expr != null)
                     fp.preProcessExpr(fa, false, kb);
                 else
-                    fp.preProcess(f, false, kb);
+                    System.out.println("[THFnew.transPlainTHF] There was an error in parsing FormulaAST");
+//                    fp.preProcess(f, false, kb);
             }
 
             // For pure { $i, $o } we probably don't need a big header.
@@ -2109,7 +2112,7 @@ public class THFnew {
             analyzeBadUsages(kb);
             if (debug) System.out.println("Predicate Terms: " + predicateTerms);
 
-            for (Formula f : kb.formulaMap.values()) {
+            for (FormulaAST f : kb.formulaMap.values()) {
                 String flatFormula = f.getFormula()
                         .replace("\n", " ").replace("\r", " ");
                 String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
@@ -2125,11 +2128,12 @@ public class THFnew {
                         oneTransNonModalExpr(kb, fa, out);
                 } else {
                     excluded = excludeNonModal(f, kb, out);
-                    if (!excluded) {
-                        System.out.println("THFnew.transPlainTHF(): fallback to string-based translation for: "
-                                + f.sourceFile + " line " + f.startLine + ": " + f.getFormula());
-                        oneTransNonModal(kb, f, out);
-                    }
+                    System.out.println("[THFnew.transPlainTHF] There was an error in parsing FormulaAST");
+//                    if (!excluded) {
+//                        System.out.println("THFnew.transPlainTHF(): fallback to string-based translation for: "
+//                                + f.sourceFile + " line " + f.startLine + ": " + f.getFormula());
+//                        oneTransNonModal(kb, f, out);
+//                    }
                 }
                 if (excluded) {
                     out.write("% excluded (non-modal): " + stripped + "\n");
@@ -2326,7 +2330,7 @@ public class THFnew {
                 "      (or\n" +
                 "        (instance ?LAND2 Continent)\n" +
                 "        (instance ?LAND2 Island)))))\n";
-        Formula f = new FormulaAST(fstr);
+        FormulaAST f = new FormulaAST(fstr);
      //   try {
             //oneTrans(kb,f,null);
      //   }
@@ -2361,7 +2365,7 @@ public class THFnew {
                       "(located ?CHILD ?LOC)))))";
         f = new FormulaAST(fstr);
         try {
-            oneTrans(kb,f,null);
+            oneTransExpr(kb,f,null);
         }
         catch (IOException ex) {
             ex.printStackTrace();
@@ -2432,7 +2436,7 @@ public class THFnew {
                         oneTransExpr(kb, fa, writer);
                     } else {
                         System.out.println("THFnew.main(): FormulaAST parse failed or expr is null — falling back to string-based translation");
-                        oneTrans(kb, new FormulaAST(kifStr), writer);
+                        oneTransExpr(kb, new FormulaAST(kifStr), writer);
                     }
                 }
                 catch (Exception e) {

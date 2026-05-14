@@ -98,7 +98,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
      * @param input the Formula containing SUO-KIF to process
      * @return an instance for accessing a Map that should have a single formula
      */
-    public static SuokifVisitor parseFormula(Formula input) {
+    public static SuokifVisitor parseFormula(FormulaAST input) {
 
         if (debug) System.out.println(input);
         SuokifVisitor visitor = SuokifVisitor.parseString(input.getFormula());

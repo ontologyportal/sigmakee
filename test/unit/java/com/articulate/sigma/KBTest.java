@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.tp.ProverTimeoutException;
 import com.articulate.sigma.tp.ATPException;
@@ -32,7 +33,7 @@ public class KBTest extends UnitTestBase {
     @Test
     public void testAskWithTwoRestrictionsDirect1() {
 
-        List<Formula> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Driving", 2, "Guiding");
+        List<FormulaAST> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Driving", 2, "Guiding");
         assertNotEquals(0, actual.size());
     }
 
@@ -42,7 +43,7 @@ public class KBTest extends UnitTestBase {
     @Test
     public void testAskWithTwoRestrictionsIndirect1() {
 
-        List<Formula> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Driving", 2, "Guiding");
+        List<FormulaAST> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Driving", 2, "Guiding");
         if (actual != null && !actual.isEmpty()) {
             System.out.println("KBtest.testAskWithTwoRestrictionsIndirect1(): " + actual);
             assertEquals(1, actual.size());
@@ -55,7 +56,7 @@ public class KBTest extends UnitTestBase {
     @Test
     public void testAskWithTwoRestrictionsIndirect2() {
 
-        List<Formula> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Boy", 2, "Entity");
+        List<FormulaAST> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Boy", 2, "Entity");
         assertEquals(0, actual.size());
     }
 
@@ -113,7 +114,7 @@ public class KBTest extends UnitTestBase {
 
         System.out.println("============== testDeleteUserAssertionsAndReload =====================");
         SigmaTestBase.kb.tell("(instance JohnJacob Human)");
-        List<Formula> results = SigmaTestBase.kb.ask("arg",1,"JohnJacob");
+        List<FormulaAST> results = SigmaTestBase.kb.ask("arg",1,"JohnJacob");
         System.out.println("testDeleteUserAssertionsAndReload(): results: " + results);
         assertEquals(1, results.size());
         SigmaTestBase.kb.deleteUserAssertionsAndReload();

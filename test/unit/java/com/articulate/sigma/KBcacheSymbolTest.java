@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import org.junit.Test;
 
 import java.util.*;
@@ -29,7 +30,7 @@ public class KBcacheSymbolTest {
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);
         kb.merge(kif, "");
-        for (Formula f : kb.formulaMap.values())
+        for (FormulaAST f : kb.formulaMap.values())
             f.sourceFile = "test";
         kb.kbCache.buildCaches(); // calls buildSymbolTaxonomy() internally
         return kb;

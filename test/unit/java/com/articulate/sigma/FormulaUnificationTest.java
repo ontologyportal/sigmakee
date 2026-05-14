@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -56,9 +57,9 @@ public class FormulaUnificationTest extends UnitTestBase {
 
     @Test
     public void test() {
-        Formula f1 = new Formula();
+        FormulaAST f1 = new FormulaAST();
         f1.read(f1Text);
-        Formula f2 = new Formula();
+        FormulaAST f2 = new FormulaAST();
         f2.read(f2Text);
 
         assertTrue(f1.unifyWith(f2));

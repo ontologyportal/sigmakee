@@ -1,6 +1,7 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
 
 import com.esotericsoftware.kryo.io.Input;
@@ -577,7 +578,7 @@ public class NLGUtils implements Serializable {
      * @return A format string with all relevant argument pointers
      * expanded.
      */
-    public static String expandStar(Formula f, String strFormat, String lang) {
+    public static String expandStar(FormulaAST f, String strFormat, String lang) {
 
         String result = strFormat;
         List<String> problems = new ArrayList<>();

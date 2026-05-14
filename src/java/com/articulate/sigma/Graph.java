@@ -13,6 +13,7 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 
 import java.io.File;
@@ -68,7 +69,7 @@ public class Graph {
         relations.add("subAttribute");
 
         int count = 0;
-        List<Formula> children;
+        List<FormulaAST> children;
         for (int i = 0; i < relations.size(); i++) {
             children = kb.askWithRestriction(0,relations.get(i),2,term);
             if (children != null)
@@ -98,10 +99,10 @@ public class Graph {
     private String generateDocumentationColumn(KB kb, String term, String href, String language) {
 
         String docString;
-        List<Formula> docStmts = kb.askWithTwoRestrictions(0,"documentation",1,term,2,language);
-        Formula doc;
+        List<FormulaAST> docStmts = kb.askWithTwoRestrictions(0,"documentation",1,term,2,language);
+        FormulaAST doc;
         if (!docStmts.isEmpty()) {
-            doc = (Formula) docStmts.get(0);
+            doc = (FormulaAST) docStmts.get(0);
             docString = doc.getStringArgument(3);
             if (!DB.emptyString(docString)) {
                 if (docString.length() > 100)
@@ -256,13 +257,13 @@ public class Graph {
         int graphMax = Integer.parseInt(KBmanager.getMgr().getPref("adminBrowserLimit"));
         if (!check.contains(term) && graphsize < graphMax) {
             if (above > 0) {
-                List<Formula> stmtAbove;
+                List<FormulaAST> stmtAbove;
                 if (!DB.emptyString(relation) && relation.equals("all"))
                     stmtAbove = kb.ask("arg",1,term);
                 else
                     stmtAbove = kb.askWithRestriction(0,relation,1,term);
 
-                Formula f;
+                FormulaAST f;
                 String newTerm;
                 for (int i = 0; i < stmtAbove.size(); i++) {
                     f = stmtAbove.get(i);
@@ -301,8 +302,8 @@ public class Graph {
                 }
             }
             if (below > 0) {
-                List<Formula> stmtBelow = kb.askWithRestriction(0,relation,2,term);
-                Formula f;
+                List<FormulaAST> stmtBelow = kb.askWithRestriction(0,relation,2,term);
+                FormulaAST f;
                 String newTerm;
                 for (int i = 0; i < stmtBelow.size(); i++) {
                     f = stmtBelow.get(i);
@@ -409,8 +410,8 @@ public class Graph {
         Iterator<String> it;
         String term, parent, rel, link, arrow, s, str;
         boolean removed;
-        List<Formula> stmts, cons;
-        Formula f;
+        List<FormulaAST> stmts, cons;
+        FormulaAST f;
         while (!startSet.isEmpty()) {
             it = startSet.iterator();
             term = it.next();
@@ -540,8 +541,8 @@ public class Graph {
         Iterator<String> it;
         String term, child, parent, link, arrow, rel, s;
         boolean removed;
-        List<Formula> stmts;
-        Formula f;
+        List<FormulaAST> stmts;
+        FormulaAST f;
         while (!startSet.isEmpty()) {
             it = startSet.iterator();
             term = (String) it.next();

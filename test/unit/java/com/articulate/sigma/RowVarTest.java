@@ -24,7 +24,7 @@ public class RowVarTest extends UnitTestBase  {
         System.out.println("\n=========== testFindRowVars =================");
         String stmt1 = "(links @ARGS)";
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt1);
 
         //RowVars.DEBUG = true;
@@ -52,7 +52,7 @@ public class RowVarTest extends UnitTestBase  {
                 "        (ListFn @ARGS) ?ARG)))\n" +
                 "  (greaterThan ?VAL ?N))";
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt1);
 
         //RowVars.DEBUG = true;
@@ -81,7 +81,7 @@ public class RowVarTest extends UnitTestBase  {
                 "        (ListFn @ARGS) ?ARG)))\n" +
                 "  (greaterThan ?VAL ?N))";
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt1);
 
         //RowVars.DEBUG = true;

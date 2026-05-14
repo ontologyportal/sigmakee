@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import org.junit.Test;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public class KbIntegrationTest extends IntegrationTestBase {
      */
     @Test
     public void testAskWithTwoRestrictionsDirect2() {
-        List<Formula> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Boy", 2, "Man");
+        List<FormulaAST> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Boy", 2, "Man");
         assertNotEquals(0, actual.size());
     }
 

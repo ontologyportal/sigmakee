@@ -27,7 +27,7 @@ public class SUOKIFCacheTest extends UnitTestBase {
         System.out.println("===================== SUOKIFCacheTest.test1() =====================");
         String input = "(likes John Mary)";
         Map<Integer,FormulaAST> hm = process(input);
-        Formula f = hm.values().iterator().next();
+        FormulaAST f = hm.values().iterator().next();
         f.printCaches();
         System.out.println("termCache: " + f.termCache);
         String expected = "[John, likes, Mary]";

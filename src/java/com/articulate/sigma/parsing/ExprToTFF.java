@@ -123,6 +123,7 @@ public class ExprToTFF {
         if (!freeVars.isEmpty()) {
             String quantStr = query ? "? [" : "! [";
             String varList = freeVars.stream()
+                    .sorted()
                     .map(v -> ExprToTPTP.translateVarName(v) + " : "
                             + varSorts.getOrDefault(v, "$i"))
                     .collect(Collectors.joining(","));
@@ -497,7 +498,7 @@ public class ExprToTFF {
         if (!SUMOtoTFAform.equalTFFsig(newsig, sig, op)
                 || KButilities.isVariableArity(kb, baseOp)
                 || SUMOtoTFAform.needsForcedTypeSuffix(op)) {
-            String candidate = SUMOtoTFAform.makePredFromArgTypes(new Formula(baseOp), newsig);
+            String candidate = SUMOtoTFAform.makePredFromArgTypes(new FormulaAST(baseOp), newsig);
             // makePredFromArgTypes returns baseOp unchanged when no suffix is needed
             if (!candidate.equals(baseOp)) newOp = candidate;
         }
@@ -1158,7 +1159,9 @@ public class ExprToTFF {
                                              Map<String, Set<String>> varmap,
                                              Set<String> freeVars, KB kb) {
         StringBuilder qlist = new StringBuilder();
-        for (String var : freeVars) {
+        List<String> sortedFreeVars = new ArrayList<>(freeVars);
+        Collections.sort(sortedFreeVars);
+        for (String var : sortedFreeVars) {
             Set<String> types = varmap.get(var);
             if (types == null || types.isEmpty()) continue;
             String t = SUMOtoTFAform.mostSpecificType(types);

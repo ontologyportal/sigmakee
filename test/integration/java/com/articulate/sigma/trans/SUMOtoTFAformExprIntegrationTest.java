@@ -399,13 +399,13 @@ public class SUMOtoTFAformExprIntegrationTest extends IntegrationTestBase {
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
         // --- String path: preProcess → process ---
-        Formula f = new FormulaAST(kif);
+        Formula f = new Formula(kif);
         Set<Formula> strExpanded = fp.preProcess(f, false, kb);
         System.out.println("\n=== STRING PATH preProcess results ===");
         Map<String, String> strResults = new TreeMap<>();
         for (Formula sf : strExpanded) {
             String expandedKif = sf.getFormula();
-            String tff = SUMOtoTFAform.process(sf, false);
+            String tff = SUMOtoTFAform.process(new FormulaAST(sf.getFormula()), false);
             Map<String, Set<String>> varmap = new java.util.HashMap<>(
                     fp.findAllTypeRestrictions(new FormulaAST(expandedKif), kb));
             System.out.println("  expanded: " + expandedKif);

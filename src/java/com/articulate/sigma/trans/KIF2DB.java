@@ -1,6 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.FormulaAST;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -84,13 +85,13 @@ public class KIF2DB {
         //if (kb.childOf(term,"BinaryRelation") && kb.isInstance(term))
         //    writeRelations(pw,term);
         //if (Character.isUpperCase(term.charAt(0))) {
-        Collection<Formula> forms = kb.ask("arg",1,term);
+        Collection<FormulaAST> forms = kb.ask("arg",1,term);
         System.out.println("INFO in KIF2DB.writeSUMOTerm(): formulas " + forms);
         Map<String,Map<String,Set<String>>> table;
         Map<String, Set<String>> rels;
         Set<String> vals;
         String rel, arg;
-        for (Formula f : forms) {
+        for (FormulaAST f : forms) {
             if (!f.isBinary()) {
                 if (f.getArgument(0).equals("domain")) { // convert domain statements to a binary relation
                                                          // assuming it to be on a binary relation

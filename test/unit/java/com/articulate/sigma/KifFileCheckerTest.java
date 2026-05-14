@@ -2,6 +2,7 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.FormulaAST;
 import org.junit.BeforeClass;
+import com.articulate.sigma.KIFAST;
 import org.junit.Test;
 import java.util.*;
 import static org.junit.Assert.*;
@@ -32,7 +33,7 @@ public class KifFileCheckerTest extends UnitTestBase {
             "  (and\n" +
             "    (instance Shaun Human)\n" +
             "    (attribute Shaun Mortal)))";
-        Formula kifFormula = new FormulaAST(kifString);
+        FormulaAST kifFormula = new FormulaAST(kifString);
         List<ErrRec> errorList = new ArrayList<>();
         kfc.CheckQuantifiedVariableNotInStatement("fileName", kifFormula, kifString, 0, errorList);
         ErrRec expected = new ErrRec( ErrRec.ERROR, "fileName", 0, 1, 7, "Quantified variable not used in statement body - (exists (?X)");
@@ -54,7 +55,7 @@ public class KifFileCheckerTest extends UnitTestBase {
                            "    (instance ?X CausingHappiness)\n" + 
                            "    (patient ?X ?Y)\n" + 
                            "    (owns ?A ?B)))";
-        Formula kifFormula = new FormulaAST(kifString);
+        FormulaAST kifFormula = new FormulaAST(kifString);
         List<ErrRec> errorList = new ArrayList<>();
         kfc.CheckOrphanVars("fileName", kifFormula, kifString, 0, errorList);
         ErrRec expected = new ErrRec( ErrRec.ERROR, "fileName", 0, 0, 102, "Formula has 2 disconnected variable groups: Group 1: [?A, ?B]; Group 2: [?X, ?Y] in formula: " + kifString.trim());
@@ -75,7 +76,7 @@ public class KifFileCheckerTest extends UnitTestBase {
                         "  (exists (?X)\n" +
                         "   (instance ?X Human))\n" +
                         "   (instance Shaun Human))";
-        Formula kifFormula = new FormulaAST(kifString);
+        FormulaAST kifFormula = new FormulaAST(kifString);
         List<ErrRec> errorList = new ArrayList<>();
         kfc.CheckExistentialInAntecedent("fileName", kifFormula, kifString, 0, errorList);
         ErrRec expected = new ErrRec( ErrRec.WARNING, "fileName", 1, 3, 10, "Existential quantifier in antecedent - (exists (?X)");
@@ -95,7 +96,7 @@ public class KifFileCheckerTest extends UnitTestBase {
         String kifString = "(=>\n" + 
                         "  (instance ?X Man)\n" +
                         "  (instance Shaun Man))";
-        Formula kifFormula = new FormulaAST(kifString);
+        FormulaAST kifFormula = new FormulaAST(kifString);
         List<ErrRec> errorList = new ArrayList<>();
         kfc.CheckSingleUseVariables("fileName", kifFormula, kifString, 0, errorList);
         ErrRec expected = new ErrRec( ErrRec.WARNING, "fileName", 1, 12, 14, "Variable used only once - (instance ?X Man)");
@@ -117,7 +118,7 @@ public class KifFileCheckerTest extends UnitTestBase {
                            "    (instance ?X Man)\n" +
                            "    (instance ?X Human))\n" +
                            "  (instance ?Y Man))";
-        Formula kifFormula = new FormulaAST(kifString);
+        FormulaAST kifFormula = new FormulaAST(kifString);
         List<ErrRec> errorList = new ArrayList<>();
         kfc.CheckUnquantInConsequent("fileName", kifFormula, kifString, 0, errorList);
         ErrRec expected = new ErrRec( ErrRec.ERROR, "fileName", 4, 12, 14, "Unquantified variable in consequent - (instance ?Y Man))");
@@ -137,12 +138,11 @@ public class KifFileCheckerTest extends UnitTestBase {
         String kifString = "(=>\n" +
                            "  (instance ?X Man)\n" +
                            "  (attribute ?X Mortal)";
-        Formula kifFormula = new FormulaAST(kifString);
+        FormulaAST kifFormula = new FormulaAST(kifString);
         List<ErrRec> errorList = new ArrayList<>();
         kfc.CheckFormulaPreprocess("fileName", kb, kifFormula, 0, errorList);
-        ErrRec expected = new ErrRec( ErrRec.ERROR, "fileName", 1, 3, 11, "Unbalanced parentheses or quotes in: (=>\n" +
-                        "  (instance ?X Man)\n" +
-                        "  (attribute ?X Mortal)");
+        ErrRec expected = new ErrRec( ErrRec.ERROR, "fileName", 2, 23, 24,
+                "Parse error at line:charposn 3:23: -> missing ')' at '<EOF>'");
         ErrRec actual = errorList.get(0);
         if (debug) {
             System.out.println(divider + "TEST = KifFileCheckerTest.testCheckSingleUseVariables1()");
@@ -159,7 +159,7 @@ public class KifFileCheckerTest extends UnitTestBase {
         String kifString = "(=>\n" +
                               "(instance ?X Man)\n" + 
                               "(instance ?X Woman)";
-        Formula kifFormula = new FormulaAST(kifString);
+        FormulaAST kifFormula = new FormulaAST(kifString);
         List<ErrRec> errorList = new ArrayList<>();
         kfc.CheckIsValidFormula("fileName", kifFormula, 0, kb, kifString, errorList);
         // KIFAST (ANTLR) error message format (replaces KIF StreamTokenizer format)
@@ -245,7 +245,7 @@ public class KifFileCheckerTest extends UnitTestBase {
     public void testCheckTermsBelowEntity1() {
 
         String kifString = "(instance Shaun Supercalifragilisticexpialidocious)";
-        Formula kifFormula = new FormulaAST(kifString);
+        FormulaAST kifFormula = new FormulaAST(kifString);
         Set<String> localIndividuals = new HashSet<>();
         Set<String> localSubclasses = new HashSet<>();
         List<ErrRec> errorList = new ArrayList<>();
@@ -286,8 +286,9 @@ public class KifFileCheckerTest extends UnitTestBase {
                            "  (instance Shaun Human\n" + 
                            "  (instance Shaun DomesticDog))";
         List<ErrRec> errorList = new ArrayList<>();
-        KIF localKif = kfc.StringToKif(kifString, "fileName", errorList);
-        ErrRec expected = new ErrRec(ErrRec.ERROR, "fileName", 2, 0, 1, "Parsing error in: Formula: Invalid number of arguments near line: 2 : Wrong number of arguments for '<=>' or '=>' : (=>)");
+        KIFAST localKif = kfc.StringToKif(kifString, "fileName", errorList);
+        ErrRec expected = new ErrRec(ErrRec.ERROR, "fileName", 3, 1, 2,
+                "Parse error at line:charposn 3:0: -> extraneous input ')' expecting {'(', REGVAR, ROWVAR}");
         ErrRec actual = errorList.get(0);
         if (debug) {
             System.out.println(divider + "TEST = KifFileCheckerTest.testStringToKif()");
@@ -359,7 +360,7 @@ public class KifFileCheckerTest extends UnitTestBase {
             "   (instance \"Bob\" Human)\n" +
             "   (instance 123 Human)\n" +
             ")";
-        Formula f = new FormulaAST(kif);
+        FormulaAST f = new FormulaAST(kif);
         Set<String> localIndividuals = new HashSet<>();
         Set<String> localSubclasses  = new HashSet<>();
         kfc.harvestLocalFacts(f, localIndividuals, localSubclasses);

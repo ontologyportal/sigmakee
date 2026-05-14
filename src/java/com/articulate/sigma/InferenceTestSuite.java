@@ -1,5 +1,7 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.tp.Vampire;
@@ -173,12 +175,13 @@ public class InferenceTestSuite {
             // (Now done in vampire constructor)
             // Step 3: run the queries as before
             int maxAnswers = Math.max(1, itd.expectedAnswers.size());
-            Formula theQuery = new Formula();
+            FormulaAST theQuery = new FormulaAST();
             theQuery.read(itd.query);
-            Set<Formula> theQueries = new FormulaPreprocessor().preProcess(theQuery, true, kb);
+            Set<Expr> theQueries = new FormulaPreprocessor().preProcessExpr(theQuery.expr, true, kb);
 
             itd.actualAnswers = new ArrayList<>();
-            for (Formula f : theQueries) {
+            for (Expr ex : theQueries) {
+                FormulaAST f = new FormulaAST(ex.toKifString());
                 TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
                 String q = f.getFormula();
                 if (f.isHigherOrder(kb) && !"thf".equals(SUMOformulaToTPTPformula.getLang())) {
@@ -870,16 +873,17 @@ public class InferenceTestSuite {
              kb.tell(formula);
         System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): expected answers: " + itd.expectedAnswers);
         int maxAnswers = itd.expectedAnswers.size();
-        Formula theQuery = new Formula();
+        FormulaAST theQuery = new FormulaAST();
         theQuery.read(itd.query);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        Set<Formula> theQueries = fp.preProcess(theQuery,true,kb);
+        Set<Expr> theQueries = fp.preProcessExpr(theQuery,true,kb);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         String processedStmt;
         Vampire vampire = new Vampire(kb, "tptp", "CASC", false, itd.timeout, maxAnswers);
         com.articulate.sigma.tp.EProver eprover = new EProver(kb, "tptp", itd.timeout, maxAnswers);
         com.articulate.sigma.tp.LEO leo = new LEO(kb, "tptp", itd.timeout, maxAnswers, null);
-        for (Formula f : theQueries) {
+        for (Expr ex : theQueries) {
+            FormulaAST f = new FormulaAST(ex.toKifString());
             processedStmt = f.getFormula();
             if (f.isHigherOrder(kb) && !SUMOformulaToTPTPformula.getLang().equals("thf")) {
                 System.out.println("Error in InferenceTestSuite.inferenceUnitTest(): skipping higher order query: " +

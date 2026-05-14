@@ -16,6 +16,7 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
@@ -78,7 +79,7 @@ public class TPTPutil {
      *
      * @param hyperlink - the URL to be referenced to a hyperlinked term.
      */
-    public static String htmlTPTPFormat(Formula f, String hyperlink, boolean traditionalLogic) {
+    public static String htmlTPTPFormat(FormulaAST f, String hyperlink, boolean traditionalLogic) {
 
 //        String indentChars = "  ";
 //        String eolChars = "\n";
@@ -306,10 +307,10 @@ public class TPTPutil {
 
         //System.out.println("\nTPTPutil.citation: sumoStep: " + sumoStep);
         //System.out.println("TPTPutil.citation: stepName: " + stepName);
-        List<Formula> ciAxioms = kb.ask("arg",0,"containsFormula");
+        List<FormulaAST> ciAxioms = kb.ask("arg",0,"containsFormula");
         //System.out.println("TPTPutil.citation: formulas: " + ciAxioms);
-        Formula arg;
-        for (Formula f : ciAxioms) {
+        FormulaAST arg;
+        for (FormulaAST f : ciAxioms) {
             arg = f.getArgument(2);
             //System.out.println("TPTPutil.citation: formula arg: " + arg);
             if (arg != null && arg.listP()) {
@@ -327,16 +328,16 @@ public class TPTPutil {
      */
     public static String getCitationString(String sumoStep, String stepName, KB kb) {
 
-        List<Formula> ciAxioms = kb.ask("arg",0,"containsFormula");
+        List<FormulaAST> ciAxioms = kb.ask("arg",0,"containsFormula");
         //System.out.println("TPTPutil.getCitationString: stepName: " + stepName);
         //System.out.println("TPTPutil.getCitationString: sumo: " + sumoStep);
-        Formula arg;
+        FormulaAST arg;
         String term;
-        List<Formula> comments;
-        for (Formula f : ciAxioms) {
+        List<FormulaAST> comments;
+        for (FormulaAST f : ciAxioms) {
             arg = f.getArgument(2);
             if (arg != null && arg.listP()) {
-                if (arg.equals(new Formula(sumoStep))) {
+                if (arg.equals(new FormulaAST(sumoStep))) {
                     //System.out.println("TPTPutil.getCitationString: formula arg: " + arg);
                     term = f.getStringArgument(1);
                     comments = kb.askWithRestriction(0,"comment",1,term);
@@ -352,7 +353,7 @@ public class TPTPutil {
      */
     public static void test() {
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         //f.theTptpFormulas.add("fof(kb_ArabicCulture_20,axiom,(( s__subclass(s__Hajj,s__Translocation) ))).");
         f.theTptpFormulas.add("(! [V__P] : (s__instance(V__P,s__Agent) => ((s__attribute(V__P,s__Muslim) & s__capability(s__Hajj,s__agent__m,V__P)) => " +
                 "s__modalAttribute('(? [V__H] : (s__instance(V__H,s__Process) & s__instance(V__H,s__Hajj) & s__agent(V__H,V__P)))',s__Obligation))))");

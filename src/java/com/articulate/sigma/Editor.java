@@ -12,6 +12,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
 package com.articulate.sigma;
 import com.articulate.sigma.KB;
+import com.articulate.sigma.parsing.FormulaAST;
 
 public class Editor {
 
@@ -21,7 +22,7 @@ public class Editor {
     public static String createFormPage(KB kb, String term, Formula f) {
 
         if (f.getFormula().indexOf("(",1) < 0) {  // a simple statement
-            Formula temp = new Formula();
+            FormulaAST temp = new FormulaAST();
             temp.read(f.getFormula());
             String relation = temp.car();
             temp.read(temp.cdr());

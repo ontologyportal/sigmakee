@@ -5,6 +5,7 @@ package com.articulate.sigma;
 // Copyright 2019 Infosys, 2020- Articulate Software
 // apease@articulatesoftware.com
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.google.common.collect.Sets;
 
 import java.util.*;
@@ -42,7 +43,7 @@ public class PredVarInstTest extends UnitTestBase  {
     @Test
     public void testGatherPredVarsStmt1() {
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(PredVarInstTest.AXIOM_1);
         Set<String> actual = PredVarInst.gatherPredVars(kb,f);
         Set<String> expected = Sets.newHashSet("?REL");
@@ -61,7 +62,7 @@ public class PredVarInstTest extends UnitTestBase  {
     @Test
     public void testGatherPredVarsStmt2() {
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(PredVarInstTest.AXIOM_2);
         Set<String> actual = PredVarInst.gatherPredVars(kb,f);
         Set<String> expected = Sets.newHashSet();
@@ -80,7 +81,7 @@ public class PredVarInstTest extends UnitTestBase  {
     @Test
     public void testGatherPredVarsStmt3() {
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(PredVarInstTest.AXIOM_3);
         Set<String> actual = PredVarInst.gatherPredVars(kb,f);
         Set<String> expected = Sets.newHashSet("?R");
@@ -99,10 +100,10 @@ public class PredVarInstTest extends UnitTestBase  {
     @Test
     public void testInstantiatePredStmt2() {
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(PredVarInstTest.AXIOM_2);
-        Set<Formula> actual = PredVarInst.instantiatePredVars(f, kb);
-        Set<Formula> expected = Sets.newHashSet();
+        Set<FormulaAST> actual = PredVarInst.instantiatePredVars(f, kb);
+        Set<FormulaAST> expected = Sets.newHashSet();
         System.out.println("\n--------------------");
         System.out.println("testInstantiatePredStmt2() actual: " + actual);
         System.out.println("testInstantiatePredStmt2() expected: " + expected);
@@ -124,12 +125,12 @@ public class PredVarInstTest extends UnitTestBase  {
                   "(?R @ARGS) " +
                   "(equal ?VAL (ListOrderFn (ListFn @ARGS) ?ARG))) " +
                 "(greaterThan ?VAL ?N))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         System.out.println("\n--------------------");
-        Set<Formula> actual = PredVarInst.instantiatePredVars(f, kb);
-        Set<Formula> expected = Sets.newHashSet();
+        Set<FormulaAST> actual = PredVarInst.instantiatePredVars(f, kb);
+        Set<FormulaAST> expected = Sets.newHashSet();
         System.out.println("testInstantiatePredStmt3() actual: " + actual);
         System.out.println("testInstantiatePredStmt3() expected: " + expected);
         if (actual.size() > 100)
@@ -146,7 +147,7 @@ public class PredVarInstTest extends UnitTestBase  {
 
         String stmt = "(=> (and (instance ?REL CaseRole) (instance ?OBJ Object) " +
                 "(?REL ?PROCESS ?OBJ)) (exists (?TIME) (overlapsSpatially (WhereFn ?PROCESS ?TIME) ?OBJ)))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         System.out.println("\n--------------------");
         Set<String>  actual = PredVarInst.gatherPredVarRecurse(kb,f);
@@ -183,7 +184,7 @@ public class PredVarInstTest extends UnitTestBase  {
                 "  (exists (?TIME)\n" +
                 "    (overlapsSpatially\n" +
                 "      (WhereFn ?PROCESS ?TIME) ?OBJ)))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         System.out.println("\n--------------------");
         String var = "?REL";
@@ -226,7 +227,7 @@ public class PredVarInstTest extends UnitTestBase  {
                 "                        (instance ?ELEMENT ?CLASS)))\n" +
                 "                (exists (?ITEM)\n" +
                 "                    (?REL @ROW ?ITEM))))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         System.out.println("\n--------------------");
         System.out.println("PredVarInstTest.testTVRPredVars(): formula: " + f);
@@ -263,7 +264,7 @@ public class PredVarInstTest extends UnitTestBase  {
                 "                        (instance ?ELEMENT ?CLASS)))\n" +
                 "                (exists (?ITEM)\n" +
                 "                    (?REL @ROW ?ITEM))))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         System.out.println("\n--------------------");
         String var = "?REL";
@@ -302,7 +303,7 @@ public class PredVarInstTest extends UnitTestBase  {
                 "                        (instance ?ELEMENT ?CLASS)))\n" +
                 "                (exists (?ITEM)\n" +
                 "                    (?REL @ROW ?ITEM))))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         System.out.println("\n--------------------");
         System.out.println("PredVarInstTest.testTVRTypes(): formula: " + f);
@@ -328,7 +329,7 @@ public class PredVarInstTest extends UnitTestBase  {
     public void testPredVarCount() {
 
         String stmt = PredVarInst.DOUBLE_PREDICATE_AXIOM;
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         System.out.println("\n--------------------");
         System.out.println("PredVarInstTest.testPredVarCount(): formula: " + f);
@@ -401,7 +402,7 @@ public class PredVarInstTest extends UnitTestBase  {
     public void testArity() {
 
         String stmt = "(termFormat EnglishLanguage WestMakianLanguage \"west makian language\")";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         System.out.println("\n--------------------");
         System.out.println("PredVarInstTest.testArity(): formula: " + f);

@@ -44,7 +44,7 @@ public class TPTPPatchTest {
     private static final AtomicInteger sessionCounter = new AtomicInteger(0);
 
     /** Saved copy of the global axiomKey — restored after each test. */
-    private Map<String, Formula> savedAxiomKey;
+    private Map<String, FormulaAST> savedAxiomKey;
 
     // ------------------------------------------------------------------
     // Setup / teardown
@@ -92,7 +92,7 @@ public class TPTPPatchTest {
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);
         kb.merge(kif, "");
-        for (Formula f : kb.formulaMap.values())
+        for (FormulaAST f : kb.formulaMap.values())
             f.sourceFile = "test";
         kb.kbCache.buildCaches();
         return kb;
@@ -131,7 +131,7 @@ public class TPTPPatchTest {
     @Test
     public void testRetranslate_null_returnsEmptyMap() {
         KB kb = buildKB(CORE);
-        Map<Formula, List<String>> result =
+        Map<FormulaAST, List<String>> result =
                 SUMOKBtoTPTPKB.retranslateFormulas(kb, null, "fof");
         assertTrue("null input must return empty map", result.isEmpty());
     }
@@ -140,7 +140,7 @@ public class TPTPPatchTest {
     @Test
     public void testRetranslate_emptySet_returnsEmptyMap() {
         KB kb = buildKB(CORE);
-        Map<Formula, List<String>> result =
+        Map<FormulaAST, List<String>> result =
                 SUMOKBtoTPTPKB.retranslateFormulas(kb, Collections.emptySet(), "fof");
         assertTrue("empty set must return empty map", result.isEmpty());
     }
@@ -149,10 +149,10 @@ public class TPTPPatchTest {
     @Test
     public void testRetranslate_nonReasoningFormula_producesNoBodies() {
         KB kb = buildKB(CORE);
-        Formula f = new FormulaAST("(termFormat EnglishLanguage Entity \"entity\")");
+        FormulaAST f = new FormulaAST("(termFormat EnglishLanguage Entity \"entity\")");
         f.sourceFile = "test";
 
-        Map<Formula, List<String>> result =
+        Map<FormulaAST, List<String>> result =
                 SUMOKBtoTPTPKB.retranslateFormulas(kb, Collections.singleton(f), "fof");
 
         List<String> bodies = result.get(f);
@@ -165,17 +165,17 @@ public class TPTPPatchTest {
     public void testRetranslate_hasEntryForEveryInputFormula() {
         KB kb = buildKB(CORE);
         // Collect two formulas from the KB
-        Set<Formula> twoFormulas = new HashSet<>();
-        for (Formula f : kb.formulaMap.values()) {
+        Set<FormulaAST> twoFormulas = new HashSet<>();
+        for (FormulaAST f : kb.formulaMap.values()) {
             twoFormulas.add(f);
             if (twoFormulas.size() == 2) break;
         }
         if (twoFormulas.size() < 2) return; // KB too small — skip
 
-        Map<Formula, List<String>> result =
+        Map<FormulaAST, List<String>> result =
                 SUMOKBtoTPTPKB.retranslateFormulas(kb, twoFormulas, "fof");
 
-        for (Formula f : twoFormulas)
+        for (FormulaAST f : twoFormulas)
             assertTrue("result must contain entry for every input formula",
                     result.containsKey(f));
     }
@@ -185,10 +185,10 @@ public class TPTPPatchTest {
     public void testRetranslate_simpleSubclassFormula_producesFofOutput() {
         KB kb = buildKB(concat(CORE, "(subclass Robot Entity)"));
 
-        Formula robotF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
+        FormulaAST robotF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
         assertNotNull("KB must contain a formula mentioning Robot", robotF);
 
-        Map<Formula, List<String>> result =
+        Map<FormulaAST, List<String>> result =
                 SUMOKBtoTPTPKB.retranslateFormulas(kb, Collections.singleton(robotF), "fof");
 
         List<String> bodies = result.get(robotF);
@@ -209,9 +209,9 @@ public class TPTPPatchTest {
     @Test
     public void testPatch_preservesUnaffectedBaseContent() throws IOException {
         KB kb = buildKB(CORE);
-        Formula f1 = kb.formulaMap.values().iterator().next();
-        Formula f2 = null;
-        for (Formula f : kb.formulaMap.values()) {
+        FormulaAST f1 = kb.formulaMap.values().iterator().next();
+        FormulaAST f2 = null;
+        for (FormulaAST f : kb.formulaMap.values()) {
             if (f != f1) { f2 = f; break; }
         }
         if (f2 == null) return; // only one formula — skip
@@ -246,7 +246,7 @@ public class TPTPPatchTest {
     @Test
     public void testPatch_affectedAxiomLine_commentedOut() throws IOException {
         KB kb = buildKB(CORE);
-        Formula affectedFormula = kb.formulaMap.values().iterator().next();
+        FormulaAST affectedFormula = kb.formulaMap.values().iterator().next();
         String axiomName = "kb_TestPatchKB_99";
 
         SUMOKBtoTPTPKB.axiomKey.put(axiomName, affectedFormula);
@@ -278,7 +278,7 @@ public class TPTPPatchTest {
     @Test
     public void testPatch_sectionHeader_appearsAfterBaseContent() throws IOException {
         KB kb = buildKB(CORE);
-        Formula f = kb.formulaMap.values().iterator().next();
+        FormulaAST f = kb.formulaMap.values().iterator().next();
         SUMOKBtoTPTPKB.axiomKey.put("kb_TestPatchKB_1", f);
         writeSharedBase("tptp", "fof(kb_TestPatchKB_1,axiom,(base)).");
 
@@ -312,12 +312,12 @@ public class TPTPPatchTest {
         KB kb = buildKB(concat(CORE, "(subclass Robot Entity)"));
 
         // Provide a non-empty axiomKey so the fallback guard passes
-        Formula existing = kb.formulaMap.values().iterator().next();
+        FormulaAST existing = kb.formulaMap.values().iterator().next();
         SUMOKBtoTPTPKB.axiomKey.put("kb_TestPatchKB_1", existing);
         writeSharedBase("tptp", "fof(kb_TestPatchKB_1,axiom,(placeholder)).");
 
         // New formula from tell() — not in the base file
-        Formula newF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
+        FormulaAST newF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
         assertNotNull("KB must contain Robot formula", newF);
 
         KBcache sessionCache = new KBcache(kb.kbCache, kb);
@@ -355,7 +355,7 @@ public class TPTPPatchTest {
     @Test
     public void testPatch_multipleTells_baseContentPreserved() throws IOException {
         KB kb = buildKB(CORE);
-        Formula f = kb.formulaMap.values().iterator().next();
+        FormulaAST f = kb.formulaMap.values().iterator().next();
         SUMOKBtoTPTPKB.axiomKey.put("kb_TestPatchKB_1", f);
         writeSharedBase("tptp", "fof(kb_TestPatchKB_1,axiom,(base_content)).");
 
@@ -363,7 +363,7 @@ public class TPTPPatchTest {
         String sessionId = uniqueSession();
         try {
             // First tell()
-            Formula f1 = new FormulaAST("(subclass Robot Entity)");
+            FormulaAST f1 = new FormulaAST("(subclass Robot Entity)");
             f1.sourceFile = "test";
             kb.formulaMap.put(f1.getFormula(), f1);
             SessionTPTPManager.patchSessionTPTP(
@@ -371,7 +371,7 @@ public class TPTPPatchTest {
                     Collections.emptySet(), Collections.singleton(f1), sessionCache);
 
             // Second tell()
-            Formula f2 = new FormulaAST("(subclass Cat Entity)");
+            FormulaAST f2 = new FormulaAST("(subclass Cat Entity)");
             f2.sourceFile = "test";
             kb.formulaMap.put(f2.getFormula(), f2);
             Path sessionFile = SessionTPTPManager.patchSessionTPTP(
@@ -400,12 +400,12 @@ public class TPTPPatchTest {
     public void testPatch_secondTell_sessionAxiomCommentedOut() throws IOException {
         KB kb = buildKB(concat(CORE, "(subclass Robot Entity)"));
 
-        Formula baseF = kb.formulaMap.values().iterator().next();
+        FormulaAST baseF = kb.formulaMap.values().iterator().next();
         SUMOKBtoTPTPKB.axiomKey.put("kb_TestPatchKB_1", baseF);
         writeSharedBase("tptp", "fof(kb_TestPatchKB_1,axiom,(base)).");
 
         // Find a Robot formula that will be in the "affected" set for tell #2
-        Formula robotF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
+        FormulaAST robotF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
         assertNotNull("KB must contain Robot formula", robotF);
 
         KBcache sessionCache = new KBcache(kb.kbCache, kb);
@@ -418,7 +418,7 @@ public class TPTPPatchTest {
                     Collections.singleton(robotF),
                     sessionCache);
 
-            Map<String, Formula> sessionKey = SessionTPTPManager.getSessionAxiomKey(sessionId);
+            Map<String, FormulaAST> sessionKey = SessionTPTPManager.getSessionAxiomKey(sessionId);
             // Only run the second assertion if tell #1 produced session axiom entries
             // (retranslation may legitimately produce nothing for some formula shapes)
             if (sessionKey == null || sessionKey.isEmpty()) return;
@@ -451,13 +451,13 @@ public class TPTPPatchTest {
     public void testPatch_newAxioms_writtenToSessionKey_notGlobal() throws IOException {
         KB kb = buildKB(concat(CORE, "(subclass Robot Entity)"));
 
-        Formula existing = kb.formulaMap.values().iterator().next();
+        FormulaAST existing = kb.formulaMap.values().iterator().next();
         SUMOKBtoTPTPKB.axiomKey.put("kb_TestPatchKB_1", existing);
         int globalSizeBefore = SUMOKBtoTPTPKB.axiomKey.size();
 
         writeSharedBase("tptp", "fof(kb_TestPatchKB_1,axiom,(placeholder)).");
 
-        Formula newF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
+        FormulaAST newF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
         assertNotNull("Robot formula must exist", newF);
 
         KBcache sessionCache = new KBcache(kb.kbCache, kb);
@@ -472,7 +472,7 @@ public class TPTPPatchTest {
             assertEquals("global axiomKey must not grow during a patch",
                     globalSizeBefore, SUMOKBtoTPTPKB.axiomKey.size());
 
-            Map<String, Formula> sessionKey = SessionTPTPManager.getSessionAxiomKey(sessionId);
+            Map<String, FormulaAST> sessionKey = SessionTPTPManager.getSessionAxiomKey(sessionId);
             assertNotNull("session axiom key must be created by patchSessionTPTP", sessionKey);
         } finally {
             SessionTPTPManager.cleanupSession(sessionId);
@@ -487,12 +487,12 @@ public class TPTPPatchTest {
     public void testPatch_twoSessions_axiomKeysIsolated() throws IOException {
         KB kb = buildKB(concat(CORE, "(subclass Robot Entity)", "(subclass Cat Entity)"));
 
-        Formula existing = kb.formulaMap.values().iterator().next();
+        FormulaAST existing = kb.formulaMap.values().iterator().next();
         SUMOKBtoTPTPKB.axiomKey.put("kb_TestPatchKB_1", existing);
         writeSharedBase("tptp", "fof(kb_TestPatchKB_1,axiom,(placeholder)).");
 
-        Formula robotF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
-        Formula catF   = kb.ask("arg", 1, "Cat").stream().findFirst().orElse(null);
+        FormulaAST robotF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
+        FormulaAST catF   = kb.ask("arg", 1, "Cat").stream().findFirst().orElse(null);
         if (robotF == null || catF == null) return;
 
         KBcache cacheA = new KBcache(kb.kbCache, kb);
@@ -507,8 +507,8 @@ public class TPTPPatchTest {
                     sessionB, kb, "tptp",
                     Collections.emptySet(), Collections.singleton(catF), cacheB);
 
-            Map<String, Formula> keyA = SessionTPTPManager.getSessionAxiomKey(sessionA);
-            Map<String, Formula> keyB = SessionTPTPManager.getSessionAxiomKey(sessionB);
+            Map<String, FormulaAST> keyA = SessionTPTPManager.getSessionAxiomKey(sessionA);
+            Map<String, FormulaAST> keyB = SessionTPTPManager.getSessionAxiomKey(sessionB);
 
             // The two session keys must not share any axiom name
             if (keyA != null && keyB != null) {
@@ -534,11 +534,11 @@ public class TPTPPatchTest {
     public void testCleanup_removesSessionAxiomKey() throws IOException {
         KB kb = buildKB(concat(CORE, "(subclass Dog Entity)"));
 
-        Formula existing = kb.formulaMap.values().iterator().next();
+        FormulaAST existing = kb.formulaMap.values().iterator().next();
         SUMOKBtoTPTPKB.axiomKey.put("kb_TestPatchKB_1", existing);
         writeSharedBase("tptp", "fof(kb_TestPatchKB_1,axiom,(placeholder)).");
 
-        Formula dogF = kb.ask("arg", 1, "Dog").stream().findFirst().orElse(null);
+        FormulaAST dogF = kb.ask("arg", 1, "Dog").stream().findFirst().orElse(null);
         if (dogF == null) return;
 
         KBcache sessionCache = new KBcache(kb.kbCache, kb);

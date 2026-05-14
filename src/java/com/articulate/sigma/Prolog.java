@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
 
@@ -38,11 +39,11 @@ public class Prolog {
 
     /** *************************************************************
      */
-    private static void writeOneHornClause(Formula f, PrintWriter pw) {
+    private static void writeOneHornClause(FormulaAST f, PrintWriter pw) {
 
         System.out.println("INFO in Prolog.writeOneHornClause(): formula: " + f);
         StringBuilder sb = new StringBuilder();
-        Formula antecedent = f.cdrAsFormula().carAsFormula();
+        FormulaAST antecedent = f.cdrAsFormula().carAsFormula();
         System.out.println("INFO in Prolog.writeOneHornClause(): antecedent: " + antecedent);
         sb.append(" :- ");
         if (antecedent.isSimpleClause(kb)) {
@@ -51,10 +52,10 @@ public class Prolog {
                 return;
             sb.append(clause);
         }
-        if (antecedent.car().equals(Formula.AND)) {
-            Formula consList = antecedent.cdrAsFormula();
+        if (antecedent.car().equals(FormulaAST.AND)) {
+            FormulaAST consList = antecedent.cdrAsFormula();
             System.out.println("INFO in Prolog.writeOneHornClause(): consList: " + consList);
-            Formula car;
+            FormulaAST car;
             String clause;
             while (!consList.empty()) {
                 car = consList.carAsFormula();
@@ -69,7 +70,7 @@ public class Prolog {
             }
         }
 
-        Formula consequent = f.cdrAsFormula().cdrAsFormula().carAsFormula();
+        FormulaAST consequent = f.cdrAsFormula().cdrAsFormula().carAsFormula();
         System.out.println("INFO in Prolog.writeOneHornClause(): consequent: " + consequent);
         if (consequent.isSimpleClause(kb)) {
             String clause = consequent.toProlog();
@@ -78,8 +79,8 @@ public class Prolog {
             pw.println(clause + sb.toString() + ".");
         }
         if (consequent.car().equals(Formula.AND)) {
-              Formula consList = consequent.cdrAsFormula();
-              Formula car;
+            FormulaAST consList = consequent.cdrAsFormula();
+            FormulaAST car;
               String carst;
               while (!consList.empty()) {
                   car = consList.carAsFormula();
@@ -96,7 +97,7 @@ public class Prolog {
      */
     private static void writeClauses(PrintWriter pw) {
 
-        for (Formula f : kb.formulaMap.values()) {
+        for (FormulaAST f : kb.formulaMap.values()) {
             if (f.isRule() && f.isHorn(kb) && !f.getFormula().contains(Formula.EQUANT) &&
                     !f.getFormula().contains(Formula.UQUANT))
                 writeOneHornClause(f,pw);

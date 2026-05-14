@@ -1,6 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.Formula;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
 import org.junit.Test;
 import org.junit.Before;
@@ -204,7 +205,7 @@ public class SUMOformulaToTPTPformulaTest {
     @Test
     public void testGenerateQList() {
 
-        Formula f = new Formula("(<=> (instance ?NUMBER NegativeRealNumber) (and (lessThan ?NUMBER 0) (instance ?NUMBER RealNumber)))");
+        FormulaAST f = new FormulaAST("(<=> (instance ?NUMBER NegativeRealNumber) (and (lessThan ?NUMBER 0) (instance ?NUMBER RealNumber)))");
         SUMOformulaToTPTPformula.generateQList(f);
         assertEquals(SUMOformulaToTPTPformula.getQlist().toString(),"V__NUMBER");
 
@@ -213,7 +214,7 @@ public class SUMOformulaToTPTPformulaTest {
                 "(between ?O ?O2 ?GUN))) (lessThanOrEqualTo ?LM1 ?LM)) " +
                 "(capability (KappaFn ?KILLING (and (instance ?KILLING Killing) " +
                 "(patient ?KILLING ?O))) instrument ?GUN))";
-        f = new Formula(kifstring);
+        f = new FormulaAST(kifstring);
         SUMOformulaToTPTPformula.generateQList(f);
         assertEquals(SUMOformulaToTPTPformula.getQlist().toString(), "V__GUN,V__KILLING,V__LM,V__LM1,V__O");
     }

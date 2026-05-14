@@ -29,7 +29,7 @@ public class SUOKIFparseTest extends UnitTestBase {
 
         Map<Integer,FormulaAST> hm = process(input);
         StringBuilder sb = new StringBuilder();
-        for (Formula f : hm.values()) {
+        for (FormulaAST f : hm.values()) {
             f.printCaches();
             sb.append(f.getFormula()).append("\n");
         }
@@ -51,7 +51,7 @@ public class SUOKIFparseTest extends UnitTestBase {
         String input = "(=> (and (minValue ?R ?ARG ?N) (?R @ARGS) (equal ?VAL (ListOrderFn (ListFn @ARGS) ?ARG))) (greaterThan ?VAL ?N))";
         Map<Integer,FormulaAST> hm = process(input);
         StringBuilder sb = new StringBuilder();
-        for (Formula f : hm.values()) {
+        for (FormulaAST f : hm.values()) {
             f.printCaches();
             sb.append(f.getFormula()).append(" ");
         }
@@ -73,7 +73,7 @@ public class SUOKIFparseTest extends UnitTestBase {
         String input = "(=> (and (exhaustiveAttribute ?CLASS @ROW) (inList NonFullyFormed (ListFn @ROW))) (instance NonFullyFormed Attribute))";
         Map<Integer,FormulaAST> hm = process(input);
         StringBuilder sb = new StringBuilder();
-        for (Formula f : hm.values()) {
+        for (FormulaAST f : hm.values()) {
             //f.printCaches();
             sb.append(f.getFormula()).append(" ");
         }

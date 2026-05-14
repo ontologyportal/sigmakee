@@ -39,7 +39,7 @@ public class AffectedFormulasTest {
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);
         kb.merge(kif, "");
-        for (Formula f : kb.formulaMap.values())
+        for (FormulaAST f : kb.formulaMap.values())
             f.sourceFile = "test";
         kb.kbCache.buildCaches();
         return kb;
@@ -63,7 +63,7 @@ public class AffectedFormulasTest {
     public void testEmpty_changedTerms() {
 
         KB kb = buildKB(CORE);
-        Set<Formula> result = SUMOKBtoTPTPKB.findAffectedFormulas(kb, Collections.emptySet());
+        Set<FormulaAST> result = SUMOKBtoTPTPKB.findAffectedFormulas(kb, Collections.emptySet());
         assertTrue("empty changedTerms must return empty set", result.isEmpty());
     }
 
@@ -74,7 +74,7 @@ public class AffectedFormulasTest {
     public void testNull_changedTerms() {
 
         KB kb = buildKB(CORE);
-        Set<Formula> result = SUMOKBtoTPTPKB.findAffectedFormulas(kb, null);
+        Set<FormulaAST> result = SUMOKBtoTPTPKB.findAffectedFormulas(kb, null);
         assertTrue("null changedTerms must return empty set", result.isEmpty());
     }
 
@@ -95,7 +95,7 @@ public class AffectedFormulasTest {
 
         // Simulate that "Robot" was the newly added child
         Set<String> changed = new HashSet<>(Arrays.asList("Robot", "Agent"));
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
 
         // (subclass Robot Agent) mentions Robot at arg-1 and Agent at arg-2
         boolean foundRobotFormula = affected.stream()
@@ -113,7 +113,7 @@ public class AffectedFormulasTest {
         KB kb = buildKB(stmts);
 
         Set<String> changed = Collections.singleton("myRobot");
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
 
         assertTrue("(instance myRobot Robot) must be in affected set",
                 affected.stream().anyMatch(f -> f.getFormula().contains("myRobot")));
@@ -130,7 +130,7 @@ public class AffectedFormulasTest {
 
         // "Animal" appears at arg-2 in (subclass Dog Animal)
         Set<String> changed = Collections.singleton("Animal");
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
 
         assertTrue("(subclass Dog Animal) must be in affected set (Animal at arg-2)",
                 affected.stream().anyMatch(f -> f.getFormula().contains("Animal")));
@@ -150,7 +150,7 @@ public class AffectedFormulasTest {
 
         // Only "Robot" changed
         Set<String> changed = Collections.singleton("Robot");
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
 
         // (subclass Table Entity) must not be included
         assertFalse("(subclass Table Entity) must NOT be affected when Robot changed",
@@ -173,14 +173,14 @@ public class AffectedFormulasTest {
         KB kb = buildKB(stmts);
 
         // Manually inject a formula with a pred-var and mark its predVarCache
-        Formula predVarFormula = new FormulaAST("(=> (?REL ?X ?Y) (foo ?X ?Y))");
+        FormulaAST predVarFormula = new FormulaAST("(=> (?REL ?X ?Y) (foo ?X ?Y))");
         predVarFormula.predVarCache = new HashSet<>(Collections.singleton("?REL"));
         predVarFormula.sourceFile = "test";
         kb.formulaMap.put(predVarFormula.getFormula(), predVarFormula);
 
         // "loves" is a relation, so predicateChanged = true
         Set<String> changed = Collections.singleton("loves");
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
 
         assertTrue("predicate-variable formula must be in affected set when a relation changes",
                 affected.contains(predVarFormula));
@@ -197,14 +197,14 @@ public class AffectedFormulasTest {
         KB kb = buildKB(stmts);
 
         // Inject a pred-var formula with no direct mention of "Robot"
-        Formula predVarFormula = new FormulaAST("(=> (?REL ?X ?Y) (bar ?X ?Y))");
+        FormulaAST predVarFormula = new FormulaAST("(=> (?REL ?X ?Y) (bar ?X ?Y))");
         predVarFormula.predVarCache = new HashSet<>(Collections.singleton("?REL"));
         predVarFormula.sourceFile = "test";
         kb.formulaMap.put(predVarFormula.getFormula(), predVarFormula);
 
         // "Robot" is a class, not a relation → predicateChanged = false
         Set<String> changed = Collections.singleton("Robot");
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
 
         assertFalse("predicate-variable formula must NOT be included when only a class changed",
                 affected.contains(predVarFormula));
@@ -220,13 +220,13 @@ public class AffectedFormulasTest {
         String[] stmts = concat(CORE, "(instance loves Relation)");
         KB kb = buildKB(stmts);
 
-        Formula unprocessed = new FormulaAST("(=> (?REL ?X ?Y) (baz ?X ?Y))");
+        FormulaAST unprocessed = new FormulaAST("(=> (?REL ?X ?Y) (baz ?X ?Y))");
         unprocessed.predVarCache = null;  // not yet computed
         unprocessed.sourceFile = "test";
         kb.formulaMap.put(unprocessed.getFormula(), unprocessed);
 
         Set<String> changed = Collections.singleton("loves");
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
 
         assertFalse("formula with null predVarCache must NOT be included via criterion 2",
                 affected.contains(unprocessed));
@@ -242,13 +242,13 @@ public class AffectedFormulasTest {
         String[] stmts = concat(CORE, "(instance loves Relation)");
         KB kb = buildKB(stmts);
 
-        Formula noPredVar = new FormulaAST("(subclass Cat Animal)");
+        FormulaAST noPredVar = new FormulaAST("(subclass Cat Animal)");
         noPredVar.predVarCache = Collections.emptySet();  // explicitly no pred vars
         noPredVar.sourceFile = "test";
         kb.formulaMap.put(noPredVar.getFormula(), noPredVar);
 
         Set<String> changed = Collections.singleton("loves");
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changed);
 
         assertFalse("formula with empty predVarCache must NOT be included via criterion 2",
                 affected.contains(noPredVar));
@@ -269,7 +269,7 @@ public class AffectedFormulasTest {
         KB kb = buildKB(stmts);
 
         // Mark the formula with a pre-populated varTypeCache
-        Formula f = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
+        FormulaAST f = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
         if (f == null) return;  // skip if KB didn't generate that formula
         f.varTypeCache = new HashMap<>();
         f.varTypeCache.put("?X", new HashSet<>(Collections.singleton("Robot")));
@@ -294,7 +294,7 @@ public class AffectedFormulasTest {
         KB kb = buildKB(stmts);
 
         // Find a formula mentioning Table (unaffected if only Robot changed)
-        Formula tableFormula = kb.ask("arg", 1, "Table").stream().findFirst().orElse(null);
+        FormulaAST tableFormula = kb.ask("arg", 1, "Table").stream().findFirst().orElse(null);
         if (tableFormula == null) return;
         Map<String, Set<String>> originalCache = new HashMap<>();
         originalCache.put("?X", new HashSet<>(Collections.singleton("Table")));
@@ -327,7 +327,7 @@ public class AffectedFormulasTest {
         Set<String> changedTerms = kb.kbCache.addSubclass("Robot", "Agent");
 
         // M3.3: find affected formulas
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changedTerms);
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changedTerms);
 
         // (subclass Robot Entity) and (subclass Robot Agent) are the most directly
         // relevant; at a minimum (subclass Robot Entity) exists in the KB
@@ -346,7 +346,7 @@ public class AffectedFormulasTest {
         KB kb = buildKB(stmts);
 
         // Simulate adding (instance myRobot Robot) to the formula index manually
-        Formula instF = new FormulaAST("(instance myRobot Robot)");
+        FormulaAST instF = new FormulaAST("(instance myRobot Robot)");
         instF.sourceFile = "test";
         kb.formulaMap.put(instF.getFormula(), instF);
         // Register in the formulas index at the expected keys
@@ -360,7 +360,7 @@ public class AffectedFormulasTest {
         // Incremental cache update
         Set<String> changedTerms = kb.kbCache.addInstance("myRobot", "Robot");
 
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changedTerms);
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulas(kb, changedTerms);
 
         assertTrue("(instance myRobot Robot) must be in affected set",
                 affected.stream().anyMatch(f -> f.getFormula().contains("myRobot")));
@@ -383,7 +383,7 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addSubclass("Robot", "Agent");
 
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
                 kb, sc, "Robot", "Agent");
 
         assertTrue("formula mentioning Robot must be in affected set",
@@ -406,7 +406,7 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addSubclass("Robot", "Agent");
 
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
                 kb, sc, "Robot", "Agent");
 
         // (subclass Table Entity) does not mention Robot and shares no relation with
@@ -444,7 +444,7 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addSubclass("Greek", "Human");
 
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
                 kb, sc, "Greek", "Human");
 
         // Signature path is removed: formulas that mention serveGreek but NOT "Greek"
@@ -469,12 +469,12 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addSubclass("newRel", "Agent");  // newRel is a relation in the session cache
 
-        Formula predVarF = new FormulaAST("(=> (?REL ?X ?Y) (exists (?Z) (?REL ?Z ?X)))");
+        FormulaAST predVarF = new FormulaAST("(=> (?REL ?X ?Y) (exists (?Z) (?REL ?Z ?X)))");
         predVarF.predVarCache = new HashSet<>(Collections.singleton("?REL"));
         predVarF.sourceFile = "test";
         kb.formulaMap.put(predVarF.getFormula(), predVarF);
 
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
                 kb, sc, "newRel", "Agent");
 
         assertTrue("predVar formula must be included when child is a relation",
@@ -495,12 +495,12 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addSubclass("Robot", "Agent");
 
-        Formula predVarF = new FormulaAST("(=> (?REL ?X ?Y) (exists (?Z) (?REL ?Z ?X)))");
+        FormulaAST predVarF = new FormulaAST("(=> (?REL ?X ?Y) (exists (?Z) (?REL ?Z ?X)))");
         predVarF.predVarCache = new HashSet<>(Collections.singleton("?REL"));
         predVarF.sourceFile = "test";
         kb.formulaMap.put(predVarF.getFormula(), predVarF);
 
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulasForSubclass(
                 kb, sc, "Robot", "Agent");
 
         assertFalse("predVar formula must NOT be included when child is a class",
@@ -521,7 +521,7 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addSubclass("Robot", "Agent");
 
-        Formula robotF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
+        FormulaAST robotF = kb.ask("arg", 1, "Robot").stream().findFirst().orElse(null);
         if (robotF == null) return;
         robotF.varTypeCache = new HashMap<>();
         robotF.varTypeCache.put("?X", new HashSet<>(Collections.singleton("Entity")));
@@ -565,7 +565,7 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addInstance("myRobot", "Robot");
 
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
                 kb, sc, "myRobot", "Robot");
 
         assertTrue("formula mentioning myRobot must be in affected set",
@@ -585,7 +585,7 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addInstance("myRobot", "Robot");
 
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
                 kb, sc, "myRobot", "Robot");
 
         assertFalse("(subclass Table Entity) must NOT be affected",
@@ -605,12 +605,12 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addInstance("myRel", "BinaryRelation");
 
-        Formula predVarF = new FormulaAST("(=> (?REL ?X ?Y) (foo ?X ?Y))");
+        FormulaAST predVarF = new FormulaAST("(=> (?REL ?X ?Y) (foo ?X ?Y))");
         predVarF.predVarCache = new HashSet<>(Collections.singleton("?REL"));
         predVarF.sourceFile = "test";
         kb.formulaMap.put(predVarF.getFormula(), predVarF);
 
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
                 kb, sc, "myRel", "BinaryRelation");
 
         assertTrue("predVar formula must be included when inst is a relation",
@@ -630,12 +630,12 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addInstance("myRobot", "Robot");
 
-        Formula predVarF = new FormulaAST("(=> (?REL ?X ?Y) (bar ?X ?Y))");
+        FormulaAST predVarF = new FormulaAST("(=> (?REL ?X ?Y) (bar ?X ?Y))");
         predVarF.predVarCache = new HashSet<>(Collections.singleton("?REL"));
         predVarF.sourceFile = "test";
         kb.formulaMap.put(predVarF.getFormula(), predVarF);
 
-        Set<Formula> affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
+        Set<FormulaAST> affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
                 kb, sc, "myRobot", "Robot");
 
         assertFalse("predVar formula must NOT be included when inst is not a relation",
@@ -653,7 +653,7 @@ public class AffectedFormulasTest {
         KB kb = buildKB(stmts);
         KBcache sc = kb.kbCache;
 
-        Formula instF = new FormulaAST("(instance myRobot Robot)");
+        FormulaAST instF = new FormulaAST("(instance myRobot Robot)");
         instF.sourceFile = "test";
         instF.varTypeCache = new HashMap<>();
         instF.varTypeCache.put("?X", new HashSet<>(Collections.singleton("Robot")));

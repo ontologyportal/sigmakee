@@ -2,6 +2,8 @@
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
@@ -102,15 +104,15 @@ public class CELTTestSuite {
                     System.out.println(sentence + " to CELT. " + ioe.getMessage());
                 }
                 if (celtResult != null) {
-                    Formula f = new Formula();
+                    FormulaAST f = new FormulaAST();
                     f.read(expectedAnswer);
                     boolean correct = false;
-                    Formula celtResultF = new Formula(celtResult);
+                    FormulaAST celtResultF = new FormulaAST(celtResult);
                     if (f.logicallyEquals(celtResultF))
                         correct = true;
                     else
                         correct = false;
-                    Formula c = new Formula();
+                    FormulaAST c = new FormulaAST();
                     c.read(celtResult);
                     if (!odd)
                         result = result.append("<tr><td valign=top>" + (Integer.valueOf(count)).toString());
@@ -133,7 +135,7 @@ public class CELTTestSuite {
                 }
                 else {
                     numIncorrect++;
-                    Formula f = new Formula();
+                    FormulaAST f = new FormulaAST();
                     f.read(expectedAnswer);
                     if (!odd)
                         result = result.append("<tr><td valign=top>" + (Integer.valueOf(count)).toString());

@@ -89,7 +89,7 @@ public class SigmaMockTestBase {
 
     private static final Map<String, List<String>> signaturesMap = Maps.newHashMap();
 
-    private static final ArrayList<Formula> LANG_FORMAT_MAP_COLS = Lists.newArrayList(
+    private static final ArrayList<FormulaAST> LANG_FORMAT_MAP_COLS = Lists.newArrayList(
             new FormulaAST("(format EnglishLanguage agent \"%2 is %n an &%agent of %1\")"),
             new FormulaAST("(format EnglishLanguage attribute \"%2 is %n an &%attribute of %1\")"),
             new FormulaAST("(format EnglishLanguage destination \"%1 %n{doesn't} %n &%end%p{s} at %2\")"),
@@ -167,7 +167,7 @@ public class SigmaMockTestBase {
         }
 
         @Override
-        public ArrayList<Formula> askWithRestriction(int argnum1, String term1, int argnum2, String term2) {
+        public ArrayList<FormulaAST> askWithRestriction(int argnum1, String term1, int argnum2, String term2) {
             return LANG_FORMAT_MAP_COLS;
         }
 

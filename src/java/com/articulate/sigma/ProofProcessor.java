@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.tp.EProver;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
@@ -117,7 +118,7 @@ public class ProofProcessor {
     /** ***************************************************************
      * if the answer clause is found, return null
      */
-    private static Formula removeNestedAnswerClauseRecurse(Formula f) {
+    private static FormulaAST removeNestedAnswerClauseRecurse(FormulaAST f) {
 
     	if (StringUtil.emptyString(f.getFormula().trim()))
     		return null;
@@ -126,17 +127,17 @@ public class ProofProcessor {
     	String relation = f.car();
     	if (relation.equals("answer"))
     		return null;
-    	if (relation.equals(Formula.NOT)) {
-            Formula fcdar = f.cdrAsFormula().carAsFormula();
+    	if (relation.equals(FormulaAST.NOT)) {
+            FormulaAST fcdar = f.cdrAsFormula().carAsFormula();
             if (fcdar == null) {
                 System.err.println("Error in ProofProcessor.removeNestedAnswerClauseRecurse(): bad arg to not: '" + f.getFormula() + "'");
                 return null;
             }
-            Formula fnew = removeNestedAnswerClauseRecurse(fcdar);
+            FormulaAST fnew = removeNestedAnswerClauseRecurse(fcdar);
             if (fnew == null)
                 return null;
             else {
-                Formula result = new Formula();
+                FormulaAST result = new FormulaAST();
                 result.read(Formula.LP + Formula.NOT + Formula.SPACE + fnew.getFormula() + Formula.RP);
                 return result;
             }
@@ -147,10 +148,10 @@ public class ProofProcessor {
     	int arg = 1;
     	boolean foundAnswer = false;
     	String strArgs = "";
-        Formula argForm, argRes;
+        FormulaAST argForm, argRes;
     	while (!StringUtil.emptyString(f.getArgument(arg))) {
-            argForm = new Formula();
-            argForm.read(f.getStringArgument(arg));
+            argForm = new FormulaAST();
+            argForm.setFormula(f.getStringArgument(arg));
             argRes = removeNestedAnswerClauseRecurse(argForm);
             if (argRes == null)
                     foundAnswer = true;
@@ -161,7 +162,7 @@ public class ProofProcessor {
             }
             arg = arg + 1;
     	}
-    	Formula result = new Formula();
+        FormulaAST result = new FormulaAST();
     	if (connective && foundAnswer && arg < 4)
             result.read(strArgs);
     	else
@@ -178,11 +179,11 @@ public class ProofProcessor {
     	if (st == null || !st.contains("answer"))
     		return st;
     	// clean the substring with "answer" in it
-    	Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
     	f.read(st);
 
 		// if there are no nested answers, return the original one
-		Formula removeNestedAnswerFormula = removeNestedAnswerClauseRecurse(f);
+        FormulaAST removeNestedAnswerFormula = removeNestedAnswerClauseRecurse(f);
 		if (removeNestedAnswerFormula == null)
 			return st;
     	return removeNestedAnswerFormula.getFormula();

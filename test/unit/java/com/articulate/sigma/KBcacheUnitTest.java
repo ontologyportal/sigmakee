@@ -21,6 +21,7 @@ package com.articulate.sigma;
  TransitiveRelation
  Relation
  */
+import com.articulate.sigma.parsing.FormulaAST;
 import org.junit.Test;
 import org.junit.BeforeClass;
 
@@ -72,7 +73,7 @@ public class KBcacheUnitTest {
         kif.parseStatement("(subclass Dog Vertebrate)");
         kif.parseStatement("(subclass Jellyfish Invertebrate)");
         kb.merge(kif,"");
-        for (Formula f : kb.formulaMap.values())
+        for (FormulaAST f : kb.formulaMap.values())
             f.sourceFile = "test"; // without a source file kbCache assumes it's a cached formula and ignores it
         kb.kbCache.buildCaches();
         KBcache.showState(kb.kbCache);
@@ -312,7 +313,7 @@ public class KBcacheUnitTest {
 
         System.out.println("Test testCollectArgsFromFormulas");
         String rel = "TransitiveRelation";
-        List<Formula> forms = kb.askWithRestriction(0,"instance",2,rel);
+        List<FormulaAST> forms = kb.askWithRestriction(0,"instance",2,rel);
         System.out.println("INFO in KBcache.testCollectArgsFromFormulas(): forms2: " + forms);
         Set<String> actual = new HashSet<>();
         if (forms != null)

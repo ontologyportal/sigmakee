@@ -5,6 +5,7 @@ package com.articulate.sigma;
 // Copyright 2019 Infosys
 // adam.pease@infosys.com
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.google.common.collect.*;
 import org.junit.Test;
 
@@ -23,7 +24,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
     public void testFindExplicitTypesDomainNotRule() {
 
         String stmt = "(domain date 1 Physical)";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -38,7 +39,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
     public void testFindExplicitTypesDomainNotRule2() {
 
         String stmt = "(domain date 1 Physical)";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -55,7 +56,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
     public void testFindExplicitTypesNames() {
 
         String stmt = "(names \"John\" ?H)";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -70,7 +71,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
     public void testFindExplicitTypesNames2() {
 
         String stmt = "(names \"John\" ?H)";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -87,7 +88,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
     public void testFindExplicitTypesSubclass() {
 
         String stmt = "(subclass ?Cougar Feline)";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -102,7 +103,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
     public void testFindExplicitTypesSubclass2() {
 
         String stmt = "(subclass ?Cougar Feline)";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -123,7 +124,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
         String stmt =   "(=> " +
                             "(subclass ?C Feline) "  +
                             "(subclass ?C Carnivore))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -144,7 +145,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
         String stmt =   "(=> " +
                             "(subclass ?C Feline) "  +
                             "(subclass ?C Carnivore))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -166,7 +167,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                             "(forall (?INST1 ?INST2 ?INST3) " +
                                 "(=> (and (?REL ?INST1 ?INST2) " +
                                 "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -188,7 +189,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                             "(forall (?INST1 ?INST2 ?INST3) " +
                                 "(=> (and (?REL ?INST1 ?INST2) " +
                                 "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -214,7 +215,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "               (names \"Sue\" ?S)\n" +
                 "               (likes ?J ?S))\n" +
                 "            (like ?S ?J))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -241,7 +242,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "               (names \"Sue\" ?S)\n" +
                 "               (likes ?J ?S))\n" +
                 "            (like ?S ?J))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -261,7 +262,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
     @Test
     public void testFindExplicitTypesIfAndOnlyIfEntity()     {
         String stmt = "(<=> (instance ?PHYS Entity) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -279,7 +280,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
     @Test
     public void testFindExplicitTypesIfAndOnlyIfEntity2()     {
         String stmt = "(<=> (instance ?PHYS Entity) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -297,7 +298,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
     @Test
     public void testFindExplicitTypesIfAndOnlyIfAutomobile()     {
         String stmt = "(<=> (instance ?PHYS Automobile) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -315,7 +316,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
     @Test
     public void testFindExplicitTypesIfAndOnlyIfAutomobile2()     {
         String stmt = "(<=> (instance ?PHYS Automobile) (exists (?LOC ?TIME) (and (located ?PHYS ?LOC) (time ?PHYS ?TIME))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -337,7 +338,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                                 "(=> (and (?REL ?INST1 ?INST2) " +
                                     "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -357,7 +358,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                                 "(=> (and (?REL ?INST1 ?INST2) " +
                                 "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -374,7 +375,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
     public void testFindExplicitTypesAgent()     {
         String stmt = "(agent Leaving Human)";
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -389,7 +390,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
     public void testFindExplicitTypesAgent2()     {
         String stmt = "(agent Leaving Human)";
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -409,7 +410,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "               (instance ?H Human)\n" +
                 "               (agent ?D ?H)))";
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -428,7 +429,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "               (instance ?H Human)\n" +
                 "               (agent ?D ?H)))";
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -452,7 +453,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "            (agent ?RATE ?AGENT)\n" +
                 "            (patient ?RATE ?ATTR)\n" +
                 "            (destination ?RATE ?ENTITY))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -473,7 +474,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "      (part ?SUBSTANCE ?MIXTURE)\n" +
                 "      (not (instance ?SUBSTANCE Mixture)))\n" +
                 "   (instance ?SUBSTANCE PureSubstance))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -500,7 +501,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "            (and\n" +
                 "                (instance ?ATTR BodyPosition)\n" +
                 "                (attribute ?ANIMAL ?ATTR)))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -524,7 +525,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "   (<=>\n" +
                 "      (equal (GraphPathFn ?NODE1 ?NODE2) ?PATH)\n" +
                 "      (equal (GraphPathFn ?NODE2 ?NODE1) ?PATH)))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -544,7 +545,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "      (instance ?Y ?YEAR)\n" +
                 "      (not (instance ?Y LeapYear)))\n" +
                 "   (duration ?MONTH (MeasureFn 28 DayDuration)))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -574,7 +575,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "               (measure ?WATER ?MEASURE1)\n" +
                 "               (measure ?PART ?MEASURE2)\n" +
                 "               (greaterThan ?MEASURE1 ?MEASURE2))))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -598,7 +599,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "   (and\n" +
                 "      (instance ?AGENT Animal)\n" +
                 "      (not (instance ?AGENT Human))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -620,7 +621,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "      (and\n" +
                 "         (instance ?PLAN Planning)\n" +
                 "         (result ?PLAN ?LANG))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -641,7 +642,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "      (instance ?PUB Publication)\n" +
                 "      (patient ?PUB ?TEXT))\n" +
                 "   (subclass ?TEXT Text))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -667,7 +668,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "    (measure ?X (MeasureFn ?TEMP KelvinDegree))\n" +
                 "    (greaterThan ?TEMP ?BOIL))\n" +
                 "  (attribute ?X Gas))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -692,7 +693,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "      (holdsDuring (WhenFn ?BOILING) (measure ?SUBSTANCE (MeasureFn ?TEMP2 ?MEASURE)))\n" +
                 "      (instance ?MEASURE UnitOfTemperature))\n" +
                 "   (greaterThanOrEqualTo ?TEMP2 ?TEMP1))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -722,7 +723,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "            (instance ?R2 Rotating)\n" +
                 "            (subProcess ?R2 ?R)\n" +
                 "            (experiencer ?R2 ?AXIS)))))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -766,7 +767,7 @@ public class FormulaPreprocessorFindExplicitTypesTest extends UnitTestBase  {
                 "            (patient ?RADIO ?SOUND)\n" +
                 "            (destination ?RADIO ?RX)\n" +
                 "            (agent ?RADIO ?TX)))))))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 

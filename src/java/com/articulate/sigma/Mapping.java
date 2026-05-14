@@ -1,6 +1,7 @@
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.OWLtranslator;
 import com.articulate.sigma.utils.StringUtil;
 
@@ -217,9 +218,9 @@ public class Mapping {
     public static String getTermFormat(KB kb, String term) {
 
         if (kb != null) {
-            List<Formula> al = kb.askWithRestriction(0,"termFormat",2,term);
+            List<FormulaAST> al = kb.askWithRestriction(0,"termFormat",2,term);
             if (al != null && !al.isEmpty()) {
-                Formula f = al.get(0);
+                FormulaAST f = al.get(0);
                 String t = f.getStringArgument(3);
                 t = OWLtranslator.removeQuotes(t);
                 return t;

@@ -16,7 +16,7 @@ public class FormulaUtil {
     /** ***************************************************************
      * Get the antecedent of an implication.  If not a rule, return null
      */
-    public static String antecedent (Formula f) {
+    public static String antecedent (FormulaAST f) {
 
         if (f == null || !f.isRule())
             return null;
@@ -26,7 +26,7 @@ public class FormulaUtil {
     /** ***************************************************************
      * Get the consequent of an implication.  If not a rule, return null
      */
-    public static String consequent (Formula f) {
+    public static String consequent (FormulaAST f) {
 
         if (f == null || !f.isRule())
             return null;
@@ -36,7 +36,7 @@ public class FormulaUtil {
     /** ***************************************************************
      * Must check that this is a simple clause before calling!
      */
-    public static String toProlog(Formula f) {
+    public static String toProlog(FormulaAST f) {
 
         StringBuilder sb = new StringBuilder();
         String car = f.car();
@@ -62,10 +62,10 @@ public class FormulaUtil {
 
     /** ***************************************************************
      */
-    public static String formatCollection(Collection<Formula> c) {
+    public static String formatCollection(Collection<FormulaAST> c) {
 
         StringBuilder sb = new StringBuilder();
-        for (Formula f : c)
+        for (FormulaAST f : c)
             sb.append(f.toString()).append("\n\n");
         return sb.toString();
     }
@@ -95,7 +95,7 @@ public class FormulaUtil {
      * Test whether a formula is suitable for theorem proving or if
      * it's just a documentation statement
      */
-    public static boolean isDoc(Formula f) {
+    public static boolean isDoc(FormulaAST f) {
 
         if (f.isRule())
             return false;
@@ -159,7 +159,7 @@ public class FormulaUtil {
         List<String> ans = new ArrayList<>();
         try {
             if (!StringUtil.emptyString(kifListAsString)) {
-                Formula f = new FormulaAST();
+                FormulaAST f = new FormulaAST();
                 f.read(kifListAsString);
                 ans = f.literalToArrayList();
             }
@@ -193,7 +193,7 @@ public class FormulaUtil {
                     sb.append(tree);
                 }
                 else {
-                    Formula f = new FormulaAST();
+                    FormulaAST f = new FormulaAST();
                     f.read(tree);
                     List tuple = f.literalToArrayList();
                     sb.append(Formula.LP);
@@ -220,12 +220,12 @@ public class FormulaUtil {
     /** ********************************************************************************************
      * Factory method for the memo map
      */
-    public static String removeAnswerClause(Formula f) {
+    public static String removeAnswerClause(FormulaAST f) {
 
         String s = f.getFormula();
         String result = s.replaceAll("(not)?\\s*\\(ans\\d[^\\)]*\\)", "");
         result = result.replaceAll("\\(\\s*\\)","");
-        Formula fnew = new FormulaAST(result);
+        FormulaAST fnew = new FormulaAST(result);
         result = SUMOtoTFAform.elimUnitaryLogops(fnew);
         result = result.replaceAll("\\(\\s*\\)","");
         return result;
@@ -297,9 +297,9 @@ public class FormulaUtil {
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("KButilities.main(): completed init");
-        List<Formula> flist = kb.ask("ant",0,"Process");
+        List<FormulaAST> flist = kb.ask("ant",0,"Process");
         sortBySourceFile(flist);
-        for (Formula f : flist)
+        for (FormulaAST f : flist)
             System.out.println(f.getSourceFile());
     }
 
@@ -314,15 +314,15 @@ public class FormulaUtil {
         return FILE_PRIORITY.getOrDefault(file, Integer.MAX_VALUE);
     }
 
-    public static void sortBySourceFile(List<Formula> forms) {
+    public static void sortBySourceFile(List<FormulaAST> forms) {
         forms.sort(
                 Comparator
                         // 1. priority files first
-                        .comparingInt((Formula f) -> filePriority(FileUtil.noPath(f.getSourceFile())))
+                        .comparingInt((FormulaAST f) -> filePriority(FileUtil.noPath(f.getSourceFile())))
                         // 2. then by sourceFile name
-                        .thenComparing(Formula::getSourceFile)
+                        .thenComparing(FormulaAST::getSourceFile)
                         // 3. then by line number
-                        .thenComparingInt(Formula::getLineNumber)
+                        .thenComparingInt(FormulaAST::getLineNumber)
         );
     }
 

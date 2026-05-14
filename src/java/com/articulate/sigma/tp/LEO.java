@@ -16,7 +16,9 @@ package com.articulate.sigma.tp;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.FormulaPreprocessor;
 import com.articulate.sigma.KB;
+import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
@@ -105,10 +107,10 @@ public class LEO {
         
         if (debug>0) System.out.printf("LEO.askLeo(%s)", suoKifFormula);
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            Formula query = new Formula();
+            FormulaAST query = new FormulaAST();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedQuery = fp.preProcess(query, true, this.kb);
+            Set<Expr> processedQuery = fp.preProcessExpr(query.expr, true, this.kb);
             if (!processedQuery.isEmpty() && this != null) {
                 this.axiomIndex = 0;
                 String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
@@ -118,7 +120,9 @@ public class LEO {
                 StringBuilder combined = new StringBuilder();
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
-                    for (Formula p : processedQuery) combined.append(p.getFormula()).append(Formula.SPACE);
+                    for (Expr ex : processedQuery) {
+                        combined.append(ex.toKifString()).append(Formula.SPACE);
+                    }
                     combined.append(Formula.RP);
                     String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + this.axiomIndex++ +
                         ",conjecture,(" +
@@ -129,7 +133,7 @@ public class LEO {
                 else {
                     String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + this.axiomIndex++ +
                         ",conjecture,(" +
-                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().getFormula(), true, this.requestedTptpLanguage)
+                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().toKifString(), true, this.requestedTptpLanguage)
                         + ")).";
                     tptpquery.add(theTPTPstatement);
                 }
@@ -140,7 +144,7 @@ public class LEO {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                String strQuery = processedQuery.iterator().next().getFormula();
+                String strQuery = processedQuery.iterator().next().toKifString();
             }
             else System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
         }
@@ -159,10 +163,10 @@ public class LEO {
         if (debug>0) System.out.printf("LEO.askLeo(%s, %b)", suoKifFormula, useSession);
         final String requestedLang = SUMOKBtoTPTPKB.getLang();
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            Formula query = new Formula();
+            FormulaAST query = new FormulaAST();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedQuery = fp.preProcess(query, true, this.kb);
+            Set<Expr> processedQuery = fp.preProcessExpr(query, true, this.kb);
             if (!processedQuery.isEmpty() && this != null) {
                 this.axiomIndex = 0;
                 String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
@@ -193,7 +197,7 @@ public class LEO {
                 StringBuilder combined = new StringBuilder();
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
-                    for (Formula p : processedQuery) combined.append(p.getFormula()).append(Formula.SPACE);
+                    for (Expr p : processedQuery) combined.append(p.toKifString()).append(Formula.SPACE);
                     combined.append(Formula.RP);
                     String theTPTPstatement = requestedLang + "(query" + "_" + this.axiomIndex++ +
                             ",conjecture,(" +
@@ -204,7 +208,7 @@ public class LEO {
                 else {
                     String theTPTPstatement = requestedLang + "(query" + "_" + this.axiomIndex++ +
                         ",conjecture,(" +
-                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().getFormula(), true, this.requestedTptpLanguage)
+                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedQuery.iterator().next().toKifString(), true, this.requestedTptpLanguage)
                         + ")).";
                     tptpquery.add(theTPTPstatement);
                 }
@@ -260,25 +264,25 @@ public class LEO {
      * @param tptp convert formula to TPTP if tptp = true
      * @return true if all assertions are added for inference
      */
-    public boolean assertFormula(String userAssertionTPTP, List<Formula> parsedFormulas, boolean tptp) {
+    public boolean assertFormula(String userAssertionTPTP, List<FormulaAST> parsedFormulas, boolean tptp) {
 
         if (debug>0) System.out.printf("LEO.assertFormula(%s, %s, %b)", userAssertionTPTP, parsedFormulas, tptp);
         boolean allAdded = false;
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
-            HashSet<Formula> processedFormulas = new HashSet();
+            HashSet<Expr> processedFormulas = new HashSet<>();
             FormulaPreprocessor fp;
             Set<String> tptpFormulas;
             String tptpStr;
-            for (Formula parsedF : parsedFormulas) {
+            for (FormulaAST parsedF : parsedFormulas) {
                 processedFormulas.clear();
                 fp = new FormulaPreprocessor();
-                processedFormulas.addAll(fp.preProcess(parsedF,false, this.kb));
+                processedFormulas.addAll(fp.preProcessExpr(parsedF, false, this.kb));
                 if (processedFormulas.isEmpty()) allAdded = false;
                 else {   // 2. Translate to THF.
                     tptpFormulas = new HashSet<>();
                     if (tptp) {
-                        for (Formula p : processedFormulas) {
-                            String formula = THFnew.processNonModal(p, new HashMap<>(), false);
+                        for (Expr p : processedFormulas) {
+                            String formula = THFnew.processNonModal(new FormulaAST(p.toKifString()), new HashMap<>(), false);
                             tptpFormulas.add(formula);
                         }
                     }
