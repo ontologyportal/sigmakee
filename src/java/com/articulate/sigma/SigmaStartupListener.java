@@ -14,7 +14,7 @@ public class SigmaStartupListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent event) {
 
-        System.out.println("\n================================ SIGMAKEE INITIALIZING ================================\n" + "INFO  [SigmaStartupListener.contextInitialized()] SigmaKEE startup beginning...");
+        System.out.println("\n================================ SIGMAKEE INITIALIZING ================================\nINFO  [SigmaStartupListener.contextInitialized()] SigmaKEE startup beginning...");
         try {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB("SUMO");

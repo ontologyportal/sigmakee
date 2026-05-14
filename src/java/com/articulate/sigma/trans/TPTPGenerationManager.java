@@ -174,7 +174,6 @@ public class TPTPGenerationManager {
         Path tmp    = java.nio.file.Paths.get(infFilename + ".tmp");
 
         try {
-            System.out.println("===== TPTPGenerationManager: Generating FOF file: " + infFilename);
             long startTime = System.currentTimeMillis();
 
             // Ensure we don't leave a stale tmp around
@@ -183,7 +182,6 @@ public class TPTPGenerationManager {
             // Set BOTH static language fields to FOF
             SUMOKBtoTPTPKB.setLang("fof");
             SUMOformulaToTPTPformula.setLang("fof");
-            System.out.println("TPTPGenerationManager.generateFOF(): setHideNumbers true");
             SUMOformulaToTPTPformula.setHideNumbers(true);
 
             // Pre-capture relations set so ExprToTPTP.shouldAddMention() does a single
@@ -250,7 +248,6 @@ public class TPTPGenerationManager {
         Path tmp    = Paths.get(infFilename + ".tmp");
 
         try {
-            System.out.println("==== TPTPGenerationManager: Generating TFF file: " + infFilename);
             SUMOKBtoTPTPKB.resetPathCounters();
             long startTime = System.currentTimeMillis();
 

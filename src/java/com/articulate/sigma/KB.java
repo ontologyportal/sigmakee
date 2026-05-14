@@ -95,6 +95,8 @@ import java.util.regex.PatternSyntaxException;
 
 import tptp_parser.TPTPFormula;
 
+import org.openjdk.jol.info.GraphLayout;
+
 /**
  * ***************************************************************** Contains
  * methods for reading, writing knowledge bases and their configurations. Also
@@ -2835,17 +2837,16 @@ public class KB implements Serializable {
         for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
             termFrequency.merge(entry.getKey(), entry.getValue(), Integer::sum);
         }
-
         int count = 2;
         int total = file.formulas.keySet().size();
         // Merge predicate-position index
-        for (String key : file.formulas.keySet()) {
-            if ((count++ % 100) == 1) progressSb.append(".");
-            if ((count % 4000) == 1) {
-                System.out.print(progressSb + "x");
-                progressSb.setLength(0);
-                System.out.printf("%nINFO in KB.addConstituentInfoAST(): still adding keys. %d%% done.%n",
-                        count * 100 / total);
+        if (total > 0) for (String key : file.formulas.keySet()) {
+            if ((count % Math.max(1, total / 1000)) == 0 || count == total) {
+                LoggingUtils.printProgressBar(
+                    "INFO [KB.addConstituentInfoAST()] Adding formulas from " + file.filename,
+                    count,
+                    total
+                );
             }
             List<String> newlist = file.formulas.get(key);
             List<String> list = formulas.get(key);
@@ -2854,19 +2855,18 @@ public class KB implements Serializable {
             }
             formulas.put(key, newlist);
         }
-
-        count = 2;
-        total = file.formulaMap.values().size();
-        // Merge formulaMap (FormulaAST extends Formula, so it fits Map<String,Formula>)
-        for (FormulaAST f : file.formulaMap.values()) {
-            String internedFormula = f.getFormula().intern();
-            if ((count++ % 100) == 1) progressSb.append(".");
-            if ((count % 4000) == 1) {
-                System.out.print(progressSb + "x");
-                progressSb.setLength(0);
-                System.out.printf("%nINFO in KB.addConstituentInfoAST(): still adding values. %d%% done.%n",
-                        count * 100 / total);
+        count = 0;
+        total = file.formulaMap.size();
+        if (total > 0) for (FormulaAST f : file.formulaMap.values()) {
+            count++;
+            if ((count % Math.max(1, total / 1000)) == 0 || count == total) {
+                LoggingUtils.printProgressBar(
+                    "INFO [KB.addConstituentInfoAST()] Adding formulaMap from " + file.filename,
+                    count,
+                    total
+                );
             }
+            String internedFormula = f.getFormula().intern();
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
         }
@@ -2928,7 +2928,6 @@ public class KB implements Serializable {
         }
 
         int count = 2;
-        //System.out.println("INFO in KB.addConstituent(): add keys");
         List<String> newlist, list;
         int total = file.formulas.keySet().size();
         for (String key : file.formulas.keySet()) { // Iterate through keys.

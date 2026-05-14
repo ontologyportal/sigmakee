@@ -1264,7 +1264,8 @@ public class SUMOKBtoTPTPKB {
                             .collect(Collectors.toList())
             ).get();
         } catch (Exception ex) {
-            System.err.println("ERROR  [SUMOKBtoTPTPKB._tWriteFile()]  Parallel translation failed, falling back to sequential: " + ex.getMessage());
+            System.err.println("INFO  [SUMOKBtoTPTPKB._tWriteFile()]  parallel translation failed, falling back to sequential: "
+                    + ex.getMessage());
             ex.printStackTrace();
             results = IntStream.range(0, formulaList.size())
                     .mapToObj(i -> translateOneFormula(formulaList.get(i), localLang, total, i))

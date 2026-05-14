@@ -65,6 +65,8 @@ public class Vampire {
     private KB kb;
     /** The path where the vampire executable is found */
     private String executablePath;
+    /** The path where the vampire executable is found */
+    private String holExecutablePath;
     /** Directory of the knowledge base vampire will query against */
     private String inferenceFilePath;
     /**  */
@@ -162,6 +164,10 @@ public class Vampire {
         } else {
             this.requestedTptpLanguage = "thf";
             this.inferenceFileExtension = "thf";
+            this.executablePath = this.executablePath.replace(
+            File.separator + "build" + File.separator,
+            File.separator + "build_hol" + File.separator
+        );
         }
         System.out.println("VAMPIRE LANGUAGE: " + this.requestedTptpLanguage);
         this.modensPonens = modensPonens;
@@ -313,7 +319,7 @@ public class Vampire {
         ));
         if (this.askQuestion){
             this.commands.add("-qa");
-            this.commands.add("plain");
+            // this.commands.add("plain");
         }
         try{
             this.runCustom(kbFile);
@@ -460,7 +466,7 @@ public class Vampire {
             Set<String> allStmts = new LinkedHashSet<>(userAsserts);
             allStmts.addAll(conjectureStmts);
             writeStatements(allStmts);
-            concatFiles(kbThfPath, stmtFile, outfile);
+            writeIncludeProblem(kbThfPath, stmtFile, outfile);
             // -------- 6. Actually call Vampire on temp-comb.thf --------
             if (debug>1) System.out.println("------ Vampire.askVampireHOL(): Asking Vampire");
             this.askVampireTHF(outfile);
@@ -975,6 +981,52 @@ public class Vampire {
                 }
             }
         }
+    }
+
+    /*****************************************************************
+     * Write a TPTP/THF problem file that includes the base KB file
+     * rather than physically concatenating the base KB into temp-comb.thf.
+     *
+     * @param baseFile base THF axiom file, e.g. SUMO_plain.thf or SUMO_modals.thf
+     * @param stmtFile temp-stmt.thf containing user assertions and conjectures
+     * @param outfile temp-comb.thf wrapper file given to Vampire
+     */
+    public void writeIncludeProblem(String baseFile, String stmtFile, String outfile) throws IOException {
+
+        if (debug > 0)
+            System.out.printf("\nVampire.writeIncludeProblem(%s, %s, %s)", baseFile, stmtFile, outfile);
+
+        Path basePath = Paths.get(baseFile).toAbsolutePath().normalize();
+        Path stmtPath = Paths.get(stmtFile).toAbsolutePath().normalize();
+        Path outPath = Paths.get(outfile).toAbsolutePath().normalize();
+
+        if (!Files.exists(basePath))
+            System.err.println("ERROR in writeIncludeProblem(): " + basePath + " does not exist");
+
+        if (!Files.exists(stmtPath))
+            System.err.println("ERROR in writeIncludeProblem(): " + stmtPath + " does not exist");
+
+        try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(outPath));
+            BufferedReader br = Files.newBufferedReader(stmtPath)) {
+
+            pw.println("% Base SUMO axioms");
+            pw.println("include('" + escapeTPTPPath(basePath.toString()) + "').");
+            pw.println();
+
+            pw.println("% User assertions and conjectures");
+            String line;
+            while ((line = br.readLine()) != null) {
+                pw.println(line);
+            }
+        }
+    }
+
+    /*****************************************************************
+     * Escape file paths for single-quoted TPTP include atoms.
+     */
+    private static String escapeTPTPPath(String path) {
+
+        return path.replace("\\", "/").replace("'", "\\'");
     }
 
     /***************************************************************
