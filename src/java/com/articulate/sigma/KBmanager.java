@@ -901,34 +901,29 @@ public class KBmanager implements Serializable {
      *        typically ~/.sigmakee/KBs
      */
     public void initializeOnce(String configFileDir) {
-
+        
+        String horizontalLine = "================================================================\n";
+        long start = System.nanoTime();
+        int stepNumber = 0;
+        System.out.println("\n" + horizontalLine + "INFO  [KBmanager.initializeOnce()] Initializing KBmanager!");
         long millis = System.currentTimeMillis();
         boolean loaded = false;
-        if (initializing || initialized) {
-            if (debug) System.out.println("Info in KBmanager.initializeOnce(): initialized is " + initialized);
-            if (debug) System.out.println("Info in KBmanager.initializeOnce(): initializing is " + initializing);
-            if (debug) System.out.println("Info in KBmanager.initializeOnce(): returning ");
-            return;
-        }
+        if (initializing || initialized) return;
         initializing = true;
         KBmanager.getMgr().setPref("kbDir",configFileDir);
-        if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " + preferences.keySet().size());
         try {
-            if (debug) System.out.println("Info in KBmanager.initializeOnce(): initializing with " + configFileDir);
             SimpleElement configuration = readConfiguration(configFileDir);
-            if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " + preferences.keySet().size());
-            if (configuration == null) throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
+            if (configuration == null) throw new Exception(horizontalLine + "ERROR  [KBmanager.initializeOnce()] Error in config.xml");
             if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists() && !serializedOld(configuration)) {
-                if (debug) System.out.println("KBmanager.initializeOnce(): serialized exists and is not old");
+                System.out.printf(horizontalLine + "INFO  [KBmanager.initializeOnce()] STEP #%d)    Loading from serialized cache...\n", stepNumber);
+                stepNumber++;
                 loaded = loadSerialized();
                 if (loaded) {
-                    if (debug) System.out.println("KBmanager.initializeOnce(): manager is loaded");
+                    System.out.printf(horizontalLine + "INFO  [KBmanager.initializeOnce(): STEP #%d)    Loading English Lexicons...\n", stepNumber);
+                    stepNumber++;
                     if (!prefEquals("loadLexicons","false")) {
-                        if (debug) System.out.println("KBmanager.initializeOnce(): here 1");
                         WordNet.initOnce();
-                        if (debug) System.out.println("KBmanager.initializeOnce(): here 2");
                         NLGUtils.init(configFileDir);
-                        if (debug) System.out.println("KBmanager.initializeOnce(): here 3");
                         OMWordnet.readOMWfiles();
                         if (!VerbNet.disable) {
                             VerbNet.initOnce();
@@ -936,42 +931,39 @@ public class KBmanager implements Serializable {
                         }
                     }
                     else {
+                        System.out.printf(horizontalLine + "INFO  [KBmanager.initializeOnce()] STEP #%d)    Skipped...\n", stepNumber);
+                        stepNumber++;
                         WordNet.disable = true;
                         VerbNet.disable = true;
                         OMWordnet.disable = true;
                     }
-                    if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
                     initializing = false;
                     initialized = true;
-                    // Rebuild transient symbol taxonomies in background (warm start: skipped buildCaches())
+                    System.out.printf(horizontalLine + "INFO  [KBmanager.initializeOnce()] STEP #%d)    Building SUMO Term Taxonomy...\n", stepNumber);
+                    stepNumber++;
                     for (KB kb : manager.kbs.values()) {
                         final KB kbFinal = kb;
                         KButilities.EXECUTOR_SERVICE.submit(() -> {
                             try { kbFinal.kbCache.buildSymbolTaxonomy(); }
-                            catch (Exception e) { System.err.println("KBmanager: buildSymbolTaxonomy failed: " + e.getMessage()); }
+                            catch (Exception e) { System.err.println("ERROR  [KBmanager.initializeOnce()] buildSymbolTaxonomy failed: " + e.getMessage()); }
                         });
                     }
-                    // Start background TPTP generation for all needed formats (FOF, TFF, THF)
-                    TPTPGenerationManager.startBackgroundGeneration();
                 }
             }
-            if (!loaded) { // if there was an error loading the serialized file, or there is none,
-                           // then reload from sources
-                if (debug) System.out.println("Info in KBmanager.initializeOnce(): reading from sources");
-                if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
-                        preferences.keySet().size());
+            if (!loaded) {
+                System.out.printf(horizontalLine + "INFO  [KBmanager.initializeOnce()] STEP #%d)    Regenerating Fresh Cache...\n", stepNumber);
+                stepNumber++;
                 manager = this;
-                KBmanager.getMgr().setPref("kbDir",configFileDir); // need to restore config file path
-                if (StringUtil.isNonEmptyString(configFileDir)) setConfiguration(configuration); // preferences are set here as well
+                KBmanager.getMgr().setPref("kbDir", configFileDir);
+                if (StringUtil.isNonEmptyString(configFileDir)) setConfiguration(configuration);
                 else setDefaultAttributes();
-                if (debug) System.out.println("Info in KBmanager.initializeOnce(): completed initialization");
-                if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
                 serialize();
                 initializing = false;
                 initialized = true;
-                // Start background TPTP generation for all needed formats (FOF, TFF, THF)
-                TPTPGenerationManager.startBackgroundGeneration();
             }
+            System.out.printf(horizontalLine + "INFO  [KBmanager.initializeOnce()] STEP #%d) Starting TPTP Background Generation...\n", stepNumber);
+            stepNumber++;
+            TPTPGenerationManager.startBackgroundGeneration();
         }
         catch (Exception ex) {
             System.err.println(ex.getMessage());
@@ -980,9 +972,8 @@ public class KBmanager implements Serializable {
         }
         // Clean up orphaned session directories from previous runs
         cleanupOrphanedSessionDirectories();
-        if (debug) System.out.println("Info in KBmanager.initializeOnce(): initialized is " + initialized);
-        if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " + preferences.keySet().size());
-        if (debug) System.out.println("KBmanager.initializeOnce(): total init time in seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
+        double elapsedSeconds = (System.nanoTime() - start) / 1_000_000_000.0;
+        System.out.println(horizontalLine + "INFO  [KBmanager.initializeOnce()] Initialization completed in " + elapsedSeconds + " seconds!\n");
     }
 
     /** ***************************************************************
@@ -1262,28 +1253,18 @@ public class KBmanager implements Serializable {
 
         String kbDir = getMgr().getPref("kbDir");
         Path sessionsDir = Paths.get(kbDir, "sessions");
-
         if (!Files.exists(sessionsDir)) {
             return;
         }
-
-        System.out.println("KBmanager: Checking for orphaned session directories...");
-
+        System.out.println("KBmanager.cleanupOrphanedSessionDirectories(): Checking for orphaned session directories...");
         // 60 minutes = default HTTP session timeout
         long cutoffTime = System.currentTimeMillis() - (60 * 60 * 1000);
-
         try {
             java.util.concurrent.atomic.AtomicInteger removed = new java.util.concurrent.atomic.AtomicInteger(0);
-
             Files.list(sessionsDir).forEach(sessionDir -> {
-                if (!Files.isDirectory(sessionDir)) {
-                    return;
-                }
-
+                if (!Files.isDirectory(sessionDir)) return;
                 try {
-                    // Check directory modification time
                     long dirTime = Files.getLastModifiedTime(sessionDir).toMillis();
-
                     if (dirTime < cutoffTime) {
                         String sessionId = sessionDir.getFileName().toString();
                         System.out.println("KBmanager: Removing orphaned session directory: " + sessionId);
@@ -1291,18 +1272,13 @@ public class KBmanager implements Serializable {
                         removed.incrementAndGet();
                     }
                 } catch (IOException e) {
-                    System.err.println("KBmanager: Error checking session directory: " + e.getMessage());
+                    System.err.println("KBmanager.cleanupOrphanedSessionDirectories(): Error checking session directory: " + e.getMessage());
                 }
             });
-
-            if (removed.get() > 0) {
-                System.out.println("KBmanager: Removed " + removed.get() + " orphaned session directories");
-            } else {
-                System.out.println("KBmanager: No orphaned session directories found");
-            }
-
+            if (removed.get() > 0) System.out.println("KBmanager.cleanupOrphanedSessionDirectories(): Removed " + removed.get() + " orphaned session directories");
+            else System.out.println("KBmanager.cleanupOrphanedSessionDirectories(): No orphaned session directories found");
         } catch (IOException e) {
-            System.err.println("KBmanager: Error during orphaned session cleanup: " + e.getMessage());
+            System.err.println("KBmanager.cleanupOrphanedSessionDirectories(): Error during orphaned session cleanup: " + e.getMessage());
         }
     }
 

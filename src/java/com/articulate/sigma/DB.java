@@ -56,6 +56,8 @@ import java.util.regex.Pattern;
 /** A class to interface with databases and database-like formats,
 such as spreadsheets. */
 public class DB {
+
+    public static int debug = 0;
       // a map of word keys, broken down by POS, listing whether it's a positive or negative word
       // keys are pre-defined as type, POS, stemmed, polarity
     public static Map<String,Map<String,String>> sentiment = new HashMap<>();
@@ -141,16 +143,13 @@ public class DB {
         // representation of the time to proof or "F" if no proof.
         String problemName;
         List al = readSpreadsheet("TPTPresults.csv", null,true);
-        //System.out.println("INFO in DB.processTPTPData: " + al.size() + " lines");
         Map problem = null;
         List row;
         String cell, proverName, success, time;
         for (int i = 0; i < al.size(); i++) {
             row = (ArrayList) al.get(i);
-            //System.out.println("INFO in DB.processTPTPData line: " + row);
             if (!row.isEmpty()) {
                 cell = (String) row.get(0);
-                //System.out.println(cell);
                 if (cell.startsWith("CSR")) {
                     problem = new HashMap();
                     problemName = cell;
@@ -166,7 +165,6 @@ public class DB {
                 }
             }
         }
-        //System.out.println("INFO in DB.processTPTPData: " + problemSet.keySet().size() + " problems");
         return problemSet;
     }
 
@@ -211,14 +209,14 @@ public class DB {
      */
     public void generateDB(KB kb) {
 
-        System.out.println("create database " + kb.name + ";");
+        if (debug>0) System.out.println("create database " + kb.name + ";");
         List composites = kb.askWithRestriction(0,"instance",2,"DatabaseTable");
         Formula f;
         String element;
         for (int i = 0; i < composites.size(); i++) {
             f = (Formula) composites.get(i);
             element = f.getStringArgument(1);
-            System.out.println("create table " + element + ";");
+            if (debug>0) System.out.println("create table " + element + ";");
             generateDBElement(kb, element);
         }
     }
@@ -238,7 +236,7 @@ public class DB {
     public static List<List<String>> readSpreadsheet(Reader inReader, List<String> lineStartTokens, boolean quote, char delimiter) {
 
         long t1 = System.currentTimeMillis();
-        System.out.println("ENTER DB.readSpreadsheet(" + inReader + ", " + lineStartTokens + ")");
+        if (debug>0) System.out.println("ENTER DB.readSpreadsheet(" + inReader + ", " + lineStartTokens + ")");
         List<List<String>> rows = new ArrayList<>();
         String line = null, cellVal;
         StringBuilder cell = null;
@@ -255,7 +253,7 @@ public class DB {
                 if (!skippingHeader) {
                     try {
                         if (StringUtil.containsNonAsciiChars(line))
-                            System.out.println("\nINFO in DB.readSpreadsheet(): NonASCII char near line " + lr.getLineNumber() + ": " + line + "\n");
+                            if (debug>0) System.out.println("\nINFO in DB.readSpreadsheet(): NonASCII char near line " + lr.getLineNumber() + ": " + line + "\n");
                         line += " ";
                         // concatenate lines not starting with one of the
                         // tokens in lineStartTokens.
@@ -341,9 +339,9 @@ public class DB {
             System.err.println(e.getMessage());
             e.printStackTrace();
         }
-        System.out.println("EXIT DB.readSpreadsheet(" + inReader + ", " + lineStartTokens + ")");
-        System.out.println("  rows == [list of " + rows.size() + " rows]");
-        System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds elapsed time");
+        if (debug>0) System.out.println("EXIT DB.readSpreadsheet(" + inReader + ", " + lineStartTokens + ")");
+        if (debug>0) System.out.println("  rows == [list of " + rows.size() + " rows]");
+        if (debug>0) System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds elapsed time");
         return rows;
     }
 
@@ -362,7 +360,7 @@ public class DB {
     public static List<List<String>> readSpreadsheet(String fname, List lineStartTokens,
             boolean quote, char delimiter) {
 
-        System.out.println("ENTER DB.readSpreadsheet(" + fname + ", " + lineStartTokens + ")");
+        if (debug>0) System.out.println("ENTER DB.readSpreadsheet(" + fname + ", " + lineStartTokens + ")");
         List<List<String>> rows = new ArrayList<>();
         try (FileReader fr = new FileReader(fname)) {
             rows = readSpreadsheet(fr, lineStartTokens,quote,delimiter);
@@ -372,7 +370,7 @@ public class DB {
             System.err.println(e.getMessage());
             e.printStackTrace();
         }
-        System.out.println("EXIT DB.readSpreadsheet(" + fname + ", " + lineStartTokens + ")");
+        if (debug>0) System.out.println("EXIT DB.readSpreadsheet(" + fname + ", " + lineStartTokens + ")");
         return rows;
     }
 
@@ -442,7 +440,7 @@ public class DB {
     public static List<List> readDataInterchangeFormatFile(Reader inReader) {
 
         long t1 = System.currentTimeMillis();
-        System.out.println("ENTER DB.readDataInterchangeFormatFile(" + inReader + ")");
+        if (debug>0) System.out.println("ENTER DB.readDataInterchangeFormatFile(" + inReader + ")");
         List<List> rows = new ArrayList<>();
         try (LineNumberReader lr = new LineNumberReader(inReader)) {
             List row = new ArrayList();
@@ -456,7 +454,7 @@ public class DB {
             while ((line = lr.readLine()) != null) {
                 try {
                     if (StringUtil.containsNonAsciiChars(line))
-                        System.out.println("NonASCII char near line " + lr.getLineNumber() + ": "
+                        if (debug>0) System.out.println("NonASCII char near line " + lr.getLineNumber() + ": "
                                 + line);
                     prevVal = val;
                     // Remove only one layer of quotes.
@@ -535,9 +533,9 @@ public class DB {
         catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("EXIT DB.readDataInterchangeFormatFile(" + inReader + ")");
-        System.out.println("  rows == [list of " + rows.size() + " rows]");
-        System.out.println("  "  + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds elapsed time");
+        if (debug>0) System.out.println("EXIT DB.readDataInterchangeFormatFile(" + inReader + ")");
+        if (debug>0) System.out.println("  rows == [list of " + rows.size() + " rows]");
+        if (debug>0) System.out.println("  "  + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds elapsed time");
         return rows;
     }
 
@@ -551,7 +549,7 @@ public class DB {
      */
     public static List<List> readDataInterchangeFormatFile(String fname) {
 
-        System.out.println("ENTER DB.readDataInterchangeFormatFile(" + fname + ")");
+        if (debug>0) System.out.println("ENTER DB.readDataInterchangeFormatFile(" + fname + ")");
         List<List> rows = new ArrayList<>();
         try (Reader fr = new FileReader(fname)) {
             rows = readDataInterchangeFormatFile(fr);
@@ -559,7 +557,7 @@ public class DB {
         catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println("EXIT DB.readDataInterchangeFormatFile(" + fname + ")");
+        if (debug>0) System.out.println("EXIT DB.readDataInterchangeFormatFile(" + fname + ")");
         return rows;
     }
 
@@ -601,11 +599,11 @@ public class DB {
     public static int writeSuoKifStatements(Set statements, PrintWriter pw) {
 
         long t1 = System.currentTimeMillis();
-        System.out.println("ENTER DB.writeSuoKifStatements([" + statements.size() + " statements], " + pw.toString() + ")");
+        if (debug>0) System.out.println("ENTER DB.writeSuoKifStatements([" + statements.size() + " statements], " + pw.toString() + ")");
         int n = 0;
         try {
             if (!statements.isEmpty()) {
-                System.out.println("  writing ");
+                // System.out.println("  writing ");
                 String stmt;
                 Formula printF = new Formula();
                 for (Iterator it = statements.iterator(); it.hasNext(); n++) {
@@ -615,17 +613,17 @@ public class DB {
                     printF.read(stmt);
                     pw.println(printF.toString());
                     pw.println("");
-                    if ((n % 100) == 1) System.out.print(".");
+                    // if ((n % 100) == 1) System.out.print(".");
                 }
-                System.out.println("x: " + n + " statements written");
+                // System.out.println("x: " + n + " statements written");
             }
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        System.out.println("EXIT DB.writeSuoKifStatements([" + statements.size() + " statements], " + pw.toString() + ")");
-        System.out.println("  n == " + n);
-        System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds elapsed time");
+        // System.out.println("EXIT DB.writeSuoKifStatements([" + statements.size() + " statements], " + pw.toString() + ")");
+        // System.out.println("  n == " + n);
+        // System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds elapsed time");
         return n;
     }
 
@@ -644,14 +642,14 @@ public class DB {
     public static int writeSuoKifStatements(KB kb, String sourceFilePath) {
 
         long t1 = System.currentTimeMillis();
-        System.out.println("ENTER DB.writeSuoKifStatements(" + kb.name + ", " + sourceFilePath + ")");
+        if (debug>0) System.out.println("ENTER DB.writeSuoKifStatements(" + kb.name + ", " + sourceFilePath + ")");
         boolean foundFirstOne = false;
         PrintWriter pw = null;
         int count = 0;
         try {
             File sourceFile = new File(sourceFilePath);
             String canonicalPath = sourceFile.getCanonicalPath();
-            System.out.print("  writing " + canonicalPath + " ");
+            if (debug>0) System.out.print("  writing " + canonicalPath + " ");
             Formula printF = new Formula();
             Formula f;
             String stmt, pathname;
@@ -669,10 +667,9 @@ public class DB {
                     // stmt = StringUtil.removeEscapedEscapes(stmt);
                     pw.println(printF.toString());
                     pw.println("");
-                    if ((count++ % 100) == 1) System.out.print(".");
                 }
             }
-            System.out.println("x: " + count + " statements written");
+            if (debug>0) System.out.println("x: " + count + " statements written");
         }
         catch (IOException ex) {
             System.err.println("Error writing file " + sourceFilePath);
@@ -688,9 +685,9 @@ public class DB {
                 ioe.printStackTrace();
             }
         }
-        System.out.println("EXIT DB.writeSuoKifStatements(" + kb.name + ", " + sourceFilePath + ")");
-        System.out.println("  count == " + count);
-        System.out.println("  "  + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds elapsed time");
+        if (debug>0) System.out.println("EXIT DB.writeSuoKifStatements(" + kb.name + ", " + sourceFilePath + ")");
+        if (debug>0) System.out.println("  count == " + count);
+        if (debug>0) System.out.println("  "  + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds elapsed time");
         return count;
     }
 

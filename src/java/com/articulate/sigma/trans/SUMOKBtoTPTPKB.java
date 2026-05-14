@@ -652,6 +652,7 @@ public class SUMOKBtoTPTPKB {
     public String writeFile(String fileName, Formula conjecture,
                             boolean isQuestion, PrintWriter pw) {
 
+        System.out.println("----------------------------------------------------------------\nSUMOKBtoTPTPKB.writeFile():");
         PredVarInst.init();
         millis = System.currentTimeMillis();
         if (!KBmanager.initialized) {

@@ -46,6 +46,7 @@ public class VerbNet {
      */
     public static void initOnce() {
 
+        long start = System.nanoTime();
         if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
             disable = true;
         if (disable) return;
@@ -69,20 +70,22 @@ public class VerbNet {
             for (int i = 1; i < keys.size()/2; i++) {
                 ROLES.put(keys.get(i*2 - 1), keys.get(i*2));
             }
-            readVerbFiles();
-            initialized = true;
+            if (readVerbFiles()) {
+                System.err.println("VerbNet.initOnce(): Completed in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
+            }
+            else initialized = true;
         }
     }
 
     /** *************************************************************
      */
-    public static void readVerbFiles() {
+    public static boolean readVerbFiles() {
+        
         String dirStr = KBmanager.getMgr().getPref("verbnet");
-        System.out.println("VerbNet.readVerbFiles(): loading files from: " + dirStr);
         File dir = new File(dirStr);
         if (!dir.exists()) {
-            System.err.println("VerbNet.readVerbFiles(): no such dir: " + dirStr);
-            return;
+            System.err.println("VerbNet.readVerbFiles(): ERROR no such dir: " + dirStr);
+            return false;
         }
         File folder = new File(dirStr);
         SimpleDOMParser sdp;
@@ -90,15 +93,16 @@ public class VerbNet {
             if (!fileEntry.toString().endsWith(".xml")) {
                 continue;
             }
-
             try (Reader br = new BufferedReader(new FileReader(fileEntry.toString()))) {
                 sdp = new SimpleDOMParser();
                 VERB_FILES.put(fileEntry.toString(), sdp.parse(br));
             } catch (IOException e) {
                 System.err.println("Error in VerbNet.readVerbFiles(): " + e.getMessage());
                 e.printStackTrace();
+                return false;
             }
         }
+        return true;
     }
 
     /** *************************************************************

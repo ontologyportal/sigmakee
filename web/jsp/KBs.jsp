@@ -21,11 +21,7 @@
   out.println("  <body bgcolor=\"#FFFFFF\">");
   String baseDir = mgr.getPref("baseDir");
   String kbDir = mgr.getPref("kbDir");
-  System.out.println("INFO in KBs.jsp: baseDir == " + baseDir);
-  System.out.println("INFO in KBs.jsp:   kbDir == " + kbDir);
-  System.out.println("KBs.jsp: username: " + username);
   boolean isAdministrator = role.equalsIgnoreCase("admin");
-  System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
   KBmanager.getMgr().initializeOnce();
   String pageName = "KBs";
   String pageString = "Knowledge Bases";
@@ -39,9 +35,7 @@
       removeResult = KBmanager.getMgr().removeKB(kbName);
 
   if (KBmanager.getMgr().getKBnames() != null && !KBmanager.getMgr().getKBnames().isEmpty()) {
-      System.out.println(KBmanager.getMgr().getKBnames().size());
       kbNames = KBmanager.getMgr().getKBnames().iterator();
-      System.out.println("INFO in KBs.jsp: Got KB names.");
   }
 
   String defaultKB = null;
@@ -54,7 +48,6 @@
              <TH>Knowledge Bases</TH>
            </TR>
 <%
-      System.out.println("Showing knowledge bases.");
       boolean first = true;
       boolean odd = true;
       String kbName2 = null;
@@ -140,7 +133,6 @@
       while (kbNames.hasNext()) {
           kbName3 = (String) kbNames.next();
           kb = (KB) KBmanager.getMgr().getKB(kbName3);
-          System.out.println("INFO in KBs.jsp href: " + HTMLformatter.kbHref);
           if (!kb.errors.isEmpty()) {
               out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
               kbErrorsFound = true;

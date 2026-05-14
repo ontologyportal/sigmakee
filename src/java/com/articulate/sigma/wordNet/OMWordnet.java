@@ -280,7 +280,6 @@ August 9, Acapulco, Mexico.
 
         File serfile = new File(WordNet.baseDir + File.separator + "omw.ser");
         Date saveDate = new Date(serfile.lastModified());
-        System.out.println("OMWordnet.serializedOld(): " + serfile.getName() + " save date: " + saveDate.toString());
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String filename;
         Date fileDate;
@@ -313,7 +312,6 @@ August 9, Acapulco, Mexico.
                 return;
             }
             omw = decoder();
-            System.out.println("OMWordnet.loadSerialized(): OMW has been deserialized ");
         }
         catch(Exception ex) {
             System.err.println("Error in OMWordnet.loadSerialized()");
@@ -348,7 +346,6 @@ August 9, Acapulco, Mexico.
     public static boolean serializedExists() {
 
         File serfile = new File(WordNet.baseDir + File.separator + "omw.ser");
-        System.out.println("OMWordnet.serializedExists(): " + serfile.exists());
         return serfile.exists();
     }
 
@@ -356,28 +353,28 @@ August 9, Acapulco, Mexico.
      * Assumes a fixed set of files in the KBs directory.
      */
     public static void readOMWfiles() {
-
+        
+        long start = System.nanoTime();
         if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
             disable = true;
         if (disable)
             return;
         if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists())
             loadSerialized();
-        if (omw != null)
+        if (omw != null) {
+            System.out.println("OMWordnet.readOMWfiles(): Serialized loaded in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
             return;
+        }
         omw = new OMWordnet();
         String kbDir = KBmanager.getMgr().getPref("kbDir");
-        System.out.println("INFO in OMWordnet.readOMWfiles(): reading files: ");
         String filename;
         for (int i = 0; i < lcodes.size(); i++) {
-            filename = kbDir + File.separator + "OMW" +
-                    File.separator + lcodes.get(i)  + File.separator +
-                    "wn-data-" + lcodes.get(i) + ".tab";
+            filename = kbDir + File.separator + "OMW" + File.separator + lcodes.get(i)  + File.separator + "wn-data-" + lcodes.get(i) + ".tab";
             System.out.print(filename + "\n");
             readOMWformat(filename,lcodes.get(i));
         }
         serialize();
-        System.out.println();
+        System.out.println("OMWordnet.readOMWfiles() Serialized fresh in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
     }
 
     /** *************************************************************

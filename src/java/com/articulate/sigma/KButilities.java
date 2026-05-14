@@ -80,7 +80,7 @@ public class KButilities implements ServletContextListener {
             });
         } else {
             // For translation: use fixed thread pool for predictable performance
-            System.out.println("KButilities: Creating fixed thread pool (" + PAR + " threads) for translation mode");
+            System.out.println("KButilities.createExecutorService(): Creating fixed thread pool (" + PAR + " threads) for translation mode");
             return Executors.newFixedThreadPool(PAR, r -> {
                 Thread t = new Thread(r, "SIGMA-Translation-Thread");
                 t.setDaemon(true); // Make it daemon to ensure JVM exits cleanly

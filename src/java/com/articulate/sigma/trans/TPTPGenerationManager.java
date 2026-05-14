@@ -71,7 +71,7 @@ public class TPTPGenerationManager {
      */
     public static void startBackgroundGeneration() {
 
-        System.out.println("TPTPGenerationManager: Starting background TPTP generation");
+        System.out.println("----------------------------------------------------------------\nTPTPGenerationManager.startBackgroundGeneration(): Starting background TPTP generation");
 
         // Reset all latches and flags for fresh generation
         fofLatch = new CountDownLatch(1);
@@ -95,7 +95,7 @@ public class TPTPGenerationManager {
 
         // Use 4 threads: FOF, TFF, THF Modal, THF Plain all in parallel
         executor = Executors.newFixedThreadPool(4);
-
+        System.out.println("TPTPGenerationManager.startBackgroundGeneration(): 4 Translation threads allocated");
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         for (KB kb : KBmanager.getMgr().kbs.values()) {
             String infFilenameBase = kbDir + File.separator + kb.name;
@@ -103,8 +103,7 @@ public class TPTPGenerationManager {
             executor.submit(() -> {
                 File infFile = new File(infFilenameBase + ".tptp");
                 if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                    System.out.println("TPTPGenerationManager: FOF file is current: " + infFile.getName() +
-                            "; rebuilding axiomKey in background for incremental patching");
+                    System.out.println("TPTPGenerationManager.startBackgroundGeneration(): FOF file " + infFile.getName() + " is current! rebuilding axiomKey for incremental patching");
                     // Mark FOF file ready immediately (file is current for prover use).
                     // Rebuild axiomKey asynchronously — patchSessionTPTP degrades gracefully
                     // (no stale-axiom commenting-out) if a tell() arrives before rebuild completes.
@@ -119,16 +118,30 @@ public class TPTPGenerationManager {
             executor.submit(() -> {
                 File infFile = new File(infFilenameBase + ".tff");
                 if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                    System.out.println("TPTPGenerationManager: TFF file already exists and is current: " + infFile.getName());
+                    System.out.println("TPTPGenerationManager.startBackgroundGeneration(): TFF file" + infFile.getName() +  " is current!");
                     tffReady.set(true);
                     tffLatch.countDown();
-                } else {
+                }
+                else {
+                    System.out.println("TPTPGenerationManager.startBackgroundGeneration(): Generating TFF file " + infFile.getName());
+                    long start = System.nanoTime();
                     generateTFF(kb);
+                    double elapsedSeconds = (System.nanoTime() - start) / 1_000_000_000.0;
+                    System.out.printf("TPTPGenerationManager.startBackgroundGeneration(): TFF file generation completed in %.2f seconds%n", elapsedSeconds);
                 }
             });
-            // THF can run in parallel (different code path)
-            executor.submit(() -> generateTHFModal(kb));
-            executor.submit(() -> generateTHFPlain(kb));
+            executor.submit(() -> {
+                System.out.println("TPTPGenerationManager.startBackgroundGeneration(): Generating TFF Modal");
+                long start = System.nanoTime();
+                generateTHFModal(kb);
+                System.out.printf("TPTPGenerationManager.startBackgroundGeneration(): TFF Modal generation completed in %.2f seconds%n", ((System.nanoTime() - start) / 1_000_000_000.0));
+            });
+            executor.submit(() -> {
+                System.out.println("TPTPGenerationManager.startBackgroundGeneration(): Generating THF Plain ");
+                long start = System.nanoTime();
+                generateTHFPlain(kb);
+                System.out.printf("TPTPGenerationManager.startBackgroundGeneration(): THF Plain generation completed in %.2f seconds%n", ((System.nanoTime() - start) / 1_000_000_000.0));
+            });
         }
         executor.shutdown();
     }

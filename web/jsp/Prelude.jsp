@@ -44,12 +44,16 @@ userPages.add("Editor.jsp");
 String URLString = request.getRequestURL().toString();
 String pageURLString = URLString.substring(URLString.lastIndexOf("/") + 1);
 
-HttpSession existingSession = request.getSession(false);
+HttpSession session = request.getSession(false);
+
 String username = null;
-String role = null;
-if (existingSession != null) {
-    username = (String) existingSession.getAttribute("username");
-    role = (String) existingSession.getAttribute("role");
+String role = "guest";
+
+if (session != null) {
+    username = (String) session.getAttribute("username");
+    String sessionRole = (String) session.getAttribute("role");
+    if (!StringUtil.emptyString(sessionRole))
+        role = sessionRole;
 }
 
 if (username != null) {

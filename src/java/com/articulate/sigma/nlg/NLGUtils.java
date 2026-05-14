@@ -26,7 +26,7 @@ public class NLGUtils implements Serializable {
     private Map<String, Map<String, String>> keywordMap;
     // a list of format parameters or words and the sentence words they match with
     public static Map<String, CoreLabel> outputMap = new HashMap<>();
-    public static boolean debug = false;
+    public static int debug = 0;
 
     static final Set<String> LOGICAL_OPERATORS;
 
@@ -49,13 +49,13 @@ public class NLGUtils implements Serializable {
     /** *************************************************************
      */
     public static void init(String kbDir) {
-
-        System.out.println("NLGUtils.init(): ");
-        if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
-            return;
-        System.out.println("NLGUtils.init(): initializing with " + kbDir);
+        
+        long start = System.nanoTime();
+        if (KBmanager.getMgr().getPref("loadLexicons").equals("false")) return;
         nlg = new NLGUtils();
+        System.out.print("NLGUtils.init(): Loaded ");
         NLGUtils.readKeywordMap(kbDir);
+        System.out.println(" Keyword Mappings in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
     }
 
     /** ***************************************************************
@@ -97,7 +97,6 @@ public class NLGUtils implements Serializable {
 
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         File serfile = new File(kbDir + File.separator + "NLGUtils.ser");
-        System.out.println("NLGUtils.serializedExists(): " + serfile.exists());
         return serfile.exists();
     }
 
@@ -110,12 +109,12 @@ public class NLGUtils implements Serializable {
         String phrasesFilename = kbDir + File.separator + PHRASES_FILENAME;
         File phrasesFile = new File(phrasesFilename);
         if (!phrasesFile.exists()) {
-            System.out.println("NLGUtils.serializeOld(): Cannot read " + phrasesFilename);
+            System.err.println("NLGUtils.serializeOld(): Cannot read " + phrasesFilename);
         }
         Date configDate = new Date(phrasesFile.lastModified());
         File serfile = new File(kbDir + File.separator + "NLGUtils.ser");
         Date saveDate = new Date(serfile.lastModified());
-        System.out.println("NLGUtils.serializedOld(): " + serfile.getName() + " save date: " + saveDate.toString());
+        if(debug>0) System.out.println("NLGUtils.serializedOld(): " + serfile.getName() + " save date: " + saveDate.toString());
         return saveDate.compareTo(configDate) < 0;
     }
 
@@ -127,12 +126,12 @@ public class NLGUtils implements Serializable {
         nlg = null;
         try {
             if (serializedOld()) {
-                System.out.println("NLGutils.loadSerialized(): serialized file is older than sources, " +
+                if(debug>0) System.out.println("NLGutils.loadSerialized(): serialized file is older than sources, " +
                         "reloding from sources.");
                 return;
             }
             nlg = decoder();
-            System.out.println("NLGUtils.loadSerialized(): NLGUtils has been deserialized ");
+            if(debug>0) System.out.println("NLGUtils.loadSerialized(): NLGUtils has been deserialized ");
         }
         catch (Exception ex) {
             System.err.println("Error in NLGUtils.loadSerialized(): IOException is caught");
@@ -153,11 +152,11 @@ public class NLGUtils implements Serializable {
             String kbDir = KBmanager.getMgr().getPref("kbDir");
             try (OutputStream file = new FileOutputStream(kbDir + File.separator + "NLGUtils.ser");
                 ObjectOutputStream out = new ObjectOutputStream(file)) {
-                System.out.println("NLGUtils.serialize(): nlg size " + getKeywordMap().keySet().size());
+                if(debug>0) System.out.println("NLGUtils.serialize(): nlg size " + getKeywordMap().keySet().size());
                 // Method for deserialization of object
                 out.writeObject(nlg);
             }
-            System.out.println("NLGUtils.serialize(): NLGUtils has been serialized: " + nlg);
+            if(debug>0) System.out.println("NLGUtils.serialize(): NLGUtils has been serialized: " + nlg);
         }
         catch (IOException ex) {
             System.err.println("Error in NLGUtils.serialize(): IOException is caught");
@@ -329,13 +328,15 @@ public class NLGUtils implements Serializable {
         if (!dirFile.exists())  {
             throw new IllegalArgumentException("Parameter dir points to non-existent path: " + dir);
         }
-        System.out.println("NLGUtils.readKeywordMap():");
+        if(debug>0) System.out.println("NLGUtils.readKeywordMap():");
         nlg = null;
         if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists())
             loadSerialized();
-        if (nlg != null)
+        if (nlg != null) {
+            System.out.print(getKeywordMap().keySet().size());
             return;
-        System.out.println("INFO in NLGUtils.readKeywordMap(" + dir + "/" +
+        }
+        if(debug>0) System.out.println("INFO in NLGUtils.readKeywordMap(" + dir + "/" +
                 PHRASES_FILENAME + ")");
 
         if (getKeywordMap() == null)
@@ -344,7 +345,7 @@ public class NLGUtils implements Serializable {
         File phrasesFile;
 
         if (getKeywordMap().isEmpty()) {
-            System.out.println("Filling keywordMap");
+            if(debug>0) System.out.println("Filling keywordMap");
 
             phrasesFile = new File(dirFile, PHRASES_FILENAME);
             if (!phrasesFile.canRead()) {
@@ -383,20 +384,19 @@ public class NLGUtils implements Serializable {
                             getKeywordMap().put(key.intern(), phrasesByLang);
                         }
                     } else {
-                        System.out.println("WARNING in NLGUtils.readKeywordMap(): "
+                        if(debug>0) System.out.println("WARNING in NLGUtils.readKeywordMap(): "
                                 + "Unrecognized line");
-                        System.out.println(lc + ": \"" + line + "\"");
+                        if(debug>0) System.out.println(lc + ": \"" + line + "\"");
                     }
                 }
             } catch (Exception ex) {
                 System.err.println("ERROR loading " + PHRASES_FILENAME + " at line " + lc + ":");
                 System.err.println(ex.getMessage());
                 ex.printStackTrace();
-            } finally {
-                System.out.println("EXIT NLGUtils.readKeywordMap(" + dir + ") with size " + getKeywordMap().keySet().size());
             }
-//        serialize(); // old method. Replace w/ Kryo serialization (tdn) 10/15/24
+            //        serialize(); // old method. Replace w/ Kryo serialization (tdn) 10/15/24
             encoder(nlg);
+            System.out.print(getKeywordMap().keySet().size());
         }
     }
 
@@ -528,7 +528,7 @@ public class NLGUtils implements Serializable {
 
         String ans = "";
         if (getKeywordMap() == null) {
-            if (debug) System.err.println("Error in NLGUtils.getKeyword(): keyword map is null");
+            if (debug>0) System.err.println("Error in NLGUtils.getKeyword(): keyword map is null");
             return ans;
         }
         Map<String,String> hm = getKeywordMap().get(englishWord);
@@ -722,7 +722,7 @@ public class NLGUtils implements Serializable {
             while (it.hasNext()) {
                 str = it.next();
                 System.err.println("Error in NLGUtils.expandStar(): ");
-                System.out.println("  " + str);
+                if(debug>0) System.out.println("  " + str);
                 errStr += ("\n<br/>" + str + "\n<br/>");
             }
             KBmanager.getMgr().setError(errStr);
