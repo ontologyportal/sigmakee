@@ -38,7 +38,7 @@ if (StringUtil.emptyString(username)) {
     return;
 }
 username = username.trim();
-UserManager userManager = new UserManager();
+UserManager userManager = (UserManager) application.getAttribute("userManager");
 User user = userManager.getUser(request, username);
 if (user == null) {
     out.println("<b>No user found for username: " +

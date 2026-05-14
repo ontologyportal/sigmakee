@@ -45,7 +45,8 @@
     String created = request.getParameter("created");
     String error   = request.getParameter("err");
     String flash = null;
-    UserManager userManager = new UserManager();
+    
+    UserManager userManager = (UserManager) application.getAttribute("userManager");
     try {
         userManager.getAllUsernames(request);// Forces an admin check before rendering the page.
     }

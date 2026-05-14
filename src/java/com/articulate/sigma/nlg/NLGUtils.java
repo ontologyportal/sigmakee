@@ -53,9 +53,9 @@ public class NLGUtils implements Serializable {
         long start = System.nanoTime();
         if (KBmanager.getMgr().getPref("loadLexicons").equals("false")) return;
         nlg = new NLGUtils();
-        System.out.print("NLGUtils.init(): Loaded ");
+        System.out.print("INFO  [NLGUtils.init()]  Loaded ");
         NLGUtils.readKeywordMap(kbDir);
-        System.out.println(" Keyword Mappings in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
+        System.out.println(" NLG Keyword Mappings in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
     }
 
     /** ***************************************************************

@@ -1838,11 +1838,10 @@ public class WordNet implements Serializable {
             }
         }
         catch (Exception ex) {
-            System.err.println("Error in WordNet.initOnce(): ");
-            System.err.println(ex.getMessage());
+            System.err.println("ERROR  [WordNet.initOnce()] " + ex.getMessage());
             ex.printStackTrace();
         }
-        System.out.println("WordNet.initOnce(): Loaded " + wn.reverseSenseIndex.keySet().size() + " word senses in " + ((System.nanoTime() - start) / 1_000_000_000.0) + "seconds!");
+        System.out.println("INFO  [WordNet.initOnce()]  Loaded " + wn.reverseSenseIndex.keySet().size() + " word senses in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
     }
 
     /** ***************************************************************

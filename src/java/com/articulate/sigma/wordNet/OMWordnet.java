@@ -47,7 +47,7 @@ August 9, Acapulco, Mexico.
 
     public static boolean disable = false; // disable for debugging
 
-    /** *************************************************************
+    /****************************************************************
      */
     private static char getOMWMappingSuffix(String SUMOmapping) {
 
@@ -61,7 +61,7 @@ August 9, Acapulco, Mexico.
         return ' ';
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     private static void generateOMWformat(String fileWithPath) {
 
@@ -103,7 +103,7 @@ August 9, Acapulco, Mexico.
         }
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     private static void readOMWformat(String inputFileWithPath, String langName) {
 
@@ -169,7 +169,7 @@ August 9, Acapulco, Mexico.
         }
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static List<String> lcodes = new ArrayList<>(Arrays.asList(
             "als","arb","bul",
@@ -195,7 +195,7 @@ August 9, Acapulco, Mexico.
             "ThaiLanguage","MalayLanguage"));
 
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static String codeToLanguage(String code) {
 
@@ -205,7 +205,7 @@ August 9, Acapulco, Mexico.
             return "";
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static String languageToCode(String lang) {
 
@@ -215,7 +215,7 @@ August 9, Acapulco, Mexico.
             return "";
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Convert a 9-digit, POS-prefixed WordNet synset to a POS-suffix
      * OMW synset.
      */
@@ -230,7 +230,7 @@ August 9, Acapulco, Mexico.
         return synset.substring(1) + "-" + POS;
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Convert a POS-suffix OMW synset to an 8-digit WordNet synset.
      */
     public static String fromOMWsynset(String synset) {
@@ -243,7 +243,7 @@ August 9, Acapulco, Mexico.
         return synset.substring(0,synset.length()-2);
     }
 
-    /** ***************************************************************
+    /******************************************************************
      */
     public static void encoder(Object object) {
 
@@ -257,7 +257,7 @@ August 9, Acapulco, Mexico.
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      */
     public static <T> T decoder() {
 
@@ -273,7 +273,7 @@ August 9, Acapulco, Mexico.
         return (T) ob;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      *  Check whether sources are newer than serialized version.
      */
     public static boolean serializedOld() {
@@ -297,7 +297,7 @@ August 9, Acapulco, Mexico.
         return false;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      *  Load the most recently save serialized version.
      */
     public static void loadSerialized() {
@@ -319,7 +319,7 @@ August 9, Acapulco, Mexico.
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      *  save serialized version.
      */
     public static void serialize() {
@@ -341,7 +341,7 @@ August 9, Acapulco, Mexico.
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      */
     public static boolean serializedExists() {
 
@@ -349,7 +349,7 @@ August 9, Acapulco, Mexico.
         return serfile.exists();
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Assumes a fixed set of files in the KBs directory.
      */
     public static void readOMWfiles() {
@@ -362,7 +362,7 @@ August 9, Acapulco, Mexico.
         if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists())
             loadSerialized();
         if (omw != null) {
-            System.out.println("OMWordnet.readOMWfiles(): Serialized loaded in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
+            System.out.println("INFO  [OMWordnet.readOMWfiles()]  Loaded Serialized OMW Files in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
             return;
         }
         omw = new OMWordnet();
@@ -374,10 +374,10 @@ August 9, Acapulco, Mexico.
             readOMWformat(filename,lcodes.get(i));
         }
         serialize();
-        System.out.println("OMWordnet.readOMWfiles() Serialized fresh in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
+        System.out.println("INFO  [OMWordnet.readOMWfiles()]  Loaded fresh OMW Files in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static void generateOMWOWLformat(KB kb) {
 
@@ -403,7 +403,7 @@ August 9, Acapulco, Mexico.
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * HTML format a list of word senses
      * @param term is the SUMO term
      * @param lang is the SUMO term for a language (EnglishLanguage, FrenchLanguage etc)
@@ -444,7 +444,7 @@ August 9, Acapulco, Mexico.
         return result.toString();
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     private static String formatArrayList(List<String> al) {
 
@@ -457,7 +457,7 @@ August 9, Acapulco, Mexico.
         return sb.toString();
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static String displaySynset(String kbName, String synset, String params) {
 
@@ -490,7 +490,7 @@ August 9, Acapulco, Mexico.
         return sb.toString();
     }
 
-    /** ***************************************************************
+    /******************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
