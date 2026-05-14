@@ -391,7 +391,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        Set<Expr> preProcessSet = fp.preProcessExpr(f.expr, false, kb);
+        Set<Expr> preProcessSet = fp.preProcessExpr(f, false, kb);
         assertTrue(fp.computeVariableTypesExpr(preProcessSet.iterator().next(), kb).size() == 5);
         //PredVarInst.debug = true;
         //FormulaPreprocessor.debug = true;
@@ -478,12 +478,8 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        //PredVarInst.debug = true;
-        //FormulaPreprocessor.debug = true;
-        //RowVars.DEBUG = true;
         Set<Expr> actual = fp.preProcessExpr(f, false, kb);
         System.out.println("testFunctionVariable(): actual: " + actual);
-        Set<Formula> expected = Sets.newHashSet();
         int expectedSize = 1;
         System.out.println("testFunctionVariable(): expected: " + expectedSize);
         if (actual.size() > expectedSize)

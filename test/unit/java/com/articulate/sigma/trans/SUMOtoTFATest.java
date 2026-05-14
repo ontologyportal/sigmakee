@@ -159,9 +159,9 @@ public class SUMOtoTFATest extends UnitTestBase {
         if (exprs == null || exprs.isEmpty())
             return;
         expectedRes = "! [V__EV : $i,V__DEV : $i] : " +
-                "((s__instance(V__DEV, s__ElectricDevice) & s__instance(V__EV, s__Process) & " +
+                "(((s__instance(V__DEV, s__ElectricDevice) & s__instance(V__EV, s__Process) & " +
                 "s__instrument(V__EV, V__DEV)) => " +
-                "( ? [V__R:$i] : ((s__instance(V__R, s__Electricity) & s__resource(V__EV, V__R)))))";
+                "( ? [V__R:$i] : ((s__instance(V__R, s__Electricity) & s__resource(V__EV, V__R))))))";
         actualRes = SUMOtoTFAform.processExpr(exprs.iterator().next(), false);
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
@@ -190,10 +190,10 @@ public class SUMOtoTFATest extends UnitTestBase {
         if (exprs == null || exprs.isEmpty())
             return;
         expectedRes = "! [V__PROC : $i,V__SUB : $i,V__LOC : $i] : " +
-                "(s__instance(V__SUB, s__Process) => (s__instance(V__PROC, s__Process) & " +
+                "((s__instance(V__SUB, s__Process) => ((s__instance(V__PROC, s__Process) & " +
                 "s__eventLocated(V__PROC, V__LOC) & " +
                 "s__subProcess(V__SUB, V__PROC)) => " +
-                "s__eventLocated(V__SUB, V__LOC))";
+                "s__eventLocated(V__SUB, V__LOC))))";
         actualRes = SUMOtoTFAform.processExpr(exprs.iterator().next(), false);
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);

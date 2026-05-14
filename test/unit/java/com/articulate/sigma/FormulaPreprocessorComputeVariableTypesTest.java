@@ -307,13 +307,13 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
                 "           (holdsDuring\n" +
                 "               (WhenFn ?PROC)\n" +
                 "               (attribute ?HUMAN Awake)))";
-        Formula f = new Formula(stmt);
+        FormulaAST f = new FormulaAST(stmt);
 
         FormulaPreprocessor fp = new FormulaPreprocessor();
         System.out.println("Formula: " + f);
-        System.out.println("Var types: " + fp.computeVariableTypes(f, SigmaTestBase.kb));
+        System.out.println("Var types: " + fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb));
 
-        Map<String, Set<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actualMap = fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         assertEquals(expected, actualMap);
     }

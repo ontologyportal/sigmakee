@@ -1161,15 +1161,10 @@ public class KB implements Serializable {
                 }
             }
             if (partiala != null) {
-                FormulaAST f, fargb, fargc;
-                for (int i = 0; i < partiala.size(); i++) {
-                    f = partiala.get(i);
-                    fargb = f.getArgument(argb);
-                    fargc = f.getArgument(argc);
-                    if (f != null && fargb != null && f.getArgument(argb).equals(termb)) {
-                        if (fargc != null && f.getArgument(argc).equals(termc))
-                            result.add(f);
-                    }
+                for (FormulaAST f : partiala) {
+                    if (f != null && f.getStringArgument(argb).equals(termb)
+                            && f.getStringArgument(argc).equals(termc))
+                        result.add(f);
                 }
             }
         }

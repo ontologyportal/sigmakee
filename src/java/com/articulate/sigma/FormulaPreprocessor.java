@@ -1145,11 +1145,11 @@ public class FormulaPreprocessor {
 
         Map<String, Set<String>> result = new HashMap<>();
 
-        if (Formula.isLogicalOperator(head) && !head.equals(Formula.EQUAL)) {
+        if (FormulaAST.isLogicalOperator(head) && !head.equals(FormulaAST.EQUAL)) {
             // Logical operator: recurse into subformulas
             result.putAll(input);
             int start = 0;
-            if (Formula.isQuantifier(head)) start = 1; // skip the variable-list argument
+            if (FormulaAST.isQuantifier(head)) start = 1; // skip the variable-list argument
             for (int i = start; i < se.args().size(); i++) {
                 result = KButilities.mergeToMap(result,
                         computeVariableTypesRecurseExpr(kb, se.args().get(i), input), kb);
@@ -1157,9 +1157,9 @@ public class FormulaPreprocessor {
         } else {
             // Predicate application (ground or with variables)
             String pred = head;
-            if (!Formula.isVariable(pred)) {
+            if (!FormulaAST.isVariable(pred)) {
                 // Special case: (equal funcExpr ?var) or (equal ?var funcExpr)
-                if (pred.equals(Formula.EQUAL) && se.args().size() >= 2) {
+                if (pred.equals(FormulaAST.EQUAL) && se.args().size() >= 2) {
                     Expr a0 = se.args().get(0);
                     Expr a1 = se.args().get(1);
                     if (a0 instanceof Expr.Var vv && a1 instanceof Expr.SExpr fse) {
@@ -1186,7 +1186,7 @@ public class FormulaPreprocessor {
                         }
                     } else if (arg instanceof Expr.SExpr argSe) {
                         String argHead = argSe.headName();
-                        if (argHead != null && !Formula.isVariable(argHead) && kb.isFunction(argHead)) {
+                        if (argHead != null && !FormulaAST.isVariable(argHead) && kb.isFunction(argHead)) {
                             result = KButilities.mergeToMap(result,
                                     computeVariableTypesRecurseExpr(kb, arg, input), kb);
                         }
@@ -1324,7 +1324,8 @@ public class FormulaPreprocessor {
             return new Expr.SExpr(new Expr.Atom("subclass"),
                     List.of(new Expr.Var(varName), new Expr.Atom(t)));
         } else {
-            if (type.equals("Entity") || type.equals("World")) return null;
+            if (type.equals("Entity") || type.equals("World") || type.equals("Object")
+                    || type.equals("Formula") || type.equals("ObjectiveNorm")) return null;
             if (addOnlyNonNumericTypes && kb.isSubclass(type, "Quantity")) return null;
             return new Expr.SExpr(new Expr.Atom("instance"),
                     List.of(new Expr.Var(varName), new Expr.Atom(type)));

@@ -429,6 +429,12 @@ public class FormulaAST implements Comparable, Serializable {
             this.isDoc = parsed.isDoc;
             this.isRule = parsed.isRule;
             this.containsNumber = parsed.containsNumber;
+            if (parsed.predVarCache != null) {
+                this.predVarCache = new HashSet<>(parsed.predVarCache);
+            }
+            if (parsed.rowVarCache != null) {
+                this.rowVarCache = new HashSet<>(parsed.rowVarCache);
+            }
         } else {
             String trimmed = s.trim();
             if (!trimmed.startsWith("(")) {

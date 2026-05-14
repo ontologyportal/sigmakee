@@ -3512,6 +3512,8 @@ public class SUMOtoTFAform {
 
     /***************************************************************
      */
+    //TODO: replace the @Deprecated process method
+    //TODO: move the method to the actual test folder.
     public static void test7() {
 
         FormulaAST f = new FormulaAST("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
@@ -3530,6 +3532,8 @@ public class SUMOtoTFAform {
 
     /***************************************************************
      */
+    //TODO: replace the @Deprecated process method
+    //TODO: move the method to the actual test folder.
     public static void test8() {
 
         FormulaAST f = new FormulaAST("(<=> (equal (LastFn ?LIST) ?ITEM) (exists (?NUMBER) " +
@@ -3546,6 +3550,8 @@ public class SUMOtoTFAform {
 
     /***************************************************************
      */
+    //TODO: replace the @Deprecated process method
+    //TODO: move the method to the actual test folder.
     public static void test9() {
 
         FormulaAST f = new FormulaAST("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
@@ -3565,6 +3571,8 @@ public class SUMOtoTFAform {
 
     /***************************************************************
      */
+    //TODO: replace the @Deprecated process method
+    //TODO: move the method to the actual test folder.
     public static void test10() {
 
         FormulaAST f = new FormulaAST("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
