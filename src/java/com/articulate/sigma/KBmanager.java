@@ -697,7 +697,15 @@ public class KBmanager implements Serializable {
      * Conventional/sequential version
      */
     private boolean _loadKB(String kbName, List<String> constituents, KB kb) {
+        int i = 1;
         for (String filename : constituents) {
+            LoggingUtils.printProgressBar(
+                "INFO [KBmanager._loadKB()]  " + kbName + " Adding Constituents: ",
+                i,
+                constituents.size(), 
+                filename
+            );
+            i++;
             try {
                 if (debug) System.out.println("KBmanager.loadKB(): add constituent " + filename + " to " + kbName);
                 kb.addConstituent(filename);
@@ -714,6 +722,7 @@ public class KBmanager implements Serializable {
      * Threaded version.
      * Turns out not to be much help timewise and even causes an out of order
      * situation with many constituents being loaded (tdn) 4/22/25
+     * @deprecated
      */
     private boolean _t_loadKB(String kbName, List<String> constituents, KB kb) {
         Future<Boolean> future;
@@ -989,19 +998,19 @@ public class KBmanager implements Serializable {
         if (debug) System.out.println("Info in KBmanager.setConfiguration(): Using kbDir: " + kbDir);
         long milis = System.currentTimeMillis();
         NLGUtils.init(kbDir);
-        if (!prefEquals("loadLexicons","false")) {
-            WordNet.initOnce();
-            VerbNet.initOnce();
-            VerbNet.processVerbs();
-            OMWordnet.readOMWfiles();
-        }
+        // if (!prefEquals("loadLexicons","false")) {
+        //     WordNet.initOnce();
+        //     VerbNet.initOnce();
+        //     VerbNet.processVerbs();
+        //     OMWordnet.readOMWfiles();
+        // }
         String cwa = preferences.get("cwa");
         SUMOKBtoTPTPKB.CWA = !StringUtil.emptyString(cwa) && cwa.equals("true");
         if (debug) System.out.println("KBmanager.setConfiguration(): linguistics load time: " + (System.currentTimeMillis() - milis) / KButilities.ONE_K + " secs");
         if (kbs != null && !kbs.isEmpty() && !WordNet.initNeeded) {
             File f3, f4;
             for (String kbName : kbs.keySet()) {
-                if (debug) System.out.println("INFO in KBmanager.setConfiguration(): " + kbName);
+                System.out.println("INFO in KBmanager.setConfiguration(): " + kbName);
                 f3 = new File(kbDir + sep + kbName + KB._userAssertionsString);
                 f3.delete();
                 f4 = new File(kbDir + sep + kbName + KB._userAssertionsTPTP);

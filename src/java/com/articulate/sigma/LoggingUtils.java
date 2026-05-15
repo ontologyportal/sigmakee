@@ -4,13 +4,18 @@ public class LoggingUtils {
 
     public static void printProgressBar(String before, int current, int total) {
 
+        LoggingUtils.printProgressBar(before, current, total, "");
+    }
+
+    public static void printProgressBar(String before, int current, int total, String after) {
+
         int width = 20;
         if (total <= 0)
             total = 1;
         float progress = (float) current / total;
         int completedBlocks = (int) (progress * width);
         StringBuilder bar = new StringBuilder();
-        bar.append("\r");
+        bar.append("\r\033[2K");
         bar.append(before);
         bar.append(" [");
         for (int i = 0; i < width; i++) {
@@ -20,6 +25,7 @@ public class LoggingUtils {
                 bar.append("░");
         }
         bar.append(String.format("] %d%%", (int) (progress * 100)));
+        bar.append(" " + after);
         System.out.print(bar.toString());
         if (current >= total)
             System.out.println();

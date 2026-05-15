@@ -2841,13 +2841,6 @@ public class KB implements Serializable {
         int total = file.formulas.keySet().size();
         // Merge predicate-position index
         if (total > 0) for (String key : file.formulas.keySet()) {
-            if ((count % Math.max(1, total / 1000)) == 0 || count == total) {
-                LoggingUtils.printProgressBar(
-                    "INFO [KB.addConstituentInfoAST()] Adding formulas from " + file.filename,
-                    count,
-                    total
-                );
-            }
             List<String> newlist = file.formulas.get(key);
             List<String> list = formulas.get(key);
             if (list != null) {
@@ -2859,13 +2852,6 @@ public class KB implements Serializable {
         total = file.formulaMap.size();
         if (total > 0) for (FormulaAST f : file.formulaMap.values()) {
             count++;
-            if ((count % Math.max(1, total / 1000)) == 0 || count == total) {
-                LoggingUtils.printProgressBar(
-                    "INFO [KB.addConstituentInfoAST()] Adding formulaMap from " + file.filename,
-                    count,
-                    total
-                );
-            }
             String internedFormula = f.getFormula().intern();
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
@@ -2936,7 +2922,6 @@ public class KB implements Serializable {
             if ((count % 4000) == 1) {
                 System.out.print(progressSb.toString() + "x");
                 progressSb.setLength(0);
-                System.out.printf("%nINFO in KB.addConstituent(): still adding keys. %d%% done.%n", count*100/total);
             }
             newlist = file.formulas.get(key);
             list = formulas.get(key);
@@ -2949,16 +2934,8 @@ public class KB implements Serializable {
         count = 2;
         String internedFormula;
         total = file.formulaMap.values().size();
-        //System.out.println("INFO in KB.addConstituent(): add values");
         for (Formula f : file.formulaMap.values()) { // Iterate through values
             internedFormula = f.getFormula().intern();
-            if ((count++ % 100) == 1)
-                progressSb.append(".");
-            if ((count % 4000) == 1) {
-                System.out.print(progressSb.toString() + "x");
-                progressSb.setLength(0);
-                System.out.printf("\nINFO in KB.addConstituent(): still adding values. %d%% done.%n", count*100/total);
-            }
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
         }
@@ -2978,17 +2955,14 @@ public class KB implements Serializable {
     public void addConstituent(String filename) {
 
         long millis = System.currentTimeMillis();
-        System.out.println("INFO in KB.addConstituent(): " + filename);
         // KIFAST (ANTLR-based) is the default parser. Opt out with useAntlrParser=false in config.xml.
         if (!"false".equals(KBmanager.getMgr().getPref("useAntlrParser"))) {
             KIFAST file = readConstituentAST(filename);
             if (file == null) return;
             addConstituentInfoAST(file);
-            if (debug>1) System.out.printf("\nKB.addConstituent(%s) Loaded in %d seconds:\n    Formula#: %d\n    Term#: %d", filename, (System.currentTimeMillis()-millis)/KButilities.ONE_K, file.formulaMap.values().size(), file.terms.size());
         } else {
             KIF file = readConstituent(filename);
             addConstituentInfo(file);
-            System.out.printf("\nKB.addConstituent(%s) Loaded in %d seconds:\n    Formula#: %d\n    Term#: %d", filename, (System.currentTimeMillis()-millis)/KButilities.ONE_K, file.formulaMap.values().size(), file.terms.size());
         }
     }
 
