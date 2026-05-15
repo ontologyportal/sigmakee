@@ -77,21 +77,18 @@ public class TPTPGenerationManager {
         tffLatch = new CountDownLatch(1);
         thfModalLatch = new CountDownLatch(1);
         thfPlainLatch = new CountDownLatch(1);
-
         fofReady.set(false);
         tffReady.set(false);
         thfModalReady.set(false);
         thfPlainReady.set(false);
-
         if (skipBackgroundGeneration.get()) {
-            System.out.println("INFO  [TPTPGenerationManager.startBackgroundGeneration()]: Background generation suppressed (skipBackgroundGeneration=true)");
+            LoggingUtils.log("INFO", "Background generation suppressed (skipBackgroundGeneration=true)");
             fofLatch.countDown();
             tffLatch.countDown();
             thfModalLatch.countDown();
             thfPlainLatch.countDown();
             return;
         }
-
         // Use 4 threads: FOF, TFF, THF Modal, THF Plain all in parallel
         executor = Executors.newFixedThreadPool(4);
         String kbDir = KBmanager.getMgr().getPref("kbDir");
@@ -100,45 +97,26 @@ public class TPTPGenerationManager {
             executor.submit(() -> {
                 File infFile = new File(infFilenameBase + ".tptp");
                 if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                    System.out.println("INFO  [TPTPGenerationManager.startBackgroundGeneration()]  " + infFile.getName() + " is current! rebuilding axiomKey for incremental patching");
-                    // Mark FOF file ready immediately (file is current for prover use).
-                    // Rebuild axiomKey asynchronously — patchSessionTPTP degrades gracefully
-                    // (no stale-axiom commenting-out) if a tell() arrives before rebuild completes.
+                    LoggingUtils.log("INFO", infFile.getName() + " is current! rebuilding axiomKey for incremental patching");
                     new Thread(() -> rebuildAxiomKey(kb), "axiomKey-rebuild-" + kb.name).start();
                     fofReady.set(true);
                     fofLatch.countDown();
-                } else {
-                    long start = System.nanoTime();
-                    generateFOF(kb);
-                    double elapsed = (System.nanoTime() - start) / 1_000_000_000.0;
-                    System.out.printf("INFO  [TPTPGenerationManager.startBackgroundGeneration()]  " + infFile.getName() + " generated in %.3f seconds!", elapsed);
-                }
+                } else generateFOF(kb);
             });
             executor.submit(() -> {
                 File infFile = new File(infFilenameBase + ".tff");
                 if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                    System.out.println("INFO  [TPTPGenerationManager.startBackgroundGeneration()]  " + infFile.getName() +  " is current!");
+                    LoggingUtils.log("INFO", infFile.getName() + " is current!");
                     tffReady.set(true);
                     tffLatch.countDown();
                 }
-                else {
-                    long start = System.nanoTime();
-                    generateTFF(kb);
-                    double elapsed = (System.nanoTime() - start) / 1_000_000_000.0;
-                    System.out.printf("INFO  [TPTPGenerationManager.startBackgroundGeneration()]  %s generation completed in %.3f seconds!\n", infFile.getName(), elapsed);
-                }
+                else generateTFF(kb);
             });
             executor.submit(() -> {
-                long start = System.nanoTime();
                 generateTHFModal(kb);
-                double elapsed = (System.nanoTime() - start) / 1_000_000_000.0;
-                System.out.printf("INFO  [TPTPGenerationManager.startBackgroundGeneration()]  %s generation completed in %.3f seconds!\n", infFilenameBase + "_modals.thf", elapsed);
             });
             executor.submit(() -> {
-                long start = System.nanoTime();
                 generateTHFPlain(kb);
-                double elapsed = (System.nanoTime() - start) / 1_000_000_000.0;
-                System.out.printf("INFO  [TPTPGenerationManager.startBackgroundGeneration()]  %s generation completed in %.3f seconds!\n", infFilenameBase + "_plain.thf", elapsed);
             });
         }
         executor.shutdown();
@@ -210,9 +188,7 @@ public class TPTPGenerationManager {
                 Files.move(tmp, target,
                         StandardCopyOption.REPLACE_EXISTING);
             }
-
             long elapsed = System.currentTimeMillis() - startTime;
-            System.out.println("==== TPTPGenerationManager: FOF generation complete in " + (elapsed / 1000.0) + "s");
             fofReady.set(true);
         }
         catch (Exception e) {

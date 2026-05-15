@@ -700,14 +700,13 @@ public class KBmanager implements Serializable {
         int i = 1;
         for (String filename : constituents) {
             LoggingUtils.printProgressBar(
-                "INFO [KBmanager._loadKB()]  " + kbName + " Adding Constituents: ",
+                "INFO", kbName + " Adding Constituents:",
                 i,
                 constituents.size(), 
-                filename
+                "(" + i + "/"  + constituents.size() + ")"
             );
             i++;
             try {
-                if (debug) System.out.println("KBmanager.loadKB(): add constituent " + filename + " to " + kbName);
                 kb.addConstituent(filename);
             } catch (Exception e1) {
                 System.err.println("Error in KBmanager.loadKB():  " + e1.getMessage());
@@ -913,7 +912,7 @@ public class KBmanager implements Serializable {
         
         long start = System.nanoTime();
         int stepNumber = 0;
-        System.out.println("INFO  [KBmanager.initializeOnce()]  Initializing KBmanager!");
+        LoggingUtils.log("INFO", "Initializing KBmanager!");
         long millis = System.currentTimeMillis();
         boolean loaded = false;
         if (initializing || initialized) return;
@@ -923,11 +922,11 @@ public class KBmanager implements Serializable {
             SimpleElement configuration = readConfiguration(configFileDir);
             if (configuration == null) throw new Exception("ERROR  [KBmanager.initializeOnce()]  Error in config.xml");
             if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists() && !serializedOld(configuration)) {
-                System.out.printf("INFO  [KBmanager.initializeOnce()]  Loading from serialized cache...\n");
+                LoggingUtils.log("INFO", "Loading from serialized cache...");
                 stepNumber++;
                 loaded = loadSerialized();
                 if (loaded) {
-                    System.out.printf("INFO  [KBmanager.initializeOnce()]  Loading English Lexicons...\n");
+                    LoggingUtils.log("INFO", "Loading English Lexicons...");
                     stepNumber++;
                     if (!prefEquals("loadLexicons","false")) {
                         WordNet.initOnce();
@@ -939,7 +938,7 @@ public class KBmanager implements Serializable {
                         }
                     }
                     else {
-                        System.out.printf("INFO  [KBmanager.initializeOnce()]  Skipped...\n");
+                        LoggingUtils.log("INFO", "Skipped...");
                         stepNumber++;
                         WordNet.disable = true;
                         VerbNet.disable = true;
@@ -947,19 +946,19 @@ public class KBmanager implements Serializable {
                     }
                     initializing = false;
                     initialized = true;
-                    System.out.printf("INFO  [KBmanager.initializeOnce()]  Building SUMO Term Taxonomy...\n");
+                    LoggingUtils.log("INFO", "Building SUMO Term Taxonomy...\n");
                     stepNumber++;
                     for (KB kb : manager.kbs.values()) {
                         final KB kbFinal = kb;
                         KButilities.EXECUTOR_SERVICE.submit(() -> {
                             try { kbFinal.kbCache.buildSymbolTaxonomy(); }
-                            catch (Exception e) { System.err.println("ERROR  [KBmanager.initializeOnce()]  buildSymbolTaxonomy failed: " + e.getMessage()); }
+                            catch (Exception e) { LoggingUtils.log("ERROR", "buildSymbolTaxonomy failed: " + e.getMessage()); }
                         });
                     }
                 }
             }
             if (!loaded) {
-                System.out.printf("INFO  [KBmanager.initializeOnce()]  Regenerating Fresh Cache...\n");
+                LoggingUtils.log("INFO", "Regenerating Fresh Cache...");
                 stepNumber++;
                 manager = this;
                 KBmanager.getMgr().setPref("kbDir", configFileDir);
@@ -969,7 +968,7 @@ public class KBmanager implements Serializable {
                 initializing = false;
                 initialized = true;
             }
-            System.out.printf("INFO  [KBmanager.initializeOnce()]  Starting TPTP Background Generation...\n");
+            LoggingUtils.log("INFO", "Starting TPTP Background Generation...\n");
             stepNumber++;
             TPTPGenerationManager.startBackgroundGeneration();
         }
@@ -981,7 +980,7 @@ public class KBmanager implements Serializable {
         // Clean up orphaned session directories from previous runs
         cleanupOrphanedSessionDirectories();
         double elapsedSeconds = (System.nanoTime() - start) / 1_000_000_000.0;
-        System.out.println("INFO  [KBmanager.initializeOnce()]  Initialization completed in " + elapsedSeconds + " seconds!");
+        LoggingUtils.log("INFO", "Initialization completed in " + elapsedSeconds + " seconds!");
     }
 
     /*****************************************************************
@@ -1023,8 +1022,7 @@ public class KBmanager implements Serializable {
                     if (debug) System.out.println("INFO in WordNet.termFormatsToSynsets(): term format to synsets is not activated");
             }
         }
-        else
-            System.err.println("Error in KBmanager.setConfiguration(): No kbs");
+        else LoggingUtils.log("ERROR", "No kbs!");
         if (debug) System.out.println("KBmanager.setConfiguration(): number of preferences: " +
                 preferences.keySet().size());
     }

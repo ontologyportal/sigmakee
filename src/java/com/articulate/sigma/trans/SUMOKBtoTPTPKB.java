@@ -680,7 +680,6 @@ public class SUMOKBtoTPTPKB {
         }
         KB.axiomKey = axiomKey;
         // Skip serialization during background generation - TPTPGenerationManager handles it
-        System.out.println("INFO  [SUMOKBtoTPTPKB.writeFile()] Wrote " + axiomKey.size() + " axioms to TPTP in " + (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds!");
         axiomIndex.set(1);
         counter = 0; 
         formCount.set(0);
@@ -839,6 +838,7 @@ public class SUMOKBtoTPTPKB {
 //                else
 //                    pw.println("% empty, already written or filtered formula, skipping : " + theTPTPFormula);
             }
+
         } // end outer (main) for loop
         if (debug) System.out.println();
         printVariableArityRelationContent(pw,relationMap,getSanitizedKBname(),axiomIndex);
@@ -1203,6 +1203,7 @@ public class SUMOKBtoTPTPKB {
     private String tWriteFile(String fileName, Formula conjecture,
                               boolean isQuestion, PrintWriter pw) {
 
+        long start = System.nanoTime();
         final String localLang = getLang(); // snapshot once from ThreadLocal
 
         Map<String, String> relationMap = new TreeMap<>(); // variable-arity relations keyed by new name
@@ -1276,7 +1277,10 @@ public class SUMOKBtoTPTPKB {
 
         // ---- Phase 2: Sequential write (dedup, axiom naming, file I/O) ----
         String name;
+        int i = 1;
+        int totalResults = results.size();
         for (FormulaResult res : results) {
+            i++;
             if (res.skipEverything) continue;
 
             // Merge per-formula relation map into the global one
@@ -1313,15 +1317,11 @@ public class SUMOKBtoTPTPKB {
             // Write all lines for this formula to the output file
             for (String line : linesBuf)
                 pw.println(line);
+            if (i % 100 == 0) LoggingUtils.printProgressBar("INFO", "Writing Formulas to SUMO.tff", i, totalResults, ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds");
         }
-
-        System.out.println();
         printVariableArityRelationContent(pw, relationMap, getSanitizedKBname(), axiomIndex);
         printTFFNumericConstants(pw);
-        System.out.println("SUMOKBtoTPTPKB.writeFile() CWA: " + CWA);
-        if (CWA)
-            pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
-
+        if (CWA) pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
         if (conjecture != null) {
             String type = isQuestion ? "question" : "conjecture";
             for (String theTPTPFormula : conjecture.theTptpFormulas)

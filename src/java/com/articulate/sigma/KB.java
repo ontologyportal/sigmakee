@@ -228,8 +228,6 @@ public class KB implements Serializable {
     // (You can also keep generation manager atomics, but this protects the policy boundary.)
     public final Object baseGenLock = new Object();
 
-    private int counter = 0;
-
     /****************************************************************
      * This List is used to limit the number of warning messages logged by
      * loadFormatMaps(lang). If an attempt to load format or termFormat values
@@ -543,15 +541,10 @@ public class KB implements Serializable {
     public void checkArity() {
 
         long millis = System.currentTimeMillis();
-        System.out.print("INFO in KB.checkArity(): Performing Arity Check\n");
-
         if (!SUMOKBtoTPTPKB.rapidParsing)
             _checkArity();
         else
             _t_checkArity();
-
-        counter = 0; // reset
-        System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
     }
 
     /** *************************************************************
@@ -560,20 +553,20 @@ public class KB implements Serializable {
     private void _checkArity() {
 
         if (formulaMap != null && !formulaMap.isEmpty()) {
+            long start = System.nanoTime();
+            int counter = 1;
             int total = formulaMap.values().size();
             String term;
             for (Formula f : formulaMap.values()) {
-                if (counter++ % 10 == 0)
-                    System.out.print(".");
-                if (counter % 400 == 0)
-                    System.out.printf("%nINFO in KB.checkArity(): Still performing Arity Check. %d%% done%n", counter*100/total);
-                 term = PredVarInst.hasCorrectArity(f, this);
+                term = PredVarInst.hasCorrectArity(f, this);
+                if(counter % 400 == 1) LoggingUtils.printProgressBar("INFO", "Checking Formula Arity...", counter, total);
+                counter++;
                 if (!StringUtil.emptyString(term)) {
                     errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
                             + " in formula: \n" + f.getFormula());
                 }
             }
-            System.out.println();
+            LoggingUtils.printProgressBar("INFO", "Checking Formula Arity...", counter, total, "completed " + total + " formulas in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
         }
     }
 
@@ -583,30 +576,26 @@ public class KB implements Serializable {
     private void _t_checkArity() {
 
         if (formulaMap != null && !formulaMap.isEmpty()) {
+            long start = System.nanoTime();
             Future<?> future;
             List<Future<?>> futures = new ArrayList<>();
             int total = formulaMap.values().size();
             Runnable r;
+            int counter = 1;
             for (Formula f : formulaMap.values()) {
                 r = () -> {
-                    if (counter++ % 10 == 0)
-//                        System.out.print(".");
-                        progressSb.append(".");
-                    if (counter % 400 == 0) {
-                        System.out.print(progressSb.toString() + "x");
-                        progressSb.setLength(0);
-                        System.out.printf("%nINFO in KB.checkArity(): Still performing Arity Check. %d%% done%n", counter*100/total);
-                    }
                     String term = PredVarInst.hasCorrectArity(f, this);
                     if (!StringUtil.emptyString(term)) {
                         errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
                                 + " in formula: \n" + f.getFormula());
                     }
                 };
+                if(counter % 400 == 1) LoggingUtils.printProgressBar("INFO", "Checking Formula Arity...", counter, total);
+                counter++;
                 future = KButilities.EXECUTOR_SERVICE.submit(r);
                 futures.add(future);
             }
-            System.out.println();
+            LoggingUtils.printProgressBar("INFO",  "Checking Formula Arity...", counter, total, "completed " + total + " formulas in "+ ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
             for (Future<?> f : futures)
                 try {
                     f.get(); // waits for task completion
@@ -3584,6 +3573,7 @@ public class KB implements Serializable {
         Formula f;
         Set<Formula> processed;
         Set<String> tptp;
+        int counter = 0;
         while (it.hasNext()) {
             form = it.next();
             if ((counter++ % 100) == 1)
@@ -3626,7 +3616,6 @@ public class KB implements Serializable {
             }
         }
         System.out.println("INFO in KB.preProcess(): completed in " + (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
-        counter = 0;
         return newTreeSet;
     }
 

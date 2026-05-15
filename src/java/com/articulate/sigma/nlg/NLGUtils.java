@@ -9,6 +9,7 @@ import com.esotericsoftware.kryo.io.Output;
 import edu.stanford.nlp.ling.CoreLabel;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,9 +54,7 @@ public class NLGUtils implements Serializable {
         long start = System.nanoTime();
         if (KBmanager.getMgr().getPref("loadLexicons").equals("false")) return;
         nlg = new NLGUtils();
-        System.out.print("INFO  [NLGUtils.init()]  Loaded ");
         NLGUtils.readKeywordMap(kbDir);
-        System.out.println(" NLG Keyword Mappings in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
     }
 
     /** ***************************************************************
@@ -320,7 +319,8 @@ public class NLGUtils implements Serializable {
      *  language identifier.
      */
     public static void readKeywordMap(String dir) {
-
+        
+        long start = System.nanoTime();
         if (dir == null || dir.isEmpty())    {
             throw new IllegalArgumentException("Parameter dir is null or empty.");
         }
@@ -341,7 +341,7 @@ public class NLGUtils implements Serializable {
 
         if (getKeywordMap() == null)
             setKeywordMap(new HashMap<>());
-        int lc = 0;
+
         File phrasesFile;
 
         if (getKeywordMap().isEmpty()) {
@@ -355,6 +355,16 @@ public class NLGUtils implements Serializable {
                     Logger.getLogger(NLGUtils.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+            int totalLines = 0;
+            try (java.util.stream.Stream<String> lines = Files.lines(phrasesFile.toPath(), StandardCharsets.UTF_8)) {
+                totalLines = Math.toIntExact(lines.count());
+            }
+            catch (Exception ex) {
+                System.err.println(ex.getMessage());
+                ex.printStackTrace();
+            }        
+            int lc = 1;
+            int mappingsLoaded = 0;
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(phrasesFile), "UTF-8"))) {
                 Map<String, String> phrasesByLang;
                 List<String> phraseList;
@@ -373,7 +383,8 @@ public class NLGUtils implements Serializable {
                         if (line.startsWith("EnglishLanguage|")) // The language key line.
                         {
                             languageKeys = Arrays.asList(line.split("\\" + delim));
-                        } else {
+                        } 
+                        else {
                             phraseList = Arrays.asList(line.split("\\" + delim));
                             phrasesByLang = new HashMap<>();
                             key = phraseList.get(0);
@@ -382,21 +393,30 @@ public class NLGUtils implements Serializable {
                                 phrasesByLang.put(languageKeys.get(i), phraseList.get(i));
                             }
                             getKeywordMap().put(key.intern(), phrasesByLang);
+                            mappingsLoaded++;
+                            if(mappingsLoaded % 10 == 0 || lc <= totalLines) LoggingUtils.printProgressBar(
+                                "INFO",
+                                "Loading NLG Keyword Mappings",
+                                lc,
+                                totalLines,
+                                mappingsLoaded + " Keyword Mappings Loaded in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " Seconds!"
+                            );
                         }
-                    } else {
+                    } 
+                    else {
                         if(debug>0) System.out.println("WARNING in NLGUtils.readKeywordMap(): "
                                 + "Unrecognized line");
                         if(debug>0) System.out.println(lc + ": \"" + line + "\"");
                     }
                 }
-            } catch (Exception ex) {
+            } 
+            catch (Exception ex) {
                 System.err.println("ERROR loading " + PHRASES_FILENAME + " at line " + lc + ":");
                 System.err.println(ex.getMessage());
                 ex.printStackTrace();
             }
             //        serialize(); // old method. Replace w/ Kryo serialization (tdn) 10/15/24
             encoder(nlg);
-            System.out.print(getKeywordMap().keySet().size());
         }
     }
 

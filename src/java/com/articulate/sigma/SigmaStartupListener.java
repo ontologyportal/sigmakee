@@ -13,22 +13,25 @@ public class SigmaStartupListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
-
-        System.out.println("\n================================ SIGMAKEE INITIALIZING ================================\nINFO  [SigmaStartupListener.contextInitialized()] SigmaKEE startup beginning...");
+long start = System.nanoTime();
+        System.out.println("\n================================ SIGMAKEE INITIALIZING ================================\n");
+        LoggingUtils.log("INFO", "SigmaKEE Startup Beginning!");
         try {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB("SUMO");
             if (kb == null) {
-                System.err.println("ERROR  [SigmaStartupListener.contextInitialized()] KB SUMO was null");
+                LoggingUtils.log("ERROR", "KB was null!");
             }
             userManager = new UserManager();
             event.getServletContext().setAttribute("userManager", userManager);
         }
         catch (Exception e) {
-            System.err.println("ERROR  [SigmaStartupListener.contextInitialized()] startup failed");
+            LoggingUtils.log("ERROR", "SigmaKEE Startup Failed!");
             e.printStackTrace();
         }
-        System.out.println("INFO  [SigmaStartupListener.contextInitialized()] SigmaKEE startup completed!\n============================ SIGMAKEE INITIALIZING COMPLETE ============================\n");
+        double elapsedSeconds = (System.nanoTime() - start) / 1_000_000_000.0;
+        LoggingUtils.log("INFO", "SigmaKEE startup completed in " + elapsedSeconds + " seconds!");
+        System.out.println("============================ SIGMAKEE INITIALIZING COMPLETE ============================\n");
     }
 
     @Override
