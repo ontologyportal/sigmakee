@@ -158,7 +158,7 @@ public class PredVarInst {
                     if (debug) System.out.println("PredVarInst.processOne(): rowVarStructs: " + fnew.rowVarStructs);
                     newresult.add(fnew);
                     if (newresult.size() > AXIOM_EXPANSION_LIMIT) {
-                        System.err.println("Error in PredVarInst.processOne(): " +
+                        if (debug) System.err.println("Error in PredVarInst.processOne(): " +
                                 "AXIOM_EXPANSION_LIMIT EXCEEDED: " + AXIOM_EXPANSION_LIMIT);
                         break outer;
                     }

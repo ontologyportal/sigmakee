@@ -1277,13 +1277,13 @@ public class KBmanager implements Serializable {
                         removed.incrementAndGet();
                     }
                 } catch (IOException e) {
-                    System.err.println("ERROR  [KBmanager.cleanupOrphanedSessionDirectories()]  Error checking session directory: " + e.getMessage());
+                    LoggingUtils.log("ERROR", "Checking session directory: " + e.getMessage());
                 }
             });
-            if (removed.get() > 0) System.out.println("INFO  [KBmanager.cleanupOrphanedSessionDirectories()]  Removed " + removed.get() + " orphaned session directories!");
-            else System.out.println("INFO  [KBmanager.cleanupOrphanedSessionDirectories()]  No orphaned session directories found");
+            if (removed.get() > 0) LoggingUtils.log("INFO", "Removed " + removed.get() + " orphaned session directories!");
+            else LoggingUtils.log("No orphaned session directories found");
         } catch (IOException e) {
-            System.err.println("ERROR  [KBmanager.cleanupOrphanedSessionDirectories()]  Error during orphaned session cleanup: " + e.getMessage());
+            LoggingUtils.log("Error during orphaned session cleanup: " + e.getMessage());
         }
     }
 

@@ -2074,7 +2074,6 @@ public class THFnew {
                     out.write("% excluded: " + stripped + "\n");
                     out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
                 }
-                if (i % 100 == 0 || i >= total) LoggingUtils.printProgressBar("INFO", "Writing Formulas to SUMO.tptp", i, total, ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds");
                 i++;
             }
         }
@@ -2111,7 +2110,8 @@ public class THFnew {
 
             analyzeBadUsages(kb);
             if (debug) System.out.println("Predicate Terms: " + predicateTerms);
-
+            int i = 1;
+            int total = kb.formulaMap.values().size();
             for (Formula f : kb.formulaMap.values()) {
                 String flatFormula = f.getFormula()
                         .replace("\n", " ").replace("\r", " ");
@@ -2138,8 +2138,8 @@ public class THFnew {
                     out.write("% from file " + f.sourceFile + " at line " +
                             f.startLine + "\n");
                 }
+                i++;
             }
-            System.out.println("\n\nTHFnew.transPlainTHF(): Result written to file " + filename);
         }
         catch (IOException ex) {
             ex.printStackTrace();

@@ -398,8 +398,7 @@ public class NLGUtils implements Serializable {
                                 "INFO",
                                 "Loading NLG Keyword Mappings",
                                 lc,
-                                totalLines,
-                                mappingsLoaded + " Keyword Mappings Loaded in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " Seconds!"
+                                totalLines
                             );
                         }
                     } 

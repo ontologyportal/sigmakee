@@ -47,7 +47,7 @@ public final class UserManager {
     public UserManager() {
 
         this.userDatabase = new UserDatabase();
-        System.out.println("INFO  [UserManager()]  User Manager Created!");
+        LoggingUtils.log("User Manager Created!");
     }
 
     /********************************************************************

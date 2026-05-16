@@ -1,5 +1,8 @@
 package com.articulate.sigma;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 public class LoggingUtils {
 
     private static final Object PROGRESS_LOCK = new Object();
@@ -8,11 +11,13 @@ public class LoggingUtils {
             StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
 
     private static final int DEFAULT_BEFORE_WIDTH = 80;
-    private static final int DEFAULT_BAR_WIDTH = 20;
-    private static final int DEFAULT_GAP = 5;
+    private static final int DEFAULT_BAR_WIDTH = 10;
+    private static final int DEFAULT_GAP = 2;
     private static final int TYPE_WIDTH = 5;
     private static final int LOCATION_WIDTH = 30;
     private static final Object LOG_LOCK = new Object();
+    private static boolean progressGroupCompleted = false;
+
     public static void printProgressBar(String type,
                                         String message,
                                         int current,
@@ -20,6 +25,13 @@ public class LoggingUtils {
 
         printProgressBar(type, message, current, total, "");
     }
+
+    public static void log(String message) {
+
+        LogSite caller = getCaller();
+        log("INFO", caller.className, caller.functionName, message);
+    }
+
 
     public static void log(String type, String message) {
 
@@ -185,6 +197,69 @@ public class LoggingUtils {
 
             this.className = className;
             this.functionName = functionName;
+        }
+    }
+
+    private static final Map<String, ProgressState> PROGRESS_STATES = new LinkedHashMap<>();
+
+    private static final int DEFAULT_COMBINED_BAR_WIDTH = 10;
+
+    private static final long MIN_RENDER_INTERVAL_NANOS = 50_000_000L; // 50 ms
+
+    private static long lastRenderNanos = 0L;
+
+    private static String formatTaskProgress(ProgressState state, int barWidth) {
+
+        int total = state.total <= 0 ? 1 : state.total;
+
+        float progress = Math.max(0.0f, Math.min(1.0f, (float) state.current / total));
+        int completedBlocks = Math.round(progress * barWidth);
+        int percent = Math.round(progress * 100);
+
+        StringBuilder result = new StringBuilder();
+
+        result.append(padRight(state.taskName, 6));
+        result.append(" [");
+
+        for (int i = 0; i < barWidth; i++) {
+            if (i < completedBlocks)
+                result.append("█");
+            else
+                result.append("░");
+        }
+
+        result.append("] ");
+        result.append(String.format("%3d%%", percent));
+
+        if (state.done)
+            result.append(" done");
+
+        return result.toString();
+    }
+
+    private static boolean allProgressDone() {
+
+        if (PROGRESS_STATES.isEmpty())
+            return false;
+
+        for (ProgressState state : PROGRESS_STATES.values()) {
+            if (!state.done)
+                return false;
+        }
+        return true;
+    }
+
+    private static class ProgressState {
+
+        private final String taskName;
+        private int current = 0;
+        private int total = 1;
+        private String after = "";
+        private boolean done = false;
+
+        private ProgressState(String taskName) {
+
+            this.taskName = taskName;
         }
     }
 }

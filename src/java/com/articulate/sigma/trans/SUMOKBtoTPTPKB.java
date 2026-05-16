@@ -652,7 +652,6 @@ public class SUMOKBtoTPTPKB {
     public String writeFile(String fileName, Formula conjecture,
                             boolean isQuestion, PrintWriter pw) {
 
-        System.out.println("INFO  [SUMOKBtoTPTPKB.writeFile()] Writing all axioms to TPTP Format");
         PredVarInst.init();
         millis = System.currentTimeMillis();
         if (!KBmanager.initialized) {
@@ -674,7 +673,7 @@ public class SUMOKBtoTPTPKB {
 
         }
         catch (Exception ex) {
-            System.err.println("Error in SUMOKBtoTPTPKB.writeFile(): " + ex.getMessage());
+            LoggingUtils.log("ERROR", ex.getMessage());
             ex.printStackTrace();
             return retVal;
         }
@@ -840,7 +839,6 @@ public class SUMOKBtoTPTPKB {
             }
 
         } // end outer (main) for loop
-        if (debug) System.out.println();
         printVariableArityRelationContent(pw,relationMap,getSanitizedKBname(),axiomIndex);
         printTFFNumericConstants(pw);
         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() CWA: " + CWA);
@@ -1024,7 +1022,7 @@ public class SUMOKBtoTPTPKB {
                 formula instanceof FormulaAST && ((FormulaAST) formula).expr != null) {
             FormulaAST fa = (FormulaAST) formula;
             if (loggedExprPath.compareAndSet(false, true))
-                System.out.println("INFO  [SUMOKBtoTPTPKB.translateOneFormula()]  Using EXPR path for formula=" + fa.getFormula());
+                LoggingUtils.log("Using EXPR path for formula=" + fa.getFormula());
             Set<Expr> processedExprs = fp.preProcessExpr(fa, false, kb);
             if (processedExprs != null && !processedExprs.isEmpty()) {
                 usedExprPath = true;
@@ -1108,7 +1106,7 @@ public class SUMOKBtoTPTPKB {
             }
             // Print the first formula that fallback to string manipulation
             if (loggedStringPath.compareAndSet(false, true))
-                System.out.println("INFO  [SUMOKBtoTPTPKB.translateOneFormula()]  using STRING path for formula=" + f.getFormula());
+                LoggingUtils.log("Using STRING path for formula=" + f.getFormula());
             Set<Formula> processed = fp.preProcess(f, false, kb);
             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : processed: " + processed);
             if (processed != null && !processed.isEmpty()) {
@@ -1205,7 +1203,11 @@ public class SUMOKBtoTPTPKB {
 
         long start = System.nanoTime();
         final String localLang = getLang(); // snapshot once from ThreadLocal
-
+        String progressTask = switch (localLang) {
+            case "fof" -> "FOF";
+            case "tff" -> "TFF";
+            default -> localLang.toUpperCase();
+        };
         Map<String, String> relationMap = new TreeMap<>(); // variable-arity relations keyed by new name
         writeHeader(pw, fileName);
 
@@ -1265,8 +1267,7 @@ public class SUMOKBtoTPTPKB {
                             .collect(Collectors.toList())
             ).get();
         } catch (Exception ex) {
-            System.err.println("INFO  [SUMOKBtoTPTPKB._tWriteFile()]  parallel translation failed, falling back to sequential: "
-                    + ex.getMessage());
+            LoggingUtils.log("Parallel translation failed, falling back to sequential: " + ex.getMessage());
             ex.printStackTrace();
             results = IntStream.range(0, formulaList.size())
                     .mapToObj(i -> translateOneFormula(formulaList.get(i), localLang, total, i))
@@ -1317,7 +1318,6 @@ public class SUMOKBtoTPTPKB {
             // Write all lines for this formula to the output file
             for (String line : linesBuf)
                 pw.println(line);
-            if (i % 100 == 0) LoggingUtils.printProgressBar("INFO", "Writing Formulas to SUMO.tff", i, totalResults, ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds");
         }
         printVariableArityRelationContent(pw, relationMap, getSanitizedKBname(), axiomIndex);
         printTFFNumericConstants(pw);
@@ -1333,7 +1333,6 @@ public class SUMOKBtoTPTPKB {
         relationMap.clear();
         orderedFormulae.clear();
         progressSb.setLength(0);
-
         return getInfFilename();
     }
 
