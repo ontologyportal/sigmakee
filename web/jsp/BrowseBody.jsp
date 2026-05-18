@@ -72,7 +72,7 @@ else if ((kb != null) && (term != null) && kb.containsTerm(term)) {  // Build th
         Map<String, String> fm = kb.getFormatMap(lang);
         String fmValue = null;
         if (fm != null) fmValue = fm.get(term);
-        if (fmValue == null) System.out.println("INFO in BrowseBody.jsp: No format map entry for \"" + term + "\" in language " + lang);
+        //if (fmValue == null) System.out.println("INFO in BrowseBody.jsp: No format map entry for \"" + term + "\" in language " + lang);
     }
     else {
         Map<String, String> tfm = kb.getTermFormatMap(lang);
@@ -97,7 +97,6 @@ else if ((kb != null) && (term != null) && kb.containsTerm(term)) {  // Build th
             if (!StringUtil.emptyString(verbs)) show.append("<P>" + verbs);
             show.append("</small></td>");
         }
-        else System.out.println("INFO in BrowseBody.jsp: No synsets for term " + term);
         show.append("</tr></table>\n");
     }
     show.append ("</b></font></td></tr></table>\n");
