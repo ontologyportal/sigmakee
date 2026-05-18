@@ -1124,8 +1124,8 @@ public class KBmanager implements Serializable {
      */
     public KB getKB(String name) {
 
-        if (!kbs.containsKey(name))
-            System.out.println("WARN in KBmanager.getKB(): KB " + name + " not found.");
+        // if (!kbs.containsKey(name))
+        //     System.out.println("WARN in KBmanager.getKB(): KB " + name + " not found.");
         return kbs.get(name);
     }
 
