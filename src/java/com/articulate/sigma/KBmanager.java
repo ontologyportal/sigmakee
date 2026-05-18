@@ -946,7 +946,7 @@ public class KBmanager implements Serializable {
                     }
                     initializing = false;
                     initialized = true;
-                    LoggingUtils.log("INFO", "Building SUMO Term Taxonomy...\n");
+                    LoggingUtils.log("INFO", "Building SUMO Term Taxonomy...");
                     stepNumber++;
                     for (KB kb : manager.kbs.values()) {
                         final KB kbFinal = kb;
@@ -968,7 +968,7 @@ public class KBmanager implements Serializable {
                 initializing = false;
                 initialized = true;
             }
-            LoggingUtils.log("INFO", "Starting TPTP Background Generation...\n");
+            LoggingUtils.log("INFO", "Starting TPTP Background Generation...");
             stepNumber++;
             TPTPGenerationManager.startBackgroundGeneration();
         }

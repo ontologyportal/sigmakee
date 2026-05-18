@@ -67,12 +67,8 @@ public class VerbNet {
             "Topic","containsInformation", "Undergoer","patient",
             "Value", "measure"));
         if (!initialized) {
-            for (int i = 1; i < keys.size()/2; i++) {
-                ROLES.put(keys.get(i*2 - 1), keys.get(i*2));
-            }
-            if (readVerbFiles()) {
-                System.err.println("ERROR  [VerbNet.initOnce(): Completed in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
-            }
+            for (int i = 1; i < keys.size()/2; i++) ROLES.put(keys.get(i*2 - 1), keys.get(i*2));
+            if (readVerbFiles()) LoggingUtils.log("ERROR", "Completed in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
             else initialized = true;
         }
     }
@@ -85,7 +81,7 @@ public class VerbNet {
         String dirStr = KBmanager.getMgr().getPref("verbnet");
         File dir = new File(dirStr);
         if (!dir.exists()) {
-            System.err.println("ERROR  [VerbNet.readVerbFiles()]  ERROR no such dir: " + dirStr);
+            LoggingUtils.log("ERROR", "no such dir: " + dirStr);
             return false;
         }
         File folder = new File(dirStr);
@@ -98,12 +94,12 @@ public class VerbNet {
                 sdp = new SimpleDOMParser();
                 VERB_FILES.put(fileEntry.toString(), sdp.parse(br));
             } catch (IOException e) {
-                System.err.println("ERROR  [VerbNet.readVerbFiles()] " + e.getMessage());
+                LoggingUtils.log("ERROR", e.getMessage());
                 e.printStackTrace();
                 return false;
             }
         }
-        System.out.println("INFO  [Verbnet.readVerbfiles()]  Loaded Fresh Files in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
+        LoggingUtils.log("Loaded Fresh Files in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
         return true;
     }
 

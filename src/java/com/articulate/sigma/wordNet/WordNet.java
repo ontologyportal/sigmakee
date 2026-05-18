@@ -1316,7 +1316,7 @@ public class WordNet implements Serializable {
      *  @param input is the target sentence to be parsed. See WordSenseBody.jsp for usage.
      *  @param context is the larger context of the sentence. Can mean more accurate results.
      *  @param params is the set of html parameters
-     *  @returns a String that is the sentence taken apart and displayed in HTML
+     *  @returns a String that is the sentence taken apart and dispWlayed in HTML
      */
     public String sumoSentenceDisplay(String input, String context, String params) {
 
@@ -1721,7 +1721,7 @@ public class WordNet implements Serializable {
             }
         }
         return false;
-    }
+    } 
 
     /** ***************************************************************
      *  Loads the most recently saved serialized version.
@@ -1736,9 +1736,9 @@ public class WordNet implements Serializable {
                 return;
             }
             wn = decoder();
-            if (debug>0) System.out.println("WordNet.loadSerialized(): WN has been deserialized ");
+            if (debug>0) LoggingUtils.log("WN has been deserialized ");
             initNeeded = false;
-            if (debug>0) System.out.println("INFO in WordNet.loadSerialized(): origMaxNounSynsetID: " +
+            if (debug>0) LoggingUtils.log("origMaxNounSynsetID: " +
                     wn.origMaxNounSynsetID + " maxNounSynsetID: " +
                     wn.maxNounSynsetID);
         }
@@ -1759,11 +1759,11 @@ public class WordNet implements Serializable {
             System.err.println("Error in WordNet.serialize(): empty max synset id");
         try {
             encoder(wn);
-            System.out.println("WordNet.serialize(): WN has been serialized ");
+            LoggingUtils.log("WN has been serialized!");
             initNeeded = false;
         }
         catch (Exception ex) {
-            System.err.println("Error in WordNet.serialize():");
+            LoggingUtils.log("");
             ex.printStackTrace();
         }
     }
@@ -1838,10 +1838,10 @@ public class WordNet implements Serializable {
             }
         }
         catch (Exception ex) {
-            System.err.println("ERROR  [WordNet.initOnce()] " + ex.getMessage());
+            LoggingUtils.log(ex.getMessage());
             ex.printStackTrace();
         }
-        System.out.println("INFO  [WordNet.initOnce()]  Loaded " + wn.reverseSenseIndex.keySet().size() + " word senses in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
+        LoggingUtils.log("Loaded " + wn.reverseSenseIndex.keySet().size() + " word senses in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
     }
 
     /** ***************************************************************

@@ -7,6 +7,7 @@ import java.util.*;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.KButilities;
+import com.articulate.sigma.LoggingUtils;
 
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -333,10 +334,10 @@ August 9, Acapulco, Mexico.
             encoder(omw);
             //out.close();
             //file.close();
-            System.out.println("OMWordnet.serialize(): OMW has been serialized ");
+            LoggingUtils.log("OMW has been serialized ");
         }
         catch(Exception ex) {
-            System.err.println("Error in OMWordNet.serialize(): IOException is caught");
+            LoggingUtils.log("ERROR", "OMWordNet.serialize(): IOException is caught");
             ex.printStackTrace();
         }
     }
@@ -362,7 +363,7 @@ August 9, Acapulco, Mexico.
         if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists())
             loadSerialized();
         if (omw != null) {
-            System.out.println("INFO  [OMWordnet.readOMWfiles()]  Loaded Serialized OMW Files in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
+            LoggingUtils.log("Loaded Serialized OMW Files in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
             return;
         }
         omw = new OMWordnet();
@@ -370,21 +371,18 @@ August 9, Acapulco, Mexico.
         String filename;
         for (int i = 0; i < lcodes.size(); i++) {
             filename = kbDir + File.separator + "OMW" + File.separator + lcodes.get(i)  + File.separator + "wn-data-" + lcodes.get(i) + ".tab";
-            System.out.print(filename + "\n");
             readOMWformat(filename,lcodes.get(i));
         }
         serialize();
-        System.out.println("INFO  [OMWordnet.readOMWfiles()]  Loaded fresh OMW Files in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
+        LoggingUtils.log("Loaded fresh OMW Files in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
     }
 
     /****************************************************************
      */
     public static void generateOMWOWLformat(KB kb) {
 
-        //System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file ");
         String kbDir = KBmanager.getMgr().getPref("kbDir");
-        File f = new File(kbDir + File.separator + "OMW" +
-                File.separator + "OMW.owl");
+        File f = new File(kbDir + File.separator + "OMW" + File.separator + "OMW.owl");
         try (FileWriter fw = new FileWriter(f);
             PrintWriter pw = new PrintWriter(fw)) {
             pw.println("<rdf:RDF xml:base=\"http://www.ontologyportal.org/SUMO.owl\">");
@@ -419,7 +417,6 @@ August 9, Acapulco, Mexico.
         int limit = synsets.size();
         if (limit > 50)
             limit = 50;
-
         String synset;
         String OMWsynset;
         List<String> words;

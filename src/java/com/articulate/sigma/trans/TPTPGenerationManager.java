@@ -101,7 +101,10 @@ public class TPTPGenerationManager {
                     fofReady.set(true);
                     fofLatch.countDown();
                 } else {
+                    long start = System.currentTimeMillis();
                     generateFOF(kb);
+                    long elapsed = System.currentTimeMillis() - start;
+                    LoggingUtils.log("SUMO.tptp generated in " + (elapsed / 1000.0) + " seconds!");
                 }
             });
             executor.submit(() -> {
@@ -111,13 +114,24 @@ public class TPTPGenerationManager {
                     tffReady.set(true);
                     tffLatch.countDown();
                 }
-                else generateTFF(kb);
+                else {
+                    long start = System.currentTimeMillis();
+                    generateTFF(kb);
+                    long elapsed = System.currentTimeMillis() - start;
+                    LoggingUtils.log("SUMO.tff generated in " + (elapsed / 1000.0) + " seconds!");
+                };
             });
             executor.submit(() -> {
+                long start = System.currentTimeMillis();
                 generateTHFModal(kb);
+                long elapsed = System.currentTimeMillis() - start;
+                LoggingUtils.log("SUMO_modal.thf generated in " + (elapsed / 1000.0) + " seconds!");
             });
             executor.submit(() -> {
+                long start = System.currentTimeMillis();
                 generateTHFPlain(kb);
+                long elapsed = System.currentTimeMillis() - start;
+                LoggingUtils.log("SUMO_plain.thf generated in " + (elapsed / 1000.0) + " seconds!");
             });
         }
         executor.shutdown();
@@ -302,7 +316,7 @@ public class TPTPGenerationManager {
             File thfFile = new File(thfFilename);
             // Check if file already exists and is not stale
             if (thfFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                LoggingUtils.log(thfFilename + " exists and is current: ");
+                LoggingUtils.log("SUMO_modal.thf exists and is current: ");
                 thfModalReady.set(true);
                 return;
             }
@@ -338,7 +352,7 @@ public class TPTPGenerationManager {
         try {
             File thfFile = new File(thfFilename);
             if (thfFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                LoggingUtils.log(thfFilename + " already exists and is current!");
+                LoggingUtils.log("SUMO_plain.thf exists and is current!");
                 thfPlainReady.set(true);
                 return;
             }

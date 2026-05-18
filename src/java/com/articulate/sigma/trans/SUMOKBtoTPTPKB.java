@@ -1226,7 +1226,7 @@ public class SUMOKBtoTPTPKB {
             long totalAST = formulaList.stream().filter(f -> f instanceof FormulaAST).count();
             long totalASTtranslated = formulaList.stream().filter(f -> localLang.equals("fof") && f instanceof FormulaAST && ((FormulaAST) f).expr != null).count();
 
-            System.out.println("INFO  [SUMOKBtoTPTPKB._tWriteFile()]  FormulaAST=" + totalAST
+            LoggingUtils.log("FormulaAST=" + totalAST
                     + "/" + formulaList.size() + "  expr!=null=" + withExpr
                     + "  totalASTtranslated=" + totalASTtranslated
                     + " (cold=" + (withExpr == totalAST) + ")");

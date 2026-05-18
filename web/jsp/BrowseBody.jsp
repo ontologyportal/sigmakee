@@ -82,7 +82,7 @@ else if ((kb != null) && (term != null) && kb.containsTerm(term)) {  // Build th
             if (isArabic) tfmValue = "<span dir=\"rtl\">" + tfmValue + "</span>";
             show.append("(" + tfmValue + ")");
         }
-        else if (lang != null && lang.equals("EnglishLanguage")) System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" + term + "\" in language " + lang);
+        // else if (lang != null && lang.equals("EnglishLanguage")) System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" + term + "\" in language " + lang);
         if (role != null && role.equalsIgnoreCase("admin")) show.append(" [<a href=\"" + HTMLformatter.createHrefStart() + "/sigma/InstFiller.jsp?kb=" + kbName + "&flang=" + flang + "&lang=" + lang + "&term=" + term + "\">assert facts</a>]<br>");
         show.append(HTMLformatter.showMap(kb,term));
         show.append(HTMLformatter.showPictures(kb,term));
