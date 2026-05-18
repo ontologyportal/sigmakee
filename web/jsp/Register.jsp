@@ -27,7 +27,7 @@
         }
         else if (!username.matches("[A-Za-z0-9_-]+")) error = "Username can only contain letters, numbers, hyphens, and underscores.";
         else {
-            UserManager userManager = new UserManager();
+            UserManager userManager = (UserManager) application.getAttribute("userManager");
             boolean created = userManager.registerGuest(
                 username.trim(),
                 password,

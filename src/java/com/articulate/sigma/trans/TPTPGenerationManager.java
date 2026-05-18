@@ -71,64 +71,68 @@ public class TPTPGenerationManager {
      */
     public static void startBackgroundGeneration() {
 
-        System.out.println("TPTPGenerationManager: Starting background TPTP generation");
-
         // Reset all latches and flags for fresh generation
         fofLatch = new CountDownLatch(1);
         tffLatch = new CountDownLatch(1);
         thfModalLatch = new CountDownLatch(1);
         thfPlainLatch = new CountDownLatch(1);
-
         fofReady.set(false);
         tffReady.set(false);
         thfModalReady.set(false);
         thfPlainReady.set(false);
-
         if (skipBackgroundGeneration.get()) {
-            System.out.println("TPTPGenerationManager: Background generation suppressed (skipBackgroundGeneration=true)");
+            LoggingUtils.log("Background generation suppressed (skipBackgroundGeneration=true)");
             fofLatch.countDown();
             tffLatch.countDown();
             thfModalLatch.countDown();
             thfPlainLatch.countDown();
             return;
         }
-
         // Use 4 threads: FOF, TFF, THF Modal, THF Plain all in parallel
         executor = Executors.newFixedThreadPool(4);
-
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         for (KB kb : KBmanager.getMgr().kbs.values()) {
             String infFilenameBase = kbDir + File.separator + kb.name;
-            // FOF on its own thread
             executor.submit(() -> {
                 File infFile = new File(infFilenameBase + ".tptp");
                 if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                    System.out.println("TPTPGenerationManager: FOF file is current: " + infFile.getName() +
-                            "; rebuilding axiomKey in background for incremental patching");
-                    // Mark FOF file ready immediately (file is current for prover use).
-                    // Rebuild axiomKey asynchronously — patchSessionTPTP degrades gracefully
-                    // (no stale-axiom commenting-out) if a tell() arrives before rebuild completes.
+                    LoggingUtils.log(infFile.getName() + " is current! rebuilding axiomKey for incremental patching");
                     new Thread(() -> rebuildAxiomKey(kb), "axiomKey-rebuild-" + kb.name).start();
                     fofReady.set(true);
                     fofLatch.countDown();
                 } else {
+                    long start = System.currentTimeMillis();
                     generateFOF(kb);
+                    long elapsed = System.currentTimeMillis() - start;
+                    LoggingUtils.log("SUMO.tptp generated in " + (elapsed / 1000.0) + " seconds!");
                 }
             });
-            // TFF on its own thread (parallel with FOF)
             executor.submit(() -> {
                 File infFile = new File(infFilenameBase + ".tff");
                 if (infFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                    System.out.println("TPTPGenerationManager: TFF file already exists and is current: " + infFile.getName());
+                    LoggingUtils.log(infFile.getName() + " is current!");
                     tffReady.set(true);
                     tffLatch.countDown();
-                } else {
-                    generateTFF(kb);
                 }
+                else {
+                    long start = System.currentTimeMillis();
+                    generateTFF(kb);
+                    long elapsed = System.currentTimeMillis() - start;
+                    LoggingUtils.log("SUMO.tff generated in " + (elapsed / 1000.0) + " seconds!");
+                };
             });
-            // THF can run in parallel (different code path)
-            executor.submit(() -> generateTHFModal(kb));
-            executor.submit(() -> generateTHFPlain(kb));
+            executor.submit(() -> {
+                long start = System.currentTimeMillis();
+                generateTHFModal(kb);
+                long elapsed = System.currentTimeMillis() - start;
+                LoggingUtils.log("SUMO_modal.thf generated in " + (elapsed / 1000.0) + " seconds!");
+            });
+            executor.submit(() -> {
+                long start = System.currentTimeMillis();
+                generateTHFPlain(kb);
+                long elapsed = System.currentTimeMillis() - start;
+                LoggingUtils.log("SUMO_plain.thf generated in " + (elapsed / 1000.0) + " seconds!");
+            });
         }
         executor.shutdown();
     }
@@ -163,7 +167,6 @@ public class TPTPGenerationManager {
         Path tmp    = java.nio.file.Paths.get(infFilename + ".tmp");
 
         try {
-            System.out.println("===== TPTPGenerationManager: Generating FOF file: " + infFilename);
             long startTime = System.currentTimeMillis();
 
             // Ensure we don't leave a stale tmp around
@@ -172,7 +175,6 @@ public class TPTPGenerationManager {
             // Set BOTH static language fields to FOF
             SUMOKBtoTPTPKB.setLang("fof");
             SUMOformulaToTPTPformula.setLang("fof");
-            System.out.println("TPTPGenerationManager.generateFOF(): setHideNumbers true");
             SUMOformulaToTPTPformula.setHideNumbers(true);
 
             // Pre-capture relations set so ExprToTPTP.shouldAddMention() does a single
@@ -201,13 +203,11 @@ public class TPTPGenerationManager {
                 Files.move(tmp, target,
                         StandardCopyOption.REPLACE_EXISTING);
             }
-
             long elapsed = System.currentTimeMillis() - startTime;
-            System.out.println("==== TPTPGenerationManager: FOF generation complete in " + (elapsed / 1000.0) + "s");
             fofReady.set(true);
         }
         catch (Exception e) {
-            System.err.println("TPTPGenerationManager: Error generating FOF: " + e.getMessage());
+            LoggingUtils.log("ERROR", "Error generating FOF: " + e.getMessage());
             e.printStackTrace();
             // best effort cleanupT
             try { java.nio.file.Files.deleteIfExists(tmp); } catch (Exception ignore) {}
@@ -239,7 +239,6 @@ public class TPTPGenerationManager {
         Path tmp    = Paths.get(infFilename + ".tmp");
 
         try {
-            System.out.println("==== TPTPGenerationManager: Generating TFF file: " + infFilename);
             SUMOKBtoTPTPKB.resetPathCounters();
             long startTime = System.currentTimeMillis();
 
@@ -282,15 +281,11 @@ public class TPTPGenerationManager {
                 Files.move(tmp, target,
                         StandardCopyOption.REPLACE_EXISTING);
             }
-
-            long elapsed = System.currentTimeMillis() - startTime;
-            System.out.println("==== TPTPGenerationManager: TFF generation complete in " + (elapsed / 1000.0) + "s");
-            SUMOKBtoTPTPKB.logPathCounters();
+            // SUMOKBtoTPTPKB.logPathCounters();
             tffReady.set(true);
-
         }
         catch (Exception e) {
-            System.err.println("TPTPGenerationManager: Error generating TFF: " + e.getMessage());
+            System.err.println("ERROR  [TPTPGenerationManager.generateTFF()]  Error generating TFF: " + e.getMessage());
             e.printStackTrace();
             // best-effort cleanup
             try { Files.deleteIfExists(tmp); } catch (Exception ignore) {}
@@ -319,28 +314,22 @@ public class TPTPGenerationManager {
             String kbDir = KBmanager.getMgr().getPref("kbDir");
             String thfFilename = kbDir + File.separator + kb.name + "_modals.thf";
             File thfFile = new File(thfFilename);
-
             // Check if file already exists and is not stale
             if (thfFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                System.out.println("TPTPGenerationManager: THF Modal file already exists and is current: " + thfFilename);
+                LoggingUtils.log("SUMO_modal.thf exists and is current: ");
                 thfModalReady.set(true);
                 return;
             }
-
-            System.out.println("==== TPTPGenerationManager: Generating THF Modal file: " + thfFilename);
             long startTime = System.currentTimeMillis();
-
             if (kb.kbCache != null && kb.kbCache.relations != null)
                 ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
-
             THFnew.transModalTHF(kb);
 
-            long elapsed = System.currentTimeMillis() - startTime;
-            System.out.println("==== TPTPGenerationManager: THF Modal generation complete in " + (elapsed / 1000.0) + "s");
+            double elapsed = (System.currentTimeMillis() - startTime) / 1000.0;
             thfModalReady.set(true);
         }
         catch (Exception e) {
-            System.err.println("TPTPGenerationManager: Error generating THF Modal: " + e.getMessage());
+            LoggingUtils.log("ERROR",  "Error generating THF Modal: " + e.getMessage());
             e.printStackTrace();
         }
         finally {
@@ -358,32 +347,22 @@ public class TPTPGenerationManager {
         if (!thfPlainGenerating.compareAndSet(false, true)) {
             return; // Already generating
         }
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String thfFilename = kbDir + File.separator + kb.name + "_plain.thf";
         try {
-            String kbDir = KBmanager.getMgr().getPref("kbDir");
-            String thfFilename = kbDir + File.separator + kb.name + "_plain.thf";
             File thfFile = new File(thfFilename);
-
-            // Check if file already exists and is not stale
             if (thfFile.exists() && !KBmanager.getMgr().infFileOld()) {
-                System.out.println("TPTPGenerationManager: THF Plain file already exists and is current: " + thfFilename);
+                LoggingUtils.log("SUMO_plain.thf exists and is current!");
                 thfPlainReady.set(true);
                 return;
             }
-
-            System.out.println("==== TPTPGenerationManager: Generating THF Plain file: " + thfFilename);
-            long startTime = System.currentTimeMillis();
-
             if (kb.kbCache != null && kb.kbCache.relations != null)
                 ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
-
             THFnew.transPlainTHF(kb);
-
-            long elapsed = System.currentTimeMillis() - startTime;
-            System.out.println("==== TPTPGenerationManager: THF Plain generation complete in " + (elapsed / 1000.0) + "s");
             thfPlainReady.set(true);
         }
         catch (Exception e) {
-            System.err.println("TPTPGenerationManager: Error generating THF Plain: " + e.getMessage());
+            LoggingUtils.log("ERROR", thfFilename + " " + e.getMessage());
             e.printStackTrace();
         }
         finally {
@@ -402,7 +381,7 @@ public class TPTPGenerationManager {
 
         if (fofReady.get()) return true;
         try {
-            System.out.println("TPTPGenerationManager: Waiting for FOF generation (timeout: " + timeoutSec + "s)...");
+            LoggingUtils.log("Waiting for FOF generation (timeout: " + timeoutSec + "s)...");
             boolean completed = fofLatch.await(timeoutSec, TimeUnit.SECONDS);
             if (completed) {
                 System.out.println("TPTPGenerationManager: FOF generation wait completed");
@@ -426,12 +405,12 @@ public class TPTPGenerationManager {
 
         if (tffReady.get()) return true;
         try {
-            System.out.println("TPTPGenerationManager: Waiting for TFF generation (timeout: " + timeoutSec + "s)...");
+            LoggingUtils.log("Waiting for TFF generation (timeout: " + timeoutSec + "s)...");
             boolean completed = tffLatch.await(timeoutSec, TimeUnit.SECONDS);
             if (completed) {
-                System.out.println("TPTPGenerationManager: TFF generation wait completed");
+                LoggingUtils.log("TFF generation wait completed in " + timeoutSec + " seconds!");
             } else {
-                System.out.println("TPTPGenerationManager: TFF generation wait timed out");
+                LoggingUtils.log("TFF generation wait timed out");
             }
             return completed && tffReady.get();
         }
@@ -450,12 +429,12 @@ public class TPTPGenerationManager {
 
         if (thfModalReady.get()) return true;
         try {
-            System.out.println("TPTPGenerationManager: Waiting for THF Modal generation (timeout: " + timeoutSec + "s)...");
+            LoggingUtils.log("Waiting for THF Modal generation (timeout: " + timeoutSec + "s)...");
             boolean completed = thfModalLatch.await(timeoutSec, TimeUnit.SECONDS);
             if (completed) {
-                System.out.println("TPTPGenerationManager: THF Modal generation wait completed");
+                LoggingUtils.log("THF Modal generation wait completed");
             } else {
-                System.out.println("TPTPGenerationManager: THF Modal generation wait timed out");
+                LoggingUtils.log("THF Modal generation wait timed out");
             }
             return completed && thfModalReady.get();
         }
@@ -474,12 +453,12 @@ public class TPTPGenerationManager {
 
         if (thfPlainReady.get()) return true;
         try {
-            System.out.println("TPTPGenerationManager: Waiting for THF Plain generation (timeout: " + timeoutSec + "s)...");
+            LoggingUtils.log("Waiting for THF Plain generation (timeout: " + timeoutSec + "s)...");
             boolean completed = thfPlainLatch.await(timeoutSec, TimeUnit.SECONDS);
             if (completed) {
-                System.out.println("TPTPGenerationManager: THF Plain generation wait completed");
+                LoggingUtils.log("THF Plain generation wait completed");
             } else {
-                System.out.println("TPTPGenerationManager: THF Plain generation wait timed out");
+                LoggingUtils.log("THF Plain generation wait timed out");
             }
             return completed && thfPlainReady.get();
         }
@@ -645,13 +624,13 @@ public class TPTPGenerationManager {
     private static void rebuildAxiomKey(KB kb) {
 
         try {
-            System.out.println("TPTPGenerationManager: Rebuilding axiomKey in background (warm start, no I/O)...");
+            // if (debug>0) System.out.println("TPTPGenerationManager: Rebuilding axiomKey in background (warm start, no I/O)...");
             long start = System.currentTimeMillis();
             String kbDir = KBmanager.getMgr().getPref("kbDir");
             String infFilename = kbDir + java.io.File.separator + kb.name + ".tptp";
             SUMOKBtoTPTPKB.setLang("fof");
             SUMOformulaToTPTPformula.setLang("fof");
-            System.out.println("TPTPGenerationManager.rebuildAxiomKey(): setHideNumbers true");
+            // if (debug>0) System.out.println("TPTPGenerationManager.rebuildAxiomKey(): setHideNumbers true");
             SUMOformulaToTPTPformula.setHideNumbers(true);
             if (kb.kbCache != null && kb.kbCache.relations != null)
                 ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
@@ -662,11 +641,10 @@ public class TPTPGenerationManager {
                 skb.writeFile(infFilename, null, false, pw);
             }
             long elapsed = System.currentTimeMillis() - start;
-            System.out.println("TPTPGenerationManager: axiomKey rebuilt in " +
-                    (elapsed / 1000.0) + "s — " + SUMOKBtoTPTPKB.axiomKey.size() + " entries");
+            System.out.println("INFO  [TPTPGenerationManager.rebuildAxiomKey()]  axiomKey rebuilt in " + (elapsed / 1000.0) + " seconds — " + SUMOKBtoTPTPKB.axiomKey.size() + " entries");
         }
         catch (Exception e) {
-            System.err.println("TPTPGenerationManager: Failed to rebuild axiomKey: " + e.getMessage());
+            System.err.println("ERROR  [TPTPGenerationManager.rebuildAxiomKey()]  Failed to rebuild axiomKey: " + e.getMessage());
             e.printStackTrace();
         }
         finally {
@@ -722,7 +700,7 @@ public class TPTPGenerationManager {
             long elapsed = System.currentTimeMillis() - startTime;
             System.out.println("TPTPGenerationManager: TFF generation to custom path complete in " +
                                (elapsed / 1000.0) + "s");
-            SUMOKBtoTPTPKB.logPathCounters();
+            // SUMOKBtoTPTPKB.logPathCounters();
 
         } finally {
             ExprToTPTP.relationsThreadLocal.remove();

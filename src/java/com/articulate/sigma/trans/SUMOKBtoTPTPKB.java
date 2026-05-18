@@ -100,13 +100,13 @@ public class SUMOKBtoTPTPKB {
     /** Progress bar text capture */
     private final StringBuilder progressSb = new StringBuilder();
 
-    /** *************************************************************
+    /****************************************************************
      */
     public SUMOKBtoTPTPKB() {
         buildExcludedPredicates();
     }
 
-    /** *************************************************************
+    /****************************************************************
      * define a set of predicates which will not be used for inference
      */
     public static Set<String> buildExcludedPredicates() {
@@ -126,7 +126,7 @@ public class SUMOKBtoTPTPKB {
         return excludedPredicates;
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Given the set of terms whose KBcache entries changed (returned by an
      * incremental update method such as {@code addSubclass}), identify
      * all formulas in the KB that need to be retranslated to TPTP.
@@ -198,7 +198,7 @@ public class SUMOKBtoTPTPKB {
         return affected;
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Subclass-specific affected formula detection.
      *
      * <p>Replaces the generic {@link #findAffectedFormulas} for
@@ -275,7 +275,7 @@ public class SUMOKBtoTPTPKB {
         return affected;
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Instance-specific affected formula detection.
      *
      * <p>Replaces the generic {@link #findAffectedFormulas} for
@@ -325,7 +325,7 @@ public class SUMOKBtoTPTPKB {
         return affected;
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Retranslate a set of formulas using the current {@code kb.kbCache}.
      *
      * <p>The caller is responsible for swapping {@code kb.kbCache} to the desired
@@ -347,7 +347,7 @@ public class SUMOKBtoTPTPKB {
         return retranslateFormulas(kb, formulas, lang, null);
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Retranslate a set of formulas using the current {@code kb.kbCache}.
      *
      * <p>The caller is responsible for swapping {@code kb.kbCache} to the desired
@@ -402,14 +402,14 @@ public class SUMOKBtoTPTPKB {
         return result;
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public String getSanitizedKBname() {
 
         return kb.name.replaceAll("\\W","_");
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static String langToExtension(String l) {
 
@@ -418,7 +418,7 @@ public class SUMOKBtoTPTPKB {
         return l;
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static String extensionToLang(String l) {
 
@@ -427,7 +427,7 @@ public class SUMOKBtoTPTPKB {
         return l;
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public String getInfFilename() {
 
@@ -436,7 +436,7 @@ public class SUMOKBtoTPTPKB {
                 sanitizedKBName + "." + langToExtension(getLang());
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public String copyFile(String fileName) {
 
@@ -459,7 +459,7 @@ public class SUMOKBtoTPTPKB {
         return outputPath;
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static void addToFile(String fileName, List<String> axioms, String conjecture) {
 
@@ -481,7 +481,7 @@ public class SUMOKBtoTPTPKB {
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * @param relationMap is a Map of String keys and values where
      *                    the key is the renamed relation and the
      *                    value is the original name.
@@ -510,7 +510,7 @@ public class SUMOKBtoTPTPKB {
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Print the sorts of any numeric constants encountered during processing.
      * They are stored in SUMOtoTFAform.getNumericConstantTypes()
      */
@@ -538,7 +538,7 @@ public class SUMOKBtoTPTPKB {
 //        }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Print the sorts of any numeric constants encountered during processing.
      * They are stored in SUMOtoTFAform.getNumericConstantTypes()
      */
@@ -562,7 +562,7 @@ public class SUMOKBtoTPTPKB {
         }
     }
 
-    /** *************************************************************
+    /****************************************************************
      *  Sets isQuestion and calls writeTPTPFile() below
 
     public String writeFile(String fileName,
@@ -572,7 +572,7 @@ public class SUMOKBtoTPTPKB {
         return writeFile(fileName,conjecture,isQuestion);
     }
 */
-    /** *************************************************************
+    /****************************************************************
      *  Sets pw and calls writeTPTPFile() below
 
     public String writeFile(String fileName,
@@ -583,7 +583,7 @@ public class SUMOKBtoTPTPKB {
         return writeFile(fileName,conjecture,isQuestion,pw);
     }
 */
-    /** *************************************************************
+    /****************************************************************
      */
     public class OrderedFormulae extends TreeSet<Formula> {
 
@@ -603,7 +603,7 @@ public class SUMOKBtoTPTPKB {
         }
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Per-formula translation result for the parallel formula loop.
      * Translation data (expensive) is computed in parallel; dedup/write is sequential.
      */
@@ -620,7 +620,7 @@ public class SUMOKBtoTPTPKB {
 
         }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public void writeHeader(PrintWriter pw, String sanitizedKBName) {
 
@@ -639,7 +639,7 @@ public class SUMOKBtoTPTPKB {
     private int counter = 0;
     private long millis = 0L;
 
-    /** *************************************************************
+    /****************************************************************
      *  Write all axioms in the KB to TPTP format.
      *
      * @param fileName - the full pathname of the file to write
@@ -655,11 +655,10 @@ public class SUMOKBtoTPTPKB {
         PredVarInst.init();
         millis = System.currentTimeMillis();
         if (!KBmanager.initialized) {
-            String msg = "Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed";
+            String msg = "ERROR  [SUMOKBtoTPTPKB.writeFile()] KB initialization not completed";
             System.err.println(msg);
             return msg;
         }
-
         String retVal = null;
         try {
             // (orig) sequential processing
@@ -674,30 +673,21 @@ public class SUMOKBtoTPTPKB {
 
         }
         catch (Exception ex) {
-            System.err.println("Error in SUMOKBtoTPTPKB.writeFile(): " + ex.getMessage());
+            LoggingUtils.log("ERROR", ex.getMessage());
             ex.printStackTrace();
             return retVal;
         }
-
         KB.axiomKey = axiomKey;
         // Skip serialization during background generation - TPTPGenerationManager handles it
-//        if (!TPTPGenerationManager.isBackgroundGenerating()) {
-//            System.out.println("SUMOKBtoTPTPKB.writeFile(): serializing KB after writing");
-//            KBmanager.serialize();
-//        }
-        if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile(): axiomKey: " + axiomKey.size());
-        if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
-
-        axiomIndex.set(1); // reset
-        counter = 0; // reset
-        formCount.set(0); // reset
-        millis = 0L; // reset
-        idxCount.set(1); // reset
-
+        axiomIndex.set(1);
+        counter = 0; 
+        formCount.set(0);
+        millis = 0L;
+        idxCount.set(1);
         return retVal;
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Conventional/sequential version
      * @deprecated
      */
@@ -847,8 +837,8 @@ public class SUMOKBtoTPTPKB {
 //                else
 //                    pw.println("% empty, already written or filtered formula, skipping : " + theTPTPFormula);
             }
+
         } // end outer (main) for loop
-        if (debug) System.out.println();
         printVariableArityRelationContent(pw,relationMap,getSanitizedKBname(),axiomIndex);
         printTFFNumericConstants(pw);
         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() CWA: " + CWA);
@@ -911,7 +901,7 @@ public class SUMOKBtoTPTPKB {
                 || kif.startsWith("(documentation");
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Collect TFF numeric constant sort declarations from this thread's ThreadLocal
      * into the provided list. Called from parallel lambda — reads only the current
      * thread's TL (no shared state); avoids the synchronized printTFFNumericConstants.
@@ -950,7 +940,7 @@ public class SUMOKBtoTPTPKB {
         return name.matches("-?[0-9]+(\\.[0-9]*|/[0-9]+)?|-?[0-9]*\\.[0-9]+");
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Translate a single formula into a FormulaResult (parallel-safe).
      * All operations here use only per-formula or ThreadLocal state; shared
      * fields (alreadyWrittenTPTPs, axiomKey, relationMap) are NOT touched.
@@ -959,7 +949,7 @@ public class SUMOKBtoTPTPKB {
         return translateOneFormula(formula, localLang, total, formulaIndex, null);
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Translate a single formula into a FormulaResult (parallel-safe).
      * All operations here use only per-formula or ThreadLocal state; shared
      * fields (alreadyWrittenTPTPs, axiomKey, relationMap) are NOT touched.
@@ -969,7 +959,6 @@ public class SUMOKBtoTPTPKB {
         FormulaResult res = new FormulaResult();
         res.formula = formula;
         Formula f = formula;
-
         // Session isolation: skip UA formulas from other sessions during base generation.
         // Base generation (sessionId==null) must never include session-specific assertions —
         // they belong only in session TPTP files.  Cross-session formulas pollute the shared
@@ -978,13 +967,11 @@ public class SUMOKBtoTPTPKB {
             res.skipEverything = true;
             return res;
         }
-
         // Non-reasoning formulas: skip entirely (nothing to write)
         if (isNonReasoningForATP(f.getFormula())) {
             res.skipEverything = true;
             return res;
         }
-
         // Format-specific cache clearing (safe: each formula is assigned to exactly one thread)
         if (localLang.equals("fof")) {
             f.theFofFormulas.clear();
@@ -992,7 +979,6 @@ public class SUMOKBtoTPTPKB {
             f.theTffFormulas.clear();
         }
         f.theTptpFormulas.clear(); // Legacy compatibility
-
         // Prologue comment lines (getFormula() is O(1) vs format() which scans char-by-char)
         res.prologueLines.add("% f: " + f.getFormula());
         if (!f.derivation.parents.isEmpty()) {
@@ -1001,7 +987,6 @@ public class SUMOKBtoTPTPKB {
         }
         res.prologueLines.add("% " + formulaIndex + " of " + total
                 + " from file " + f.sourceFile + " at line " + f.startLine);
-
         // HOL check — use Expr fast path when available (avoids findAllTypeRestrictions +
         // Formula allocation per arg in the original string-based isHigherOrder)
         boolean isHOL = f.isHigherOrder(kb);
@@ -1019,18 +1004,14 @@ public class SUMOKBtoTPTPKB {
         } else {
             res.prologueLines.add("% not higher order");
         }
-
         // Cache check
         if (!KBmanager.getMgr().prefEquals("cache", "yes") && f.isCached()) {
             res.skippedCached = true;
             return res;
         }
-
         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : process: " + f);
-
         // ---- preprocess + translate ----
         FormulaPreprocessor fp = new FormulaPreprocessor();
-
         // Expr fast path: FormulaAST with an Expr bypasses the string-scanning
         // preProcessRecurse() and the parseSentence() re-parse in translateKifString().
         // Pred-var instantiation (Phase A) and row-var expansion (Phase B) are now
@@ -1039,10 +1020,9 @@ public class SUMOKBtoTPTPKB {
         boolean usedExprPath = false;
         if ((localLang.equals("fof") || localLang.equals("tff")) &&
                 formula instanceof FormulaAST && ((FormulaAST) formula).expr != null) {
-
             FormulaAST fa = (FormulaAST) formula;
             if (loggedExprPath.compareAndSet(false, true))
-                System.out.println("SUMOKBtoTPTPKB.translateOneFormula(): using EXPR path for formula=" + fa.getFormula());
+                LoggingUtils.log("Using EXPR path for formula=" + fa.getFormula());
             Set<Expr> processedExprs = fp.preProcessExpr(fa, false, kb);
             if (processedExprs != null && !processedExprs.isEmpty()) {
                 usedExprPath = true;
@@ -1109,7 +1089,6 @@ public class SUMOKBtoTPTPKB {
                 }
             }
         } // end if ((fof || tff) && FormulaAST)
-
         // ---- string-based pre-processing ----
         if (!usedExprPath) {
             if (localLang.equals("fof")) fofStringCount.incrementAndGet();
@@ -1127,7 +1106,7 @@ public class SUMOKBtoTPTPKB {
             }
             // Print the first formula that fallback to string manipulation
             if (loggedStringPath.compareAndSet(false, true))
-                System.out.println("SUMOKBtoTPTPKB.translateOneFormula(): using STRING path for formula=" + f.getFormula());
+                LoggingUtils.log("Using STRING path for formula=" + f.getFormula());
             Set<Formula> processed = fp.preProcess(f, false, kb);
             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : processed: " + processed);
             if (processed != null && !processed.isEmpty()) {
@@ -1135,7 +1114,6 @@ public class SUMOKBtoTPTPKB {
                 Set<Formula> withRelnRenames = new TreeSet<>();
                 for (Formula f2 : new TreeSet<>(processed))
                     withRelnRenames.add(f2.renameVariableArityRelations(kb, res.localRelationMap));
-
                 for (Formula f3 : withRelnRenames) {
                     switch (localLang) {
                         case "fof":
@@ -1150,32 +1128,25 @@ public class SUMOKBtoTPTPKB {
                                 f.theTptpFormulas.add(fofResult); // Legacy compatibility
                             }
                             break;
-
                         case "tff":
                             res.prologueLines.add("% tff input: " + f3.format("", "", Formula.SPACE));
                             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: "
                                     + f3.format("", "", " "));
-
                             // Fast path: try ExprToTFF first (no heavyweight string manipulation).
                             // Reset filterMessage so a stale value from the previous formula doesn't
                             // fire the else-if below when translateKifString returns "" (formula dropped).
                             SUMOtoTFAform.setFilterMessage("");
                             String tffResult = ExprToTFF.translateKifString(f3.getFormula(), false, kb);
-
                             // null = parse failure → fall back; "" = intentionally dropped → no fallback.
                             if (tffResult == null) {
                                 // Fallback: full SUMOtoTFAform processing
                                 System.out.println("ExprToTFF.translateKifString() fallback (string path): " + f3.getFormula());
                                 SUMOtoTFAform stfa = new SUMOtoTFAform();
                                 SUMOtoTFAform.kb = kb;
-
                                 stfa.sorts = stfa.missingSorts(f3);
-
                                 if (stfa.sorts != null && !stfa.sorts.isEmpty())
                                     f3.tffSorts.addAll(stfa.sorts);
-
                                 tffResult = SUMOtoTFAform.process(f3.getFormula(), false);
-
                                 // Collect numeric constants from this thread's TL (parallel-safe, no synchronized)
                                 collectNumericConstants(res.numConstLines);
                                 // Reset TL for the next formula processed by this thread
@@ -1183,7 +1154,6 @@ public class SUMOKBtoTPTPKB {
                                 SUMOtoTFAform.getNumericConstantTypes().put("NumberE", "RealNumber");
                                 SUMOtoTFAform.getNumericConstantTypes().put("Pi", "RealNumber");
                             }
-
                             if (!StringUtil.emptyString(tffResult)) {
                                 f.theTffFormulas.add(tffResult);
                                 f.theTptpFormulas.add(tffResult); // Legacy compatibility
@@ -1213,11 +1183,10 @@ public class SUMOKBtoTPTPKB {
             if (!StringUtil.emptyString(tptp))
                 res.tptpBodies.add(tptp);
         }
-
         return res;
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Parallel formula translation + sequential write.
      * Phase 1: translateOneFormula() runs concurrently on all formulas (thread-safe).
      * Phase 2: dedup (alreadyWrittenTPTPs), axiom naming, file write are sequential.
@@ -1232,8 +1201,13 @@ public class SUMOKBtoTPTPKB {
     private String tWriteFile(String fileName, Formula conjecture,
                               boolean isQuestion, PrintWriter pw) {
 
+        long start = System.nanoTime();
         final String localLang = getLang(); // snapshot once from ThreadLocal
-
+        String progressTask = switch (localLang) {
+            case "fof" -> "FOF";
+            case "tff" -> "TFF";
+            default -> localLang.toUpperCase();
+        };
         Map<String, String> relationMap = new TreeMap<>(); // variable-arity relations keyed by new name
         writeHeader(pw, fileName);
 
@@ -1252,7 +1226,7 @@ public class SUMOKBtoTPTPKB {
             long totalAST = formulaList.stream().filter(f -> f instanceof FormulaAST).count();
             long totalASTtranslated = formulaList.stream().filter(f -> localLang.equals("fof") && f instanceof FormulaAST && ((FormulaAST) f).expr != null).count();
 
-            System.out.println("SUMOKBtoTPTPKB._tWriteFile(): FormulaAST=" + totalAST
+            LoggingUtils.log("FormulaAST=" + totalAST
                     + "/" + formulaList.size() + "  expr!=null=" + withExpr
                     + "  totalASTtranslated=" + totalASTtranslated
                     + " (cold=" + (withExpr == totalAST) + ")");
@@ -1293,8 +1267,7 @@ public class SUMOKBtoTPTPKB {
                             .collect(Collectors.toList())
             ).get();
         } catch (Exception ex) {
-            System.err.println("SUMOKBtoTPTPKB._tWriteFile(): parallel translation failed, falling back to sequential: "
-                    + ex.getMessage());
+            LoggingUtils.log("Parallel translation failed, falling back to sequential: " + ex.getMessage());
             ex.printStackTrace();
             results = IntStream.range(0, formulaList.size())
                     .mapToObj(i -> translateOneFormula(formulaList.get(i), localLang, total, i))
@@ -1305,7 +1278,10 @@ public class SUMOKBtoTPTPKB {
 
         // ---- Phase 2: Sequential write (dedup, axiom naming, file I/O) ----
         String name;
+        int i = 1;
+        int totalResults = results.size();
         for (FormulaResult res : results) {
+            i++;
             if (res.skipEverything) continue;
 
             // Merge per-formula relation map into the global one
@@ -1343,14 +1319,9 @@ public class SUMOKBtoTPTPKB {
             for (String line : linesBuf)
                 pw.println(line);
         }
-
-        System.out.println();
         printVariableArityRelationContent(pw, relationMap, getSanitizedKBname(), axiomIndex);
         printTFFNumericConstants(pw);
-        System.out.println("SUMOKBtoTPTPKB.writeFile() CWA: " + CWA);
-        if (CWA)
-            pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
-
+        if (CWA) pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
         if (conjecture != null) {
             String type = isQuestion ? "question" : "conjecture";
             for (String theTPTPFormula : conjecture.theTptpFormulas)
@@ -1362,12 +1333,11 @@ public class SUMOKBtoTPTPKB {
         relationMap.clear();
         orderedFormulae.clear();
         progressSb.setLength(0);
-
         return getInfFilename();
     }
 
 
-    /** *************************************************************
+    /****************************************************************
      * @return true if the given formula is simple clause,
      *   and contains one of the excluded predicates;
      * otherwise return false;
@@ -1380,7 +1350,7 @@ public class SUMOKBtoTPTPKB {
         return pass;
     }
 
-    /** *************************************************************
+    /****************************************************************
      * @deprecated
      */
     @Deprecated
@@ -1449,7 +1419,7 @@ public class SUMOKBtoTPTPKB {
         }
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Will first write out SUMO.tptp if the KB had not yet been
      * serialized, or serialized files are older than the sources,
      * then, will write out a fresh SUMO.fof.

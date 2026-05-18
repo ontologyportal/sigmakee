@@ -2,6 +2,7 @@
    language="java"
    import="com.articulate.sigma.*,com.articulate.sigma.tp.*,com.articulate.sigma.trans.*,com.articulate.sigma.user.UserSessionManager,com.articulate.sigma.security.*,com.articulate.sigma.utils.*,com.articulate.sigma.wordNet.*,com.articulate.sigma.VerbNet.*,com.articulate.sigma.CCheckManager.*,java.text.ParseException,java.net.URLConnection, javax.servlet.http.HttpServletRequest, java.net.URL,com.oreilly.servlet.multipart.MultipartParser,com.oreilly.servlet.multipart.Part,com.oreilly.servlet.multipart.ParamPart,com.oreilly.servlet.multipart.FilePart,java.util.*,java.io.*, tptp_parser.*, TPTPWorld.*"
    pageEncoding="UTF-8"
+   session="false"
    contentType="text/html;charset=UTF-8"
 %>
 <!DOCTYPE html
@@ -43,8 +44,17 @@ userPages.add("Editor.jsp");
 String URLString = request.getRequestURL().toString();
 String pageURLString = URLString.substring(URLString.lastIndexOf("/") + 1);
 
-String username = (String) session.getAttribute("username");
-String role = (String) session.getAttribute("role");
+HttpSession session = request.getSession(false);
+
+String username = null;
+String role = "guest";
+
+if (session != null) {
+    username = (String) session.getAttribute("username");
+    String sessionRole = (String) session.getAttribute("role");
+    if (!StringUtil.emptyString(sessionRole))
+        role = sessionRole;
+}
 
 if (username != null) {
 %>
@@ -102,18 +112,17 @@ if (kb != null) TaxoModel.kbName = kbName;
 String filename = "";
 String line = "";
 
-UserSessionManager userSessionManager = UserSessionManager.get(request);
-userSessionManager.updateFromRequest(request);
+UserSessionManager userSessionManager = UserSessionManager.resolve(request);
 
 String flang = userSessionManager.getFormalLanguage().getSigmaName();
 flang = HTMLformatter.processFormalLanguage(flang);
 if (StringUtil.emptyString(flang))
     flang = "SUO-KIF";
 
-String language = userSessionManager.getHumanLanguage().getSigmaName();
-language = HTMLformatter.processNaturalLanguage(language, kb);
-if (StringUtil.emptyString(language))
-    language = "EnglishLanguage";
+String lang = userSessionManager.getHumanLanguage().getSigmaName();
+lang = HTMLformatter.processNaturalLanguage(lang, kb);
+if (StringUtil.emptyString(lang))
+    lang = "EnglishLanguage";
 
 String hostname = mgr.getPref("hostname");
 if (hostname == null) hostname = "localhost";

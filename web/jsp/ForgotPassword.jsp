@@ -14,7 +14,7 @@
 String method = request.getMethod();
 if ("POST".equalsIgnoreCase(method)) {
     String email = request.getParameter("email");
-    UserManager userManager = new UserManager();
+    UserManager userManager = (UserManager) application.getAttribute("userManager");
     userManager.requestPasswordReset(email);
 %>
     <p>If an account exists for that email address, a password reset link will be sent.</p>

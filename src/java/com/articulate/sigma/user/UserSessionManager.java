@@ -77,14 +77,16 @@ public class UserSessionManager implements Serializable {
 
     private static final String SESSION_KEY = UserSessionManager.class.getName();
 
-    /*****************************************************************
-     * Gets or creates the session preferences object for the current user session.
-     * @param request the servlet request
-     * @return the session preferences for this user
-     */
-    public static UserSessionManager get(HttpServletRequest request) {
+    public static UserSessionManager resolve(HttpServletRequest request) {
 
-        return get(request, true);
+        UserSessionManager manager = new UserSessionManager();
+        HttpSession session = request.getSession(false);
+        if (session != null && isLoggedIn(session)) {
+            UserSessionManager sessionManager = (UserSessionManager) session.getAttribute(SESSION_KEY);
+            if (sessionManager != null) manager = sessionManager.copy();
+        }
+        manager.updateFromRequest(request);
+        return manager;
     }
 
     /*****************************************************************
@@ -119,6 +121,33 @@ public class UserSessionManager implements Serializable {
         if (langParam != null && !langParam.trim().isEmpty()) setHumanLanguage(HumanLanguage.fromString(langParam));
     }
 
+    private static boolean isLoggedIn(HttpSession session) {
+
+        if (session == null) return false;
+        String username = (String) session.getAttribute("username");
+        String role = (String) session.getAttribute("role");
+        return username != null && !username.trim().isEmpty() && role != null && !"guest".equalsIgnoreCase(role);
+    }
+    
+    public UserSessionManager copy() {
+
+        UserSessionManager copy = new UserSessionManager();
+        copy.setFormalLanguage(this.formalLanguage);
+        copy.setHumanLanguage(this.humanLanguage);
+        return copy;
+    }
+
+    public static void saveToLoggedInSession(HttpServletRequest request) {
+
+        HttpSession session = request.getSession(false);
+        if (!isLoggedIn(session)) return;
+        UserSessionManager manager = (UserSessionManager) session.getAttribute(SESSION_KEY);
+        if (manager == null) {
+            manager = new UserSessionManager();
+            session.setAttribute(SESSION_KEY, manager);
+        }
+        manager.updateFromRequest(request);
+    }
     /*****************************************************************
      * Gets the selected formal language.
      * @return the selected formal language

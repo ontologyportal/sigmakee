@@ -4,7 +4,7 @@ String error = "";
 if ("POST".equalsIgnoreCase(request.getMethod())) {
     String username = ValidationUtils.sanitizeString(request.getParameter("username"));
     String password = ValidationUtils.sanitizeString(request.getParameter("password"));
-    UserManager userManager = new UserManager();
+    UserManager userManager = (UserManager) application.getAttribute("userManager");
     boolean loggedIn = userManager.login(request, username, password);
     if (loggedIn) {
         System.out.println("login.jsp: Successful login for " + username);

@@ -812,7 +812,6 @@ public class HTMLformatter {
                         + "&kb=" + kb.name + "&start=" + (start + limit)
                         + "&arg=" + arg + "&type=" + type + "\">Show next "
                         + limit + "</a></td></tr>\n");
-
             show.append(formatFormulaList(forms, header, kb, language, flang, start, localLimit, limitString));
             show.append(limitString);
             show.append("</table>\n");

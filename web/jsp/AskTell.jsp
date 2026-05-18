@@ -25,7 +25,16 @@
     // --------- STEP 1 -------------------------------------------------------------------
 
     // Custom Query or Saved test file
+    session = request.getSession(true);
 
+    if (session == null || StringUtil.emptyString((String) session.getAttribute("username"))) {
+        response.sendRedirect("login.html");
+        return;
+    }
+
+    username = (String) session.getAttribute("username");
+    role = (String) session.getAttribute("role");
+    
     runSource = (runSource == null && session.getAttribute("runSource") == null) ? "custom" : (String) session.getAttribute("runSource");
     session.setAttribute("runSource", runSource);
 
@@ -234,13 +243,6 @@
         String pageString = "Inference Interface";
     %>
     <%@include file="CommonHeader.jsp" %>
-    <table ALIGN="LEFT" WIDTH=80%>
-        <tr>
-            <TD BGCOLOR='#AAAAAA'>
-                <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0>
-            </TD>
-        </tr>
-    </table><BR>
     <!-- ===== STEP 1: INPUT ===== -->
     <fieldset class="step">
         <legend>Step 1 - Input</legend>
@@ -456,8 +458,6 @@
     </div>
 </form>
 <div id="resultsHost"></div>
-<table align='left' width='80%'><tr><td bgcolor='#AAAAAA'>
-    <img src='pixmaps/1pixel.gif' width=1 height=1 border=0></td></tr></table><br>
 <div id="serverResults">
 <%
     // ================ Ask ======================================================================================================== Server-side execution for single "Run" button =====
@@ -560,11 +560,11 @@
                             setGraphFormat(graphFormulaFormat,tpp);
                             publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                             tpp.processAnswersFromProof(new StringBuilder(), itd.query);
-                            printAnswersBlock(tpp, kbName, language, out);
+                            printAnswersBlock(tpp, kbName, lang, out);
                             /* Prevent duplicate answers inside HTMLformatter */
                             if (tpp.bindingMap != null) tpp.bindingMap.clear();
                             if (tpp.bindings   != null) tpp.bindings.clear();
-                            out.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kbName, language));
+                            out.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kbName, lang));
                             // Generate proof summary if requested
                             if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
                                 // Extract proof steps as strings
@@ -640,10 +640,10 @@
                                 setGraphFormat(graphFormulaFormat, tpp);
                                 publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                                 tpp.processAnswersFromProof(result.getQList(), pseudoQuery);
-                                printAnswersBlock(tpp, kbName, language, out);
+                                printAnswersBlock(tpp, kbName, lang, out);
                                 if (tpp.bindingMap != null) tpp.bindingMap.clear();
                                 if (tpp.bindings != null) tpp.bindings.clear();
-                                out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
+                                out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, lang));
                             }
                             else {
                                 out.println("<font color='red'>No result from theorem prover.</font>");
@@ -689,10 +689,10 @@
                                 tpp.parseProofOutput(cleaned, pseudoQuery, kb, result.getQList());
                                 setGraphFormat(graphFormulaFormat, tpp);
                                 publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-                                printAnswersBlock(tpp, kbName, language, out);
+                                printAnswersBlock(tpp, kbName, lang, out);
                                 if (tpp.bindingMap != null) tpp.bindingMap.clear();
                                 if (tpp.bindings != null) tpp.bindings.clear();
-                                out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
+                                out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, lang));
                             }
                             else {
                                 out.println("<font color='red'>No result from theorem prover.</font>");
@@ -763,10 +763,10 @@
                             setGraphFormat(graphFormulaFormat, tpp);
                             publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                             tpp.processAnswersFromProof(result.getQList(), stmt);
-                            printAnswersBlock(tpp, kbName, language, out);
+                            printAnswersBlock(tpp, kbName, lang, out);
                             if (tpp.bindingMap != null) tpp.bindingMap.clear();
                             if (tpp.bindings != null) tpp.bindings.clear();
-                            out.println(HTMLformatter.formatTPTP3ProofResult(tpp, stmt, lineHtml, kbName, language));
+                            out.println(HTMLformatter.formatTPTP3ProofResult(tpp, stmt, lineHtml, kbName, lang));
                             if (!StringUtil.emptyString(tpp.status)) {
                                 out.println("Status: " + tpp.status);
                             }
@@ -827,8 +827,8 @@
                 tellResultRef.set(tellResult);
                 if (mustRegen) {
                     final String requestedLang = SUMOKBtoTPTPKB.getLang(); // "fof" or "tff"
-                    final String lang = "fof".equals(requestedLang) ? "tptp" : "tff";
-                    regenLangRef.set(lang);
+                    final String language = "fof".equals(requestedLang) ? "tptp" : "tff";
+                    regenLangRef.set(language);
                     // Update spinner message before slow regen (early flush to iframe)
                     jspOut.println("<script>");
                     jspOut.println("if(parent.document.getElementById('spinTitle'))");
@@ -840,12 +840,12 @@
                     // Use session-specific TPTP generation for session-isolated tells
                     if (sessionId != null && !sessionId.isEmpty()) {
                         System.out.println("INFO AskTell.jsp(Tell): Session-specific regen required for session " + sessionId +
-                                " -> regenerating session " + kb.name + "." + lang + " (Tell changed schema/transitive facts)");
-                        com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, kb, lang);
+                                " -> regenerating session " + kb.name + "." + language + " (Tell changed schema/transitive facts)");
+                        com.articulate.sigma.trans.SessionTPTPManager.generateSessionTPTP(sessionId, kb, language);
                     } else {
                         System.out.println("INFO AskTell.jsp(Tell): FULL base regen required -> regenerating "
-                                + kb.name + "." + lang + " (Tell changed schema/transitive facts)");
-                        TPTPGenerationManager.generateProperFile(kb, lang);
+                                + kb.name + "." + language + " (Tell changed schema/transitive facts)");
+                        TPTPGenerationManager.generateProperFile(kb, language);
                     }
                 } else {
                     // Reset spinner message when no regeneration needed (prevent stale message)
