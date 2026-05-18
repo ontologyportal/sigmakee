@@ -413,7 +413,7 @@ public class WordNetUtilities {
         case '4': return 'r';
         case '5': return 's';
         }
-        System.err.println("Error in WordNetUtilities.posNumberToLetter(): bad number: " + POS);
+        // System.err.println("Error in WordNetUtilities.posNumberToLetter(): bad number: " + POS);
         return 'n';
     }
 
