@@ -911,9 +911,7 @@ public class KBmanager implements Serializable {
     public void initializeOnce(String configFileDir) {
         
         long start = System.nanoTime();
-        int stepNumber = 0;
         LoggingUtils.log("INFO", "Initializing KBmanager!");
-        long millis = System.currentTimeMillis();
         boolean loaded = false;
         if (initializing || initialized) return;
         initializing = true;
@@ -923,31 +921,9 @@ public class KBmanager implements Serializable {
             if (configuration == null) throw new Exception("ERROR  [KBmanager.initializeOnce()]  Error in config.xml");
             if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists() && !serializedOld(configuration)) {
                 LoggingUtils.log("INFO", "Loading from serialized cache...");
-                stepNumber++;
                 loaded = loadSerialized();
                 if (loaded) {
-                    LoggingUtils.log("INFO", "Loading English Lexicons...");
-                    stepNumber++;
-                    if (!prefEquals("loadLexicons","false")) {
-                        WordNet.initOnce();
-                        NLGUtils.init(configFileDir);
-                        OMWordnet.readOMWfiles();
-                        if (!VerbNet.disable) {
-                            VerbNet.initOnce();
-                            VerbNet.processVerbs();
-                        }
-                    }
-                    else {
-                        LoggingUtils.log("INFO", "Skipped...");
-                        stepNumber++;
-                        WordNet.disable = true;
-                        VerbNet.disable = true;
-                        OMWordnet.disable = true;
-                    }
-                    initializing = false;
-                    initialized = true;
                     LoggingUtils.log("INFO", "Building SUMO Term Taxonomy...");
-                    stepNumber++;
                     for (KB kb : manager.kbs.values()) {
                         final KB kbFinal = kb;
                         KButilities.EXECUTOR_SERVICE.submit(() -> {
@@ -959,20 +935,21 @@ public class KBmanager implements Serializable {
             }
             if (!loaded) {
                 LoggingUtils.log("INFO", "Regenerating Fresh Cache...");
-                stepNumber++;
                 manager = this;
                 KBmanager.getMgr().setPref("kbDir", configFileDir);
                 if (StringUtil.isNonEmptyString(configFileDir)) setConfiguration(configuration);
                 else setDefaultAttributes();
                 serialize();
-                initializing = false;
-                initialized = true;
             }
+            LoggingUtils.log("INFO", "Loading English Lexicons...");
+            initializeLexicons(configFileDir);
+            initializing = false;
+            initialized = true;
             LoggingUtils.log("INFO", "Starting TPTP Background Generation...");
-            stepNumber++;
             TPTPGenerationManager.startBackgroundGeneration();
         }
         catch (Exception ex) {
+            initializing = false;
             System.err.println(ex.getMessage());
             ex.printStackTrace();
             return;
@@ -981,6 +958,25 @@ public class KBmanager implements Serializable {
         cleanupOrphanedSessionDirectories();
         double elapsedSeconds = (System.nanoTime() - start) / 1_000_000_000.0;
         LoggingUtils.log("INFO", "Initialization completed in " + elapsedSeconds + " seconds!");
+    }
+
+    private void initializeLexicons(String configFileDir) {
+
+        if (!prefEquals("loadLexicons", "false")) {
+            WordNet.initOnce();
+            NLGUtils.init(configFileDir);
+            OMWordnet.readOMWfiles();
+            if (!VerbNet.disable) {
+                VerbNet.initOnce();
+                VerbNet.processVerbs();
+            }
+        }
+        else {
+            LoggingUtils.log("INFO", "Skipping English Lexicons...");
+            WordNet.disable = true;
+            VerbNet.disable = true;
+            OMWordnet.disable = true;
+        }
     }
 
     /*****************************************************************
@@ -995,7 +991,6 @@ public class KBmanager implements Serializable {
         String kbDir = preferences.get("kbDir");
         String sep = File.separator;
         if (debug) System.out.println("Info in KBmanager.setConfiguration(): Using kbDir: " + kbDir);
-        long milis = System.currentTimeMillis();
         NLGUtils.init(kbDir);
         // if (!prefEquals("loadLexicons","false")) {
         //     WordNet.initOnce();
