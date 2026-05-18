@@ -611,15 +611,20 @@ public class Graph {
     public static void main(String[] args) {
 
         System.out.println("INFO in Graph.main()");
-        if (args != null && args.length > 1 && args[0].equals("-h")) {
+        Map<String, List<String>> parsedArgs = CLIMapParser.parse(args != null ? args : new String[0]);
+
+        if (parsedArgs.containsKey("h")) {
             showHelp();
+            return;
         }
-        if (args != null && args.length > 2 && args[0].equals("-g")) {
+
+        List<String> gArgs = parsedArgs.get("g");
+        if (gArgs != null && gArgs.size() >= 2) {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             Graph g = new Graph();
-            String term = args[1];
-            String relation = args[2];
+            String term = gArgs.get(0);
+            String relation = gArgs.get(1);
             String fileRestrict = "";
             try {
                 g.createDotGraph(kb, term, relation, 1, 1, 100, "proof", fileRestrict);
