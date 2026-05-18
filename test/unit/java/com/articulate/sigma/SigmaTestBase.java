@@ -34,6 +34,13 @@ public class SigmaTestBase {
 
             KBmanager.getMgr().setDefaultAttributes();
             KBmanager.getMgr().setConfiguration(configuration);
+            if (!KBmanager.getMgr().prefEquals("loadLexicons", "false")) {
+                WordNet.initOnce();
+                NLGUtils.init(KB_PATH);
+            }
+            else {
+                WordNet.disable = true;
+            }
             KBmanager.initialized = true;
         }
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
