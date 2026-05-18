@@ -19,7 +19,7 @@ if (StringUtil.emptyString(token)) {
     out.println("<p>Invalid or expired password reset link.</p>");
     return;
 }
-UserManager userManager = new UserManager();
+UserManager userManager = (UserManager) application.getAttribute("userManager");
 String tokenHash = PasswordService.hashResetToken(token);
 User user = userManager.getUserForValidPasswordResetToken(tokenHash);
 if (user == null) {

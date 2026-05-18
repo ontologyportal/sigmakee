@@ -2,7 +2,6 @@
 import="com.articulate.sigma.*,com.articulate.sigma.wordNet.*,java.net.URLConnection, javax.servlet.http.HttpServletRequest, java.io.*"
     pageEncoding="US-ASCII"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-
 <html>
    <body>
 
@@ -25,18 +24,14 @@ import="com.articulate.sigma.*,com.articulate.sigma.wordNet.*,java.net.URLConnec
     out.println("    <title>Sigma Knowledge Engineering Environment - Initializing</title>");
     out.println("  </head>");
     out.println("  <body bgcolor=\"#FFFFFF\">");
-
     if (KBmanager.initialized) {
-        System.out.println("init.jsp: initialized.  Redirecting to KBs.jsp.");
         response.sendRedirect("KBs.jsp");
         Thread.sleep(1000);
         return;
     }
-
     // Set refresh, autoload time as 15 seconds
     response.setIntHeader("Refresh", 15);
  %>
-
 <table width="95%" cellspacing="0" cellpadding="0">
     <tr>
         <td valign="top">
@@ -51,28 +46,21 @@ import="com.articulate.sigma.*,com.articulate.sigma.wordNet.*,java.net.URLConnec
         </td>
     </tr>
 </table>
-
 <B>Sigma is initializing</b>
-
 <%
     out.println("<P><P>\n");
     KB kb;
     for (String kbname : KBmanager.getMgr().kbs.keySet()) {
         kb = KBmanager.getMgr().getKB(kbname);
         out.println(kb.name + " : " + kb.constituents.size() + " constituents loaded<br>");
-        if (kb.kbCache != null && kb.kbCache.initialized)
-            out.println("cache initialized<br>");
-        else
-            out.println("cache not initialized<br>");
+        if (kb.kbCache != null && kb.kbCache.initialized) out.println("cache initialized<br>");
+        else out.println("cache not initialized<br>");
         out.println("<P>");
     }
     out.println("<P>");
-    if (!WordNet.initNeeded)
-        out.println("WordNet initialized<P>");
-    else
-        out.println("WordNet not initialized<P>");
+    if (!WordNet.initNeeded) out.println("WordNet initialized<P>");
+    else out.println("WordNet not initialized<P>");
 %>
-
 <%@ include file="Postlude.jsp" %>
 </BODY>
 </HTML>

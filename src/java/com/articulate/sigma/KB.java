@@ -95,6 +95,8 @@ import java.util.regex.PatternSyntaxException;
 
 import tptp_parser.TPTPFormula;
 
+import org.openjdk.jol.info.GraphLayout;
+
 /**
  * ***************************************************************** Contains
  * methods for reading, writing knowledge bases and their configurations. Also
@@ -225,8 +227,6 @@ public class KB implements Serializable {
     // Serialize base SUMO.<lang> regeneration decisions + generation trigger
     // (You can also keep generation manager atomics, but this protects the policy boundary.)
     public final Object baseGenLock = new Object();
-
-    private int counter = 0;
 
     /****************************************************************
      * This List is used to limit the number of warning messages logged by
@@ -541,15 +541,10 @@ public class KB implements Serializable {
     public void checkArity() {
 
         long millis = System.currentTimeMillis();
-        System.out.print("INFO in KB.checkArity(): Performing Arity Check\n");
-
         if (!SUMOKBtoTPTPKB.rapidParsing)
             _checkArity();
         else
             _t_checkArity();
-
-        counter = 0; // reset
-        System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
     }
 
     /** *************************************************************
@@ -558,20 +553,20 @@ public class KB implements Serializable {
     private void _checkArity() {
 
         if (formulaMap != null && !formulaMap.isEmpty()) {
+            long start = System.nanoTime();
+            int counter = 1;
             int total = formulaMap.values().size();
             String term;
             for (Formula f : formulaMap.values()) {
-                if (counter++ % 10 == 0)
-                    System.out.print(".");
-                if (counter % 400 == 0)
-                    System.out.printf("%nINFO in KB.checkArity(): Still performing Arity Check. %d%% done%n", counter*100/total);
-                 term = PredVarInst.hasCorrectArity(f, this);
+                term = PredVarInst.hasCorrectArity(f, this);
+                if(counter % 400 == 1) LoggingUtils.printProgressBar("INFO", "Checking Formula Arity...", counter, total);
+                counter++;
                 if (!StringUtil.emptyString(term)) {
                     errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
                             + " in formula: \n" + f.getFormula());
                 }
             }
-            System.out.println();
+            LoggingUtils.printProgressBar("INFO", "Checking Formula Arity...", counter, total, "completed " + total + " formulas in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
         }
     }
 
@@ -581,30 +576,26 @@ public class KB implements Serializable {
     private void _t_checkArity() {
 
         if (formulaMap != null && !formulaMap.isEmpty()) {
+            long start = System.nanoTime();
             Future<?> future;
             List<Future<?>> futures = new ArrayList<>();
             int total = formulaMap.values().size();
             Runnable r;
+            int counter = 1;
             for (Formula f : formulaMap.values()) {
                 r = () -> {
-                    if (counter++ % 10 == 0)
-//                        System.out.print(".");
-                        progressSb.append(".");
-                    if (counter % 400 == 0) {
-                        System.out.print(progressSb.toString() + "x");
-                        progressSb.setLength(0);
-                        System.out.printf("%nINFO in KB.checkArity(): Still performing Arity Check. %d%% done%n", counter*100/total);
-                    }
                     String term = PredVarInst.hasCorrectArity(f, this);
                     if (!StringUtil.emptyString(term)) {
                         errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
                                 + " in formula: \n" + f.getFormula());
                     }
                 };
+                if(counter % 400 == 1) LoggingUtils.printProgressBar("INFO", "Checking Formula Arity...", counter, total);
+                counter++;
                 future = KButilities.EXECUTOR_SERVICE.submit(r);
                 futures.add(future);
             }
-            System.out.println();
+            LoggingUtils.printProgressBar("INFO",  "Checking Formula Arity...", counter, total, "completed " + total + " formulas in "+ ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
             for (Future<?> f : futures)
                 try {
                     f.get(); // waits for task completion
@@ -2835,18 +2826,10 @@ public class KB implements Serializable {
         for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
             termFrequency.merge(entry.getKey(), entry.getValue(), Integer::sum);
         }
-
         int count = 2;
         int total = file.formulas.keySet().size();
         // Merge predicate-position index
-        for (String key : file.formulas.keySet()) {
-            if ((count++ % 100) == 1) progressSb.append(".");
-            if ((count % 4000) == 1) {
-                System.out.print(progressSb + "x");
-                progressSb.setLength(0);
-                System.out.printf("%nINFO in KB.addConstituentInfoAST(): still adding keys. %d%% done.%n",
-                        count * 100 / total);
-            }
+        if (total > 0) for (String key : file.formulas.keySet()) {
             List<String> newlist = file.formulas.get(key);
             List<String> list = formulas.get(key);
             if (list != null) {
@@ -2854,19 +2837,11 @@ public class KB implements Serializable {
             }
             formulas.put(key, newlist);
         }
-
-        count = 2;
-        total = file.formulaMap.values().size();
-        // Merge formulaMap (FormulaAST extends Formula, so it fits Map<String,Formula>)
-        for (FormulaAST f : file.formulaMap.values()) {
+        count = 0;
+        total = file.formulaMap.size();
+        if (total > 0) for (FormulaAST f : file.formulaMap.values()) {
+            count++;
             String internedFormula = f.getFormula().intern();
-            if ((count++ % 100) == 1) progressSb.append(".");
-            if ((count % 4000) == 1) {
-                System.out.print(progressSb + "x");
-                progressSb.setLength(0);
-                System.out.printf("%nINFO in KB.addConstituentInfoAST(): still adding values. %d%% done.%n",
-                        count * 100 / total);
-            }
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
         }
@@ -2928,7 +2903,6 @@ public class KB implements Serializable {
         }
 
         int count = 2;
-        //System.out.println("INFO in KB.addConstituent(): add keys");
         List<String> newlist, list;
         int total = file.formulas.keySet().size();
         for (String key : file.formulas.keySet()) { // Iterate through keys.
@@ -2937,7 +2911,6 @@ public class KB implements Serializable {
             if ((count % 4000) == 1) {
                 System.out.print(progressSb.toString() + "x");
                 progressSb.setLength(0);
-                System.out.printf("%nINFO in KB.addConstituent(): still adding keys. %d%% done.%n", count*100/total);
             }
             newlist = file.formulas.get(key);
             list = formulas.get(key);
@@ -2950,16 +2923,8 @@ public class KB implements Serializable {
         count = 2;
         String internedFormula;
         total = file.formulaMap.values().size();
-        //System.out.println("INFO in KB.addConstituent(): add values");
         for (Formula f : file.formulaMap.values()) { // Iterate through values
             internedFormula = f.getFormula().intern();
-            if ((count++ % 100) == 1)
-                progressSb.append(".");
-            if ((count % 4000) == 1) {
-                System.out.print(progressSb.toString() + "x");
-                progressSb.setLength(0);
-                System.out.printf("\nINFO in KB.addConstituent(): still adding values. %d%% done.%n", count*100/total);
-            }
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
         }
@@ -2979,17 +2944,14 @@ public class KB implements Serializable {
     public void addConstituent(String filename) {
 
         long millis = System.currentTimeMillis();
-        System.out.println("INFO in KB.addConstituent(): " + filename);
         // KIFAST (ANTLR-based) is the default parser. Opt out with useAntlrParser=false in config.xml.
         if (!"false".equals(KBmanager.getMgr().getPref("useAntlrParser"))) {
             KIFAST file = readConstituentAST(filename);
             if (file == null) return;
             addConstituentInfoAST(file);
-            if (debug>1) System.out.printf("\nKB.addConstituent(%s) Loaded in %d seconds:\n    Formula#: %d\n    Term#: %d", filename, (System.currentTimeMillis()-millis)/KButilities.ONE_K, file.formulaMap.values().size(), file.terms.size());
         } else {
             KIF file = readConstituent(filename);
             addConstituentInfo(file);
-            System.out.printf("\nKB.addConstituent(%s) Loaded in %d seconds:\n    Formula#: %d\n    Term#: %d", filename, (System.currentTimeMillis()-millis)/KButilities.ONE_K, file.formulaMap.values().size(), file.terms.size());
         }
     }
 
@@ -3611,6 +3573,7 @@ public class KB implements Serializable {
         Formula f;
         Set<Formula> processed;
         Set<String> tptp;
+        int counter = 0;
         while (it.hasNext()) {
             form = it.next();
             if ((counter++ % 100) == 1)
@@ -3653,7 +3616,6 @@ public class KB implements Serializable {
             }
         }
         System.out.println("INFO in KB.preProcess(): completed in " + (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
-        counter = 0;
         return newTreeSet;
     }
 

@@ -36,8 +36,7 @@ import javax.servlet.http.HttpSession;
  * A class that encrypts a string and checks it against another stored
  * encrypted string, in order to validate a user login.
  */
-@WebListener
-public final class UserManager implements ServletContextListener {
+public final class UserManager {
 
     private int debug = 0;
     private UserDatabase userDatabase; 
@@ -48,6 +47,7 @@ public final class UserManager implements ServletContextListener {
     public UserManager() {
 
         this.userDatabase = new UserDatabase();
+        LoggingUtils.log("User Manager Created!");
     }
 
     /********************************************************************
@@ -297,26 +297,9 @@ public final class UserManager implements ServletContextListener {
         return this.userDatabase.deleteUser(username);
     }
 
-    /********************************************************************
-     * Logs that the UserManager servlet context has started.
-     * https://howtodoinjava.com/security/how-to-generate-secure-password-hash-md5-sha-pbkdf2-bcrypt-examples/
-     * @param servletContextEvent the servlet context initialization event
-     */
-    @Override
-    public void contextInitialized(ServletContextEvent servletContextEvent) {
-        System.out.println("Starting " + UserManager.class.getName() + "...");
-    }
+    public void shutdown() {
 
-    /********************************************************************
-     * Shuts down the user database when the servlet context is destroyed.
-     * https://github.com/spring-projects/spring-boot/issues/21221
-     * and: https://stackoverflow.com/questions/9972372/what-is-the-proper-way-to-close-h2
-     * @param servletContextEvent the servlet context destruction event
-     */
-    @Override
-    public void contextDestroyed(ServletContextEvent servletContextEvent) {
-
-        if (debug > 0) System.out.printf("UserManager.contextDestroyed() for %s", UserManager.class.getName());
+        if (debug > 0) System.out.printf("INFO  [UserManager.shutdown()] for %s%n", UserManager.class.getName());
         if (this.userDatabase != null) this.userDatabase.shutdown();
     }
 

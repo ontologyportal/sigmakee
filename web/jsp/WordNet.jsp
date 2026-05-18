@@ -61,7 +61,7 @@
 <%
   }
   if (writeProlog != null) WordNet.wn.writeProlog(kb);
-  String params = "flang=" + flang + "&lang=" + language + "&kb=" + kbName;
+  String params = "flang=" + flang + "&lang=" + lang + "&kb=" + kbName;
   if (word != null && word != "") out.println(WordNet.wn.page(word,Integer.decode(POS).intValue(),kbName,synset,params));
   else if (synset != null && synset != "") out.println(WordNet.wn.displaySynset(kbName,synset,params)); 
   else if (key != null) out.println(WordNet.wn.displayByKey(kbName,key,params));  
@@ -70,8 +70,8 @@
       out.println("\n<a href=\"" + HTMLformatter.createHrefStart() + "/sigma/OMW.jsp?" + "kb=" + kbName + "&synset=" + OMWsynset + "\">Show Open Multilingual Wordnet links</a><p>\n");
   }
   if (synset != null && synset != "") {
-      System.out.println("WordNet.jsp: synset: " + synset);
-      System.out.println("WordNet.jsp: POS: " + POS);
+      //System.out.println("WordNet.jsp: synset: " + synset);
+      //System.out.println("WordNet.jsp: POS: " + POS);
       if (synset.length() == 8 && POS.length() == 1) out.println(WordNetUtilities.showVerbFrames(POS + synset));
       else out.println(WordNetUtilities.showVerbFrames(synset));
   }

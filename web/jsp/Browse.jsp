@@ -19,7 +19,7 @@
    if (StringUtil.emptyString(nonRelTerm)) nonRelTerm = "";
    if (StringUtil.emptyString(relTerm)) relTerm = "";
    if (flang.equals("OWL")) {
-      response.sendRedirect(HTMLformatter.createHrefStart() + "/sigma/OWL.jsp?" + "kb=" + kbName + "&term=" + term);
+      response.sendRedirect(HTMLformatter.createHrefStart() + "/sigma/OWL.jsp?" + "kb=" + kbName + "&flang=" + flang + "&lang=" + lang + "&term=" + term);
       return;
    }
 %>
