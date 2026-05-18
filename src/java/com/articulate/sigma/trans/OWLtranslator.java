@@ -1155,7 +1155,7 @@ public class OWLtranslator {
      */
     private void writeWordNetSynset(PrintWriter pw, String synset) {
 
-    	System.out.println("INFO in OWLtranslator.writeWordNetSynset(): " + synset);
+    	// System.out.println("INFO in OWLtranslator.writeWordNetSynset(): " + synset);
         if (synset.startsWith("WN30-"))
             synset = synset.substring(5);
         ArrayList al = (ArrayList) WordNet.wn.synsetsToWords.get(synset);

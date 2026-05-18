@@ -721,7 +721,7 @@ public class FormulaPreprocessor {
             if (Formula.isQuantifier(carstr))  // skip the quantified variable list
                 start = 2;
             if (Formula.isLogicalOperator(carstr) && f.listLength() == 2 && f.getArgument(1).isVariable()) {
-                System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): logical op with var arg " + f.getFormula());
+                // System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): logical op with var arg " + f.getFormula());
                 MapUtils.addToMap(result,f.getArgument(1).toString(),"Formula");  // When a variable is an argument to a logical operator, it's a formula
             }
             Formula farg;
