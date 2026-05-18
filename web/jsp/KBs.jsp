@@ -22,7 +22,6 @@
   String baseDir = mgr.getPref("baseDir");
   String kbDir = mgr.getPref("kbDir");
   boolean isAdministrator = role.equalsIgnoreCase("admin");
-  KBmanager.getMgr().initializeOnce();
   String pageName = "KBs";
   String pageString = "Knowledge Bases";
   %>
