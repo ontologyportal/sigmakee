@@ -21,7 +21,7 @@ nonRelTerm = request.getParameter("nonrelation");
 relTerm = StringUtil.emptyString(relTerm) ? request.getParameter("relation") : "";
 
 // ???
-if (!StringUtil.emptyString(filename)) {
+if (!StringUtil.emptyString(filename) && false) {
     int l = 0;
     if (!StringUtil.emptyString(line)) {
         try {l = Integer.parseInt(line);}
