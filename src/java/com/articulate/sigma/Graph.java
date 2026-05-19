@@ -602,39 +602,37 @@ public class Graph {
         System.out.println("Graphing");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
-        System.out.println("  -g <term> <rel> - create a dot graph file with a term and relation");
+        System.out.println("  --graph <term> <rel> - create a dot graph file with a term and relation");
     }
 
     /** ***************************************************************
-     * A test method.
      */
     public static void main(String[] args) {
 
         System.out.println("INFO in Graph.main()");
-        Map<String, List<String>> parsedArgs = CLIMapParser.parse(args != null ? args : new String[0]);
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
 
-        if (parsedArgs.containsKey("h")) {
+        if (argMap.isEmpty() || argMap.containsKey("h"))
             showHelp();
-            return;
-        }
-
-        List<String> gArgs = parsedArgs.get("g");
-        if (gArgs != null && gArgs.size() >= 2) {
-            KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            Graph g = new Graph();
-            String term = gArgs.get(0);
-            String relation = gArgs.get(1);
-            String fileRestrict = "";
-            try {
-                g.createDotGraph(kb, term, relation, 1, 1, 100, "proof", fileRestrict);
+        else {
+            if (argMap.containsKey("graph")) {
+                List<String> gArgs = argMap.get("graph");
+                KBmanager.getMgr().initializeOnce();
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                Graph g = new Graph();
+                String term = gArgs.get(0);
+                String relation = gArgs.get(1);
+                String fileRestrict = "";
+                try {
+                    g.createDotGraph(kb, term, relation, 1, 1, 100, "proof", fileRestrict);
+                }
+                catch (IOException e) {
+                    System.err.println(e.getMessage());
+                    e.getStackTrace();
+                }
             }
-            catch (IOException e) {
-                System.err.println(e.getMessage());
-                e.getStackTrace();
-            }
+            else
+                showHelp();
         }
-        else
-            showHelp();
     }
 }

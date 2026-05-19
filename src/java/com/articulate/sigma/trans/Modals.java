@@ -593,6 +593,8 @@ public class Modals {
         }
     }
 
+    /***************************************************************
+     */
     private static Set<String> collectAllVarsExpr(Expr expr) {
         Set<String> vars = new HashSet<>();
         collectAllVarsExprRecurse(expr, vars);
@@ -749,6 +751,8 @@ public class Modals {
         };
     }
 
+    /***************************************************************
+     */
     private static Expr processRecurseSExprExpr(Expr.SExpr se, KB kb,
                                                   String worldvar, int worldNum) {
         String headName = se.headName();
@@ -837,7 +841,6 @@ public class Modals {
             if (v.matches(wPattern))
                 worldTypes.put(v, wType);
         }
-
         return new SimpleEntry<>(result, worldTypes);
     }
 
@@ -943,7 +946,8 @@ public class Modals {
      * symmetric if w R u implies u R w, for all w and u in G
      * transitive if w R u and u R q together imply w R q, for all w, u, q in G.
      * serial if, for every w in G there is some u in G such that w R u.
-     * Euclidean if, for every u, t, and w, w R u and w R t implies u R t (by symmetry, it also implies t R u, as well as t R t and u R u)
+     * Euclidean if, for every u, t, and w, w R u and w R t implies u R t
+     * (by symmetry, it also implies t R u, as well as t R t and u R u)
      */
     public static String genFrameAxiom(String modalOp, FrameAx frameAx) {
 
@@ -1015,14 +1019,6 @@ public class Modals {
                 "thf(accreln2_tp,type, s__accreln2: (m > $i > w > w > $o) ).\n" +
                 "thf(accreln3_tp,type, s__accreln3: (m > $i > $i > w > w > $o) ).\n" +
                 "thf(accreln3norm_tp,type, s__accreln3norm: (m > $i > m > w > w > $o) ).\n" +
-                //"thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +     // CF: This is no longer needed, we are using accreln[ |2|3] 
-                //"thf(knows_tp,type,(s__knows : m)).\n" +
-                //"thf(believes_tp,type,(s__believes : m)).\n" +
-                //"thf(desires_tp,type,(s__desires : m)).\n" +
-                //"thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__desires @ P @ W @ W))).\n" +
-                //"thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__knows @ P @ W @ W))).\n" +
-                //"thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln2 @ s__believes @ P @ W @ W))).\n" +
-                //"thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n" +
 
                 genAllModalSystems();
                 //  + genDistinctModals(); // $distinct doesn't appear to be allowed by Vampire in THF
