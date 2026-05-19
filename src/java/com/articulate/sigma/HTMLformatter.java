@@ -346,7 +346,7 @@ public class HTMLformatter {
             long serLastModified = kbManagerSer.exists() ? kbManagerSer.lastModified() : 0L;
             long cacheLastModified = cacheFile.exists() ? cacheFile.lastModified() : 0L;
             if (cacheFile.exists() && cacheLastModified >= serLastModified) {
-                System.out.println("[showStatistics] Using cached HTML stats for " + kb.name);
+                // System.out.println("[showStatistics] Using cached HTML stats for " + kb.name);
                 return Files.readString(cacheFile.toPath(), StandardCharsets.UTF_8);
             }
             System.out.println("[showStatistics] Recomputing statistics for " + kb.name);

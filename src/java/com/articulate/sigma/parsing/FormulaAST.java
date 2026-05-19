@@ -197,9 +197,10 @@ public class FormulaAST extends Formula {
             this.isDoc = parsed.isDoc;
             this.isRule = parsed.isRule;
             this.containsNumber = parsed.containsNumber;
-        }else{
-            System.out.println("[FormulaAST - read] : SuokifVisitor couldn't parse the formula: " + s);
         }
+        // else {
+        //     System.out.println("[FormulaAST - read] : SuokifVisitor couldn't parse the formula: " + s);
+        // }
     }
     
 

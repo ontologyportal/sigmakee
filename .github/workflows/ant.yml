@@ -7,7 +7,8 @@ on:
     branches: [ "master", "main" ]
   pull_request:
     branches: [ "master", "main" ]
-
+  workflow_dispatch:
+    
 env:
   DEFAULT_DOCKER_ACCOUNT: apease
   SUMO_REF: 5051a4ebf1a8d1c00e602bcdabaa7b5bd3a5ed1c
