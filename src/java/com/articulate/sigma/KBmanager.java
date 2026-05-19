@@ -918,6 +918,8 @@ public class KBmanager implements Serializable {
         KBmanager.getMgr().setPref("kbDir",configFileDir);
         try {
             SimpleElement configuration = readConfiguration(configFileDir);
+            LoggingUtils.log("INFO", "Loading English Lexicons...");
+            initializeLexicons(configFileDir);
             if (configuration == null) throw new Exception("ERROR  [KBmanager.initializeOnce()]  Error in config.xml");
             if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists() && !serializedOld(configuration)) {
                 LoggingUtils.log("INFO", "Loading from serialized cache...");
@@ -941,8 +943,6 @@ public class KBmanager implements Serializable {
                 else setDefaultAttributes();
                 serialize();
             }
-            LoggingUtils.log("INFO", "Loading English Lexicons...");
-            initializeLexicons(configFileDir);
             initializing = false;
             initialized = true;
             LoggingUtils.log("INFO", "Starting TPTP Background Generation...");
@@ -960,7 +960,7 @@ public class KBmanager implements Serializable {
         LoggingUtils.log("INFO", "Initialization completed in " + elapsedSeconds + " seconds!");
     }
 
-    private void initializeLexicons(String configFileDir) {
+    public void initializeLexicons(String configFileDir) {
 
         if (!prefEquals("loadLexicons", "false")) {
             WordNet.initOnce();
@@ -972,7 +972,7 @@ public class KBmanager implements Serializable {
             }
         }
         else {
-            LoggingUtils.log("INFO", "Skipping English Lexicons...");
+            LoggingUtils.log("Skipping English Lexicons...");
             WordNet.disable = true;
             VerbNet.disable = true;
             OMWordnet.disable = true;
