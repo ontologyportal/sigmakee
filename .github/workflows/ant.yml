@@ -169,6 +169,85 @@ jobs:
         with:
           name: sigma-webapp
           path: /usr/local/tomcat/webapps/sigma.war
+          
+  build-related-repos:
+    name: Build related repos
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    container:
+      image: apease/sigma-ci:latest
+
+    steps:
+      - name: checkout sigmakee
+        uses: actions/checkout@v4
+        with:
+          path: sigmakee
+
+      - name: checkout TPTP-ANTLR
+        uses: actions/checkout@v4
+        with:
+          repository: ontologyportal/TPTP-ANTLR
+          path: TPTP-ANTLR
+
+      - name: checkout SigmaUtils
+        uses: actions/checkout@v4
+        with:
+          repository: ontologyportal/SigmaUtils
+          path: SigmaUtils
+
+      - name: checkout sigmaAntlr
+        uses: actions/checkout@v4
+        with:
+          repository: ontologyportal/sigmaAntlr
+          path: sigmaAntlr
+
+      - name: checkout SUMOjEdit
+        uses: actions/checkout@v4
+        with:
+          repository: ontologyportal/SUMOjEdit
+          path: SUMOjEdit
+
+      - name: checkout sigmanlp
+        uses: actions/checkout@v4
+        with:
+          repository: ontologyportal/sigmanlp
+          path: sigmanlp
+
+      - name: checkout sumo
+        uses: actions/checkout@v4
+        with:
+          repository: ontologyportal/sumo
+          ref: ${{ env.SUMO_REF }}
+          path: sumo
+          fetch-depth: 0
+
+      - name: Set up JDK 21 for x64
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup SIGMA_HOME
+        env:
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+          ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          mkdir -p "$SIGMA_HOME/KBs/WordNetMappings"
+          cp -R "$ONTOLOGYPORTAL_GIT/sumo/"* "$SIGMA_HOME/KBs/"
+          cp /opt/WordNet-3.0/dict/* "$SIGMA_HOME/KBs/WordNetMappings/"
+
+      - name: Build related repos
+        env:
+          SIGMA_SRC: ${{ github.workspace }}/sigmakee
+          ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+          CATALINA_HOME: /usr/local/tomcat
+          SIGMA_CP: ${{ github.workspace }}/sigmakee/build/sigmakee.jar:${{ github.workspace }}/sigmakee/lib/*
+        working-directory: ./sigmakee
+        run: |
+          chmod +x scripts/build-related-repos.sh
+          bash scripts/build-related-repos.sh
 
   build-sumo-ci-and-sigmakee:
     runs-on: ubuntu-latest
