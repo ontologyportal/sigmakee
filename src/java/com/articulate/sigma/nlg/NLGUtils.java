@@ -334,20 +334,14 @@ public class NLGUtils implements Serializable {
         if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists())
             loadSerialized();
         if (nlg != null) {
-            System.out.print(getKeywordMap().keySet().size());
             return;
         }
-        if(debug>0) System.out.println("INFO in NLGUtils.readKeywordMap(" + dir + "/" +
-                PHRASES_FILENAME + ")");
-
+        if(debug>0) System.out.println("INFO in NLGUtils.readKeywordMap(" + dir + "/" + PHRASES_FILENAME + ")");
         if (getKeywordMap() == null)
             setKeywordMap(new HashMap<>());
-
         File phrasesFile;
-
         if (getKeywordMap().isEmpty()) {
             if(debug>0) System.out.println("Filling keywordMap");
-
             phrasesFile = new File(dirFile, PHRASES_FILENAME);
             if (!phrasesFile.canRead()) {
                 try {
