@@ -14,6 +14,7 @@ August 9, Acapulco, Mexico.
 */
 
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.io.File;
 import java.io.IOException;

@@ -6,6 +6,7 @@ import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.io.File;
 import java.io.FileWriter;
