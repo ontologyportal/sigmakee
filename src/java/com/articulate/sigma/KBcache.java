@@ -31,6 +31,8 @@ package com.articulate.sigma;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.utils.*;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

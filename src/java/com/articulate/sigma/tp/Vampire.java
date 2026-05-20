@@ -30,6 +30,8 @@ import com.articulate.sigma.parsing.ExprToTHF;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.parsing.SuokifVisitor;
+import com.articulate.sigma.parsing.CLIMapParser;
+
 import tptp_parser.TPTPFormula;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

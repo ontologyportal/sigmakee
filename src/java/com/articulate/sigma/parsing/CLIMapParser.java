@@ -1,4 +1,4 @@
-package com.articulate.sigma;
+package com.articulate.sigma.parsing;
 
 import java.util.ArrayList;
 import java.util.HashMap;

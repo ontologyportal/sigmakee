@@ -22,6 +22,7 @@ import com.articulate.sigma.trans.SessionTPTPManager;
 import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.io.*;
 import java.util.*;

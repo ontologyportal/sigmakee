@@ -291,7 +291,7 @@
         <javac destdir="${build.classes}"
             debug="on"
             optimize="on"
-            deprecation="on"
+            deprecation="off"
             includeantruntime="false"
             release="${javac.release}">
             <src refid="core.sourcepath"/>

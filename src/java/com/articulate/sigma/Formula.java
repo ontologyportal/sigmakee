@@ -24,6 +24,7 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.trans.Modals;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.io.*;
 import java.util.*;

@@ -6,6 +6,8 @@ import com.articulate.sigma.parsing.ExprToTFF;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.parsing.CLIMapParser;
+import com.articulate.sigma.utils.*;
 
 import java.io.*;
 import java.nio.file.Files;

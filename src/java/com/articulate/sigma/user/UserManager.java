@@ -11,6 +11,7 @@ package com.articulate.sigma.user;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.security.ValidationUtils;
 import com.articulate.sigma.*;
+import com.articulate.sigma.utils.*;
 
 import java.net.URLEncoder;
 import java.security.MessageDigest;
