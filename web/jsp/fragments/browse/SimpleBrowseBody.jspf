@@ -18,7 +18,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 
  Map theMap = null;     // Map of natural language format strings.
 
- HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?lang=" + language + "&simple=yes&kb=" + kbName;
+ HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?lang=" + lang + "&simple=yes&kb=" + kbName;
 
  if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) && StringUtil.emptyString(nonRelTerm))       // Show statistics only when no term is specified.
      show.append(HTMLformatter.showStatistics(kb));
@@ -34,26 +34,19 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
     show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
     List forms;
     show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
-    Map<String, String> tfm = kb.getTermFormatMap(language);
+    Map<String, String> tfm = kb.getTermFormatMap(lang);
     if (term != null) {
         term = term.intern();
         //show.append(term);
         show.append("</b></FONT>");
     	if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
     	    String fmValue = null;
-    	    if (tfm != null)
-                fmValue = tfm.get(term);
-    	    if (fmValue == null)
-                System.out.println("INFO in SimpleBrowseBody.jsp: No format map entry for \"" +
-                                   term + "\" in language " + language);
+    	    if (tfm != null) fmValue = tfm.get(term);
     	}
     	else {
     	    String tfmValue = null;
     	    if (tfm != null)
                 tfmValue = (String) tfm.get(term);
-    	    if (tfmValue == null)
-                System.out.println("INFO in SimpleBrowseBody.jsp: No term format map entry for \"" +
-                                   term + "\" in language " + language);
     	}
         show.append(HTMLformatter.showPictures(kb,term));
         show.append("</td>");
@@ -68,7 +61,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 
     String ontology = KBmanager.getMgr().getPref("sumokbname");
     String formatToken = kb.name;
-    String defaultNS = language;
+    String defaultNS = lang;
     DocGen gen = DocGen.getInstance();
     Map<String, Map<String, List<String>>> alphaList = gen.getAlphaList(kb); // tfm
     show.append(DocGen.getInstance(kb.name).createPage(kb,HTMLformatter.kbHref,term,alphaList,limit,defaultNS,formatToken));
@@ -78,14 +71,14 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 
     if (!parentPage.equals("TreeView.jsp"))
         show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" +
-                    "?lang=" + language + "&simple=yes&kb=" + kbName +
+                    "?lang=" + lang + "&simple=yes&kb=" + kbName +
                     "&term=" + term + "\">Show simplified definition with tree view</a></small><br>\n");
 
     show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/Browse.jsp" +
-                "?lang=" + language + "&kb=" + kbName + "&simple=no" +
+                "?lang=" + lang + "&kb=" + kbName + "&simple=no" +
                 "&term=" + term + "\">Show full definition (without tree view)</a></small><br>\n");
     show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" +
-                "?lang=" + language + "&kb=" + kbName + "&simple=no" +
+                "?lang=" + lang + "&kb=" + kbName + "&simple=no" +
                 "&term=" + term + "\">Show full definition (with tree view)</a></small><br>\n");
  }
 %>

@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <%@ page import="java.net.URLEncoder, java.nio.charset.Charset, java.io.*, com.articulate.sigma.tp.GenPropFormulas, com.articulate.sigma.security.*" %>
 <html>
 <head>
@@ -42,7 +42,7 @@ int depthInt = ValidationUtils.sanitizeInteger(depth);
       String pageName = "LogLearn";
       String pageString = "LogLearn";
   %>
-  <%@ include file="CommonHeader.jsp" %>
+  <%@ include file="fragments/universal/CommonHeader.jspf" %>
   <p><a href="/sigma/TableauxWorksheet.jsp">Blank Tableau Worksheet</a></p>
   <h2><b>Create logic problem with solutions</b></h2>
   <table>
@@ -176,6 +176,6 @@ if (erase != null && erase.equalsIgnoreCase("erase")) {
     out.println("<p>Reset generator state.</p>");
 }
 %>
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>
 </html>

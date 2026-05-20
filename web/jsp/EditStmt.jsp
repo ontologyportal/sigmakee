@@ -1,4 +1,4 @@
-<%@include file="Prelude.jsp" %>
+<%@include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
     Infosys (c) 2017-present.

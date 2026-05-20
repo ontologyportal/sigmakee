@@ -1,4 +1,4 @@
-<%@ include	file="Prelude.jsp" %>
+<%@ include	file="fragments/universal/Prelude.jspf" %>
 
 <%
 /** This code is copyright Articulate Software (c) 2003.  Some portions
@@ -27,7 +27,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       File kbDirFile = new File(kbDir);
       //System.out.println("INFO in AddConstituent.jsp: KB dir: " + kbDir);
       MultipartParser mpp = null;
-      String kbName = "";
+      kbName = "";
       String ontology = "";
       int postSize = Integer.MAX_VALUE;
       Part requestPart = null;
@@ -42,13 +42,9 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
       long writeCount = -1L;
       try {  
           boolean isError = false;
-
           System.out.println("request == " + request);
-
           mpp = new MultipartParser(request, postSize, true, true);
-
           System.out.println("mpp == " + mpp);
-
           while ((requestPart = mpp.readNextPart()) != null) {
               String paramName = requestPart.getName();
               if (paramName == null) 
@@ -59,19 +55,12 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                   if (ppval == null) ppval = "";
                   System.out.println("paramName == " + paramName);
                   System.out.println(" paramVal == " + ppval);
-                  if (paramName.equalsIgnoreCase("kb"))
-                      // && StringUtil.emptyString(kbName))
-                      kbName = ppval;
-                  else if (paramName.equalsIgnoreCase("ontology"))
-                      // && StringUtil.emptyString(ontology))
-                      ontology = ppval;
-                  else if (paramName.equalsIgnoreCase("load"))
-                      // && StringUtil.emptyString(load))
-                      load = ppval;
+                  if (paramName.equalsIgnoreCase("kb")) kbName = ppval;
+                  else if (paramName.equalsIgnoreCase("ontology")) ontology = ppval;
+                  else if (paramName.equalsIgnoreCase("load")) load = ppval;
               }
               else if (requestPart.isFile()) {
                   FilePart fp = (FilePart) requestPart;
-
                   // First, we copy the data file into the KBs
                   // directory.  This is inefficient if the data file
                   // is already in the KBs directory, but safer than
@@ -102,34 +91,26 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
               }
           }
           String overwrite = mgr.getPref("overwrite");
-          overwriteP = (StringUtil.isNonEmptyString(overwrite)
-                        && overwrite.equalsIgnoreCase("yes"));
-          loadP = (StringUtil.isNonEmptyString(load)
-                   && load.equalsIgnoreCase("yes"));
-              
-
+          overwriteP = (StringUtil.isNonEmptyString(overwrite) && overwrite.equalsIgnoreCase("yes"));
+          loadP = (StringUtil.isNonEmptyString(load) && load.equalsIgnoreCase("yes"));
           String errStr = "";
           if (overwriteP
               && !existingFile.getCanonicalPath().equalsIgnoreCase(outfile.getCanonicalPath())) {
               boolean overwriteSucceeded = false;
               try {
                   if (existingFile.delete() && outfile.renameTo(existingFile)) {
-                      outfile = existingFile;
-                      overwriteSucceeded = outfile.canRead();
+                    outfile = existingFile;
+                    overwriteSucceeded = outfile.canRead();
                   }
               }
               catch (Exception owex) {
                   owex.printStackTrace();
               }
-              if (!overwriteSucceeded)
-                  errStr = "Error: Could not overwrite existing data file";
+              if (!overwriteSucceeded) errStr = "Error: Could not overwrite existing data file";
           }
           if (StringUtil.emptyString(errStr)) {
-              if (StringUtil.emptyString(kbName)) {
-                  errStr = "Error: No knowledge base name specified";
-              }
-              else if ((outfile == null) || !outfile.canRead()) 
-                  errStr = "Error: The data file could not be saved or cannot be read";
+              if (StringUtil.emptyString(kbName)) errStr = "Error: No knowledge base name specified";
+              else if ((outfile == null) || !outfile.canRead()) errStr = "Error: The data file could not be saved or cannot be read";
           }
           if (StringUtil.isNonEmptyString(errStr)) {
               mgr.setError(mgr.getError() + "\n<br/>" + errStr + "\n<br/>");
@@ -139,10 +120,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
               response.sendRedirect("KBs.jsp"); 
           }
           else {
-              if (mgr.getKB(kbName) == null) 
-                  mgr.addKB(kbName);
-              KB kb = mgr.getKB(kbName);
-
+              if (mgr.getKB(kbName) == null) mgr.addKB(kbName);
               // The newly written data file is now the input to the
               // next step, which is the translation of the data file
               // to a KIF constituent file.
@@ -178,7 +156,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           response.sendRedirect("KBs.jsp"); 
       }
   }
-
 %>
 
 

@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 
 <%
 /** This code is copyright Articulate Software (c) 2003.  Some portions
@@ -171,7 +171,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
         String pageName = "Manifest";
         String pageString = "Manifest";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 <b>Files which are the <I>constituents</I> of the <B><%=kbName %></b> knowledge base </b>
 <%
   if (kb.constituents == null || kb.constituents.size() <= 0) {
@@ -292,6 +292,6 @@ if (role != null && role.equalsIgnoreCase("admin")) {
 %>
 <P>
   <a href="KBs.jsp">Return to home page</a><p>
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>

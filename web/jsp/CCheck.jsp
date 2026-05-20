@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
     Infosys (c) 2017-present.
@@ -31,7 +31,7 @@ String formattedFormula = null;
 Map theMap = null;
 HttpSession hsObj = request.getSession();
 hsObj.setMaxInactiveInterval(-1);
-kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName + "&flang=" + flang;
+kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + lang + "&kb=" + kbName + "&flang=" + flang;
 InterfaceTPTP.init();
 List<String> systemListBuiltIn = InterfaceTPTP.systemListBuiltIn;
 List<String> systemListLocal = InterfaceTPTP.systemListLocal;
@@ -81,7 +81,7 @@ String defaultSystemRemote = InterfaceTPTP.defaultSystemRemote;
         String pageName = "CCheck";
         String pageString = "Knowledge Based Consistency Check";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 
 <%
 show = new StringBuilder();
@@ -93,14 +93,14 @@ if (override != null && override.equalsIgnoreCase("true"))
     overrideValue = true;
 
 if (KBmanager.ccheckStatus(kb.name) == CCheckStatus.ONGOING) {
-    show.append(HTMLformatter.formatConsistencyCheck(kb.name + " is currently undergoing checks.  Partial results are available.", KBmanager.ccheckResults(kb.name), language, pageNum));
-    show.append("<p>[&nbsp; <a href='CCheck.jsp?kb=" + kb.name + "&lang=" + language + "&page=" + pageNum + "&override=false'>Refresh</a>&nbsp; ] </p>");
+    show.append(HTMLformatter.formatConsistencyCheck(kb.name + " is currently undergoing checks.  Partial results are available.", KBmanager.ccheckResults(kb.name), lang, pageNum));
+    show.append("<p>[&nbsp; <a href='CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&page=" + pageNum + "&override=false'>Refresh</a>&nbsp; ] </p>");
 }
 else if (KBmanager.ccheckStatus(kb.name) == CCheckStatus.DONE)
-    show.append(HTMLformatter.formatConsistencyCheck(kb.name + "  has been checked. Results can be found below. [<a href=CCheck.jsp?kb=" + kb.name + "&lang=" + language + "&override=true&page=0>Restart Check</a>]", KBmanager.ccheckResults(kb.name), language, pageNum));
+    show.append(HTMLformatter.formatConsistencyCheck(kb.name + "  has been checked. Results can be found below. [<a href=CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&override=true&page=0>Restart Check</a>]", KBmanager.ccheckResults(kb.name), lang, pageNum));
 else if (KBmanager.ccheckStatus(kb.name) == CCheckStatus.QUEUED) {
     show.append(kb.name + " has been added to the queue for consistency checks.");
-    show.append("<p>[&nbsp; <a href='CCheck.jsp?kb=" + kb.name + "&lang=" + language + "&page=" + pageNum + "&override=false'>Refresh</a>&nbsp; ] </p>");
+    show.append("<p>[&nbsp; <a href='CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&page=" + pageNum + "&override=false'>Refresh</a>&nbsp; ] </p>");
 }
 else if (!overrideValue && KBmanager.ccheckStatus(kb.name) == CCheckStatus.NOCCHECK) {
     boolean tptpWorldExists = InterfaceTPTP.tptpWorldExists;
@@ -109,7 +109,7 @@ else if (!overrideValue && KBmanager.ccheckStatus(kb.name) == CCheckStatus.NOCCH
     show.append("Please set timeout value and choose an inference engine.<br>");
     show.append("Query time limit: <input TYPE='TEXT' NAME='timeout' VALUE='30'><BR>");
     show.append("Choose an inference engine:<BR>");
-    if (kb.eprover == null)
+//    if (kb.eprover == null)
         show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='EProver onclick=\"document.getElementById('SoTPTPControl').style.display='none'\" disabled>EProver<br>");
     else show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='EProver' onclick=\"document.getElementById('SoTPTPControl').style.display='none'\" checked>EProver<br>");
         show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='LeoSine' onclick=\"document.getElementById('SoTPTPControl').style.display='none'\">LEO-II with SInE (experimental)<BR>");
@@ -182,9 +182,9 @@ else if (overrideValue && KBmanager.ccheckStatus(kb.name) == CCheckStatus.NOCCHE
         if (chosenEngine.equals("SoTPTP"))
             show.append("Chosen system: " + systemChosen + "<br>");
         show.append("Entered timeout: " + timeout + " seconds.<br>");
-        if (KBmanager.initiateCCheck(kb, chosenEngine, systemChosen, location, language, timeout) == CCheckStatus.QUEUED) {
+        if (KBmanager.initiateCCheck(kb, chosenEngine, systemChosen, location, lang, timeout) == CCheckStatus.QUEUED) {
             show.append(kb.name + " has been added to the queue for consistency checks. <br>");
-            show.append("<p>[&nbsp; <a href='CCheck.jsp?kb=" + kb.name + "&lang=" + language + "&page=" + pageNum + "&override=false'>Refresh</a>&nbsp; ] </p>");
+            show.append("<p>[&nbsp; <a href='CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&page=" + pageNum + "&override=false'>Refresh</a>&nbsp; ] </p>");
         }
         else
             show.append("Error trying to start consistency check for " + kb.name + ". Please try again.");
@@ -198,6 +198,6 @@ show.append("</form>");
 
 <table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
   <%=show.toString() %><BR>
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>

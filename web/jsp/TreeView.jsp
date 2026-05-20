@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
     Infosys (c) 2017-present.
@@ -69,22 +69,22 @@
 
   if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
-    <%@ include file="SimpleBrowseBody.jsp" %>
+    <%@ include file="fragments/browse/SimpleBrowseBody.jspff" %>
 <%
   }
   else {
 %>
-    <%@ include file="BrowseBody.jsp" %>
+    <%@ include file="fragments/browse/BrowseBody.jspf" %>
 <%
   }
   if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
-    <%@ include file="SimpleBrowseHeader.jsp" %>
+    <%@ include file="Simplefragments/browse/BrowseHeader.jspf" %>
 <%
   }
   else {
 %>
-    <%@ include file="BrowseHeader.jsp" %>
+    <%@ include file="fragments/browse/BrowseHeader.jspf" %>
 <%
   }
 %>
@@ -119,5 +119,5 @@
   }
 %>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 

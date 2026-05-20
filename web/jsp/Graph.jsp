@@ -1,4 +1,4 @@
-<%@ include	file="Prelude.jsp" %>
+<%@ include	file="fragments/universal/Prelude.jspf" %>
 
 <html>
   <head>
@@ -96,7 +96,7 @@ function setWidth(id) {
     String pageName = "Graph";
     String pageString = "KB Graph";
 %>
-<%@include file="CommonHeader.jsp" %>
+<%@include file="fragments/universal/CommonHeader.jspf" %>
 
 <form action="Graph.jsp">
       <font face="Arial,helvetica"><b>Relation: </b>
@@ -188,7 +188,7 @@ function setWidth(id) {
 </form>
 <p>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>
 </html>
 

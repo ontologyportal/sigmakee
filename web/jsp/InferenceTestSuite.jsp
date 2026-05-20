@@ -1,5 +1,5 @@
 <%@ page import="java.io.File, java.util.*, com.articulate.sigma.*, com.articulate.sigma.utils.StringUtil" %>
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <%
     if (!role.equalsIgnoreCase("admin")) { response.sendRedirect("login.jsp"); return; }
 
@@ -32,7 +32,7 @@
             String modeAll = "normal";
             if ("normal".equalsIgnoreCase(type)) modeAll = "normal";
             else if ("mp".equalsIgnoreCase(type)) modeAll = "mp";
-            else /* both */ modeAll = "mp".equalsIgnoreCase(phase) ? "mp" : "normal";
+            else /* both */ modeAll = "mp".equalsIgnoreCase(phase)  ? "mp" : "normal";
             // ---- RUN ONE (same as your single-test block) ----
             try {
                 InferenceTestSuite its = new InferenceTestSuite();
@@ -140,7 +140,8 @@
                             pw.println(proof_line);
                         }
                     }
-                } catch (Exception ioex) {
+                } 
+                catch (Exception ioex) {
                     // optional: log or display warning
                 }
 
@@ -164,6 +165,14 @@
             // FULL reload: wipe user assertions + reload base KB + rebuild inference view
             kb.deleteUserAssertionsAndReload();
             KBmanager.getMgr().loadKBforInference(kb);
+
+            long millis = System.currentTimeMillis() - t0;
+            out.println("<div style='color:#0a0'>KB reloaded in " + millis + " ms.</div>");
+        }
+        catch (Exception e) {
+            out.println("<div style='color:#b00'>Error reloading KB: "
+                    + esc(String.valueOf(e.getMessage())) + "</div>");
+            e.printStackTrace();
         }
     }
 %>
@@ -583,7 +592,7 @@
     String pageName = "InferenceTestSuite";
     String pageString = "Inference Interface";
 %>
-<%@include file="CommonHeader.jsp" %>
+<%@include file="fragments/universal/CommonHeader.jspf" %>
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
@@ -816,7 +825,7 @@
     </div>
 </div>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>
 </html>
 

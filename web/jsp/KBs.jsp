@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
@@ -25,7 +25,7 @@
   String pageName = "KBs";
   String pageString = "Knowledge Bases";
   %>
-  <%@include file="CommonHeader.jsp" %>
+  <%@include file="fragments/universal/CommonHeader.jspf" %>
 <%
   Iterator<String> kbNames = null;
   String removeResult = "";
@@ -157,7 +157,7 @@
 </ul>
 <p>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>
 

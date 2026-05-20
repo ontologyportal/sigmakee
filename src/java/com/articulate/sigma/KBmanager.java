@@ -615,14 +615,10 @@ public class KBmanager implements Serializable {
      * Conventional/sequential version
      */
     private boolean _loadKB(String kbName, List<String> constituents, KB kb) {
+        
         int i = 1;
         for (String filename : constituents) {
-            LoggingUtils.printProgressBar(
-                "INFO", kbName + " Adding Constituents:",
-                i,
-                constituents.size(), 
-                "(" + i + "/"  + constituents.size() + ")"
-            );
+            LoggingUtils.printProgressBar("INFO", kbName + " Adding Constituents:", i, constituents.size(), "(" + i + "/"  + constituents.size() + ")");
             i++;
             try {
                 kb.addConstituent(filename);
@@ -642,6 +638,7 @@ public class KBmanager implements Serializable {
      * @deprecated
      */
     private boolean _t_loadKB(String kbName, List<String> constituents, KB kb) {
+
         Future<Boolean> future;
         List<Future<Boolean>> futures = new ArrayList<>();
         boolean retVal = false;

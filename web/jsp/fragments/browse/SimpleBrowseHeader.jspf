@@ -27,7 +27,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
             return;
         }
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 
   <table cellspacing="0" cellpadding="0">
       <tr>

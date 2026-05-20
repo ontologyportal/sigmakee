@@ -19,7 +19,6 @@
     String pageName = "Browse";
     String pageString = "Browsing Interface";
 %>
-<%@include file="CommonHeader.jsp" %>
 <form method="GET" action="<%=parentPage%>">
     <input type="hidden" name="simple" value="<%=simple%>">
     <input type="hidden" name="kb" value="<%=kbName%>">

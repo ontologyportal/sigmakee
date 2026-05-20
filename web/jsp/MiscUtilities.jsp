@@ -1,4 +1,4 @@
-<%@ include	file="Prelude.jsp" %>
+<%@ include	file="fragments/universal/Prelude.jspf" %>
 
 <html>
   <head>
@@ -76,7 +76,7 @@
         String pageName = "MiscUtilities";
         String pageString = "MiscUtilities";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 
     <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
 	<img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
@@ -148,7 +148,7 @@
 </form>
 <p>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 
 </body>
 </html>

@@ -2947,7 +2947,8 @@ public class KB implements Serializable {
             KIFAST file = readConstituentAST(filename);
             if (file == null) return;
             addConstituentInfoAST(file);
-        } else {
+        } 
+        else {
             KIF file = readConstituent(filename);
             addConstituentInfo(file);
         }

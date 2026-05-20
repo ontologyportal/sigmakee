@@ -14,7 +14,7 @@ import org.junit.runners.Suite;
     IntegrationVerbNetTestSuite.class,
     IntegrationNLGTestSuite.class,
     IntegrationParsingTestSuite.class,
-    IntegrationTransTestSuite.class
+    IntegrationTransTestSuite.class,
 })
 public class IntegrationTestSuite extends IntegrationTestBase {
 

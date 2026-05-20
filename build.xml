@@ -50,6 +50,11 @@
             <path refid="compile.classpath"/>
             <pathelement location="${build.classes}"/>
             <pathelement path="lib/hamcrest-core-1.3.jar:lib/junit-4.13.2.jar"/>
+            <fileset dir="${env.CATALINA_HOME}/lib">
+                <include name="*.jar"/>
+            </fileset>
+            <pathelement location="${env.CATALINA_HOME}/bin/tomcat-juli.jar"/>
+            <pathelement location="${ant.home}/lib/ant.jar"/>
         </path>
         <path id="run.test.classpath">
             <path refid="compile.test.classpath"/>

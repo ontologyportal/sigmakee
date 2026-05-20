@@ -235,7 +235,8 @@ public class InferenceTestSuite {
             try {
                 // Remove any test assertions
                 resetAllForInference(kb);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 System.err.println("Warning: could not reset KB after test: " + e.getMessage());
             }
         }
@@ -737,9 +738,7 @@ public class InferenceTestSuite {
         String resultString;
         for (InfTestData itd : tests) {
             kb.deleteUserAssertionsAndReload();
-            for (String s : itd.statements)
-                if (!StringUtil.emptyString(s))
-                    kb.tell(s);
+            for (String s : itd.statements) if (!StringUtil.emptyString(s)) kb.tell(s);
             compareFiles(itd);
             maxAnswers = itd.expectedAnswers.size();
             try {
@@ -783,12 +782,11 @@ public class InferenceTestSuite {
                     System.out.println(duration);
                     itd.execTime = duration;
                     totalTime = totalTime + duration;
-                    if (saveTPTP)
-                        saveTPTP(itd);
+                    if (saveTPTP) saveTPTP(itd);
                 }
             }
             catch (Exception ex) {
-                    result = result.append("<br>Error in InferenceTestSuite.test() while executing query ").append(itd.filename).append(": ").append(ex.getMessage()).append("<br>");
+                result = result.append("<br>Error in InferenceTestSuite.test() while executing query ").append(itd.filename).append(": ").append(ex.getMessage()).append("<br>");
             }
             lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";

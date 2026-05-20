@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 
 <HTML>
 <HEAD>
@@ -168,7 +168,7 @@ if (!role.equalsIgnoreCase("admin")) {
         String pageName = "Mapping";
         String pageString = "Mapping";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
   <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
@@ -288,7 +288,7 @@ if (!role.equalsIgnoreCase("admin")) {
   <P><INPUT type="submit" NAME="merge" VALUE="Merge (#2 into #1)"><P>
 </FORM><P>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>
 

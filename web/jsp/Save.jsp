@@ -1,4 +1,4 @@
-<%@ include	file="Prelude.jsp" %>
+<%@ include	file="fragments/universal/Prelude.jspf" %>
 <HTML>
 <HEAD>
 <TITLE>Sigma KB Save As</TITLE>
@@ -52,8 +52,6 @@ SKB: <%= Util.genSelector( SKBMgr.getDefaultSKBMgr().getSKBKeys(), skbName, "skb
 <INPUT type="submit" name="action" value="Save">
 </FORM>
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
-
-
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>

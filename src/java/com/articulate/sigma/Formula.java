@@ -179,7 +179,7 @@ public class Formula implements Comparable, Serializable {
     public Set<String> warnings = new TreeSet<>();
 
     /** The formula in textual forms. */
-    private String theFormula;
+    public String theFormula;
 
     // if not a directly authored form, document how it was derived
     // ??? Examples of derivation methods

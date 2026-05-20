@@ -1,4 +1,4 @@
-<%@include file="Prelude.jsp" %>
+<%@include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
     Infosys (c) 2017-present.
@@ -147,7 +147,7 @@
         String pageName = "SystemOnTPTP";
         String pageString = "SystemOnTPTP";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 
 
   <IMG SRC='pixmaps/1pixel.gif' WIDTH=1 HEIGHT=1 BORDER=0><BR>
@@ -247,7 +247,7 @@
             if (req.equalsIgnoreCase("tell")) {
                 Formula statement = new Formula();
                 statement.theFormula = stmt;
-                String port = KBmanager.getMgr().getPref("port");
+                port = KBmanager.getMgr().getPref("port");
                 if ((port == null) || port.equals(""))
                     port = "8080";
                 String kbHref = HTMLformatter.createHrefStart()
@@ -575,7 +575,7 @@
                         if (isTheorem) {
                             if (proofExists)
                                 out.println(HTMLformatter.formatProofResult(
-                                            newResult, stmt, stmt, lineHtml,kbName, language));
+                                            newResult, stmt, stmt, lineHtml,kbName, lang));
                             else //----Proof does not exist, but was a theorem
                                 out.println("Answer 1. Yes [Theorem]<br>");
                         }
@@ -602,6 +602,6 @@
 %>
 <p>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
    </BODY>
    </HTML>
