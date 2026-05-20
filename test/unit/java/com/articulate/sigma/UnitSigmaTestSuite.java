@@ -10,6 +10,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+    CLIMapParserTest.class,
     FormulaArityCheckTest.class,
     FormulaDeepEqualsTest.class,
     FormulaLogicalEqualityTest.class,

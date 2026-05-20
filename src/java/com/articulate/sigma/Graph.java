@@ -603,34 +603,37 @@ public class Graph {
         System.out.println("Graphing");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
-        System.out.println("  -g <term> <rel> - create a dot graph file with a term and relation");
+        System.out.println("  --graph <term> <rel> - create a dot graph file with a term and relation");
     }
 
     /** ***************************************************************
-     * A test method.
      */
     public static void main(String[] args) {
 
         System.out.println("INFO in Graph.main()");
-        if (args != null && args.length > 1 && args[0].equals("-h")) {
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+
+        if (argMap.isEmpty() || argMap.containsKey("h"))
             showHelp();
-        }
-        if (args != null && args.length > 2 && args[0].equals("-g")) {
-            KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            Graph g = new Graph();
-            String term = args[1];
-            String relation = args[2];
-            String fileRestrict = "";
-            try {
-                g.createDotGraph(kb, term, relation, 1, 1, 100, "proof", fileRestrict);
+        else {
+            if (argMap.containsKey("graph")) {
+                List<String> gArgs = argMap.get("graph");
+                KBmanager.getMgr().initializeOnce();
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                Graph g = new Graph();
+                String term = gArgs.get(0);
+                String relation = gArgs.get(1);
+                String fileRestrict = "";
+                try {
+                    g.createDotGraph(kb, term, relation, 1, 1, 100, "proof", fileRestrict);
+                }
+                catch (IOException e) {
+                    System.err.println(e.getMessage());
+                    e.getStackTrace();
+                }
             }
-            catch (IOException e) {
-                System.err.println(e.getMessage());
-                e.getStackTrace();
-            }
+            else
+                showHelp();
         }
-        else
-            showHelp();
     }
 }

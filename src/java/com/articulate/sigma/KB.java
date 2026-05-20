@@ -93,11 +93,8 @@ import java.util.regex.PatternSyntaxException;
 
 import tptp_parser.TPTPFormula;
 
-import org.openjdk.jol.info.GraphLayout;
-
-/**
- * ***************************************************************** Contains
- * methods for reading, writing knowledge bases and their configurations. Also
+/*******************************************************************
+ * Contains methods for reading, writing knowledge bases and their configurations. Also
  * contains the inference engine process for the knowledge base.
  */
 public class KB implements Serializable {

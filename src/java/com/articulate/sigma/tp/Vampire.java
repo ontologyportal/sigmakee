@@ -121,6 +121,8 @@ public class Vampire {
         this.output = new ArrayList<>();
     }
 
+    /*****************************************************************
+     */
     public Vampire(KB kb) {
 
         this(kb, "tptp", "CASC", false, 30, 1);
@@ -152,7 +154,7 @@ public class Vampire {
      */
     public Vampire(KB kb, String requestedTptpLang, String mode, boolean modensPonens, int timeout, int maxAnswers, String sessionId) {
 
-        if (debug>0) System.out.printf("\nVampire(%s, %s, %s, %b, %d, %d, %s)", kb.name, requestedTptpLang, mode, modensPonens, timeout, maxAnswers, sessionId);
+        if (debug > 0) System.out.printf("\nVampire(%s, %s, %s, %b, %d, %d, %s)", kb.name, requestedTptpLang, mode, modensPonens, timeout, maxAnswers, sessionId);
         this.kb = kb;
         this.sessionId = sessionId;
         this.executablePath = KBmanager.getMgr().getPref("vampire");
@@ -189,7 +191,9 @@ public class Vampire {
         }
     }
 
-    /** Set the sessionId */
+    /***************************************************************
+     * Set the sessionId
+     */
     public void setSessionId(String sid) { this.sessionId = sid; }
 
     public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.getMgr().getPref("vampire")));}
@@ -199,7 +203,7 @@ public class Vampire {
      */
     public void askVampire(String suoKifFormula) {
 
-        if (debug>0) System.out.printf("\nVampire.askVampire(%s)", suoKifFormula);
+        if (debug > 0) System.out.printf("\nVampire.askVampire(%s)", suoKifFormula);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
         // FormulaAST fast path: KIFAST → preProcessExpr → Set<Expr>
@@ -292,7 +296,7 @@ public class Vampire {
      */
     public void askVampireModensPonens(String suoKifFormula) {
 
-        if (debug>0) System.out.printf("\nVampire.askVampireModensPonens()");
+        if (debug > 0) System.out.printf("\nVampire.askVampireModensPonens()");
         // STEP 1 - use session-aware askVampire
         this.askVampire(suoKifFormula);
         // STEPS 2-6
@@ -306,7 +310,7 @@ public class Vampire {
      */
     private void modensPonensPostProcess() {
 
-        if (debug>0) System.out.printf("\nVampire.modensPonensPostProcess()");
+        if (debug > 0) System.out.printf("\nVampire.modensPonensPostProcess()");
         // STEP 2
         List<TPTPFormula> proof = TPTPutil.processProofLines(this.output);
         List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
@@ -326,9 +330,11 @@ public class Vampire {
         try{
             this.runCustom(kbFile);
             this.output = TPTPutil.clearProofFile(this.output);
-        } catch (ATPException e){
+        }
+        catch (ATPException e){
             throw e;
-        } catch (Exception e){
+        }
+        catch (Exception e){
             throw new ATPException("Vampire ModensPonens execution failed: " + e.getMessage(), "Vampire");
         }
         // STEP 4
@@ -346,7 +352,7 @@ public class Vampire {
      */
     public void askVampireHOL(String stmt, boolean useModals) {
 
-        if (debug>0) System.out.printf("\nVampire.askVampireHOL(%s, %b)", stmt, useModals);
+        if (debug > 0) System.out.printf("\nVampire.askVampireHOL(%s, %b)", stmt, useModals);
         KBmanager mgr = KBmanager.getMgr();
         if (useModals)
             System.out.println("==== Using Modals/HOL mode ====");
@@ -490,7 +496,7 @@ public class Vampire {
      */
     public void askVampireTHF(String test_path) {
 
-        if (debug>0) System.out.printf("\nVampire.askVampireTHF(%s)", test_path);
+        if (debug > 0) System.out.printf("\nVampire.askVampireTHF(%s)", test_path);
         String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
         String includesPath = testDir + File.separator + "includes";
         File test = new File(test_path);
@@ -531,7 +537,7 @@ public class Vampire {
      */
     public String askVampireFormat(String suoKifFormula) {
 
-        if (debug>0) System.out.printf("\nVampire.askVampireFormat(%s)", suoKifFormula);
+        if (debug > 0) System.out.printf("\nVampire.askVampireFormat(%s)", suoKifFormula);
         StringBuilder sb = new StringBuilder();
         if (!StringUtil.emptyString(System.getenv("VAMPIRE_OPTS")))
             this.mode = Vampire.ModeType.CUSTOM;
@@ -569,7 +575,7 @@ public class Vampire {
      */
     private void createCommandList(File kbFile) {
 
-        if (debug>0) System.out.printf("\nVampire.createCommandList(%s)", kbFile.getName());
+        if (debug > 0) System.out.printf("\nVampire.createCommandList(%s)", kbFile.getName());
         String space = Formula.SPACE;
         StringBuilder options = new StringBuilder("--output_axiom_names").append(space).append("on").append(space).append("--proof").append(space).append("tptp").append(space);;
         if (this.mode == ModeType.AVATAR) {
@@ -607,7 +613,7 @@ public class Vampire {
      */
     private void createCustomCommandList(File executable, int timeout, File kbFile, Collection<String> commands) {
 
-        if (debug>0) System.out.printf("\nVampire.createCustomCommandList(%s, %d, %s, %s)", executable.getName(), timeout, kbFile.getName(), commands);
+        if (debug > 0) System.out.printf("\nVampire.createCustomCommandList(%s, %d, %s, %s)", executable.getName(), timeout, kbFile.getName(), commands);
         String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder();
         boolean callerSuppliesMode = commands.contains("--mode");
@@ -657,7 +663,7 @@ public class Vampire {
      */
     public void run(File kbFile) throws Exception {
 
-        if (debug>0) System.out.printf("\nVampire.run(%s)", kbFile.getName());
+        if (debug > 0) System.out.printf("\nVampire.run(%s)", kbFile.getName());
         this.output.clear();
         long startTime = System.currentTimeMillis();
         long timeoutMs = this.timeout * 1000L;
@@ -750,7 +756,7 @@ public class Vampire {
      */
     public void run(File kbFile, Set<String> stmts) throws Exception {
 
-        if (debug>0) System.out.printf("\nVampire.run(%s, %s)", kbFile.getName(), stmts);
+        if (debug > 0) System.out.printf("\nVampire.run(%s, %s)", kbFile.getName(), stmts);
         this.output.clear();
         String lang = "tff";
         if (SUMOKBtoTPTPKB.getLang().equalsIgnoreCase("fof"))
@@ -820,7 +826,7 @@ public class Vampire {
      */
     public void runCustom(File kbFile) throws Exception {
 
-        if (debug>0) System.out.printf("\nVampire.runCustom(%s)", kbFile.getName());
+        if (debug > 0) System.out.printf("\nVampire.runCustom(%s)", kbFile.getName());
         long startTime = System.currentTimeMillis();
         long timeoutMs = timeout * 1000L;
         output = new ArrayList<>();
@@ -858,7 +864,7 @@ public class Vampire {
             _builder.directory(kbFile.getParentFile());
             System.out.println("Vampire CWD: " + _builder.directory().getAbsolutePath());
         }
-        if (debug>0) System.out.println("Vampire.runCustom(): running with commands " + String.join(" ", this.commands));
+        if (debug > 0) System.out.println("Vampire.runCustom(): running with commands " + String.join(" ", this.commands));
         Process _vampire = _builder.start();
         List<String> stdoutLines = new ArrayList<>();
         List<String> stderrLines = new ArrayList<>();
@@ -922,7 +928,7 @@ public class Vampire {
      */
     public void writeStatements(Set<String> stmts) {
 
-        if (debug>0) System.out.printf("\nVampire.writeStatements(%s)", stmts);
+        if (debug > 0) System.out.printf("\nVampire.writeStatements(%s)", stmts);
         String dir;
         if (sessionId != null && !sessionId.isEmpty()) {
             java.nio.file.Path sessionDir = SessionTPTPManager.getSessionDir(this.sessionId);
@@ -961,7 +967,7 @@ public class Vampire {
      */
     public void concatFiles(String f1, String f2, String fout) throws IOException {
 
-        if (debug>0) System.out.printf("\nVampire.concatFiles(%s, %s, %s)", f1, f2, fout);
+        if (debug > 0) System.out.printf("\nVampire.concatFiles(%s, %s, %s)", f1, f2, fout);
         File f1file = new File(f1);
         File f2file = new File(f2);
         if (!f1file.exists())
@@ -1040,7 +1046,7 @@ public class Vampire {
      */
     public List<String> getUserAssertions(KB kb, String sessionId) {
 
-        if (debug>0) System.out.printf("\nVampire.getUserAssertions(%s, %s)", kb.name, sessionId);
+        if (debug > 0) System.out.printf("\nVampire.getUserAssertions(%s, %s)", kb.name, sessionId);
         return kb.withUserAssertionLock(() -> {
             String userAssertionTPTP = kb.name + KB._userAssertionsTPTP;
             if ("tff".equals(this.inferenceFileExtension))

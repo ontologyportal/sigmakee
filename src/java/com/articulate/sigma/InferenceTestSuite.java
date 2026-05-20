@@ -84,7 +84,10 @@ public class InferenceTestSuite {
         public List<String> proofText;
     }
 
-    /** Thin wrapper for the JSP buttons: returns PASS/FAIL + time + a tiny HTML summary. */
+    /** ***************************************************************
+     * Thin wrapper for the JSP buttons: returns PASS/FAIL + time +
+     * a tiny HTML summary.
+     */
     public OneResult runOne(final KB kb,
                             final String engine,
                             final int timeoutSec,
@@ -131,7 +134,10 @@ public class InferenceTestSuite {
         return r;
     }
 
-    /** Runs exactly one .tq test file (like the inner body of test()) and returns the InfTestData. */
+    /** ***************************************************************
+     * Runs exactly one .tq test file (like the inner body of test())
+     * and returns the InfTestData.
+     */
     private InfTestData runSingleTestFile(final KB kb,
                                           final String engine,        // "Vampire" | "EProver" | "LEO"
                                           final int timeoutSec,
@@ -244,8 +250,11 @@ public class InferenceTestSuite {
         return itd;
     }
 
-    private static String esc(String s){
-        if(s==null)return "";
+    /** ***************************************************************
+     */
+    private static String esc(String s) {
+
+        if (s == null) return "";
         return s.replace("&","&amp;").replace("<","&lt;")
             .replace(">","&gt;").replace("\"","&quot;").replace("'","&#39;"); }
 
@@ -338,7 +347,6 @@ public class InferenceTestSuite {
         if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): returning true");
         return true;
     }
-
 
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
@@ -858,6 +866,7 @@ public class InferenceTestSuite {
      * Note that this procedure DOES NOT delete any prior user assertions.
      */
     public InfTestData inferenceUnitTest(String testpath, KB kb) {
+
         this.kb = kb; // tdn 10/15/24
         System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): testpath: " + testpath);
         // read the test file
@@ -1086,12 +1095,13 @@ public class InferenceTestSuite {
         deleteIfExists(new File(dir, kbName + KB._userAssertionsTHF));    // *_UserAssertions.thf
     }
 
+    /****************************************************************
+     */
     private static void deleteIfExists(File f) {
         if (f.exists() && !f.delete()) {
             System.out.println("WARN resetAllForInference(): failed to delete " + f.getAbsolutePath());
         }
     }
-
 
     /** ***************************************************************
      */
@@ -1104,9 +1114,9 @@ public class InferenceTestSuite {
         System.out.println("or (file \"path\")");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
-        System.out.println("  -t <name> - run named test file in config.xml inferenceTestDir");
-        System.out.println("  -i <mode> - run test files known to pass in the given mode in config.xml inferenceTestDir");
-        System.out.println("  -a <mode> - run all test files in the given mode in config.xml inferenceTestDir");
+        System.out.println("  --test <name> - run named test file in config.xml inferenceTestDir");
+        System.out.println("  --inf <mode> - run test files known to pass in the given mode in config.xml inferenceTestDir");
+        System.out.println("  --all <mode> - run all test files in the given mode in config.xml inferenceTestDir");
         System.out.println("     e - run with eprover (add letter to options above)");
         System.out.println("     v - run with vampire (add letter to options above)");
         System.out.println("     l - run with LEO-III (add letter to options above)");
@@ -1120,64 +1130,63 @@ public class InferenceTestSuite {
      */
     public static void main(String[] args) {
 
-        System.out.println("args: " + Arrays.toString(args));
-        if (args != null && args.length > 0) {
-            if (args[0].equals("-h"))
-                showHelp();
-            else {
-                KBmanager.getMgr().initializeOnce();
-                InferenceTestSuite its = new InferenceTestSuite();
-                if (args[0].indexOf('l') != -1)
-                    SUMOKBtoTPTPKB.setLang("thf");
-                if (args[0].indexOf('f') != -1)
-                    SUMOKBtoTPTPKB.setLang("tff");
-                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        System.out.println("INFO in KB.main()");
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.isEmpty() || argMap.containsKey("h"))
+            showHelp();
+        else {
+            KBmanager.getMgr().initializeOnce();
+            InferenceTestSuite its = new InferenceTestSuite();
+            if (argMap.containsKey("l"))
+                SUMOKBtoTPTPKB.setLang("thf");
+            if (argMap.containsKey("f"))
+                SUMOKBtoTPTPKB.setLang("tff");
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            try {
+                resetAllForInference(kb);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (argMap.containsKey("e")) {
+                KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
+            }
+            if (argMap.containsKey("l")) {
+                SUMOformulaToTPTPformula.setLang("thf");
+                KBmanager.getMgr().prover = KBmanager.Prover.LEO;
+            }
+            if (argMap.containsKey("f")) {
+                SUMOformulaToTPTPformula.setLang("tff");
+                SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
+                skbtfakb.initOnce();
+                SUMOtoTFAform.initOnce();
+            }
+            if (argMap.containsKey("0")) {
+                SUMOformulaToTPTPformula.setLang("thf");
+            }
+            if (argMap.containsKey("v"))
+                KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
+            if (argMap.containsKey("o"))
+                overrideTimeout = true;
+            System.out.println("in InferenceTestSuite.main(): using prover: " + KBmanager.getMgr().prover);
+
+            if (argMap.containsKey("test")) {
+                its.cmdLineTest(argMap.get("test").get(0));
+            }
+            else if (argMap.containsKey("inf")) {
+                its.runPassing();
+            }
+            else if (argMap.containsKey("all")) {
                 try {
-                    resetAllForInference(kb);
+                    its.test(kb);
                 }
                 catch (IOException e) {
                     e.printStackTrace();
                 }
-                if (args[0].indexOf('e') != -1) {
-                    KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
-                }
-                if (args[0].indexOf('l') != -1) {
-                    SUMOformulaToTPTPformula.setLang("thf");
-                    KBmanager.getMgr().prover = KBmanager.Prover.LEO;
-                }
-                if (args[0].indexOf('f') != -1) {
-                    SUMOformulaToTPTPformula.setLang("tff");
-                    SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
-                    skbtfakb.initOnce();
-                    SUMOtoTFAform.initOnce();
-                }
-                if (args[0].indexOf('0') != -1) {
-                    SUMOformulaToTPTPformula.setLang("thf");
-                }
-                if (args[0].indexOf('v') != -1)
-                    KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
-                if (args[0].indexOf('0') != -1)
-                    overrideTimeout = true;
-                System.out.println("in InferenceTestSuite.main(): using prover: " + KBmanager.getMgr().prover);
-
-                if (args.length > 1 && args[0].contains("t")) {
-                    its.cmdLineTest(args[1]);
-                }
-                else if (args.length > 1 && args[0].contains("i")) {
-                    its.runPassing();
-                }
-                else if (args.length > 0 && args[0].contains("a")) {
-                    try {
-                        its.test(kb);
-                    }
-                    catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
             }
+            else
+                showHelp();
         }
-        else
-            showHelp();
     }
 }
 
