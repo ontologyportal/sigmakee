@@ -23,14 +23,13 @@
     response.sendRedirect("KBs.jsp");
     return;
   }
-  System.out.println("INFO in Diag.jsp: Running diagnostics");
   long t0 = System.currentTimeMillis();
   String kbHref = null;
   String formattedFormula = null;
   Map theMap = null;
   kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + lang + "&kb=" + kbName + "&flang=" + flang;
 %>
-<form action="Diag.jsp">
+<form action="Diagnostics.jsp">
     <%
         String pageName = "Diag";
         String pageString = "Knowledge Base Diagnostics";

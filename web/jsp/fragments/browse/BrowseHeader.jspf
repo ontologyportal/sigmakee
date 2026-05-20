@@ -16,8 +16,6 @@
     String word = ValidationUtils.sanitizeSumoTerm(request.getParameter("word"));
     String POS = ValidationUtils.sanitizeString(request.getParameter("POS"), "0");
     if (POS == null) POS = "0";
-    String pageName = "Browse";
-    String pageString = "Browsing Interface";
 %>
 <form method="GET" action="<%=parentPage%>">
     <input type="hidden" name="simple" value="<%=simple%>">

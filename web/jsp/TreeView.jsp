@@ -58,7 +58,7 @@
  else
      https = "https";
  String kbHref = https + "://" + hostname + ":" + port + "/sigma/TreeView.jsp?kb=" + kbName +
-                 "&simple=" + simple + "&lang=" + language + "&flang=" + flang + "&term=";
+                 "&simple=" + simple + "&lang=" + lang + "&flang=" + flang + "&term=";
 
  TaxoModel.displayTerm(term);
 %>
@@ -69,7 +69,7 @@
 
   if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
-    <%@ include file="fragments/browse/SimpleBrowseBody.jspff" %>
+    <%@ include file="fragments/browse/SimpleBrowseBody.jspf" %>
 <%
   }
   else {
@@ -79,7 +79,7 @@
   }
   if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
-    <%@ include file="Simplefragments/browse/BrowseHeader.jspf" %>
+    <%@ include file="fragments/browse/SimpleBrowseHeader.jspf" %>
 <%
   }
   else {
@@ -109,7 +109,7 @@
 <%
   if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
-    <small><a href="SimpleBrowse.jsp?kb=<%=kbName%>&simple=yes&lang=<%=language%>&term=<%=term%>">Show without tree</a></small><p>
+    <small><a href="SimpleBrowse.jsp?kb=<%=kbName%>&simple=yes&lang=<%=lang%>&term=<%=term%>">Show without tree</a></small><p>
 <%
   }
   else {
