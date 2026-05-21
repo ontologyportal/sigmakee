@@ -1,4 +1,4 @@
-<%@ include	file="Prelude.jsp" %>
+<%@ include	file="fragments/universal/Prelude.jspf" %>
 
 <%
 
@@ -50,7 +50,7 @@ if (!role.equalsIgnoreCase("admin")) {
         String pageName = "InstFiller";
         String pageString = "Instance Filler";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 
   <table cellspacing="0" cellpadding="0">
       <tr>
@@ -71,5 +71,5 @@ if (!role.equalsIgnoreCase("admin")) {
       </td></tr></table>
 </form><BR>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>

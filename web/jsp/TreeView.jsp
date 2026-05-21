@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
     Infosys (c) 2017-present.
@@ -58,7 +58,7 @@
  else
      https = "https";
  String kbHref = https + "://" + hostname + ":" + port + "/sigma/TreeView.jsp?kb=" + kbName +
-                 "&simple=" + simple + "&lang=" + language + "&flang=" + flang + "&term=";
+                 "&simple=" + simple + "&lang=" + lang + "&flang=" + flang + "&term=";
 
  TaxoModel.displayTerm(term);
 %>
@@ -69,22 +69,22 @@
 
   if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
-    <%@ include file="SimpleBrowseBody.jsp" %>
+    <%@ include file="fragments/browse/SimpleBrowseBody.jspf" %>
 <%
   }
   else {
 %>
-    <%@ include file="BrowseBody.jsp" %>
+    <%@ include file="fragments/browse/BrowseBody.jspf" %>
 <%
   }
   if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
-    <%@ include file="SimpleBrowseHeader.jsp" %>
+    <%@ include file="fragments/browse/SimpleBrowseHeader.jspf" %>
 <%
   }
   else {
 %>
-    <%@ include file="BrowseHeader.jsp" %>
+    <%@ include file="fragments/browse/BrowseHeader.jspf" %>
 <%
   }
 %>
@@ -109,7 +109,7 @@
 <%
   if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
-    <small><a href="SimpleBrowse.jsp?kb=<%=kbName%>&simple=yes&lang=<%=language%>&term=<%=term%>">Show without tree</a></small><p>
+    <small><a href="SimpleBrowse.jsp?kb=<%=kbName%>&simple=yes&lang=<%=lang%>&term=<%=term%>">Show without tree</a></small><p>
 <%
   }
   else {
@@ -119,5 +119,5 @@
   }
 %>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 

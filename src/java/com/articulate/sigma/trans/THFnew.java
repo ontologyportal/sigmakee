@@ -1,5 +1,6 @@
 package com.articulate.sigma.trans;
 
+import com.articulate.sigma.parsing.CLIMapParser;
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTHF;

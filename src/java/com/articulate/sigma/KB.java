@@ -67,11 +67,9 @@ import com.articulate.sigma.tp.FormulaTranslationException;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
+import com.articulate.sigma.parsing.CLIMapParser;
 import com.articulate.sigma.trans.*;
-import com.articulate.sigma.utils.FileUtil;
-import com.articulate.sigma.utils.Pair;
-import com.articulate.sigma.utils.SetUtil;
-import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.utils.*;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -2946,7 +2944,8 @@ public class KB implements Serializable {
             KIFAST file = readConstituentAST(filename);
             if (file == null) return;
             addConstituentInfoAST(file);
-        } else {
+        } 
+        else {
             KIF file = readConstituent(filename);
             addConstituentInfo(file);
         }

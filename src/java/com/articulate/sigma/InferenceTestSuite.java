@@ -1,22 +1,3 @@
-package com.articulate.sigma;
-
-import com.articulate.sigma.tp.EProver;
-import com.articulate.sigma.tp.LEO;
-import com.articulate.sigma.tp.Vampire;
-import com.articulate.sigma.trans.*;
-import com.articulate.sigma.utils.FileUtil;
-import com.articulate.sigma.utils.StringUtil;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.*;
-
-
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -55,6 +36,26 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal
  *  SUO-KIF expressions.  'answer' may take multiple SUO-KIF statements where there
  *  could be more than one valid answer.
  */
+
+package com.articulate.sigma;
+
+import com.articulate.sigma.tp.EProver;
+import com.articulate.sigma.tp.LEO;
+import com.articulate.sigma.tp.Vampire;
+import com.articulate.sigma.trans.*;
+import com.articulate.sigma.utils.FileUtil;
+import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.parsing.CLIMapParser;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
+
 public class InferenceTestSuite {
 
     /** Total time */
@@ -745,9 +746,7 @@ public class InferenceTestSuite {
         String resultString;
         for (InfTestData itd : tests) {
             kb.deleteUserAssertionsAndReload();
-            for (String s : itd.statements)
-                if (!StringUtil.emptyString(s))
-                    kb.tell(s);
+            for (String s : itd.statements) if (!StringUtil.emptyString(s)) kb.tell(s);
             compareFiles(itd);
             maxAnswers = itd.expectedAnswers.size();
             try {
@@ -791,12 +790,11 @@ public class InferenceTestSuite {
                     System.out.println(duration);
                     itd.execTime = duration;
                     totalTime = totalTime + duration;
-                    if (saveTPTP)
-                        saveTPTP(itd);
+                    if (saveTPTP) saveTPTP(itd);
                 }
             }
             catch (Exception ex) {
-                    result = result.append("<br>Error in InferenceTestSuite.test() while executing query ").append(itd.filename).append(": ").append(ex.getMessage()).append("<br>");
+                result = result.append("<br>Error in InferenceTestSuite.test() while executing query ").append(itd.filename).append(": ").append(ex.getMessage()).append("<br>");
             }
             lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";

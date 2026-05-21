@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <html>
   <head>
     <title> Knowledge base Diagnostics</title>
@@ -23,19 +23,18 @@
     response.sendRedirect("KBs.jsp");
     return;
   }
-  System.out.println("INFO in Diag.jsp: Running diagnostics");
   long t0 = System.currentTimeMillis();
   String kbHref = null;
   String formattedFormula = null;
   Map theMap = null;
-  kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName + "&flang=" + flang;
+  kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + lang + "&kb=" + kbName + "&flang=" + flang;
 %>
-<form action="Diag.jsp">
+<form action="Diagnostics.jsp">
     <%
         String pageName = "Diag";
         String pageString = "Knowledge Base Diagnostics";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 </form>
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
@@ -147,6 +146,6 @@
   System.out.println("  > " + ((System.currentTimeMillis() - t0) / 1000.0)
                      + " seconds to run all diagnostics");
 %>
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
   </body>
 </html>

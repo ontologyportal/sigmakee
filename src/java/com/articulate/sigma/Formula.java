@@ -24,6 +24,7 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.trans.Modals;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.io.*;
 import java.util.*;
@@ -178,7 +179,7 @@ public class Formula implements Comparable, Serializable {
     public Set<String> warnings = new TreeSet<>();
 
     /** The formula in textual forms. */
-    private String theFormula;
+    public String theFormula;
 
     // if not a directly authored form, document how it was derived
     // ??? Examples of derivation methods

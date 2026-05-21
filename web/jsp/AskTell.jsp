@@ -1,5 +1,5 @@
 <%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
-<%@include file="Prelude.jsp" %>
+<%@include file="fragments/universal/Prelude.jspf" %>
 <%
     /** Copyright header omitted for brevity; keep your original text **/
     if (!role.equalsIgnoreCase("admin")) {
@@ -242,7 +242,7 @@
         String pageName = "AskTell";
         String pageString = "Inference Interface";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
     <!-- ===== STEP 1: INPUT ===== -->
     <fieldset class="step">
         <legend>Step 1 - Input</legend>
@@ -1044,7 +1044,7 @@
     }
 %>
 <p>
-    <%@ include file="Postlude.jsp" %>
+    <%@ include file="fragments/universal/Postlude.jspf" %>
     <iframe name="runFrame" id="runFrame" style="display:none;"></iframe>
 </body>
 </html>

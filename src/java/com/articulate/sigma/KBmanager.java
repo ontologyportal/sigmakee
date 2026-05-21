@@ -25,6 +25,7 @@ import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
+import com.articulate.sigma.utils.*;
 
 import java.nio.file.*;
 import com.esotericsoftware.kryo.io.*;
@@ -47,85 +48,85 @@ public class KBmanager implements Serializable {
 
     /** Master key cache for the config */
     public static final List<String> CONFIG_KEYS =
-            Arrays.asList(
-                    "adminBrowserLimit",
-                    "baseDir",
-                    "cache",
-                    "cacheDisjoint",
-                    "celtdir",
-                    "cwa",
-                    "dbpediaSrcDir",
-                    "dbUser",
-                    "editorCommand",
-                    "editDir",
-                    "englishPCFG",
-                    "eprover",
-                    "graphDir",
-                    "graphVizDir",
-                    "graphWidth",
-                    "holdsPrefix",
-                    "hostname",
-                    "https",
-                    "imageFormat",
-                    "inferenceTestDir",
-                    "jedit",
-                    "kbDir",
-                    "lineNumberCommand",
-                    "loadCELT",
-                    "loadFresh",
-                    "loadLexicons",
-                    "leoExecutable",
-                    "logDir",
-                    "logLevel",
-                    "multiWordAnnotatorType",
-                    "nlpTools",
-                    "overwrite",
-                    "port",
-                    "prolog",
-                    "reportDup",
-                    "reportFnError",
-                    "semRewrite",
-                    "showcached",
-                    "sumokbname",
-                    "systemsDir",
-                    "termFormats",
-                    "testOutputDir",
-                    "tptpHomeDir",
-                    "TPTP",
-                    "TPTPlang",
-                    "TPTPDisplay",
-                    "typePrefix",
-                    "userBrowserLimit",
-                    "vampire",
-                    "ollamaHost",
-                    "verbnet",
-                    "smtpEmailAddress",
-                    "smtpEmailUser",
-                    "smtpEmailPassword",
-                    "smtpEmailServer",
-                    "aws",
-                    "useAntlrParser"
-            );
+        Arrays.asList(
+            "adminBrowserLimit",
+            "baseDir",
+            "cache",
+            "cacheDisjoint",
+            "celtdir",
+            "cwa",
+            "dbpediaSrcDir",
+            "dbUser",
+            "editorCommand",
+            "editDir",
+            "englishPCFG",
+            "eprover",
+            "graphDir",
+            "graphVizDir",
+            "graphWidth",
+            "holdsPrefix",
+            "hostname",
+            "https",
+            "imageFormat",
+            "inferenceTestDir",
+            "jedit",
+            "kbDir",
+            "lineNumberCommand",
+            "loadCELT",
+            "loadFresh",
+            "loadLexicons",
+            "leoExecutable",
+            "logDir",
+            "logLevel",
+            "multiWordAnnotatorType",
+            "nlpTools",
+            "overwrite",
+            "port",
+            "prolog",
+            "reportDup",
+            "reportFnError",
+            "semRewrite",
+            "showcached",
+            "sumokbname",
+            "systemsDir",
+            "termFormats",
+            "testOutputDir",
+            "tptpHomeDir",
+            "TPTP",
+            "TPTPlang",
+            "TPTPDisplay",
+            "typePrefix",
+            "userBrowserLimit",
+            "vampire",
+            "ollamaHost",
+            "verbnet",
+            "smtpEmailAddress",
+            "smtpEmailUser",
+            "smtpEmailPassword",
+            "smtpEmailServer",
+            "aws",
+            "useAntlrParser"
+        );
 
     /** Master file key cache for the config */
     public static final List<String> FILE_KEYS =
-            Arrays.asList(
-                    "baseDir",
-                    "celtdir",
-                    "dbpediaSrcDir",
-                    "editDir",
-                    "englishPCFG",
-                    "eprover",
-                    "graphDir",
-                    "graphVizDir",
-                    "inferenceTestDir",
-                    "kbDir",
-                    "logDir",
-                    "systemsDir",
-                    "testOutputDir",
-                    "tptpHomeDir",
-                    "vampire"
-            );
+        Arrays.asList(
+            "baseDir",
+            "celtdir",
+            "dbpediaSrcDir",
+            "editDir",
+            "englishPCFG",
+            "eprover",
+            "graphDir",
+            "graphVizDir",
+            "inferenceTestDir",
+            "kbDir",
+            "logDir",
+            "systemsDir",
+            "testOutputDir",
+            "tptpHomeDir",
+            "vampire"
+        );
 
     private static final java.util.concurrent.locks.ReentrantLock SER_LOCK = new java.util.concurrent.locks.ReentrantLock();
 
@@ -332,7 +333,7 @@ public class KBmanager implements Serializable {
             initialized = true;
         }
         catch (Exception ex) {
-            System.err.println("Error in KBmanager.loadSerialized()");
+            LoggingUtils.log("ERROR", "");
             ex.printStackTrace();
             return false;
         }
@@ -600,10 +601,10 @@ public class KBmanager implements Serializable {
             kb.kbCache = new KBcache(kb);
             kb.kbCache.buildCaches();
             kb.checkArity();
-            if (debug) System.out.println("KBmanager.loadKB(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
+            if (debug) LoggingUtils.log("seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
         }
         catch (Exception e) {
-            System.err.println("Error in KBmanager.loadKB(): Unable to save configuration: " + e.getMessage());
+            LoggingUtils.log("ERROR", "Unable to save configuration: " + e.getMessage());
             e.printStackTrace(System.err);
             retVal = false;
         }
@@ -614,19 +615,15 @@ public class KBmanager implements Serializable {
      * Conventional/sequential version
      */
     private boolean _loadKB(String kbName, List<String> constituents, KB kb) {
+        
         int i = 1;
         for (String filename : constituents) {
-            LoggingUtils.printProgressBar(
-                "INFO", kbName + " Adding Constituents:",
-                i,
-                constituents.size(), 
-                "(" + i + "/"  + constituents.size() + ")"
-            );
+            LoggingUtils.printProgressBar("INFO", kbName + " Adding Constituents:", i, constituents.size(), "(" + i + "/"  + constituents.size() + ")");
             i++;
             try {
                 kb.addConstituent(filename);
             } catch (Exception e1) {
-                System.err.println("Error in KBmanager.loadKB():  " + e1.getMessage());
+                LoggingUtils.log("ERROR", e1.getMessage());
                 e1.printStackTrace();
                 return false;
             }
@@ -641,17 +638,18 @@ public class KBmanager implements Serializable {
      * @deprecated
      */
     private boolean _t_loadKB(String kbName, List<String> constituents, KB kb) {
+
         Future<Boolean> future;
         List<Future<Boolean>> futures = new ArrayList<>();
         boolean retVal = false;
         for (String filename : constituents) {
             Callable<Boolean> r = () -> {
                 try {
-                    if (debug) System.out.println("KBmanager.loadKB(): add constituent " + filename + " to " + kbName);
+                    if (debug) LoggingUtils.log("add constituent " + filename + " to " + kbName);
                     kb.addConstituent(filename);
                 }
                 catch (Exception e1) {
-                    System.err.println("Error in KBmanager.loadKB():  " + e1.getMessage());
+                    LoggingUtils.log("ERROR", e1.getMessage());
                     e1.printStackTrace();
                     return false;
                 }
@@ -667,7 +665,7 @@ public class KBmanager implements Serializable {
                 if (!retVal)
                     break;
             } catch (InterruptedException | ExecutionException ex) {
-                System.err.printf("Error in KBmanager.loadKB(): %s", ex);
+                LoggingUtils.log("ERROR", ex.toString());
                 ex.printStackTrace();
                 retVal = false;
                 break;
@@ -682,7 +680,7 @@ public class KBmanager implements Serializable {
     private void fromXML(SimpleElement configuration) {
 
         if (!configuration.getTagName().equals("configuration"))
-        	System.err.println("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
+        	LoggingUtils.log("ERROR", "Bad tag: " + configuration.getTagName());
         else {
             SimpleElement element, kbConst;
             String name, value, kbName, filename;
@@ -693,7 +691,7 @@ public class KBmanager implements Serializable {
                 if (element.getTagName().equals("preference")) {
                     name = (String) element.getAttribute("name");
                     if (!CONFIG_KEYS.contains(name)) {
-                        System.err.println("Error in KBmanager.fromXML(): Bad key: " + name);
+                        LoggingUtils.log("ERROR", "Bad key: " + name);
                         // continue; // set it anyway
                     }
                     value = (String) element.getAttribute("value");
@@ -708,7 +706,7 @@ public class KBmanager implements Serializable {
                         for (int j = 0; j < element.getChildElements().size(); j++) {
                             kbConst = (SimpleElement) element.getChildElements().get(j);
                             if (!kbConst.getTagName().equals("constituent"))
-                            	System.err.println("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
+                            	LoggingUtils.log("ERROR", "Bad tag: " + kbConst.getTagName());
                             filename = (String) kbConst.getAttribute("filename");
                             if (!StringUtil.emptyString(filename)) {
                                 if (KButilities.isCacheFile(filename)) {
@@ -721,7 +719,7 @@ public class KBmanager implements Serializable {
                         }
                         loadKB(kbName, constituentsToAdd);
                     }
-                    else System.err.println("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
+                    else LoggingUtils.log("ERROR", "Bad tag: " + element.getTagName());
                 }
             }
             preferences.putAll(prefOverride);
@@ -760,7 +758,6 @@ public class KBmanager implements Serializable {
      */
     public SimpleElement readConfiguration(String configDirPath) {
 
-        if (debug) System.out.println("KBmanager.readConfiguration()");
         SimpleElement configuration = null;
         try {
             String kbDirStr = configDirPath;
@@ -859,7 +856,7 @@ public class KBmanager implements Serializable {
         }
         catch (Exception ex) {
             initializing = false;
-            System.err.println(ex.getMessage());
+            LoggingUtils.log("ERROR", ex.getMessage());
             ex.printStackTrace();
             return;
         }
@@ -907,7 +904,6 @@ public class KBmanager implements Serializable {
         if (kbs != null && !kbs.isEmpty() && !WordNet.initNeeded) {
             File f3, f4;
             for (String kbName : kbs.keySet()) {
-                System.out.println("INFO in KBmanager.setConfiguration(): " + kbName);
                 f3 = new File(kbDir + sep + kbName + KB._userAssertionsString);
                 f3.delete();
                 f4 = new File(kbDir + sep + kbName + KB._userAssertionsTPTP);
@@ -1082,9 +1078,7 @@ public class KBmanager implements Serializable {
      */
     public void printPrefs() {
 
-        System.out.println("KBmanager.printPrefs()");
-        if (preferences == null || preferences.isEmpty())
-            LoggingUtils.log("WARN", "preference list is empty");
+        if (preferences == null || preferences.isEmpty()) LoggingUtils.log("WARN", "preference list is empty");
         String value;
         for (String key : preferences.keySet()) {
             value = preferences.get(key);
@@ -1152,7 +1146,7 @@ public class KBmanager implements Serializable {
                     long dirTime = Files.getLastModifiedTime(sessionDir).toMillis();
                     if (dirTime < cutoffTime) {
                         String sessionId = sessionDir.getFileName().toString();
-                        System.out.println("KBmanager: Removing orphaned session directory: " + sessionId);
+                        LoggingUtils.log("Removing orphaned session directory: " + sessionId);
                         com.articulate.sigma.trans.SessionTPTPManager.cleanupSession(sessionId);
                         removed.incrementAndGet();
                     }
@@ -1178,12 +1172,12 @@ public class KBmanager implements Serializable {
      */
     public static void pythonServer() {
 
-        System.out.println("KBmanager.pythonServer(): begin initialization");
+        LoggingUtils.log("begin initialization");
         try {
             KBmanager.getMgr().initializeOnce();
         }
         catch (Exception e ) {
-            System.err.println(e.getMessage());
+            LoggingUtils.log("ERROR", e.getMessage());
         }
         GatewayServer server = new GatewayServer(new PythonAPI());
         server.start();
@@ -1211,13 +1205,12 @@ public class KBmanager implements Serializable {
                 KBmanager.getMgr().initializeOnce();
             }
             catch (Exception e) {
-                System.err.println(e.getMessage());
+                LoggingUtils.log("ERROR", e.getMessage());
             }
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             Formula f = new Formula();
             f.read("(=> (and (wears ?A ?C) (part ?P ?C)) (wears ?A ?P))");
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            System.out.println(fp.preProcess(f, false, kb));
         }
         else {
             if (args.length > 0 && args[0].equals("-p")) {

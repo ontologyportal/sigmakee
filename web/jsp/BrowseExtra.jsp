@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
     Infosys (c) 2017-present.
@@ -32,9 +32,7 @@ String argString = request.getParameter("arg");
 if (!StringUtil.emptyString(argString)) arg = Integer.decode(argString).intValue();
 String type = request.getParameter("type");
 Map theMap = null;
-
-HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp" + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName;
-
+HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp" + "?lang=" + lang + "&flang=" + flang + "&kb=" + kbName;
 if (kb != null && (term == null || term.equals(""))) show.append(HTMLformatter.showStatistics(kb));
 else if (kb != null && kb.containsTerm(term)) {
 show.append("<title>Sigma KEE - " + term + "</title>\n");
@@ -44,17 +42,17 @@ if (term != null) {
     show.append(term);
     show.append("</b></FONT>");
     if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
-        Map<String, String> fm = kb.getFormatMap(language);
+        Map<String, String> fm = kb.getFormatMap(lang);
         String fmValue = null;
         if (fm != null) fmValue = fm.get(term);
-        if (fmValue == null) System.out.println("INFO in BrowseBody.jsp: No format map entry for \"" + term + "\" in language " + language);
+        if (fmValue == null) System.out.println("INFO in fragments/browse/BrowseBody.jspf: No format map entry for \"" + term + "\" in language " + lang);
     }
     else {
-        Map<String, String> tfm = kb.getTermFormatMap(language);
+        Map<String, String> tfm = kb.getTermFormatMap(lang);
         String tfmValue = null;
         if (tfm != null) tfmValue = tfm.get(term);
         if (tfmValue != null) show.append("(" + tfmValue + ")");
-        else System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" + term + "\" in language " + language);
+        else System.out.println("INFO in fragments/browse/BrowseBody.jspf: No term format map entry for \"" + term + "\" in language " + lang);
     }
     show.append("</td>");
     show.append("</tr></table>\n");
@@ -62,8 +60,8 @@ if (term != null) {
 else show.append ("</b></FONT></td></tr></table>\n");
 int limit = 25;
 if (role != null && !role.equalsIgnoreCase("guest")) limit = 200;
-show.append(HTMLformatter.browserSectionFormatLimit(term,"", kb, language,flang,start,limit,arg,type));
+show.append(HTMLformatter.browserSectionFormatLimit(term,"", kb, lang,flang,start,limit,arg,type));
 }
 %>
 <%=show.toString() %><BR>
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>

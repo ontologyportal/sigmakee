@@ -61,7 +61,7 @@ import="com.articulate.sigma.*,com.articulate.sigma.wordNet.*,java.net.URLConnec
     if (!WordNet.initNeeded) out.println("WordNet initialized<P>");
     else out.println("WordNet not initialized<P>");
 %>
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>
 

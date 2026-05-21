@@ -13,12 +13,12 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 
 package com.articulate.sigma.tp;
 
-import com.articulate.sigma.CLIMapParser;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.tp.ATPQuery.ATPType;
 import com.articulate.sigma.tp.ATPQuery.RunSource;
 import com.articulate.sigma.tp.ATPQuery.TptpLanguage;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.util.ArrayList;
 import java.util.List;

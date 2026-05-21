@@ -73,6 +73,6 @@ if ("POST".equalsIgnoreCase(request.getMethod())) {
                 </tr>
             </table>
         </form>
-    <%@include file="Postlude.jsp" %>
+    <%@include file="fragments/universal/Postlude.jspf" %>
     </body>
 </html>

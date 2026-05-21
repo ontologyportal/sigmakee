@@ -15,6 +15,7 @@ import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import tptp_parser.TPTPFormula;
 import com.articulate.sigma.tp.EProver;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

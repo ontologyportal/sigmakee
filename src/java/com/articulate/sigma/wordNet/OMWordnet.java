@@ -7,7 +7,7 @@ import java.util.*;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.KButilities;
-import com.articulate.sigma.LoggingUtils;
+import com.articulate.sigma.utils.*;
 
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -303,19 +303,14 @@ August 9, Acapulco, Mexico.
      */
     public static void loadSerialized() {
 
-        if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
-            return;
+        if (KBmanager.getMgr().getPref("loadLexicons").equals("false")) return;
         omw = null;
         try {
-            if (serializedOld()) {
-                System.out.println("OMWordnet.loadSerialized(): serialized file is older than sources, " +
-                        "reloding from sources.");
-                return;
-            }
+            if (serializedOld()) return;
             omw = decoder();
         }
         catch(Exception ex) {
-            System.err.println("Error in OMWordnet.loadSerialized()");
+            LoggingUtils.log("ERROR", "Error");
             ex.printStackTrace();
         }
     }

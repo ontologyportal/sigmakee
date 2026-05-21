@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 
 <%!
   private static String escHtml(String s) {
@@ -21,7 +21,7 @@
     http://github.com/ontologyportal
 */
 
- String params = "flang=" + flang + "&lang=" + language + "&kb=" + kbName;
+ String params = "flang=" + flang + "&lang=" + lang + "&kb=" + kbName;
  StringBuilder show = new StringBuilder();
 
  String kbDir = mgr.getPref("kbDir");
@@ -85,7 +85,7 @@ catch (Exception e) {
         String pageName = "WordSenseFile";
         String pageString = "SUMO Word Sense/Sentiment Analysis Tool";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 
 <h3>SUMO Word Sense/Sentiment Analysis Tool</h3>
 <P>This tool provides context sensitive sense and sentiment analysis of whole sentences. Enter either a sentence or a full pathname for a .txt file.
@@ -108,7 +108,7 @@ catch (Exception e) {
 <br>
  <%=show.toString() %><BR>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>
 </html>
 

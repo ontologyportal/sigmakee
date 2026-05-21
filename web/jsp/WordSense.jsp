@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 
 <%!
   private static String escHtml(String s) {
@@ -25,7 +25,7 @@ String sentence = request.getParameter("sentence");
 String sentCounter = request.getParameter("sentCounter");
 
 StringBuilder show = new StringBuilder();
-String params = "flang=" + flang + "&lang=" + language + "&kb=" + kbName;
+String params = "flang=" + flang + "&lang=" + lang + "&kb=" + kbName;
 
 if (sentence != null && sentCounter == null) {
 	if (WordNet.wn.isFile(sentence) == false) // This will fail if the input is not supposed to be a file path but contains a / or \
@@ -43,13 +43,11 @@ if (sentence != null && sentCounter != null)
   <title>SUMO Word Sense/Sentiment Analysis Tool</title>
 </head>
 <BODY BGCOLOR=#FFFFFF>
-
     <%
         String pageName = "WordSense";
         String pageString = "SUMO Word Sense/Sentiment Analysis Tool";
     %>
-    <%@include file="CommonHeader.jsp" %>
-
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 <h3>SUMO Word Sense/Sentiment Analysis Tool</h3>
 <P>This tool provides context sensitive sense and sentiment analysis of whole sentences. Enter either a sentence or a full pathname for a .txt file.
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
@@ -70,6 +68,6 @@ if (sentence != null && sentCounter != null)
 <br>
  <%=show.toString() %><BR>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>
 </html>

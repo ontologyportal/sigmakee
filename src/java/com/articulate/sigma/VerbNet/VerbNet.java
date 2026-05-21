@@ -15,6 +15,7 @@ package com.articulate.sigma.VerbNet;
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
+import com.articulate.sigma.utils.*;
 
 import java.io.*;
 import java.util.*;

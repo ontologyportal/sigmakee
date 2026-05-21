@@ -1,10 +1,10 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <%
     String pageName = "CheckKifFile";
     String pageString = "Check KIF File";
     if (welcomeString == null) welcomeString = "";
 %>
-<%@ include file="CommonHeader.jsp" %>
+<%@ include file="fragments/universal/CommonHeader.jspf" %>
 
 <!DOCTYPE html>
 <html>
@@ -333,6 +333,6 @@ function refreshErrorHighlighting() {
 }
 </script>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>
 </html>

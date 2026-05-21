@@ -1,4 +1,4 @@
-<%@ include	file="Prelude.jsp" %>
+<%@ include	file="fragments/universal/Prelude.jspf" %>
 
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
@@ -33,7 +33,7 @@
     String pageName = "WordNet";
     String pageString = "WordNet mapping browser";
 %>
-<%@include file="CommonHeader.jsp" %>
+<%@include file="fragments/universal/CommonHeader.jspf" %>
 <h3>SUMO Search Tool</h3>
 <P>This tool relates English terms to concepts from the
    <a href="http://www.ontologyportal.org">SUMO</a>
@@ -79,5 +79,5 @@
   else if (word != null && word != "") out.println("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/OWL.jsp?" + "kb=" + kbName + "&term=WN30Word-" + word + "\">Show OWL translation</a></small><p>\n");   
 %>
 <BR>
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>

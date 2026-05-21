@@ -1,7 +1,7 @@
 package com.articulate.sigma.security;
 
 import com.articulate.sigma.utils.StringUtil;
-import com.articulate.sigma.CLIMapParser;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.util.List;
 import java.util.Map;

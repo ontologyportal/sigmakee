@@ -1,4 +1,4 @@
-<%@ include    file="Prelude.jsp" %>
+<%@ include    file="fragments/universal/Prelude.jspf" %>
 
 <%
 if (!role.equalsIgnoreCase("admin"))
@@ -14,7 +14,7 @@ if (!role.equalsIgnoreCase("admin"))
         String pageName = "Preferences";
         String pageString = "Preferences";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
@@ -502,6 +502,6 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>

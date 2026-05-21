@@ -40,22 +40,17 @@ userPages.add("TreeView.jsp");
 userPages.add("WordNet.jsp");
 userPages.add("CheckKifFile.jsp");
 userPages.add("Editor.jsp");
-
 String URLString = request.getRequestURL().toString();
 String pageURLString = URLString.substring(URLString.lastIndexOf("/") + 1);
-
 HttpSession session = request.getSession(false);
-
 String username = null;
 String role = "guest";
-
 if (session != null) {
     username = (String) session.getAttribute("username");
     String sessionRole = (String) session.getAttribute("role");
     if (!StringUtil.emptyString(sessionRole))
         role = sessionRole;
 }
-
 if (username != null) {
 %>
 <script>
@@ -70,34 +65,27 @@ resetIdleTimer();
 </script>
 <%
 }
-
 String welcomeString = " : Welcome guest : <a href=\"login.jsp\">log in</a>";
 if (!StringUtil.emptyString(username)) welcomeString = " : Welcome " + username;
 KBmanager mgr = KBmanager.getMgr();
-
 if (StringUtil.emptyString(role)) role = "guest";
-
 if (!KBmanager.initialized) {
     mgr.initializeOnce();
     response.sendRedirect("init.jsp");
     return;
 }
-
 if (role.equalsIgnoreCase("guest") && !userPages.contains(pageURLString)) {
     mgr.setError("You are not authorized to visit " + pageURLString);
     response.sendRedirect("KBs.jsp");
     return;
 }
-
 String simple = request.getParameter("simple");
 if (StringUtil.isNonEmptyString(simple) && simple.equalsIgnoreCase("yes")) out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\" />");
-
 String kbName = request.getParameter("kb");
 if (StringUtil.emptyString(kbName)) {
     kbName = "SUMO";
     if (!mgr.kbs.keySet().contains("SUMO")) kbName = mgr.getPref("sumokbname");
 }
-
 boolean awsMode = "yes".equalsIgnoreCase(mgr.getPref("aws"));
 request.setAttribute("awsMode", awsMode);
 if (awsMode && "Editor.jsp".equalsIgnoreCase(pageURLString)) {
@@ -105,30 +93,20 @@ if (awsMode && "Editor.jsp".equalsIgnoreCase(pageURLString)) {
     response.sendRedirect("KBs.jsp");
     return;
 }
-
 KB kb = mgr.getKB(kbName);
 if (kb != null) TaxoModel.kbName = kbName;
-
 String filename = "";
 String line = "";
-
 UserSessionManager userSessionManager = UserSessionManager.resolve(request);
-
 String flang = userSessionManager.getFormalLanguage().getSigmaName();
 flang = HTMLformatter.processFormalLanguage(flang);
-if (StringUtil.emptyString(flang))
-    flang = "SUO-KIF";
-
+if (StringUtil.emptyString(flang)) flang = "SUO-KIF";
 String lang = userSessionManager.getHumanLanguage().getSigmaName();
 lang = HTMLformatter.processNaturalLanguage(lang, kb);
-if (StringUtil.emptyString(lang))
-    lang = "EnglishLanguage";
-
+if (StringUtil.emptyString(lang)) lang = "EnglishLanguage";
 String hostname = mgr.getPref("hostname");
 if (hostname == null) hostname = "localhost";
-
 String port = mgr.getPref("port");
 if (port == null) port = "8080";
-
 String term = ValidationUtils.sanitizeSumoTerm(request.getParameter("term"));
 %>

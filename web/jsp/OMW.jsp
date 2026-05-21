@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 
 <%
 /** This code is copyright Articulate Software (c) 2003.  Some portions
@@ -24,13 +24,13 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
         String pageName = "OMW";
         String pageString = "Open Multilingual Wordnet";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 
 <h3>Language mappings</h3>
 
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 <%
-  String params = "flang=" + flang + "&lang=" + language + "&kb=" + kbName;
+  String params = "flang=" + flang + "&lang=" + lang + "&kb=" + kbName;
   if (synset != null && synset != "")
       out.println(OMWordnet.displaySynset(kbName,synset,params));           
 %>
@@ -70,5 +70,5 @@ Source language data (linked through OMW) from:
 <A HREF="https://github.com/arademaker/wordnet-br">OpenWN-PT</A>,
 <A HREF="http://th.asianwordnet.org/"></small><P>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>

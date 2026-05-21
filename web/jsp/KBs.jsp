@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
@@ -25,7 +25,7 @@
   String pageName = "KBs";
   String pageString = "Knowledge Bases";
   %>
-  <%@include file="CommonHeader.jsp" %>
+  <%@include file="fragments/universal/CommonHeader.jspf" %>
 <%
   Iterator<String> kbNames = null;
   String removeResult = "";
@@ -75,7 +75,7 @@
           out.println("<TD><A href=\"Graph.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Graph</A></TD>");
           out.println("<TD><A href=\"TestStmnt.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Test Stmt</A></TD>");
           if (isAdministrator) {
-              out.println("<TD><A href=\"Diag.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Diagnostics</A></TD>");
+              out.println("<TD><A href=\"Diagnostics.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Diagnostics</A></TD>");
               out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang +  "&page=0\">Consistency Check</A></TD>");
               out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Inference Tests</A></TD>");
               if (kb.celt != null)
@@ -157,7 +157,7 @@
 </ul>
 <p>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>
 

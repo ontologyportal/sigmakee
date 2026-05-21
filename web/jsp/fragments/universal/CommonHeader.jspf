@@ -17,11 +17,8 @@
     welcomString should be derived from Prelude.jsp
 */
 
-if (StringUtil.emptyString(flang))
-    flang = "SUO-KIF";
-
-if (StringUtil.emptyString(lang))
-    lang = "EnglishLanguage";
+if (StringUtil.emptyString(flang)) flang = "SUO-KIF";
+if (StringUtil.emptyString(lang)) lang = "EnglishLanguage";
 %>
 <TABLE width="95%" cellspacing="0" cellpadding="0">
     <TR>

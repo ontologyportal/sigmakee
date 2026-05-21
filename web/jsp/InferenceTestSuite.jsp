@@ -1,5 +1,5 @@
 <%@ page import="java.io.File, java.util.*, com.articulate.sigma.*, com.articulate.sigma.utils.StringUtil" %>
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <%
     if (!role.equalsIgnoreCase("admin")) { response.sendRedirect("login.jsp"); return; }
 
@@ -32,7 +32,7 @@
             String modeAll = "normal";
             if ("normal".equalsIgnoreCase(type)) modeAll = "normal";
             else if ("mp".equalsIgnoreCase(type)) modeAll = "mp";
-            else /* both */ modeAll = "mp".equalsIgnoreCase(phase) ? "mp" : "normal";
+            else /* both */ modeAll = "mp".equalsIgnoreCase(phase)  ? "mp" : "normal";
             // ---- RUN ONE (same as your single-test block) ----
             try {
                 InferenceTestSuite its = new InferenceTestSuite();
@@ -140,7 +140,8 @@
                             pw.println(proof_line);
                         }
                     }
-                } catch (Exception ioex) {
+                } 
+                catch (Exception ioex) {
                     // optional: log or display warning
                 }
 
@@ -163,7 +164,15 @@
         try {
             // FULL reload: wipe user assertions + reload base KB + rebuild inference view
             kb.deleteUserAssertionsAndReload();
-            KBmanager.getMgr().loadKBforInference(kb);
+            //KBmanager.getMgr().loadKBforInference(kb);
+
+            long millis = System.currentTimeMillis() - t0;
+            out.println("<div style='color:#0a0'>KB reloaded in " + millis + " ms.</div>");
+        }
+        catch (Exception e) {
+            out.println("<div style='color:#b00'>Error reloading KB: "
+                    + esc(String.valueOf(e.getMessage())) + "</div>");
+            e.printStackTrace();
         }
     }
 %>
@@ -192,34 +201,30 @@
         Map<String,Object> cellMapX = (Map<String,Object>) session.getAttribute("cellMap");
         if (cellMapX == null || cellMapX.isEmpty()) {
             out.println("<script>alert('Nothing to export yet. Run some tests first.');</script>");
-        } else {
+        } 
+        else {
             // Resolve export root (web-visible). Falls back to tmp if running outside a WAR.
             String root = application.getRealPath("/exports");
             if (root == null) root = System.getProperty("java.io.tmpdir") + File.separator + "sigma_exports";
             File exportRoot = new File(root);
             if (!exportRoot.exists()) exportRoot.mkdirs();
-
             String stamp = new java.text.SimpleDateFormat("yyyyMMdd-HHmmss").format(new java.util.Date());
             File bundleDir   = new File(exportRoot, stamp);
             File proofsDir   = new File(bundleDir, "proofs");
             File testsDir    = new File(bundleDir, "tests");
             proofsDir.mkdirs(); testsDir.mkdirs();
-
             // Tally + gather tq names used.
             int passCnt=0, failCnt=0, errCnt=0, cells=0;
             Set<String> tqSeen = new java.util.TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-
             // Copy proof files and build a rewritten link map (absolute->relative).
             Map<String,String> proofRelMap = new HashMap<>();
             for (Object e : cellMapX.entrySet()) {
                 Map.Entry me = (Map.Entry)e;
                 String key = (String) me.getKey();               // "<tq>|normal" or "<tq>|mp"
                 Map val    = (Map) me.getValue();
-
                 String[] parts = key.split("\\|", 2);
                 String tqBase = parts.length>0 ? parts[0] : "unknown.tq";
                 tqSeen.add(tqBase);
-
                 // Calculate the PASS/FAIL/ERROR sums for the Summary table
                 Boolean pass = (Boolean) val.get("pass");
                 if (pass != null) {
@@ -237,8 +242,6 @@
                         }
                     }
                 }
-
-
                 String proofPath = (String) val.get("proofPath"); // absolute path we stored earlier
                 if (proofPath != null) {
                     File src = new File(proofPath);
@@ -252,7 +255,6 @@
                     }
                 }
             }
-
             // Copy original .tq files into /tests
             String itDir = KBmanager.getMgr().getPref("inferenceTestDir");
             if (itDir != null) {
@@ -266,12 +268,9 @@
                     } catch (Exception ignore) {}
                 }
             }
-
-
             // Build static HTML
             String title = "Inference Test Results - " + stamp;
             File index = new File(bundleDir, "index.html");
-
             // For totals & not-run counts, list files in dir to mirror UI order
             File dir = (itDir==null)?null:new File(itDir);
             File[] files = (dir==null)?new File[0]:dir.listFiles((d,n)->n.toLowerCase().endsWith(".tq"));
@@ -285,14 +284,12 @@
                 validKeys.add(name + "|normal");
                 validKeys.add(name + "|mp");
             }
-
             int runTests = 0;
             for (Object e : cellMapX.keySet()) {
                 String k = (String) e;
                 if (validKeys.contains(k)) runTests++;
             }
             int notRunTests = Math.max(0, totalTests - runTests);
-
             try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(index, false), true)) {
                 pw.println("<!doctype html><html><head><meta charset='utf-8'><title>"+esc(title)+"</title>");
                 pw.println("<style>");
@@ -308,7 +305,6 @@
                 pw.println(".tiny{font-size:12px;color:#666}");
                 pw.println(".file{font-weight:700}");
                 pw.println("</style></head><body>");
-
                 // Download .zip file button
                 pw.println("<div id='zipBtn' style='display:none;margin:10px 0;'>"
                         + "<a id='zipLink' href='#' download "
@@ -321,7 +317,6 @@
                         + "document.getElementById('zipBtn').style.display='block';}})"
                         + ".catch(function(){});"
                         + "})();</script>");
-
                 // Summary table
                 int total = cells;
                 int passRate = (total==0)?0:(int)Math.round((passCnt*100.0)/total);
@@ -335,12 +330,10 @@
                 pw.println("<span class='tiny' style='margin-left:10px'>Pass-rate: "+passRate+"%</span><br>");
                 pw.println("<span class='tiny'>Total test files: "+totalFiles+" &nbsp;&nbsp;Total tests: "+totalTests+" &nbsp;&nbsp; Run: "+runTests+" &nbsp;&nbsp; Not run: "+notRunTests+"</span><br>");
                 pw.println("</div></div>");
-
                 // Table header
                 pw.println("<table><thead><tr>");
                 pw.println("<th style='width:40%'>File</th><th style='width:30%'>Normal</th><th style='width:30%'>ModusPonens</th>");
                 pw.println("</tr></thead><tbody>");
-
                 // Table body
                 for (File tf : files) {
                     String name = tf.getName();
@@ -348,18 +341,17 @@
                     String kM = name + "|mp";
                     Map cN = (Map) cellMapX.get(kN);
                     Map cM = (Map) cellMapX.get(kM);
-
                     pw.println("<tr>");
                     // File column with relative link to copied .tq if present
                     pw.println("<td>");
                     pw.println("<div class='file'>"+esc(name)+"</div>");
                     if (tqSeen.contains(name)) {
                         pw.println("<div class='tiny'><a href='tests/"+esc(name)+"' target='_blank'>View original .tq</a></div>");
-                    } else {
+                    } 
+                    else {
                         pw.println("<div class='tiny'>- not run yet -</div>");
                     }
                     pw.println("</td>");
-
                     // writer for a cell WITHOUT extra PASS/FAIL pill (you already show status in your HTML)
                     java.util.function.Consumer<Map> writeCell = (cell) -> {
                         try {
@@ -375,22 +367,18 @@
                             if (rel != null) pw.println("<div class='tiny' style='margin-top:6px'><a href='"+esc(rel)+"' target='_blank'>View proof</a></div>");
                         } catch(Exception ignore){}
                     };
-
                     pw.println("<td>"); writeCell.accept(cN); pw.println("</td>");
                     pw.println("<td>"); writeCell.accept(cM); pw.println("</td>");
                     pw.println("</tr>");
                 }
                 pw.println("</tbody></table>");
-
                 pw.println("<div class='tiny' style='max-width:1100px;margin:12px auto 0 auto'>");
                 pw.println("This page is a static snapshot. Proofs and tests are in ./proofs and ./tests.");
                 pw.println("</div>");
-
                 pw.println("</body></html>");
             } catch (Exception ex) {
                 out.println("<script>alert('Export failed: "+esc(String.valueOf(ex))+"');</script>");
             }
-
             // --- Create ZIP file ---
             File zipFile    = new File(exportRoot, stamp + ".zip");
             File zipTemp    = new File(exportRoot, stamp + ".zip.part");
@@ -408,7 +396,6 @@
                 });
                 // stream closes here
             } catch (Exception ignore) {}
-
             // Try atomic move; fall back to replace
             try {
                 java.nio.file.Files.move(zipTemp.toPath(), zipFile.toPath(),
@@ -418,7 +405,6 @@
                 try { java.nio.file.Files.move(zipTemp.toPath(), zipFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING); }
                 catch (Exception ignore) {}
             }
-
             // Redirect to the exported index (web path)
             String webHtml = request.getContextPath() + "/exports/" + stamp + "/index.html";
             String webZip  = request.getContextPath() + "/exports/" + stamp + ".zip";
@@ -426,9 +412,6 @@
         }
     }
 %>
-
-
-
 <%!
     private static void deleteRecursive(java.io.File f) {
         if (f == null || !f.exists()) return;
@@ -452,7 +435,6 @@
         .controls { margin: 10px 0 16px; display:flex; gap:16px; align-items:center; }
         .runBtn { padding:4px 10px; }
     </style>
-
     <style>
         .testTable {
             width: 70%;
@@ -492,8 +474,6 @@
         .fileName { font-weight: bold; }
         .filePath { font-size: 12px; color: #777; word-wrap: break-word; }
     </style>
-
-
     <style>
         /* === Buttons === */
         .runAllGroup { display:flex; gap:10px; align-items:center; }
@@ -505,7 +485,6 @@
         .runAllBtn:hover { filter:brightness(0.95); }
         .runAllBtn.mp { background:#168a9e; }
         .runAllBtn.both { background:#0a7f3f; }
-
         /* === Fieldset (configuration) === */
         .configBox {
             border:1px solid #bbb;
@@ -525,7 +504,6 @@
             padding:2px 4px;
         }
     </style>
-
     <style>
         .spinner {
             display:none; width:14px; height:14px;
@@ -534,36 +512,27 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
-
-
     <script>
         function safeId(s){ return (s||'').replace(/[^A-Za-z0-9._-]/g,'_'); }
-
         function runOne(tq, mode) {
             const sid = 'spinner-' + safeId(tq) + '-' + mode;
             const bid = 'btn-'     + safeId(tq) + '-' + mode;
-
             const sp = document.getElementById(sid);
             if (sp) sp.style.display = 'inline-block';
-
             const btn = document.getElementById(bid);
             if (btn) { btn.disabled = true; btn.innerHTML = "Running&hellip;"; }
-
             const form = document.getElementById('runnerForm');
             form.tq.value = tq;
             form.mode.value = mode;
             form.submit();
         }
     </script>
-
-
     <script>
         function viewTestFile(fileName) {
             const url = 'ViewTest.jsp?name=' + encodeURIComponent(fileName);
             window.open(url, '_blank');
         }
     </script>
-
     <script>
         function startRunAll(type){          // type: 'normal' | 'mp' | 'both'
             const f = document.getElementById('runnerForm');
@@ -574,27 +543,20 @@
             f.submit();
         }
     </script>
-
-
 </head>
 <body style="face=Arial,Helvetica" bgcolor="#FFFFFF">
-
 <%
     String pageName = "InferenceTestSuite";
     String pageString = "Inference Interface";
 %>
-<%@include file="CommonHeader.jsp" %>
+<%@include file="fragments/universal/CommonHeader.jspf" %>
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
-
 <h2>Inference Test Suite</h2>
-
 <form id="runnerForm" method="POST" action="InferenceTestSuite.jsp">
     <!-- global controls persist across runs -->
-
     <!-- === Global Controls === -->
     <div style="width:70%;margin:0 auto 20px auto;display:flex;justify-content:space-between;align-items:flex-end;">
-
         <!-- Left: Run-All buttons -->
         <div class="runAllGroup">
             <button type="button" class="runAllBtn" onclick="startRunAll('normal')">Run All (Normal)</button>
@@ -605,7 +567,6 @@
                 Export HTML
             </button>
         </div>
-
         <!-- Right: Configuration box -->
         <fieldset class="configBox">
             <legend><b>Configuration</b></legend>
@@ -621,29 +582,25 @@
             </label>
         </fieldset>
     </div>
-
     <!-- single-run fields (keep your existing) -->
     <input type="hidden" name="action" value="run">
     <input type="hidden" name="tq" value="">
     <input type="hidden" name="mode" value="">
-
     <!-- run-all fields -->
     <input type="hidden" name="runAllType" value="">
     <input type="hidden" name="idx" value="">
     <input type="hidden" name="phase" value="">
-
 </form>
-
 <%
     if (inferenceTestDir == null) {
 %>
 <div style="color:#b00">No inference test directory set. Configure it in <a href="Preferences.jsp">Preferences</a>.</div>
 <%
-} else {
+} 
+else {
     File dir = new File(inferenceTestDir);
     File[] files = dir.listFiles((d, name) -> name.toLowerCase().endsWith(".tq"));
     Arrays.sort(files, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
-
 %>
 <table class="testTable">
     <thead>
@@ -667,7 +624,6 @@
             String safeId = name.replaceAll("[^A-Za-z0-9._-]", "_");
             Map cN = (Map) cellMap.get(kN);
             Map cM = (Map) cellMap.get(kM);
-
             String metaN = (cN == null) ? "" : (String)cN.get("meta");
             String metaM = (cM == null) ? "" : (String)cM.get("meta");
     %>
@@ -683,7 +639,6 @@
             </div>
             <div class="filePath tiny"><%= esc(f.getAbsolutePath()) %></div>
         </td>
-
         <!-- Normal column -->
         <td>
             <div class="cellHead">
@@ -694,11 +649,11 @@
                 <span id="spinner-<%=safeId%>-normal" class="spinner" aria-label="Running&hellip;" title="Running&hellip;"></span>
             </div>
             <div>
-                    <% if (cN == null) { %>
-                    <span class='tiny'>- not run yet -</span>
-                    <% } else { %>
-                    <div><%= (String)cN.get("html") %></div>
-                    <% } %>
+                <% if (cN == null) { %>
+                <span class='tiny'>- not run yet -</span>
+                <% } else { %>
+                <div><%= (String)cN.get("html") %></div>
+                <% } %>
             </div>
             <% String proofUrlN = (cN == null) ? null : (String)cN.get("proofUrl"); %>
             <% if (proofUrlN != null && proofUrlN.length() > 0) { %>
@@ -707,7 +662,6 @@
             </div>
             <% } %>
         </td>
-
         <!-- ModusPonens column -->
         <td>
             <div class="cellHead">
@@ -724,7 +678,6 @@
                     <div><%= (String)cM.get("html") %></div>
                 <% } %>
             </div>
-
             <% String proofUrlM = (cM == null) ? null : (String)cM.get("proofUrl"); %>
             <% if (proofUrlM != null && proofUrlM.length() > 0) { %>
             <div class="tiny" style="margin-top:6px;">
@@ -739,7 +692,6 @@
     %>
     </tbody>
 </table>
-
 <%
     Integer raIdx  = (Integer)request.getAttribute("raIdx");
     Integer raTot  = (Integer)request.getAttribute("raTot");
@@ -767,7 +719,8 @@
                 var bid = 'btn-'     + (nextName||'').replace(/[^A-Za-z0-9._-]/g,'_') + '-' + (nextPhase==='mp'?'mp':'normal');
                 var sp = document.getElementById(sid); if (sp) sp.style.display='inline-block';
                 var bt = document.getElementById(bid); if (bt) { bt.disabled=true; bt.innerHTML="Running&hellip;"; }
-            }catch(e){}
+            }
+            catch(e){}
 
             // submit next step
             const f = document.getElementById('runnerForm');
@@ -780,16 +733,10 @@
     })();
 </script>
 <% } %>
-
-
 <%
     } // inferenceTestDir != null
 %>
-
 <hr style="margin:24px 0; border:0; border-top:1px solid #ddd; width:70%; margin-left:auto; margin-right:auto;">
-
-
-
 <div style="width:70%; margin:0 auto 20px auto; display:flex; justify-content:space-between; align-items:center;">
     <div>
         <form method="post" onsubmit="return confirm('This will fully reload the KB and clear user assertions. Continue?');">
@@ -803,7 +750,6 @@
             </button>
             <span class="tiny" style="margin-left:8px;">Reloads base ontology and clears user assertions.</span>
         </form>
-
         <form method="post" style="margin-top:8px;"
               onsubmit="return confirm('This will clear all stored test results for this page. Continue?');">
             <input type="hidden" name="action" value="clearSession">
@@ -815,11 +761,9 @@
         </form>
     </div>
 </div>
-
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>
 </html>
-
 <%!
     private static String esc(String s){
         if (s == null) return "";

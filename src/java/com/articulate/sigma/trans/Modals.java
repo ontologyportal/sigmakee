@@ -3,6 +3,7 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
