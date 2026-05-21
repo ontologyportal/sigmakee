@@ -12,13 +12,11 @@
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
-
 if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
     response.sendRedirect("login.jsp");
     return;
 }
 %>
-
 <HTML>
 <HEAD>
   <TITLE>Sigma Knowledge Engineering Environment - Test Statement</TITLE>
@@ -86,14 +84,11 @@ if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
             }
         }
     }
-
     if (!error)
         status.append("Statement ok<P>");
-
     String lineHtml =
       "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
 %>
-
 <BODY style="face=Arial,Helvetica" BGCOLOR=#FFFFFF>
 <FORM name="TestStmnt" ID="TestStmnt" action="TestStmnt.jsp" METHOD="POST">
     <%
@@ -101,7 +96,6 @@ if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
         String pageString = "Test A Statement";
     %>
     <%@include file="fragments/universal/CommonHeader.jspf" %>
-
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0><BR>
     <textarea rows="5" cols="70" name="stmt"><%=stmt%></textarea>
     <br>
@@ -109,16 +103,12 @@ if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
 </FORM>
 <table ALIGN='LEFT' WIDTH='80%'><tr><TD BGCOLOR='#AAAAAA'>
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
-
 <%
     if (status != null && status.toString().length() > 0) {
         out.println(status.toString());
     }
 %>
     <p>
-
 <%@ include file="fragments/universal/Postlude.jspf" %>
-
 </BODY>
 </HTML>
-

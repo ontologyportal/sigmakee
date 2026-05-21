@@ -369,6 +369,8 @@ public class Configuration {
 
         System.out.println("Configuration.main() Options:");
         System.out.println("  -h - show this help screen");
+        System.out.println("  -p - print configuration from xml");
+        
     }
 
     /******************************************************************
@@ -378,10 +380,11 @@ public class Configuration {
 
         Map<String, List<String>> argMap = CLIMapParser.parse(args);
         if (argMap.isEmpty() || argMap.containsKey("h")) showHelp();
-        
-        else if (argMap.containsKey("a")) {
+        else  {
+            Configuration config = new Configuration("");
+            if (argMap.containsKey("a")) {
             
+            }
         }
-        
     }
 }

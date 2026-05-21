@@ -981,8 +981,7 @@ public class KButilities implements ServletContextListener {
 
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String fileStr = kbDir + File.separator + "triples.txt";
-        if (StringUtil.emptyString(language))
-            language = "EnglishLanguage";
+        if (StringUtil.emptyString(language)) language = "EnglishLanguage";
         String formStr, doc;
         List<Formula> forms;
         Formula form;

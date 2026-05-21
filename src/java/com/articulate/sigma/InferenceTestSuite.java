@@ -39,9 +39,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal
 
 package com.articulate.sigma;
 
-import com.articulate.sigma.tp.EProver;
-import com.articulate.sigma.tp.LEO;
-import com.articulate.sigma.tp.Vampire;
+import com.articulate.sigma.tp.*;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
@@ -145,96 +143,108 @@ public class InferenceTestSuite {
                                           final boolean modusPonens) {
 
         this.kb = kb;
-
         // Choose prover (same mechanism test() uses)
         switch (engine.toUpperCase()) {
             case "EPROVER": KBmanager.getMgr().prover = KBmanager.Prover.EPROVER; break;
             case "LEO":     KBmanager.getMgr().prover = KBmanager.Prover.LEO;     break;
             default:        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE; break;
         }
-
         // InferenceTestSuite.useModusPonens = modusPonens;
-
         // Parse .tq → InfTestData (same as test())
         final File tf = new File(tqPath);
         InfTestData itd = readTestFile(tf);
-
         // Apply timeout policy (mirror test(); if overrideTimeout is true, force default)
         if (overrideTimeout) {
             itd.timeout = timeoutSec > 0 ? timeoutSec : _DEFAULT_TIMEOUT;   // was _DEFAULT_TIMEOUT only
         } else {
             itd.timeout = timeoutSec > 0 ? timeoutSec : (itd.timeout > 0 ? itd.timeout : _DEFAULT_TIMEOUT);
         }
-
         // --- Isolated assertion block (prevents KB pollution) ---
         compareFiles(itd);
-
         // Step 1: assert formulas for this test
         List<String> asserted = new ArrayList<>(itd.statements);
         for (String s : asserted) {
             kb.tell(s);
         }
-
         try {
             // Step 2: reload KB before running queries
             // (Now done in vampire constructor)
             // Step 3: run the queries as before
-            int maxAnswers = Math.max(1, itd.expectedAnswers.size());
             Formula theQuery = new Formula();
             theQuery.read(itd.query);
             Set<Formula> theQueries = new FormulaPreprocessor().preProcess(theQuery, true, kb);
-
             itd.actualAnswers = new ArrayList<>();
+            TheoremProverController theoremProverController = new TheoremProverController();
             for (Formula f : theQueries) {
                 TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
                 String q = f.getFormula();
-                if (f.isHigherOrder(kb) && !"thf".equals(SUMOformulaToTPTPformula.getLang())) {
+                if (f.isHigherOrder(kb) && !"thf".equalsIgnoreCase(SUMOformulaToTPTPformula.getLang())) {
                     System.out.println("Skipping higher-order query not in THF: " + q);
                     continue;
                 }
-                switch (KBmanager.getMgr().prover) {
-                    case VAMPIRE:
-                        com.articulate.sigma.tp.Vampire vampire;
-                        if (modusPonens) {
-                            vampire = new Vampire(kb, "tptp", "CASC", true, itd.timeout, maxAnswers);
-                            vampire.askVampireModensPonens(q);
-                        }
-                        else {
-                            vampire = new Vampire(kb, "tptp", "CASC", false, itd.timeout, maxAnswers);
-                            vampire.askVampire(q);
-                        }
-                        System.out.println("vampire-output");
-                        System.out.println(vampire.output);
-                        tpp.parseProofOutput(vampire.output, q, kb, vampire.qlist);
-                        itd.proof = vampire.output;
-                        break;
-                    case EPROVER:
-                        com.articulate.sigma.tp.EProver eprover = new com.articulate.sigma.tp.EProver(kb, "tptp", itd.timeout, maxAnswers);
-                        eprover.askEProver(q);
-                        tpp.parseProofOutput(eprover.output, q, kb, eprover.qlist);
-                        itd.proof = eprover.output;
-                        break;
-                    case LEO:
-                        com.articulate.sigma.tp.LEO leo = new com.articulate.sigma.tp.LEO(kb, "tptp", itd.timeout, maxAnswers, null);
-                        leo.askLeo(q);
-                        tpp.parseProofOutput(leo.output, q, kb, leo.qlist);
-                        itd.proof = leo.output;
-                        break;
-                    default:
-                        System.err.println("Unknown prover: " + KBmanager.getMgr().prover);
+                String proverType = engine == null ? "VAMPIRE" : engine.toUpperCase();
+                if ("VAMPIRE".equalsIgnoreCase(engine)) {
+                    proverType = "VAMPIRE";
                 }
-                if (tpp.status != null && tpp.status.startsWith("Theorem") && itd.actualAnswers.isEmpty())
+                else if ("EPROVER".equalsIgnoreCase(engine)) {
+                    proverType = "EPROVER";
+                }
+                else if ("LEO".equalsIgnoreCase(engine)) {
+                    proverType = "LEO";
+                }
+                String tptpLang = SUMOformulaToTPTPformula.getLang();
+                if (tptpLang == null || tptpLang.isEmpty()) {
+                    tptpLang = "FOF";
+                }
+                tptpLang = tptpLang.toUpperCase();
+                int maxAnswers = Math.max(1, itd.expectedAnswers.size());
+                ATPQuery atpQuery = new ATPQuery(
+                        kb,
+                        null,               // session id, or pass sessionId if available
+                        q,                  // query
+                        null,               // testFilePath
+                        "CUSTOM",           // run source
+                        proverType,         // VAMPIRE | EPROVER | LEO
+                        tptpLang,           // FOF | TFF | THF
+                        "CASC",             // Vampire mode
+                        false,              // CWA
+                        modusPonens,
+                        false,              // dropOnePremise
+                        false,              // holUseModals
+                        itd.timeout,
+                        maxAnswers
+                );
+                ATPResult atpResult = theoremProverController.ask(atpQuery);
+                if (atpResult == null) {
+                    itd.proof = new ArrayList<>();
+                    itd.proof.add("ERROR: ATPResult was null");
+                    itd.success = false;
+                    continue;
+                }
+                itd.proof = new ArrayList<>();
+                if (atpResult.getStdout() != null) {
+                    itd.proof.addAll(atpResult.getStdout());
+                }
+                if (atpResult.getStderr() != null && !atpResult.getStderr().isEmpty()) {
+                    itd.proof.add("---- STDERR ----");
+                    itd.proof.addAll(atpResult.getStderr());
+                }
+                tpp.parseProofOutput(atpResult.getStdout(), q, kb, atpResult.getQList());
+                if (tpp.status != null && tpp.status.startsWith("Theorem") && itd.actualAnswers.isEmpty()) {
                     itd.actualAnswers.add("yes");
-                if (tpp.inconsistency) {
+                }
+                if (tpp.inconsistency || atpResult.isInconsistencyDetected()) {
                     itd.inconsistent = true;
                     itd.actualAnswers = new ArrayList<>();
                 }
-                if (tpp.bindings != null) itd.actualAnswers.addAll(tpp.bindings);
+                if (tpp.bindings != null) {
+                    itd.actualAnswers.addAll(tpp.bindings);
+                }
                 boolean different = true;
                 if (tpp.proof != null && (tpp.status == null || !tpp.status.startsWith("Timeout"))) {
                     different = !sameAnswers(tpp, itd.expectedAnswers);
                 }
-                itd.success = !(different || tpp.noConjecture);
+                itd.success = !(different || tpp.noConjecture || atpResult.hasErrors());
             }
         }
         finally {

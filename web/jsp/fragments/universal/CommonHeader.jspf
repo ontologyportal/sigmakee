@@ -45,9 +45,9 @@ if (StringUtil.emptyString(lang)) lang = "EnglishLanguage";
             if (role.equalsIgnoreCase("user") || role.equalsIgnoreCase("admin")) {
                 if (!pageName.equals("AskTell") && kb != null) out.println("<a href=\"AskTell.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Ask/Tell</b></a>&nbsp;|&nbsp;");
                 if(role.equalsIgnoreCase("admin")) {
-                    if (!pageName.equals("NLP")) out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>NLP</b></A>&nbsp;|&nbsp");    
-                    if (!pageName.equals("Prefs")) out.println("<A href=\"Properties.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Prefs</b></A>&nbsp;|&nbsp");
+                    if (!pageName.equals("NLP")) out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>NLP</b></A>&nbsp;|&nbsp");
                     if (!pageName.equals("manageUsers")) out.println("<A href=\"ManageUsers.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Manage Users</b></A>&nbsp;|&nbsp;");
+                    if (!pageName.equals("Configuration")) out.println("<A href=\"Configuration.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Prefs</b></A>&nbsp;|&nbsp");
                 }
             }
         %>

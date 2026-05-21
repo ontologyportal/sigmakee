@@ -1,16 +1,64 @@
+<%-- /web/jsp/InferenceTestSuite.jsp --%>
 <%@ page import="java.io.File, java.util.*, com.articulate.sigma.*, com.articulate.sigma.utils.StringUtil" %>
 <%@ include file="fragments/universal/Prelude.jspf" %>
 <%
     if (!role.equalsIgnoreCase("admin")) { response.sendRedirect("login.jsp"); return; }
 
     String inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
-    String engine = Optional.ofNullable(request.getParameter("engine")).orElse("Vampire");
+    String inferenceEngine = Optional.ofNullable(request.getParameter("inferenceEngine")).orElse("Vampire");
     int timeout = 30;
     try { if (request.getParameter("timeout") != null) timeout = Math.max(1, Integer.parseInt(request.getParameter("timeout"))); } catch (Exception ignore) {}
+    int maxAnswers = 1;
 
     String action = request.getParameter("action");   // "run" when a RUN button is pressed
     String tqName = request.getParameter("tq");       // file name only
     String mode   = request.getParameter("mode");     // "normal" or "mp"
+    String vampireMode = "CASC";
+    boolean useModals = false;
+    boolean dropOnePremise = false;
+    boolean closedWorldAssumption = request.getParameter("CWA") != null;
+    if (request.getParameter("CWA") == null && session.getAttribute("CWA") != null) {
+        closedWorldAssumption = Boolean.TRUE.equals(session.getAttribute("CWA"));
+    }
+
+    String cwa = closedWorldAssumption ? "yes" : "no";
+
+    boolean modusPonens = "mp".equalsIgnoreCase(mode);
+
+    session.setAttribute("timeout", timeout);
+    session.setAttribute("CWA", closedWorldAssumption);
+
+    String translationMode = Optional
+            .ofNullable(request.getParameter("translationMode"))
+            .orElse(Optional.ofNullable((String) session.getAttribute("translationMode")).orElse("FOL"));
+
+    String TPTPlang = Optional
+            .ofNullable(request.getParameter("TPTPlang"))
+            .orElse(Optional.ofNullable((String) session.getAttribute("TPTPlang")).orElse("fof"));
+
+    translationMode = translationMode.toUpperCase();
+    TPTPlang = TPTPlang.toLowerCase();
+
+    if ("HOL".equals(translationMode)) {
+        TPTPlang = "thf";
+        cwa = "no";
+    }
+    else {
+        translationMode = "FOL";
+        if (!"tff".equals(TPTPlang)) {
+            TPTPlang = "fof";
+        }
+        if (!"tff".equals(TPTPlang)) {
+            cwa = "no";
+        }
+    }
+
+    session.setAttribute("translationMode", translationMode);
+    session.setAttribute("TPTPlang", TPTPlang);
+    session.setAttribute("CWA", closedWorldAssumption);
+
+
+
 
     // Persist per-cell results in the session
     Map<String,Object> cellMap = (Map<String,Object>) session.getAttribute("cellMap");
@@ -37,16 +85,15 @@
             try {
                 InferenceTestSuite its = new InferenceTestSuite();
                 String tqPath = inferenceTestDir + File.separator + tqName;
-                boolean modusPonens = "mp".equalsIgnoreCase(modeAll);
                 // Test RUN
-                InferenceTestSuite.OneResult r = its.runOne(kb, engine, timeout, tqPath, modusPonens);
+                InferenceTestSuite.OneResult r = its.runOne(kb, inferenceEngine, timeout, tqPath, modusPonens);
                 Map<String,Object> cellMap2 = (Map<String,Object>) session.getAttribute("cellMap");
                 if (cellMap2 == null) { cellMap2 = new HashMap<>(); session.setAttribute("cellMap", cellMap2); }
                 Map<String,Object> cell = new HashMap<>();
                 String key = tqName + "|" + ("mp".equalsIgnoreCase(modeAll) ? "mp" : "normal");
                 cell.put("pass",   r.pass);
                 cell.put("millis", r.millis);
-                cell.put("meta",   "(engine=" + esc(engine) + ", t=" + timeout + "s)");
+                cell.put("meta",   "(inferenceEngine=" + esc(inferenceEngine) + ", t=" + timeout + "s)");
                 cell.put("expected", r.expected == null ? java.util.Collections.emptyList() : r.expected);
                 cell.put("actual",   r.actual   == null ? java.util.Collections.emptyList() : r.actual);
                 cell.put("html",     r.html);
@@ -68,9 +115,7 @@
                 }
 
                 cellMap2.put(key, cell);
-
             } catch (Throwable ignore) {}
-
             // ---- compute next step ----
             int nextIdx = idx; String nextPhase = phase; boolean hasNext = false;
             if ("both".equalsIgnoreCase(type)) {
@@ -94,7 +139,6 @@
 // Handle a single test run if requested
     if ("run".equalsIgnoreCase(action) && inferenceTestDir != null && tqName != null) {
         String tqPath = inferenceTestDir + File.separator + tqName;
-        boolean modusPonens = "mp".equalsIgnoreCase(mode);
 
         long t0 = System.currentTimeMillis();
         boolean pass = false;
@@ -104,13 +148,13 @@
         try {
             InferenceTestSuite its = new InferenceTestSuite();
             // ---- call your single-test method (add this to InferenceTestSuite) ----
-            InferenceTestSuite.OneResult r = its.runOne(kb, engine, timeout, tqPath, modusPonens);
+            InferenceTestSuite.OneResult r = its.runOne(kb, inferenceEngine, timeout, tqPath, modusPonens);
 
             Map<String,Object> cell = new HashMap<>();
             String key = tqName + "|" + mode;
             cell.put("pass",   r.pass);
             cell.put("millis", r.millis);
-            cell.put("meta",   "(engine=" + esc(engine) + ", t=" + timeout + "s)");
+            cell.put("meta",   "(inferenceEngine=" + esc(inferenceEngine) + ", t=" + timeout + "s)");
             cell.put("expected", r.expected == null ? java.util.Collections.emptyList() : r.expected);
             cell.put("actual",   r.actual   == null ? java.util.Collections.emptyList() : r.actual);
             cell.put("html",     r.html);
@@ -550,14 +594,16 @@
     String pageString = "Inference Interface";
 %>
 <%@include file="fragments/universal/CommonHeader.jspf" %>
-<table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
-    <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 <h2>Inference Test Suite</h2>
 <form id="runnerForm" method="POST" action="InferenceTestSuite.jsp">
     <!-- global controls persist across runs -->
     <!-- === Global Controls === -->
+    <fieldset class="configBox">
+        <legend><b>Configuration</b></legend>
+        <%@ include file="fragments/prover-settings-selectors/LanguageSelector.jspf" %>
+        <%@ include file="fragments/prover-settings-selectors/ProverSelector.jspf" %>
+    </fieldset>
     <div style="width:70%;margin:0 auto 20px auto;display:flex;justify-content:space-between;align-items:flex-end;">
-        <!-- Left: Run-All buttons -->
         <div class="runAllGroup">
             <button type="button" class="runAllBtn" onclick="startRunAll('normal')">Run All (Normal)</button>
             <button type="button" class="runAllBtn mp" onclick="startRunAll('mp')">Run All (MP)</button>
@@ -567,20 +613,6 @@
                 Export HTML
             </button>
         </div>
-        <!-- Right: Configuration box -->
-        <fieldset class="configBox">
-            <legend><b>Configuration</b></legend>
-            <label><b>Engine:</b>
-                <select name="engine">
-                    <option value="Vampire" <%= "Vampire".equals(engine) ? "selected" : "" %>>Vampire</option>
-                    <option value="EProver" <%= "EProver".equals(engine) ? "selected" : "" %>>EProver</option>
-                </select>
-            </label>
-            <label style="margin-left:12px;"><b>Timeout (sec):</b>
-                <span class='infoTip' title='Time for each individual prover call, not total elapsed time'>&#9432;</span>
-                <input type="number" name="timeout" min="1" value="<%=timeout%>">
-            </label>
-        </fieldset>
     </div>
     <!-- single-run fields (keep your existing) -->
     <input type="hidden" name="action" value="run">
@@ -742,7 +774,7 @@ else {
         <form method="post" onsubmit="return confirm('This will fully reload the KB and clear user assertions. Continue?');">
             <input type="hidden" name="action" value="reloadKB">
             <!-- preserve current UI selections (optional) -->
-            <input type="hidden" name="engine" value="<%= esc(engine) %>">
+            <input type="hidden" name="inferenceEngine" value="<%= esc(inferenceEngine) %>">
             <input type="hidden" name="timeout" value="<%= timeout %>">
             <button type="submit"
                     style="background:#b33;color:#fff;border:0;border-radius:4px;padding:6px 12px;cursor:pointer;">
