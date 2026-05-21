@@ -27,7 +27,7 @@
 List<String> userPages = new ArrayList<>();
 userPages.add("AllPictures.jsp");
 userPages.add("Browse.jsp");
-userPages.add("BrowseExtra.jsp");
+userPages.add("BrowseStatistics.jsp");
 userPages.add("Graph.jsp");
 userPages.add("Intersect.jsp");
 userPages.add("KBs.jsp");

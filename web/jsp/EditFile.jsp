@@ -13,17 +13,14 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
-
-  // @param file: the file name.
-  // @param line: the line number in the file the cursor should point to at start.
-
+// @param file: the file name.
+// @param line: the line number in the file the cursor should point to at start.
 if (!role.equalsIgnoreCase("admin"))
     response.sendRedirect("KBs.jsp");
 String file = request.getParameter("file");
 line = request.getParameter("line");
 String srcText = "";
 %>
-
 <HTML>
 <HEAD>
 <TITLE>Sigma Knowledge Engineering Environment - Edit File </TITLE>
@@ -46,7 +43,6 @@ String srcText = "";
   </tr>
 </table>
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
-
 <SCRIPT LANGUAGE=JavaScript>
 
    function update_onclick() {
@@ -61,7 +57,6 @@ String srcText = "";
    }
 
 </Script>
-
 <Table>
 <TR>
 <TD><B> Editing Constituent:
@@ -69,11 +64,10 @@ String srcText = "";
 </TR>
 <TR><TD>&nbsp;</TD></TR>
 </TABLE>
-
 <Form name="updateForm" method="POST" >
  <Table>
    <TR><TD><textarea rows="15" wrap="virtual" name="text_update" cols="100" onChange="textAreaOnChange()" >
-           <%= srcText %></textarea> </TD></TR>
+      <%= srcText %></textarea> </TD></TR>
    <TR><TD align=center><input type = submit name = "action" value="Update"></TD></TR>
  </Table>
 </Form>

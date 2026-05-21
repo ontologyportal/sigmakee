@@ -808,7 +808,7 @@ public class HTMLformatter {
             else
                 limitString = ("<tr><td><br></td></tr><tr><td>Display limited to "
                         + limit + " items. "
-                        + "<a href=\"BrowseExtra.jsp?term=" + term + "&lang=" + language + "&flang=" + flang
+                        + "<a href=\"BrowseStatistics.jsp?term=" + term + "&lang=" + language + "&flang=" + flang
                         + "&kb=" + kb.name + "&start=" + (start + limit)
                         + "&arg=" + arg + "&type=" + type + "\">Show next "
                         + limit + "</a></td></tr>\n");
