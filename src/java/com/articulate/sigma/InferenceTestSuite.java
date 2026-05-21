@@ -192,7 +192,7 @@ public class InferenceTestSuite {
                 else if ("LEO".equalsIgnoreCase(engine)) {
                     proverType = "LEO";
                 }
-                String tptpLang = SUMOformulaToTPTPformula.getLang();
+                String tptpLang = "FOF";
                 if (tptpLang == null || tptpLang.isEmpty()) {
                     tptpLang = "FOF";
                 }
