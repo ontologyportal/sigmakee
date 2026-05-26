@@ -303,7 +303,7 @@
             String itDir = KBmanager.getMgr().getPref("inferenceTestDir");
             if (itDir != null) {
                 for (String tq : tqSeen) {
-                    try {se
+                    try {
                         File src = new File(itDir, tq);
                         if (src.exists()) {
                             File dst = new File(testsDir, tq);
