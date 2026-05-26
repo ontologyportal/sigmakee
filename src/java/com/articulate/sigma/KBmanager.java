@@ -576,7 +576,10 @@ public class KBmanager implements Serializable {
         List<String> validConstituents = new ArrayList<>();
         for (String constituent : constituentList) {
             if (Files.exists(Paths.get(constituent))) validConstituents.add(constituent);
-            else setError("ERROR: File " + constituent + " does not exist");
+            else {
+                LoggingUtils.log("ERROR", "Constituent " + constituent + " does not exist!");
+                setError("ERROR: File " + constituent + " does not exist!");
+            }
         }
         return validConstituents;
     }

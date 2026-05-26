@@ -1126,6 +1126,8 @@ public class InferenceTestSuite {
         System.out.println("  -h - show this help screen");
         System.out.println("  --test <name> - run named test file in config.xml inferenceTestDir");
         System.out.println("  --inf <mode> - run test files known to pass in the given mode in config.xml inferenceTestDir");
+        System.out.println("  --runone <path-or-filename> - run one .tq file through runOne()");
+        System.out.println("     optional: --timeout <sec>, --mp, e/v/l");
         System.out.println("  --all <mode> - run all test files in the given mode in config.xml inferenceTestDir");
         System.out.println("     e - run with eprover (add letter to options above)");
         System.out.println("     v - run with vampire (add letter to options above)");
@@ -1185,6 +1187,62 @@ public class InferenceTestSuite {
             }
             else if (argMap.containsKey("inf")) {
                 its.runPassing();
+            }
+            if (argMap.containsKey("runone")) {
+                String tqArg = argMap.get("runone").get(0);
+                String tqPath = tqArg;
+                File tqFile = new File(tqPath);
+                if (!tqFile.exists()) {
+                    String inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
+                    tqFile = new File(inferenceTestDir, tqArg);
+                }
+                if (!tqFile.exists()) {
+                    System.err.println("InferenceTestSuite.main(): could not find test file: " + tqArg);
+                    return;
+                }
+                int timeout = _DEFAULT_TIMEOUT;
+                if (argMap.containsKey("timeout") && !argMap.get("timeout").isEmpty()) {
+                    try {
+                        timeout = Math.max(1, Integer.parseInt(argMap.get("timeout").get(0)));
+                    }
+                    catch (NumberFormatException nfe) {
+                        System.err.println("InferenceTestSuite.main(): bad timeout: " + argMap.get("timeout").get(0));
+                        return;
+                    }
+                }
+                String engine = "Vampire";
+                if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
+                    engine = "EProver";
+                }
+                else if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
+                    engine = "LEO";
+                }
+                boolean modusPonens = argMap.containsKey("mp");
+                OneResult r = its.runOne(
+                        kb,
+                        engine,
+                        timeout,
+                        tqFile.getAbsolutePath(),
+                        modusPonens
+                );
+                System.out.println("====================================");
+                System.out.println("InferenceTestSuite.runOne()");
+                System.out.println("file:     " + tqFile.getAbsolutePath());
+                System.out.println("engine:   " + engine);
+                System.out.println("timeout:  " + timeout);
+                System.out.println("mp:       " + modusPonens);
+                System.out.println("result:   " + (r.pass ? "PASS" : "FAIL"));
+                System.out.println("millis:   " + r.millis);
+                System.out.println("expected: " + r.expected);
+                System.out.println("actual:   " + r.actual);
+                System.out.println("proof:");
+                if (r.proofText != null) {
+                    for (String line : r.proofText) {
+                        System.out.println(line);
+                    }
+                }
+                System.out.println("====================================");
+                return;
             }
             else if (argMap.containsKey("all")) {
                 try {

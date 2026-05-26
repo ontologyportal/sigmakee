@@ -144,10 +144,21 @@ public class TPTPGenerationManager {
 
         if (skipBackgroundGeneration.get()) return;
         synchronized (GEN_LOCK) {
-            if ("fof".equals(lang) || "tptp".equals(lang)) {
-                generateFOF(kb);
-            } else if ("tff".equals(lang)) {
-                generateTFF(kb);
+            if ("fof".equalsIgnoreCase(lang) || "tptp".equalsIgnoreCase(lang)) {
+                if (fofGenerating.get()) {
+                    waitForFOF(600);
+                }
+                else if (!fofReady.get()) {
+                    generateFOF(kb);
+                }
+            }
+            else if ("tff".equalsIgnoreCase(lang)) {
+                if (tffGenerating.get()) {
+                    waitForTFF(600);
+                }
+                else if (!tffReady.get()) {
+                    generateTFF(kb);
+                }
             }
         }
     }

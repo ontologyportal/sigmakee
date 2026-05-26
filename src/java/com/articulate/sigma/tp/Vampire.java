@@ -182,12 +182,13 @@ public class Vampire {
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
         this.inferenceFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + "." + this.inferenceFileExtension;
+        //ISSUE HERE
         if (!(new File(this.inferenceFilePath).exists()) || KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(this.inferenceFileExtension)) {
             System.out.println("INFO in KB.loadVampire(): this.inferenceFilePath=" + !(new File(this.inferenceFilePath).exists()));
             System.out.println("INFO in KB.loadVampire(): managerInfFileOld " + KBmanager.getMgr().infFileOld());
-            synchronized (kb.baseGenLock) {
-                TPTPGenerationManager.generateProperFile(kb, this.requestedTptpLanguage);
-            }
+            // synchronized (kb.baseGenLock) {
+            //     TPTPGenerationManager.generateProperFile(kb, this.requestedTptpLanguage);
+            // }
         }
     }
 
@@ -379,18 +380,18 @@ public class Vampire {
             File thfAxioms = new File(kbThfPath);
             if (!thfAxioms.exists()) {
                 System.out.println("Vampire.askVampireHOL(): no such file: " + kbThfPath + ". Waiting for background generation or creating it.");
-                // Wait for background THF generation if in progress, otherwise generate synchronously
-                if (useModals) {
-                    if (!TPTPGenerationManager.waitForTHFModal(600)) {
-                        System.out.println("Vampire.askVampireHOL(): Background generation not ready, generating THF Modal synchronously");
-                        THFnew.transModalTHF(this.kb);
-                    }
-                } else {
-                    if (!TPTPGenerationManager.waitForTHFPlain(600)) {
-                        System.out.println("Vampire.askVampireHOL(): Background generation not ready, generating THF Plain synchronously");
-                        THFnew.transPlainTHF(this.kb);
-                    }
-                }
+                // DOES NOT BELONG HERE
+                // if (useModals) {
+                //     if (!TPTPGenerationManager.waitForTHFModal(600)) {
+                //         System.out.println("Vampire.askVampireHOL(): Background generation not ready, generating THF Modal synchronously");
+                //         THFnew.transModalTHF(this.kb);
+                //     }
+                // } else {
+                //     if (!TPTPGenerationManager.waitForTHFPlain(600)) {
+                //         System.out.println("Vampire.askVampireHOL(): Background generation not ready, generating THF Plain synchronously");
+                //         THFnew.transPlainTHF(this.kb);
+                //     }
+                // }
             }
             // -------- 2. Prepare temp-stmt.thf and temp-comb.thf (mirrors FOF/TFF run() pattern) --------
             String stmtFile = dir + "temp-stmt." + this.inferenceFileExtension;

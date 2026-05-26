@@ -11,12 +11,14 @@ import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.utils.LoggingUtils;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 /**
  * Created by apease on 7/23/18.
@@ -1218,17 +1220,17 @@ public class SUMOtoTFAform {
 
         if (argTypes1 == null || argTypes2 == null ||
             argTypes1.size() != argTypes2.size()) {
-            if ((argTypes1 == null || argTypes2 == null) && pred != null && !pred.startsWith(Formula.EQUAL))
-                System.err.println("Error in SUMOtoTFAform.equalTFFsig(): bad signatures " +
-                    argTypes1 + ", " + argTypes2 + " for " + pred);
+            if ((argTypes1 == null || argTypes2 == null) && pred != null && !pred.startsWith(Formula.EQUAL)) {
+                LoggingUtils.log("ERROR", "Bad signatures " + argTypes1 + ", " + argTypes2 + " for " + pred);
+                LoggingUtils.printStackTrace(10);
+            }
             return false;
         }
         String arg1, arg2;
         for (int i = 0; i < argTypes1.size(); i++) {
             arg1 = SUMOKBtoTFAKB.translateSort(kb,argTypes1.get(i));
             arg2 = SUMOKBtoTFAKB.translateSort(kb,argTypes2.get(i));
-            if (!arg1.equals(arg2))
-                return false;
+            if (!arg1.equals(arg2)) return false;
         }
         return true;
     }
