@@ -250,7 +250,7 @@ public class Formula implements Comparable, Serializable {
      * This constant indicates the maximum predicate arity supported
      * by the current implementation of Sigma.
      */
-    public static final int MAX_PREDICATE_ARITY = 7;
+    public static final int MAX_PREDICATE_ARITY = 10;
 
     /*******************************************************************
      * Getter for the source file of this Formula
