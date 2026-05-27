@@ -107,6 +107,7 @@ jobs:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
           SIGMA_SRC: ${{ github.workspace }}/sigmakee
           ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
+          TPTP_BG_WAIT: "true"
         working-directory: ${{ github.workspace }}
         run: |
           find $SIGMA_HOME/KBs -name '**/*.ser' -delete
