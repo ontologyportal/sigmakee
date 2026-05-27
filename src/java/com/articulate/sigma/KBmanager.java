@@ -851,8 +851,10 @@ public class KBmanager implements Serializable {
             }
             initializing = false;
             initialized = true;
-            LoggingUtils.log("Starting TPTP Background Generation...");
-            TPTPGenerationManager.startBackgroundGeneration();
+            if (!"true".equalsIgnoreCase(System.getenv("SIGMA_SKIP_TPTP_BG"))) {
+                LoggingUtils.log("Starting TPTP Background Generation...");
+                TPTPGenerationManager.startBackgroundGeneration();
+            }
         }
         catch (Exception ex) {
             initializing = false;
