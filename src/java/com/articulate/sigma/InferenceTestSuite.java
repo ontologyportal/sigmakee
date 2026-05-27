@@ -45,6 +45,7 @@ import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.utils.LoggingUtils;
 import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.io.File;
@@ -58,22 +59,29 @@ import java.util.*;
 
 public class InferenceTestSuite {
 
-    /** Total time */
-    public static long totalTime = 0;
-
-    /** Default timeout for queries with unspecified timeouts or override when selected */
-    public static int _DEFAULT_TIMEOUT = 30;
-
-    public static boolean overrideTimeout = false;
-
-    public KB kb = null;
-
     public static boolean debug = false;
 
-    // save TPTP translations of each problem as <probName>.p
+    private KB kb = null;
+
+    private String inferenceTestDir;
+
+    private List<String> inferenceTestPaths = new ArrayList<>(); 
+
+    /** Default timeout for queries with unspecified timeouts or override when selected */
+    public static int DEFAULT_TIMEOUT = 30;
+
+    public static boolean OVERRIDE_TIMEOUT = false;
+
+    /** Save TPTP translations of each problem as <probName>.p */
     public static boolean saveTPTP =  true;
 
     public static Set<String> metaPred = new HashSet(Arrays.asList("note", "time", "query", "answer"));
+
+    public InferenceTestSuite(KB kb) {
+        this.kb = kb;
+        this.inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
+        this.inferenceTestPaths = loadInferenceTestPaths();
+    }
 
     public static class OneResult {
         public boolean pass;
@@ -83,6 +91,24 @@ public class InferenceTestSuite {
         public java.util.List<String> actual;
         public List<String> proofText;
     }
+
+    private List<String> getInferenceTestPaths() {
+
+        return this.inferenceTestPaths;
+    }
+
+    
+    private List<String> loadInferenceTestPaths() {
+        
+        File dir = new File(this.inferenceTestDir);
+        File[] files = dir.listFiles((d, n) -> n.toLowerCase().endsWith(".tq"));
+        Arrays.sort(files, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
+        List<String> inferenceTestPaths = new ArrayList<>();
+        for (int i = 0; i < files.length; i++) inferenceTestPaths.add(files[i].getName());
+        LoggingUtils.log("Loaded " + inferenceTestPaths.size() + " .tq inference test files!");
+        return inferenceTestPaths;
+    }
+
 
     /** ***************************************************************
      * Thin wrapper for the JSP buttons: returns PASS/FAIL + time +
@@ -159,11 +185,11 @@ public class InferenceTestSuite {
         final File tf = new File(tqPath);
         InfTestData itd = readTestFile(tf);
 
-        // Apply timeout policy (mirror test(); if overrideTimeout is true, force default)
-        if (overrideTimeout) {
-            itd.timeout = timeoutSec > 0 ? timeoutSec : _DEFAULT_TIMEOUT;   // was _DEFAULT_TIMEOUT only
+        // Apply timeout policy (mirror test(); if OVERRIDE_TIMEOUT is true, force default)
+        if (OVERRIDE_TIMEOUT) {
+            itd.timeout = timeoutSec > 0 ? timeoutSec : DEFAULT_TIMEOUT;   // was DEFAULT_TIMEOUT only
         } else {
-            itd.timeout = timeoutSec > 0 ? timeoutSec : (itd.timeout > 0 ? itd.timeout : _DEFAULT_TIMEOUT);
+            itd.timeout = timeoutSec > 0 ? timeoutSec : (itd.timeout > 0 ? itd.timeout : DEFAULT_TIMEOUT);
         }
 
         // --- Isolated assertion block (prevents KB pollution) ---
@@ -478,7 +504,7 @@ public class InferenceTestSuite {
      * Convenience method that sets default parameters
     */
     public String test(KB kb) throws IOException  {
-        return test(kb, _DEFAULT_TIMEOUT, "");
+        return test(kb, DEFAULT_TIMEOUT, "");
     }
 
     /** ***************************************************************
@@ -717,7 +743,7 @@ public class InferenceTestSuite {
 
         String language = "EnglishLanguage";
         int maxAnswers;
-        totalTime = 0;
+        double totalTime = 0;
         long duration = 0;
         result = result.append("<h2>Inference tests</h2>\n");
         result = result.append("<table><tr><td>name</td><td>test file</td><td>result</td><td>Time (ms)</td></tr>");
@@ -727,9 +753,8 @@ public class InferenceTestSuite {
         List<File> files = new ArrayList();
         String error = getTestFiles(files,outputDir);
         copyTestFiles(files,outputDir);
-        if (error != null)
-            return error;
-
+        if (error != null) return error;
+        
         List<InfTestData> tests = readTestFiles(files);
         System.out.println("INFO in InferenceTestSuite.test(): number of files: " + files.size());
         int counter = 0;
@@ -768,7 +793,7 @@ public class InferenceTestSuite {
                     start = System.currentTimeMillis();
                     System.out.println("INFO in InferenceTestSuite.test(): Query " + processed + " is posed to " + KBmanager.getMgr().prover);
                     int actualTimeout = itd.timeout;
-                    if (overrideTimeout)
+                    if (OVERRIDE_TIMEOUT)
                         actualTimeout = defaultTimeout;
                     if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
                         com.articulate.sigma.tp.EProver eprover = new  com.articulate.sigma.tp.EProver(kb, "tptp", actualTimeout, maxAnswers);
@@ -871,8 +896,8 @@ public class InferenceTestSuite {
         System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): testpath: " + testpath);
         // read the test file
         InfTestData itd = readTestFile(new File(testpath));
-        if (overrideTimeout)
-            itd.timeout = _DEFAULT_TIMEOUT;
+        if (OVERRIDE_TIMEOUT)
+            itd.timeout = DEFAULT_TIMEOUT;
         compareFiles(itd);
         for (String formula : itd.statements)
              kb.tell(formula);
@@ -1114,6 +1139,7 @@ public class InferenceTestSuite {
         System.out.println("or (file \"path\")");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
+        System.out.println("  -p - print available inference test paths");
         System.out.println("  --test <name> - run named test file in config.xml inferenceTestDir");
         System.out.println("  --inf <mode> - run test files known to pass in the given mode in config.xml inferenceTestDir");
         System.out.println("  --all <mode> - run all test files in the given mode in config.xml inferenceTestDir");
@@ -1122,7 +1148,7 @@ public class InferenceTestSuite {
         System.out.println("     l - run with LEO-III (add letter to options above)");
         System.out.println("     f - run with TF0 language");
         System.out.println("     0 - run with TH0 language");
-        System.out.println("     o - override test timeout with global timeout of " + _DEFAULT_TIMEOUT + " sec");
+        System.out.println("     o - override test timeout with global timeout of " + DEFAULT_TIMEOUT + " sec");
     }
 
      /** ***************************************************************
@@ -1132,21 +1158,21 @@ public class InferenceTestSuite {
 
         System.out.println("INFO in KB.main()");
         Map<String, List<String>> argMap = CLIMapParser.parse(args);
-        if (argMap.isEmpty() || argMap.containsKey("h"))
-            showHelp();
+        if (argMap.isEmpty() || argMap.containsKey("h")) showHelp();
         else {
             KBmanager.getMgr().initializeOnce();
-            InferenceTestSuite its = new InferenceTestSuite();
-            if (argMap.containsKey("l"))
-                SUMOKBtoTPTPKB.setLang("thf");
-            if (argMap.containsKey("f"))
-                SUMOKBtoTPTPKB.setLang("tff");
+            InferenceTestSuite inferenceTestSuite = new InferenceTestSuite(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")));
+            if (argMap.containsKey("l")) SUMOKBtoTPTPKB.setLang("thf");
+            if (argMap.containsKey("f")) SUMOKBtoTPTPKB.setLang("tff");
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             try {
                 resetAllForInference(kb);
             }
             catch (IOException e) {
                 e.printStackTrace();
+            }
+            if (argMap.containsKey("p")) {
+                for (String path : inferenceTestSuite.getInferenceTestPaths()) LoggingUtils.log("  " + path);
             }
             if (argMap.containsKey("e")) {
                 KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
@@ -1167,25 +1193,24 @@ public class InferenceTestSuite {
             if (argMap.containsKey("v"))
                 KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
             if (argMap.containsKey("o"))
-                overrideTimeout = true;
+                OVERRIDE_TIMEOUT = true;
             System.out.println("in InferenceTestSuite.main(): using prover: " + KBmanager.getMgr().prover);
 
             if (argMap.containsKey("test")) {
-                its.cmdLineTest(argMap.get("test").get(0));
+                inferenceTestSuite.cmdLineTest(argMap.get("test").get(0));
             }
             else if (argMap.containsKey("inf")) {
-                its.runPassing();
+                inferenceTestSuite.runPassing();
             }
             else if (argMap.containsKey("all")) {
                 try {
-                    its.test(kb);
+                    inferenceTestSuite.test(kb);
                 }
                 catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-            else
-                showHelp();
+            else showHelp();
         }
     }
 }
