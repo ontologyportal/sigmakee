@@ -2304,7 +2304,8 @@ public class KBcache implements Serializable {
     public void buildCaches() {
 
         clearCaches(); // ensure a clean slate
-        p_buildCaches();
+        buildCaches_singleThread();
+        // p_buildCaches();
     }
 
     /** ***************************************************************
@@ -2386,6 +2387,49 @@ public class KBcache implements Serializable {
         System.out.printf("INFO in KBcache.buildCaches(): size: %d%n", instanceOf.keySet().size());
         System.out.printf("KBcache.buildCaches():                              %d total seconds%n", (System.currentTimeMillis() - startMillis) / KButilities.ONE_K);
         initialized = true;
+    }
+
+    private void buildCaches_singleThread() {
+
+        long startMillis = System.currentTimeMillis();
+        // Pre-warm Formula.stringArgs single-threaded.
+        for (Formula f : kb.formulaMap.values())
+            f.getStringArgument(0);
+        // Former Wave 1
+        buildInsts();
+        LoggingUtils.printProgressBar("INFO", "buildInsts:", 1, 10);
+        buildRelationsSet();
+        buildTransitiveRelationsSet();
+        buildDirectParentTerms();
+        LoggingUtils.printProgressBar("INFO", "relations/transitive/direct parents:", 2, 10);
+        // Former Wave 2
+        buildParents();
+        buildChildren();
+        LoggingUtils.printProgressBar("INFO", "buildParents+buildChildren:", 3, 10);
+        // Former Wave 3
+        collectDomains();
+        buildDirectInstances();
+        LoggingUtils.printProgressBar("INFO", "collectDomains+buildDirectInstances:", 4, 10);
+        // Former Wave 4
+        buildInstTransRels();
+        LoggingUtils.printProgressBar("INFO", "buildInstTransRels:", 5, 10);
+        addTransitiveInstances();
+        LoggingUtils.printProgressBar("INFO", "addTransitiveInstances:", 6, 10);
+        buildTransInstOf();
+        correctValences();
+        buildFunctionsSet();
+        LoggingUtils.printProgressBar("INFO", "transInstOf+valences+functions:", 7, 10);
+        if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
+            buildExplicitDisjointMap();
+            buildDisjointRelationsMap();
+            buildDisjointMap();
+        }
+        storeCacheAsFormulas();
+        LoggingUtils.printProgressBar("INFO", "storeCacheAsFormulas:", 8, 10);
+        buildSymbolTaxonomy();
+        LoggingUtils.printProgressBar("INFO", "buildSymbolTaxonomy:", 9, 10);
+        initialized = true;
+        LoggingUtils.printProgressBar("INFO", "Completed cache:", 10, 10, (System.currentTimeMillis() - startMillis) + " milliseconds");
     }
 
     /** ***************************************************************
