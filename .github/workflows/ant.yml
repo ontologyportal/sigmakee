@@ -97,7 +97,7 @@ jobs:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
           SIGMA_SRC: ${{ github.workspace }}/sigmakee
           ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
-          SIGMA_SKIP_TPTP_BG: "true"
+          TPTP_BG_WAIT: "true"
         working-directory: ./sigmakee
         run: |
           ant test.unit
@@ -121,7 +121,7 @@ jobs:
       - name: Setup KB for integration tests
         env:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
-          SIGMA_SKIP_TPTP_BG: "true"
+          TPTP_BG_WAIT: "true"
         working-directory: ${{ github.workspace }}
         run: >
           sed -i '/<\/configuration>/i\
@@ -137,7 +137,7 @@ jobs:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
           SIGMA_SRC: ${{ github.workspace }}/sigmakee
           ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
-          SIGMA_TPTP_BG: "true"
+          TPTP_BG_WAIT: "true"
         working-directory: ./sigmakee
         run: |
           ant test.integration
