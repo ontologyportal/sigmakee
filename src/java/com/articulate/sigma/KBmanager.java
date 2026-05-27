@@ -853,6 +853,13 @@ public class KBmanager implements Serializable {
             initialized = true;
             LoggingUtils.log("Starting TPTP Background Generation...");
             TPTPGenerationManager.startBackgroundGeneration();
+            if ("true".equalsIgnoreCase(System.getenv("TPTP_BG_WAIT"))) {
+                try {
+                    Thread.sleep(120000); 
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         catch (Exception ex) {
             initializing = false;
