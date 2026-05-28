@@ -15,9 +15,12 @@ package com.articulate.sigma.tp;
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+
+import com.articulate.sigma.utils.LoggingUtils;
 import com.articulate.sigma.tp.ATPQuery.ATPType;
 import com.articulate.sigma.tp.ATPQuery.RunSource;
 import com.articulate.sigma.tp.ATPQuery.TptpLanguage;
+import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.util.ArrayList;
@@ -144,11 +147,28 @@ public class TheoremProverController {
             System.out.println("Available Provers: " + TheoremProverController.availableProvers());
             return;
         }
-        if (argMap.containsKey("v")) {
-            ATPQuery atpQuery = new ATPQuery(
+        ATPQuery atpQuery = new ATPQuery(
+            kb, 
+            null, 
+            "", 
+            null, 
+            "CUSTOM", 
+            "VAMPIRE", 
+            "FOF", 
+            "CASC", 
+            false, 
+            false, 
+            false, 
+            false, 
+            30, 
+            1
+        );
+        if (argMap.containsKey("v") && argMap.get("v").size() == 1) {
+            String queryString = String.join(" ", argMap.get("v"));
+            atpQuery = new ATPQuery(
                 kb, 
                 null, 
-                "(instance ?X Relation)", 
+                queryString, 
                 null, 
                 "CUSTOM", 
                 "VAMPIRE", 
@@ -163,11 +183,12 @@ public class TheoremProverController {
             );
             System.out.println("TheoremProverController.main(): Result=\n" + theoremProverController.ask(atpQuery).toString());
         }
-        if (argMap.containsKey("e")) {
-            ATPQuery atpQuery = new ATPQuery(
+        if (argMap.containsKey("e") && argMap.get("e").size() == 1) {
+            String queryString = String.join(" ", argMap.get("e"));
+            atpQuery = new ATPQuery(
                 kb, 
                 null, 
-                "(instance ?X Relation)", 
+                queryString, 
                 null, 
                 "CUSTOM",
                 "EPROVER", 
@@ -182,5 +203,19 @@ public class TheoremProverController {
             );
             System.out.println("TheoremProverController.main(): Result=\n" + theoremProverController.ask(atpQuery).toString());
         }
+        ATPResult result = theoremProverController.ask(atpQuery);
+        System.out.println("TheoremProverController.main(): Summary=");
+        System.out.println(result.getSummary());
+        System.out.println("\nRaw Vampire output:");
+        for (String line : result.getStdout()) System.out.println(line);
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        tpp.parseProofOutput(result.getStdout(), atpQuery.getQuery(), kb, result.getQList());
+        tpp.processAnswersFromProof(result.getQList(), atpQuery.getQuery());
+        System.out.println("\nBindings:");
+        System.out.println(tpp.bindings);
+        System.out.println("\nBinding map:");
+        System.out.println(tpp.bindingMap);
+        System.out.println("\nProof steps:");
+        System.out.println(tpp.proof == null ? 0 : tpp.proof.size());
     }
 }
