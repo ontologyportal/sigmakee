@@ -84,6 +84,14 @@ public class InferenceTestSuite {
         public List<String> proofText;
     }
 
+    public InferenceTestSuite(KB kb) {
+
+    }    
+    
+    public InferenceTestSuite() {
+
+    }
+
     /** ***************************************************************
      * Thin wrapper for the JSP buttons: returns PASS/FAIL + time +
      * a tiny HTML summary.
@@ -1189,5 +1197,4 @@ public class InferenceTestSuite {
         }
     }
 }
-
 
