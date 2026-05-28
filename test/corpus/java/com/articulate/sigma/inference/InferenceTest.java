@@ -106,7 +106,7 @@ public class InferenceTest {
     public void test() {
 
         System.out.println("InferenceTest.test(): " + fInput);
-        InferenceTestSuite its = new InferenceTestSuite();
+        InferenceTestSuite its = new InferenceTestSuite(kb);
         InferenceTestSuite.InfTestData itd = its.inferenceUnitTest(fInput,kb);
         System.out.println("expected: " + itd.expectedAnswers);
         System.out.println("actual: " + itd.actualAnswers);
