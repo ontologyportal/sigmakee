@@ -21,6 +21,7 @@ import com.articulate.sigma.tp.ATPQuery.ATPType;
 import com.articulate.sigma.tp.ATPQuery.RunSource;
 import com.articulate.sigma.tp.ATPQuery.TptpLanguage;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
+import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.util.ArrayList;
@@ -38,7 +39,8 @@ public class TheoremProverController {
      * @param query ATPQuery object used to determine which prover to ask with associated options.
      */
     public ATPResult ask (ATPQuery query) {
-
+        
+        TPTPGenerationManager.waitForAllTPTP(600);
         switch (query.getProverType()) {
             case EPROVER:
                 return this.askEProver(query);

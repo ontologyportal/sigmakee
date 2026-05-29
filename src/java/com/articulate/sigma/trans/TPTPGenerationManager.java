@@ -19,6 +19,7 @@ import com.articulate.sigma.utils.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -60,7 +61,6 @@ public class TPTPGenerationManager {
     public static void setSkipBackgroundGeneration(boolean skip) {
         skipBackgroundGeneration.set(skip);
     }
-
 
     /*********************************************************************************
      * Start background generation of all TPTP formats for all KBs.
@@ -371,6 +371,15 @@ public class TPTPGenerationManager {
             thfPlainGenerating.set(false);
             thfPlainLatch.countDown();
         }
+    }
+
+    /*********************************************************************************
+     * Wait for all TPTP generation to complete.
+     * @param timeoutSec Maximum time to wait in seconds
+     * @return true if generation completed successfully, false if timed out
+     */
+    public static boolean waitForAllTPTP(int timeoutSec) {
+        return waitForFOF(timeoutSec) && waitForTFF(timeoutSec) && waitForTHFModal(timeoutSec) && waitForTHFPlain(timeoutSec);
     }
 
     /*********************************************************************************
