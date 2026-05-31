@@ -2710,7 +2710,7 @@ public class KB implements Serializable {
             deleteFileIfExists(new File(kbDirectory, this.name + _userAssertionsString));
             deleteUserAssertionsForInference();
             deleteStaleProverTempFiles();
-            deleteGeneratedBaseInferenceFiles();
+            //deleteGeneratedBaseInferenceFiles();
         }
     }
 

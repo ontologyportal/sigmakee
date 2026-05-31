@@ -40,6 +40,8 @@ import java.nio.file.Paths;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.io.IOException;
+import java.util.stream.Stream;
 
 /** This is a class that manages a group of knowledge bases.  It should only
  *  have one instance, contained in its own static member variable.
@@ -228,30 +230,11 @@ public class KBmanager implements Serializable {
     }
 
     /*****************************************************************
-     * Check whether config file or any .kif constituent is newer than its
-     * corresponding TPTP/TFF/THF file.
-     * @param lang inference file extension, such as tptp, tff, or thf
-     * @return true if the inference file is older than config/constituents
-     */
-    public boolean infFileOld(String lang) {
-
-        String kbDir = KButilities.SIGMA_HOME + File.separator + "KBs";
-        for (String kbname : kbs.keySet()) {
-            KB kb = getKB(kbname);
-            File infFile = new File(kbDir + File.separator + kbname + "." + lang);
-            Date infFileDate = new Date(infFile.lastModified());
-            Date newestSourceDate = newestConfigOrConstituentDate();
-            if (infFileDate.compareTo(newestSourceDate) < 0) return true;
-        }
-        return false;
-    }
-
-    /*****************************************************************
      * Return the newest modified date among config.xml and constituent files.
      * @param constituentFiles KB constituent file paths
      * @return newest modified date among config.xml and constituents
      */
-    private static Date newestConfigOrConstituentDate() {
+    public static Date newestConfigOrConstituentDate() {
         
         String base = KButilities.SIGMA_HOME;
         return newestConfigOrConstituentDate(base + File.separator + "KBs");
@@ -288,6 +271,57 @@ public class KBmanager implements Serializable {
         return new Date(newest);
     }
 
+    public static Date newestBaseConfigOrConstituentDateIgnoringUserAssertions() {
+
+        String kbDir = KButilities.SIGMA_HOME + File.separator + "KBs";
+        SimpleElement configuration = KBmanager.getMgr().readConfiguration(kbDir);
+
+        List<String> allConstituents = new ArrayList<>();
+
+        for (List<String> kbFiles : kbFilenamesFromXML(configuration)) {
+            allConstituents.addAll(kbFiles);
+        }
+
+        File configFile = new File(kbDir + File.separator + "config.xml");
+        long newest = configFile.lastModified();
+        String newestPath = configFile.getAbsolutePath();
+
+        for (String constituent : allConstituents) {
+
+            if (isUserAssertionOrTempInferenceFile(constituent)) {
+                System.out.println("Skipping dynamic inference file: " + constituent);
+                continue;
+            }
+
+            File constituentFile = new File(constituent);
+            long modified = constituentFile.lastModified();
+
+            if (modified > newest) {
+                newest = modified;
+                newestPath = constituentFile.getAbsolutePath();
+            }
+        }
+
+        System.out.println("Newest base source for TPTP freshness: " + newestPath);
+        System.out.println("Newest base source modified: " + new Date(newest));
+
+        return new Date(newest);
+    }
+
+    private static boolean isUserAssertionOrTempInferenceFile(String path) {
+
+        if (StringUtil.emptyString(path)) {
+            return false;
+        }
+        String name = new File(path).getName();
+        return name.endsWith(KB._userAssertionsString) ||
+            name.endsWith(KB._userAssertionsTPTP) ||
+            name.endsWith(KB._userAssertionsTFF) ||
+            name.endsWith(KB._userAssertionsTHF) ||
+            name.startsWith("temp-stmt.") ||
+            name.startsWith("temp-comb.");
+    }
+
     /*****************************************************************
      * Check whether config.xml or any base constituent is newer than the
      * corresponding TPTP/TFF/THF file, ignoring dynamic user assertions.
@@ -296,28 +330,25 @@ public class KBmanager implements Serializable {
      */
     public boolean infBaseFileOldIgnoringUserAssertions(String lang) {
 
-        String kbDir = KButilities.SIGMA_HOME + File.separator + "KBs";
+        String kbDir = getPref("kbDir");
+
         for (String kbname : kbs.keySet()) {
-            KB kb = getKB(kbname);
+
             File base = new File(kbDir + File.separator + kbname + "." + lang);
+
+            if (!base.exists()) {
+                return true;
+            }
+
             long baseTimeStamp = base.lastModified();
-            if (baseTimeStamp == 0L) return true;
-            String userAssertionsKifName = kbname + "_UserAssertions.kif";
-            Date newestSourceDate = newestConfigOrConstituentDate();
-            if (baseTimeStamp < newestSourceDate.getTime()) return true;
+            Date newestSourceDate = newestBaseConfigOrConstituentDateIgnoringUserAssertions();
+
+            if (baseTimeStamp < newestSourceDate.getTime()) {
+                return true;
+            }
         }
+
         return false;
-    }
-
-    /*****************************************************************
-     * Check whether config.xml/Constituents are newer than its TPTP/TFF/THF file
-     * @return true if tptp file is older and config/constituents
-     */
-    public boolean infFileOld() {
-
-        String lang = "tff";
-        if (SUMOKBtoTPTPKB.getLang().equals("fof")) lang = "tptp";
-        return infFileOld(lang);
     }
 
     /*****************************************************************
@@ -735,7 +766,7 @@ public class KBmanager implements Serializable {
     public static void copyFile(File in, File out) {
 
         try (InputStream fis = new FileInputStream(in);
-             OutputStream fos = new FileOutputStream(out)
+            OutputStream fos = new FileOutputStream(out)
         ){
             byte[] buf = new byte[1024];
             int i;
@@ -871,8 +902,37 @@ public class KBmanager implements Serializable {
         double elapsedSeconds = (System.nanoTime() - start) / 1_000_000_000.0;
         LoggingUtils.log("Initialization completed in " + elapsedSeconds + " seconds!");
     }
-
     
+    /*****************************************************************
+     * Check whether config.xml/Constituents are newer than its TPTP/TFF/THF file
+     * @return true if tptp file is older and config/constituents
+     */
+    public boolean infFileOld() {
+
+        String lang = "tff";
+        if (SUMOKBtoTPTPKB.getLang().equals("fof")) lang = "tptp";
+        return infFileOld(lang);
+    }
+
+    /*****************************************************************
+     * Check whether config file or any .kif constituent is newer than its
+     * corresponding TPTP/TFF/THF file.
+     * @param lang inference file extension, such as tptp, tff, or thf
+     * @return true if the inference file is older than config/constituents
+     */
+    public boolean infFileOld(String lang) {
+
+        String kbDir = KButilities.SIGMA_HOME + File.separator + "KBs";
+        for (String kbname : kbs.keySet()) {
+            KB kb = getKB(kbname);
+            File infFile = new File(kbDir + File.separator + kbname + "." + lang);
+            Date infFileDate = new Date(infFile.lastModified());
+            Date newestSourceDate = newestConfigOrConstituentDate();
+            if (infFileDate.compareTo(newestSourceDate) < 0) return true;
+        }
+        return false;
+    }
+
     /*****************************************************************
      * Initialize Wordnet, NLGUtils, OMWordnet, Verbnet
      * @param configFileDir 

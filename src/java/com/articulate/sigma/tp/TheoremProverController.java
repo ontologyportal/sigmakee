@@ -39,7 +39,7 @@ public class TheoremProverController {
      * @param query ATPQuery object used to determine which prover to ask with associated options.
      */
     public ATPResult ask (ATPQuery query) {
-        
+        LoggingUtils.log("Querying " + query.getProverType());
         TPTPGenerationManager.waitForAllTPTP(600);
         switch (query.getProverType()) {
             case EPROVER:
@@ -117,6 +117,28 @@ public class TheoremProverController {
         LEO leo = new LEO(query.getKb(), query.getLanguage().name(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
         leo.askLeo(query.getQuery());
         return leo.getResult();
+    }
+
+
+    public ATPResult runTestFile(KB kb, String testFilePath, String proverType, String language, String vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout) {
+
+        ATPQuery atpQuery = new ATPQuery(
+            kb,
+            null,
+            null,
+            testFilePath,
+            "TEST_FILE",
+            proverType,
+            language,
+            vampireMode,
+            closedWorldAssumption,
+            modusPonens, 
+            dropOnePremise,
+            holUseModals,
+            timeout, 
+            1
+        );
+        return ask(atpQuery);
     }
 
     /********************************************************************
