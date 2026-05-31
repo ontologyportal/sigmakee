@@ -21,7 +21,7 @@ import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.trans.SessionTPTPManager;
 import com.articulate.sigma.trans.THFnew;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
-import com.articulate.sigma.trans.TPTPGenerationManager;
+// import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.trans.TPTPutil;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
@@ -372,17 +372,17 @@ public class Vampire {
             if (!thfAxioms.exists()) {
                 System.out.println("Vampire.askVampireHOL(): no such file: " + kbThfPath + ". Waiting for background generation or creating it.");
                 // Wait for background THF generation if in progress, otherwise generate synchronously
-                if (useModals) {
-                    if (!TPTPGenerationManager.waitForTHFModal(600)) {
-                        System.out.println("Vampire.askVampireHOL(): Background generation not ready, generating THF Modal synchronously");
-                        THFnew.transModalTHF(this.kb);
-                    }
-                } else {
-                    if (!TPTPGenerationManager.waitForTHFPlain(600)) {
-                        System.out.println("Vampire.askVampireHOL(): Background generation not ready, generating THF Plain synchronously");
-                        THFnew.transPlainTHF(this.kb);
-                    }
-                }
+                // if (useModals) {
+                //     if (!TPTPGenerationManager.waitForTHFModal(600)) {
+                //         System.out.println("Vampire.askVampireHOL(): Background generation not ready, generating THF Modal synchronously");
+                //         THFnew.transModalTHF(this.kb);
+                //     }
+                // } else {
+                //     if (!TPTPGenerationManager.waitForTHFPlain(600)) {
+                //         System.out.println("Vampire.askVampireHOL(): Background generation not ready, generating THF Plain synchronously");
+                //         THFnew.transPlainTHF(this.kb);
+                //     }
+                // }
             }
             // -------- 2. Prepare temp-stmt.thf and temp-comb.thf (mirrors FOF/TFF run() pattern) --------
             String stmtFile = dir + "temp-stmt." + this.inferenceFileExtension;
