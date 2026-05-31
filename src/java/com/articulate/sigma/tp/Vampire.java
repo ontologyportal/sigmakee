@@ -169,11 +169,10 @@ public class Vampire {
             this.requestedTptpLanguage = "thf";
             this.inferenceFileExtension = "thf";
             this.executablePath = this.executablePath.replace(
-            File.separator + "build" + File.separator,
-            File.separator + "build_hol" + File.separator
-        );
+                File.separator + "build" + File.separator,
+                File.separator + "build_hol" + File.separator
+            );
         }
-        System.out.println("VAMPIRE LANGUAGE: " + this.requestedTptpLanguage);
         this.modensPonens = modensPonens;
         if (mode.equalsIgnoreCase(ModeType.AVATAR.name())) this.mode = ModeType.AVATAR;
         if (mode.equalsIgnoreCase(ModeType.CASC.name())) this.mode = ModeType.CASC;
@@ -182,13 +181,6 @@ public class Vampire {
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
         this.inferenceFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + "." + this.inferenceFileExtension;
-        if (!(new File(this.inferenceFilePath).exists()) || KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(this.inferenceFileExtension)) {
-            System.out.println("INFO in KB.loadVampire(): this.inferenceFilePath=" + !(new File(this.inferenceFilePath).exists()));
-            System.out.println("INFO in KB.loadVampire(): managerInfFileOld " + KBmanager.getMgr().infFileOld());
-            synchronized (kb.baseGenLock) {
-                TPTPGenerationManager.generateProperFile(kb, this.requestedTptpLanguage);
-            }
-        }
     }
 
     /***************************************************************

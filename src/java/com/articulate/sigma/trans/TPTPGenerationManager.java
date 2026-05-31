@@ -132,14 +132,26 @@ public class TPTPGenerationManager {
      * @return true if the inference file is older than config/constituents
      */
     public static boolean isInferenceFileOld(String inferenceFilePath) {
-        
+
         File inferenceFile = new File(inferenceFilePath);
-        Date infFileDate = new Date(inferenceFile.lastModified());
-        Date newestSourceDate = KBmanager.getMgr().newestConfigOrConstituentDate();
-        if (!inferenceFile.exists() || infFileDate.compareTo(newestSourceDate) < 0) {
-            LoggingUtils.log(inferenceFilePath + " is old! Needs regeneration...");
-            return true;    
+
+        if (!inferenceFile.exists()) {
+            LoggingUtils.log(inferenceFilePath + " is missing! Needs regeneration...");
+            return true;
         }
+
+        Date infFileDate = new Date(inferenceFile.lastModified());
+        Date newestSourceDate = KBmanager.newestBaseConfigOrConstituentDateIgnoringUserAssertions();
+
+        System.out.println("Inference file: " + inferenceFilePath);
+        System.out.println("Inference file modified: " + infFileDate);
+        System.out.println("Newest base source modified: " + newestSourceDate);
+
+        if (infFileDate.compareTo(newestSourceDate) < 0) {
+            LoggingUtils.log(inferenceFilePath + " is old! Needs regeneration...");
+            return true;
+        }
+
         return false;
     }
 
@@ -214,16 +226,17 @@ public class TPTPGenerationManager {
     public static void generateFOF(KB kb) {
 
         if (!fofGenerating.compareAndSet(false, true)) return;
-        if (!isInferenceFileOld(baseKbDir + ".tptp")) {
-            new Thread(() -> rebuildAxiomKey(kb), "axiomKey-rebuild-" + kb.name).start();
-            LoggingUtils.log(baseKbDir + ".tptp" + " is current! Rebuilding axiom key.");
-            return;
-        }
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String infFilename = kbDir + File.separator + kb.name + ".tptp";
         Path target = java.nio.file.Paths.get(infFilename);
         Path tmp    = java.nio.file.Paths.get(infFilename + ".tmp");
         try {
+            if (!isInferenceFileOld(baseKbDir + ".tptp")) {
+                new Thread(() -> rebuildAxiomKey(kb), "axiomKey-rebuild-" + kb.name).start();
+                LoggingUtils.log(baseKbDir + ".tptp is current! Rebuilding axiom key.");
+                fofReady.set(true);
+                return;
+            }
             long startTime = System.currentTimeMillis();
             try { java.nio.file.Files.deleteIfExists(tmp); } catch (Exception ignore) {}
             SUMOKBtoTPTPKB.setLang("fof");
@@ -265,15 +278,16 @@ public class TPTPGenerationManager {
     private static void generateTFF(KB kb) {
 
         if (!tffGenerating.compareAndSet(false, true))  return;
-        if(isInferenceFileOld(baseKbDir + ".tff")) {
-            LoggingUtils.log(baseKbDir + ".tff" + " is current!");
-            return;
-        }
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String infFilename = kbDir + File.separator + kb.name + ".tff";
         Path target = Paths.get(infFilename);
         Path tmp    = Paths.get(infFilename + ".tmp");
         try {
+            if (!isInferenceFileOld(baseKbDir + ".tff")) {
+                LoggingUtils.log(baseKbDir + ".tff is current!");
+                tffReady.set(true);
+                return;
+            }
             SUMOKBtoTPTPKB.resetPathCounters();
             long startTime = System.currentTimeMillis();
             try { Files.deleteIfExists(tmp); } catch (Exception ignore) {}
@@ -333,6 +347,7 @@ public class TPTPGenerationManager {
         }
         if(isInferenceFileOld(baseKbDir + "_modal.thf")) {
             LoggingUtils.log(baseKbDir + "_modal.thf" + " is current!");
+            thfModalReady.set(true);
             return;
         }
         try {
@@ -371,6 +386,7 @@ public class TPTPGenerationManager {
         }
         if(isInferenceFileOld(baseKbDir + "_plain.thf")) {
             LoggingUtils.log(baseKbDir + "_plain.thf" + " is current!");
+            thfPlainReady.set(true);
             return;
         }
         String thfFilename = baseKbDir + "_plain.thf";
@@ -666,33 +682,31 @@ public class TPTPGenerationManager {
         return GEN_LOCK;
     }
 
-    /*****************************************************************
-     */
-    public static void printHelp() {
+    // /*****************************************************************
+    //  */
+    // public static void printHelp() {
 
-        System.out.println("TPTPGenerationManager class");
-        System.out.println("  options:");
-        System.out.println("  -h - show this help screen");
-        System.out.println("  -p - demo Python interface");
-        System.out.println("  with no arguments show this help screen and execute a test");
-    }
+    //     System.out.println("TPTPGenerationManager class");
+    //     System.out.println("  options:");
+    //     System.out.println("  -h - show this help screen");
+    // }
 
-    /********************************************************************
-     * Main method for this class used to test the different theorem provers and their options.
-     */
-    public static void main(String[] args) {
+    // /********************************************************************
+    //  * Main method for this class used to test the different theorem provers and their options.
+    //  */
+    // public static void main(String[] args) {
 
-        Map<String, List<String>> argMap = CLIMapParser.parse(args);
-        System.out.printf("TheoremProverController.main(%s)%n", argMap);
-        if (argMap.isEmpty() || argMap.containsKey("h") || argMap.containsKey("help")) {
-            showHelp();
-            return;
-        }
-        KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        if (argMap.containsKey("a") || argMap.containsKey("available")) {
-            System.out.println("Available Provers: " + TheoremProverController.availableProvers());
-            return;
-        }
-    }
+    //     Map<String, List<String>> argMap = CLIMapParser.parse(args);
+    //     System.out.printf("TheoremProverController.main(%s)%n", argMap);
+    //     if (argMap.isEmpty() || argMap.containsKey("h") || argMap.containsKey("help")) {
+    //         showHelp();
+    //         return;
+    //     }
+    //     KBmanager.getMgr().initializeOnce();
+    //     KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+    //     if (argMap.containsKey("a") || argMap.containsKey("available")) {
+    //         System.out.println("Available Provers: " + TheoremProverController.availableProvers());
+    //         return;
+    //     }
+    // }
 }
