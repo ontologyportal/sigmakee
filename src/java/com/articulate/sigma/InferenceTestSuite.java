@@ -91,6 +91,26 @@ public class InferenceTestSuite {
         public List<String> proofText;
     }
 
+    /** ***************************************************************
+     */
+    public class InfTestData {
+
+        public String filename = "";
+        public String note = "";
+        public String query = "";
+        public Set<String> kbFiles = new HashSet<>();
+        public List<String> expectedAnswers = new ArrayList<>();
+        public List<String> actualAnswers = new ArrayList<>();
+        public int timeout = 30;
+        public List<String> files = new ArrayList<>();
+        public List<String> statements = new ArrayList<>();
+        public boolean inconsistent = false;
+        public boolean success = false;
+        public float execTime = 0;
+        public String SZSstatus = "";
+        public List<String> proof = new ArrayList<>();
+    }
+
     public InferenceTestSuite(KB kb) {
         this.kb = kb;
         this.inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
@@ -113,25 +133,6 @@ public class InferenceTestSuite {
 
         File testFile = new File(testFilePath);
         InfTestData itd = readTestFile(testFile);
-        // if (!testFile.isAbsolute()) testFile = new File(this.inferenceTestDir, testFilePath);
-        // if (!testFile.exists()) {
-        //     LoggingUtils.log("ERROR", "Test File DNE: " + testFile.getAbsolutePath());
-        //     InfTestData failed = new InfTestData();
-        //     failed.filename = testFile.getName();
-        //     failed.success = false;
-        //     failed.SZSstatus = "FileNotFound";
-        //     failed.proof.add("Test file does not exist: " + testFile.getAbsolutePath());
-        //     return failed;
-        // }
-        // InfTestData itd = readTestFile(testFile);
-        // if (itd == null) {
-        //     InfTestData failed = new InfTestData();
-        //     failed.filename = testFile.getName();
-        //     failed.success = false;
-        //     failed.SZSstatus = "ParseError";
-        //     failed.proof.add("Could not read test file: " + testFile.getAbsolutePath());
-        //     return failed;
-        // }
         if (OVERRIDE_TIMEOUT) {
             itd.timeout = timeout > 0 ? timeout : DEFAULT_TIMEOUT;
         }
@@ -194,26 +195,6 @@ public class InferenceTestSuite {
                 System.err.println("Warning: could not reset KB after test: " + e.getMessage());
             }
         }
-    }
-
-    /** ***************************************************************
-     */
-    public class InfTestData {
-
-        public String filename = "";
-        public String note = "";
-        public String query = "";
-        public Set<String> kbFiles = new HashSet<>();
-        public List<String> expectedAnswers = new ArrayList<>();
-        public List<String> actualAnswers = new ArrayList<>();
-        public int timeout = 30;
-        public List<String> files = new ArrayList<>();
-        public List<String> statements = new ArrayList<>();
-        public boolean inconsistent = false;
-        public boolean success = false;
-        public float execTime = 0;
-        public String SZSstatus = "";
-        public List<String> proof = new ArrayList<>();
     }
 
     /** ***************************************************************
@@ -444,12 +425,10 @@ public class InferenceTestSuite {
         String inferenceTestDirPath = KBmanager.getMgr().getPref("inferenceTestDir");
         if ((inferenceTestDirPath == null) || inferenceTestDirPath.equals(""))
             return("Error in InferenceTestSuite.getTestFiles(): The Sigma preference \"inferenceTestDir\" has not been set");
-
         File inferenceTestDir = new File(inferenceTestDirPath);
         if (!inferenceTestDir.isDirectory() && !inferenceTestDir.mkdir())
             return("Error in InferenceTestSuite.getTestFiles(): Could not find or create " +
                     inferenceTestDir.getCanonicalPath());
-
         if (!outputDir.isDirectory() && !outputDir.mkdirs()) {
             File baseDir = new File(KBmanager.getMgr().getPref("baseDir"));
             if (baseDir.isDirectory()) {

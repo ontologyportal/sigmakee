@@ -324,8 +324,7 @@ public class Vampire {
                 "-fde","none","-updr","off","-rp","off","-bce","off"
         ));
         if (this.askQuestion){
-            this.commands.add("-qa");
-            // this.commands.add("plain");
+            this.commands.add("-qa plain");
         }
         try{
             this.runCustom(kbFile);
@@ -516,8 +515,7 @@ public class Vampire {
         }
 
         if (this.askQuestion){
-            this.commands.add("-qa");
-            this.commands.add("plain");
+            this.commands.add("-qa plain");
         }
 
         this.logic = Vampire.Logic.HOL;
