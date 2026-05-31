@@ -517,7 +517,7 @@
                         new com.articulate.sigma.trans.TPTP3ProofProcessor();
                 if (ext.endsWith(".tq")) {
                     // ===== tq tests =====
-                    InferenceTestSuite its = new InferenceTestSuite();
+                    InferenceTestSuite its = new InferenceTestSuite(kb);
                     InferenceTestSuite.InfTestData itd = its.readTestFile(new File(testPath));
                     if (itd == null) {
                         out.println("<font color='red'>Could not read test file.</font>");
