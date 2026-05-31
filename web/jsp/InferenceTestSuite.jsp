@@ -35,7 +35,7 @@
             else /* both */ modeAll = "mp".equalsIgnoreCase(phase)  ? "mp" : "normal";
             // ---- RUN ONE (same as your single-test block) ----
             try {
-                InferenceTestSuite its = new InferenceTestSuite();
+                InferenceTestSuite its = new InferenceTestSuite(kb);
                 String tqPath = inferenceTestDir + File.separator + tqName;
                 boolean modusPonens = "mp".equalsIgnoreCase(modeAll);
                 // Test RUN
@@ -102,7 +102,7 @@
         String detailsHtml = null;
 
         try {
-            InferenceTestSuite its = new InferenceTestSuite();
+            InferenceTestSuite its = new InferenceTestSuite(kb);
             // ---- call your single-test method (add this to InferenceTestSuite) ----
             InferenceTestSuite.OneResult r = its.runOne(kb, engine, timeout, tqPath, modusPonens);
 

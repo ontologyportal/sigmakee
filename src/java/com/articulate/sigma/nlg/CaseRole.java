@@ -1,8 +1,8 @@
 package com.articulate.sigma.nlg;
 
-import com.articulate.sigma.KB;
-
 import java.util.Collection;
+
+import com.articulate.sigma.KB;
 
 /**
  * Identifies specific Sumo CaseRole objects. Not all Sumo CaseRoles are listed here--only those whose behavior
