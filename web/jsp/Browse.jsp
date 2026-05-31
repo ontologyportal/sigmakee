@@ -28,6 +28,7 @@
 <html>
    <head><title><%=term%> - Sigma Knowledge base Browser</title></head>
    <body bgcolor="#FFFFFF">
+      <%@ include file="fragments/universal/CommonHeader.jspf"%>
       <%@ include file="fragments/browse/BrowseBody.jspf"%>
       <%@ include file="fragments/browse/BrowseHeader.jspf" %>
       <br>
