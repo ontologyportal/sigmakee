@@ -72,7 +72,7 @@ public class InferenceTestSuite {
     /** Save TPTP translations of each problem as <probName>.p */
     public static boolean saveTPTP =  true;
 
-    public static Set<String> metaPred = new HashSet(Arrays.asList("note", "time", "query", "answer"));
+    public static Set<String> metaPred = new HashSet(Arrays.asList("note", "time", "query", "answer", "file", "regen"));
 
     private KB kb = null;
 
@@ -81,6 +81,8 @@ public class InferenceTestSuite {
     private TheoremProverController theoremProverController = new TheoremProverController();
 
     private List<String> inferenceTestPaths = new ArrayList<>(); 
+
+    public static boolean KEEP_FAILED_SESSION_DIRS = Boolean.parseBoolean(System.getProperty("sigma.keepFailedSessions", "false"));
 
     public static class OneResult {
         public boolean pass;
@@ -104,6 +106,7 @@ public class InferenceTestSuite {
         public int timeout = 30;
         public List<String> files = new ArrayList<>();
         public List<String> statements = new ArrayList<>();
+        public boolean regen = false;
         public boolean inconsistent = false;
         public boolean success = false;
         public float execTime = 0;
@@ -129,70 +132,141 @@ public class InferenceTestSuite {
         return inferenceTestPaths;
     }
 
-    private InfTestData runTest(String testFilePath, String proverType, String language, String vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout) {
+    private InfTestData runTest(String testFilePath, String proverType, String language, String vampireMode,
+                                boolean closedWorldAssumption, boolean modusPonens,
+                                boolean dropOnePremise, boolean holUseModals, int timeout) {
+
+        System.out.println("===============================================================================================================================================");
+        LoggingUtils.log("Running " + testFilePath + " with " + proverType + " in " + language + " modusPonens=" + modusPonens);
 
         File testFile = new File(testFilePath);
         InfTestData itd = readTestFile(testFile);
+        LoggingUtils.log("TQ regen=" + itd.regen + " for " + testFilePath);
         if (OVERRIDE_TIMEOUT) {
             itd.timeout = timeout > 0 ? timeout : DEFAULT_TIMEOUT;
         }
         else {
             itd.timeout = itd.timeout > 0 ? itd.timeout : (timeout > 0 ? timeout : DEFAULT_TIMEOUT);
         }
+
         compareFiles(itd);
+
+        String sessionId = "tq-" + UUID.randomUUID();
+
+        // Keep the session directory unless we prove the test completed successfully.
+        boolean cleanupSessionDir = false;
+
         try {
-            for (String statement : itd.statements) if (!StringUtil.emptyString(statement)) this.kb.tell(statement);
+            if (itd.regen) {
+                SessionTPTPManager.beginBatchTells(sessionId);
+            }
+            try {
+                for (String statement : itd.statements) {
+                    if (!StringUtil.emptyString(statement)) {
+                        this.kb.tell(statement, sessionId);
+                    }
+                }
+            }
+            finally {
+                if (itd.regen) {
+                    SessionTPTPManager.endBatchTells(sessionId);
+                }
+            }
+            if (itd.regen) {
+                String fileLang = sessionFileLang(language);
+                LoggingUtils.log("Full session TPTP regeneration requested by "
+                        + testFilePath + " for session " + sessionId);
+                SessionTPTPManager.generateSessionTPTP(sessionId, this.kb, fileLang);
+            }
+
             ATPQuery atpQuery = new ATPQuery(
-                this.kb,
-                null,                 
-                itd.query,            
-                null,                 
-                "CUSTOM",             
-                proverType,
-                language,
-                vampireMode,
-                closedWorldAssumption,
-                modusPonens,
-                dropOnePremise,
-                holUseModals,
-                itd.timeout,
-                itd.expectedAnswers.size()
+                    this.kb,
+                    sessionId,
+                    itd.query,
+                    null,
+                    "CUSTOM",
+                    proverType,
+                    language,
+                    vampireMode,
+                    closedWorldAssumption,
+                    modusPonens,
+                    dropOnePremise,
+                    holUseModals,
+                    itd.timeout,
+                    itd.expectedAnswers.size()
             );
+
             ATPResult atpResult = this.theoremProverController.ask(atpQuery);
             itd.execTime = atpResult.getElapsedTimeMs();
-            if (atpResult.getSzsStatus() != null) itd.SZSstatus = atpResult.getSzsStatus().getTptpName();
-            else if (atpResult.getSzsStatusRaw() != null) itd.SZSstatus = atpResult.getSzsStatusRaw();
-            else itd.SZSstatus = "Unknown";
+
+            if (atpResult.getSzsStatus() != null)
+                itd.SZSstatus = atpResult.getSzsStatus().getTptpName();
+            else if (atpResult.getSzsStatusRaw() != null)
+                itd.SZSstatus = atpResult.getSzsStatusRaw();
+            else
+                itd.SZSstatus = "Unknown";
+
             itd.proof = new ArrayList<>();
-            if (atpResult.getStdout() != null) itd.proof.addAll(atpResult.getStdout());
+
+            if (atpResult.getStdout() != null)
+                itd.proof.addAll(atpResult.getStdout());
+
             if (atpResult.getStderr() != null && !atpResult.getStderr().isEmpty()) {
                 itd.proof.add("---- STDERR ----");
                 itd.proof.addAll(atpResult.getStderr());
             }
+
             if (atpResult.getPrimaryError() != null && !atpResult.getPrimaryError().isEmpty()) {
                 itd.proof.add("---- PRIMARY ERROR ----");
                 itd.proof.add(atpResult.getPrimaryError());
             }
+
             TPTP3ProofProcessor tpp = atpResult.getParsedProofProcessor(this.kb, itd.query);
-            if (tpp.status != null) itd.SZSstatus = tpp.status;
+
+            if (tpp.status != null)
+                itd.SZSstatus = tpp.status;
+
             itd.actualAnswers = new ArrayList<>();
-            if (tpp.bindings != null) itd.actualAnswers.addAll(tpp.bindings);
-            if (tpp.status != null && tpp.status.startsWith("Theorem") && itd.actualAnswers.isEmpty()) itd.actualAnswers.add("yes");
+
+            if (tpp.bindings != null)
+                itd.actualAnswers.addAll(tpp.bindings);
+
+            if (tpp.status != null && tpp.status.startsWith("Theorem") && itd.actualAnswers.isEmpty())
+                itd.actualAnswers.add("yes");
+
             if (tpp.inconsistency) {
                 itd.inconsistent = true;
                 itd.actualAnswers = new ArrayList<>();
             }
+
             boolean different = true;
-            if (tpp.proof != null && (tpp.status == null || !tpp.status.startsWith("Timeout"))) different = !sameAnswers(tpp, itd.expectedAnswers);
+            if (tpp.proof != null && (tpp.status == null || !tpp.status.startsWith("Timeout")))
+                different = !sameAnswers(tpp, itd.expectedAnswers);
+
             itd.success = !(different || tpp.noConjecture);
+
+            // Only delete the session directory if the test truly passed.
+            cleanupSessionDir = itd.success && !itd.inconsistent;
+
             return itd;
         }
         finally {
             try {
-                resetAllForInference(this.kb);
+                resetAllForInference(this.kb, sessionId);
+
+                if (cleanupSessionDir) {
+                    SessionTPTPManager.cleanupSession(sessionId);
+                }
+                else {
+                    System.err.println("Preserving failed session directory for debugging:");
+                    System.err.println("  sessionId: " + sessionId);
+                    System.err.println("  dir: " + SessionTPTPManager.getSessionDir(sessionId));
+                    System.err.println("  temp-comb: " + SessionTPTPManager.getSessionDir(sessionId).resolve("temp-comb.tptp"));
+                }
             }
             catch (Exception e) {
                 System.err.println("Warning: could not reset KB after test: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }
@@ -204,43 +278,60 @@ public class InferenceTestSuite {
     public OneResult runOne(final KB kb, final String engine, final int timeoutSec, final String tqPath, final boolean modusPonens) {
 
         long t0 = System.currentTimeMillis();
-        InfTestData itd = runTest(
-            tqPath,
-            engine,
-            "FOF",
-            "CASC",
-            false,
-            modusPonens,
-            false,
-            false,
-            timeoutSec
-        );
-        if (itd.proof.isEmpty()){
+        try {
+            InfTestData itd = runTest(
+                tqPath,
+                engine,
+                "FOF",
+                "CASC",
+                false,
+                modusPonens,
+                false,
+                false,
+                timeoutSec
+            );
+            if (itd.proof.isEmpty()){
+                OneResult err = new OneResult();
+                err.pass = false;
+                err.millis = System.currentTimeMillis() - t0;
+                err.html = "<div style='color:#b00'><b>ERROR:</b>An error occurred during the execution</div>";
+                return err;
+            }
+            long ms = System.currentTimeMillis() - t0;
+            boolean pass = itd.success && !itd.inconsistent;
+            String statusTag = pass ? "<b style='color:#0a0'>PASS</b>" : "<b style='color:#b00'>FAIL</b>";
+            String html =
+                    statusTag +
+                            "&nbsp; &bull; &nbsp;" +
+                            "<span>" + ms + " ms </span>" +
+                            "<span class='infoTip' title='Total runtime: includes KB loading, multiple prover calls, and postprocessing.'>&#9432;</span>" +
+                            "<div style='color:#666'>Expected: " + esc(String.valueOf(itd.expectedAnswers)) + "</div>" +
+                            "<div style='color:#666'>Actual: "   + esc(String.valueOf(itd.actualAnswers))   + "</div>" +
+                            (itd.inconsistent ? "<div style='color:#b00'>Inconsistency detected</div>" : "");
+            OneResult r = new OneResult();
+            r.pass   = pass;
+            r.millis = ms;
+            r.html   = html;
+            r.expected = (itd.expectedAnswers == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.expectedAnswers);
+            r.actual   = (itd.actualAnswers   == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.actualAnswers);
+            r.proofText = (itd.proof   == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.proof);
+            return r;
+        }
+        catch (Throwable t) {
+            System.err.println("InferenceTestSuite.runOne(): ERROR while running " + tqPath);
+            t.printStackTrace();
             OneResult err = new OneResult();
             err.pass = false;
             err.millis = System.currentTimeMillis() - t0;
-            err.html = "<div style='color:#b00'><b>ERROR:</b>An error occurred during the execution</div>";
+            err.html = "<div style='color:#b00'><b>ERROR:</b> "
+                    + esc(t.getClass().getSimpleName() + ": " + t.getMessage())
+                    + "</div>";
+            err.expected = Collections.emptyList();
+            err.actual = Collections.emptyList();
+            err.proofText = new ArrayList<>();
+            err.proofText.add(t.toString());
             return err;
         }
-        long ms = System.currentTimeMillis() - t0;
-        boolean pass = itd.success && !itd.inconsistent;
-        String statusTag = pass ? "<b style='color:#0a0'>PASS</b>" : "<b style='color:#b00'>FAIL</b>";
-        String html =
-                statusTag +
-                        "&nbsp; &bull; &nbsp;" +
-                        "<span>" + ms + " ms </span>" +
-                        "<span class='infoTip' title='Total runtime: includes KB loading, multiple prover calls, and postprocessing.'>&#9432;</span>" +
-                        "<div style='color:#666'>Expected: " + esc(String.valueOf(itd.expectedAnswers)) + "</div>" +
-                        "<div style='color:#666'>Actual: "   + esc(String.valueOf(itd.actualAnswers))   + "</div>" +
-                        (itd.inconsistent ? "<div style='color:#b00'>Inconsistency detected</div>" : "");
-        OneResult r = new OneResult();
-        r.pass   = pass;
-        r.millis = ms;
-        r.html   = html;
-        r.expected = (itd.expectedAnswers == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.expectedAnswers);
-        r.actual   = (itd.actualAnswers   == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.actualAnswers);
-        r.proofText = (itd.proof   == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.proof);
-        return r;
     }
 
     /** ***************************************************************
@@ -573,6 +664,11 @@ public class InferenceTestSuite {
                         String filename = formula.substring(6, formula.length() - 1);
                         if (!itd.files.contains(filename)) itd.files.add(filename);
                     }
+                    else if (formula.startsWith("(regen")) {
+                        String regenValue = formula.substring(7, formula.length() - 1).trim();
+                        itd.regen = regenValue.equalsIgnoreCase("yes") ||
+                                regenValue.equalsIgnoreCase("true");
+                    }
                     else itd.statements.add(formula);
                 }
             }
@@ -585,6 +681,24 @@ public class InferenceTestSuite {
             e.printStackTrace();
         }
         return itd;
+    }
+
+    /********************************************************************
+     * Convert ATP language name to the session TPTP file extension.
+     * @param language ATP language: FOF, TFF, THF
+     * @return file extension used by SessionTPTPManager
+     */
+    private static String sessionFileLang(String language) {
+
+        if (StringUtil.emptyString(language))
+            return "tptp";
+        if ("FOF".equalsIgnoreCase(language) || "TPTP".equalsIgnoreCase(language))
+            return "tptp";
+        if ("TFF".equalsIgnoreCase(language))
+            return "tff";
+        if ("THF".equalsIgnoreCase(language))
+            return "thf";
+        return language.toLowerCase();
     }
 
     /** ***************************************************************
@@ -1126,30 +1240,28 @@ public class InferenceTestSuite {
      */
     public static void resetAllForInference(KB kb, String sessionId) throws IOException {
 
+        boolean sessionMode = sessionId != null && !sessionId.isEmpty();
         try {
             kb.withUserAssertionLock(() -> {
-                // LoggingUtils.log("delete user assertions" + (sessionId != null && !sessionId.isEmpty() ? " (session: " + sessionId + ")" : " (shared)"));
-                // 1) Purge UA formulas from in-memory KB indexes
+                if (sessionMode) {
+                    deleteSessionUserAssertionFiles(kb, sessionId);
+                    if (kb.termDepthCache != null)
+                        kb.termDepthCache.clear();
+                    return Boolean.TRUE;
+                }
                 int before = kb.countUserAssertionFormulasInMemory();
                 int purged = kb.purgeUserAssertionsFromMemory();
                 int after  = kb.countUserAssertionFormulasInMemory();
-                if (KB.debug>0) {
-                    System.out.println("resetAllForInference(): UA in-memory before=" + before
-                            + ", purged=" + purged
-                            + ", after=" + after);
+                if (KB.debug > 0) {
+                    System.out.println("resetAllForInference(): UA in-memory before=" + before + ", purged=" + purged + ", after=" + after);
                 }
-                // 2) Remove UA from constituents + delete UA.<current-lang> inference artifact (if any)
                 kb.deleteUserAssertions();
-                // 3) Delete UA files on disk (KIF + translated variants)
-                if (sessionId != null && !sessionId.isEmpty()) deleteSessionUserAssertionFiles(kb, sessionId);
-                else deleteSharedUserAssertionFiles(kb);
-                // 4) Clear cheap caches that can be polluted by accumulating terms
+                deleteSharedUserAssertionFiles(kb);
                 if (kb.termDepthCache != null) kb.termDepthCache.clear();
                 return Boolean.TRUE;
             });
         }
         catch (RuntimeException re) {
-            // Unwrap IOException thrown inside the lock
             Throwable cause = re.getCause();
             if (cause instanceof IOException) throw (IOException) cause;
             throw re;

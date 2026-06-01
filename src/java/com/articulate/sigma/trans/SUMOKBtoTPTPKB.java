@@ -386,9 +386,11 @@ public class SUMOKBtoTPTPKB {
             List<String> bodies = new ArrayList<>();
             if (!res.skipEverything && !res.skippedHOL && !res.skippedCached) {
                 // Sort declarations (TFF-specific, typically empty for FOF)
-                for (String sort : res.sortBodies) {
-                    if (!StringUtil.emptyString(sort) && !bodies.contains(sort))
-                        bodies.add(sort);
+                if ("tff".equalsIgnoreCase(lang)) {
+                    for (String sort : res.sortBodies) {
+                        if (!StringUtil.emptyString(sort) && !bodies.contains(sort))
+                            bodies.add(sort);
+                    }
                 }
                 // TPTP body strings — apply content filters but not global dedup
                 // (dedup against the patched file is handled by the caller)
@@ -814,13 +816,15 @@ public class SUMOKBtoTPTPKB {
                 //System.out.println("SUMOKBtoTPTPKB.writeFile() : % empty result from preprocess on " + f.getFormula().replace("\\n"," "));
                 pw.println("% empty result from preprocess on " + f.getFormula().replace("\\n",Formula.SPACE));
             }
-            for (String sort : new TreeSet<>(f.tffSorts)) {
-                if (!StringUtil.emptyString(sort) &&
-                        !alreadyWrittenTPTPs.contains(sort)) {
-                    name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
-                    putAxiom(name,f);
-                    pw.println(getLang() + Formula.LP + name + ",type," + sort + ").");
-                    alreadyWrittenTPTPs.add(sort);
+            if ("tff".equalsIgnoreCase(getLang())) {
+                for (String sort : new TreeSet<>(f.tffSorts)) {
+                    if (!StringUtil.emptyString(sort) &&
+                            !alreadyWrittenTPTPs.contains(sort)) {
+                        name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
+                        putAxiom(name, f);
+                        pw.println("tff" + Formula.LP + name + ",type," + sort + ").");
+                        alreadyWrittenTPTPs.add(sort);
+                    }
                 }
             }
             // Use format-specific field for file writing
@@ -1174,12 +1178,14 @@ public class SUMOKBtoTPTPKB {
                         + f.getFormula().replace("\\n", Formula.SPACE));
             }
         } // end if (!usedExprPath)
-
-        // Collect sort and TPTP bodies for sequential dedup+write phase (sorted for determinism)
-        for (String sort : new TreeSet<>(f.tffSorts)) {
-            if (!StringUtil.emptyString(sort))
-                res.sortBodies.add(sort);
+        // Collect sort declarations only for TFF. FOF does not allow type declarations.
+        if ("tff".equalsIgnoreCase(localLang)) {
+            for (String sort : new TreeSet<>(f.tffSorts)) {
+                if (!StringUtil.emptyString(sort))
+                    res.sortBodies.add(sort);
+            }
         }
+
         Set<String> formulasToWrite = localLang.equals("fof") ? f.theFofFormulas : f.theTffFormulas;
         for (String tptp : new TreeSet<>(formulasToWrite)) {
             if (!StringUtil.emptyString(tptp))
@@ -1285,23 +1291,27 @@ public class SUMOKBtoTPTPKB {
         for (FormulaResult res : results) {
             i++;
             if (res.skipEverything) continue;
-
             // Merge per-formula relation map into the global one
             relationMap.putAll(res.localRelationMap);
-
             List<String> linesBuf = new ArrayList<>(res.prologueLines);
             linesBuf.addAll(res.numConstLines);
-
-            // Sort axioms (dedup + write)
-            for (String sort : res.sortBodies) {
-                if (!alreadyWrittenTPTPs.contains(sort)) {
-                    name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
-                    putAxiom(name, res.formula);
-                    linesBuf.add(localLang + Formula.LP + name + ",type," + sort + ").");
-                    alreadyWrittenTPTPs.add(sort);
+            if ("fof".equalsIgnoreCase(localLang) && !res.sortBodies.isEmpty()) {
+                System.err.println("BUG: FOF generation has TFF sortBodies for formula: "
+                        + res.formula.getFormula());
+                for (String sort : res.sortBodies)
+                    System.err.println("  sort=" + sort);
+            }
+            // Sort axioms are legal only in TFF, not FOF.
+            if ("tff".equalsIgnoreCase(localLang)) {
+                for (String sort : res.sortBodies) {
+                    if (!alreadyWrittenTPTPs.contains(sort)) {
+                        name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
+                        putAxiom(name, res.formula);
+                        linesBuf.add("tff" + Formula.LP + name + ",type," + sort + ").");
+                        alreadyWrittenTPTPs.add(sort);
+                    }
                 }
             }
-
             // TPTP formula axioms (filter + dedup + write)
             for (String tptp : res.tptpBodies) {
                 if (!StringUtil.emptyString(tptp) && !alreadyWrittenTPTPs.contains(tptp)) {
@@ -1322,7 +1332,9 @@ public class SUMOKBtoTPTPKB {
                 pw.println(line);
         }
         printVariableArityRelationContent(pw, relationMap, getSanitizedKBname(), axiomIndex);
-        printTFFNumericConstants(pw);
+        if ("tff".equalsIgnoreCase(localLang)) {
+            printTFFNumericConstants(pw);
+        }
         if (CWA) pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
         if (conjecture != null) {
             String type = isQuestion ? "question" : "conjecture";

@@ -2678,6 +2678,7 @@ public class KB implements Serializable {
     private void deleteGeneratedBaseInferenceFiles() {
 
         File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        LoggingUtils.log("Deleting " + this.name + ".tptp" + " and " + this.name + ".tff");
         deleteFileIfExists(new File(dir, this.name + ".tptp"));
         deleteFileIfExists(new File(dir, this.name + ".tff"));
     }
@@ -2710,7 +2711,7 @@ public class KB implements Serializable {
             deleteFileIfExists(new File(kbDirectory, this.name + _userAssertionsString));
             deleteUserAssertionsForInference();
             deleteStaleProverTempFiles();
-            //deleteGeneratedBaseInferenceFiles();
+            deleteGeneratedBaseInferenceFiles();
         }
     }
 

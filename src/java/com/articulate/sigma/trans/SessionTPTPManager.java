@@ -89,7 +89,9 @@ public class SessionTPTPManager {
      */
     private static final ConcurrentHashMap<String, Boolean> precomputedRegenRequired =
             new ConcurrentHashMap<>();
-
+            
+    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>>
+        sessionDerivedTypeFacts = new ConcurrentHashMap<>();
     /*********************************************************************************
      * Return the session-specific axiom key for {@code sessionId}, creating an empty
      * map on the first call.
@@ -233,6 +235,9 @@ public class SessionTPTPManager {
         KBcache sessionCache = getOrCreateSessionCache(sessionId, kb);
         Set<Formula> affected = Collections.emptySet();
 
+        Set<Formula> newFormulas = new LinkedHashSet<>();
+        newFormulas.add(formula);
+
         try {
             switch (pred) {
                 case "subclass":
@@ -249,8 +254,13 @@ public class SessionTPTPManager {
                     String inst = formula.getStringArgument(1);
                     String className = formula.getStringArgument(2);
                     sessionCache.addInstance(inst, className);
-                    affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(
-                            kb, sessionCache, inst, className);
+                    affected = SUMOKBtoTPTPKB.findAffectedFormulasForInstance(kb, sessionCache, inst, className);
+                    newFormulas.addAll(materializeInheritedInstanceFacts(
+                        sessionId,
+                        kb,
+                        inst,
+                        className,
+                        sessionCache));
                     break;
                 }
                 case "domain":
@@ -309,7 +319,7 @@ public class SessionTPTPManager {
             affected.remove(formula);
         }
 
-        return patchSessionTPTP(sessionId, kb, fileLang, affected, Collections.singleton(formula), sessionCache);
+        return patchSessionTPTP(sessionId, kb, fileLang, affected, newFormulas, sessionCache);
     }
 
     /*********************************************************************************
@@ -438,6 +448,16 @@ public class SessionTPTPManager {
             // Double-check if file is already valid (race condition protection)
             if (isSessionFileValid(sessionId, kb, lang)) {
                 if (debug) System.out.println("SessionTPTPManager: Session file already valid for " + sessionId);
+                Set<Formula> derivedFacts = getSessionDerivedTypeFacts(sessionId);
+                if (!derivedFacts.isEmpty()) {
+                    patchSessionTPTP(
+                        sessionId,
+                        kb,
+                        lang,
+                        Collections.emptySet(),
+                        derivedFacts,
+                        getOrCreateSessionCache(sessionId, kb));
+                }
                 return getSessionTPTPPath(sessionId, kb.name, lang);
             }
 
@@ -485,7 +505,21 @@ public class SessionTPTPManager {
                 catch (AtomicMoveNotSupportedException e) {
                     Files.move(tmpFile, sessionFile, StandardCopyOption.REPLACE_EXISTING);
                 }
+                Set<Formula> derivedFacts = getSessionDerivedTypeFacts(sessionId);
+                if (!derivedFacts.isEmpty()) {
+                    System.out.println("SessionTPTPManager: Re-applying "
+                            + derivedFacts.size()
+                            + " derived type fact(s) after full session generation for "
+                            + sessionId);
 
+                    patchSessionTPTP(
+                            sessionId,
+                            kb,
+                            lang,
+                            Collections.emptySet(),
+                            derivedFacts,
+                            getOrCreateSessionCache(sessionId, kb));
+                }
                 long elapsed = System.currentTimeMillis() - startTime;
                 System.out.println("SessionTPTPManager: Session " + lang + " generation complete in " +
                                    (elapsed / 1000.0) + "s for " + sessionId);
@@ -996,6 +1030,7 @@ public class SessionTPTPManager {
         sessionLocks.remove(sessionId);
         sessionGenerationTimestamps.remove(sessionId);
         sessionCaches.remove(sessionId);
+        sessionDerivedTypeFacts.remove(sessionId);
         sessionAxiomKeys.remove(sessionId);
         batchModeActive.remove(sessionId);
         precomputedRegenRequired.remove(sessionId);
@@ -1014,7 +1049,6 @@ public class SessionTPTPManager {
         }
 
         System.out.println("SessionTPTPManager: Cleaning up session directory: " + sessionDir);
-
         try {
             // Delete all files in the session directory
             Files.walk(sessionDir)
@@ -1185,5 +1219,80 @@ public class SessionTPTPManager {
                 kb.kbCache = shared;
             }
         }
+    }
+
+    /********************************************************************
+     * Materialize inherited type facts for a session instance assertion.
+     * Example:
+     *   (instance John Human)
+     * becomes:
+     *   (instance John Human)
+     *   (instance John Physical)
+     *   (instance John Object)
+     * @param sessionId the session id
+     * @param kb the KB
+     * @param inst the instance term
+     * @param directClass the directly asserted class
+     * @param sessionCache the session-specific KBcache
+     * @return derived type facts as Formula objects
+     */
+    private static Set<Formula> materializeInheritedInstanceFacts(
+            String sessionId,
+            KB kb,
+            String inst,
+            String directClass,
+            KBcache sessionCache) {
+
+        Set<Formula> result = new LinkedHashSet<>();
+        if (StringUtil.emptyString(inst) ||
+                StringUtil.emptyString(directClass) ||
+                sessionCache == null ||
+                sessionCache.instanceOf == null)
+            return result;
+        Set<String> classes = sessionCache.instanceOf.get(inst);
+        if (classes == null || classes.isEmpty())
+            return result;
+        ConcurrentHashMap<String, Formula> stored = getOrCreateSessionDerivedTypeFacts(sessionId);
+        for (String cls : new TreeSet<>(classes)) {
+            if (StringUtil.emptyString(cls))
+                continue;
+            if (cls.equals(directClass))
+                continue;
+            if ("Entity".equals(cls))
+                continue;
+            String kif = "(instance " + inst + " " + cls + ")";
+            Formula f = stored.get(kif);
+            if (f == null) {
+                f = new Formula();
+                f.read(kif);
+                f.uaSessionId = sessionId;
+                stored.put(kif, f);
+            }
+            result.add(f);
+        }
+        return result;
+    }
+
+    /********************************************************************
+     * Return session-derived type facts, creating the map if needed.
+     * @param sessionId the session id
+     * @return derived type fact map
+     */
+    private static ConcurrentHashMap<String, Formula> getOrCreateSessionDerivedTypeFacts(String sessionId) {
+
+        return sessionDerivedTypeFacts.computeIfAbsent(sessionId, id -> new ConcurrentHashMap<>());
+    }
+
+    /********************************************************************
+     * Return all derived type facts for a session.
+     * @param sessionId the session id
+     * @return derived type facts
+     */
+    private static Set<Formula> getSessionDerivedTypeFacts(String sessionId) {
+
+        Map<String, Formula> facts = sessionDerivedTypeFacts.get(sessionId);
+        if (facts == null || facts.isEmpty())
+            return Collections.emptySet();
+        return new LinkedHashSet<>(facts.values());
     }
 }
