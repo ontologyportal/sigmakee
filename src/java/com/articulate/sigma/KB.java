@@ -2390,6 +2390,7 @@ public class KB implements Serializable {
      */
     public List<String> getNearestRelations(String term) {
 
+        if (StringUtil.emptyString(term)) return null;
         term = Character.toLowerCase(term.charAt(0)) + term.substring(1, term.length());
         return getNearestTerms(term);
     }
