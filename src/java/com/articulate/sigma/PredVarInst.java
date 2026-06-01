@@ -503,6 +503,8 @@ public class PredVarInst {
         if (debug) System.out.println("INFO in PredVarInst.gatherPredVars(): " + f);
         if (f.predVarCache != null) {
             if (debug) System.out.println("INFO in PredVarInst.gatherPredVars(): returning cache " + f.predVarCache);
+            if (!f.predVarCache.isEmpty())
+                gatherPredVarRecurse(kb, f); // ensure predVarArityTL is populated (side-effect)
             return f.predVarCache;
         }
         Set<String> varlist = null;

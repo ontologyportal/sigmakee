@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -130,10 +131,10 @@ public class FormulaAST implements Comparable, Serializable {
     private int cachedHashCode          = 0;
     public Set<String> rowVarCache      = null;
     public Map<String,Set<String>> varTypeCache = new HashMap<>();
-    public Set<String> theTptpFormulas  = new HashSet<>();
-    public Set<String> theFofFormulas   = new HashSet<>();
-    public Set<String> theTffFormulas   = new HashSet<>();
-    public Set<String> tffSorts         = new HashSet<>();
+    public Set<String> theTptpFormulas  = ConcurrentHashMap.newKeySet();
+    public Set<String> theFofFormulas   = ConcurrentHashMap.newKeySet();
+    public Set<String> theTffFormulas   = ConcurrentHashMap.newKeySet();
+    public Set<String> tffSorts         = ConcurrentHashMap.newKeySet();
 
     // ---------------------------------------------------------------
     // Getters / setters for fields that Formula exposed as methods
