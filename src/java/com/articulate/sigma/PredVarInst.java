@@ -327,6 +327,7 @@ public class PredVarInst {
             String errStr = "No predicate instantiations for ";
             errStr += input.getFormula();
             input.errors.add(errStr);
+//            return null;
             // fall through: return empty set so callers keep the original formula as fallback.
             // null is reserved for the "double pred-var, already handled" hard-reject case.
         }
