@@ -256,7 +256,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         f.read(strf);
         //FormulaPreprocessor.debug = true;
         Map<String, Set<String>> varmap = fp.findTypeRestrictionsExpr(f.expr, kb);
-        String actual = fp.addTypeRestrictionsExpr(f.expr, varmap, kb).toString();
+        Expr actualExpr = fp.addTypeRestrictionsExpr(f.expr, varmap, kb);
         String expected = "(=>\n" +
                 "  (and\n" +
                 "    (instance ?POS TimePosition)\n" +
@@ -265,13 +265,15 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
                 "    (temporalPart ?POS\n" +
                 "      (WhenFn ?THING))\n" +
                 "    (time ?THING ?POS)))";
-        System.out.println("test6(): actual: " + actual);
+        FormulaAST fActual = new FormulaAST(actualExpr.toKifString());
+        FormulaAST fExpected = new FormulaAST(expected);
+        System.out.println("test6(): actual: " + actualExpr);
         System.out.println("test6(): expected: " + expected);
-        if (expected.equals(actual))
+        if (fExpected.deepEquals(fActual))
             System.out.println("test6(): pass");
         else
             System.err.println("test6(): fail");
-        assertEquals(expected,actual);
+        assertTrue(fExpected.deepEquals(fActual));
     }
 
     /** ***************************************************************
@@ -297,13 +299,15 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
                 "    (temporalPart ?POS\n" +
                 "      (WhenFn ?THING))\n" +
                 "    (time ?THING ?POS)))";
-        System.out.println("test7(): actual: " + actual);
+        FormulaAST fActual = new FormulaAST(actual.iterator().next().toKifString());
+        FormulaAST fExpected = new FormulaAST(expected);
+        System.out.println("test7(): actual: " + fActual.expr);
         System.out.println("test7(): expected: " + expected);
-        if (expected.equals(actual.iterator().next().toString()))
+        if (fExpected.deepEquals(fActual))
             System.out.println("test7(): pass");
         else
             System.err.println("test7(): fail");
-        assertEquals(expected,actual.iterator().next().toString());
+        assertTrue(fExpected.deepEquals(fActual));
     }
 
     /** ***************************************************************

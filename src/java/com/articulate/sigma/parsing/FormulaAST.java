@@ -381,6 +381,60 @@ public class FormulaAST implements Comparable, Serializable {
     }
 
     /** ***************************************************************
+     * Construct a FormulaAST from an already-parsed Expr without ANTLR re-parsing.
+     * Populates formula string, predVarCache, rowVarCache, rowVarStructs, and varTypes
+     * by walking the Expr tree in O(n).
+     */
+    public FormulaAST(Expr expr) {
+        setFormula(expr.toKifString());
+        this.expr = expr;
+        this.predVarCache = new HashSet<>();
+        this.rowVarCache = new HashSet<>();
+        initCachesFromExpr(expr);
+    }
+
+    private void initCachesFromExpr(Expr e) {
+        if (!(e instanceof Expr.SExpr sexpr)) {
+            if (e instanceof Expr.RowVar rv)
+                rowVarCache.add(rv.name());
+            return;
+        }
+        Expr head = sexpr.head();
+        List<Expr> args = sexpr.args();
+        // Variable in predicate position → pred var
+        if (head instanceof Expr.Var v)
+            predVarCache.add(v.name());
+        // instance/subclass → varTypes
+        if (head instanceof Expr.Atom a && args.size() >= 2
+                && args.get(0) instanceof Expr.Var varNode
+                && args.get(1) instanceof Expr.Atom typeAtom) {
+            if (a.name().equals("instance"))
+                varTypes.computeIfAbsent(varNode.name(), k -> new HashSet<>()).add(typeAtom.name());
+            else if (a.name().equals("subclass"))
+                varTypes.computeIfAbsent(varNode.name(), k -> new HashSet<>()).add(typeAtom.name() + "+");
+        }
+        // Row vars in args → rowVarCache + rowVarStructs
+        String predName = head instanceof Expr.Atom a2 ? a2.name()
+                        : head instanceof Expr.Var v2 ? v2.name() : null;
+        for (Expr arg : args) {
+            if (arg instanceof Expr.RowVar rv) {
+                rowVarCache.add(rv.name());
+                if (predName != null) {
+                    RowStruct rs = new RowStruct();
+                    rs.pred = predName;
+                    rs.rowvar = rv.name();
+                    rs.literal = sexpr.toKifString();
+                    rs.arity = args.size();
+                    addRowVarStruct(rv.name(), rs);
+                }
+            }
+        }
+        // Recurse
+        if (head != null) initCachesFromExpr(head);
+        for (Expr arg : args) initCachesFromExpr(arg);
+    }
+
+    /** ***************************************************************
      * Set 'theFormula' to the string clear all cache and populate the expr field.
      * @param s - the formula string
      */

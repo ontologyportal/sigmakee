@@ -1547,13 +1547,10 @@ public class FormulaPreprocessor {
         // Phase A: Predicate variable expansion (must precede row-var expansion)
         Collection<FormulaAST> afterPredVar;
         if (fa.predVarCache != null && !fa.predVarCache.isEmpty()) {
-            com.articulate.sigma.parsing.PredVarInst pvi = new com.articulate.sigma.parsing.PredVarInst(kb);
-            afterPredVar = pvi.processOne(fa); // returns List — no hashCode() calls
-            if (afterPredVar == null)
-                return Set.of(); // null = formula marked "reject" by processOne
-            if (afterPredVar.isEmpty())
-                afterPredVar = List.of(fa); // empty = no KB instances found for this pred-var type;
-                                             // keep original (mirrors string-path: accumulator.add(f))
+            Set<FormulaAST> pviResult = PredVarInst.instantiatePredVars(fa, kb);
+            if (pviResult == null)
+                return Set.of(); // null = double pred var or other reject
+            afterPredVar = pviResult.isEmpty() ? List.of(fa) : pviResult;
         } else {
             afterPredVar = List.of(fa);
         }
@@ -1624,9 +1621,7 @@ public class FormulaPreprocessor {
      *         {@link com.articulate.sigma.parsing.ExprToTPTP#translate}
      */
     public Set<Expr> preProcessExpr(Expr expr, boolean isQuery, KB kb) {
-        FormulaAST fa = new FormulaAST();
-        fa.expr = expr;
-        return preProcessExpr(fa, isQuery, kb);
+        return preProcessExpr(new FormulaAST(expr), isQuery, kb);
     }
 
     /***************************************************************
