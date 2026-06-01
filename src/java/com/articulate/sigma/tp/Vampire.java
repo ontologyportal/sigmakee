@@ -1020,8 +1020,8 @@ public class Vampire {
                     if (tptp) {
                         for (Expr ex : processedFormulas) {
                             FormulaAST p = new FormulaAST();
-                            p.expr = ex;
                             p.setFormula(ex.toKifString());
+                            p.expr = ex;
                             if (!p.isHigherOrder(kb)) {
                                 tptpStr = ExprToTPTP.translate(ex, false, this.requestedTptpLanguage);
                                 tptpFormulas.add(tptpStr);

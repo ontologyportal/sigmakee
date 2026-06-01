@@ -145,8 +145,8 @@ public class FormulaAST implements Comparable, Serializable {
     public void setFormula(String f) {
         theFormula = f;
         cachedHashCode = 0;
-//        formulaASTHashCode = 0;
-//        expr = null;
+        formulaASTHashCode = 0;
+        expr = null;
         args = new ArrayList<>();
         stringArgs = new ArrayList<>();
     }
@@ -1298,8 +1298,8 @@ public class FormulaAST implements Comparable, Serializable {
             Expr arg = se.args().getFirst();
             if (arg instanceof Expr.SExpr) {
                 FormulaAST fa = new FormulaAST();
-                fa.expr = arg;
                 fa.setFormula(arg.toKifString());
+                fa.expr = arg;
                 return fa.isSimpleClause(kb);
             }
         }
@@ -1388,8 +1388,8 @@ public class FormulaAST implements Comparable, Serializable {
         if (expr != null) {
             Expr newExpr = substituteExpr(expr, m);
             FormulaAST fa = new FormulaAST();
-            fa.expr = newExpr;
             fa.setFormula(newExpr.toKifString());
+            fa.expr = newExpr;
             return fa;
         }
         System.out.println("Formula string-based method used: substituteVariables");
@@ -2318,8 +2318,8 @@ public class FormulaAST implements Comparable, Serializable {
         if (debug) System.out.println("Formula.format(): " + this.getFormula());
         if (this.getFormula() == null)
             return "";
-        if (!StringUtil.emptyString(this.getFormula()))
-            this.setFormula(this.getFormula().trim());
+        if (!StringUtil.emptyString(theFormula))
+            theFormula = theFormula.trim();
         if (atom())
             return getFormula();
         String legalTermChars = "-:";

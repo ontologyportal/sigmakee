@@ -136,8 +136,9 @@ public class PredVarInst {
                     if (debug) System.out.println("PredVarInst.processOne(): in formula: " + fnew);
                     if (fnew.expr != null) {
                         // Expr-based substitution: precise, no substring-match issues
-                        fnew.expr = substituteVar(fnew.expr, var, rel);
-                        fnew.setFormula(fnew.expr.toKifString());
+                        Expr substituted = substituteVar(fnew.expr, var, rel);
+                        fnew.setFormula(substituted.toKifString());
+                        fnew.expr = substituted;
                     } else {
                         fnew.setFormula(fnew.getFormula().replace(var, rel)); // TODO: vulnerable to a match of variable name substrings
                     }
