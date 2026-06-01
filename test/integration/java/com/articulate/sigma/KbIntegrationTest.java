@@ -96,7 +96,7 @@ public class KbIntegrationTest extends IntegrationTestBase {
                 "    (rangeSubclass ?F ?C)\n" +
                 "    (instance ?I (?F ?X)))\n" +
                 "  (instance ?I ?C))";
-        Formula f = new Formula(stmt);
+        FormulaAST f = new FormulaAST(stmt);
         System.out.println("testIsHigherOrder3: " + f);
         System.out.println("testIsHigherOrder3: results: " + f.isHigherOrder(SigmaTestBase.kb));
         System.out.println("testIsHigherOrder3(): expected: " + false);

@@ -104,11 +104,11 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
                 "               (instance ?P LegalAction)\n" +
                 "               (instance ?H Human)\n" +
                 "               (plaintiff ?P ?H)))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("CognitiveAgent");
