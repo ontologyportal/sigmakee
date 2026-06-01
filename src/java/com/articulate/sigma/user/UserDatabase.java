@@ -255,20 +255,22 @@ public class UserDatabase {
     public List<String> getAdminEmails() {
 
         List<String> adminEmails = new ArrayList<>();
-        try (Statement query = connection.createStatement();
-            ResultSet resultSet = query.executeQuery("SELECT username FROM users WHERE role='admin';")) {
+        String sql = """
+            SELECT email
+            FROM users
+            WHERE LOWER(role) = 'admin'
+            AND email IS NOT NULL
+            AND TRIM(email) <> ''
+            """;
+        try (PreparedStatement statement = this.connection.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
-                String username = resultSet.getString(1);
-                User user = fromDB(username);
-                if (user != null) {
-                    String adminEmail = user.getEmail();
-                    if (adminEmail != null && !adminEmail.trim().isEmpty()) adminEmails.add(adminEmail.trim());
-                    else System.err.println("WARNING: Admin user " + username + " has no valid email.");
-                }
+                String adminEmail = resultSet.getString("email");
+                if (adminEmail != null && !adminEmail.trim().isEmpty()) adminEmails.add(adminEmail.trim());
             }
         }
         catch (SQLException e) {
-            System.err.println("Error in getAdminEmails(): " + e.getMessage());
+            System.err.println("Error in UserDatabase.getAdminEmails(): " + e.getMessage());
             e.printStackTrace();
         }
         return adminEmails;
@@ -585,6 +587,20 @@ public class UserDatabase {
         }
         catch (SQLException e) {
             System.err.println(H2_DRIVER + " shutdown issues: " + e.getLocalizedMessage());
+        }
+    }
+
+    /********************************************************************
+     * Closes the H2 database connection without shutting down the database.
+     */
+    public void close() {
+
+        try {
+            if (this.connection != null && !this.connection.isClosed()) this.connection.close();
+        }
+        catch (SQLException e) {
+            System.err.println("Error in UserDatabase.close(): " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

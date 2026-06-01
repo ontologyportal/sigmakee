@@ -119,28 +119,6 @@ public class TheoremProverController {
         return leo.getResult();
     }
 
-
-    public ATPResult runTestFile(KB kb, String testFilePath, String proverType, String language, String vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout) {
-
-        ATPQuery atpQuery = new ATPQuery(
-            kb,
-            null,
-            null,
-            testFilePath,
-            "TEST_FILE",
-            proverType,
-            language,
-            vampireMode,
-            closedWorldAssumption,
-            modusPonens, 
-            dropOnePremise,
-            holUseModals,
-            timeout, 
-            1
-        );
-        return ask(atpQuery);
-    }
-
     /********************************************************************
      * Prints the main() console options for this class.
      */
