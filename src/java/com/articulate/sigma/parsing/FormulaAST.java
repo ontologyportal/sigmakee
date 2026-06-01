@@ -145,6 +145,8 @@ public class FormulaAST implements Comparable, Serializable {
     public void setFormula(String f) {
         theFormula = f;
         cachedHashCode = 0;
+        formulaASTHashCode = 0;
+        expr = null;
         args = new ArrayList<>();
         stringArgs = new ArrayList<>();
     }

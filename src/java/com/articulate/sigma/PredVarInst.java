@@ -219,11 +219,11 @@ public class PredVarInst {
     /** ***************************************************************
      * @param input formula
      * @param kb knowledge base
-     * @return A list of formulas where predicate variables are instantiated;
-     *         There are three possible returns:
-     *         return null if input contains predicate variables but cannot be instantiated;
-     *         return empty if input contains no predicate variables;
-     *         return a list of instantiated formulas if the predicate variables are instantiated;
+     * @return A set of formulas where predicate variables are instantiated:
+     *         null      — double pred-var that was already handled (hard reject);
+     *         empty set — no predicate variables in input, OR pred vars exist but no KB
+     *                     instances qualify (caller should keep the original as fallback);
+     *         non-empty — successful instantiation, one entry per substituted relation.
      */
     public static Set<FormulaAST> instantiatePredVars(FormulaAST input, KB kb) {
 
@@ -323,11 +323,12 @@ public class PredVarInst {
                 }
             }
         }
-        if (result.isEmpty()) {   // Return null if input contains predicate variables but cannot be initialized
+        if (result.isEmpty()) {
             String errStr = "No predicate instantiations for ";
             errStr += input.getFormula();
             input.errors.add(errStr);
-            return null;
+            // fall through: return empty set so callers keep the original formula as fallback.
+            // null is reserved for the "double pred-var, already handled" hard-reject case.
         }
         return result;
     }

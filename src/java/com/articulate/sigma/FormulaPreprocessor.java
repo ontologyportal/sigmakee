@@ -1549,7 +1549,7 @@ public class FormulaPreprocessor {
         if (fa.predVarCache != null && !fa.predVarCache.isEmpty()) {
             Set<FormulaAST> pviResult = PredVarInst.instantiatePredVars(fa, kb);
             if (pviResult == null)
-                return Set.of(); // null = double pred var or other reject
+                return Set.of(); // null = double pred-var already-handled → hard reject
             afterPredVar = pviResult.isEmpty() ? List.of(fa) : pviResult;
         } else {
             afterPredVar = List.of(fa);
