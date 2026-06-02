@@ -153,8 +153,15 @@ public class KIFAST {
             if (f == null || StringUtil.emptyString(f.getFormula())) continue;
             // Normalize whitespace (collapse sequences to single space) to match KIF's
             // normalizeSpaceChars() behaviour so that formula-map keys are identical.
+            // NOTE: setFormula() clears f.expr, but the Expr built by SuokifToExpr is
+            // still correct after normalization because StrLiteral nodes are already
+            // whitespace-normalized inside SuokifToExpr.convertTerm(). Save and restore.
             String kifStr = StringUtil.normalizeSpaceChars(f.getFormula());
-            if (!kifStr.equals(f.getFormula())) f.setFormula(kifStr);
+            if (!kifStr.equals(f.getFormula())) {
+                Expr savedExpr = f.expr;
+                f.setFormula(kifStr);
+                f.expr = savedExpr;
+            }
             // Duplicate detection
             if (formulaMap.containsKey(kifStr)) {
                 if (!"no".equals(KBmanager.getMgr().getPref("reportDup"))) {
