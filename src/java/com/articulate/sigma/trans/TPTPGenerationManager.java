@@ -492,6 +492,8 @@ public class TPTPGenerationManager {
      * @return true if generation completed successfully, false if timed out
      */
     public static boolean waitForAllTPTP(int timeoutSec) {
+
+        LoggingUtils.log("Waiting for TPTP Regeneration...");
         return waitForFOF(timeoutSec) && waitForTFF(timeoutSec) && waitForTHFModal(timeoutSec) && waitForTHFPlain(timeoutSec);
     }
 

@@ -2390,6 +2390,7 @@ public class KB implements Serializable {
      */
     public List<String> getNearestRelations(String term) {
 
+        if (StringUtil.emptyString(term)) return null;
         term = Character.toLowerCase(term.charAt(0)) + term.substring(1, term.length());
         return getNearestTerms(term);
     }
@@ -2678,6 +2679,7 @@ public class KB implements Serializable {
     private void deleteGeneratedBaseInferenceFiles() {
 
         File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        LoggingUtils.log("Deleting " + this.name + ".tptp" + " and " + this.name + ".tff");
         deleteFileIfExists(new File(dir, this.name + ".tptp"));
         deleteFileIfExists(new File(dir, this.name + ".tff"));
     }
@@ -2710,7 +2712,7 @@ public class KB implements Serializable {
             deleteFileIfExists(new File(kbDirectory, this.name + _userAssertionsString));
             deleteUserAssertionsForInference();
             deleteStaleProverTempFiles();
-            //deleteGeneratedBaseInferenceFiles();
+            deleteGeneratedBaseInferenceFiles();
         }
     }
 

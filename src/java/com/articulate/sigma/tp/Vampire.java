@@ -58,7 +58,7 @@ import java.util.function.Supplier;
 public class Vampire {
 
     /** Turn debugging logs on or off */
-    public int debug = 1;
+    public int debug = 0;
     /** ModeTypes: AVATAR is faster but doesn't provide answers, CASC (CADE Automated System Competition) is the mode used in competition, CUSTOM takes values from the env var */
     public enum ModeType {AVATAR, CASC, CUSTOM, VAMPIRE};
     /** Logic modes: FOL and HOL */
@@ -173,7 +173,6 @@ public class Vampire {
             File.separator + "build_hol" + File.separator
         );
         }
-        System.out.println("VAMPIRE LANGUAGE: " + this.requestedTptpLanguage);
         this.modensPonens = modensPonens;
         if (mode.equalsIgnoreCase(ModeType.AVATAR.name())) this.mode = ModeType.AVATAR;
         if (mode.equalsIgnoreCase(ModeType.CASC.name())) this.mode = ModeType.CASC;
@@ -183,8 +182,6 @@ public class Vampire {
         this.maxAnswers = maxAnswers;
         this.inferenceFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + "." + this.inferenceFileExtension;
         if (!(new File(this.inferenceFilePath).exists()) || KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(this.inferenceFileExtension)) {
-            System.out.println("INFO in KB.loadVampire(): this.inferenceFilePath=" + !(new File(this.inferenceFilePath).exists()));
-            System.out.println("INFO in KB.loadVampire(): managerInfFileOld " + KBmanager.getMgr().infFileOld());
             synchronized (kb.baseGenLock) {
                 TPTPGenerationManager.generateProperFile(kb, this.requestedTptpLanguage);
             }
@@ -203,10 +200,7 @@ public class Vampire {
      */
     public void askVampire(String suoKifFormula) {
 
-        if (debug > 0) System.out.printf("\nVampire.askVampire(%s)", suoKifFormula);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-
-        // FormulaAST fast path: KIFAST → preProcessExpr → Set<Expr>
         Set<Expr> processedExprs = null;
         try {
             KIFAST kifAst = new KIFAST();
@@ -217,28 +211,23 @@ public class Vampire {
                         this.sessionId, this.kb, () -> fp.preProcessExpr(queryFA, true, this.kb));
             }
         } catch (Exception e) {
-            if (debug > 0) System.err.println("Vampire.askVampire(): FormulaAST path failed, using string fallback: " + e.getMessage());
             processedExprs = null;
         }
 
         // String fallback path (TFF mode or AST path unavailable/empty)
         Set<Formula> processedStmts = null;
         if (processedExprs == null || processedExprs.isEmpty()) {
-            if (debug > 0) System.err.println("Vampire.askVampire(): FormulaAST path failed or empty, using string fallback, for formula: " + suoKifFormula);
             Formula query = new Formula();
             query.read(suoKifFormula);
             processedStmts = SessionTPTPManager.withSessionCache(
                     this.sessionId, this.kb, () -> fp.preProcess(query, true, this.kb));
         }
 
-        boolean hasProcessed = (processedExprs != null && !processedExprs.isEmpty())
-                || (processedStmts != null && !processedStmts.isEmpty());
-
+        boolean hasProcessed = (processedExprs != null && !processedExprs.isEmpty()) || (processedStmts != null && !processedStmts.isEmpty());
         if (hasProcessed) {
             int axiomIndex = 0;
             File inferenceFile = new File(this.inferenceFilePath);
             Set<String> tptpQuery = new HashSet<>();
-
             if (processedExprs != null && !processedExprs.isEmpty()) {
                 for (Expr e : processedExprs) {
                     String kifStr = e.toKifString();
