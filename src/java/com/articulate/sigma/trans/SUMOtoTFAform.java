@@ -3335,7 +3335,7 @@ public class SUMOtoTFAform {
 
     /** Build the quantifier wrapper around a TFF body, using the varmap already set. */
     private static String buildQuantifiedResult(FormulaAST f, String result, boolean query) {
-        Set<String> uqVars = f.collectUnquantifiedVariables();
+        Set<String> uqVars = new TreeSet<>(f.collectUnquantifiedVariables());
         StringBuilder qlist = new StringBuilder();
         for (String s : uqVars) {
             String oneVar = SUMOformulaToTPTPformula.translateWord(s, s.charAt(0), false);
@@ -3393,6 +3393,15 @@ public class SUMOtoTFAform {
         Expr.SExpr se = (Expr.SExpr) expr;
         String op = se.headName();
         if (op == null) {
+            // Head is a Var (predicate variable application), e.g. (?REL @ROW ?ITEM)
+            // Translate as: s__?REL(arg1, arg2, ...)
+            if (se.head() instanceof Expr.Var headVar) {
+                StringBuilder argStr = new StringBuilder();
+                for (Expr arg : se.args())
+                    argStr.append(processRecurseExpr(arg, "Entity")).append(", ");
+                String translatedArgs = argStr.length() >= 2 ? argStr.substring(0, argStr.length() - 2) : "";
+                return FormulaAST.TERM_SYMBOL_PREFIX + headVar.name() + FormulaAST.LP + translatedArgs + FormulaAST.RP;
+            }
             System.err.println("Error in SUMOtoTFAform.processRecurseExpr(): null head in " + se.toKifString());
             return "";
         }

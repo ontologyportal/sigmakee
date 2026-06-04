@@ -126,9 +126,9 @@ public class SUMOtoTFATest extends UnitTestBase {
         Set<Expr> exprs = SUMOtoTFAform.fp.preProcessExpr(new FormulaAST(kifstring), false, kb);
         if (exprs == null || exprs.isEmpty())
             return;
-        expectedRes = "! [V__P : $i,V__S1 : $i,V__S2 : $i] : ((s__instance(V__P, s__Process) & " +
+        expectedRes = "! [V__P : $i,V__S1 : $i,V__S2 : $i] : (((s__instance(V__P, s__Process) & " +
                 "s__instance(V__S1, s__Process) & s__instance(V__S2, s__Process)) => " +
-                "(s__subProcess(V__S1, V__P) & s__subProcess(V__S2, V__P)) => s__relatedEvent(V__S1, V__S2))";
+                "((s__subProcess(V__S1, V__P) & s__subProcess(V__S2, V__P)) => s__relatedEvent(V__S1, V__S2))))";
         actualRes = SUMOtoTFAform.processExpr(exprs.iterator().next(), false);
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);

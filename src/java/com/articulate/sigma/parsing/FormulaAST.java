@@ -1252,8 +1252,44 @@ public class FormulaAST implements Comparable, Serializable {
             return hol;
         }
         System.out.println("Formula string-based method used: isHigherOrder");
-        return new FormulaAST(getFormula()).isHigherOrder(kb);
+
+        if (varTypeCache == null || varTypeCache.keySet().isEmpty()) {
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            varTypeCache = fp.findAllTypeRestrictions(new FormulaAST(getFormula()),kb);
+        }
+        if (!KBmanager.initialized)
+            return false;
+        if (this.listP()) {
+            String pred = this.car();
+            List<String> sig = kb.kbCache.getSignature(pred);
+            if (sig != null && !FormulaAST.isVariable(pred) && sig.contains("Formula"))
+                return true;
+            boolean logop = isLogicalOperator(pred);
+            List<String> al = literalToArrayList();
+            FormulaAST f;
+            for (String arg : al) {
+                f = new FormulaAST();
+                f.read(arg);
+                f.varTypeCache = this.varTypeCache;
+                if (!atom(arg) && !kb.isFunctional(new FormulaAST(f.getFormula()))) {
+                    if (logop) {
+                        if (f.isHigherOrder(kb)) {
+                            higherOrder = true;
+                            return true;
+                        }
+                    } else {
+                        higherOrder = true;
+                        return true;
+                    }
+                } else if (f.isHigherOrder(kb)) {
+                    higherOrder = true;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
+
 
     /*****************************************************************
      */

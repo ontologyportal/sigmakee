@@ -1324,8 +1324,8 @@ public class FormulaPreprocessor {
             return new Expr.SExpr(new Expr.Atom("subclass"),
                     List.of(new Expr.Var(varName), new Expr.Atom(t)));
         } else {
-            if (type.equals("Entity") || type.equals("World") || type.equals("Object")
-                    || type.equals("Formula") || type.equals("ObjectiveNorm")) return null;
+            if (type.equals("Entity") || type.equals("World")
+                    || type.equals("ObjectiveNorm")) return null;
             if (addOnlyNonNumericTypes && kb.isSubclass(type, "Quantity")) return null;
             return new Expr.SExpr(new Expr.Atom("instance"),
                     List.of(new Expr.Var(varName), new Expr.Atom(type)));
@@ -1456,8 +1456,8 @@ public class FormulaPreprocessor {
      * @return type-guarded Expr, or {@code expr} itself if nothing changed
      */
     Expr addTypeRestrictionsExpr(Expr expr, Map<String, Set<String>> varmap, KB kb) {
-        // Collect free (unquantified) variables
-        Set<String> freeVars = ExprToTPTP.collectFreeVars(expr);
+        // Collect free (unquantified) variables — sort for deterministic output
+        Set<String> freeVars = new TreeSet<>(ExprToTPTP.collectFreeVars(expr));
 
         // Build guards for free variables
         List<Expr> freeGuards = new ArrayList<>();
