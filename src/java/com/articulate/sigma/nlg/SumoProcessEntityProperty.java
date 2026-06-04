@@ -1,7 +1,7 @@
 package com.articulate.sigma.nlg;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.google.common.collect.Lists;
 
 import java.util.Arrays;
@@ -12,7 +12,7 @@ import java.util.List;
  * as any other expression or phrase modifying an entity.
 */
 public class SumoProcessEntityProperty implements Comparable {
-    private final Formula formula;
+    private final FormulaAST formula;
     private final String predicate;
     private List<String> arguments = Lists.newArrayList();
 
@@ -20,7 +20,7 @@ public class SumoProcessEntityProperty implements Comparable {
      *
      * @param form
      */
-    public SumoProcessEntityProperty(Formula form) {
+    public SumoProcessEntityProperty(FormulaAST form) {
         formula = form;
         predicate = form.car();
 

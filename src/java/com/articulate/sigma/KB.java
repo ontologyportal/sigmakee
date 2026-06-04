@@ -90,7 +90,7 @@ import tptp_parser.TPTPFormula;
 
 /**
  * ***************************************************************** Contains
- * methods for reading, writing knowledge bases and their configurations. Also
+ * methods for reading, writing knowledge bases, and their configurations. Also
  * contains the inference engine process for the knowledge base.
  */
 public class KB implements Serializable {
@@ -763,7 +763,7 @@ public class KB implements Serializable {
         String pred = form.car();
         if (debug) System.out.println("KB.isFunctional(): pred: " + pred);
         if (debug) System.out.println("KB.isFunctional(): isFunction: " + isFunction(pred));
-        if (Formula.isVariable(pred)) {
+        if (FormulaAST.isVariable(pred)) {
             Set<String> varTypes = form.getVarType(this,pred);
             if (varTypes != null) {
                 for (String s : varTypes) {
@@ -897,19 +897,19 @@ public class KB implements Serializable {
      * @return An ArrayList of formula tuples (ArrayLists), or an empty
      * ArrayList.
      */
-    public static List<List<String>> formulasToArrayLists(List<Formula> formulaList) {
-
-        List<List<String>> ans = new ArrayList<>();
-        if (formulaList instanceof List) {
-            Iterator<Formula> it = formulaList.iterator();
-            Formula f;
-            while (it.hasNext()) {
-                f = (Formula) it.next();
-                ans.add(f.literalToArrayList());
-            }
-        }
-        return ans;
-    }
+//    public static List<List<String>> formulasToArrayLists(List<Formula> formulaList) {
+//
+//        List<List<String>> ans = new ArrayList<>();
+//        if (formulaList instanceof List) {
+//            Iterator<Formula> it = formulaList.iterator();
+//            Formula f;
+//            while (it.hasNext()) {
+//                f = (Formula) it.next();
+//                ans.add(f.literalToArrayList());
+//            }
+//        }
+//        return ans;
+//    }
 
     /* *************************************************************
      * Converts all atoms in the input List to Formula objects.
@@ -936,20 +936,20 @@ public class KB implements Serializable {
      * @param literal A List representing a SUO-KIF formula.
      * @return A String representing a SUO-KIF formula.
      */
-    public static String literalListToString(List<String> literal) {
-
-        StringBuilder b = new StringBuilder();
-        if (literal instanceof List) {
-            b.append(Formula.LP);
-            for (int i = 0; i < literal.size(); i++) {
-                if (i > 0)
-                    b.append(Formula.SPACE);
-                b.append(literal.get(i));
-            }
-            b.append(Formula.RP);
-        }
-        return b.toString();
-    }
+//    public static String literalListToString(List<String> literal) {
+//
+//        StringBuilder b = new StringBuilder();
+//        if (literal instanceof List) {
+//            b.append(Formula.LP);
+//            for (int i = 0; i < literal.size(); i++) {
+//                if (i > 0)
+//                    b.append(Formula.SPACE);
+//                b.append(literal.get(i));
+//            }
+//            b.append(Formula.RP);
+//        }
+//        return b.toString();
+//    }
 
     /***************************************************************
      * Converts a
@@ -958,16 +958,16 @@ public class KB implements Serializable {
      * @param lit A List representing a SUO-KIF formula.
      * @return A SUO-KIF Formula object, or null if no Formula can be created.
      */
-    public static FormulaAST literalListToFormula(List<String> lit) {
-
-        FormulaAST f = null;
-        String theFormula = literalListToString(lit);
-        if (StringUtil.isNonEmptyString(theFormula)) {
-            f = new FormulaAST();
-            f.read(theFormula);
-        }
-        return f;
-    }
+//    public static FormulaAST literalListToFormula(List<String> lit) {
+//
+//        FormulaAST f = null;
+//        String theFormula = literalListToString(lit);
+//        if (StringUtil.isNonEmptyString(theFormula)) {
+//            f = new FormulaAST();
+//            f.read(theFormula);
+//        }
+//        return f;
+//    }
 
     /***************************************************************
      * Returns an
@@ -1379,8 +1379,8 @@ public class KB implements Serializable {
             List<String> inverses = null;
             if (useInverses) {
                 inverseSyns = getTermsViaAskWithRestriction(0, "subrelation", 2, "inverse", 1);
-                inverseSyns.addAll(getTermsViaAskWithRestriction(0, Formula.EQUAL, 2, "inverse", 1));
-                inverseSyns.addAll(getTermsViaAskWithRestriction(0, Formula.EQUAL, 1, "inverse", 2));
+                inverseSyns.addAll(getTermsViaAskWithRestriction(0, FormulaAST.EQUAL, 2, "inverse", 1));
+                inverseSyns.addAll(getTermsViaAskWithRestriction(0, FormulaAST.EQUAL, 1, "inverse", 2));
                 inverseSyns.add("inverse");
                 SetUtil.removeDuplicates(inverseSyns);
                 inverses = new ArrayList<>();
@@ -1393,8 +1393,8 @@ public class KB implements Serializable {
                     reduced.addAll(
                             getTermsViaAskWithRestriction(0, pred, idxArgnum, idxTerm, targetArgnum, predicatesUsed));
                     accumulator.addAll(getTermsViaAskWithRestriction(0, "subrelation", 2, pred, 1));
-                    accumulator.addAll(getTermsViaAskWithRestriction(0, Formula.EQUAL, 2, "subrelation", 1));
-                    accumulator.addAll(getTermsViaAskWithRestriction(0, Formula.EQUAL, 1, "subrelation", 2));
+                    accumulator.addAll(getTermsViaAskWithRestriction(0, FormulaAST.EQUAL, 2, "subrelation", 1));
+                    accumulator.addAll(getTermsViaAskWithRestriction(0, FormulaAST.EQUAL, 1, "subrelation", 2));
                     accumulator.remove(pred);
                     if (useInverses) {
                         for (String syn : inverseSyns) {
@@ -1571,14 +1571,14 @@ public class KB implements Serializable {
      *
      * @deprecated replaced with {@link #merge(KIFAST kif, String pathname)}
      */
-    public List<FormulaAST> merge(KIF kif, String pathname) {
-//        return mergeFormulaSource(kif.terms, kif.formulas, kif.formulaMap, pathname);
-        System.out.println("[KB.merge] merge with stale KIF called");
-        return null;
-    }
+//    public List<FormulaAST> merge(KIF kif, String pathname) {
+////        return mergeFormulaSource(kif.terms, kif.formulas, kif.formulaMap, pathname);
+//        System.out.println("[KB.merge] merge with stale KIF called");
+//        return null;
+//    }
 
     /**
-     * KIFAST-based overload of {@link #merge(KIF, String)}.
+     * KIFAST-based overload of {link #merge(KIF, String)}.
      * {@link KIFAST} stores {@link com.articulate.sigma.parsing.FormulaAST} values
      * (which extend Formula), so it is compatible with the same merge logic.
      */
@@ -2023,7 +2023,7 @@ public class KB implements Serializable {
         //System.out.println("KB.termDepth(): " + term);
         if (term.endsWith("+"))
             term = term.substring(0,term.length()-1);
-        if (term.startsWith(Formula.LP)) {
+        if (term.startsWith(FormulaAST.LP)) {
             System.out.println("KB.termDepth(): warning - composite term: " + term);
             FormulaAST f = new FormulaAST(term);
             String arg1 = f.getStringArgument(1);
@@ -2083,7 +2083,7 @@ public class KB implements Serializable {
 
     /*****************************************************************
      * Analogous to compareTo(), return -1,0 or 1 depending on whether
-     * the first term is "smaller", equal to or "greater" than the
+     * the first term is "smaller", equal to, or "greater" than the
      * second, respectively.  A term that is the parent of another
      * is "smaller".  If not a parent of the other, the smaller term
      * is that which is fewer "levels" from their common parent.
@@ -2839,37 +2839,37 @@ public class KB implements Serializable {
     /***************************************************************
      * @deprecated replaced with {@link #readConstituentAST}
      */
-    public KIF readConstituent(String filename) {
-
-        String canonicalPath = null;
-        KIF file = null;
-        try {
-            if (filename.endsWith(".owl") || filename.endsWith(".OWL") || filename.endsWith(".rdf")
-                    || filename.endsWith(".RDF")) {
-                OWLtranslator.read(filename);
-                filename = filename + ".kif";
-            }
-            File constituent = new File(filename);
-
-            canonicalPath = constituent.getCanonicalPath();
-            if (constituents.contains(canonicalPath))
-                errors.add("Error. " + canonicalPath + " already loaded.");
-            file = new KIF(canonicalPath);
-            file.readFile(canonicalPath);
-            warnings.addAll(file.warningSet);
-        }
-        catch (Exception ex1) {
-            StringBuilder error = new StringBuilder();
-            error.append(ex1.getMessage());
-            if (ex1 instanceof ParseException)
-                error.append(" at line ").append(((ParseException) ex1).getErrorOffset());
-            error.append(" in file ").append(canonicalPath);
-            errors.add(error.toString());
-            System.err.println("Error in KB.readConstituent(): " + error.toString());
-            ex1.printStackTrace();
-        }
-        return file;
-    }
+//    public KIF readConstituent(String filename) {
+//
+//        String canonicalPath = null;
+//        KIF file = null;
+//        try {
+//            if (filename.endsWith(".owl") || filename.endsWith(".OWL") || filename.endsWith(".rdf")
+//                    || filename.endsWith(".RDF")) {
+//                OWLtranslator.read(filename);
+//                filename = filename + ".kif";
+//            }
+//            File constituent = new File(filename);
+//
+//            canonicalPath = constituent.getCanonicalPath();
+//            if (constituents.contains(canonicalPath))
+//                errors.add("Error. " + canonicalPath + " already loaded.");
+//            file = new KIF(canonicalPath);
+//            file.readFile(canonicalPath);
+//            warnings.addAll(file.warningSet);
+//        }
+//        catch (Exception ex1) {
+//            StringBuilder error = new StringBuilder();
+//            error.append(ex1.getMessage());
+//            if (ex1 instanceof ParseException)
+//                error.append(" at line ").append(((ParseException) ex1).getErrorOffset());
+//            error.append(" in file ").append(canonicalPath);
+//            errors.add(error.toString());
+//            System.err.println("Error in KB.readConstituent(): " + error.toString());
+//            ex1.printStackTrace();
+//        }
+//        return file;
+//    }
 
     /***************************************************************
      * Adds a formula or formulas into the KB
@@ -2878,59 +2878,59 @@ public class KB implements Serializable {
      *
      * @Deprecated
      */
-    public void addConstituentInfo(KIF file) {
-
-        for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
-            if (!termFrequency.containsKey(entry.getKey())) {
-                termFrequency.put(entry.getKey(), entry.getValue());
-            }
-            else {
-                termFrequency.put(entry.getKey(), termFrequency.get(entry.getKey()) + entry.getValue());
-            }
-        }
-
-        int count = 2;
-        //System.out.println("INFO in KB.addConstituent(): add keys");
-        List<String> newlist, list;
-        int total = file.formulas.keySet().size();
-        for (String key : file.formulas.keySet()) { // Iterate through keys.
-            if ((count++ % 100) == 1)
-                progressSb.append(".");
-            if ((count % 4000) == 1) {
-                System.out.print(progressSb.toString() + "x");
-                progressSb.setLength(0);
-                System.out.printf("%nINFO in KB.addConstituent(): still adding keys. %d%% done.%n", count*100/total);
-            }
-            newlist = file.formulas.get(key);
-            list = formulas.get(key);
-            if (list != null) {
-                newlist.addAll(list);
-            }
-            formulas.put(key, newlist);
-        }
-
-        count = 2;
-        String internedFormula;
-        total = file.formulaMap.values().size();
-        //System.out.println("INFO in KB.addConstituent(): add values");
-        for (Formula f : file.formulaMap.values()) { // Iterate through values
-            internedFormula = f.getFormula().intern();
-            if ((count++ % 100) == 1)
-                progressSb.append(".");
-            if ((count % 4000) == 1) {
-                System.out.print(progressSb.toString() + "x");
-                progressSb.setLength(0);
-                System.out.printf("\nINFO in KB.addConstituent(): still adding values. %d%% done.%n", count*100/total);
-            }
-            if (!formulaMap.containsKey(internedFormula))
-                formulaMap.put(internedFormula, new FormulaAST(f.getFormula()));
-        }
-        this.getTerms().addAll(file.terms);
-        for (String t : file.terms)
-            capterms.put(t.toUpperCase(),t);
-        if (!constituents.contains(file.filename) && !file.filename.endsWith(_cacheFileSuffix)) // don't add auto-generated cache file
-            constituents.add(file.filename);
-    }
+//    public void addConstituentInfo(KIF file) {
+//
+//        for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
+//            if (!termFrequency.containsKey(entry.getKey())) {
+//                termFrequency.put(entry.getKey(), entry.getValue());
+//            }
+//            else {
+//                termFrequency.put(entry.getKey(), termFrequency.get(entry.getKey()) + entry.getValue());
+//            }
+//        }
+//
+//        int count = 2;
+//        //System.out.println("INFO in KB.addConstituent(): add keys");
+//        List<String> newlist, list;
+//        int total = file.formulas.keySet().size();
+//        for (String key : file.formulas.keySet()) { // Iterate through keys.
+//            if ((count++ % 100) == 1)
+//                progressSb.append(".");
+//            if ((count % 4000) == 1) {
+//                System.out.print(progressSb.toString() + "x");
+//                progressSb.setLength(0);
+//                System.out.printf("%nINFO in KB.addConstituent(): still adding keys. %d%% done.%n", count*100/total);
+//            }
+//            newlist = file.formulas.get(key);
+//            list = formulas.get(key);
+//            if (list != null) {
+//                newlist.addAll(list);
+//            }
+//            formulas.put(key, newlist);
+//        }
+//
+//        count = 2;
+//        String internedFormula;
+//        total = file.formulaMap.values().size();
+//        //System.out.println("INFO in KB.addConstituent(): add values");
+//        for (Formula f : file.formulaMap.values()) { // Iterate through values
+//            internedFormula = f.getFormula().intern();
+//            if ((count++ % 100) == 1)
+//                progressSb.append(".");
+//            if ((count % 4000) == 1) {
+//                System.out.print(progressSb.toString() + "x");
+//                progressSb.setLength(0);
+//                System.out.printf("\nINFO in KB.addConstituent(): still adding values. %d%% done.%n", count*100/total);
+//            }
+//            if (!formulaMap.containsKey(internedFormula))
+//                formulaMap.put(internedFormula, new FormulaAST(f.getFormula()));
+//        }
+//        this.getTerms().addAll(file.terms);
+//        for (String t : file.terms)
+//            capterms.put(t.toUpperCase(),t);
+//        if (!constituents.contains(file.filename) && !file.filename.endsWith(_cacheFileSuffix)) // don't add auto-generated cache file
+//            constituents.add(file.filename);
+//    }
 
     /***************************************************************
      * Add a new KB constituent by reading in the file, and then merging the formulas with
@@ -2943,23 +2943,12 @@ public class KB implements Serializable {
 
         long millis = System.currentTimeMillis();
         System.out.println("INFO in KB.addConstituent(): " + filename);
-        // KIFAST (ANTLR-based) is the default parser. Opt out with useAntlrParser=false in config.xml.
-        if (!"false".equals(KBmanager.getMgr().getPref("useAntlrParser"))) {
-            KIFAST file = readConstituentAST(filename);
-            addConstituentInfoAST(file);
-            System.out.println("\nINFO in KB.addConstituent(ANTLR): added " + file.formulaMap.values().size()
-                    + " formulas and " + file.terms.size() + " terms.");
-            System.out.println("INFO in KB.addConstituent(ANTLR): " + file.filename + " loaded in: " +
-                    (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
-        } else {
-            System.out.println("[KB.addConstituent] Fallback to old KIF parser");
-            KIF file = readConstituent(filename);
-            addConstituentInfo(file);
-            System.out.println("\nINFO in KB.addConstituent(KIF): added " + file.formulaMap.values().size()
-                    + " formulas and " + file.terms.size() + " terms.");
-            System.out.println("INFO in KB.addConstituent(KIF): " + file.filename + " loaded in: " +
-                    (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
-        }
+        KIFAST file = readConstituentAST(filename);
+        addConstituentInfoAST(file);
+        System.out.println("\nINFO in KB.addConstituent(ANTLR): added " + file.formulaMap.values().size()
+                + " formulas and " + file.terms.size() + " terms.");
+        System.out.println("INFO in KB.addConstituent(ANTLR): " + file.filename + " loaded in: " +
+                (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
     }
 
     /*****************************************************************
@@ -3228,7 +3217,7 @@ public class KB implements Serializable {
                     inst = (String) it.next();
                     valence = kbCache.valences.get(inst);
                     if (valence > 0) {
-                        String fStr = ("(valence " + inst + Formula.SPACE + valence + Formula.RP);
+                        String fStr = ("(valence " + inst + FormulaAST.SPACE + valence + FormulaAST.RP);
                         FormulaAST f = new FormulaAST();
                         f.read(fStr);
                         ans.add(f);
@@ -3332,7 +3321,7 @@ public class KB implements Serializable {
     public int getValence(String relnName) {
 
         if (kbCache.valences.get(relnName) == null) {
-            if (Formula.isLogicalOperator(relnName)) // logical operator arity
+            if (FormulaAST.isLogicalOperator(relnName)) // logical operator arity
                                                         // is checked in
                                                         // KIF.parse()
                 return -1;
@@ -3358,7 +3347,7 @@ public class KB implements Serializable {
      * @return true if obj is a String representation of a LISP empty list, else false.
      */
     public static boolean isEmptyList(Object obj) {
-        return (StringUtil.isNonEmptyString(obj) && Formula.empty((String) obj));
+        return (StringUtil.isNonEmptyString(obj) && FormulaAST.empty((String) obj));
     }
 
     /*****************************************************************
@@ -3369,7 +3358,7 @@ public class KB implements Serializable {
     public static boolean isVariable(String obj) {
 
         if (StringUtil.isNonEmptyString(obj)) {
-            return (obj.startsWith(Formula.V_PREF) || obj.startsWith(Formula.R_PREF));
+            return (obj.startsWith(FormulaAST.V_PREF) || obj.startsWith(FormulaAST.R_PREF));
         }
         return false;
     }
@@ -3381,7 +3370,7 @@ public class KB implements Serializable {
      */
     public static boolean isQuantifier(String obj) {
 
-        return (StringUtil.isNonEmptyString(obj) && (obj.equals(Formula.UQUANT) || obj.equals(Formula.EQUANT)));
+        return (StringUtil.isNonEmptyString(obj) && (obj.equals(FormulaAST.UQUANT) || obj.equals(FormulaAST.EQUANT)));
     }
 
     /*****************************************************************
@@ -3391,7 +3380,7 @@ public class KB implements Serializable {
      */
     public static boolean isCommutative(String obj) {
 
-        return (StringUtil.isNonEmptyString(obj) && (obj.equals(Formula.AND) || obj.equals(Formula.OR) || obj.equals(Formula.XOR)));
+        return (StringUtil.isNonEmptyString(obj) && (obj.equals(FormulaAST.AND) || obj.equals(FormulaAST.OR) || obj.equals(FormulaAST.XOR)));
     }
 
     /***************************************************************
@@ -3401,8 +3390,8 @@ public class KB implements Serializable {
 
         if (!documentation.contains("[from Wikipedia]"))
             return documentation;
-        int space1 = documentation.indexOf(Formula.SPACE);
-        int space2 = documentation.indexOf(Formula.SPACE,space1);
+        int space1 = documentation.indexOf(FormulaAST.SPACE);
+        int space2 = documentation.indexOf(FormulaAST.SPACE,space1);
         String term = documentation.substring(space1+1,space2);
         return documentation.replace("[from Wikipedia]","[<a href=\"https://en.wikipedia.org/wiki/" + term +
                 "\">from Wikipedia]</a>");

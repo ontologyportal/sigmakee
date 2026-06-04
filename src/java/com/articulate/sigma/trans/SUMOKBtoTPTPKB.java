@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@SuppressWarnings("LongLine")
 public class SUMOKBtoTPTPKB {
 
     public static final boolean FILTER_SIMPLE_ONLY = false;
@@ -36,12 +37,7 @@ public class SUMOKBtoTPTPKB {
 
     public static boolean debug = false;
 
-    // One-shot diagnostic flags (print first occurrence only, thread-safe)
-    private static final java.util.concurrent.atomic.AtomicBoolean loggedReparse =
-            new java.util.concurrent.atomic.AtomicBoolean(false);
     private static final java.util.concurrent.atomic.AtomicBoolean loggedExprPath =
-            new java.util.concurrent.atomic.AtomicBoolean(false);
-    private static final java.util.concurrent.atomic.AtomicBoolean loggedStringPath =
             new java.util.concurrent.atomic.AtomicBoolean(false);
 
     // Per-language path counters for observability (reset via resetPathCounters())
@@ -649,7 +645,7 @@ public class SUMOKBtoTPTPKB {
      *
      * @return the name of the KB translation to TPTP file
      */
-    public String writeFile(String fileName, Formula conjecture,
+    public String writeFile(String fileName, FormulaAST conjecture,
                             boolean isQuestion, PrintWriter pw) {
 
         PredVarInst.init();
@@ -828,7 +824,7 @@ public class SUMOKBtoTPTPKB {
             res.prologueLines.add("% is higher order");
             if (localLang.equals("thf")) {
                 Map<String, Set<String>> typeMap = new HashMap<>();
-                f = Modals.processModals(f, kb,typeMap);
+                f = new FormulaAST(Modals.processModalsExpr(f.expr, kb).getKey());
             }
             if (removeHOL) {
                 res.skippedHOL = true;
@@ -954,7 +950,7 @@ public class SUMOKBtoTPTPKB {
      *
      * @return the name of the KB translation to TPTP file
      */
-    private String tWriteFile(String fileName, Formula conjecture,
+    private String tWriteFile(String fileName, FormulaAST conjecture,
                               boolean isQuestion, PrintWriter pw) {
 
         final String localLang = getLang(); // snapshot once from ThreadLocal
@@ -1042,7 +1038,7 @@ public class SUMOKBtoTPTPKB {
                 if (!alreadyWrittenTPTPs.contains(sort)) {
                     name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
                     putAxiom(name, res.formula);
-                    linesBuf.add(localLang + Formula.LP + name + ",type," + sort + ").");
+                    linesBuf.add(localLang + FormulaAST.LP + name + ",type," + sort + ").");
                     alreadyWrittenTPTPs.add(sort);
                 }
             }
@@ -1054,7 +1050,7 @@ public class SUMOKBtoTPTPKB {
                     if (!filtered) {
                         name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
                         putAxiom(name, res.formula);
-                        linesBuf.add(localLang + Formula.LP + name + ",axiom,(" + tptp + ")).");
+                        linesBuf.add(localLang + FormulaAST.LP + name + ",axiom,(" + tptp + ")).");
                         alreadyWrittenTPTPs.add(tptp);
                     }
                 } else {
@@ -1106,39 +1102,39 @@ public class SUMOKBtoTPTPKB {
     /** *************************************************************
      * @deprecated
      */
-    @Deprecated
-    public boolean filterAxiom(Formula form, String tptp, PrintWriter pw) {
-
-        //----Don't output ""ed ''ed and numbers
-        if (QUOTED_CALL_PATTERN.matcher(tptp).matches() &&
-                this.getClass().equals(SUMOKBtoTPTPKB.class)) { // only filter numbers in TPTP, not TFF
-            pw.println("% number: " + tptp);
-            return removeNum;
-        }
-        if (removeStrings && (tptp.contains("'") || tptp.indexOf('"') >= 0)) {
-            pw.println("% f: " + form.getFormula());
-            pw.println("% quoted thing");
-            return true;
-        }
-
-        if (form.isHigherOrder(kb))
-            if (removeHOL)
-                return true;
-        if (!filterExcludePredicates(new FormulaAST(form.getFormula()))) {
-            if (!alreadyWrittenTPTPs.contains(tptp)) {
-                //pw.println("% not already written: " + tptp);
-                return false;
-            }
-            else {
-                pw.println("% already written: " + tptp);
-                return true;
-            }
-        }
-        else {
-            pw.println("% filtered predicate: " + form.getArgument(0));
-            return true;
-        }
-    }
+//    @Deprecated
+//    public boolean filterAxiom(Formula form, String tptp, PrintWriter pw) {
+//
+//        //----Don't output ""ed ''ed and numbers
+//        if (QUOTED_CALL_PATTERN.matcher(tptp).matches() &&
+//                this.getClass().equals(SUMOKBtoTPTPKB.class)) { // only filter numbers in TPTP, not TFF
+//            pw.println("% number: " + tptp);
+//            return removeNum;
+//        }
+//        if (removeStrings && (tptp.contains("'") || tptp.indexOf('"') >= 0)) {
+//            pw.println("% f: " + form.getFormula());
+//            pw.println("% quoted thing");
+//            return true;
+//        }
+//
+//        if (form.isHigherOrder(kb))
+//            if (removeHOL)
+//                return true;
+//        if (!filterExcludePredicates(new FormulaAST(form.getFormula()))) {
+//            if (!alreadyWrittenTPTPs.contains(tptp)) {
+//                //pw.println("% not already written: " + tptp);
+//                return false;
+//            }
+//            else {
+//                pw.println("% already written: " + tptp);
+//                return true;
+//            }
+//        }
+//        else {
+//            pw.println("% filtered predicate: " + form.getArgument(0));
+//            return true;
+//        }
+//    }
 
     public boolean filterAxiom(FormulaAST form, String tptp, List<String> fileContents) {
 

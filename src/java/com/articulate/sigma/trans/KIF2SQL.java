@@ -241,7 +241,7 @@ Articulate Software
         List doc = kb.askWithRestriction(0,"documentation",1,term);    // Class expressions for term.
         if (!doc.isEmpty()) {
             for (int i = 0; i < doc.size(); i++) {
-                Formula form = (Formula) doc.get(i);
+                FormulaAST form = (FormulaAST) doc.get(i);
                 String lang = form.getStringArgument(2);
                 String documentation = form.getStringArgument(3);
                 if (documentation != null)

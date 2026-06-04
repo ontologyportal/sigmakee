@@ -1,6 +1,5 @@
 package com.articulate.sigma.trans;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
 import org.junit.Test;

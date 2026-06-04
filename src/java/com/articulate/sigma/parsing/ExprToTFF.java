@@ -1,6 +1,5 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.FormulaPreprocessor;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KButilities;
@@ -48,7 +47,7 @@ import java.util.stream.Collectors;
  *
  * <h3>Fallback</h3>
  * <p>Callers should fall back to
- * {@link com.articulate.sigma.trans.SUMOtoTFAform#process(Formula, boolean)}
+ * {link com.articulate.sigma.trans.SUMOtoTFAform#process(Formula, boolean)}
  * when {@link #translate} returns {@code null} (parse failure or unsupported
  * construct).</p>
  */
@@ -152,7 +151,7 @@ public class ExprToTFF {
             if (kb.isSubclass(sumoType, "RationalNumber")) return "$rat";
             if (kb.isSubclass(sumoType, "RealNumber"))     return "$real";
         }
-        return Formula.TERM_SYMBOL_PREFIX + sumoType;
+        return FormulaAST.TERM_SYMBOL_PREFIX + sumoType;
     }
 
     // -----------------------------------------------------------------------
@@ -269,7 +268,7 @@ public class ExprToTFF {
     /***************************************************************
      * Substitute numeric constants with their decimal values.
      *
-     * <p>Mirrors {@link SUMOtoTFAform#instantiateNumericConstants(Formula)}:
+     * <p>Mirrors {link SUMOtoTFAform#instantiateNumericConstants(Formula)}:
      * if the top-level formula is {@code (instance NumberE ...)} or
      * {@code (instance Pi ...)}, returns {@code null} (the formula is dropped).
      * Otherwise replaces every occurrence of {@code NumberE} / {@code Pi} with
@@ -295,7 +294,7 @@ public class ExprToTFF {
      * occurrences from the formula tree.
      *
      * <p>Mirrors the regex-based removal in
-     * {@link SUMOtoTFAform#modifyPrecond(Formula)}.  Removed nodes create
+     * {link SUMOtoTFAform#modifyPrecond(Formula)}.  Removed nodes create
      * unary logical operators that are cleaned up by
      * {@link #elimUnitaryLogopsExpr(Expr)}.</p>
      *
@@ -311,7 +310,7 @@ public class ExprToTFF {
      * sub-type that has a constraint in {@link SUMOtoTFAform#numericConstraints}
      * with the corresponding constraint expression.
      *
-     * <p>Mirrors {@link SUMOtoTFAform#modifyTypesToConstraints(Formula)} using a
+     * <p>Mirrors {link SUMOtoTFAform#modifyTypesToConstraints(Formula)} using a
      * fixed-point iteration (up to 10 passes).</p>
      *
      * @return transformed Expr, or the original if no substitutable constraints found
@@ -337,7 +336,7 @@ public class ExprToTFF {
      *   <li>{@code (op singleArg)} with one argument → replaced by {@code singleArg}</li>
      * </ul>
      *
-     * <p>Mirrors {@link SUMOtoTFAform#elimUnitaryLogops(Formula)}.  Applied
+     * <p>Mirrors {link SUMOtoTFAform#elimUnitaryLogops(Formula)}.  Applied
      * recursively; re-applies when the tree changes.</p>
      *
      * @return simplified Expr, or {@code null} if the whole formula should be dropped
@@ -374,8 +373,8 @@ public class ExprToTFF {
      * Annotate function/predicate operator names with context-derived type suffixes
      * and propagate variable types into {@code varmap}.
      *
-     * <p>Mirrors {@link SUMOtoTFAform#constrainFunctVarsRecurse} /
-     * {@link SUMOtoTFAform#constrainOp} but operates entirely on {@link Expr} trees.
+     * <p>Mirrors {link SUMOtoTFAform#constrainFunctVarsRecurse} /
+     * {link SUMOtoTFAform#constrainOp} but operates entirely on {@link Expr} trees.
      * The key purpose is to rewrite operator atoms so that, e.g.,
      * {@code (DivisionFn 10 2)} in context {@code (equal … 5)} becomes
      * {@code (DivisionFn__0In1In2InFn 10 2)}.  The type-annotated name is then read
@@ -421,7 +420,7 @@ public class ExprToTFF {
         // Logical operators: recurse into each arg using the operator's KB signature
         // (or Entity when no signature is available) — mirrors the logic-branch of
         // constrainFunctVarsRecurse.
-        if (Formula.isLogicalOperator(op)) {
+        if (FormulaAST.isLogicalOperator(op)) {
             List<String> sig = kb.kbCache.getSignature(op);
             List<Expr> newArgs = new ArrayList<>();
             List<Expr> seArgs = se.args();
@@ -442,7 +441,7 @@ public class ExprToTFF {
      * and returns a new {@link Expr.SExpr} whose head atom carries the
      * type-annotated operator name and whose children are recursively annotated.
      *
-     * <p>Mirrors {@link SUMOtoTFAform#constrainOp}.</p>
+     * <p>Mirrors {link SUMOtoTFAform#constrainOp}.</p>
      */
     private static Expr constrainOpExpr(Expr.SExpr se, String op, String parentType,
                                          Map<String, Set<String>> varmap, KB kb) {
@@ -519,7 +518,7 @@ public class ExprToTFF {
      * Returns the SUMO type of a single {@link Expr} node, using {@code varmap}
      * to resolve variable types.
      *
-     * <p>Mirrors {@link SUMOtoTFAform#findTypeExpr(Expr)} (private there) but
+     * <p>Mirrors {link SUMOtoTFAform#findTypeExpr(Expr)} (private there) but
      * takes explicit {@code varmap} and {@code kb} parameters.</p>
      */
     static String argTypeOf(Expr expr, Map<String, Set<String>> varmap, KB kb) {
@@ -660,7 +659,7 @@ public class ExprToTFF {
                     String cons   = SUMOtoTFAform.numericConstraints.get(type);
                     String origVar = SUMOtoTFAform.numericVars.get(type);
                     if (cons != null && !cons.isEmpty() && origVar != null) {
-                        String newCons = cons.replace(Formula.V_PREF + origVar, var);
+                        String newCons = cons.replace(FormulaAST.V_PREF + origVar, var);
                         Expr constraintExpr = parseKifToExpr(newCons);
                         if (constraintExpr != null) return constraintExpr;
                     }
@@ -1018,7 +1017,7 @@ public class ExprToTFF {
                 String cons    = SUMOtoTFAform.numericConstraints.get(type);
                 String origVar = cons != null ? SUMOtoTFAform.numericVars.get(type) : null;
                 if (cons != null && !cons.isEmpty() && origVar != null) {
-                    String newCons = cons.replace(Formula.V_PREF + origVar, v.name());
+                    String newCons = cons.replace(FormulaAST.V_PREF + origVar, v.name());
                     Expr constraintExpr = parseKifToExpr(newCons);
                     if (constraintExpr != null) return constraintExpr;
                 }

@@ -811,7 +811,7 @@ public class FormulaAST implements Comparable, Serializable {
 
     /*****************************************************************
      * Walks the already-parsed {@link Expr} tree without constructing any
-     * {@link Formula} objects or calling {@code findAllTypeRestrictions}.
+     * {link Formula} objects or calling {@code findAllTypeRestrictions}.
      * The logic mirrors {@code Formula.isHigherOrder} exactly.
      */
     static boolean isHigherOrderExpr(Expr expr, KB kb) {

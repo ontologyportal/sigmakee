@@ -357,7 +357,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         assertEquals(2, (int) kb.kbCache.valences.get("greaterThanOrEqualTo"));
         Set<Expr> actual = fp.preProcessExpr(f.expr, false, kb);
         System.out.println("testMinValuePreprocess(): actual: " + actual);
-        Set<Formula> expected = Sets.newHashSet();
+        Set<FormulaAST> expected = Sets.newHashSet();
         int expectedSize = 100;
         System.out.println("testMinValuePreprocess(): expected: " + expectedSize);
         if (actual.size() > expectedSize)
@@ -404,7 +404,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
                 kb.kbCache.valences.get("patient"));
         assertTrue(kb.kbCache.valences.get("patient") == 2);
 
-        List<Formula> forms = RowVars.expandRowVars(kb, new Formula(f.getFormula()));
+        List<FormulaAST> forms = RowVars.expandRowVars(kb, new FormulaAST(f.getFormula()));
         System.out.println("testArgNumsPreprocess: forms: " + forms);
     }
 
@@ -458,7 +458,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
                 kb.kbCache.valences.get("greaterThanOrEqualTo"));
         Set<Expr> actual = fp.preProcessExpr(f, false, kb);
         System.out.println("testTVRPreprocess(): actual: " + actual);
-        Set<Formula> expected = Sets.newHashSet();
+        Set<FormulaAST> expected = Sets.newHashSet();
         int expectedSize = 30;
         System.out.println("testTVRPreprocess(): actual size: " + actual.size());
         System.out.println("testTVRPreprocess(): expected: " + expectedSize);

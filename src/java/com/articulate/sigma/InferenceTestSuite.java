@@ -553,7 +553,7 @@ public class InferenceTestSuite {
             itd.expectedAnswers.add(answerstring);
         }
         else {
-            Formula ansForm = new Formula(answerstring);
+            FormulaAST ansForm = new FormulaAST(answerstring);
             if (debug) System.out.println("INFO in InferenceTestSuite.readTestFile(): answer form: " + ansForm);
             List<String> answers = ansForm.complexArgumentsToArrayListString(1);
             if (debug) System.out.println("INFO in InferenceTestSuite.readTestFile(): answers: " + answers);
@@ -580,11 +580,11 @@ public class InferenceTestSuite {
             if (f.getCanonicalPath().endsWith(".tq")) {
                 ifd = new InfTestData();
                 ifd.filename = f.getName();
-                KIF test = new KIF();
+                KIFAST test = new KIFAST();
                 test.readFile(f.getCanonicalPath());
                 System.out.println("INFO in InferenceTestSuite.readTestFile(): num formulas: " +
-                        String.valueOf(test.formulasOrdered.size()));
-                for (Formula orderedF : test.formulasOrdered.values()) {
+                        String.valueOf(test.formulaMap.size()));
+                for (FormulaAST orderedF : test.formulaMap.values()) {
                     String formula = orderedF.getFormula();
                     if (formula.contains(";"))
                         formula = formula.substring(0, formula.indexOf(";"));
@@ -726,10 +726,10 @@ public class InferenceTestSuite {
         List<InfTestData> tests = readTestFiles(files);
         System.out.println("INFO in InferenceTestSuite.test(): number of files: " + files.size());
         int counter = 0;
-        Formula theQuery;
+        FormulaAST theQuery;
         FormulaPreprocessor fp;
         SUMOKBtoTFAKB stfa;
-        Set<Formula> theQueries;
+        Set<Expr> theQueries;
         long start;
         String lineHtml;
         String rfn;
@@ -748,13 +748,15 @@ public class InferenceTestSuite {
                 System.out.println("====================================");
                 System.out.println("INFO in InferenceTestSuite.test(): Note: " + itd.note);
                 System.out.println("INFO in InferenceTestSuite.test(): Query: " + itd.query);
-                theQuery = new Formula(itd.query);
+                theQuery = new FormulaAST();
+                theQuery.read(itd.query);
                 fp = new FormulaPreprocessor();
                 stfa = new SUMOKBtoTFAKB();
                 stfa.initOnce();
                 SUMOtoTFAform.initOnce();
-                theQueries = fp.preProcess(theQuery,true,kb);
-                for (Formula processed : theQueries) {
+                theQueries = fp.preProcessExpr(theQuery, true, kb);
+                for (Expr ex : theQueries) {
+                    FormulaAST processed = new FormulaAST(ex.toKifString());
                     if (processed.isHigherOrder(kb)) {
                         System.out.println("Error in InferenceTestSuite.test(): skipping higher order query: " +
                                 processed + " in test " + itd.note);

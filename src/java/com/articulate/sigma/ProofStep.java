@@ -215,7 +215,7 @@ public class ProofStep {
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
-        sb.append(number).append(". ").append(new FormulaAST(axiom).format("","  ","\n")).append(Formula.SPACE).append(premises).append(Formula.SPACE);
+        sb.append(number).append(". ").append(new FormulaAST(axiom).format("","  ","\n")).append(FormulaAST.SPACE).append(premises).append(FormulaAST.SPACE);
         if (inferenceType.startsWith("kb_")) {
             FormulaAST originalF = SUMOKBtoTPTPKB.axiomKey.get(inferenceType);
             if (originalF != null) {

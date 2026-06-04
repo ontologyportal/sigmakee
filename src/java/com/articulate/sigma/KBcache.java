@@ -940,7 +940,7 @@ public class KBcache implements Serializable {
         //    System.out.println("KBcache.extendInstance(): instance parents of: " + newTerm + " are: " + iset);
         //System.out.println("extendInstance(): new term: " + newTerm + " parents: " + iset);
         relations.add(newTerm);
-        if (newTerm.endsWith(Formula.FN_SUFF))
+        if (newTerm.endsWith(FormulaAST.FN_SUFF))
             functions.add(newTerm);
         else
             predicates.add(newTerm);
@@ -974,7 +974,7 @@ public class KBcache implements Serializable {
          **/
         List<String> sig = signatures.get(term);
 
-        if (sig == null && term != null && term.equals(Formula.EQUAL)) {
+        if (sig == null && term != null && term.equals(FormulaAST.EQUAL)) {
             sig = new ArrayList<>();
             sig.add("Entity");
             sig.add("Entity");
@@ -987,7 +987,7 @@ public class KBcache implements Serializable {
         Integer val = valences.get(term);
         if (val != null)
             valences.put(newTerm, val);
-        if (term.endsWith(Formula.FN_SUFF))
+        if (term.endsWith(FormulaAST.FN_SUFF))
             functions.add(newTerm);
     }
 
@@ -1186,13 +1186,13 @@ public class KBcache implements Serializable {
      */
     public boolean checkDisjoint(KB kb, String c1, String c2) {
 
-        if (!StringUtil.emptyString(c1) && Formula.listP(c1)) {
+        if (!StringUtil.emptyString(c1) && FormulaAST.listP(c1)) {
             FormulaAST c1f = new FormulaAST(c1);
             String pred = c1f.car();
             if (KButilities.isFunction(kb,pred))
                 c1 = getRange(pred);
         }
-        if (!StringUtil.emptyString(c2) && Formula.listP(c2)) {
+        if (!StringUtil.emptyString(c2) && FormulaAST.listP(c2)) {
             FormulaAST c2f = new FormulaAST(c2);
             String pred = c2f.car();
             if (KButilities.isFunction(kb,pred))
@@ -1960,7 +1960,7 @@ public class KBcache implements Serializable {
         FormulaAST form;
         String arg2, type;
         for (String rel : relations) {
-            domainArray = new String[Formula.MAX_PREDICATE_ARITY];
+            domainArray = new String[FormulaAST.MAX_PREDICATE_ARITY];
             maxIndex = 0;
             domainArray[0] = "";
             forms = kb.askWithRestriction(0,"domain",1,rel);
@@ -2110,7 +2110,7 @@ public class KBcache implements Serializable {
                     for (String child : valSet.keySet()) {
                         prents = valSet.get(child);
                         for (String parent : prents) {
-                            tuple = Formula.LP + rel + Formula.SPACE + child + Formula.SPACE + parent + Formula.RP;
+                            tuple = FormulaAST.LP + rel + FormulaAST.SPACE + child + FormulaAST.SPACE + parent + FormulaAST.RP;
                             if (!kb.formulaMap.containsKey(tuple)) {
                                 fw.write(tuple + System.getProperty("line.separator"));
                             }
@@ -2121,7 +2121,7 @@ public class KBcache implements Serializable {
                 for (String inst : instanceOf.keySet()) {
                     vSet = instanceOf.get(inst);
                     for (String parent : vSet) {
-                        tuple = "(instance " + inst + Formula.SPACE + parent + Formula.RP;
+                        tuple = "(instance " + inst + FormulaAST.SPACE + parent + FormulaAST.RP;
                         if (!kb.formulaMap.containsKey(tuple)) {
                             fw.write(tuple + System.getProperty("line.separator"));
                         }
@@ -2161,7 +2161,7 @@ public class KBcache implements Serializable {
             for (String child : valSet.keySet()) {
                 prents = valSet.get(child);
                 for (String parent : prents) {
-                    tuple = Formula.LP + rel + Formula.SPACE + child + Formula.SPACE + parent + Formula.RP;
+                    tuple = FormulaAST.LP + rel + FormulaAST.SPACE + child + FormulaAST.SPACE + parent + FormulaAST.RP;
                     if (!kb.formulaMap.containsKey(tuple)) {
                         sb.append(tuple);
                         cacheCount++;
@@ -2173,7 +2173,7 @@ public class KBcache implements Serializable {
         for (String inst : instanceOf.keySet()) {
             vSet = instanceOf.get(inst);
             for (String parent : vSet) {
-                tuple = "(instance " + inst + Formula.SPACE + parent + Formula.RP;
+                tuple = "(instance " + inst + FormulaAST.SPACE + parent + FormulaAST.RP;
                 if (!kb.formulaMap.containsKey(tuple)) {
                     sb.append(tuple);
                     cacheCount++;

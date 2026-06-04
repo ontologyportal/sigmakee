@@ -15,7 +15,7 @@ http://sigmakee.sourceforge.net
 /*************************************************************************************************/
 package com.articulate.sigma.trans;
 
-import com.articulate.sigma.Formula;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
 
 import tptp_parser.*;
@@ -31,49 +31,49 @@ public class TPTP2SUMO {
    * connectives with more arguments.  For example
    * (and (and A B) C) becomes (and A B C)
    */
-  public static Formula collapseConnectives(Formula form) {
+  public static FormulaAST collapseConnectives(FormulaAST form) {
 
-      if (!form.getFormula().contains(Formula.LP + Formula.AND + Formula.SPACE) && !form.getFormula().contains(Formula.LP + Formula.OR + Formula.SPACE) && !form.getFormula().contains(Formula.LP + Formula.XOR + Formula.SPACE))
+      if (!form.getFormula().contains(FormulaAST.LP + FormulaAST.AND + FormulaAST.SPACE) && !form.getFormula().contains(FormulaAST.LP + FormulaAST.OR + FormulaAST.SPACE) && !form.getFormula().contains(FormulaAST.LP + FormulaAST.XOR + FormulaAST.SPACE))
           return form;
       if (!form.isBalancedList())
           return form;
       if (debug) System.out.println("collapseConnectives(): input: " + form);
-      List<Formula> args = form.complexArgumentsToArrayList(1);
+      List<FormulaAST> args = form.complexArgumentsToArrayList(1);
       if (args == null)
           return form;
       StringBuilder sb = new StringBuilder();
       String pred = form.car();
-      sb.append(Formula.LP).append(pred).append(Formula.SPACE);
-      List<Formula> newargs = new ArrayList<>();
+      sb.append(FormulaAST.LP).append(pred).append(FormulaAST.SPACE);
+      List<FormulaAST> newargs = new ArrayList<>();
       if (debug) System.out.println("collapseConnectives(): args: " + args);
-      for (Formula f : args)
+      for (FormulaAST f : args)
           newargs.add(collapseConnectives(f));
       if (debug) System.out.println("collapseConnectives(): newargs: " + newargs);
-      if (pred.equals(Formula.OR) || pred.equals(Formula.XOR) || pred.equals(Formula.AND)) {
-          List<Formula> subargs;
-          for (Formula f : newargs) {
+      if (pred.equals(FormulaAST.OR) || pred.equals(FormulaAST.XOR) || pred.equals(FormulaAST.AND)) {
+          List<FormulaAST> subargs;
+          for (FormulaAST f : newargs) {
               if (f.car() != null && f.car().equals(pred)) {
                   if (debug) System.out.println("collapseConnectives(): matching connectives in " + f);
                   subargs = f.complexArgumentsToArrayList(1);
                   if (debug) System.out.println("collapseConnectives(): subargs " + subargs);
-                  for (Formula f2 : subargs)
-                      sb.append(f2.toString()).append(Formula.SPACE);
+                  for (FormulaAST f2 : subargs)
+                      sb.append(f2.toString()).append(FormulaAST.SPACE);
                   if (debug) System.out.println("collapseConnectives(): after adding to " + f + " result is " + sb);
               }
               else {
                   if (debug) System.out.println("collapseConnectives(): not matching connective in " + f);
                   if (debug) System.out.println("collapseConnectives(): adding to " + sb);
-                  sb.append(f.toString()).append(Formula.SPACE);
+                  sb.append(f.toString()).append(FormulaAST.SPACE);
               }
           }
       }
       else {
-          for (Formula f : newargs)
-            sb.append(f.toString()).append(Formula.SPACE);
+          for (FormulaAST f : newargs)
+            sb.append(f.toString()).append(FormulaAST.SPACE);
       }
       sb.deleteCharAt(sb.length()-1);
-      sb.append(Formula.RP);
-      Formula newForm = new Formula(sb.toString());
+      sb.append(FormulaAST.RP);
+      FormulaAST newForm = new FormulaAST(sb.toString());
       if (debug) System.out.println("collapseConnectives(): result: " + newForm);
       return newForm;
   }
@@ -84,7 +84,7 @@ public class TPTP2SUMO {
 
       String res = "";
       for (int i = indented+1; i <= indent; i++)
-          res += Formula.SPACE;
+          res += FormulaAST.SPACE;
       return res;
   }
 
@@ -107,7 +107,7 @@ public class TPTP2SUMO {
    */
   private static String transformVariable (String variable) {
 
-      return variable.replace(Formula.TERM_VARIABLE_PREFIX, "");
+      return variable.replace(FormulaAST.TERM_VARIABLE_PREFIX, "");
   }
 
   /** ***************************************************************
@@ -115,8 +115,8 @@ public class TPTP2SUMO {
    */
   public static String transformTerm (String term) {
 
-      term = term.replaceFirst(Formula.TERM_SYMBOL_PREFIX, "");
-      term = term.replace(Formula.TERM_MENTION_SUFFIX, "");
+      term = term.replaceFirst(FormulaAST.TERM_SYMBOL_PREFIX, "");
+      term = term.replace(FormulaAST.TERM_MENTION_SUFFIX, "");
       if (term.matches(".*__\\d"))
           term = term.substring(0,term.length()-3);
       return term;

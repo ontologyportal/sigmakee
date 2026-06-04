@@ -1,6 +1,6 @@
 package com.articulate.sigma.nlg;
 
-import com.articulate.sigma.Formula;
+import com.articulate.sigma.parsing.FormulaAST;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -188,8 +188,8 @@ public final class NLGReadability {
         if (template.indexOf('<') >= 0 || template.indexOf('>') >= 0)
             return template;
 
-        final String andKw = NLGUtils.getKeyword(Formula.AND, language);
-        final String orKw  = NLGUtils.getKeyword(Formula.OR, language);
+        final String andKw = NLGUtils.getKeyword(FormulaAST.AND, language);
+        final String orKw  = NLGUtils.getKeyword(FormulaAST.OR, language);
 
         if ((andKw == null || andKw.isEmpty()) && (orKw == null || orKw.isEmpty()))
             return template;

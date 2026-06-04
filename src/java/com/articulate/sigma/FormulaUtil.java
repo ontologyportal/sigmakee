@@ -40,8 +40,8 @@ public class FormulaUtil {
 
         StringBuilder sb = new StringBuilder();
         String car = f.car();
-        sb.append(car).append(Formula.LP);
-        if (Formula.listP(car)) {
+        sb.append(car).append(FormulaAST.LP);
+        if (FormulaAST.listP(car)) {
             System.err.println("Error in FormulaUtil.toProlog(): not a simple clause: " + car);
             return "";
         }
@@ -50,13 +50,13 @@ public class FormulaUtil {
             if (i != 1)
                 sb.append(",");
             arg = f.getStringArgument(i);
-            if (Formula.listP(arg)) {
+            if (FormulaAST.listP(arg)) {
                 System.err.println("Error in FormulaUtil.toProlog(): not a simple clause: " + arg);
                 return "";
             }
             sb.append(arg);
         }
-        sb.append(Formula.RP);
+        sb.append(FormulaAST.RP);
         return sb.toString();
     }
 
@@ -74,16 +74,16 @@ public class FormulaUtil {
      * @return a string consisting of a literal with the given predicate
      * that also contains a row variable, or null otherwise
      */
-    public static String getLiteralWithPredAndRowVar(String pred, Formula f) {
+    public static String getLiteralWithPredAndRowVar(String pred, FormulaAST f) {
 
         //System.out.println("getLiteralWithPredAndRowVar(): pred,f: " + pred + ", " + f);
         if (f == null || !f.listP())
             return null;
-        if (f.car().equals(pred) && f.getFormula().contains(Formula.R_PREF))
+        if (f.car().equals(pred) && f.getFormula().contains(FormulaAST.R_PREF))
             return f.getFormula();
-        List<Formula> lits = f.complexArgumentsToArrayList(0);
+        List<FormulaAST> lits = f.complexArgumentsToArrayList(0);
         String result;
-        for (Formula form : lits) {
+        for (FormulaAST form : lits) {
             result = getLiteralWithPredAndRowVar(pred,form);
             if (result != null)
                 return result;
@@ -181,41 +181,41 @@ public class FormulaUtil {
      * @return A new tree (String), with all occurrences of terms
      * matching oldPattern replaced by newTerm
      */
-    public static String treeReplace(String oldPattern, String newTerm, String tree) {
-
-        String result = tree;
-        try {
-            StringBuilder sb = new StringBuilder();
-            if (tree.matches(oldPattern))
-                sb.append(newTerm);
-            else if (Formula.listP(tree)) {
-                if (Formula.empty(tree)) {
-                    sb.append(tree);
-                }
-                else {
-                    FormulaAST f = new FormulaAST();
-                    f.read(tree);
-                    List tuple = f.literalToArrayList();
-                    sb.append(Formula.LP);
-                    int i = 0;
-                    for (Iterator it = tuple.iterator(); it.hasNext(); i++) {
-                        if (i > 0) sb.append(Formula.SPACE);
-                        sb.append(treeReplace(oldPattern,
-                                newTerm,
-                                (String) it.next()));
-                    }
-                    sb.append(Formula.RP);
-                }
-            } else {
-                sb.append(tree);
-            }
-            result = sb.toString();
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
+//    public static String treeReplace(String oldPattern, String newTerm, String tree) {
+//
+//        String result = tree;
+//        try {
+//            StringBuilder sb = new StringBuilder();
+//            if (tree.matches(oldPattern))
+//                sb.append(newTerm);
+//            else if (Formula.listP(tree)) {
+//                if (Formula.empty(tree)) {
+//                    sb.append(tree);
+//                }
+//                else {
+//                    FormulaAST f = new FormulaAST();
+//                    f.read(tree);
+//                    List tuple = f.literalToArrayList();
+//                    sb.append(Formula.LP);
+//                    int i = 0;
+//                    for (Iterator it = tuple.iterator(); it.hasNext(); i++) {
+//                        if (i > 0) sb.append(Formula.SPACE);
+//                        sb.append(treeReplace(oldPattern,
+//                                newTerm,
+//                                (String) it.next()));
+//                    }
+//                    sb.append(Formula.RP);
+//                }
+//            } else {
+//                sb.append(tree);
+//            }
+//            result = sb.toString();
+//        }
+//        catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
+//        return result;
+//    }
 
     /** ********************************************************************************************
      * Factory method for the memo map

@@ -1,6 +1,5 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.utils.MapUtils;
 
@@ -171,7 +170,7 @@ public class VarTypes {
         // Prefer Expr-based path when available
         if (f.expr != null)
             return constrainVarsFromExpr(rel, var, f);
-        if (var.startsWith(Formula.R_PREF))
+        if (var.startsWith(FormulaAST.R_PREF))
             return f;
         Map<Integer, Set<SuokifParser.ArgumentContext>> argsForIndex = f.argMap.get(var);
         List<String> sig = kb.kbCache.getSignature(rel);
@@ -183,7 +182,7 @@ public class VarTypes {
                     sb.append(arg.getText()).append(", ");
             }
             if (debug) System.out.println("VarTypes.constrainVars(): " + sb.toString());
-            if (sb.toString().contains(Formula.R_PREF)) {
+            if (sb.toString().contains(FormulaAST.R_PREF)) {
                 if (debug) System.out.println("Arg mismatch caused by row variable " + argsForIndex.keySet());
             }
             else {
@@ -333,8 +332,8 @@ public class VarTypes {
         for (String c : f.constants.keySet()) {
             as = f.constants.get(c);
             if (kb.kbCache.relations.contains(c)) {
-                newc = c + Formula.TERM_MENTION_SUFFIX;
-                as.literal = as.literal.replace(Formula.SPACE +  c, " " + newc);
+                newc = c + FormulaAST.TERM_MENTION_SUFFIX;
+                as.literal = as.literal.replace(FormulaAST.SPACE +  c, " " + newc);
             }
         }
     }
@@ -370,7 +369,7 @@ public class VarTypes {
             return;
         }
 
-        if (!Formula.isVariable(headName)) {
+        if (!FormulaAST.isVariable(headName)) {
             List<String> sig = kb.kbCache.getSignature(headName);
             if (sig != null) {
                 if (sig.contains("Formula")) {
@@ -521,7 +520,7 @@ public class VarTypes {
     public FormulaAST constrainVarsFromExpr(String rel, String var, FormulaAST f) {
 
         if (f.expr == null) return f;
-        if (var.startsWith(Formula.R_PREF)) return f;
+        if (var.startsWith(FormulaAST.R_PREF)) return f;
         List<String> sig = kb.kbCache.getSignature(rel);
         if (sig == null) return f;
         collectConstraintTypes(f.expr, var, rel, sig, f);
@@ -608,7 +607,7 @@ public class VarTypes {
                     System.out.println();
                 }
             }
-            if (argsForIndex == null || Formula.isVariable(pred))
+            if (argsForIndex == null || FormulaAST.isVariable(pred))
                 continue;
             if (debug) {
                 System.out.println("VarTypes.findType(): ");
@@ -632,7 +631,7 @@ public class VarTypes {
                         sb.append(arg.getText()).append(", ");
                 }
                 if (debug) System.out.println("VarTypes.findType(): " + sb.toString());
-                if (sb.toString().contains(Formula.R_PREF)) {
+                if (sb.toString().contains(FormulaAST.R_PREF)) {
                     if (debug) System.out.println("Arg mismatch caused by row variable " + argsForIndex.keySet());
                 }
                 else {

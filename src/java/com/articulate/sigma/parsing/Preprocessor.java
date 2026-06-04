@@ -1,6 +1,5 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 
 import java.util.ArrayList;
@@ -89,14 +88,14 @@ public class Preprocessor {
 
         if (debug) {
             for (FormulaAST r : rvResults) {
-                if (r.getFormula().contains(Formula.R_PREF))
+                if (r.getFormula().contains(FormulaAST.R_PREF))
                     System.err.println("Error in Preprocessor.preprocess(): rvresults contains rowvar: " + r);
             }
         }
         Set<FormulaAST> newRules = new HashSet<>();
         for (FormulaAST r : rules) {
             if (!rowvar.contains(r) && !predvar.contains(r) && !r.higherOrder && !r.containsNumber) { // only add rules without pred and row vars
-                if (r.getFormula().contains(Formula.R_PREF))
+                if (r.getFormula().contains(FormulaAST.R_PREF))
                     System.err.println("Error in Preprocessor.preprocess(): contains rowvar: " + r);
                 else
                     newRules.add(r);
@@ -124,7 +123,7 @@ public class Preprocessor {
             sortals.addSortals(r);
             sortalTimes = sortalTimes + (System.currentTimeMillis()-sortalStart);
             if (debug) System.out.println("Preprocessor.preprocess(): result adding sortals to r: " + r);
-            if (r.getFormula().contains(Formula.R_PREF))
+            if (r.getFormula().contains(FormulaAST.R_PREF))
                 System.err.println("Error in Preprocessor.preprocess(): before reparsing, contains rowvar: " + r);
             else {
                 reparseStart = System.currentTimeMillis();
@@ -164,7 +163,7 @@ public class Preprocessor {
         SuokifVisitor visitor;
         for (FormulaAST f : rules) {
             if (f.higherOrder) continue;
-            if (f.getFormula().contains(Formula.R_PREF)) {
+            if (f.getFormula().contains(FormulaAST.R_PREF)) {
                 System.err.println("Error in Preprocessor.reparse(): Shouldn't have row variable after preprocessing: " + f);
                 continue;
             }

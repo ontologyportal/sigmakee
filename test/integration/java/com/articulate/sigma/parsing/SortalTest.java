@@ -1,6 +1,5 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.IntegrationTestBase;
 import org.junit.Test;
 
@@ -34,9 +33,9 @@ public class SortalTest extends IntegrationTestBase {
         s = new Sortals(kb);
         s.winnowAllTypes(f);
         String result = s.addSortals(f);
-        Formula resultf = new Formula(result);
+        FormulaAST resultf = new FormulaAST(result);
         System.out.println("Result: " + resultf);
-        Formula expectedf = new Formula(expected);
+        FormulaAST expectedf = new FormulaAST(expected);
         System.out.println("expected: " +expectedf);
         if (resultf.equals(expectedf))
             System.out.println("Success");
@@ -65,7 +64,7 @@ public class SortalTest extends IntegrationTestBase {
                     "(equal ?VAL (ListOrderFn (ListFn @ARGS) ?ARG))) " +
                     "(greaterThan ?VAL ?N)))";
         String result = process(input,expected);
-        assertEquals(new Formula(expected),new Formula(result));
+        assertEquals(new FormulaAST(expected),new FormulaAST(result));
     }
 
     /** ***************************************************************
@@ -91,7 +90,7 @@ public class SortalTest extends IntegrationTestBase {
                       "(equal ?OBJ (MereologicalSumFn ?PART1 ?PART2)) " +
                       "(connected ?PART1 ?PART2)))))";
         String result = process(input,expected);
-        assertEquals(new Formula(expected),new Formula(result));
+        assertEquals(new FormulaAST(expected),new FormulaAST(result));
 
     }
 
@@ -129,7 +128,7 @@ public class SortalTest extends IntegrationTestBase {
                 "        (ListLengthFn\n" +
                 "          (ListFn_2 ?ROW1 ?ROW2)) ?NUMBER)))))";
         String result = process(input,expected);
-        assertEquals(new Formula(expected),new Formula(result));
+        assertEquals(new FormulaAST(expected),new FormulaAST(result));
 
     }
 

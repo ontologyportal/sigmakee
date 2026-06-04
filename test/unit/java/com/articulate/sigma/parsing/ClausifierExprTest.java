@@ -1,7 +1,5 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.Clausifier;
-import com.articulate.sigma.Formula;
 import org.junit.Test;
 
 import java.util.List;
@@ -448,103 +446,5 @@ public class ClausifierExprTest {
         String s = out.toKifString();
         assertFalse("Sk1 should be replaced", s.contains("Sk1"));
         assertTrue("should use ?VAR names", s.contains("?VAR"));
-    }
-
-    // -----------------------------------------------------------------------
-    // Parity tests — ClausifierExpr bridge methods vs old Clausifier
-    // These verify that the Expr-based pipeline produces the same canonical
-    // output as the string-based Clausifier for the cases that matter most.
-    // -----------------------------------------------------------------------
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void parity_normalizeVariables_simple() {
-        String[] inputs = {
-            "(=> (instance ?X Human) (instance ?X Animal))",
-            "(and (p ?A ?B) (q ?B ?C))",
-            "(forall (?X ?Y) (=> (r ?X ?Y) (r ?Y ?X)))",
-        };
-        for (String input : inputs) {
-            String old  = Clausifier.normalizeVariables(input);
-            String newV = ClausifierExpr.normalizeVariables(input);
-            assertEquals("normalizeVariables mismatch for: " + input, old, newV);
-        }
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void parity_normalizeVariables_replaceSkolemTerms() {
-        String[] inputs = {
-            "(p Sk1 ?X)",
-            "(and (q SkFn1 ?Y) (r Sk2))",
-        };
-        for (String input : inputs) {
-            String old  = Clausifier.normalizeVariables(input, true);
-            String newV = ClausifierExpr.normalizeVariables(input, true);
-            assertEquals("normalizeVariables(replaceSkolem) mismatch for: " + input, old, newV);
-        }
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void parity_clausify_simpleImplication() {
-        String kifInput = "(=> (instance ?X Human) (instance ?X Animal))";
-        FormulaAST f = new FormulaAST(kifInput);
-        Formula f2 = new Formula(kifInput);
-        Formula oldResult = Clausifier.clausify(f2);
-        FormulaAST newResult = ClausifierExpr.clausify(f);
-        // Compare via normalised form so variable index differences don't matter
-        String oldNorm = Clausifier.normalizeVariables(oldResult.getFormula());
-        String newNorm = ClausifierExpr.normalizeVariables(newResult.getFormula());
-        assertEquals("clausify parity — simple implication", oldNorm, newNorm);
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void parity_clausify_equivalence() {
-        String kifInput = "(<=> (p ?X) (q ?X))";
-        FormulaAST f = new FormulaAST(kifInput);
-        Formula f2 = new Formula(kifInput);
-        Formula oldResult = Clausifier.clausify(f2);
-        FormulaAST newResult = ClausifierExpr.clausify(f);
-        String oldNorm = Clausifier.normalizeVariables(oldResult.getFormula());
-        String newNorm = ClausifierExpr.normalizeVariables(newResult.getFormula());
-        assertEquals("clausify parity — equivalence", oldNorm, newNorm);
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void parity_clausify_transitivity() {
-        String kifInput = "(=> (and (r ?X ?Y) (r ?Y ?Z)) (r ?X ?Z))";
-        FormulaAST f = new FormulaAST(kifInput);
-        Formula f2 = new Formula(kifInput);
-        Formula oldResult = Clausifier.clausify(f2);
-        FormulaAST newResult = ClausifierExpr.clausify(f);
-        String oldNorm = Clausifier.normalizeVariables(oldResult.getFormula());
-        String newNorm = ClausifierExpr.normalizeVariables(newResult.getFormula());
-        assertEquals("clausify parity — transitivity", oldNorm, newNorm);
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void parity_toNegAndPosLitsWithRenameInfo() {
-        String kifInput = "(=> (and (r ?X ?Y) (r ?Y ?Z)) (r ?X ?Z))";
-        FormulaAST f = new FormulaAST(kifInput);
-        Formula f2 = new Formula(kifInput);
-        @SuppressWarnings("unchecked")
-        List<Object> oldResult = (List<Object>) Clausifier.toNegAndPosLitsWithRenameInfo(f2);
-        @SuppressWarnings("unchecked")
-        List<Object> newResult = (List<Object>) ClausifierExpr.toNegAndPosLitsWithRenameInfo(f);
-        // Both should produce non-empty clause lists
-        assertTrue("old result should have clauses", !oldResult.isEmpty());
-        assertTrue("new result should have clauses", !newResult.isEmpty());
-        // The clause list (index 0) should have the same number of clauses
-        List<?> oldClauses = (List<?>) oldResult.get(0);
-        List<?> newClauses = (List<?>) newResult.get(0);
-        assertEquals("clause count should match", oldClauses.size(), newClauses.size());
-        // Index 1 is the original formula
-        assertNotNull("new result should include original formula", newResult.get(1));
-        // Index 2 is the rename map
-        assertTrue("new result rename map should be a Map", newResult.get(2) instanceof java.util.Map);
     }
 }

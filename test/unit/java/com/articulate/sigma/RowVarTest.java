@@ -115,11 +115,11 @@ public class RowVarTest extends UnitTestBase  {
                 "        (ListFn @ARGS) ?ARG)))\n" +
                 "  (greaterThan ?VAL ?N))";
 
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt1);
 
         //RowVars.DEBUG = true;
-        List<Formula> results = RowVars.expandRowVars(kb,f);
+        List<FormulaAST> results = RowVars.expandRowVars(kb,f);
         String result = results.get(0).getFormula();
         String expected = "(=>\n" +
                 "  (and\n" +
@@ -304,11 +304,11 @@ public class RowVarTest extends UnitTestBase  {
 
         System.out.println("\n=========== testRowVarExp =================");
         String stmt = "(<=> (partition @ROW) (and (exhaustiveDecomposition @ROW) (disjointDecomposition @ROW)))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
 
         //RowVars.DEBUG = true;
-        List<Formula> results = RowVars.expandRowVars(kb,f);
+        List<FormulaAST> results = RowVars.expandRowVars(kb,f);
         System.out.println("testRowVarExp(: input: " + stmt);
         System.out.println("testRowVarExp(): results: " + results);
         System.out.println("testRowVarExp(): results size: " + results.size());

@@ -25,8 +25,7 @@ public class ModalsTest extends UnitTestBase {
                         "    (not (modalAttribute ?FORMULA Permission)))";
 
         FormulaAST f = new FormulaAST(fstr);
-        Map<String, Set<String>> typeMap = new HashMap<>();
-        FormulaAST out = Modals.processModals(f, kb,typeMap);
+        FormulaAST out = new FormulaAST(Modals.processModalsExpr(f.expr, kb).getKey());
 
         String result = out.getFormula();
         System.out.println("\nDuality Test:\n" + result);
@@ -51,9 +50,7 @@ public class ModalsTest extends UnitTestBase {
                         "                       (acquaintance Bill Jane)))))))";
 
         FormulaAST f = new FormulaAST(fstr);
-        Map<String, Set<String>> typeMap = new HashMap<>();
-        FormulaAST out = Modals.processModals(f, kb,typeMap);
-
+        FormulaAST out = new FormulaAST(Modals.processModalsExpr(f.expr, kb).getKey());
         String result = out.getFormula();
         System.out.println("\nDeep Modal Test:\n" + result);
 
@@ -81,9 +78,7 @@ public class ModalsTest extends UnitTestBase {
                         "        (desires ?AGENT ?THING)))";
 
         FormulaAST f = new FormulaAST(fstr);
-        Map<String, Set<String>> typeMap = new HashMap<>();
-        FormulaAST out = Modals.processModals(f, kb,typeMap);
-
+        FormulaAST out = new FormulaAST(Modals.processModalsExpr(f.expr, kb).getKey());
         String result = out.getFormula();
         System.out.println("\nPure FOL Test:\n" + result);
 
@@ -109,9 +104,7 @@ public class ModalsTest extends UnitTestBase {
                         "        (conclusion ?CONCLUSION ?ARGUMENT ?W1)))))";
 
         FormulaAST f = new FormulaAST(fstr);
-        Map<String, Set<String>> typeMap = new HashMap<>();
-        FormulaAST out = Modals.processModals(f, kb, typeMap);
-
+        FormulaAST out = new FormulaAST(Modals.processModalsExpr(f.expr, kb).getKey());
         String result = out.getFormula();
         System.out.println("\nMixed World-Sensitive Test:\n" + result);
 

@@ -85,7 +85,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
         SuokifVisitor visitor = new SuokifVisitor();
         visitor.parse_common(inputStream);
         if (visitor.result.isEmpty()) {
-            String errStr = "Error in SuokifVisitor.parseString(): no results for input:\n"  + Formula.textFormat(input);
+            String errStr = "Error in SuokifVisitor.parseString(): no results for input:\n"  + FormulaAST.textFormat(input);
             System.err.println(errStr);
         }
         return visitor;
@@ -265,9 +265,9 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
     public void generateRuleKeys(FormulaAST f) {
 
         for (String s : f.antecedentTerms)
-            addToKeys(KIF.createKey(s,true,false,0,0),f);
+            addToKeys(KIFAST.createKey(s,true,false,0,0),f);
         for (String s : f.consequentTerms)
-            addToKeys(KIF.createKey(s,false,true,0,0),f);
+            addToKeys(KIFAST.createKey(s,false,true,0,0),f);
     }
 
     /** ***************************************************************
@@ -282,7 +282,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 argSet = args.get(argnum);
                 for (SuokifParser.ArgumentContext arg : argSet) {
                     if (isConstantArgument(arg))
-                        addToKeys(KIF.createKey(arg.getText(),false,false,argnum,0),f);
+                        addToKeys(KIFAST.createKey(arg.getText(),false,false,argnum,0),f);
                 }
             }
         }
@@ -495,7 +495,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
         if (debug) System.out.println("# children: " + context.children.size());
         if (debug) System.out.println("text: " + context.getText());
         StringBuilder sb = new StringBuilder();
-        sb.append(Formula.LP);
+        sb.append(FormulaAST.LP);
         String pred = null;
         int argnum = 0;
         List<String> argList = new ArrayList<>();
@@ -503,8 +503,8 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
         Map<Integer,Set<SuokifParser.ArgumentContext>> args = new HashMap<>();
         if (context.IDENTIFIER() != null) {
             pred = context.IDENTIFIER().toString();
-            sb.append(pred).append(Formula.SPACE);
-            if (Formula.DOC_PREDICATES.contains(pred))
+            sb.append(pred).append(FormulaAST.SPACE);
+            if (FormulaAST.DOC_PREDICATES.contains(pred))
                 formast.isDoc = true;
             formast.termCache.add(pred);
             formast.relation = pred;
@@ -524,7 +524,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 if (argnum == 0)
                     formast.predVarCache.add(f.getFormula());
                 formast.allVarsCache.add(f.getFormula());
-                sb.append(f.getFormula()).append(Formula.SPACE);
+                sb.append(f.getFormula()).append(FormulaAST.SPACE);
             }
             if (c instanceof SuokifParser.ArgumentContext) {
                 ac = (SuokifParser.ArgumentContext) c;
@@ -554,24 +554,24 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 argAt.add((SuokifParser.ArgumentContext) c);
                 args.put(argnum,argAt);
                 argnum++;
-                sb.append(f.getFormula()).append(Formula.SPACE);
+                sb.append(f.getFormula()).append(FormulaAST.SPACE);
                 argList.add(f.getFormula());
                 if (debug) System.out.println("Visiting relsent: containsNumber: " + f.containsNumber);
                 formast.mergeFormulaAST(f);
             }
         }
-        if (pred.equals("instance") && argList.size() > 1 && Formula.isVariable(argList.get(0)) && Formula.isTerm(argList.get(1))) {
+        if (pred.equals("instance") && argList.size() > 1 && FormulaAST.isVariable(argList.get(0)) && FormulaAST.isTerm(argList.get(1))) {
             if (debug) System.out.println("SuokifVisitor.visitRelsent(): found explicit instance: argList: " + argList);
             MapUtils.addToMap(formast.varTypes, argList.get(0), argList.get(1));
             MapUtils.addToMap(formast.explicitTypes,argList.get(0), argList.get(1));
         }
-        if (pred.equals("subclass") && argList.size() > 1 && Formula.isVariable(argList.get(0)) && Formula.isTerm(argList.get(1))) {
+        if (pred.equals("subclass") && argList.size() > 1 && FormulaAST.isVariable(argList.get(0)) && FormulaAST.isTerm(argList.get(1))) {
             MapUtils.addToMap(formast.varTypes, argList.get(0), argList.get(1) + "+");
             MapUtils.addToMap(formast.explicitTypes,argList.get(0), argList.get(1) + "+");
         }
         formast.argMap.put(pred,args);
         sb.deleteCharAt(sb.length()-1);  // delete trailing space
-        sb.append(Formula.RP);
+        sb.append(FormulaAST.RP);
         formast.setFormula(sb.toString());
         if (debug) System.out.println("pred: " + pred);
         if (debug) if (argList != null && argList.size() > 1)
@@ -667,7 +667,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
             if (c instanceof SuokifParser.SentenceContext)
                 f = visitSentence((SuokifParser.SentenceContext) c);
         }
-        f.setFormula(Formula.LP + Formula.NOT + Formula.SPACE + f.getFormula() + Formula.RP);
+        f.setFormula(FormulaAST.LP + FormulaAST.NOT + FormulaAST.SPACE + f.getFormula() + FormulaAST.RP);
         return f;
     }
 
@@ -689,11 +689,11 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 f = visitSentence((SuokifParser.SentenceContext) c);
                 if (debug) System.out.println("inside visitAndsent(): rowvarstruct: " + f.rowVarStructs);
                 ar.add(f);
-                sb.append(f.getFormula()).append(Formula.SPACE);
+                sb.append(f.getFormula()).append(FormulaAST.SPACE);
             }
         }
         sb.delete(sb.length()-1,sb.length());
-        sb.append(Formula.RP);
+        sb.append(FormulaAST.RP);
         f = new FormulaAST();
         f.setFormula(sb.toString());
         f.mergeFormulaAST(ar);
@@ -718,11 +718,11 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
             if (c instanceof SuokifParser.SentenceContext) {
                 f = visitSentence((SuokifParser.SentenceContext) c);
                 ar.add(f);
-                sb.append(f.getFormula()).append(Formula.SPACE);
+                sb.append(f.getFormula()).append(FormulaAST.SPACE);
             }
         }
         sb.delete(sb.length()-1,sb.length());
-        sb.append(Formula.RP);
+        sb.append(FormulaAST.RP);
         f = new FormulaAST();
         f.setFormula(sb.toString());
         f.mergeFormulaAST(ar);
@@ -746,11 +746,11 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
             if (c instanceof SuokifParser.SentenceContext) {
                 f = visitSentence((SuokifParser.SentenceContext) c);
                 ar.add(f);
-                sb.append(f.getFormula()).append(Formula.SPACE);
+                sb.append(f.getFormula()).append(FormulaAST.SPACE);
             }
         }
         sb.delete(sb.length()-1,sb.length());
-        sb.append(Formula.RP);
+        sb.append(FormulaAST.RP);
         f = new FormulaAST();
         f.setFormula(sb.toString());
         f.mergeFormulaAST(ar);
@@ -780,7 +780,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 }
             }
         }
-        f1.setFormula("(=> " + f1.getFormula() + Formula.SPACE + f2.getFormula() + Formula.RP);
+        f1.setFormula("(=> " + f1.getFormula() + FormulaAST.SPACE + f2.getFormula() + FormulaAST.RP);
         f1.mergeFormulaAST(f2);
         f1.isRule = true;
         if (debug) System.out.println("visitImplies: returning with containsNumber: " + f1.containsNumber);
@@ -810,7 +810,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 }
              }
         }
-        f1.setFormula("(<=> " + f1.getFormula() + Formula.SPACE + f2.getFormula() + Formula.RP);
+        f1.setFormula("(<=> " + f1.getFormula() + FormulaAST.SPACE + f2.getFormula() + FormulaAST.RP);
         f1.mergeFormulaAST(f2);
         f1.isRule = true;
         return f1;
@@ -847,7 +847,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
         oneEq.add(c1);
         oneEq.add(c2);
         f1.eqList.add(oneEq);
-        f1.setFormula("(equal " + f1.getFormula() + Formula.SPACE + f2.getFormula() + Formula.RP);
+        f1.setFormula("(equal " + f1.getFormula() + FormulaAST.SPACE + f2.getFormula() + FormulaAST.RP);
         f1.mergeFormulaAST(f2);
         return f1;
     }
@@ -890,18 +890,18 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
             if (c instanceof SuokifParser.VariableContext) {
                 farg = visitVariable((SuokifParser.VariableContext) c);
                 quant.add(farg.getFormula());
-                varlist.append(farg.getFormula()).append(Formula.SPACE);
+                varlist.append(farg.getFormula()).append(FormulaAST.SPACE);
             }
             if (c instanceof SuokifParser.SentenceContext) {
                 varlist.deleteCharAt(varlist.length()-1); // remove trailing space
                 f = visitSentence((SuokifParser.SentenceContext) c);
                 body = f.getFormula();
                 if (debug) System.out.println("visitForall(): farg: " + farg);
-                if (varlist != null && varlist.toString().contains(Formula.R_PREF)) {
+                if (varlist != null && varlist.toString().contains(FormulaAST.R_PREF)) {
                     f.rowvarLiterals.add(context);
-                    vars = varlist.toString().split(Formula.SPACE);
+                    vars = varlist.toString().split(FormulaAST.SPACE);
                     for (String var : vars) {
-                        if (var.startsWith(Formula.R_PREF)) {
+                        if (var.startsWith(FormulaAST.R_PREF)) {
                             rs = new FormulaAST.RowStruct();
                             rs.pred = "__quantList";
                             rs.rowvar = var;
@@ -916,7 +916,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
         }
         f.univVarsCache.addAll(quant);
         f.allVarsCache.addAll(quant);
-        f.setFormula("(forall (" + varlist + ") " + body + Formula.RP);
+        f.setFormula("(forall (" + varlist + ") " + body + FormulaAST.RP);
         if (debug) System.out.println("visitForall(): varlist: " + varlist);
         return f;
     }
@@ -940,12 +940,12 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
             if (c instanceof SuokifParser.VariableContext) {
                 farg = visitVariable((SuokifParser.VariableContext) c);
                 quant.add(farg.getFormula());
-                varlist.append(farg.getFormula()).append(Formula.SPACE);
+                varlist.append(farg.getFormula()).append(FormulaAST.SPACE);
             }
             if (c instanceof SuokifParser.SentenceContext) {
                 f = visitSentence((SuokifParser.SentenceContext) c);
                 body = f.getFormula();
-                if (farg != null && farg.getFormula().contains(Formula.R_PREF)) {
+                if (farg != null && farg.getFormula().contains(FormulaAST.R_PREF)) {
                     f.rowvarLiterals.add(context);
                     rs = new FormulaAST.RowStruct();
                     rs.pred = "__quantList";
@@ -960,7 +960,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
         varlist.delete(varlist.length()-1,varlist.length());
         f.existVarsCache.addAll(quant);
         f.allVarsCache.addAll(quant);
-        f.setFormula("(exists (" + varlist + ") " + body + Formula.RP);
+        f.setFormula("(exists (" + varlist + ") " + body + FormulaAST.RP);
         return f;
     }
 
@@ -1049,7 +1049,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
             if (debug) System.out.println("funword: " + funword);
             formast.termCache.add(funword);
             formast.relation = funword;
-            sb.append(Formula.LP).append(funword).append(Formula.SPACE);
+            sb.append(FormulaAST.LP).append(funword).append(FormulaAST.SPACE);
         }
         int argnum = 1;
         Map<Integer,Set<SuokifParser.ArgumentContext>> args = new HashMap<>();
@@ -1079,14 +1079,14 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 args.put(argnum,argAt);
                 argnum++;
                 arf.add(farg);
-                sb.append(farg.getFormula()).append(Formula.SPACE);
+                sb.append(farg.getFormula()).append(FormulaAST.SPACE);
                 if (debug) System.out.println("Visiting funterm: containsNumber: " + farg.containsNumber);
                 formast.mergeFormulaAST(farg);
             }
         }
         formast.argMap.put(funword,args);
         sb.delete(sb.length()-1,sb.length());
-        sb.append(Formula.RP);
+        sb.append(FormulaAST.RP);
         formast.setFormula(sb.toString());
         formast.mergeFormulaAST(arf);
         formast.isFunctional = true;

@@ -185,24 +185,24 @@ public class DB {
      * VALUES
      * ('%','databasename','username','Y','Y','Y','Y','Y','N');
      */
-    private void generateDBElement(KB kb, String element) {
-
-        List docs = kb.askWithRestriction(0,"localDocumentation",3,element);
-        System.out.println("alter table " + element + " add column documentation varchar(255);");
-        if (!docs.isEmpty()) {
-            Formula f = (Formula) docs.get(0);
-            String doc = f.getStringArgument(4);
-            System.out.println("insert into " + element + "(documentation) values ('" + doc + "');");
-        }
-        List subs = kb.askWithRestriction(0,"HasDatabaseColumn",1,element);
-        Formula f;
-        String t;
-        for (int i = 0; i < subs.size(); i++) {
-            f = (Formula) subs.get(i);
-            t = f.getStringArgument(2);
-            System.out.println("alter table " + element + " add column " + t + " varchar(255);");
-        }
-    }
+//    private void generateDBElement(KB kb, String element) {
+//
+//        List docs = kb.askWithRestriction(0,"localDocumentation",3,element);
+//        System.out.println("alter table " + element + " add column documentation varchar(255);");
+//        if (!docs.isEmpty()) {
+//            Formula f = (Formula) docs.get(0);
+//            String doc = f.getStringArgument(4);
+//            System.out.println("insert into " + element + "(documentation) values ('" + doc + "');");
+//        }
+//        List subs = kb.askWithRestriction(0,"HasDatabaseColumn",1,element);
+//        Formula f;
+//        String t;
+//        for (int i = 0; i < subs.size(); i++) {
+//            f = (Formula) subs.get(i);
+//            t = f.getStringArgument(2);
+//            System.out.println("alter table " + element + " add column " + t + " varchar(255);");
+//        }
+//    }
 
     /** ***************************************************************
      *  Generate an SQL database from the knowledge base
@@ -210,19 +210,19 @@ public class DB {
      *  must have &%localDocumentation and &%HasDatabaseColumn
      *  relations.
      */
-    public void generateDB(KB kb) {
-
-        System.out.println("create database " + kb.name + ";");
-        List composites = kb.askWithRestriction(0,"instance",2,"DatabaseTable");
-        Formula f;
-        String element;
-        for (int i = 0; i < composites.size(); i++) {
-            f = (Formula) composites.get(i);
-            element = f.getStringArgument(1);
-            System.out.println("create table " + element + ";");
-            generateDBElement(kb, element);
-        }
-    }
+//    public void generateDB(KB kb) {
+//
+//        System.out.println("create database " + kb.name + ";");
+//        List composites = kb.askWithRestriction(0,"instance",2,"DatabaseTable");
+//        Formula f;
+//        String element;
+//        for (int i = 0; i < composites.size(); i++) {
+//            f = (Formula) composites.get(i);
+//            element = f.getStringArgument(1);
+//            System.out.println("create table " + element + ";");
+//            generateDBElement(kb, element);
+//        }
+//    }
 
     /** ***************************************************************
      * Parse the input from a Reader for a CSV file into an ArrayList
@@ -642,58 +642,58 @@ public class DB {
      * @return An int denoting the number of expressions saved to the
      * file named by sourceFilePath
      */
-    public static int writeSuoKifStatements(KB kb, String sourceFilePath) {
-
-        long t1 = System.currentTimeMillis();
-        System.out.println("ENTER DB.writeSuoKifStatements(" + kb.name + ", " + sourceFilePath + ")");
-        boolean foundFirstOne = false;
-        PrintWriter pw = null;
-        int count = 0;
-        try {
-            File sourceFile = new File(sourceFilePath);
-            String canonicalPath = sourceFile.getCanonicalPath();
-            System.out.print("  writing " + canonicalPath + " ");
-            FormulaAST printF = new FormulaAST();
-            Formula f;
-            String stmt, pathname;
-            for (Iterator it = kb.formulaMap.values().iterator(); it.hasNext();) {
-                f = (Formula) it.next();
-                pathname = f.getSourceFile();
-                if (pathname.equals(canonicalPath)) {
-                    if (!foundFirstOne) {
-                        pw = new PrintWriter(new FileWriter(canonicalPath));
-                        foundFirstOne = true;
-                    }
-                    printF.read(StringUtil.normalizeSpaceChars(f.getFormula()));
-                    if (printF.getStringArgument(0).equalsIgnoreCase("contentRegexPattern"))
-                        printF.read(StringUtil.escapeEscapeChars(printF.getFormula()));
-                    // stmt = StringUtil.removeEscapedEscapes(stmt);
-                    pw.println(printF.toString());
-                    pw.println("");
-                    if ((count++ % 100) == 1) System.out.print(".");
-                }
-            }
-            System.out.println("x: " + count + " statements written");
-        }
-        catch (IOException ex) {
-            System.err.println("Error writing file " + sourceFilePath);
-            ex.printStackTrace();
-        }
-        finally {
-            try {
-                if (pw != null) {
-                    pw.close();
-                }
-            }
-            catch (Exception ioe) {
-                ioe.printStackTrace();
-            }
-        }
-        System.out.println("EXIT DB.writeSuoKifStatements(" + kb.name + ", " + sourceFilePath + ")");
-        System.out.println("  count == " + count);
-        System.out.println("  "  + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds elapsed time");
-        return count;
-    }
+//    public static int writeSuoKifStatements(KB kb, String sourceFilePath) {
+//
+//        long t1 = System.currentTimeMillis();
+//        System.out.println("ENTER DB.writeSuoKifStatements(" + kb.name + ", " + sourceFilePath + ")");
+//        boolean foundFirstOne = false;
+//        PrintWriter pw = null;
+//        int count = 0;
+//        try {
+//            File sourceFile = new File(sourceFilePath);
+//            String canonicalPath = sourceFile.getCanonicalPath();
+//            System.out.print("  writing " + canonicalPath + " ");
+//            FormulaAST printF = new FormulaAST();
+//            Formula f;
+//            String stmt, pathname;
+//            for (Iterator it = kb.formulaMap.values().iterator(); it.hasNext();) {
+//                f = (Formula) it.next();
+//                pathname = f.getSourceFile();
+//                if (pathname.equals(canonicalPath)) {
+//                    if (!foundFirstOne) {
+//                        pw = new PrintWriter(new FileWriter(canonicalPath));
+//                        foundFirstOne = true;
+//                    }
+//                    printF.read(StringUtil.normalizeSpaceChars(f.getFormula()));
+//                    if (printF.getStringArgument(0).equalsIgnoreCase("contentRegexPattern"))
+//                        printF.read(StringUtil.escapeEscapeChars(printF.getFormula()));
+//                    // stmt = StringUtil.removeEscapedEscapes(stmt);
+//                    pw.println(printF.toString());
+//                    pw.println("");
+//                    if ((count++ % 100) == 1) System.out.print(".");
+//                }
+//            }
+//            System.out.println("x: " + count + " statements written");
+//        }
+//        catch (IOException ex) {
+//            System.err.println("Error writing file " + sourceFilePath);
+//            ex.printStackTrace();
+//        }
+//        finally {
+//            try {
+//                if (pw != null) {
+//                    pw.close();
+//                }
+//            }
+//            catch (Exception ioe) {
+//                ioe.printStackTrace();
+//            }
+//        }
+//        System.out.println("EXIT DB.writeSuoKifStatements(" + kb.name + ", " + sourceFilePath + ")");
+//        System.out.println("  count == " + count);
+//        System.out.println("  "  + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds elapsed time");
+//        return count;
+//    }
 
     /** ***************************************************************
      *  Collect relations in the knowledge base
@@ -761,46 +761,46 @@ public class DB {
      *
      *  @param kb The knowledge base.
      */
-    public void exportTable(KB kb) {
-
-        List relations = getRelations(kb);
-        List usedRelations = new ArrayList();
-        Map rows = new TreeMap();
-        Map row;
-        String term, arg1, arg2, element;
-        List statements;
-        Formula f;
-        for (Iterator itr = relations.iterator(); itr.hasNext();) {
-            term = (String) itr.next();
-            statements = kb.ask("arg",0,term);
-            if (statements != null) {
-//                row = new TreeMap();
-                for (Iterator its = statements.iterator(); its.hasNext();) {
-                    f = (Formula) its.next();
-                    arg1 = f.getStringArgument(1);
-                    if (Character.isUpperCase(arg1.charAt(0)) && !arg1.endsWith(Formula.FN_SUFF)) {
-                        if (!usedRelations.contains(term))
-                            usedRelations.add(term);
-                        arg2 = f.getStringArgument(2);
-                        if (rows.get(f.getArgument(1)) == null) {
-                            row = new TreeMap();
-                            rows.put(arg1,row);
-                        }
-                        else
-                            row = (TreeMap) rows.get(arg1);
-                        if (row.get(term) == null)
-                            row.put(term,f.getArgument(2));
-                        else {
-                            element = (String) row.get(term);
-                            element = element + "/" + f.getArgument(2);
-                            row.put(term,element);
-                        }
-                    }
-                }
-            }
-        }
-        printSpreadsheet(rows,usedRelations);
-    }
+//    public void exportTable(KB kb) {
+//
+//        List relations = getRelations(kb);
+//        List usedRelations = new ArrayList();
+//        Map rows = new TreeMap();
+//        Map row;
+//        String term, arg1, arg2, element;
+//        List statements;
+//        Formula f;
+//        for (Iterator itr = relations.iterator(); itr.hasNext();) {
+//            term = (String) itr.next();
+//            statements = kb.ask("arg",0,term);
+//            if (statements != null) {
+////                row = new TreeMap();
+//                for (Iterator its = statements.iterator(); its.hasNext();) {
+//                    f = (Formula) its.next();
+//                    arg1 = f.getStringArgument(1);
+//                    if (Character.isUpperCase(arg1.charAt(0)) && !arg1.endsWith(Formula.FN_SUFF)) {
+//                        if (!usedRelations.contains(term))
+//                            usedRelations.add(term);
+//                        arg2 = f.getStringArgument(2);
+//                        if (rows.get(f.getArgument(1)) == null) {
+//                            row = new TreeMap();
+//                            rows.put(arg1,row);
+//                        }
+//                        else
+//                            row = (TreeMap) rows.get(arg1);
+//                        if (row.get(term) == null)
+//                            row.put(term,f.getArgument(2));
+//                        else {
+//                            element = (String) row.get(term);
+//                            element = element + "/" + f.getArgument(2);
+//                            row.put(term,element);
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        printSpreadsheet(rows,usedRelations);
+//    }
 
     /** ***************************************************************
      */

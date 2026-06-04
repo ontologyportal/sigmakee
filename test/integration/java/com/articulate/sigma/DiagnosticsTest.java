@@ -2,13 +2,6 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.FormulaAST;
 import org.junit.Test;
-
-import com.articulate.sigma.Diagnostics;
-import com.articulate.sigma.Formula;
-import com.articulate.sigma.IntegrationTestBase;
-import com.articulate.sigma.KIF;
-
-import java.beans.Transient;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

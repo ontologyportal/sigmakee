@@ -1,7 +1,6 @@
 package com.articulate.sigma.nlg;
-
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
+import com.articulate.sigma.parsing.FormulaAST;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -14,7 +13,7 @@ public class SumoProcessEntityPropertySimpleTest extends SigmaMockTestBase {
 
     @Test
     public void testAttributeFemale() {
-        Formula formula = new Formula("(attribute ?human Female)");
+        FormulaAST formula = new FormulaAST("(attribute ?human Female)");
         SumoProcessEntityProperty prop = new SumoProcessEntityProperty(formula);
 
         String expected = "female human";
@@ -27,7 +26,7 @@ public class SumoProcessEntityPropertySimpleTest extends SigmaMockTestBase {
      */
     @Test
     public void testAttributeNotInKBs() {
-        Formula formula = new Formula("(attribute ?x Stultifying)");
+        FormulaAST formula = new FormulaAST("(attribute ?x Stultifying)");
         SumoProcessEntityProperty prop = new SumoProcessEntityProperty(formula);
 
         String expected = "Stultifying bureaucracy";

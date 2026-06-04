@@ -1,6 +1,5 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 
 import java.util.ArrayList;
@@ -34,7 +33,7 @@ public class RowVar {
         StringBuilder sb = new StringBuilder();
         String varName = var.substring(1), varList;
         for (int i = 1; i <= 7; i++) {
-            sb.append(Formula.V_PREF).append(varName).append(i).append(Formula.SPACE);
+            sb.append(FormulaAST.V_PREF).append(varName).append(i).append(FormulaAST.SPACE);
             varList = sb.toString();
             varList = varList.substring(0, varList.length() - 1);
             result.add(varList);
@@ -71,9 +70,9 @@ public class RowVar {
                     varList = varLists.get(i);
                     if (debug) System.out.println("expandVariableArityRowVar(): replace varname : @" +
                             varName + " with varlist: " + varList);
-                    newliteral = literal.replace(Formula.R_PREF + varName, varList);
-                    fnSuffix = Formula.FN_SUFF;
-                    if (!pred.endsWith(Formula.FN_SUFF))
+                    newliteral = literal.replace(FormulaAST.R_PREF + varName, varList);
+                    fnSuffix = FormulaAST.FN_SUFF;
+                    if (!pred.endsWith(FormulaAST.FN_SUFF))
                         fnSuffix = "";
                     if (debug) System.out.println("expandVariableArityRowVar(): literal arity: " + rs.arity);
                     if (debug) System.out.println("expandVariableArityRowVar(): i: " + i);
@@ -95,7 +94,7 @@ public class RowVar {
                         fnew.setFormula(fnew.getFormula().replace(literal, newliteral));
                     else {
                         if (debug) System.out.println("expandVariableArityRowVar(): replace (" + literal + ") with (" + newliteral + ")");
-                        fnew.setFormula(fnew.getFormula().replace(Formula.LP + literal + Formula.RP, Formula.LP + newliteral + Formula.RP));
+                        fnew.setFormula(fnew.getFormula().replace(FormulaAST.LP + literal + FormulaAST.RP, FormulaAST.LP + newliteral + FormulaAST.RP));
                     }
                     if (debug) System.out.println("expandVariableArityRowVar(): fnew after " + fnew.getFormula());
                 }
@@ -260,7 +259,7 @@ public class RowVar {
                 varName = var.substring(1);
                 sb.setLength(0); // reset
                 for (int i = 1; i <= arity; i++)
-                    sb.append(Formula.V_PREF).append(varName).append(i).append(Formula.SPACE);
+                    sb.append(FormulaAST.V_PREF).append(varName).append(i).append(FormulaAST.SPACE);
                 if (sb.length() > 0)
                     sb.deleteCharAt(sb.length() - 1);
                 else{
@@ -277,10 +276,10 @@ public class RowVar {
                         continue;
                     }
                     if (kb.kbCache.valences.get(pred) == -1 && rs.rowvar.equals(var)) {
-                        newliteral = literal.replace(Formula.R_PREF + varName, sb.toString());
+                        newliteral = literal.replace(FormulaAST.R_PREF + varName, sb.toString());
                         // and we don't want a false match to a part of a var name
-                        fnSuffix = Formula.FN_SUFF;
-                        if (!pred.endsWith(Formula.FN_SUFF))
+                        fnSuffix = FormulaAST.FN_SUFF;
+                        if (!pred.endsWith(FormulaAST.FN_SUFF))
                             fnSuffix = "";
                         newPredName = pred;
                         if (!pred.equals("__quantList"))
@@ -304,7 +303,7 @@ public class RowVar {
             if (debug) System.out.println("expandRowVar() result for var: " + var);
             if (debug) {
                 for (FormulaAST fp : flist) {
-                    if (fp.getFormula().contains(Formula.R_PREF))
+                    if (fp.getFormula().contains(FormulaAST.R_PREF))
                         System.err.println("Error in RowVar.expandRowVar(): row var in output -");
                     System.out.println(fp.getFormula() + "\n");
                 }
@@ -412,7 +411,7 @@ public class RowVar {
                     // same pred appears with different arities under the same row variable
                     // (e.g. (ListFn @ROW ?ITEM) and (ListFn @ROW) in the same formula).
                     int totalArity = newArgs.size();
-                    String fnSuffix = pred.endsWith(Formula.FN_SUFF) ? Formula.FN_SUFF : "";
+                    String fnSuffix = pred.endsWith(FormulaAST.FN_SUFF) ? FormulaAST.FN_SUFF : "";
                     String newPredName = pred + "__" + totalArity + fnSuffix;
                     newHead = new Expr.Atom(newPredName);
                     kb.kbCache.copyNewPredFromVariableArity(newPredName, pred, totalArity);

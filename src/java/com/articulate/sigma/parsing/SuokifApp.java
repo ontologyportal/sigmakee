@@ -1,7 +1,5 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.Formula;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;

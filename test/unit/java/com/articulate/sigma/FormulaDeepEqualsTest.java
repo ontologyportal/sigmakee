@@ -1,7 +1,11 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.FormulaAST;
 import org.junit.Test;
+
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -120,10 +124,10 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "    (instance ?blankets-6 Blanket)\n" +
                 "    (instance ?Leigh-1 Human)\n" +
                 "    (instance ?baby-4 HumanBaby)) )");
-        Formula.debug = true;
+        FormulaAST.debug = true;
         //testing equal formulas
         assertTrue(f1.deepEquals(f2));
-        Formula.debug = false;
+        FormulaAST.debug = false;
     }
 
     /***************************************************************
@@ -258,7 +262,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         FormulaAST f2 = new FormulaAST();
         f2.read(s2);
 
-        Formula.debug = true;
+        FormulaAST.debug = true;
         //System.out.println("testUnifyWithMiscPredicates(): deepEquals: " +  f1.deepEquals(f2));
         long start = System.nanoTime();
         assertTrue(f1.unifyWith(f2));
@@ -273,7 +277,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
 
         String stmt = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
                 "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -283,13 +287,13 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "(equal ?SET1 ?SET2)))";
 
         expected.read(expectedString);
-
-        Formula actual = fp.addTypeRestrictions(f, SigmaTestBase.kb);
+        Map<String, Set<String>> varmap = fp.findTypeRestrictionsExpr(f.expr, kb);
+        Expr actual = fp.addTypeRestrictionsExpr(f.expr, varmap, SigmaTestBase.kb);
         System.out.println("testLogicallyEqualsPerformance: expected: " + expected);
         System.out.println("testLogicallyEqualsPerformance: actual: " + actual);
         long start = System.nanoTime();
 //        assertTrue(expected.logicallyEquals(actual));
-        assertTrue(expected.unifyWith(new FormulaAST(actual.getFormula())));
+        assertTrue(expected.unifyWith(new FormulaAST(actual.toKifString())));
         long stop = System.nanoTime();
         System.out.println("Execution time (in microseconds): " + ((stop - start) / 1000));
     }

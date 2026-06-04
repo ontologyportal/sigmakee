@@ -145,57 +145,57 @@ public class HTMLformatter {
     /**************************************************************
      * Create the text for a single step in a proof.
      */
-    public static String proofTextFormat(String query, ProofStep step, String kbName, String language) {
-
-        StringBuilder result = new StringBuilder();
-        FormulaAST f = new FormulaAST();
-        KB kb = KBmanager.getMgr().getKB(kbName);
-        f.read(step.axiom);
-        f.read(Formula.postProcess(f.getFormula()));
-        f.read(ProofProcessor.removeNestedAnswerClause(f.getFormula()));
-
-        if (StringUtil.isNonEmptyString(language)) {
-            String pph = NLGUtils.htmlParaphrase("",
-                    f.getFormula(),
-                    KBmanager.getMgr().getKB(kbName).getFormatMap(language),
-                    KBmanager.getMgr().getKB(kbName).getTermFormatMap(language),
-                    kb,
-                    language);
-            if (StringUtil.emptyString(pph))
-                pph = "";
-            else {
-                pph = NLGUtils.upcaseFirstVisibleChar(pph, true, language);
-            }
-            result.append(pph);
-        }
-        else {
-            if (f.getFormula().equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.
-                f.read("true");                           // Change "FALSE" to "True" so it makes more sense to the user.
-                result.append("QED");
-            }
-            else
-                result.append(Formula.textFormat(f.getFormula()));
-            if (step.inferenceType != null && step.inferenceType.equals("assume_negation")) {
-                result.append("[Negated Query]");
-            }
-            else {
-                Integer stepNum;
-                for (int i = 0; i < step.premises.size(); i++) {
-                    stepNum = step.premises.get(i);
-                    result.append(stepNum.toString()).append(" ");
-                }
-                if (step.premises.isEmpty()) {
-                    if (step.formulaType != null && step.formulaType.equals("conjecture"))
-                        result.append("[Query]");
-                    else if (step.formulaRole != null)
-                        result.append(step.formulaRole);
-                    else
-                        result.append("[KB]");
-                }
-            }
-        }
-        return result.toString();
-    }
+//    public static String proofTextFormat(String query, ProofStep step, String kbName, String language) {
+//
+//        StringBuilder result = new StringBuilder();
+//        FormulaAST f = new FormulaAST();
+//        KB kb = KBmanager.getMgr().getKB(kbName);
+//        f.read(step.axiom);
+//        f.read(Formula.postProcess(f.getFormula()));
+//        f.read(ProofProcessor.removeNestedAnswerClause(f.getFormula()));
+//
+//        if (StringUtil.isNonEmptyString(language)) {
+//            String pph = NLGUtils.htmlParaphrase("",
+//                    f.getFormula(),
+//                    KBmanager.getMgr().getKB(kbName).getFormatMap(language),
+//                    KBmanager.getMgr().getKB(kbName).getTermFormatMap(language),
+//                    kb,
+//                    language);
+//            if (StringUtil.emptyString(pph))
+//                pph = "";
+//            else {
+//                pph = NLGUtils.upcaseFirstVisibleChar(pph, true, language);
+//            }
+//            result.append(pph);
+//        }
+//        else {
+//            if (f.getFormula().equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.
+//                f.read("true");                           // Change "FALSE" to "True" so it makes more sense to the user.
+//                result.append("QED");
+//            }
+//            else
+//                result.append(Formula.textFormat(f.getFormula()));
+//            if (step.inferenceType != null && step.inferenceType.equals("assume_negation")) {
+//                result.append("[Negated Query]");
+//            }
+//            else {
+//                Integer stepNum;
+//                for (int i = 0; i < step.premises.size(); i++) {
+//                    stepNum = step.premises.get(i);
+//                    result.append(stepNum.toString()).append(" ");
+//                }
+//                if (step.premises.isEmpty()) {
+//                    if (step.formulaType != null && step.formulaType.equals("conjecture"))
+//                        result.append("[Query]");
+//                    else if (step.formulaRole != null)
+//                        result.append(step.formulaRole);
+//                    else
+//                        result.append("[KB]");
+//                }
+//            }
+//        }
+//        return result.toString();
+//    }
 
     /**************************************************************
      * Create the HTML for a single step in a proof.
@@ -712,7 +712,7 @@ public class HTMLformatter {
                     formattedFormula = TPTPutil.htmlTPTPFormat(f, kbHref, traditionalLogic) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
                 else
                     formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
-                if (Formula.DOC_PREDICATES.contains(arg0))
+                if (FormulaAST.DOC_PREDICATES.contains(arg0))
                     show.append(kb.formatDocumentation(kbHref, formattedFormula, language));
                 else
                     show.append(formattedFormula);
@@ -730,7 +730,7 @@ public class HTMLformatter {
                 }
                 show.append("</a>");
                 show.append("</td>\n<td width=\"40%\" valign=\"top\">");
-                if (!Formula.DOC_PREDICATES.contains(arg0))
+                if (!FormulaAST.DOC_PREDICATES.contains(arg0))
                     pph = NLGUtils.htmlParaphrase(kbHref, f.getFormula(),
                             kb.getFormatMap(language),
                             kb.getTermFormatMap(language),

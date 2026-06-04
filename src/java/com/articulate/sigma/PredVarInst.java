@@ -48,7 +48,7 @@ public class PredVarInst {
     public static final ThreadLocal<Boolean> doublesHandledTL = ThreadLocal.withInitial(() -> false);
 
     //The list of logical terms that not related to arity check, will skip these predicates
-    private static final List<String> LOGICAL_TERMS = Arrays.asList(new String[]{Formula.UQUANT,Formula.EQUANT,Formula.IF,Formula.AND,Formula.OR,Formula.XOR,Formula.IFF,Formula.NOT,Formula.EQUAL});
+    private static final List<String> LOGICAL_TERMS = Arrays.asList(new String[]{FormulaAST.UQUANT,FormulaAST.EQUANT,FormulaAST.IF,FormulaAST.AND,FormulaAST.OR,FormulaAST.XOR,FormulaAST.IFF,FormulaAST.NOT,FormulaAST.EQUAL});
 
     /** ***************************************************************
      */
@@ -281,8 +281,8 @@ public class PredVarInst {
                 if (debug) System.out.println("instantiatePredVars(): check relation: " + rel);
                 if (debug) System.out.println("instantiatePredVars(): pred var arity: " + predVarArityTL.get().get(var));
                 if (debug) System.out.println("instantiatePredVars(): relation arity: " + kb.kbCache.valences.get(rel));
-                if (rel.equals(Formula.EQUAL) || Formula.isLogicalOperator(rel) ||
-                        Formula.isComparisonOperator(rel) || Formula.isMathFunction(rel))
+                if (rel.equals(FormulaAST.EQUAL) || FormulaAST.isLogicalOperator(rel) ||
+                        FormulaAST.isComparisonOperator(rel) || FormulaAST.isMathFunction(rel))
                     continue;
                 if (isTypeExpansion(rel)) {
                     if (debug) System.out.println("instantiatePredVars(): type expansion of relation: " + rel);
@@ -368,7 +368,7 @@ public class PredVarInst {
             throw new IllegalArgumentException();
         }
         if (intval == null) {
-            if (!LOGICAL_TERMS.contains(rel) && !rel.startsWith(Formula.V_PREF)) {
+            if (!LOGICAL_TERMS.contains(rel) && !rel.startsWith(FormulaAST.V_PREF)) {
                 if (debug) System.out.printf("%nINFO in PredVarInst.hasCorrectArityRecurse(): " +
                         "Predicate %s does not have an arity defined in KB, " +
                         "can't get the arity number!\n%s\n", rel, f, f.getSourceFile(), f.startLine);
@@ -380,7 +380,7 @@ public class PredVarInst {
             if (!StringUtil.emptyString(res))
                 result.append(res);
         }
-        if (Formula.isVariable(rel))
+        if (FormulaAST.isVariable(rel))
             return result.toString();
         if (intval != null && intval == argList.size())
             result.toString();

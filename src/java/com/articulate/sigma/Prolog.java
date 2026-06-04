@@ -20,14 +20,14 @@ public class Prolog {
 
     /** *************************************************************
      */
-    private static void writePrologFormulas(ArrayList<Formula> forms, PrintWriter pw) {
+    private static void writePrologFormulas(ArrayList<FormulaAST> forms, PrintWriter pw) {
 
-        Set<Formula> ts = new TreeSet<>();
+        Set<FormulaAST> ts = new TreeSet<>();
         ts.addAll(forms);
         if (forms != null) {
-            Formula formula;
+            FormulaAST formula;
             String result;
-            Iterator<Formula> it = ts.iterator();
+            Iterator<FormulaAST> it = ts.iterator();
             while (it.hasNext()) {
                 formula = it.next();
                 result = formula.toProlog();
@@ -78,7 +78,7 @@ public class Prolog {
                 return;
             pw.println(clause + sb.toString() + ".");
         }
-        if (consequent.car().equals(Formula.AND)) {
+        if (consequent.car().equals(FormulaAST.AND)) {
             FormulaAST consList = consequent.cdrAsFormula();
             FormulaAST car;
               String carst;
@@ -98,8 +98,8 @@ public class Prolog {
     private static void writeClauses(PrintWriter pw) {
 
         for (FormulaAST f : kb.formulaMap.values()) {
-            if (f.isRule() && f.isHorn(kb) && !f.getFormula().contains(Formula.EQUANT) &&
-                    !f.getFormula().contains(Formula.UQUANT))
+            if (f.isRule() && f.isHorn(kb) && !f.getFormula().contains(FormulaAST.EQUANT) &&
+                    !f.getFormula().contains(FormulaAST.UQUANT))
                 writeOneHornClause(f,pw);
             else if (f.isSimpleClause(kb))
                 pw.println(f.toProlog() + ".");

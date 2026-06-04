@@ -754,9 +754,9 @@ public class DocGen {
                 if (kb != null) {
                     List formulae = kb.ask("arg", 0, "docGenCodeMapTranslation");
                     if (formulae != null) {
-                        Formula f = null;
+                        FormulaAST f = null;
                         for (Iterator it = formulae.iterator(); it.hasNext();) {
-                            f = (Formula) it.next();
+                            f = (FormulaAST) it.next();
                             srMap.put(StringUtil.removeEnclosingQuotes(f.getStringArgument(2)),
                                       StringUtil.removeEnclosingQuotes(f.getStringArgument(4)));
                         }
@@ -2541,13 +2541,13 @@ public class DocGen {
                     }
                 }
                 List formulae = null;
-                Formula f = null;
+                FormulaAST f = null;
                 for (it = p0List.iterator(); it.hasNext();) {
                     p0 = (String) it.next();
                     formulae = kb.ask("arg", 0, p0);
                     if (formulae != null) {
                         for (it2 = formulae.iterator(); it2.hasNext();) {
-                            f = (Formula) it2.next();
+                            f = (FormulaAST) it2.next();
                             p1 = f.getStringArgument(1);
                             if (requireNamespace) {
                                 namespace = getTermNamespace(kb, p1);
@@ -2693,11 +2693,11 @@ public class DocGen {
                     forms = kb.askWithRestriction(2, term, 0, "termFormat");
                 if (!forms.isEmpty()) {
                     String ctx = null;
-                    Formula f = null;
+                    FormulaAST f = null;
                     for (int i = 0; i < contexts.size(); i++) {
                         ctx = (String) contexts.get(i);
                         for (int j = 0; j < forms.size(); j++) {
-                            f = (Formula) forms.get(j);
+                            f = (FormulaAST) forms.get(j);
                             if (f.getArgument(1).equals(ctx)) {
                                 ans = f.getStringArgument(3);
                                 break;
@@ -2744,9 +2744,9 @@ public class DocGen {
             if (StringUtil.isNonEmptyString(term)) {
                 List forms = kb.askWithRestriction(1, term, 0, "documentation");
                 if ((forms != null) && !forms.isEmpty()) {
-                    Formula f = null;
+                    FormulaAST f = null;
                     if (StringUtil.isLocalTermReference(term) && (forms.size() == 1)) {
-                        f = (Formula) forms.get(0);
+                        f = (FormulaAST) forms.get(0);
                         ans = f.getStringArgument(3);
                     }
                     else {
@@ -2763,7 +2763,7 @@ public class DocGen {
                         for (Iterator itc = contexts.iterator(); itc.hasNext();) {
                             ctx = (String) itc.next();
                             for (itf = forms.iterator(); itf.hasNext();) {
-                                f = (Formula) itf.next();
+                                f = (FormulaAST) itf.next();
                                 if (f.getStringArgument(2).equals(ctx)) {
                                     ans = f.getStringArgument(3);
                                     break;
@@ -3221,10 +3221,10 @@ public class DocGen {
         if (isLegalForDisplay(term)) {
             List formulae = kb.askWithRestriction(0,"comment",1,term);
             if (formulae != null && !formulae.isEmpty()) {
-                Formula f;
+                FormulaAST f;
                 List docs = new ArrayList();
                 for (int c = 0; c < formulae.size(); c++) {
-                    f = (Formula) formulae.get(c);
+                    f = (FormulaAST) formulae.get(c);
                     docs.add(f.getArgument(3));
                 }
                 Collections.sort(docs);
@@ -3285,13 +3285,13 @@ public class DocGen {
                         String presentationName = getTermPresentationName(kb, term);
                         String basePresentationName = stripNamespacePrefix(kb, presentationName);
                         List<String> synonyms = new ArrayList<>();
-                        Formula f;
+                        FormulaAST f;
                         String syn, hwsuff = "_hw";
                         int sidx;
                         String namespace;
                         String prefix;
                         for (Iterator it = alternates.iterator(); it.hasNext();) {
-                            f = (Formula) it.next();
+                            f = (FormulaAST) it.next();
                             namespace = f.getStringArgument(1);
                             prefix = stripNamespacePrefix(kb, namespace);
                             syn = StringUtil.removeEnclosingQuotes(f.getStringArgument(3));
@@ -3667,9 +3667,9 @@ public class DocGen {
                     forms.addAll(kb.askWithPredicateSubsumption(pred, 1, term));
                 }
                 String s;
-                Formula f;
+                FormulaAST f;
                 for (Iterator it = forms.iterator(); it.hasNext();) {
-                    f = (Formula) it.next();
+                    f = (FormulaAST) it.next();
                     if (!KButilities.isCacheFile(f.sourceFile)) {
                         s = f.getStringArgument(2);
                         if (isLegalForDisplay(s)) {
@@ -3998,10 +3998,10 @@ public class DocGen {
                     FormulaAST f = new FormulaAST();
                     f.read(currentTerm);
                     List tuple = f.literalToArrayList();
-                    boolean isQuantifiedVarlist = Formula.isQuantifier(previousTerm);
+                    boolean isQuantifiedVarlist = FormulaAST.isQuantifier(previousTerm);
                     Iterator it = tuple.iterator();
                     while (isQuantifiedVarlist && it.hasNext()) {
-                        isQuantifiedVarlist = Formula.isVariable((String) it.next());
+                        isQuantifiedVarlist = FormulaAST.isVariable((String) it.next());
                     }
                     if (!isQuantifiedVarlist && (level > 0)) {
                         sb.append("<br>");
@@ -4029,8 +4029,8 @@ public class DocGen {
                     sb.append(")");
                 }
             }
-            else if (Formula.isVariable(currentTerm)
-                     || Formula.isLogicalOperator(currentTerm)
+            else if (FormulaAST.isVariable(currentTerm)
+                     || FormulaAST.isLogicalOperator(currentTerm)
                      || kb.isFunction(currentTerm)
                      || StringUtil.isQuotedString(currentTerm)
                      || StringUtil.isDigitString(currentTerm)) {
@@ -4121,7 +4121,7 @@ public class DocGen {
                             if (!statements.isEmpty()) {
                                 List vals = new ArrayList();
                                 for (Iterator its = statements.iterator(); its.hasNext();) {
-                                    Formula f = (Formula) its.next();
+                                    FormulaAST f = (FormulaAST) its.next();
                                     if (!KButilities.isCacheFile(f.sourceFile)) {
                                         vals.add(f.getArgument(2));
                                     }
@@ -4235,7 +4235,7 @@ public class DocGen {
             List cardForms = kb.askWithPredicateSubsumption("hasExactCardinality", 1, term);
             // kb.askWithRestriction(0,"exactCardinality",2,term);
             if (cardForms != null && !cardForms.isEmpty()) {
-                Formula f = (Formula) cardForms.get(0);
+                FormulaAST f = (FormulaAST) cardForms.get(0);
                 // if (context.equals("") || context.equals(f.getArgument(1)))
                 //     return f.getArgument(3);
                 cardVal = f.getStringArgument(2);
@@ -4246,7 +4246,7 @@ public class DocGen {
                 cardForms = kb.askWithPredicateSubsumption("hasMinCardinality", 1, term);
                 // kb.askWithRestriction(0,"minCardinality",2,term);
                 if (cardForms != null && !cardForms.isEmpty()) {
-                    Formula f = (Formula) cardForms.get(0);
+                    FormulaAST f = (FormulaAST) cardForms.get(0);
                     // if (context == "" || context.equals(f.getArgument(1)))
                     //     minCard = f.getArgument(3);
                     minCard = f.getStringArgument(2);
@@ -4254,7 +4254,7 @@ public class DocGen {
                 cardForms = kb.askWithPredicateSubsumption("hasMaxCardinality", 1, term);
                 // kb.askWithRestriction(0,"maxCardinality",2,term);
                 if (cardForms != null && !cardForms.isEmpty()) {
-                    Formula f = (Formula) cardForms.get(0);
+                    FormulaAST f = (FormulaAST) cardForms.get(0);
                     // if (context.equals("") || context.equals(f.getArgument(1)))
                     //     maxCard = f.getArgument(3);
                     maxCard = f.getStringArgument(2);
@@ -4321,7 +4321,7 @@ public class DocGen {
             List instanceForms = kb.askWithPredicateSubsumption("instance", 1, term);
             // System.out.println("1. instanceForms == " + instanceForms);
             if (instanceForms != null && !instanceForms.isEmpty()) {
-                Formula f = (Formula) instanceForms.get(0);
+                FormulaAST f = (FormulaAST) instanceForms.get(0);
                 parentClass = f.getStringArgument(2);
             }
             List termForms = null;
@@ -4332,7 +4332,7 @@ public class DocGen {
                 boolean isAttribute = isXmlAttribute(kb, term);
                 if (!isAttribute) isAttribute = isXmlAttribute(kb, parentClass);
                 for (Iterator ita = termForms.iterator(); ita.hasNext();) {
-                    Formula f = (Formula) ita.next();
+                    FormulaAST f = (FormulaAST) ita.next();
                     sb.append(indentChars("&nbsp;&nbsp;",indent));
                     String termFormat = StringUtil.removeEnclosingQuotes(f.getStringArgument(3));
                     sb.append("<a href=\"");
@@ -4650,10 +4650,10 @@ public class DocGen {
                 StringBuilder sb = new StringBuilder();
                 String suffix = (StringUtil.emptyString(kbHref) ? ".html" : "");
                 List docForms = kb.askWithRestriction(0,"documentation",1,instance);
-                Formula f = null;
+                FormulaAST f = null;
                 String context = null;
                 for (Iterator it = docForms.iterator(); it.hasNext();) {
-                    f = (Formula) it.next();
+                    f = (FormulaAST) it.next();
                     context = f.getStringArgument(2);
                     if (context.equals(containingComp)) {
                         sb.append("<tr>");
@@ -4987,7 +4987,7 @@ public class DocGen {
                                        + " statements of each type.<p>"
                                        + StringUtil.getLineSeparator());
                     for (int i = 0; i < localLimit; i++) {
-                        Formula form = (Formula) forms.get(i);
+                        FormulaAST form = (FormulaAST) forms.get(i);
                         result.append(NLGUtils.htmlParaphrase(kbHref,
                                 form.getFormula(),
                                 kb.getFormatMap(language),
@@ -5010,7 +5010,7 @@ public class DocGen {
                                    + " statements of each type.<p>"
                                    + StringUtil.getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
-                    Formula form = (Formula) forms.get(i);
+                    FormulaAST form = (FormulaAST) forms.get(i);
                     result.append(NLGUtils.htmlParaphrase(kbHref,
                             form.getFormula(),
                             kb.getFormatMap(language),
@@ -5032,7 +5032,7 @@ public class DocGen {
                                    + " statements of each type.<p>"
                                    + StringUtil.getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
-                    Formula form = (Formula) forms.get(i);
+                    FormulaAST form = (FormulaAST) forms.get(i);
                     result.append(NLGUtils.htmlParaphrase(kbHref,
                             form.getFormula(),
                             kb.getFormatMap(language),
@@ -5054,7 +5054,7 @@ public class DocGen {
                                    + " statements of each type.<p>"
                                    + StringUtil.getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
-                    Formula form = (Formula) forms.get(i);
+                    FormulaAST form = (FormulaAST) forms.get(i);
                     result.append(NLGUtils.htmlParaphrase(kbHref,
                             form.getFormula(),
                             kb.getFormatMap(language),
@@ -5076,7 +5076,7 @@ public class DocGen {
                                    + " statements of each type.<p>"
                                    + StringUtil.getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
-                    Formula form = (Formula) forms.get(i);
+                    FormulaAST form = (FormulaAST) forms.get(i);
                     result.append(NLGUtils.htmlParaphrase(kbHref,
                             form.getFormula(),
                             kb.getFormatMap(language),
@@ -5730,7 +5730,7 @@ public class DocGen {
             String term;
             String printableTerm;
             List docs;
-            Formula f;
+                FormulaAST f;
             String docStr;
             for (Iterator it = alphaList.keySet().iterator(); it.hasNext();) {
                 letter = (String) it.next();
@@ -5748,7 +5748,7 @@ public class DocGen {
                             docStr = "";
                             docs = kb.askWithRestriction(0, "documentation", 1, term);
                             if ((docs != null) && !docs.isEmpty()) {
-                                f = (Formula) docs.get(0);
+                                f = (FormulaAST) docs.get(0);
                                 docStr = processDocString(kb,
                                                           "",
                                                           language,

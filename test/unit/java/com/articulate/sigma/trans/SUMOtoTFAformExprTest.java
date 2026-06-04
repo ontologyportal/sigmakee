@@ -43,20 +43,6 @@ public class SUMOtoTFAformExprTest extends UnitTestBase {
         return ast.expr;
     }
 
-    /**
-     * Dual-run: parse kif to Expr, call both process() and processExpr(),
-     * assert they produce the same TFF string.
-     */
-    private void dualRun(String kif) {
-        Expr expr = parse(kif);
-        String strResult  = SUMOtoTFAform.process(kif, false);
-        String exprResult = SUMOtoTFAform.processExpr(expr, false);
-        System.out.println("kif:    " + kif);
-        System.out.println("string: " + strResult);
-        System.out.println("expr:   " + exprResult);
-        assertEquals("processExpr / process mismatch for: " + kif, strResult, exprResult);
-    }
-
     // ---- missingSortsExpr ----------------------------------------------
 
     @Test
@@ -94,46 +80,4 @@ public class SUMOtoTFAformExprTest extends UnitTestBase {
         assertFalse("Nested ListFn should yield a sort", sorts.isEmpty());
     }
 
-    // ---- processExpr dual-run (small KB) --------------------------------
-
-    @Test
-    public void testDualRunSimpleInstance() {
-        dualRun("(instance Foo Bar)");
-    }
-
-    @Test
-    public void testDualRunNot() {
-        dualRun("(not (instance Foo Bar))");
-    }
-
-    @Test
-    public void testDualRunImplication() {
-        dualRun("(=> (instance ?X Human) (attribute ?X Mortal))");
-    }
-
-    @Test
-    public void testDualRunForall() {
-        dualRun("(forall (?X) (=> (instance ?X Human) (attribute ?X Mortal)))");
-    }
-
-    @Test
-    public void testDualRunConjunction() {
-        dualRun("(and (instance ?X Foo) (instance ?X Bar))");
-    }
-
-    @Test
-    public void testDualRunDisjunction() {
-        dualRun("(or (instance ?X Foo) (instance ?X Bar))");
-    }
-
-    @Test
-    public void testDualRunBiconditional() {
-        dualRun("(<=> (instance ?X Human) (instance ?X Animal))");
-    }
-
-    @Test
-    public void testDualRunEquality() {
-        // simple equality of two constants
-        dualRun("(equal Foo Bar)");
-    }
 }

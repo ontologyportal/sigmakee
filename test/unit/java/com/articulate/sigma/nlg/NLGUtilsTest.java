@@ -1,9 +1,9 @@
 package com.articulate.sigma.nlg;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.SigmaTestBase;
 import com.articulate.sigma.UnitTestBase;
 
+import com.articulate.sigma.parsing.FormulaAST;
 import com.google.common.collect.Lists;
 
 import org.junit.Ignore;
@@ -118,7 +118,7 @@ public class NLGUtilsTest extends UnitTestBase {
                 "                    (instance ?event Transportation)\n" +
                 "                    (instance ?he Human)\n" +
                 "                    (agent ?event ?he)))";
-        Formula formula = new Formula(stmt);
+        FormulaAST formula = new FormulaAST(stmt);
 
         List<String> actual = NLGUtils.collectOrderedVariables(formula.getFormula());
 
@@ -130,7 +130,7 @@ public class NLGUtilsTest extends UnitTestBase {
     @Test
     public void testCollectOrderedVariablesWithFormula2()  {
         String stmt =   "(agent ?event ?he)";
-        Formula formula = new Formula(stmt);
+        FormulaAST formula = new FormulaAST(stmt);
 
         List<String> actual = NLGUtils.collectOrderedVariables(formula.getFormula());
 
@@ -142,7 +142,7 @@ public class NLGUtilsTest extends UnitTestBase {
     @Test
     public void testCollectOrderedVariablesWithFormula3()  {
         String stmt =   "(names \"John\" ?H)";
-        Formula formula = new Formula(stmt);
+        FormulaAST formula = new FormulaAST(stmt);
 
         List<String> actual = NLGUtils.collectOrderedVariables(formula.getFormula());
 

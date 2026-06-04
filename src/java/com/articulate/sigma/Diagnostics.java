@@ -35,8 +35,8 @@ public class Diagnostics {
 
     public static boolean debug = false;
 
-    public static List<String> LOG_OPS = Arrays.asList(Formula.AND,Formula.OR,Formula.XOR,Formula.NOT,Formula.EQUANT,
-            Formula.UQUANT,Formula.IF,Formula.IFF, "holds");
+    public static List<String> LOG_OPS = Arrays.asList(FormulaAST.AND,FormulaAST.OR,FormulaAST.XOR,FormulaAST.NOT,FormulaAST.EQUANT,
+            FormulaAST.UQUANT,FormulaAST.IF,FormulaAST.IFF, "holds");
 
     public static HashMap<String, HashSet<String>> varLinksParentMap = new HashMap<>(); // parent map for getVariableLinks(Formula f, KB kb)
     
@@ -165,7 +165,7 @@ public class Diagnostics {
      */
     public static boolean termNotBelowEntity(String term, KB kb) {
 
-        if (LOG_OPS.contains(term) || term.equals(Formula.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term))
+        if (LOG_OPS.contains(term) || term.equals(FormulaAST.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term))
             return false;
         else if (!kb.kbCache.subclassOf(term,"Entity") && !kb.kbCache.transInstOf(term,"Entity"))
             return true;
@@ -510,8 +510,8 @@ public class Diagnostics {
 
         List<FormulaAST> result = new ArrayList<>();
         for (FormulaAST form : kb.formulaMap.values()) {
-            if ((form.getFormula().contains(Formula.UQUANT))
-                    || (form.getFormula().contains(Formula.EQUANT))) {
+            if ((form.getFormula().contains(FormulaAST.UQUANT))
+                    || (form.getFormula().contains(FormulaAST.EQUANT))) {
                 if (!unquantInConsequent(form).isEmpty())
                     result.add(form);
             }
@@ -544,7 +544,7 @@ public class Diagnostics {
         if (f.getFormula() == null || f.getFormula().length() < 1 ||
                 !f.listP() || f.empty())
             return false;
-        if (!Arrays.asList(Formula.UQUANT, Formula.EQUANT).contains(f.car())) {
+        if (!Arrays.asList(FormulaAST.UQUANT, FormulaAST.EQUANT).contains(f.car())) {
             FormulaAST f1 = new FormulaAST();
             f1.read(f.car());
             FormulaAST f2 = new FormulaAST();
@@ -561,7 +561,7 @@ public class Diagnostics {
             String body = quant.cdr();
             quant.read(q);
             List<String> qList = quant.argumentsToArrayListString(0);  // Put all the quantified variables into a list.
-            if (rest.contains(Formula.EQUANT) || rest.contains(Formula.UQUANT)) { //nested quantifiers
+            if (rest.contains(FormulaAST.EQUANT) || rest.contains(FormulaAST.UQUANT)) { //nested quantifiers
                 FormulaAST restForm = new FormulaAST();
                 restForm.read(rest);
                 restForm.read(restForm.cdr());
@@ -595,8 +595,8 @@ public class Diagnostics {
             form = (FormulaAST) it.next();
             if (!FileUtil.noPath(form.sourceFile).equals(fname))
                 continue;
-            if ((form.getFormula().contains(Formula.UQUANT))
-                    || (form.getFormula().contains(Formula.EQUANT))) {
+            if ((form.getFormula().contains(FormulaAST.UQUANT))
+                    || (form.getFormula().contains(FormulaAST.EQUANT))) {
                 if (quantifierNotInStatement(form))
                     result.add(form);
             }
@@ -619,8 +619,8 @@ public class Diagnostics {
         FormulaAST form;
         while (it.hasNext()) {
             form = (FormulaAST) it.next();
-            if ((form.getFormula().contains(Formula.UQUANT))
-                    || (form.getFormula().contains(Formula.EQUANT))) {
+            if ((form.getFormula().contains(FormulaAST.UQUANT))
+                    || (form.getFormula().contains(FormulaAST.EQUANT))) {
                 if (quantifierNotInStatement(form))
                     result.add(form);
             }
@@ -1337,7 +1337,7 @@ public class Diagnostics {
                     //  if (answer.length() != 0) return answer;
                     answer.append(a);
                     negatedQuery = new StringBuilder();
-                    negatedQuery.append(Formula.LP).append(Formula.NOT).append(Formula.SPACE).append(processedQuery).append(Formula.RP);
+                    negatedQuery.append(FormulaAST.LP).append(FormulaAST.NOT).append(FormulaAST.SPACE).append(processedQuery).append(FormulaAST.RP);
                     eprover.askEProver(negatedQuery.toString());
                     proof = eprover.toString() + " ";
                     a.append(reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency"));
@@ -1415,7 +1415,7 @@ public class Diagnostics {
             if (debug) if (f.getFormula().contains("AppleComputerCorporation"))
                 System.out.println("termDefsByGivenFile(): terms: " + terms);
             for (String t : terms) {
-                if (!Formula.isVariable(t) && t.charAt(0) != '"' && !StringUtil.isNumeric(t))
+                if (!FormulaAST.isVariable(t) && t.charAt(0) != '"' && !StringUtil.isNumeric(t))
                     goodTerms.add(t);
             }
             if (termsByFile.keySet() != null && termsByFile.keySet().contains(simpleName)) {
@@ -1659,8 +1659,8 @@ public class Diagnostics {
         // case 2: logical operators (and, or, not, =>, etc.)
         // modal predicates and equality are treated as non-logical
         boolean isModal = Modals.formulaPreds.contains(head) || Modals.regHOLpred.contains(head);
-        boolean isEqual = Formula.EQUAL.contains(head);
-        if (Formula.isLogicalOperator(head) && !isModal && !isEqual) {
+        boolean isEqual = FormulaAST.EQUAL.contains(head);
+        if (FormulaAST.isLogicalOperator(head) && !isModal && !isEqual) {
             // For 'and', 'or', 'not', '=>', etc
             for (FormulaAST arg : args) {
                 mergeResults(result, findOrphanVarsRecurse(arg, parents));

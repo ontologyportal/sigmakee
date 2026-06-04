@@ -1,6 +1,7 @@
 package com.articulate.sigma.nlg;
 
-import com.articulate.sigma.Formula;
+import com.articulate.sigma.parsing.FormulaAST;
+
 import java.util.List;
 
 /**
@@ -53,6 +54,6 @@ public class NLGStringUtils {
      * @return
      */
     public static boolean isVariable(String str) {
-        return str.substring(0, 1).equals(Formula.V_PREF);
+        return str.substring(0, 1).equals(FormulaAST.V_PREF);
     }
 }

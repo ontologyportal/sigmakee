@@ -1,6 +1,5 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.utils.StringUtil;
@@ -14,7 +13,7 @@ import java.util.stream.Collectors;
  * Translates {@link Expr} trees to TPTP format (FOF or TFF).
  *
  * <p>This is the Expr-based counterpart of
- * {@link com.articulate.sigma.trans.SUMOformulaToTPTPformula#processRecurse(Formula, String)}.
+ * {link com.articulate.sigma.trans.SUMOformulaToTPTPformula#processRecurse(Formula, String)}.
  * All structural traversal is done by switching on sealed {@link Expr} subtypes;
  * no string-based parsing or ANTLR context objects are involved.</p>
  *
@@ -213,8 +212,8 @@ public class ExprToTPTP {
         // Inequality predicates used as terms (not in head position) need the __m
         // mention suffix so the same symbol is not used both as a predicate and as
         // a term — that is a TPTP type error for all languages (FOF and TFF alike).
-        if (Formula.isInequality(name) && !isHead)
-            return Formula.TERM_SYMBOL_PREFIX + name + Formula.TERM_MENTION_SUFFIX;
+        if (FormulaAST.isInequality(name) && !isHead)
+            return FormulaAST.TERM_SYMBOL_PREFIX + name + FormulaAST.TERM_MENTION_SUFFIX;
 
         // Logical operators used in head position → their TPTP equivalents
         // (These are handled structurally in translateSExpr; if we arrive here,
@@ -226,10 +225,10 @@ public class ExprToTPTP {
         // Special constants. When used as head they translate directly; in argument
         // position they become distinct-object constants (single-quoted) so the prover
         // does not confuse them with the defined TPTP propositions $true/$false.
-        if (Formula.LOG_TRUE.equals(name))
-            return isHead ? "$true"  : "'" + "$true"  + Formula.TERM_MENTION_SUFFIX + "'";
-        if (Formula.LOG_FALSE.equals(name))
-            return isHead ? "$false" : "'" + "$false" + Formula.TERM_MENTION_SUFFIX + "'";
+        if (FormulaAST.LOG_TRUE.equals(name))
+            return isHead ? "$true"  : "'" + "$true"  + FormulaAST.TERM_MENTION_SUFFIX + "'";
+        if (FormulaAST.LOG_FALSE.equals(name))
+            return isHead ? "$false" : "'" + "$false" + FormulaAST.TERM_MENTION_SUFFIX + "'";
 
         // TFF arithmetic functions (only when used as head)
         if ("tff".equals(lang) && isHead) {
@@ -242,16 +241,16 @@ public class ExprToTPTP {
         if (!isHead) {
             // Leaf argument: add __m to relations / lowercase terms / Fn-suffixed terms
             boolean addMention = shouldAddMention(term, lang);
-            if (addMention) term += Formula.TERM_MENTION_SUFFIX;
+            if (addMention) term += FormulaAST.TERM_MENTION_SUFFIX;
         }
-        return Formula.TERM_SYMBOL_PREFIX + term;
+        return FormulaAST.TERM_SYMBOL_PREFIX + term;
     }
 
     /** Return true when an atom in argument position should get the {@code __m} mention suffix. */
     private static boolean shouldAddMention(String name, String lang) {
-        if (name.endsWith(Formula.TERM_MENTION_SUFFIX)) return false; // already has it
-        if (Formula.isInequality(name)) return false;
-        if (name.endsWith(Formula.FN_SUFF)) return true;
+        if (name.endsWith(FormulaAST.TERM_MENTION_SUFFIX)) return false; // already has it
+        if (FormulaAST.isInequality(name)) return false;
+        if (name.endsWith(FormulaAST.FN_SUFF)) return true;
         if (!name.isEmpty() && Character.isLowerCase(name.charAt(0))) return true;
         // Ask the KB — relation names used as terms need __m
         // Fast path: use pre-captured relations snapshot when available (avoids per-atom KB walk)
@@ -433,7 +432,7 @@ public class ExprToTPTP {
      * <p>Example: {@code ?X} → {@code V__X}, {@code @ROW} → {@code V__ROW}.</p>
      */
     static String translateVarName(String kifName) {
-        return Formula.TERM_VARIABLE_PREFIX + kifName.substring(1).replace('-', '_');
+        return FormulaAST.TERM_VARIABLE_PREFIX + kifName.substring(1).replace('-', '_');
     }
 
     // -----------------------------------------------------------------------
@@ -444,7 +443,7 @@ public class ExprToTPTP {
      * Collect all variables that appear free (unbound by any quantifier) in
      * the given expression.  The result is a {@link LinkedHashSet} to preserve
      * depth-first traversal order — matching
-     * {@link Formula#collectUnquantifiedVariables()}.
+     * {link Formula#collectUnquantifiedVariables()}.
      */
     public static Set<String> collectFreeVars(Expr expr) {
         Set<String> bound = new LinkedHashSet<>();

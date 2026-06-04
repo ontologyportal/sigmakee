@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.FormulaAST;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -78,20 +79,21 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
                 "(instance ?Y ?WHOLE) (part ?X ?Y))))) (equal (?NOTPARTPROB " +
                 "(ProbabilityFn (not (exists (?Z) (and (instance ?Z ?WHOLE) " +
                 "(part ?X ?Z))))))) (greaterThan ?PARTPROB ?NOTPARTPROB))";
-        Formula f = new Formula();
+        FormulaAST f = new FormulaAST();
         f.read(strf);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
-        Formula expected = new Formula();
+        FormulaAST expected = new FormulaAST();
         String expectedString = "(=> (and (instance ?PART Class) (subclass ?PART Object) (instance ?PARTPROB Entity) (instance ?X Object) (instance ?WHOLE Class) (subclass ?WHOLE Object) (instance ?Y Object)) " +
                 "(=> (and (typicalPart ?PART ?WHOLE) (instance ?X ?PART) " +
                 "(equal ?PARTPROB (ProbabilityFn (exists (?Y) (and (instance ?Y ?WHOLE) (part ?X ?Y)))))" +
                 "(equal (?NOTPARTPROB (ProbabilityFn (not (exists (?Z) (and (instance ?Z ?WHOLE) (part ?X ?Z))))))) " +
                 "(greaterThan ?PARTPROB ?NOTPARTPROB))) ";
         expected.read(expectedString);
-        Formula actual = fp.addTypeRestrictions(f, SigmaTestBase.kb);
+        Map<String, Set<String>> varmap = fp.findTypeRestrictionsExpr(f.expr, kb);
+        Expr actual = fp.addTypeRestrictionsExpr(f.expr,varmap, SigmaTestBase.kb);
         //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
-        assertEquals(expected, actual);
+        assertEquals(expected, new FormulaAST(actual));
     }
 
     /** ***************************************************************

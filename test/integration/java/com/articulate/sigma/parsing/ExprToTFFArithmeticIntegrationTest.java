@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 /**
  * Integration tests comparing the NEW Expr-based arithmetic TFF path
  * ({@link ExprToTFF#translateArithmetic} / {@link ExprToTFF#translate}) against
- * the OLD string-based path ({@link SUMOtoTFAform#process(String, boolean)}).
+ * the OLD string-based path ({link SUMOtoTFAform#process(String, boolean)}).
  *
  * <p>Tests use the full SUMO KB loaded by {@link IntegrationTestBase}.  Each
  * test case calls both the old and new translators and asserts that they produce
@@ -85,7 +85,7 @@ public class ExprToTFFArithmeticIntegrationTest extends IntegrationTestBase {
     /**
      * Run both translators and compare.
      *
-     * <p>{@code oldResult} comes from the string-based {@link SUMOtoTFAform#process(String, boolean)}.
+     * <p>{@code oldResult} comes from the string-based {link SUMOtoTFAform#process(String, boolean)}.
      * {@code newResult} comes from {@link ExprToTFF#translate(Expr, boolean, com.articulate.sigma.KB)}
      * which routes arithmetic through {@link ExprToTFF#translateArithmetic}.</p>
      *
@@ -94,7 +94,7 @@ public class ExprToTFFArithmeticIntegrationTest extends IntegrationTestBase {
      */
     private void arithmeticDualRun(String kif) {
         Expr expr = parse(kif);
-        String oldResult = SUMOtoTFAform.process(kif, false);
+        String oldResult = SUMOtoTFAform.processExpr(new FormulaAST(kif).expr, false);
         String newResult = ExprToTFF.translate(expr, false, kb);
         System.out.println("kif: " + kif);
         System.out.println("old: " + oldResult);
@@ -114,7 +114,7 @@ public class ExprToTFFArithmeticIntegrationTest extends IntegrationTestBase {
      */
     private void arithmeticDualRunStructural(String kif) {
         Expr expr = parse(kif);
-        String oldResult = SUMOtoTFAform.process(kif, false);
+        String oldResult = SUMOtoTFAform.processExpr(new FormulaAST(kif).expr, false);
         String newResult = ExprToTFF.translate(expr, false, kb);
         System.out.println("kif: " + kif);
         System.out.println("old: " + oldResult);
@@ -292,7 +292,7 @@ public class ExprToTFFArithmeticIntegrationTest extends IntegrationTestBase {
         // (instance Pi RealNumber) → vacuous / empty in both paths
         String kif = "(instance Pi RealNumber)";
         Expr expr = parse(kif);
-        String oldResult = SUMOtoTFAform.process(kif, false);
+        String oldResult = SUMOtoTFAform.processExpr(new FormulaAST(kif).expr, false);
         String newResult = ExprToTFF.translate(expr, false, kb);
         System.out.println("kif: " + kif);
         System.out.println("old: " + oldResult);

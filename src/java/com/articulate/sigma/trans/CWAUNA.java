@@ -4,7 +4,6 @@ package com.articulate.sigma.trans;
  */
 
 import com.articulate.sigma.CLIMapParser;
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.parsing.FormulaAST;
@@ -28,7 +27,7 @@ public class CWAUNA {
         sb.append("fof(").append(name).append(",axiom,");
         sb.append("$distinct(");
         for (String arg : allArgs) {
-            sb.append(Formula.TERM_SYMBOL_PREFIX).append(arg).append(",\n");
+            sb.append(FormulaAST.TERM_SYMBOL_PREFIX).append(arg).append(",\n");
         }
         sb.delete(sb.length()-2,sb.length());
         sb.append(")).");

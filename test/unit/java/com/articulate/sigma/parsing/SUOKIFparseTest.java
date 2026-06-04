@@ -1,6 +1,5 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.UnitTestBase;
 import java.util.Map;
 import org.junit.Test;

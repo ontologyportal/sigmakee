@@ -75,9 +75,9 @@ public class ProofProcessor {
                 variableBinding = binding.subelements.get(j);
                 variable = variableBinding.attributes.get("name");
                 value = variableBinding.attributes.get("value");
-                result = result.append(Formula.LP).append(variable).append(Formula.SPACE).append(value).append(Formula.RP);
+                result = result.append(FormulaAST.LP).append(variable).append(FormulaAST.SPACE).append(value).append(FormulaAST.RP);
                 if (j < binding.subelements.size()-1)
-                    result = result.append(Formula.SPACE);
+                    result = result.append(FormulaAST.SPACE);
             }
     	}
     	return result.toString().equalsIgnoreCase(expectedAnswer);
@@ -92,9 +92,9 @@ public class ProofProcessor {
      */
     public static List<String> returnSkolemStmt(String skolem, List<TPTPFormula> proofSteps) {
 
-    	if (skolem.startsWith(Formula.LP) && skolem.endsWith(Formula.RP))
+    	if (skolem.startsWith(FormulaAST.LP) && skolem.endsWith(FormulaAST.RP))
     		skolem = skolem.substring(1, skolem.length()-1);
-    	skolem = skolem.split(Formula.SPACE)[0];
+    	skolem = skolem.split(FormulaAST.SPACE)[0];
     	Pattern pattern = Pattern.compile("(\\([^\\(|.]*?\\(" + skolem + " .+?\\).*?\\)|\\([^\\(|.]*?" + skolem + "[^\\)|.]*?\\))");
     	Matcher match;
 
@@ -138,12 +138,12 @@ public class ProofProcessor {
                 return null;
             else {
                 FormulaAST result = new FormulaAST();
-                result.read(Formula.LP + Formula.NOT + Formula.SPACE + fnew.getFormula() + Formula.RP);
+                result.read(FormulaAST.LP + FormulaAST.NOT + FormulaAST.SPACE + fnew.getFormula() + FormulaAST.RP);
                 return result;
             }
     	}
     	boolean connective = false;
-    	if (relation.equals(Formula.OR) || relation.equals(Formula.XOR) || relation.equals(Formula.AND))
+    	if (relation.equals(FormulaAST.OR) || relation.equals(FormulaAST.XOR) || relation.equals(FormulaAST.AND))
             connective = true;
     	int arg = 1;
     	boolean foundAnswer = false;
@@ -157,7 +157,7 @@ public class ProofProcessor {
                     foundAnswer = true;
             else {
                 if (arg > 1)
-                        strArgs = strArgs + Formula.SPACE;
+                        strArgs = strArgs + FormulaAST.SPACE;
                 strArgs = strArgs + argRes.getFormula();
             }
             arg = arg + 1;
@@ -166,7 +166,7 @@ public class ProofProcessor {
     	if (connective && foundAnswer && arg < 4)
             result.read(strArgs);
     	else
-            result.read(Formula.LP + relation + Formula.SPACE + strArgs + Formula.RP);
+            result.read(FormulaAST.LP + relation + FormulaAST.SPACE + strArgs + FormulaAST.RP);
     	return result;
     }
 
@@ -326,10 +326,10 @@ public class ProofProcessor {
     		  String stmt = "(subclass ?X Entity)";
 			  EProver eprover = new EProver(kb, "tptp", 30, 3);
 			  eprover.askEProver(stmt);
-    		  String result = eprover.toString() + Formula.SPACE;
+    		  String result = eprover.toString() + FormulaAST.SPACE;
                   TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
                   StringBuilder qlist = new StringBuilder();
-                  qlist.append(Formula.VX);
+                  qlist.append(FormulaAST.VX);
                   tpp.parseProofOutput(result,kb);
     		  result = HTMLformatter.formatTPTP3ProofResult(tpp,stmt,"<hr>\n",
 					  KBmanager.getMgr().getPref("sumokbname"),"EnglishLanguage");

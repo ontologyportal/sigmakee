@@ -169,7 +169,7 @@ public class TaxoModel {
         // kb.askWithRestriction(0,relation,2,nodeName);
         forms = removeCached(forms);
         for (int i = 0; i < forms.size(); i++) {
-            Formula form = (Formula) forms.get(i);
+            FormulaAST form = (FormulaAST) forms.get(i);
             TaxoNode child = new TaxoNode();
             child.name = form.getStringArgument(1);
             n.children.add(child);

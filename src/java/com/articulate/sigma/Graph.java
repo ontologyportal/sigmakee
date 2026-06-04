@@ -387,9 +387,9 @@ public class Graph {
 
         if (StringUtil.emptyString(s))
             return true;
-        return Formula.isLogicalOperator(s) || Formula.isMathFunction(s) || Formula.isVariable(s) ||
-                Formula.isComparisonOperator(s) || Formula.DOC_PREDICATES.contains(s) ||
-                StringUtil.isNumeric(s) || Formula.DEFN_PREDICATES.contains(s) ||
+        return FormulaAST.isLogicalOperator(s) || FormulaAST.isMathFunction(s) || FormulaAST.isVariable(s) ||
+                FormulaAST.isComparisonOperator(s) || FormulaAST.DOC_PREDICATES.contains(s) ||
+                StringUtil.isNumeric(s) || FormulaAST.DEFN_PREDICATES.contains(s) ||
                 StringUtil.isQuotedString(s);
     }
 
@@ -422,7 +422,7 @@ public class Graph {
                 errors.add(err);
                 System.out.println(err);
             }
-            if (StringUtil.isQuotedString(term) || Formula.isLogicalOperator(term))
+            if (StringUtil.isQuotedString(term) || FormulaAST.isLogicalOperator(term))
                 continue;
 
             stmts = kb.ask("arg",1, term);
@@ -437,7 +437,7 @@ public class Graph {
                     if (!StringUtil.emptyString(fileRestrict) && !FileUtil.noPath(f.getSourceFile()).equals(fileRestrict))
                         continue;
                     rel = f.getStringArgument(0);
-                    if (Formula.DOC_PREDICATES.contains(rel))
+                    if (FormulaAST.DOC_PREDICATES.contains(rel))
                         continue;
                     link = "[ label = \"" + rel + "\" ]";
                     arrow = " -> ";
@@ -466,7 +466,7 @@ public class Graph {
                     if (!StringUtil.emptyString(fileRestrict) && !FileUtil.noPath(f.getSourceFile()).equals(fileRestrict))
                         continue;
                     rel = f.getStringArgument(0);
-                    if (Formula.DOC_PREDICATES.contains(rel))
+                    if (FormulaAST.DOC_PREDICATES.contains(rel))
                         continue;
                     link = "[ label = \"" + rel + "\" ]";
                     arrow = " -> ";

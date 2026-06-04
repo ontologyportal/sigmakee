@@ -15,6 +15,8 @@ August 9, Acapulco, Mexico.
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.FormulaAST;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +47,7 @@ public class BasicXMLelement {
         String value;
         for (String key : attributes.keySet()) {
             value = attributes.get(key);
-            result = result.append(Formula.SPACE).append(key).append("='").append(value).append("'");
+            result = result.append(FormulaAST.SPACE).append(key).append("='").append(value).append("'");
         }
         result = result.append(">");
         if (contents != null)

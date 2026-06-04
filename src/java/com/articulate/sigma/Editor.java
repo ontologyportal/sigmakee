@@ -19,23 +19,23 @@ public class Editor {
     /** *************************************************************
      * Create an HTML form for editing facts about a term.
      */
-    public static String createFormPage(KB kb, String term, Formula f) {
-
-        if (f.getFormula().indexOf("(",1) < 0) {  // a simple statement
-            FormulaAST temp = new FormulaAST();
-            temp.read(f.getFormula());
-            String relation = temp.car();
-            temp.read(temp.cdr());
-            
-            while (!temp.empty()) {
-                String t = temp.car();
-                temp.read(temp.cdr());
-            }
-            return "";
-        }
-        else 
-            return "Editing of complex statements not currently supported.<P>";        
-    }
+//    public static String createFormPage(KB kb, String term, Formula f) {
+//
+//        if (f.getFormula().indexOf("(",1) < 0) {  // a simple statement
+//            FormulaAST temp = new FormulaAST();
+//            temp.read(f.getFormula());
+//            String relation = temp.car();
+//            temp.read(temp.cdr());
+//
+//            while (!temp.empty()) {
+//                String t = temp.car();
+//                temp.read(temp.cdr());
+//            }
+//            return "";
+//        }
+//        else
+//            return "Editing of complex statements not currently supported.<P>";
+//    }
 
     /** *************************************************************
      * A test method.

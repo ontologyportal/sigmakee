@@ -55,24 +55,24 @@ public class KIF2DB {
 
     /** ***************************************************************
      */
-    public String getAllRels(Collection<Formula> forms) {
-
-        Set<String> result = new HashSet();
-        String rel;
-        for (Formula f : forms) {
-            rel = f.getStringArgument(0);
-            result.add(rel + " varchar(255)");
-        }
-
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        for (String s : result) {
-            if (!first)
-                sb.append(", ");
-            sb.append(s);
-        }
-        return sb.toString();
-    }
+//    public String getAllRels(Collection<Formula> forms) {
+//
+//        Set<String> result = new HashSet();
+//        String rel;
+//        for (Formula f : forms) {
+//            rel = f.getStringArgument(0);
+//            result.add(rel + " varchar(255)");
+//        }
+//
+//        StringBuilder sb = new StringBuilder();
+//        boolean first = true;
+//        for (String s : result) {
+//            if (!first)
+//                sb.append(", ");
+//            sb.append(s);
+//        }
+//        return sb.toString();
+//    }
 
     /** ***************************************************************
      */

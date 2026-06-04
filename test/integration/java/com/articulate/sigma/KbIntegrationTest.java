@@ -55,7 +55,7 @@ public class KbIntegrationTest extends IntegrationTestBase {
                 "(between ?O ?O2 ?GUN))) (lessThanOrEqualTo ?LM1 ?LM)) " +
                 "(capability (KappaFn ?KILLING (and (instance ?KILLING Killing) " +
                 "(patient ?KILLING ?O))) instrument ?GUN))";
-        Formula f = new Formula(stmt);
+        FormulaAST f = new FormulaAST(stmt);
         assertTrue(f.isHigherOrder(SigmaTestBase.kb));
     }
 
@@ -79,7 +79,7 @@ public class KbIntegrationTest extends IntegrationTestBase {
                 "  (destination ?P M2)\n" +
                 "  (agent ?P John)\n" +
                 "  (length Tunnel1 L))";
-        Formula f = new Formula(stmt);
+        FormulaAST f = new FormulaAST(stmt);
         System.out.println("testIsHigherOrder2: " + f);
         System.out.println("isHigherOrder: " + f.isHigherOrder(SigmaTestBase.kb));
         assertFalse(f.isHigherOrder(SigmaTestBase.kb));
@@ -121,7 +121,7 @@ public class KbIntegrationTest extends IntegrationTestBase {
                 "      (located ?M ?N) " +
                 "      (instance ?W NuclearWeapon) " +
                 "      (result ?M ?W))))";
-        Formula f = new Formula(stmt);
+        FormulaAST f = new FormulaAST(stmt);
         System.out.println("testIsHigherOrder4: " + f);
         System.out.println("testIsHigherOrder4: results: " + f.isHigherOrder(SigmaTestBase.kb));
         System.out.println("testIsHigherOrder4(): expected: " + true);

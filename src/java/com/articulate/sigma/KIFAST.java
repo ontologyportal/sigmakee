@@ -10,7 +10,7 @@ import java.util.*;
 
 /**
  * ANTLR-based KIF parser that produces {@link FormulaAST} objects with populated
- * {@link Expr} trees. This is the Phase 2 replacement for {@link KIF}.
+ * {@link Expr} trees. This is the Phase 2 replacement for {link KIF}.
  *
  * <p>The parsing pipeline is:
  * <ol>
@@ -18,10 +18,10 @@ import java.util.*;
  *   <li>{@link SuokifVisitor} → {@code FormulaAST} objects (each has {@code expr} populated
  *       by {@link com.articulate.sigma.parsing.SuokifToExpr})</li>
  *   <li>This class walks the {@code Expr} tree to build the same indexing maps that
- *       {@link KIF} builds with {@code StreamTokenizer}.</li>
+ *       {link KIF} builds with {@code StreamTokenizer}.</li>
  * </ol>
  *
- * <p>Produces the same three maps as {@link KIF}:
+ * <p>Produces the same three maps as {link KIF}:
  * <ul>
  *   <li>{@code formulaMap : Map<String, FormulaAST>} — canonical formula string → FormulaAST</li>
  *   <li>{@code formulas   : Map<String, List<String>>} — predicate-position key → formula strings</li>
@@ -29,7 +29,7 @@ import java.util.*;
  *   <li>{@code termFrequency : Map<String, Integer>} — occurrence count per term</li>
  * </ul>
  *
- * <p>The {@code formulas} map uses the same key scheme as {@link KIF#createKey}: {@code arg-N-term},
+ * <p>The {@code formulas} map uses the same key scheme as {link KIF#createKey}: {@code arg-N-term},
  * {@code ant-term}, {@code cons-term}, {@code stmt-term}.
  */
 public class KIFAST {
@@ -43,7 +43,7 @@ public class KIFAST {
     /**
      * Predicate-position index. Each key (e.g. {@code "arg-0-instance"}) maps to the list of
      * canonical formula strings that contain the corresponding term in that position.
-     * This has the same structure as {@link KIF#formulas}.
+     * This has the same structure as {link KIF#formulas}.
      */
     public Map<String, List<String>> formulas = new HashMap<>();
 
@@ -207,10 +207,10 @@ public class KIFAST {
 
     /**
      * Walk the top-level {@link Expr} and populate {@code keySet} with all the
-     * predicate-position index keys that {@link KIF} would have generated for the
+     * predicate-position index keys that {link KIF} would have generated for the
      * same formula.
      *
-     * <p>Key scheme (identical to {@link KIF#createKey}):
+     * <p>Key scheme (identical to {link KIF#createKey}):
      * <ul>
      *   <li>{@code arg-N-term} — non-rule formula, term at argument position N, parenLevel 1</li>
      *   <li>{@code ant-term}   — term inside the antecedent of a rule</li>
@@ -224,7 +224,7 @@ public class KIFAST {
             // Bare atom or variable at top level — unusual but possible
             if (expr instanceof Expr.Atom a) {
                 addTerm(a.name());
-                keySet.add(KIF.createKey(a.name(), false, false, 0, 1));
+                keySet.add(createKey(a.name(), false, false, 0, 1));
             }
             return;
         }
@@ -235,7 +235,7 @@ public class KIFAST {
         // Head atom (e.g. "instance", "=>", "and", "forall")
         if (headName != null) {
             addTerm(headName);
-            keySet.add(KIF.createKey(headName, false, false, 0, 1));
+            keySet.add(createKey(headName, false, false, 0, 1));
         }
 
         if (isRule) {
@@ -263,12 +263,65 @@ public class KIFAST {
         switch (arg) {
             case Expr.Atom a -> {
                 addTerm(a.name());
-                keySet.add(KIF.createKey(a.name(), false, false, argNum, 1));
+                keySet.add(createKey(a.name(), false, false, argNum, 1));
             }
             case Expr.SExpr se -> collectNestedKeys(se, false, false, keySet);
             // Var, RowVar, NumLiteral, StrLiteral: no term, no key
             default -> { }
         }
+    }
+
+    /*****************************************************************
+     * This routine creates a key that relates a token in a logical statement to the
+     * entire statement. It prepends to the token a string indicating its
+     * position in the statement. The key is of the form type-[num]-term, where
+     * [num] is only present when the type is "arg", meaning a statement in
+     * which the term is nested only within one pair of parentheses. The other
+     * possible types are "ant" for rule antecedent, "cons" for rule consequent,
+     * and "stmt" for cases where the term is nested inside multiple levels of
+     * parentheses. An example key would be arg-0-instance for a appearance of
+     * the term "instance" in a statement in the predicate position.
+     *
+     * @param sval            - the token such as "instance", "Human" etc.
+     * @param inAntecedent    - whether the term appears in the antecedent of a rule.
+     * @param inConsequent    - whether the term appears in the consequent of a rule.
+     * @param argumentNum     - the argument position in which the term appears. The
+     *            predicate position is argument 0. The first argument is 1 etc.
+     * @param parenLevel      - if the paren level is > 1 then the term appears nested in a
+     *            statement and the argument number is ignored.
+     */
+    public static String createKey(String sval, boolean inAntecedent, boolean inConsequent,
+                                   int argumentNum, int parenLevel) {
+
+        //System.out.println("KIF.createKey(): sval: " + sval);
+        //System.out.println("KIF.createKey(): argumentNum: " + argumentNum);
+        //System.out.println("KIF.createKey(): parenLevel: " + parenLevel);
+        if (sval == null) {
+            sval = "null";
+        }
+        String key = "";
+        if (inAntecedent) {
+            key = key.concat("ant-");
+            key = key.concat(sval);
+        }
+
+        if (inConsequent) {
+            key = key.concat("cons-");
+            key = key.concat(sval);
+        }
+
+        if (!inAntecedent && !inConsequent && (parenLevel == 1)) {
+            key = key.concat("arg-");
+            key = key.concat(String.valueOf(argumentNum));
+            key = key.concat("-");
+            key = key.concat(sval);
+        }
+        if (!inAntecedent && !inConsequent && (parenLevel > 1)) {
+            key = key.concat("stmt-");
+            key = key.concat(sval);
+        }
+        //System.out.println("KIF.createKey(): key: " + key);
+        return (key);
     }
 
     /**
@@ -280,12 +333,12 @@ public class KIFAST {
         switch (expr) {
             case Expr.Atom a -> {
                 addTerm(a.name());
-                keySet.add(KIF.createKey(a.name(), inAnt, inCons, 0, 2));
+                keySet.add(createKey(a.name(), inAnt, inCons, 0, 2));
             }
             case Expr.SExpr se -> {
                 if (se.head() instanceof Expr.Atom head) {
                     addTerm(head.name());
-                    keySet.add(KIF.createKey(head.name(), inAnt, inCons, 0, 2));
+                    keySet.add(createKey(head.name(), inAnt, inCons, 0, 2));
                 }
                 for (Expr child : se.args())
                     collectRuleKeys(child, inAnt, inCons, keySet);
@@ -304,12 +357,12 @@ public class KIFAST {
             case Expr.Atom a -> {
                 addTerm(a.name());
                 // parenLevel > 1 → "stmt-term" (or "ant-"/"cons-" if in rule branch)
-                keySet.add(KIF.createKey(a.name(), inAnt, inCons, 0, 2));
+                keySet.add(createKey(a.name(), inAnt, inCons, 0, 2));
             }
             case Expr.SExpr se -> {
                 if (se.head() instanceof Expr.Atom head) {
                     addTerm(head.name());
-                    keySet.add(KIF.createKey(head.name(), inAnt, inCons, 0, 2));
+                    keySet.add(createKey(head.name(), inAnt, inCons, 0, 2));
                 }
                 for (Expr child : se.args())
                     collectNestedKeys(child, inAnt, inCons, keySet);

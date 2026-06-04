@@ -132,17 +132,17 @@ public class EProver {
 
     /***************************************************************
      * Submits a query to this E inference engine.
-     * @param suoKifFormula The String representation of the SUO-KIF query.
+     * @param suoKifFormulas The String representation of the SUO-KIF query.
      */
     public void askEProver(String suoKifFormulas) {
 
         if (debug>0) System.out.printf("\nEProver.askEProver(%s)", suoKifFormulas);
         if (StringUtil.isNonEmptyString(suoKifFormulas)) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = SessionTPTPManager.withSessionCache(
-                    this.sessionId, this.kb, () -> fp.preProcess(new Formula(suoKifFormulas), true, this.kb));
+            Set<Expr> processedStmts = SessionTPTPManager.withSessionCache(
+                    this.sessionId, this.kb, () -> fp.preProcessExpr(new FormulaAST(suoKifFormulas), true, this.kb));
             if (!processedStmts.isEmpty() && this != null) {
-                String strQuery = processedStmts.iterator().next().getFormula();
+                String strQuery = processedStmts.iterator().next().toKifString();
                 this.submitQuery(strQuery);
                 System.out.println("ThiNGHERE");
             }
@@ -483,13 +483,13 @@ public class EProver {
 
         if (debug>0) System.out.printf("\nEProver.createCustomCommandList(%s, %d, %s, %s)", executable.getName(), timeout, kbFile.getName(), commands);
         StringBuilder opts = new StringBuilder();
-        for (String s : commands) opts.append(s).append(Formula.SPACE);
+        for (String s : commands) opts.append(s).append(FormulaAST.SPACE);
         if (timeout != 0) {
-            opts.append("-t").append(Formula.SPACE);
-            opts.append(timeout).append(Formula.SPACE);
+            opts.append("-t").append(FormulaAST.SPACE);
+            opts.append(timeout).append(FormulaAST.SPACE);
         }
         opts.append(kbFile.toString());
-        String[] optar = opts.toString().split(Formula.SPACE);
+        String[] optar = opts.toString().split(FormulaAST.SPACE);
         String[] cmds = new String[optar.length + 1];
         cmds[0] = executable.toString();
         System.arraycopy(optar, 0, cmds, 1, optar.length);

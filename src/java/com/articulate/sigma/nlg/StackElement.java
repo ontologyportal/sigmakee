@@ -1,6 +1,6 @@
 package com.articulate.sigma.nlg;
 
-import com.articulate.sigma.Formula;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.google.common.collect.*;
 
 import java.util.List;
@@ -76,19 +76,19 @@ public class StackElement {
      * @param formula
      * @param args
      */
-    public void argsInit(Formula formula, List<String> args) {
+    public void argsInit(FormulaAST formula, List<String> args) {
         init(args);
 
         // Set the formula args' state.
         String pred = formula.car();
-        if (Formula.isQuantifier(pred))     {
+        if (FormulaAST.isQuantifier(pred))     {
             // See if it is a list of variables.
 
             String temp = args.get(0).replaceAll("[()]", "");
             String[] strings = temp.split(" ");
             boolean isVarList = true;
             for(String str : strings)  {
-                if (! Formula.isVariable(str)) {
+                if (! FormulaAST.isVariable(str)) {
                     isVarList = false;
                 }
             }

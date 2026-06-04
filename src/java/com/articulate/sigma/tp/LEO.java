@@ -13,7 +13,6 @@
 
 package com.articulate.sigma.tp;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.FormulaPreprocessor;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.parsing.Expr;
@@ -121,9 +120,9 @@ public class LEO {
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
                     for (Expr ex : processedQuery) {
-                        combined.append(ex.toKifString()).append(Formula.SPACE);
+                        combined.append(ex.toKifString()).append(FormulaAST.SPACE);
                     }
-                    combined.append(Formula.RP);
+                    combined.append(FormulaAST.RP);
                     String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + this.axiomIndex++ +
                         ",conjecture,(" +
                         SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, this.requestedTptpLanguage)
@@ -155,7 +154,6 @@ public class LEO {
      * Uses the shared THF base file but writes temp-comb/temp-stmt into
      * the session directory so concurrent sessions don't collide.
      * @param suoKifFormula The query in SUO-KIF format
-     * @param sessionId HTTP session ID for temp file isolation (null for shared dir)
      * @return LEO result object
      */
     public void askLeo(String suoKifFormula, boolean useSession) {
@@ -197,8 +195,8 @@ public class LEO {
                 StringBuilder combined = new StringBuilder();
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
-                    for (Expr p : processedQuery) combined.append(p.toKifString()).append(Formula.SPACE);
-                    combined.append(Formula.RP);
+                    for (Expr p : processedQuery) combined.append(p.toKifString()).append(FormulaAST.SPACE);
+                    combined.append(FormulaAST.RP);
                     String theTPTPstatement = requestedLang + "(query" + "_" + this.axiomIndex++ +
                             ",conjecture,(" +
                             SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
@@ -457,7 +455,6 @@ public class LEO {
     /***************************************************************
      * Get user assertions with optional session isolation.
      * @param kb The knowledge base
-     * @param sessionId Optional HTTP session ID for session-specific UA files.
      *                  If null or empty, uses shared UA files.
      * @return List of user assertion THF formulas
      */
@@ -533,8 +530,6 @@ public class LEO {
      * contains the response of the inference engine. It should be in the form
      * "<queryResponse>...</queryResponse>".
      * suoKifFormula The String representation of the SUO-KIF query.
-     * @param timeout       Seconds after which LEO should give up.
-     * @param maxAnswers    Max number of answers (binding sets) the inference engine should return.
      * @return A String indicating the status of the ask operation.
      * 
     public String askLEOOld(String suoKifFormula, int timeout, int maxAnswers, String flag) {
@@ -675,7 +670,7 @@ public class LEO {
         tpp.parseProofOutput(leo.output,queryStr,kb,leo.qlist);
         for (TPTPFormula step : tpp.proof) {
             System.out.println(":: " + step);
-            Formula f = new Formula(step.sumo);
+            FormulaAST f = new FormulaAST(step.sumo);
             System.out.println(f.format("","  ","\n"));
         }
         System.out.println("Leo.main(): bindings: " + tpp.bindings);
