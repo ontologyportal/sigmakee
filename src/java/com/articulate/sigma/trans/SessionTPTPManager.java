@@ -333,6 +333,7 @@ public class SessionTPTPManager {
                 try {
                     if ("tptp".equals(lang) || "fof".equals(lang)) TPTPGenerationManager.generateFOFToPath(kb, tmpFile);
                     else if ("tff".equals(lang)) TPTPGenerationManager.generateTFFToPath(kb, tmpFile);
+                    else if ("thf".equals(lang)) TPTPGenerationManager.generateTHFToPath(kb, tmpFile);
                     else throw new IllegalArgumentException("Unsupported TPTP language: " + lang);
                 } finally {
                     kb.kbCache = sharedCache;
@@ -697,6 +698,7 @@ public class SessionTPTPManager {
                 Path sharedBase = Paths.get(kbDir, kb.name + "." + lang);
                 Path sessionUA = getSessionUATPTPPath(sessionId, kb.name);
                 if ("tff".equals(lang)) sessionUA = getSessionUATFFPath(sessionId, kb.name);
+                else if ("thf".equals(lang)) sessionUA = getSessionUATHFPath(sessionId, kb.name);
                 if (!Files.exists(sharedBase)) return generateSessionTPTP(sessionId, kb, lang);
                 Files.copy(sharedBase, tmpFile, StandardCopyOption.REPLACE_EXISTING);
                 if (Files.exists(sessionUA)) {

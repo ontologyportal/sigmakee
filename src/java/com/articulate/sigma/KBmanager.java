@@ -848,6 +848,7 @@ public class KBmanager implements Serializable {
     public void initializeOnce(String configFileDir) {
         
         long start = System.nanoTime();
+        LoggingUtils.printSigmaWelcome();
         LoggingUtils.log("Initializing KBmanager!");
         boolean loaded = false;
         if (initializing || initialized) return;

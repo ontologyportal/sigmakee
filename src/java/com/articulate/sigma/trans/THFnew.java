@@ -2083,7 +2083,81 @@ public class THFnew {
         }
     }
 
+/** ***************************************************************
+ * Translate the KB to plain THF and write it to the supplied writer.
+ *
+ * This overload is used when the caller controls the output destination,
+ * for example session-specific THF generation.
+ *
+ * Important: this method does not close the writer because it does not own it.
+ */
+public static void transPlainTHF(KB kb, PrintWriter pw) {
+
+    if (pw == null)
+        throw new IllegalArgumentException("PrintWriter cannot be null");
+
+    try {
+        transPlainTHF(kb, (Writer) pw);
+        pw.flush();
+
+        if (pw.checkError())
+            throw new IOException("Error while writing plain THF output");
+    }
+    catch (IOException ex) {
+        ex.printStackTrace();
+    }
+}
+
     /** ***************************************************************
+     * Shared implementation for plain THF translation.
+     *
+     * The caller owns the writer and is responsible for closing it.
+     */
+    private static void transPlainTHF(KB kb, Writer out) throws IOException {
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        for (Formula f : kb.formulaMap.values()) {
+            if (f instanceof FormulaAST fa && fa.expr != null)
+                fp.preProcessExpr(fa, false, kb);
+            else
+                fp.preProcess(f, false, kb);
+        }
+        writeTypesNonModal(kb, out);
+        analyzeBadUsages(kb);
+        int i = 1;
+        int total = kb.formulaMap.values().size();
+        for (Formula f : kb.formulaMap.values()) {
+            String flatFormula = f.getFormula()
+                    .replace("\n", " ")
+                    .replace("\r", " ");
+            String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
+            boolean excluded;
+            if (writeKIF) {
+                out.write("% original: " + stripped + "\n");
+                out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
+            }
+            if (f instanceof FormulaAST fa && fa.expr != null) {
+                excluded = excludeNonModal(fa, kb, out);
+                if (!excluded) oneTransNonModalExpr(kb, fa, out);
+            }
+            else {
+                excluded = excludeNonModal(f, kb, out);
+                if (!excluded)
+                    oneTransNonModal(kb, f, out);
+            }
+            if (excluded) {
+                out.write("% excluded (non-modal): " + stripped + "\n");
+                out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
+            }
+            i++;
+        }
+        out.flush();
+    }
+
+    /** ***************************************************************
+     * Translate the KB to the default shared plain THF file:
+     *
+     *     $kbDir/<kb.name>_plain.thf
      */
     public static void transPlainTHF(KB kb) {
 
@@ -2091,56 +2165,8 @@ public class THFnew {
         String sep = File.separator;
         String filename = kbDir + sep + kb.name + "_plain.thf";
         try (Writer fstream = new FileWriter(filename);
-             Writer out = new BufferedWriter(fstream)) {
-
-            // Use Expr-based expansion in the warm-up so __N predicates up to arity 7
-            // are registered before writeTypesNonModal() runs (same fix as transModalTHF).
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-            for (Formula f : kb.formulaMap.values()) {
-                // We ignore the results; we just want preProcessRecurse()
-                // to run and call copyNewPredFromVariableArity(...)
-                if (f instanceof FormulaAST fa && fa.expr != null)
-                    fp.preProcessExpr(fa, false, kb);
-                else
-                    fp.preProcess(f, false, kb);
-            }
-
-            // For pure { $i, $o } we probably don't need a big header.
-            // Optionally: out.write(getPlainTHFHeader() + "\n");
-            writeTypesNonModal(kb, out);
-
-            analyzeBadUsages(kb);
-            if (debug) System.out.println("Predicate Terms: " + predicateTerms);
-            int i = 1;
-            int total = kb.formulaMap.values().size();
-            for (Formula f : kb.formulaMap.values()) {
-                String flatFormula = f.getFormula()
-                        .replace("\n", " ").replace("\r", " ");
-                String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
-                if (debug) System.out.println("THFnew.transPlainTHF(): " + f);
-                boolean excluded;
-                if (writeKIF) {
-                    out.write("% original: " + stripped + "\n");
-                    out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
-                }
-                if (f instanceof FormulaAST fa && fa.expr != null) {
-                    excluded = excludeNonModal(fa, kb, out);  // FormulaAST overload: badUsage + fast string pre-checks
-                    if (!excluded)
-                        oneTransNonModalExpr(kb, fa, out);
-                } else {
-                    excluded = excludeNonModal(f, kb, out);
-                    if (!excluded) {
-                        // System.out.println("THFnew.transPlainTHF(): fallback to string-based translation for: " + f.sourceFile + " line " + f.startLine + ": " + f.getFormula());
-                        oneTransNonModal(kb, f, out);
-                    }
-                }
-                if (excluded) {
-                    out.write("% excluded (non-modal): " + stripped + "\n");
-                    out.write("% from file " + f.sourceFile + " at line " +
-                            f.startLine + "\n");
-                }
-                i++;
-            }
+            Writer out = new BufferedWriter(fstream)) {
+            transPlainTHF(kb, out);
         }
         catch (IOException ex) {
             ex.printStackTrace();
@@ -2155,48 +2181,21 @@ public class THFnew {
         String flatFormula = f.getFormula()
                 .replace("\n", " ").replace("\r", " ");
         String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
-
-        // Excludes any formula whose main predicate has been flagged as a mixed-result
-        // symbol or a bad-usage symbol. This prevents the generation of THF axioms that
-        // Vampire would reject due to type inconsistencies discovered during analysis.
         if (THFnew.badUsageSymbols.contains(f)) {
             String flat = f.toString().replace("\n", " ").replace("\r", " ");
             out.write("% exclude(): bad usage symbol: " + flat + " in formula: " + stripped + "\n");
             return true;
         }
-
-        // Exclude strings (quotes)
         if (f.getFormula().contains("\"")) {
             out.write("% exclude(): quote (String Literal)\n");
             return true;
         }
-
-        // Exclude formulas containing true/false
         if (f.getFormula().contains(Formula.LOG_FALSE) ||
                 f.getFormula().contains(Formula.LOG_TRUE)) {
             out.write("% exclude(): contains true or false constant\n");
             return true;
         }
-
-        // ISSUE 16
-        // Exclude formulas mentioning 'Formula' as a type (SUMO meta-logic)
-        // AP - can't exclude these - any HOL axiom with a variable that's a
-        // formula would then be excluded
-        /**
-        if (f.getFormula().contains(" Formula)")) {
-            if (debug) {
-                System.out.println("exclude(): meta-logical axiom with Formula type in formula: "
-                        + f.getFormula());
-            }
-            out.write("% exclude(): meta-logical axiom with Formula type in formula: " +
-                                            f.getFormula() + "\n");
-            return true;
-        }
-         **/
         List<String> args = f.complexArgumentsToArrayListString(0);
-
-        // TODO: Fix that in SUMO
-        // Problematic Terms
         List<String> problematic_terms = Arrays.asList("airTemperature", "ListFn", "AssignmentFn");  // , "Organism"
         for (String a : args) {
             if (problematic_terms.contains(a)) {
@@ -2205,24 +2204,11 @@ public class THFnew {
                 return true;
             }
         }
-
-        // META-LOGIC FILTER
-        // Exclude any formula where a bare variable is used directly
-        // in formula position:
-        //   (=> ... ?VAR)
-        //   (not ?VAR)   or  (~ ?VAR)
-        // Because variables are $i, not $o.
-        // This catches the PROP / FORMULA / SITUATION issues in one shot.
         if (f.listP()) {
             String op = f.car();
-            // arguments starting at position 1 (operator is at 0)
             List<String> opArgs = f.complexArgumentsToArrayListString(1);
-
             if (args != null && !args.isEmpty()) {
                 String head = args.get(0);
-
-                // Non-modal: we cannot treat relations as individuals,
-                // so drop domain/subrelation axioms whose 2nd arg is a relation.
                 if ((head.equals("domain") || head.equals("subrelation"))
                         && args.size() >= 2) {
                     String p = args.get(1);
@@ -2235,7 +2221,6 @@ public class THFnew {
             }
 
             if (opArgs != null) {
-                // Case 1: implication with bare variable consequent
                 if (op.equals("=>") && opArgs.size() >= 2) {
                     String conseq = opArgs.get(1).trim();
                     if (Formula.isVariable(conseq)) {
@@ -2264,8 +2249,6 @@ public class THFnew {
                 }
             }
         }
-        // ALWAYS recurse into interior lists (this catches nested cases,
-        // since exclude() is called on all sub-formulas)
         if (args != null) {
             if (debug) {
                 System.out.println("exclude(): Formula: " + f.getFormula());
@@ -2281,8 +2264,6 @@ public class THFnew {
                     }
                 }
             }
-
-            // Existing predicate-based exclusion (documentation, format, etc.)
             for (String sub : args) {
                 if (excludePred(sub, out)) {
                     String flat = f.toString().replace("\n", " ").replace("\r", " ");
@@ -2292,10 +2273,8 @@ public class THFnew {
                 }
             }
         }
-        // Additional checks only when ground
         if (f.isGround()) {
             if (debug) System.out.println("exclude(): is ground: " + f);
-            // Reuse args (we already computed it above)
             if (args == null)
                 args = f.complexArgumentsToArrayListString(0);
             if (args != null && !args.isEmpty()) {
@@ -2312,7 +2291,6 @@ public class THFnew {
                 }
             }
         }
-        // TOP-LEVEL predicate check (documentation, format, etc.)
         return excludePred(f.car(), out);
     }
 

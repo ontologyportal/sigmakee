@@ -134,24 +134,19 @@ public class TPTPGenerationManager {
     public static boolean isInferenceFileOld(String inferenceFilePath) {
 
         File inferenceFile = new File(inferenceFilePath);
-
         if (!inferenceFile.exists()) {
             LoggingUtils.log(inferenceFilePath + " is missing! Needs regeneration...");
             return true;
         }
-
         Date infFileDate = new Date(inferenceFile.lastModified());
         Date newestSourceDate = KBmanager.newestBaseConfigOrConstituentDateIgnoringUserAssertions();
-
         System.out.println("Inference file: " + inferenceFilePath);
         System.out.println("Inference file modified: " + infFileDate);
         System.out.println("Newest base source modified: " + newestSourceDate);
-
         if (infFileDate.compareTo(newestSourceDate) < 0) {
             LoggingUtils.log(inferenceFilePath + " is old! Needs regeneration...");
             return true;
         }
-
         return false;
     }
 
@@ -345,11 +340,6 @@ public class TPTPGenerationManager {
         if (!thfModalGenerating.compareAndSet(false, true)) {
             return;
         }
-        if(isInferenceFileOld(baseKbDir + "_modal.thf")) {
-            LoggingUtils.log(baseKbDir + "_modal.thf" + " is current!");
-            thfModalReady.set(true);
-            return;
-        }
         try {
             String kbDir = KBmanager.getMgr().getPref("kbDir");
             String thfFilename = kbDir + File.separator + kb.name + "_modals.thf";
@@ -384,7 +374,7 @@ public class TPTPGenerationManager {
         if (!thfPlainGenerating.compareAndSet(false, true)) {
             return; // Already generating
         }
-        if(isInferenceFileOld(baseKbDir + "_plain.thf")) {
+        if(!isInferenceFileOld(baseKbDir + "_plain.thf")) {
             LoggingUtils.log(baseKbDir + "_plain.thf" + " is current!");
             thfPlainReady.set(true);
             return;
@@ -478,6 +468,50 @@ public class TPTPGenerationManager {
             long elapsed = System.currentTimeMillis() - startTime;
             System.out.println("TPTPGenerationManager: TFF generation to custom path complete in " + (elapsed / 1000.0) + "s");
         } 
+        finally {
+            ExprToTPTP.relationsThreadLocal.remove();
+            SUMOformulaToTPTPformula.clearThreadLocal();
+            SUMOKBtoTPTPKB.clearThreadLocal();
+            SUMOtoTFAform.clearThreadLocal();
+        }
+    }
+
+    /*********************************************************************************
+     * Generate THF (Typed Higher-order Form) to a custom output path.
+     * This is used for session-specific THF generation.
+     *
+     * @param kb The knowledge base
+     * @param outputPath The path to write the THF file
+     * @throws IOException if file operations fail
+     */
+    public static void generateTHFToPath(KB kb, Path outputPath) throws IOException {
+
+        try {
+            System.out.println("TPTPGenerationManager: Generating THF to custom path: " + outputPath);
+
+            long startTime = System.currentTimeMillis();
+
+            SUMOKBtoTPTPKB.setLang("thf");
+            SUMOformulaToTPTPformula.setLang("thf");
+
+            if (kb.kbCache != null && kb.kbCache.relations != null)
+                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
+
+            Files.createDirectories(outputPath.getParent());
+            Files.deleteIfExists(outputPath);
+
+            try (PrintWriter pw = new PrintWriter(
+                    Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8))) {
+
+                if (!kb.formulaMap.isEmpty()) {
+                    THFnew.transPlainTHF(kb, pw);
+                }
+            }
+
+            long elapsed = System.currentTimeMillis() - startTime;
+            System.out.println("TPTPGenerationManager: THF generation to custom path complete in "
+                    + (elapsed / 1000.0) + "s");
+        }
         finally {
             ExprToTPTP.relationsThreadLocal.remove();
             SUMOformulaToTPTPformula.clearThreadLocal();

@@ -58,7 +58,10 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.Path;
+import java.util.stream.Stream;
 import java.util.*;
+
 
 public class InferenceTestSuite {
 
@@ -72,7 +75,7 @@ public class InferenceTestSuite {
     /** Save TPTP translations of each problem as <probName>.p */
     public static boolean saveTPTP =  true;
 
-    public static Set<String> metaPred = new HashSet(Arrays.asList("note", "time", "query", "answer", "file", "regen"));
+    public static Set<String> metaPred = new HashSet(Arrays.asList("note", "time", "query", "answer", "file", "regen", "minLang"));
 
     private KB kb = null;
 
@@ -104,6 +107,7 @@ public class InferenceTestSuite {
         public List<String> expectedAnswers = new ArrayList<>();
         public List<String> actualAnswers = new ArrayList<>();
         public int timeout = 30;
+        public String minLang = "fof";
         public List<String> files = new ArrayList<>();
         public List<String> statements = new ArrayList<>();
         public boolean regen = false;
@@ -123,13 +127,24 @@ public class InferenceTestSuite {
     private List<String> getInferenceTestPaths() {return this.inferenceTestPaths;}
 
     private List<String> loadInferenceTestPaths() {
-        
-        File dir = new File(this.inferenceTestDir);
-        File[] files = dir.listFiles((d, n) -> n.toLowerCase().endsWith(".tq"));
-        Arrays.sort(files, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
-        List<String> inferenceTestPaths = new ArrayList<>();
-        for (int i = 0; i < files.length; i++) inferenceTestPaths.add(files[i].getName());
-        return inferenceTestPaths;
+
+        List<String> result = new ArrayList<>();
+        if (StringUtil.emptyString(this.inferenceTestDir)) return result;
+        Path root = Paths.get(this.inferenceTestDir);
+        try (Stream<Path> paths = Files.walk(root)) {
+            paths
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().toLowerCase().endsWith(".tq"))
+                    .map(root::relativize)
+                    .map(p -> p.toString().replace(File.separatorChar, '/'))
+                    .sorted(String.CASE_INSENSITIVE_ORDER)
+                    .forEach(result::add);
+        }
+        catch (IOException e) {
+            System.err.println("Error in InferenceTestSuite.loadInferenceTestPaths(): " + e.getMessage());
+            e.printStackTrace();
+        }
+        return result;
     }
 
     private InfTestData runTest(String testFilePath, String proverType, String language, String vampireMode,
@@ -148,14 +163,10 @@ public class InferenceTestSuite {
         else {
             itd.timeout = itd.timeout > 0 ? itd.timeout : (timeout > 0 ? timeout : DEFAULT_TIMEOUT);
         }
-
         compareFiles(itd);
-
         String sessionId = "tq-" + UUID.randomUUID();
-
         // Keep the session directory unless we prove the test completed successfully.
         boolean cleanupSessionDir = false;
-
         try {
             if (itd.regen) {
                 SessionTPTPManager.beginBatchTells(sessionId);
@@ -279,10 +290,12 @@ public class InferenceTestSuite {
 
         long t0 = System.currentTimeMillis();
         try {
+            File testFile = new File(tqPath);
+            InfTestData itd1 = readTestFile(testFile);
             InfTestData itd = runTest(
                 tqPath,
                 engine,
-                "FOF",
+                itd1.minLang,
                 "CASC",
                 false,
                 modusPonens,
@@ -658,6 +671,10 @@ public class InferenceTestSuite {
                     else if (formula.startsWith("(answer")) {
                         parseAnswers(formula,itd);
                     }
+                    else if (formula.startsWith("(minLang")) {
+                        String minLangValue = formula.substring(9, formula.length() - 1).trim();
+                        itd.minLang = normalizeMinLang(minLangValue);
+                    }
                     else if (formula.startsWith("(time"))
                         itd.timeout = Integer.parseInt(formula.substring(6, formula.length() - 1));
                     else if (formula.startsWith("(file")) {
@@ -681,6 +698,15 @@ public class InferenceTestSuite {
             e.printStackTrace();
         }
         return itd;
+    }
+
+    private static String normalizeMinLang(String lang) {
+
+        if (StringUtil.emptyString(lang)) return "fof";
+        lang = lang.trim().toLowerCase();
+        if ("tptp".equals(lang)) return "fof";
+        if ("fof".equals(lang) || "tff".equals(lang) || "thf".equals(lang)) return lang;
+        throw new IllegalArgumentException("Unsupported minLang: " + lang + ". Expected one of: fof, tff, thf");
     }
 
     /********************************************************************
