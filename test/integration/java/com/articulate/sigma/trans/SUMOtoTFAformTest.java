@@ -781,9 +781,9 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
                 "(not (exists (?ITEM) (and (instance ?ITEM ?TYPE) (member ?ITEM ?GROUP)))))";
         FormulaAST f = new FormulaAST(input);
         String actualRes = SUMOtoTFAform.processExpr(f.expr,false);
-        String expectedRes = "! [V__GROUP : $i,V__TYPE : $i,V__NUMBER : $int] : "
+        String expectedRes = "! [V__GROUP : $i,V__NUMBER : $int,V__TYPE : $i] : "
                 + "(((s__memberTypeCount(V__GROUP,V__TYPE,V__NUMBER) & V__NUMBER = 0) => "
-                + "~(( ? [V__ITEM:$i] : ((s__instance(V__ITEM, V__TYPE) & "
+                + "~(( ? [V__ITEM:$i] : ((s__instance(V__ITEM, V__T3YPE) & "
                 + "s__member(V__ITEM, V__GROUP)))))))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
