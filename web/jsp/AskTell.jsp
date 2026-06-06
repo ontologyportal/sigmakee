@@ -1,4 +1,6 @@
 <%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
+<%@ page import="com.articulate.sigma.parsing.FormulaAST" %>
+<%@ page import="com.articulate.sigma.parsing.Expr" %>
 <%@include file="Prelude.jsp" %>
 <%
     /** Copyright header omitted for brevity; keep your original text **/
@@ -183,7 +185,7 @@
     else {
         if (stmt.trim().charAt(0) != '(') english = true;
         else {
-            String msg = (new KIF()).parseStatement(stmt);
+            String msg = (new KIFAST()).parseStatement(stmt);
             if (msg != null) { status.append("<font color='red'>Error: ").append(msg).append("</font><br>"); syntaxError = true; }
         }
     }
@@ -534,9 +536,10 @@
                                 SessionTPTPManager.endBatchTells(sid);
                             }
                             FormulaPreprocessor fp = new FormulaPreprocessor();
-                            Set<Formula> qs = SessionTPTPManager.withSessionCache(sid, kb, () -> fp.preProcess(new Formula(itd.query), true, kb));
-                            for (Formula q : qs) {
-                                String qstr = q.getFormula();
+                            Set<Expr> qs = SessionTPTPManager.withSessionCache(sid, kb, () -> fp.preProcessExpr(new FormulaAST(itd.query), true, kb));
+
+                            for (Expr q : qs) {
+                                String qstr = q.toKifString();
                                 ATPQuery query = new ATPQuery(
                                     kb,
                                     session.getId(),

@@ -855,7 +855,7 @@ public class FormulaAST implements Comparable, Serializable {
     public boolean atom() {
 
         if (expr != null) return !(expr instanceof Expr.SExpr);
-        System.out.println("Formula string-based method used: atom");
+//        System.out.println("Formula string-based method used: atom");
         return atom(getFormula());
     }
 

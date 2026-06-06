@@ -148,11 +148,13 @@ public class PredVarInst {
                             if (fr.pred.equals(var)) {  // have to update the row var record to reflect the pred var substitution
                                 fr.pred = rel;
                                 fr.literal = fr.literal.replace(var, rel);
-                                // Predicate variables don't increment argnum during parsing, so
-                                // rs.arity is 1 short (it counts only non-pred args). Now that a
-                                // concrete predicate occupies the head position, add 1 so findArities()
-                                // computes the correct rowVarArity for @ROW expansion.
-                                fr.arity += 1;
+                                // NOTE: do NOT adjust fr.arity here.
+                                // initCachesFromExpr sets rs.arity = args.size() (total args, excluding
+                                // the head).  For (?REL @ROW), rs.arity=1.  After substituting ?REL→pred,
+                                // the formula is (pred @ROW) which still has 1 total arg — arity unchanged.
+                                // Adding 1 incorrectly caused findArities() to compute rowVarArity one too
+                                // low, e.g. rowVarArity = 2-(2-1) = 1 for a binary pred → (pred ?ROW1)
+                                // instead of the correct (pred ?ROW1 ?ROW2).
                             }
                         }
                     }

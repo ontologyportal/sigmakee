@@ -629,6 +629,10 @@ public class Modals {
                                             String worldvar, int worldNum) {
         List<Expr> flist = se.args(); // args after head (but se.args() has them already)
         // flist[0]=a1, flist[1]=a2, flist[2]=form
+        if (flist.size() < 3) {
+            System.out.println("Error in Modals.handleHOL3predExpr(): too few arguments in: " + se.toKifString());
+            return se;
+        }
         int prevWorld = worldNum;
         int currWorld = worldNum + 1;
 
@@ -661,6 +665,10 @@ public class Modals {
     private static Expr handleHOLpredExpr(Expr.SExpr se, KB kb,
                                            String worldvar, int worldNum) {
         List<Expr> flist = se.args(); // flist[0]=agent, flist[1]=form
+        if (flist.size() < 2) {
+            System.out.println("Error in Modals.handleHOLpredExpr(): too few arguments in: " + se.toKifString());
+            return se;
+        }
         int prevWorld = worldNum;
         int currWorld = worldNum + 1;
 
@@ -689,6 +697,10 @@ public class Modals {
     private static Expr handleModalAttributeExpr(Expr.SExpr se, KB kb,
                                                    String worldvar, int worldNum) {
         List<Expr> flist = se.args(); // flist[0]=form, flist[1]=modality
+        if (flist.size() < 2) {
+            System.out.println("Error in Modals.handleModalAttributeExpr(): too few arguments in: " + se.toKifString());
+            return se;
+        }
         int prevWorld = worldNum;
         int currWorld = worldNum + 1;
 
