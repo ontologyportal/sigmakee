@@ -1,0 +1,40 @@
+<fieldset class="step" id="step2Fieldset">
+    <legend>Step 2 - Translation mode</legend>
+    <div class="row inline" >
+        <label><input type="radio" id="modeFOL" name="translationMode" value="FOL"
+            <%= "HOL".equalsIgnoreCase((String)session.getAttribute("translationMode")) ? "" : "checked" %> >
+            FOL (TPTP / TFF)
+        </label>
+        <label><input type="radio" id="modeHOL" name="translationMode" value="HOL"
+            <%= "HOL".equalsIgnoreCase((String)session.getAttribute("translationMode")) ? "checked" : "" %> >
+            HOL (THF)
+        </label>
+    </div>
+    <div id="folOptions" class="row">
+        <div class="inline">
+            <span class="muted">Language:</span>
+            <label><input type="radio" id="langFof" name="TPTPlang" value="fof" <%= "fof".equals(TPTPlang)?"checked":"" %> >
+                tptp (fof)
+            </label>
+            <label><input type="radio" id="langTff" name="TPTPlang" value="tff" <%= "tff".equals(TPTPlang)?"checked":"" %> >
+                tff
+            </label>
+        </div>
+        <details class="advanced">
+            <summary>Advanced Options</summary>
+            <div class="row">
+                <label class="inline" style="margin-left:14px;">
+                    <input type="checkbox" name="CWA" id="CWA" value="yes" <% if ("yes".equals(cwa)) {%>checked<%}%> >
+                    Closed World Assumption
+                </label>
+                <span title="Runs only in TFF mode">&#9432;</span>
+            </div>
+        </details>
+    </div>
+    <div id="holOptions" class="row" style="display:none;">
+        <div class="helpText">
+            HOL uses THF translation and currently requires Vampire (HOL-enabled build). "Modus Ponens" and
+            "Drop One-Premise" are disabled in HOL mode.
+        </div>
+    </div>
+</fieldset>

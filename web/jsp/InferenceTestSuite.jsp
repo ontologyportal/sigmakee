@@ -581,6 +581,8 @@
                 <input type="number" name="timeout" min="1" value="<%=timeout%>">
             </label>
         </fieldset>
+        <%@ include file="fragments/tp/ProverSelector.jspf" %>
+        <%@ include file="fragments/tp/TranslationSelector.jspf" %>
     </div>
     <!-- single-run fields (keep your existing) -->
     <input type="hidden" name="action" value="run">

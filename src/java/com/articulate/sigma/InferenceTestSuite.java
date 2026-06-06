@@ -151,9 +151,7 @@ public class InferenceTestSuite {
                                 boolean closedWorldAssumption, boolean modusPonens,
                                 boolean dropOnePremise, boolean holUseModals, int timeout) {
 
-        System.out.println("===============================================================================================================================================");
-        LoggingUtils.log("Running " + testFilePath + " with " + proverType + " in " + language + " modusPonens=" + modusPonens);
-
+        
         File testFile = new File(testFilePath);
         InfTestData itd = readTestFile(testFile);
         LoggingUtils.log("TQ regen=" + itd.regen + " for " + testFilePath);
@@ -165,7 +163,6 @@ public class InferenceTestSuite {
         }
         compareFiles(itd);
         String sessionId = "tq-" + UUID.randomUUID();
-        // Keep the session directory unless we prove the test completed successfully.
         boolean cleanupSessionDir = false;
         try {
             if (itd.regen) {
@@ -203,7 +200,7 @@ public class InferenceTestSuite {
                     modusPonens,
                     dropOnePremise,
                     holUseModals,
-                    itd.timeout,
+                    30,
                     itd.expectedAnswers.size()
             );
 
@@ -264,15 +261,8 @@ public class InferenceTestSuite {
         finally {
             try {
                 resetAllForInference(this.kb, sessionId);
-
                 if (cleanupSessionDir) {
                     SessionTPTPManager.cleanupSession(sessionId);
-                }
-                else {
-                    System.err.println("Preserving failed session directory for debugging:");
-                    System.err.println("  sessionId: " + sessionId);
-                    System.err.println("  dir: " + SessionTPTPManager.getSessionDir(sessionId));
-                    System.err.println("  temp-comb: " + SessionTPTPManager.getSessionDir(sessionId).resolve("temp-comb.tptp"));
                 }
             }
             catch (Exception e) {
@@ -355,93 +345,19 @@ public class InferenceTestSuite {
         return s.replace("&","&amp;").replace("<","&lt;")
             .replace(">","&gt;").replace("\"","&quot;").replace("'","&#39;"); }
 
-    /** ***************************************************************
-     * Compare the expected answers to the returned answers.  Return
-     * true if no answers are found or if any pair of answers
-     * is different.  Return false otherwise.
-     *
-     * TODO: If both answersList and tpp.bindings are a lit of entities,
-     *       we enforce that all entity pair should be exactly the same;
-     */
-//    private static boolean sameAnswers(List<String> actualAnswerList, List<String> expectedAnswerList) {
-//
-//        if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): expected answers: " + expectedAnswerList);
-//        if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): bindings: " + actualAnswerList);
-//        String actualRes;
-//        for (int i = 0; i < actualAnswerList.size(); i++) {
-//            actualRes = actualAnswerList.get(i);
-//            if (TPTP3ProofProcessor.isSkolemRelation(actualRes)) {
-//                actualRes = normalizeSkolem(TPTP2SUMO.formToSUMO(actualRes));
-//                if (!normalizeSkolem(expectedAnswerList.get(i)).equals(actualRes)) {
-//                    if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): different skolem answers: " +
-//                            actualRes + " and " + expectedAnswerList.get(i));
-//                    return false;    // return false if any pair of answers is different
-//                }
-//            }
-//            else
-//                if (!expectedAnswerList.get(i).equals(actualRes)) {
-//                    if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): different answers: " +
-//                            actualRes + " and " + expectedAnswerList.get(i));
-//                    return false;    // return false if any pair of answers is different
-//                }
-//        }
-//        if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): returning true");
-//        return true;
-//    }
-
     private static boolean sameAnswers(List<String> actualAnswerList, List<String> expectedAnswerList) {
 
-        if (debug) {
-            System.out.println("InferenceTestSuite.sameAnswers(1): expected answers: " + expectedAnswerList);
-            System.out.println("InferenceTestSuite.sameAnswers(1): bindings: " + actualAnswerList);
-        }
-
-        // --- 1. Handle null or empty cases first -----------------------------------------------
-        // If the prover produced no answers:
-        //   - Return true only if the expected list is also empty (no answers expected).
-        if (actualAnswerList == null || actualAnswerList.isEmpty()) {
-            return expectedAnswerList == null || expectedAnswerList.isEmpty();
-        }
-
-        // If the prover and expected lists differ in length, they cannot be identical.
-        if (actualAnswerList.size() != expectedAnswerList.size()) {
-            if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): answer count mismatch");
-            return false;
-        }
-
-        // --- 2. Compare answers element by element ----------------------------------------------
+        if (actualAnswerList == null || actualAnswerList.isEmpty()) return expectedAnswerList == null || expectedAnswerList.isEmpty();
+        if (actualAnswerList.size() != expectedAnswerList.size()) return false;
         for (int i = 0; i < actualAnswerList.size(); i++) {
             String actualRes = actualAnswerList.get(i);
             String expectedRes = expectedAnswerList.get(i);
-
-            // If the actual result is a Skolem relation (an existential witness term)
-            // then normalize it for comparison with the expected answer.
             if (TPTP3ProofProcessor.isSkolemRelation(actualRes)) {
                 actualRes = normalizeSkolem(TPTP2SUMO.formToSUMO(actualRes));
-
-                // Compare normalized Skolemized answers.
-                if (!normalizeSkolem(expectedRes).equals(actualRes)) {
-                    if (debug) {
-                        System.out.println("InferenceTestSuite.sameAnswers(1): different skolem answers: "
-                                + actualRes + " and " + expectedRes);
-                    }
-                    return false;  // Mismatch → FAIL
-                }
+                if (!normalizeSkolem(expectedRes).equals(actualRes)) return false;
             }
-            // Otherwise, do a direct string comparison for normal (non-Skolem) answers.
-            else {
-                if (!expectedRes.equals(actualRes)) {
-                    if (debug) {
-                        System.out.println("InferenceTestSuite.sameAnswers(1): different answers: "
-                                + actualRes + " and " + expectedRes);
-                    }
-                    return false;  // Mismatch → FAIL
-                }
-            }
+            else if (!expectedRes.equals(actualRes)) return false;
         }
-
-        // --- 3. All checks passed ---------------------------------------------------------------
-        if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): returning true");
         return true;
     }
 
@@ -455,18 +371,11 @@ public class InferenceTestSuite {
      */
     private static boolean sameAnswers(TPTP3ProofProcessor tpp, List<String> answerList) {
 
-        if (debug) System.out.println("InferenceTestSuite.sameAnswers(2): expected answers: " + answerList);
-        if (debug) System.out.println("InferenceTestSuite.sameAnswers(2): tpp proof size: " + tpp.proof.size());
-        if (debug) System.out.println("InferenceTestSuite.sameAnswers(2): bindings: " + tpp.bindings);
-        // TODO: tpp may be null for other reasons.
-        // TODO: Here it says that if the prover produced no answers, we return true only if the expected list is also empty (no answers expected).
         if ((tpp == null || tpp.proof.isEmpty()) && (answerList == null || answerList.contains("no")))
             return true;         // return true if no answers are found in the inference engine
         if (answerList != null && !answerList.isEmpty()) {
-            if (answerList.get(0).equals("yes"))
-                return !tpp.proof.isEmpty() && tpp.containsFalse;   // return true if "yes" is expected, and we do find a contradiction (answer)
-            else
-                return sameAnswers(tpp.bindings, answerList);
+            if (answerList.get(0).equals("yes")) return !tpp.proof.isEmpty() && tpp.containsFalse;   // return true if "yes" is expected, and we do find a contradiction (answer)
+            else return sameAnswers(tpp.bindings, answerList);
         }
         return false;
     }

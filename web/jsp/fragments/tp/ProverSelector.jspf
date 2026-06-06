@@ -1,0 +1,75 @@
+<fieldset class="step">
+    <legend>Step 3 - Reasoner</legend>
+    <div class="row inline">
+        <label>Maximum answers:
+            <input type="text" name="maxAnswers" value="<%=maxAnswers%>" size="4">
+        </label>
+        <label>Query time limit (sec):
+            <input type="text" name="timeout" value="<%=timeout%>" size="4">
+        </label>
+    </div>
+    <div class="row grid2">
+        <div class="card <%= (availableProvers.contains("leo") ? "" : "engineDisabled") %>">
+            <h4>
+                <label>
+                    <input type="radio" id="engineLEO" name="inferenceEngine" value="LEO" <% if ("LEO".equals(inferenceEngine)) {%>checked<%}%>
+                        <% if (!availableProvers.contains("leo")) { %> disabled <% } %>
+                            onclick="toggleVampireOptions()">
+                    LEO-III
+                </label>
+            </h4>
+            <div class="sub">Higher-order prover (available if configured).</div>
+        </div>
+        <div class="card <%= (availableProvers.contains("eprover") ? "" : "engineDisabled") %>">
+            <h4>
+                <label>
+                    <input type="radio" id="engineEProver" name="inferenceEngine" value="EProver" <% if ("EProver".equals(inferenceEngine)) {%>checked<%}%>
+                        <% if (!availableProvers.contains("eprover")) { %> disabled <% } %>
+                            onclick="toggleVampireOptions()">
+                    EProver
+                </label>
+            </h4>
+            <div class="sub">First-order prover (fof/tff).</div>
+        </div>
+        <div class="card <%= (availableProvers.contains("vampire") ? "" : "engineDisabled") %>">
+            <h4>
+                <label>
+                    <input type="radio" id="engineVampire" name="inferenceEngine" value="Vampire" <% if ("Vampire".equals(inferenceEngine)) {%>checked<%}%>
+                        <% if (!availableProvers.contains("vampire")) { %> disabled <% } %>
+                            onclick="toggleVampireOptions()">
+                    Vampire
+                </label>
+            </h4>
+            <div class="inline" style="margin-top:6px;">
+                <span class="muted">Mode:</span>
+                <label><input type="radio" id="CASC" name="vampireMode" value="CASC" <% if ("CASC".equals(vampireMode)) { out.print(" CHECKED"); } %> > CASC</label>
+                <label><input type="radio" id="Avatar" name="vampireMode" value="Avatar" <% if ("Avatar".equals(vampireMode)) { out.print(" CHECKED"); } %> > Avatar</label>
+                <label><input type="radio" id="Vampire" name="vampireMode" value="Vampire" <% if ("Vampire".equals(vampireMode)) { out.print(" CHECKED"); } %> > Vampire</label>
+                <label title="Disabled until fully tested.">
+                    <input type="radio" id="Custom" name="vampireMode" value="Custom" <% if ("Custom".equals(vampireMode)) { out.print(" CHECKED"); } %> > Custom
+                </label>
+            </div>
+            <details class="advanced">
+                <summary>Advanced (Vampire)</summary>
+                <div class="row">
+                    <label>
+                        <input type="checkbox" id="ModensPonens" name="ModensPonens" value="yes" <% if (modensPonens) { out.print(" CHECKED"); } %> >
+                        Modus Ponens
+                    </label>
+                    <span title="Runs Vampire with modus-ponens-only routine over authored axioms">&#9432;</span>
+                    <label style="margin-left:14px;">
+                        <input type="checkbox" name="dropOnePremise" id="dropOnePremise" value="true" <% if (Boolean.TRUE.equals(dropOnePremise)) { out.print(" CHECKED"); } %> >
+                        Drop one-premise formulas
+                    </label>
+                </div>
+                <div class="row">
+                    <label>
+                        <input type="checkbox" id="HolUseModals" name="HolUseModals" value="yes" <% if (holUseModals) { out.print(" CHECKED"); } %> >
+                        HOL - use modals
+                    </label>
+                    <span class="muted">Only relevant in HOL mode.</span>
+                </div>
+            </details>
+        </div>
+    </div>
+</fieldset>

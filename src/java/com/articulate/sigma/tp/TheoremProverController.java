@@ -34,6 +34,27 @@ public class TheoremProverController {
 
     public TheoremProverController () {}
     
+    public ATPResult runQuery(KB kb, String userSessionId, String query, String testFilePath, String runSource, String proverType, String language, String vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout, int maxAnswers) {
+
+        ATPQuery atpQuery = new ATPQuery(
+            kb, 
+            userSessionId,
+            query,
+            testFilePath,
+            runSource,
+            proverType,
+            language,
+            vampireMode,
+            closedWorldAssumption,
+            modusPonens,
+            dropOnePremise,
+            holUseModals,
+            timeout,
+            maxAnswers
+        );
+        return ask(atpQuery);
+    }
+
     /********************************************************************
      * Primary API for the class. Capable of asking all 3 provers.
      * @param query ATPQuery object used to determine which prover to ask with associated options.
