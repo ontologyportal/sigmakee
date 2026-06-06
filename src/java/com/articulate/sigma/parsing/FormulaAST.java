@@ -1424,9 +1424,18 @@ public class FormulaAST implements Comparable, Serializable {
 
         if (expr != null) {
             Expr newExpr = substituteExpr(expr, m);
-            FormulaAST fa = new FormulaAST();
-            fa.setFormula(newExpr.toKifString());
-            fa.expr = newExpr;
+            // Use FormulaAST(Expr) constructor so initCachesFromExpr runs and populates
+            // rowVarCache, rowVarStructs, predVarCache, and varTypes from the new tree.
+            // Without this, expandRowVarExpr() sees empty rowVarStructs, findArities()
+            // returns {}, and every @ROW stays unexpanded → ListFn__1Fn(V__ROW) instead
+            // of ListFn__NFn(V__ROW1,...,V__ROWN).
+            FormulaAST fa = new FormulaAST(newExpr);
+            // Preserve source metadata for ordering and comment output
+            fa.sourceFile     = this.sourceFile;
+            fa.startLine      = this.startLine;
+            fa.endLine        = this.endLine;
+            fa.higherOrder    = this.higherOrder;
+            fa.containsNumber = this.containsNumber;
             return fa;
         }
         System.out.println("Formula string-based method used: substituteVariables");
