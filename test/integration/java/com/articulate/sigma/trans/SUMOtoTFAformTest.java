@@ -783,7 +783,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         String actualRes = SUMOtoTFAform.processExpr(f.expr,false);
         String expectedRes = "! [V__GROUP : $i,V__NUMBER : $int,V__TYPE : $i] : "
                 + "(((s__memberTypeCount(V__GROUP,V__TYPE,V__NUMBER) & V__NUMBER = 0) => "
-                + "~(( ? [V__ITEM:$i] : ((s__instance(V__ITEM, V__T3YPE) & "
+                + "~(( ? [V__ITEM:$i] : ((s__instance(V__ITEM, V__TYPE) & "
                 + "s__member(V__ITEM, V__GROUP)))))))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
