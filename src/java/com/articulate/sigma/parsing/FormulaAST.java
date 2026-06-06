@@ -1,6 +1,7 @@
 package com.articulate.sigma.parsing;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.trans.Modals;
 import com.articulate.sigma.utils.StringUtil;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -95,7 +96,7 @@ public class FormulaAST implements Comparable, Serializable {
             "instance", "subclass", "domain", "domainSubclass",
             "range", "rangeSubclass", "subAttribute", "subrelation");
 
-    public static final int MAX_PREDICATE_ARITY = 7;
+    public static final int MAX_PREDICATE_ARITY = 10;
 
     // ---------------------------------------------------------------
     // Instance fields — copied verbatim from Formula
@@ -109,7 +110,7 @@ public class FormulaAST implements Comparable, Serializable {
     public long endFilePosition = -1L;
     public Set<String> errors   = new TreeSet<>();
     public Set<String> warnings = new TreeSet<>();
-    private String theFormula;
+    public String theFormula;
     public Derivation derivation = new Derivation();
     public boolean higherOrder  = false;
     public boolean simpleClause = false;
@@ -2158,36 +2159,50 @@ public class FormulaAST implements Comparable, Serializable {
         return !(!consequent.isSimpleClause(kb) && !consequent.car().equals(AND));
     }
 
-    //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public boolean isModal(KB kb) {
+    public boolean isOtherModal(KB kb) {
 
-        return (this.isHigherOrder(kb) && this.getFormula().contains("modalAttribute"));
+        if (this.isHigherOrder(kb)) {
+            for (String s : Modals.otherModal)
+                if (this.termCache.contains(s))
+                    return true;
+        }
+        return false;
     }
 
-    //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
     public boolean isEpistemic(KB kb) {
 
-        return (this.isHigherOrder(kb) &&
-                (this.getFormula().contains("knows") || this.getFormula().contains("believes")));
+        if (this.isHigherOrder(kb)) {
+            for (String s : Modals.epistemic)
+                if (this.termCache.contains(s))
+                    return true;
+        }
+        return false;
     }
 
-    //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
+    public boolean isDeontic(KB kb) {
+
+        if (this.isHigherOrder(kb)) {
+            for (String s : Modals.deontic)
+                if (this.termCache.contains(s))
+                    return true;
+        }
+        return false;
+    }
+
     public boolean isTemporal(KB kb) {
 
-        return (this.isHigherOrder(kb) && this.getFormula().contains("holdsDuring"));
+        return (this.isHigherOrder(kb) && this.termCache.contains("holdsDuring"));
     }
 
-    //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
     public boolean isOtherHOL(KB kb) {
 
         return (this.isHigherOrder(kb) && !this.isTemporal(kb) &&
-                !this.isEpistemic(kb) && !this.isModal(kb));
+                !this.isEpistemic(kb) && !this.isOtherModal(kb));
     }
 
-    //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
     public boolean isTFF(KB kb) {
         isTFF = true;
-        return (this.isHigherOrder(kb) && this.isModal(kb) &&
+        return (this.isHigherOrder(kb) && this.isOtherModal(kb) &&
                 this.isEpistemic(kb) && this.isTemporal(kb));
     }
 

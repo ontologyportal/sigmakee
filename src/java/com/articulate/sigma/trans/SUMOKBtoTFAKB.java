@@ -315,7 +315,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         int endIndex = sig.size();
         if (KButilities.isVariableArity(kb,SUMOtoTFAform.withoutSuffix(t)))
             endIndex = getVariableAritySuffix(t) + 1;
-        if (endIndex > Formula.MAX_PREDICATE_ARITY) {
+        if (endIndex > FormulaAST.MAX_PREDICATE_ARITY) {
             pw.println("% SUMOKBtoTFAKB.writeRelationSort(): size too large: " + t);
             return;
         }

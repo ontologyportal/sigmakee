@@ -39,6 +39,8 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.tp.Vampire;

@@ -2424,7 +2424,7 @@ public class KBcache implements Serializable {
 
         long startMillis = System.currentTimeMillis();
         // Pre-warm Formula.stringArgs single-threaded.
-        for (Formula f : kb.formulaMap.values())
+        for (FormulaAST f : kb.formulaMap.values())
             f.getStringArgument(0);
         // Former Wave 1
         buildInsts();

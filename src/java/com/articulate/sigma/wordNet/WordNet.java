@@ -21,6 +21,7 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.MapUtils;
+import com.articulate.sigma.utils.LoggingUtils;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNetUtilities;
 

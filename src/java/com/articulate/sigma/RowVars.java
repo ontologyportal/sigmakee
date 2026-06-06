@@ -13,7 +13,7 @@ import java.util.*;
 public class RowVars {
 
     public static boolean DEBUG = false;
-    public static final int MAX_ARITY = Formula.MAX_PREDICATE_ARITY - 2;
+    public static final int MAX_ARITY = FormulaAST.MAX_PREDICATE_ARITY - 2;
 
     /** ***************************************************************
      * @return a HashSet, possibly empty, containing row variable
