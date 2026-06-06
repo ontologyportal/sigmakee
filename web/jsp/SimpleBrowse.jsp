@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <html>
 <%
 String nonRelTerm = request.getParameter("nonrelation");
@@ -42,20 +42,31 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 %>
 
 <%
+    String pageName = "Simple";
+    String pageString = "Simple Browser";
+
+    if (!KBmanager.initialized) {
+        KBmanager.getMgr().initializeOnce();
+        System.out.println("SimpleBrowse.jsp: initializing.  Redirecting to init.jsp.");
+        response.sendRedirect("init.jsp");
+        return;
+    }
+%>
+
+<%
  String parentPage = "SimpleBrowse.jsp";
  StringBuilder show = null;
  simple = "yes";
 %>
 
-<%@ include file="SimpleBrowseBody.jsp" %>
-
+<%@ include file="fragments/browse/SimpleBrowseBody.jspf" %>
 <!-- show KB header and KB search input -->
-
-<%@ include file="SimpleBrowseHeader.jsp" %>
+<%@include file="fragments/universal/CommonHeader.jspf" %>
+<%@ include file="fragments/browse/SimpleBrowseHeader.jspf" %>
 
 <br>
  <%=show.toString() %><BR>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>

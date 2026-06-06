@@ -1,5 +1,6 @@
 package com.articulate.sigma.trans;
 
+import com.articulate.sigma.parsing.CLIMapParser;
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTHF;
@@ -2017,6 +2018,8 @@ public class THFnew {
 //        THF thf = new THF();
 //        Collection coll = Collections.EMPTY_LIST;
 //        Collection<Formula> result = new ArrayList<>();
+
+        long start = System.nanoTime();
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
 
@@ -2046,6 +2049,8 @@ public class THFnew {
             // Write at the end of the header the hard coded types because they use some from the auto-generated ones.
             out.write(Modals.getTHFHeader(kb) + "\n");
             writeTypes(kb, out, numbers);
+            int i = 1;
+            int total = kb.formulaMap.values().size();
             for (FormulaAST f : kb.formulaMap.values()) {
                 String flatFormula = f.getFormula().replace("\n", " ").replace("\r", " ");
                 String stripped = flatFormula.replaceAll("[^\\p{ASCII}]", "");
@@ -2072,8 +2077,8 @@ public class THFnew {
                     out.write("% excluded: " + stripped + "\n");
                     out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
                 }
+                i++;
             }
-            System.out.println("\n\nTHFnew.transModalTHF(): Result written to file " + filename);
         }
         catch (IOException ex) {
             ex.printStackTrace();
@@ -2087,8 +2092,6 @@ public class THFnew {
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
         String filename = kbDir + sep + kb.name + "_plain.thf";
-
-        if (debug) System.out.println("\n\nTHFnew.transPlainTHF()");
         try (Writer fstream = new FileWriter(filename);
              Writer out = new BufferedWriter(fstream)) {
 
@@ -2111,7 +2114,8 @@ public class THFnew {
 
             analyzeBadUsages(kb);
             if (debug) System.out.println("Predicate Terms: " + predicateTerms);
-
+            int i = 1;
+            int total = kb.formulaMap.values().size();
             for (FormulaAST f : kb.formulaMap.values()) {
                 String flatFormula = f.getFormula()
                         .replace("\n", " ").replace("\r", " ");
@@ -2140,8 +2144,8 @@ public class THFnew {
                     out.write("% from file " + f.sourceFile + " at line " +
                             f.startLine + "\n");
                 }
+                i++;
             }
-            System.out.println("\n\nTHFnew.transPlainTHF(): Result written to file " + filename);
         }
         catch (IOException ex) {
             ex.printStackTrace();

@@ -12,6 +12,10 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 
 package com.articulate.sigma.tp;
 
+import com.articulate.sigma.KB;
+
+import com.articulate.sigma.trans.TPTP3ProofProcessor;
+
 import tptp_parser.TPTPFormula;
 
 import java.util.*;
@@ -59,7 +63,6 @@ public class ATPResult {
     private List<String> errorLines = new ArrayList<>();
     private String primaryError;
     private List<String> warnings = new ArrayList<>();
-
 
     /**
      * Default constructor
@@ -252,10 +255,36 @@ public class ATPResult {
         return sb.toString();
     }
 
+    public TPTP3ProofProcessor getParsedProofProcessor(KB kb, String atpQueryString) {
+
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        tpp.parseProofOutput(getStdout(), atpQueryString, kb, getQList());
+        tpp.processAnswersFromProof(getQList(), atpQueryString);
+        return tpp;
+    }
+
+    public void parseProof(KB kb, String query) {
+
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        tpp.parseProofOutput(getStdout(), query, kb, getQList());
+        tpp.processAnswersFromProof(getQList(), query);
+        this.inconsistencyDetected = tpp.inconsistency;
+        if (tpp.status != null) this.szsStatusRaw = tpp.status;
+        if (tpp.proof != null) this.proofSteps = tpp.proof;
+        if (tpp.bindings != null) {
+            this.answerBindings = new LinkedHashMap<>();
+            for (int i = 0; i < tpp.bindings.size(); i++) {
+                this.answerBindings.put("answer" + i, tpp.bindings.get(i));
+            }
+        }
+    }
+
     /**
      * Get CSS class for UI styling based on status
      */
-    public String getCssClass() {return (szsStatus == null) ?  "szs-unknown" : szsStatus.getCssClass();}
+    public String getCssClass() { 
+        return (szsStatus == null) ?  "szs-unknown" : szsStatus.getCssClass();
+    }
 
     /**
      * Get CSS class for the status badge

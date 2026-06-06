@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
@@ -14,27 +14,18 @@
     http://github.com/ontologyportal
 */
 
-    out.println("<html>");
-    out.println("  <head>");
-    out.println("    <title>Sigma Knowledge Engineering Environment - Main</title>");
-    out.println("  </head>");
-    out.println("  <body bgcolor=\"#FFFFFF\">");
-    String baseDir = mgr.getPref("baseDir");
-    String kbDir = mgr.getPref("kbDir");
-    System.out.println("INFO in KBs.jsp: baseDir == " + baseDir);
-    System.out.println("INFO in KBs.jsp:   kbDir == " + kbDir);
-    System.out.println("KBs.jsp: username: " + username);
-    boolean isAdministrator = role.equalsIgnoreCase("admin");
-    System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
-    KBmanager.getMgr().initializeOnce();
-    String pageName = "KBs";
-    String pageString = "Knowledge Bases";
-    %>
-    <%@include file="CommonHeader.jsp" %>
-
-<table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
-<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
-
+  out.println("<html>");
+  out.println("  <head>");
+  out.println("    <title>Sigma Knowledge Engineering Environment - Main</title>");
+  out.println("  </head>");
+  out.println("  <body bgcolor=\"#FFFFFF\">");
+  String baseDir = mgr.getPref("baseDir");
+  String kbDir = mgr.getPref("kbDir");
+  boolean isAdministrator = role.equalsIgnoreCase("admin");
+  String pageName = "KBs";
+  String pageString = "Knowledge Bases";
+  %>
+  <%@include file="fragments/universal/CommonHeader.jspf" %>
 <%
   Iterator<String> kbNames = null;
   String removeResult = "";
@@ -43,9 +34,7 @@
       removeResult = KBmanager.getMgr().removeKB(kbName);
 
   if (KBmanager.getMgr().getKBnames() != null && !KBmanager.getMgr().getKBnames().isEmpty()) {
-      System.out.println(KBmanager.getMgr().getKBnames().size());
       kbNames = KBmanager.getMgr().getKBnames().iterator();
-      System.out.println("INFO in KBs.jsp: Got KB names.");
   }
 
   String defaultKB = null;
@@ -58,7 +47,6 @@
              <TH>Knowledge Bases</TH>
            </TR>
 <%
-      System.out.println("Showing knowledge bases.");
       boolean first = true;
       boolean odd = true;
       String kbName2 = null;
@@ -69,7 +57,7 @@
               first = false;
           }
           kb = (KB) KBmanager.getMgr().getKB(kbName2);
-          HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + language;
+          HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + lang;
 %>
           <TR VALIGN="center" <%= odd==false? "bgcolor=#eeeeee":""%>>
             <TD><%=kbName2%></TD>
@@ -83,18 +71,17 @@
               out.println("<A href=\"Manifest.jsp?kb=" + kbName2 + "\">Manifest</A>");
           }
           out.println("</TD>");
-          out.println("<TD><A href=\"Browse.jsp?kb=" + kbName2 + "&lang=" + language + "\">Browse</A></TD>");
-          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName2 + "&lang=" + language + "\">Graph</A></TD>");
-          out.println("<TD><A href=\"TestStmnt.jsp?kb=" + kbName2 + "&lang=" + language + "\">Test Stmt</A></TD>");
-
+          out.println("<TD><A href=\"Browse.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Browse</A></TD>");
+          out.println("<TD><A href=\"Graph.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Graph</A></TD>");
+          out.println("<TD><A href=\"TestStmnt.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Test Stmt</A></TD>");
           if (isAdministrator) {
-              out.println("<TD><A href=\"Diag.jsp?kb=" + kbName2 + "&lang=" + language + "\">Diagnostics</A></TD>");
-              out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + language + "&page=0\">Consistency Check</A></TD>");
-              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName2 + "&lang=" + language + "\">Inference Tests</A></TD>");
+              out.println("<TD><A href=\"Diagnostics.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Diagnostics</A></TD>");
+              out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang +  "&page=0\">Consistency Check</A></TD>");
+              out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Inference Tests</A></TD>");
               if (kb.celt != null)
-                  out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName2 + "&lang=" + language + "\">CELT Tests</A></TD>");
-              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName2 + "&lang=" + language + "\">WordNet Check</A></TD>");
-              out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName2 + "\">Ask/Tell</A>&nbsp;</TD>");
+                  out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang +  "\">CELT Tests</A></TD>");
+              out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">WordNet Check</A></TD>");
+              out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Ask/Tell</A>&nbsp;</TD>");
               out.println("<TD><A href=\"KBs.jsp?remove=true&kb=" + kbName2 + "\">Remove</A></TD></TR>");
           }
       }
@@ -136,7 +123,7 @@
                   + kbName
                   + "\">More Output Utilities</a>");
       out.println(" | <a href=\"Mapping.jsp\">Ontology Mappings</a>");
-      out.println(" | <a href=\"WordSense.jsp?lang=" + language + "\">Sense/Sentiment Analysis</a>");
+      out.println(" | <a href=\"WordSense.jsp?lang=" + lang + "\">Sense/Sentiment Analysis</a>");
       out.println("<p>");
 
       kbNames = KBmanager.getMgr().getKBnames().iterator();
@@ -145,7 +132,6 @@
       while (kbNames.hasNext()) {
           kbName3 = (String) kbNames.next();
           kb = (KB) KBmanager.getMgr().getKB(kbName3);
-          System.out.println("INFO in KBs.jsp href: " + HTMLformatter.kbHref);
           if (!kb.errors.isEmpty()) {
               out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
               kbErrorsFound = true;
@@ -171,7 +157,7 @@
 </ul>
 <p>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>
 

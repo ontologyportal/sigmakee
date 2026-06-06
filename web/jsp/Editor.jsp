@@ -1,11 +1,11 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <%@ page import="com.articulate.sigma.*, java.util.List" %>
 <%
     String pageName = "Editor";
     String pageString = "Editor";
     if (welcomeString == null) welcomeString = "";
 %>
-<%@ include file="CommonHeader.jsp" %>
+<%@ include file="fragments/universal/CommonHeader.jspf" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -267,6 +267,6 @@
   </div>
 </div>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>
 </html>

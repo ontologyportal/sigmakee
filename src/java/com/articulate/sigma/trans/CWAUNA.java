@@ -3,11 +3,12 @@ package com.articulate.sigma.trans;
 /* A start at adding the (conservative) closed world assumption and unique names assumption to SUMO/Sigma.
  */
 
-import com.articulate.sigma.CLIMapParser;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.parsing.CLIMapParser;
+import com.articulate.sigma.utils.*;
 
 import java.io.IOException;
 import java.util.*;

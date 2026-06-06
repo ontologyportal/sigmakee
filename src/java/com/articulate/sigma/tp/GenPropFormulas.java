@@ -35,7 +35,7 @@ public class GenPropFormulas {
     public enum SZSonto {CONTRA, SAT, OTHER};  // theorem prover status
 
     private Random random = new Random();
-    public Vampire vamp = new Vampire(null);
+    public Vampire vamp = new Vampire();
     public ECNF ecnf = new ECNF();
     public TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 
@@ -83,7 +83,7 @@ public class GenPropFormulas {
     public void init() {
 
         random = new Random();
-        vamp = new Vampire(null);
+        vamp = new Vampire();
         ecnf = new ECNF();
         tpp = new TPTP3ProofProcessor();
 

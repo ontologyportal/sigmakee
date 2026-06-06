@@ -347,7 +347,7 @@ public class HTMLformatter {
             long serLastModified = kbManagerSer.exists() ? kbManagerSer.lastModified() : 0L;
             long cacheLastModified = cacheFile.exists() ? cacheFile.lastModified() : 0L;
             if (cacheFile.exists() && cacheLastModified >= serLastModified) {
-                System.out.println("[showStatistics] Using cached HTML stats for " + kb.name);
+                // System.out.println("[showStatistics] Using cached HTML stats for " + kb.name);
                 return Files.readString(cacheFile.toPath(), StandardCharsets.UTF_8);
             }
             System.out.println("[showStatistics] Recomputing statistics for " + kb.name);
@@ -368,12 +368,14 @@ public class HTMLformatter {
             show.append("<tr><td>&nbsp;&nbsp;of which are binary: </td><td align=right>").append(stats.get("binary")).append("</td></tr>\n");
             show.append("<tr><td>&nbsp;&nbsp;of which arity more than binary: </td><td align=right>").append(stats.get("higher-arity")).append("</td></tr>\n</table>\n");
             show.append("<P><table><tr><td>Rules: </td><td align=right>").append(kb.getCountRules()).append("</td></tr>\n");
-            show.append("<tr><td>&nbsp;&nbsp;of which are</td><td> horn: </td><td align=right>").append(stats.get("horn")).append("</td></tr>\n");
+            show.append("<tr><td>&nbsp;&nbsp;of which are: </td><td> horn: </td><td align=right>").append(stats.get("horn")).append("</td></tr>\n");
             show.append("<tr><td></td><td> first-order: </td><td align=right>").append(stats.get("first-order")).append("</td></tr>\n");
-            show.append("<tr><td></td><td> temporal: </td><td align=right>").append(stats.get("temporal")).append("</td></tr>\n");
-            show.append("<tr><td></td><td> modal: </td><td align=right>").append(stats.get("modal")).append("</td></tr>\n");
-            show.append("<tr><td></td><td> epistemic: </td><td align=right>").append(stats.get("epistemic")).append("</td></tr>\n");
-            show.append("<tr><td></td><td> other higher-order: </td><td align=right>").append(stats.get("otherHOL")).append("</td></tr>\n");
+            show.append("<tr><td></td><td> higher-order: </td><td align=right>").append(stats.get("higher-order")).append("</td></tr>\n");
+            show.append("<tr><td>&nbsp;&nbsp;of which are: </td><td> </td><td>temporal: </td><td align=right>").append(stats.get("temporal")).append("</td></tr>\n");
+            show.append("<tr><td></td><td> </td><td>deontic: </td><td align=right>").append(stats.get("deontic")).append("</td></tr>\n");
+            show.append("<tr><td></td><td> </td><td> epistemic:</td><td align=right>").append(stats.get("epistemic")).append("</td></tr>\n");
+            show.append("<tr><td></td><td> </td><td> other modal:</td><td align=right>").append(stats.get("otherModal")).append("</td></tr>\n");
+
             show.append("</table><P>\n");
             String html = show.toString();
             try (BufferedWriter writer = Files.newBufferedWriter(cacheFile.toPath(), StandardCharsets.UTF_8)) {
@@ -811,7 +813,6 @@ public class HTMLformatter {
                         + "&kb=" + kb.name + "&start=" + (start + limit)
                         + "&arg=" + arg + "&type=" + type + "\">Show next "
                         + limit + "</a></td></tr>\n");
-
             show.append(formatFormulaList(forms, header, kb, language, flang, start, localLimit, limitString));
             show.append(limitString);
             show.append("</table>\n");

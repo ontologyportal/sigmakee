@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <html>
 <head><title> WordNet Diagnostics </title></head>
 <body BGCOLOR="#FFFFFF">
@@ -26,7 +26,7 @@ if (!role.equals("admin") && !role.equals("user")) {
   String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
   String formattedFormula = null;
   Map theMap = null;
-  kbHref = HTMLformatter.createHrefStart() + "/sigma/WordNet.jsp?lang=" + language + "&kb=" + kbName;
+  kbHref = HTMLformatter.createHrefStart() + "/sigma/WordNet.jsp?lang=" + lang + "&kb=" + kbName;
   try {
        WordNet.initOnce();
   }
@@ -43,7 +43,7 @@ if (!role.equals("admin") && !role.equals("user")) {
         String pageName = "WNDiag";
         String pageString = "WordNet Diagnostics";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 
 <%
   out.println(WordNetUtilities.printStatistics());
@@ -51,7 +51,7 @@ if (!role.equals("admin") && !role.equals("user")) {
   List synsetsWithoutTerms = WNdiagnostics.synsetsWithoutTerms();
   List nonRelationTermsWithoutSynsets = WNdiagnostics.nonRelationTermsWithoutSynsets();
   List synsetsWithoutFoundTerms = WNdiagnostics.synsetsWithoutFoundTerms(kb);
-  List nonMatchingTaxonomy = WNdiagnostics.nonMatchingTaxonomy(kbName,language);
+  List nonMatchingTaxonomy = WNdiagnostics.nonMatchingTaxonomy(kbName,lang);
 
 boolean isError = !(synsetsWithoutTerms.isEmpty() &&
                     synsetsWithoutFoundTerms.isEmpty() &&
@@ -100,7 +100,7 @@ else {
 %>
 <p>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 
 </body>
 </html>

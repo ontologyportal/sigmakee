@@ -91,6 +91,10 @@
         <listener-class>com.articulate.sigma.SessionCleanupListener</listener-class>
     </listener>
 
+    <listener>
+        <listener-class>com.articulate.sigma.SigmaStartupListener</listener-class>
+    </listener>
+
     <session-config>
         <!-- Timeout in minutes -->
         <session-timeout>60</session-timeout>

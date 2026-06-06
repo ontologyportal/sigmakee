@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
     Infosys (c) 2017-present.
@@ -22,62 +22,46 @@
   @param lang is the language in which to generate paraphrases
 */
 
- StringBuilder show = new StringBuilder();       // Variable to contain the HTML page generated.
- String formattedFormula = null;
- int start = 0;
- String startString = request.getParameter("start");
- if (!StringUtil.emptyString(startString))
-     start = Integer.decode(startString).intValue();
- int arg = 1;
- String argString = request.getParameter("arg");
- if (!StringUtil.emptyString(argString))
-     arg = Integer.decode(argString).intValue();
- String type = request.getParameter("type");
- Map theMap = null;     // Map of natural language format strings.
-
- HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp" + "?lang=" + language + "?flang=" + flang + "&kb=" + kbName;
-
- if (kb != null && (term == null || term.equals("")))        // Show statistics only when no term is specified.
-    show.append(HTMLformatter.showStatistics(kb));
- else if (kb != null && kb.containsTerm(term)) {                // Build the HTML format for all the formulas in
-    show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
-    show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
-    if (term != null) {
-    	term = term.intern();
-        show.append(term);
-        show.append("</b></FONT>");
-    	if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
-    	    Map<String, String> fm = kb.getFormatMap(language);
-    	    String fmValue = null;
-    	    if (fm != null)
-                fmValue = fm.get(term);
-    	    if (fmValue == null)
-                System.out.println("INFO in BrowseBody.jsp: No format map entry for \"" +
-                                   term + "\" in language " + language);
-    	}
-    	else {
-    	    Map<String, String> tfm = kb.getTermFormatMap(language);
-    	    String tfmValue = null;
-    	    if (tfm != null)
-                tfmValue = tfm.get(term);
-    	    if (tfmValue != null)
-                show.append("(" + tfmValue + ")");
-    	    else
-                System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" +
-                                   term + "\" in language " + language);
-    	}
-        show.append("</td>");
-        show.append("</tr></table>\n");
+StringBuilder show = new StringBuilder();
+String formattedFormula = null;
+int start = 0;
+String startString = request.getParameter("start");
+if (!StringUtil.emptyString(startString)) start = Integer.decode(startString).intValue();
+int arg = 1;
+String argString = request.getParameter("arg");
+if (!StringUtil.emptyString(argString)) arg = Integer.decode(argString).intValue();
+String type = request.getParameter("type");
+Map theMap = null;
+HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp" + "?lang=" + lang + "&flang=" + flang + "&kb=" + kbName;
+if (kb != null && (term == null || term.equals(""))) show.append(HTMLformatter.showStatistics(kb));
+else if (kb != null && kb.containsTerm(term)) {
+show.append("<title>Sigma KEE - " + term + "</title>\n");
+show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
+if (term != null) {
+    term = term.intern();
+    show.append(term);
+    show.append("</b></FONT>");
+    if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
+        Map<String, String> fm = kb.getFormatMap(lang);
+        String fmValue = null;
+        if (fm != null) fmValue = fm.get(term);
+        if (fmValue == null) System.out.println("INFO in fragments/browse/BrowseBody.jspf: No format map entry for \"" + term + "\" in language " + lang);
     }
-    else
-        show.append ("</b></FONT></td></tr></table>\n");
-
-    int limit = 25;
-    if (role != null && !role.equalsIgnoreCase("guest")) {
-        limit = 200;
+    else {
+        Map<String, String> tfm = kb.getTermFormatMap(lang);
+        String tfmValue = null;
+        if (tfm != null) tfmValue = tfm.get(term);
+        if (tfmValue != null) show.append("(" + tfmValue + ")");
+        else System.out.println("INFO in fragments/browse/BrowseBody.jspf: No term format map entry for \"" + term + "\" in language " + lang);
     }
-    show.append(HTMLformatter.browserSectionFormatLimit(term,"", kb, language,flang,start,limit,arg,type));
- }
+    show.append("</td>");
+    show.append("</tr></table>\n");
+}
+else show.append ("</b></FONT></td></tr></table>\n");
+int limit = 25;
+if (role != null && !role.equalsIgnoreCase("guest")) limit = 200;
+show.append(HTMLformatter.browserSectionFormatLimit(term,"", kb, lang,flang,start,limit,arg,type));
+}
 %>
 <%=show.toString() %><BR>
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>

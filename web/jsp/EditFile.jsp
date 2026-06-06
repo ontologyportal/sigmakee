@@ -1,4 +1,4 @@
-<%@include file="Prelude.jsp" %>
+<%@include file="fragments/universal/Prelude.jspf" %>
 <%
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
@@ -20,7 +20,7 @@ August 9, Acapulco, Mexico.
 if (!role.equalsIgnoreCase("admin"))
     response.sendRedirect("KBs.jsp");
 String file = request.getParameter("file");
-String line = request.getParameter("line");
+line = request.getParameter("line");
 String srcText = "";
 %>
 

@@ -65,17 +65,20 @@ import com.articulate.sigma.tp.FormulaTranslationException;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
+import com.articulate.sigma.parsing.CLIMapParser;
 import com.articulate.sigma.trans.*;
-import com.articulate.sigma.utils.FileUtil;
-import com.articulate.sigma.utils.Pair;
-import com.articulate.sigma.utils.SetUtil;
-import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.utils.*;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.*;
+import java.lang.reflect.Array;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -88,9 +91,8 @@ import java.util.regex.PatternSyntaxException;
 
 import tptp_parser.TPTPFormula;
 
-/**
- * ***************************************************************** Contains
- * methods for reading, writing knowledge bases, and their configurations. Also
+/*******************************************************************
+ * Contains methods for reading, writing knowledge bases and their configurations. Also
  * contains the inference engine process for the knowledge base.
  */
 public class KB implements Serializable {
@@ -194,7 +196,7 @@ public class KB implements Serializable {
     /** force regeneration of TPTP file */
     public static boolean force = false;
 
-    public static boolean debug = false;
+    public static int debug = 0;
 
     /** Progress bar text capture */
     private StringBuilder progressSb = new StringBuilder();
@@ -218,8 +220,6 @@ public class KB implements Serializable {
     // Serialize base SUMO.<lang> regeneration decisions + generation trigger
     // (You can also keep generation manager atomics, but this protects the policy boundary.)
     public final Object baseGenLock = new Object();
-
-    private int counter = 0;
 
     /****************************************************************
      * This List is used to limit the number of warning messages logged by
@@ -534,15 +534,10 @@ public class KB implements Serializable {
     public void checkArity() {
 
         long millis = System.currentTimeMillis();
-        System.out.print("INFO in KB.checkArity(): Performing Arity Check\n");
-
         if (!SUMOKBtoTPTPKB.rapidParsing)
             _checkArity();
         else
             _t_checkArity();
-
-        counter = 0; // reset
-        System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
     }
 
     /** *************************************************************
@@ -551,20 +546,20 @@ public class KB implements Serializable {
     private void _checkArity() {
 
         if (formulaMap != null && !formulaMap.isEmpty()) {
+            long start = System.nanoTime();
+            int counter = 1;
             int total = formulaMap.values().size();
             String term;
             for (FormulaAST f : formulaMap.values()) {
-                if (counter++ % 10 == 0)
-                    System.out.print(".");
-                if (counter % 400 == 0)
-                    System.out.printf("%nINFO in KB.checkArity(): Still performing Arity Check. %d%% done%n", counter*100/total);
-                 term = PredVarInst.hasCorrectArity(f, this);
+                term = PredVarInst.hasCorrectArity(f, this);
+                if(counter % 400 == 1) LoggingUtils.printProgressBar("INFO", "Checking Formula Arity...", counter, total);
+                counter++;
                 if (!StringUtil.emptyString(term)) {
                     errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
                             + " in formula: \n" + f.getFormula());
                 }
             }
-            System.out.println();
+            LoggingUtils.printProgressBar("INFO", "Checking Formula Arity...", counter, total, "completed " + total + " formulas in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
         }
     }
 
@@ -574,30 +569,26 @@ public class KB implements Serializable {
     private void _t_checkArity() {
 
         if (formulaMap != null && !formulaMap.isEmpty()) {
+            long start = System.nanoTime();
             Future<?> future;
             List<Future<?>> futures = new ArrayList<>();
             int total = formulaMap.values().size();
             Runnable r;
+            int counter = 1;
             for (FormulaAST f : formulaMap.values()) {
                 r = () -> {
-                    if (counter++ % 10 == 0)
-//                        System.out.print(".");
-                        progressSb.append(".");
-                    if (counter % 400 == 0) {
-                        System.out.print(progressSb.toString() + "x");
-                        progressSb.setLength(0);
-                        System.out.printf("%nINFO in KB.checkArity(): Still performing Arity Check. %d%% done%n", counter*100/total);
-                    }
                     String term = PredVarInst.hasCorrectArity(f, this);
                     if (!StringUtil.emptyString(term)) {
                         errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
                                 + " in formula: \n" + f.getFormula());
                     }
                 };
+                if(counter % 400 == 1) LoggingUtils.printProgressBar("INFO", "Checking Formula Arity...", counter, total);
+                counter++;
                 future = KButilities.EXECUTOR_SERVICE.submit(r);
                 futures.add(future);
             }
-            System.out.println();
+            LoggingUtils.printProgressBar("INFO",  "Checking Formula Arity...", counter, total, "completed " + total + " formulas in "+ ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
             for (Future<?> f : futures)
                 try {
                     f.get(); // waits for task completion
@@ -752,26 +743,26 @@ public class KB implements Serializable {
     public boolean isFunctional(FormulaAST form) {
 
         if (form == null || form.empty()) {
-            if (debug) System.out.println("Warning - KB.isFunctional(): empty");
+            if (debug>1) System.out.println("Warning - KB.isFunctional(): empty");
             return false;
         }
         if (!form.listP()) {
-            if (debug) System.out.println("Warning - KB.isFunctional(): not a list: " + form);
+            if (debug>1) System.out.println("Warning - KB.isFunctional(): not a list: " + form);
             //Thread.dumpStack();
             return false;
         }
         String pred = form.car();
-        if (debug) System.out.println("KB.isFunctional(): pred: " + pred);
-        if (debug) System.out.println("KB.isFunctional(): isFunction: " + isFunction(pred));
+        if (debug>1) System.out.println("KB.isFunctional(): pred: " + pred);
+        if (debug>1) System.out.println("KB.isFunctional(): isFunction: " + isFunction(pred));
         if (FormulaAST.isVariable(pred)) {
             Set<String> varTypes = form.getVarType(this,pred);
             if (varTypes != null) {
                 for (String s : varTypes) {
-                    if (debug) System.out.println("KB.isFunctional(): s: " + s);
-                    if (debug) System.out.println("KB.isFunctional(): kbCache.subclassOf(s, \"Function\") " +
+                    if (debug>1) System.out.println("KB.isFunctional(): s: " + s);
+                    if (debug>1) System.out.println("KB.isFunctional(): kbCache.subclassOf(s, \"Function\") " +
                             kbCache.subclassOf(s, "Function"));
                     if (s.equals("Function") || kbCache.subclassOf(s, "Function")) {
-                        if (debug) System.out.println("KB.isFunctional(): returning true");
+                        if (debug>1) System.out.println("KB.isFunctional(): returning true");
                         return true;
                     }
                 }
@@ -1267,8 +1258,7 @@ public class KB implements Serializable {
      * @param argnum The argument position of the term being asked for. The first
      *               argument after the predicate is "1". This parameter is ignored
      *               if the kind is "ant", "cons" or "stmt".
-     * @return An ArrayList of Formula(s), which will be empty if no match
-     * found.
+     * @return An ArrayList of Formula(s), which will be empty if no match found.
      * see KIF.createKey()
      */
     public List<FormulaAST> ask(String kind, int argnum, String term) {
@@ -1276,25 +1266,19 @@ public class KB implements Serializable {
         List<FormulaAST> result = new ArrayList<>();
         String msg;
         if (StringUtil.emptyString(term)) {
-            msg = ("Error in KB.ask(\"" + kind + "\", " + argnum + ", \"" + term + "\"), "
-                    + "search term is null, or an empty string");
+            msg = ("Error in KB.ask(\"" + kind + "\", " + argnum + ", \"" + term + "\"), " + "search term is null, or an empty string");
             errors.add(msg);
         }
         if (term.length() > 1 && term.charAt(0) == '"' && term.charAt(term.length() - 1) == '"') {
             msg = ("Error in KB.ask(), Strings are not indexed.  No results for " + term);
-            // Strings are not indexed; do not pollute kb.errors
-//            errors.add(msg);
         }
         List<FormulaAST> tmp;
         String key;
-        if (kind.equals("arg"))
-            key = kind + "-" + argnum + "-" + term;
-        else
-            key = kind + "-" + term;
+        if (kind.equals("arg")) key = kind + "-" + argnum + "-" + term;
+        else key = kind + "-" + term;
         List<String> alstr = formulas.get(key);
         tmp = keysToFormulas(alstr);
-        if (tmp != null)
-            result.addAll(tmp);
+        if (tmp != null) result.addAll(tmp);
         return result;
     }
 
@@ -1783,7 +1767,7 @@ public class KB implements Serializable {
                     String term;
                     for (FormulaAST parsedF : kif.formulaMap.values()) { // 2. Confirm that the input has been
                         // converted into at least one Formula object and stored in this.formulaMap.
-                        if (debug) System.out.println("KB.tell(): " + parsedF.toString());
+                        if (debug>1) System.out.println("KB.tell(): " + parsedF.toString());
                         term = PredVarInst.hasCorrectArity(parsedF, this);
                         if (!StringUtil.emptyString(term)) {
                             throw new ArityException(parsedF.getFormula(), term);
@@ -1815,7 +1799,7 @@ public class KB implements Serializable {
                                 case EPROVER:
                                     try {
                                         EProver eprover = new EProver(this, "tptp", 30, 1);
-                                        if (debug) System.out.println("KB.tell: using eprover: " + eprover);
+                                        if (debug>1) System.out.println("KB.tell: using eprover: " + eprover);
                                         eprover.assertFormula(tptpfile.getCanonicalPath(), parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                                         EProver.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
                                         result += " and inference";
@@ -1826,7 +1810,7 @@ public class KB implements Serializable {
                                         return "";
                                     }
                                 case VAMPIRE:
-                                    if (debug) System.out.println("KB.tell: using vampire");
+                                    if (debug>1) System.out.println("KB.tell: using vampire");
                                     Vampire vampire = new Vampire(this, "tptp", "CASC", false, 30, 1);
                                     vampire.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
                                             !mgr.getPref("TPTP").equalsIgnoreCase("no"));
@@ -1835,7 +1819,7 @@ public class KB implements Serializable {
                                     result += " and inference";
                                     break;
                                 case LEO:
-                                    if (debug) System.out.println("KB.tell: using leo");
+                                    if (debug>1) System.out.println("KB.tell: using leo");
                                     LEO leo = new LEO(this, "tptp", 10, 1, null);
                                     List<FormulaAST> leoFormulas = new ArrayList<>();
                                     for (FormulaAST lf : parsedFormulas) leoFormulas.add(new FormulaAST(lf.getFormula()));
@@ -2092,9 +2076,9 @@ public class KB implements Serializable {
      */
     public int compareTermDepth(String t1, String t2) {
 
-        if (debug) System.out.println("KB.compareTermDepth(): ");
-        if (debug) System.out.println("KB.compareTermDepth(): subattribute: " + kbCache.subAttributeOf(t1,t2));
-        if (debug) System.out.println("KB.compareTermDepth(): subclass: " + kbCache.subclassOf(t1,t2));
+        if (debug>1) System.out.println("KB.compareTermDepth(): ");
+        if (debug>1) System.out.println("KB.compareTermDepth(): subattribute: " + kbCache.subAttributeOf(t1,t2));
+        if (debug>1) System.out.println("KB.compareTermDepth(): subclass: " + kbCache.subclassOf(t1,t2));
         if (t1.equals(t2))
             return 0;
         if (kbCache.subAttributeOf(t2,t1) || kbCache.subclassOf(t2,t1))
@@ -2105,8 +2089,8 @@ public class KB implements Serializable {
         //boolean found = false;
         int depthT1 = termDepth(t1);
         int depthT2 = termDepth(t2);
-        if (debug) System.out.println("KB.compareTermDepth(): term depth of " + t1 + " is " + depthT1);
-        if (debug) System.out.println("KB.compareTermDepth(): term depth of " + t2 + " is " + depthT2);
+        if (debug>1) System.out.println("KB.compareTermDepth(): term depth of " + t1 + " is " + depthT1);
+        if (debug>1) System.out.println("KB.compareTermDepth(): term depth of " + t2 + " is " + depthT2);
         if (depthT1 == depthT2)
             return 0;
         if (depthT1 > depthT2)
@@ -2165,11 +2149,11 @@ public class KB implements Serializable {
             return null;
         String result = "";
         for (String t : terms) {
-            if (debug) System.out.println("mostSpecificTerm(): t: " + t);
-            if (debug) System.out.println("mostSpecificTerm(): depth: " + termDepth(t));
-            if (debug) System.out.println("mostSpecificTerm(): result: " + result);
-            if (debug) System.out.println("mostSpecificTerm(): result depth: " + termDepth(result));
-            if (debug) System.out.println("mostSpecificTerm(): compareTermDepth(t,result): " + compareTermDepth(t,result));
+            if (debug>1) System.out.println("mostSpecificTerm(): t: " + t);
+            if (debug>1) System.out.println("mostSpecificTerm(): depth: " + termDepth(t));
+            if (debug>1) System.out.println("mostSpecificTerm(): result: " + result);
+            if (debug>1) System.out.println("mostSpecificTerm(): result depth: " + termDepth(result));
+            if (debug>1) System.out.println("mostSpecificTerm(): compareTermDepth(t,result): " + compareTermDepth(t,result));
             if (StringUtil.emptyString(t))
                 continue;
             if (t.endsWith("+"))
@@ -2365,6 +2349,7 @@ public class KB implements Serializable {
      */
     public List<String> getNearestRelations(String term) {
 
+        if (StringUtil.emptyString(term)) return null;
         term = Character.toLowerCase(term.charAt(0)) + term.substring(1, term.length());
         return getNearestTerms(term);
     }
@@ -2653,6 +2638,7 @@ public class KB implements Serializable {
     private void deleteGeneratedBaseInferenceFiles() {
 
         File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        LoggingUtils.log("Deleting " + this.name + ".tptp" + " and " + this.name + ".tff");
         deleteFileIfExists(new File(dir, this.name + ".tptp"));
         deleteFileIfExists(new File(dir, this.name + ".tff"));
     }
@@ -2767,8 +2753,10 @@ public class KB implements Serializable {
             }
             File constituent = new File(filename);
             canonicalPath = constituent.getCanonicalPath();
-            if (constituents.contains(canonicalPath))
+            if (constituents.contains(canonicalPath)) {
                 errors.add("Error. " + canonicalPath + " already loaded.");
+                return null;
+            }
             file = new KIFAST();
             file.readFile(canonicalPath);
             warnings.addAll(file.warningSet);
@@ -2794,18 +2782,10 @@ public class KB implements Serializable {
         for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
             termFrequency.merge(entry.getKey(), entry.getValue(), Integer::sum);
         }
-
         int count = 2;
         int total = file.formulas.keySet().size();
         // Merge predicate-position index
-        for (String key : file.formulas.keySet()) {
-            if ((count++ % 100) == 1) progressSb.append(".");
-            if ((count % 4000) == 1) {
-                System.out.print(progressSb + "x");
-                progressSb.setLength(0);
-                System.out.printf("%nINFO in KB.addConstituentInfoAST(): still adding keys. %d%% done.%n",
-                        count * 100 / total);
-            }
+        if (total > 0) for (String key : file.formulas.keySet()) {
             List<String> newlist = file.formulas.get(key);
             List<String> list = formulas.get(key);
             if (list != null) {
@@ -2813,19 +2793,11 @@ public class KB implements Serializable {
             }
             formulas.put(key, newlist);
         }
-
-        count = 2;
-        total = file.formulaMap.values().size();
-        // Merge formulaMap (FormulaAST extends Formula, so it fits Map<String,Formula>)
-        for (FormulaAST f : file.formulaMap.values()) {
+        count = 0;
+        total = file.formulaMap.size();
+        if (total > 0) for (FormulaAST f : file.formulaMap.values()) {
+            count++;
             String internedFormula = f.getFormula().intern();
-            if ((count++ % 100) == 1) progressSb.append(".");
-            if ((count % 4000) == 1) {
-                System.out.print(progressSb + "x");
-                progressSb.setLength(0);
-                System.out.printf("%nINFO in KB.addConstituentInfoAST(): still adding values. %d%% done.%n",
-                        count * 100 / total);
-            }
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
         }
@@ -2890,7 +2862,6 @@ public class KB implements Serializable {
 //        }
 //
 //        int count = 2;
-//        //System.out.println("INFO in KB.addConstituent(): add keys");
 //        List<String> newlist, list;
 //        int total = file.formulas.keySet().size();
 //        for (String key : file.formulas.keySet()) { // Iterate through keys.
@@ -2899,7 +2870,6 @@ public class KB implements Serializable {
 //            if ((count % 4000) == 1) {
 //                System.out.print(progressSb.toString() + "x");
 //                progressSb.setLength(0);
-//                System.out.printf("%nINFO in KB.addConstituent(): still adding keys. %d%% done.%n", count*100/total);
 //            }
 //            newlist = file.formulas.get(key);
 //            list = formulas.get(key);
@@ -2912,16 +2882,8 @@ public class KB implements Serializable {
 //        count = 2;
 //        String internedFormula;
 //        total = file.formulaMap.values().size();
-//        //System.out.println("INFO in KB.addConstituent(): add values");
 //        for (Formula f : file.formulaMap.values()) { // Iterate through values
 //            internedFormula = f.getFormula().intern();
-//            if ((count++ % 100) == 1)
-//                progressSb.append(".");
-//            if ((count % 4000) == 1) {
-//                System.out.print(progressSb.toString() + "x");
-//                progressSb.setLength(0);
-//                System.out.printf("\nINFO in KB.addConstituent(): still adding values. %d%% done.%n", count*100/total);
-//            }
 //            if (!formulaMap.containsKey(internedFormula))
 //                formulaMap.put(internedFormula, new FormulaAST(f.getFormula()));
 //        }
@@ -2936,13 +2898,11 @@ public class KB implements Serializable {
      * Add a new KB constituent by reading in the file, and then merging the formulas with
      * the existing set of formulas.
      *
-     * @param filename
-     *            - The full path of the file being added
+     * @param filename full path of the file being added
      */
     public void addConstituent(String filename) {
 
         long millis = System.currentTimeMillis();
-        System.out.println("INFO in KB.addConstituent(): " + filename);
         KIFAST file = readConstituentAST(filename);
         addConstituentInfoAST(file);
         System.out.println("\nINFO in KB.addConstituent(ANTLR): added " + file.formulaMap.values().size()
@@ -2959,8 +2919,7 @@ public class KB implements Serializable {
         List<String> newConstituents = new ArrayList<>();
         synchronized (this.getTerms()) {
             for (String cName : constituents) {
-                if (!KButilities.isCacheFile(cName)) // Recompute cached data
-                    newConstituents.add(cName);
+                if (!KButilities.isCacheFile(cName) && Files.exists(Paths.get(cName))) newConstituents.add(cName);
             }
             constituents.clear();
             formulas.clear();
@@ -2970,21 +2929,14 @@ public class KB implements Serializable {
             clearFormatMaps();
             errors.clear();
             warnings.clear();
-            Iterator<String> nci = newConstituents.iterator();
-            if (nci.hasNext())
-                System.out.println("INFO in KB.reload()");
-
-            String cName;
-            while (nci.hasNext()) {
-                cName = nci.next();
-                addConstituent(cName);
-                // addConstituent(cName, false, false, false);
-            }
+            Iterator<String> newConstituentIterator = newConstituents.iterator();
+            if (newConstituentIterator.hasNext()) System.out.println("INFO in KB.reload()");
+            while (newConstituentIterator.hasNext()) addConstituent(newConstituentIterator.next());
             // build kb cache when "cache" = "yes"
             //if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
-                kbCache = new KBcache(this);
-                kbCache.buildCaches();
-                checkArity(); // Re-perform arity checks on everything
+            kbCache = new KBcache(this);
+            kbCache.buildCaches();
+            checkArity(); // Re-perform arity checks on everything
             //}
             //else {
             //    kbCache = new KBcache(this);
@@ -3578,6 +3530,7 @@ public class KB implements Serializable {
         FormulaAST f;
         Set<Expr> processed;
         Set<String> tptp;
+        int counter = 0;
         while (it.hasNext()) {
             form = it.next();
             if ((counter++ % 100) == 1)
@@ -3594,8 +3547,8 @@ public class KB implements Serializable {
                 warnings.add(warn);
                 continue;
             }
-            if (debug) System.out.println("INFO in KB.preProcess(): form : " + form);
-            if (debug) System.out.println("INFO in KB.preProcess(): f : " + f);
+            if (debug>1) System.out.println("INFO in KB.preProcess(): form : " + form);
+            if (debug>1) System.out.println("INFO in KB.preProcess(): f : " + f);
             processed = fp.preProcessExpr(f, false, this); // not queries
             tptp = new HashSet<>();
             if (tptpParseP) {
@@ -3621,7 +3574,6 @@ public class KB implements Serializable {
             }
         }
         System.out.println("INFO in KB.preProcess(): completed in " + (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
-        counter = 0;
         return newTreeSet;
     }
 

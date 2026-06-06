@@ -15,6 +15,7 @@ August 9, Acapulco, Mexico.
 
 import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.io.File;
 import java.io.IOException;
@@ -188,7 +189,7 @@ public class Graph {
      * relation. creatGraphBody() does most of the work.
      */
     public Set<String> createBoundedSizeGraph(KB kb, String term, String relation,
-                                        int size, boolean instances, String language) {
+                                        int size, boolean instances, String language, String flang) {
 
         if (debug) System.out.println("Graph.createBoundedSizeGraph(" + kb.name + ", " + term + ", " + relation + ", " + 
                                       size + ", " + instances + ", " + language + ")");
@@ -203,8 +204,8 @@ public class Graph {
             oldresult = result;
             checkAbove = new HashSet<>();
             checkBelow = new HashSet<>();
-            result = createGraphBody(kb,checkAbove,term,relation,above,0,above,true,instances,language);
-            result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,instances,language));
+            result = createGraphBody(kb,checkAbove,term,relation,above,0,above,true,instances,language,flang);
+            result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,instances,language,flang));
             above++;
             below++;
         }
@@ -225,7 +226,7 @@ public class Graph {
      * @param instances whether to display instances below subclass relations
      */
     public Set<String> createGraph(KB kb, String term, String relation,
-                                 int above, int below, int termLimit, boolean instances, String language) {
+                                 int above, int below, int termLimit, boolean instances, String language, String flang) {
 
         if (debug) System.out.println("Graph.createGraph(" + kb.name + ", " + term + ", " + relation + ", " + 
                                       above + ", " + below + ", " + termLimit + ", " + instances + ", " + language + ")");
@@ -234,8 +235,8 @@ public class Graph {
         Set<String> checkAbove = new HashSet<>();
         Set<String> checkBelow = new HashSet<>();
         result.add(createColumnHeader());
-        result.addAll(createGraphBody(kb,checkAbove,term,relation,above,0,above,true,instances,language));
-        result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,instances,language));
+        result.addAll(createGraphBody(kb,checkAbove,term,relation,above,0,above,true,instances,language, flang));
+        result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,instances,language, flang));
         if (graphsize == 100)
             result.add("<P>Graph size limited to 100 terms.<P>\n");
         return result;
@@ -249,7 +250,7 @@ public class Graph {
      */
     private Set<String> createGraphBody(KB kb, Set<String> check, String term, String relation,
                                       int above, int below, int level,
-                                      boolean show, boolean instances, String language) {
+                                      boolean show, boolean instances, String language, String flang) {
 
         if (debug) System.out.println("Graph.createGraphBody(" + kb.name + ", " + check + ", " + term + ", " + relation + ", " + 
                                       above + ", " + below + ", " + level + ", " + show + ", " + instances + ", " + language + ")");
@@ -269,7 +270,7 @@ public class Graph {
                     f = stmtAbove.get(i);
                     newTerm = f.getStringArgument(2);
                     if (!newTerm.equals(term) && !KButilities.isCacheFile(f.sourceFile))
-                        result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,level-1,true,instances,language));
+                        result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,level-1,true,instances,language, flang));
                     check.add(term);
                 }
             }
@@ -289,7 +290,7 @@ public class Graph {
                 https = "http";
             else
                 https = "https";
-            String kbHref = https + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kb.name;
+            String kbHref = https + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&flang=" + flang + "&kb=" + kb.name;
             if (show) {
                 graphsize++;
                 if (graphsize < 100)
@@ -309,7 +310,7 @@ public class Graph {
                     f = stmtBelow.get(i);
                     newTerm = f.getStringArgument(1);
                     if (!newTerm.equals(term) && !KButilities.isCacheFile(f.sourceFile))
-                        result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language));
+                        result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language, flang));
                     check.add(term);
                 }
                 if (instances && stmtBelow.isEmpty() && relation.equals("subclass")) {
@@ -318,7 +319,7 @@ public class Graph {
                         f = stmtBelow.get(i);
                         newTerm = f.getStringArgument(1);
                         if (!newTerm.equals(term) && !KButilities.isCacheFile(f.sourceFile))
-                            result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language));
+                            result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language, flang));
                         check.add(term);
                     }
                 }
@@ -603,34 +604,37 @@ public class Graph {
         System.out.println("Graphing");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
-        System.out.println("  -g <term> <rel> - create a dot graph file with a term and relation");
+        System.out.println("  --graph <term> <rel> - create a dot graph file with a term and relation");
     }
 
     /** ***************************************************************
-     * A test method.
      */
     public static void main(String[] args) {
 
         System.out.println("INFO in Graph.main()");
-        if (args != null && args.length > 1 && args[0].equals("-h")) {
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+
+        if (argMap.isEmpty() || argMap.containsKey("h"))
             showHelp();
-        }
-        if (args != null && args.length > 2 && args[0].equals("-g")) {
-            KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            Graph g = new Graph();
-            String term = args[1];
-            String relation = args[2];
-            String fileRestrict = "";
-            try {
-                g.createDotGraph(kb, term, relation, 1, 1, 100, "proof", fileRestrict);
+        else {
+            if (argMap.containsKey("graph")) {
+                List<String> gArgs = argMap.get("graph");
+                KBmanager.getMgr().initializeOnce();
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                Graph g = new Graph();
+                String term = gArgs.get(0);
+                String relation = gArgs.get(1);
+                String fileRestrict = "";
+                try {
+                    g.createDotGraph(kb, term, relation, 1, 1, 100, "proof", fileRestrict);
+                }
+                catch (IOException e) {
+                    System.err.println(e.getMessage());
+                    e.getStackTrace();
+                }
             }
-            catch (IOException e) {
-                System.err.println(e.getMessage());
-                e.getStackTrace();
-            }
+            else
+                showHelp();
         }
-        else
-            showHelp();
     }
 }

@@ -24,6 +24,7 @@ import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.parsing.RowVar;
+import com.articulate.sigma.parsing.CLIMapParser;
 // Note: com.articulate.sigma.parsing.PredVarInst is referenced by fully-qualified name below
 // to avoid shadowing com.articulate.sigma.PredVarInst (used by replacePredVarsAndRowVars).
 import com.articulate.sigma.utils.*;

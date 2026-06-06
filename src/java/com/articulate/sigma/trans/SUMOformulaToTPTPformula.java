@@ -1,5 +1,6 @@
 package com.articulate.sigma.trans;
 
+import com.articulate.sigma.parsing.CLIMapParser;
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.parsing.FormulaAST;
@@ -644,7 +645,7 @@ public class SUMOformulaToTPTPformula {
 //        if (query || debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): result: " + _f.theTptpFormulas);
 //    }
 
-    /** ***************************************************************
+    /*****************************************************************
      * Parse formulae into TPTP format
      */
 //    @Deprecated

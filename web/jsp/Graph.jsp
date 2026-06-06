@@ -1,4 +1,4 @@
-<%@ include	file="Prelude.jsp" %>
+<%@ include	file="fragments/universal/Prelude.jspf" %>
 
 <html>
   <head>
@@ -92,28 +92,32 @@ function setWidth(id) {
   }
 %>
 
-<form action="Graph.jsp">
-    <%
-        String pageName = "Graph";
-        String pageString = "KB Graph";
-    %>
-    <%@include file="CommonHeader.jsp" %>
-<table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
+<%
+    String pageName = "Graph";
+    String pageString = "KB Graph";
+%>
+<%@include file="fragments/universal/CommonHeader.jspf" %>
 
+<form action="Graph.jsp">
       <font face="Arial,helvetica"><b>Relation: </b>
-      <a href="Browse.jsp?kb=<%=kbName%>&term=<%=relation%>"> <%=relation%></a></font><p>
+      <a href="Browse.jsp?kb=<%=kbName%>&term=<%=relation%>&flang=<%=flang%>&lang=<%=lang%>"> <%=relation%></a></font><p>
       <%
           /* Present the text layout (graph layout is in the else) */
+          HTMLformatter.kbHref =
+            HTMLformatter.createHrefStart()
+            + "/sigma/Browse.jsp?kb=" + java.net.URLEncoder.encode(kbName, "UTF-8")
+            + "&flang=" + java.net.URLEncoder.encode(flang, "UTF-8")
+            + "&lang=" + java.net.URLEncoder.encode(lang, "UTF-8");
           if (view.equals("text")) {
               Set<String> result = null;
               boolean instBool = false;
               if (!StringUtil.emptyString(inst) && inst.equals("inst"))
                   instBool = true;
               if (limit != null && limit != "")
-                  result = g.createBoundedSizeGraph(kb,term,relation,limitInt,instBool,language);
+                  result = g.createBoundedSizeGraph(kb,term,relation,limitInt,instBool,lang,flang);
               else
                   result = g.createGraph(kb,term,relation,upint,
-                                         downint,limitInt,instBool,language);
+                                         downint,limitInt,instBool,lang, flang);
               out.println("<p><table>\n");
               for (String element : result) {
                   out.println(element);
@@ -165,6 +169,9 @@ function setWidth(id) {
   Restrict to file:<input type="text" size="30" name="fileRestrict" value="<%=fileRestrict %>"> <br>
   Columns to display:<%=HTMLformatter.createMultiMenu("columns",g.columnList) %>
   <input type="hidden" value="" onLoad="setWidth(this)" name="scrWidth" id="scrWidth"/>
+  <input type="hidden" name="kb" value="<%=kbName%>">
+  <input type="hidden" name="flang" value="<%=flang%>">
+  <input type="hidden" name="lang" value="<%=lang%>">
       <script type="text/javascript">setWidth('scrWidth');</script>
   <p>
   <table border="0">
@@ -181,7 +188,7 @@ function setWidth(id) {
 </form>
 <p>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>
 </html>
 

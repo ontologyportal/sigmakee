@@ -9,6 +9,7 @@ import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.FileUtil;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.io.*;
 import java.util.*;

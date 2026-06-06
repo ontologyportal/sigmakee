@@ -15,7 +15,7 @@ RUN apk add apache-ant
 RUN apk add zlib-dev
 RUN apk add g++
 RUN apk add linux-headers
-RUN apk add openjdk11
+RUN apk add openjdk21
 
 # Setup home directory
 RUN cd /root \
@@ -41,6 +41,9 @@ RUN cd /root \
 RUN cd /root/workspace \
     && git clone https://github.com/vprover/vampire \
     && cd vampire \
+    && git submodule update --init \
+    && cd cadical && ./configure && make \
+    && cd .. \
     && make -j 4 vampire_rel \
     && mv vampire_rel_master* vampire
 
@@ -50,8 +53,8 @@ RUN cd /root/Programs \
     && wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' \
     && wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.6/E.tgz' \
     && tar -xvzf E.tgz \
-    && unzip apache-tomcat-9.0.96.zip \
-    && rm apache-tomcat-9.0.96.zip
+    && unzip apache-tomcat-9.0.107.zip \
+    && rm apache-tomcat-9.0.107.zip
 
 RUN cd /root/Programs/apache-tomcat-9.0.107/bin \
     && chmod 777 *
@@ -77,7 +80,8 @@ RUN cd /root/workspace \
     && git clone https://github.com/ontologyportal/sigmakee \
     && git clone https://github.com/ontologyportal/sumo \
     && git clone https://github.com/ontologyportal/TPTP-ANTLR \
-    && git clone https://github.com/ontologyportal/SigmaUtils
+    && git clone https://github.com/ontologyportal/SigmaUtils \
+    && git clone https://github.com/ontologyportal/sigmaAntlr
 
 # Setup sigmakee
 RUN cd /root/workspace/sigmakee \

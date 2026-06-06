@@ -48,6 +48,66 @@ public class EmailService {
     }
 
     /********************************************************************
+     * Sends a generic HTML notification email to all admin users.
+     * @param subject the email subject
+     * @param htmlBody the HTML body
+     * @return true if the email was sent successfully
+     */
+    public boolean sendAdminNotification(String subject, String htmlBody) {
+
+        UserDatabase userDatabase = new UserDatabase();
+        try {
+            List<String> adminEmails = userDatabase.getAdminEmails();
+            return sendHtmlEmail(adminEmails, subject, htmlBody);
+        }
+        finally {
+            userDatabase.close();
+        }
+    }
+
+    /********************************************************************
+     * Sends a generic HTML email to the given recipients.
+     * @param recipients the email recipient addresses
+     * @param subject the email subject
+     * @param htmlBody the HTML body
+     * @return true if the email was sent successfully
+     */
+    public boolean sendHtmlEmail(List<String> recipients, String subject, String htmlBody) {
+
+        if (recipients == null || recipients.isEmpty()) {
+            System.err.println("ERROR: No email recipients provided.");
+            return false;
+        }
+        if (StringUtil.emptyString(subject)) {
+            System.err.println("ERROR: Cannot send email with empty subject.");
+            return false;
+        }
+        if (StringUtil.emptyString(htmlBody)) {
+            System.err.println("ERROR: Cannot send email with empty body.");
+            return false;
+        }
+        if (!isSmtpConfigured()) {
+            printSmtpConfigurationError();
+            return false;
+        }
+
+        try {
+            MimeMessage message = new MimeMessage(createMailSession());
+            message.setFrom(new InternetAddress(smtpEmailAddress));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(String.join(",", recipients)));
+            message.setSubject(subject, StandardCharsets.UTF_8.name());
+            message.setContent(htmlBody, "text/html; charset=UTF-8");
+            Transport.send(message);
+            return true;
+        }
+        catch (MessagingException me) {
+            System.err.println("ERROR: Unable to send email.");
+            me.printStackTrace();
+            return false;
+        }
+    }
+
+    /********************************************************************
      * Sends an account registration approval request email to the moderators.
      * @param user the user requesting registration
      * @param adminEmails the moderator/admin email addresses

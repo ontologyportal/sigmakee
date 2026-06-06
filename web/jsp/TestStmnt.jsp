@@ -1,4 +1,4 @@
-<%@include file="Prelude.jsp" %>
+<%@include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
     Infosys (c) 2017-present.
@@ -100,7 +100,7 @@ if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
         String pageName = "TestStmnt";
         String pageString = "Test A Statement";
     %>
-    <%@include file="CommonHeader.jsp" %>
+    <%@include file="fragments/universal/CommonHeader.jspf" %>
 
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0><BR>
     <textarea rows="5" cols="70" name="stmt"><%=stmt%></textarea>
@@ -117,7 +117,7 @@ if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
 %>
     <p>
 
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 
 </BODY>
 </HTML>

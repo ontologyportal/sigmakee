@@ -6,6 +6,7 @@ import java.util.*;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.KButilities;
+import com.articulate.sigma.utils.*;
 
 import com.articulate.sigma.parsing.FormulaAST;
 import com.esotericsoftware.kryo.io.Input;
@@ -47,7 +48,7 @@ August 9, Acapulco, Mexico.
 
     public static boolean disable = false; // disable for debugging
 
-    /** *************************************************************
+    /****************************************************************
      */
     private static char getOMWMappingSuffix(String SUMOmapping) {
 
@@ -61,7 +62,7 @@ August 9, Acapulco, Mexico.
         return ' ';
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     private static void generateOMWformat(String fileWithPath) {
 
@@ -103,7 +104,7 @@ August 9, Acapulco, Mexico.
         }
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     private static void readOMWformat(String inputFileWithPath, String langName) {
 
@@ -169,7 +170,7 @@ August 9, Acapulco, Mexico.
         }
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static List<String> lcodes = new ArrayList<>(Arrays.asList(
             "als","arb","bul",
@@ -195,7 +196,7 @@ August 9, Acapulco, Mexico.
             "ThaiLanguage","MalayLanguage"));
 
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static String codeToLanguage(String code) {
 
@@ -205,7 +206,7 @@ August 9, Acapulco, Mexico.
             return "";
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static String languageToCode(String lang) {
 
@@ -215,7 +216,7 @@ August 9, Acapulco, Mexico.
             return "";
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Convert a 9-digit, POS-prefixed WordNet synset to a POS-suffix
      * OMW synset.
      */
@@ -230,7 +231,7 @@ August 9, Acapulco, Mexico.
         return synset.substring(1) + "-" + POS;
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Convert a POS-suffix OMW synset to an 8-digit WordNet synset.
      */
     public static String fromOMWsynset(String synset) {
@@ -243,7 +244,7 @@ August 9, Acapulco, Mexico.
         return synset.substring(0,synset.length()-2);
     }
 
-    /** ***************************************************************
+    /******************************************************************
      */
     public static void encoder(Object object) {
 
@@ -257,7 +258,7 @@ August 9, Acapulco, Mexico.
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      */
     public static <T> T decoder() {
 
@@ -273,14 +274,13 @@ August 9, Acapulco, Mexico.
         return (T) ob;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      *  Check whether sources are newer than serialized version.
      */
     public static boolean serializedOld() {
 
         File serfile = new File(WordNet.baseDir + File.separator + "omw.ser");
         Date saveDate = new Date(serfile.lastModified());
-        System.out.println("OMWordnet.serializedOld(): " + serfile.getName() + " save date: " + saveDate.toString());
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String filename;
         Date fileDate;
@@ -298,30 +298,24 @@ August 9, Acapulco, Mexico.
         return false;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      *  Load the most recently save serialized version.
      */
     public static void loadSerialized() {
 
-        if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
-            return;
+        if (KBmanager.getMgr().getPref("loadLexicons").equals("false")) return;
         omw = null;
         try {
-            if (serializedOld()) {
-                System.out.println("OMWordnet.loadSerialized(): serialized file is older than sources, " +
-                        "reloding from sources.");
-                return;
-            }
+            if (serializedOld()) return;
             omw = decoder();
-            System.out.println("OMWordnet.loadSerialized(): OMW has been deserialized ");
         }
         catch(Exception ex) {
-            System.err.println("Error in OMWordnet.loadSerialized()");
+            LoggingUtils.log("ERROR", "Error");
             ex.printStackTrace();
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      *  save serialized version.
      */
     public static void serialize() {
@@ -335,59 +329,55 @@ August 9, Acapulco, Mexico.
             encoder(omw);
             //out.close();
             //file.close();
-            System.out.println("OMWordnet.serialize(): OMW has been serialized ");
+            LoggingUtils.log("OMW has been serialized ");
         }
         catch(Exception ex) {
-            System.err.println("Error in OMWordNet.serialize(): IOException is caught");
+            LoggingUtils.log("ERROR", "OMWordNet.serialize(): IOException is caught");
             ex.printStackTrace();
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      */
     public static boolean serializedExists() {
 
         File serfile = new File(WordNet.baseDir + File.separator + "omw.ser");
-        System.out.println("OMWordnet.serializedExists(): " + serfile.exists());
         return serfile.exists();
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Assumes a fixed set of files in the KBs directory.
      */
     public static void readOMWfiles() {
-
+        
+        long start = System.nanoTime();
         if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
             disable = true;
         if (disable)
             return;
         if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists())
             loadSerialized();
-        if (omw != null)
+        if (omw != null) {
+            LoggingUtils.log("Loaded Serialized OMW Files in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
             return;
+        }
         omw = new OMWordnet();
         String kbDir = KBmanager.getMgr().getPref("kbDir");
-        System.out.println("INFO in OMWordnet.readOMWfiles(): reading files: ");
         String filename;
         for (int i = 0; i < lcodes.size(); i++) {
-            filename = kbDir + File.separator + "OMW" +
-                    File.separator + lcodes.get(i)  + File.separator +
-                    "wn-data-" + lcodes.get(i) + ".tab";
-            System.out.print(filename + "\n");
+            filename = kbDir + File.separator + "OMW" + File.separator + lcodes.get(i)  + File.separator + "wn-data-" + lcodes.get(i) + ".tab";
             readOMWformat(filename,lcodes.get(i));
         }
         serialize();
-        System.out.println();
+        LoggingUtils.log("Loaded fresh OMW Files in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static void generateOMWOWLformat(KB kb) {
 
-        //System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file ");
         String kbDir = KBmanager.getMgr().getPref("kbDir");
-        File f = new File(kbDir + File.separator + "OMW" +
-                File.separator + "OMW.owl");
+        File f = new File(kbDir + File.separator + "OMW" + File.separator + "OMW.owl");
         try (FileWriter fw = new FileWriter(f);
             PrintWriter pw = new PrintWriter(fw)) {
             pw.println("<rdf:RDF xml:base=\"http://www.ontologyportal.org/SUMO.owl\">");
@@ -406,7 +396,7 @@ August 9, Acapulco, Mexico.
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * HTML format a list of word senses
      * @param term is the SUMO term
      * @param lang is the SUMO term for a language (EnglishLanguage, FrenchLanguage etc)
@@ -422,7 +412,6 @@ August 9, Acapulco, Mexico.
         int limit = synsets.size();
         if (limit > 50)
             limit = 50;
-
         String synset;
         String OMWsynset;
         List<String> words;
@@ -447,7 +436,7 @@ August 9, Acapulco, Mexico.
         return result.toString();
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     private static String formatArrayList(List<String> al) {
 
@@ -460,7 +449,7 @@ August 9, Acapulco, Mexico.
         return sb.toString();
     }
 
-    /** *************************************************************
+    /****************************************************************
      */
     public static String displaySynset(String kbName, String synset, String params) {
 
@@ -493,7 +482,7 @@ August 9, Acapulco, Mexico.
         return sb.toString();
     }
 
-    /** ***************************************************************
+    /******************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */

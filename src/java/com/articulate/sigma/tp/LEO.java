@@ -21,6 +21,7 @@ import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.parsing.CLIMapParser;
 import tptp_parser.TPTPFormula;
 
 import java.io.*;

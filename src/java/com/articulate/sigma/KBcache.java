@@ -32,6 +32,8 @@ import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.utils.*;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -924,21 +926,9 @@ public class KBcache implements Serializable {
     public synchronized void extendInstance(String term, String suffix) {
 
         String sep = "__";
-        //if (suffix.matches("\\d__.*"))  // variable arity has appended single underscore before arity
-        //    sep = "_";
         String newTerm = term + sep + suffix;
-        //if (kb.terms.contains(newTerm)) {
-        //    System.out.println("Warning in KBcache.extendInstance(): term already exists: " + newTerm);
-        //    System.out.println("Warning in KBcache.extendInstance(): sig " + signatures.get(newTerm));
-        //}
-        kb.terms.add(newTerm);
-        kb.capterms.put(newTerm.toUpperCase(),newTerm);
         Set<String> iset = instanceOf.get(term);
-        if (iset != null)
-            instanceOf.put(newTerm,iset);
-        //if (newTerm.endsWith(Formula.FN_SUFF))
-        //    System.out.println("KBcache.extendInstance(): instance parents of: " + newTerm + " are: " + iset);
-        //System.out.println("extendInstance(): new term: " + newTerm + " parents: " + iset);
+        if (iset != null) instanceOf.put(newTerm, iset);
         relations.add(newTerm);
         if (newTerm.endsWith(FormulaAST.FN_SUFF))
             functions.add(newTerm);
@@ -973,22 +963,17 @@ public class KBcache implements Serializable {
          * '+' appended to the class name.
          **/
         List<String> sig = signatures.get(term);
-
         if (sig == null && term != null && term.equals(FormulaAST.EQUAL)) {
             sig = new ArrayList<>();
             sig.add("Entity");
             sig.add("Entity");
         }
-        if (sig == null)
-            System.err.println("Error in KBcache.extendInstance(): no sig for term " + term);
+        if (sig == null) System.err.println("Error in KBcache.extendInstance(): no sig for term " + term);
         List<String> newsig = SUMOtoTFAform.relationExtractSigFromName(newTerm);
-        signatures.put(newTerm,newsig);
-        // The number of arguments to each relation.  Variable arity is -1
+        signatures.put(newTerm, newsig);
         Integer val = valences.get(term);
-        if (val != null)
-            valences.put(newTerm, val);
-        if (term.endsWith(FormulaAST.FN_SUFF))
-            functions.add(newTerm);
+        if (val != null) valences.put(newTerm, val);
+        if (term.endsWith(FormulaAST.FN_SUFF)) functions.add(newTerm);
     }
 
     /** ***************************************************************
@@ -2148,7 +2133,6 @@ public class KBcache implements Serializable {
     public void storeCacheAsFormulas() {
 
         StringBuilder sb = new StringBuilder();
-        System.out.println("KBcache.storeCacheAsFormulas()");
         long cacheCount = 0;
         KIFAST kif = new KIFAST();
         kif.filename = kb.name + _cacheFileSuffix;
@@ -2169,7 +2153,6 @@ public class KBcache implements Serializable {
                 }
             }
         }
-        System.out.println("KBcache.storeCacheAsFormulas(): finished relations, starting instances");
         for (String inst : instanceOf.keySet()) {
             vSet = instanceOf.get(inst);
             for (String parent : vSet) {
@@ -2188,9 +2171,6 @@ public class KBcache implements Serializable {
         }
         if (KBmanager.getMgr().getPref("cache").equals("yes"))
             kb.addConstituentInfoAST(kif);
-
-        System.out.printf("KBcache.storeCacheAsFormulas(): done creating cache formulas, in %d m/s%n", (System.currentTimeMillis() - millis));
-        System.out.printf("KBcache.storeCacheAsFormulas(): cached statements: %d%n", cacheCount);
     }
 
     /** ***************************************************************
@@ -2355,7 +2335,8 @@ public class KBcache implements Serializable {
     public void buildCaches() {
 
         clearCaches(); // ensure a clean slate
-        p_buildCaches();
+        buildCaches_singleThread();
+        // p_buildCaches();
     }
 
     /** ***************************************************************
@@ -2439,6 +2420,49 @@ public class KBcache implements Serializable {
         initialized = true;
     }
 
+    private void buildCaches_singleThread() {
+
+        long startMillis = System.currentTimeMillis();
+        // Pre-warm Formula.stringArgs single-threaded.
+        for (Formula f : kb.formulaMap.values())
+            f.getStringArgument(0);
+        // Former Wave 1
+        buildInsts();
+        LoggingUtils.printProgressBar("INFO", "buildInsts:", 1, 10);
+        buildRelationsSet();
+        buildTransitiveRelationsSet();
+        buildDirectParentTerms();
+        LoggingUtils.printProgressBar("INFO", "relations/transitive/direct parents:", 2, 10);
+        // Former Wave 2
+        buildParents();
+        buildChildren();
+        LoggingUtils.printProgressBar("INFO", "buildParents+buildChildren:", 3, 10);
+        // Former Wave 3
+        collectDomains();
+        buildDirectInstances();
+        LoggingUtils.printProgressBar("INFO", "collectDomains+buildDirectInstances:", 4, 10);
+        // Former Wave 4
+        buildInstTransRels();
+        LoggingUtils.printProgressBar("INFO", "buildInstTransRels:", 5, 10);
+        addTransitiveInstances();
+        LoggingUtils.printProgressBar("INFO", "addTransitiveInstances:", 6, 10);
+        buildTransInstOf();
+        correctValences();
+        buildFunctionsSet();
+        LoggingUtils.printProgressBar("INFO", "transInstOf+valences+functions:", 7, 10);
+        if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
+            buildExplicitDisjointMap();
+            buildDisjointRelationsMap();
+            buildDisjointMap();
+        }
+        storeCacheAsFormulas();
+        LoggingUtils.printProgressBar("INFO", "storeCacheAsFormulas:", 8, 10);
+        buildSymbolTaxonomy();
+        LoggingUtils.printProgressBar("INFO", "buildSymbolTaxonomy:", 9, 10);
+        initialized = true;
+        LoggingUtils.printProgressBar("INFO", "Completed cache:", 10, 10, (System.currentTimeMillis() - startMillis) + " milliseconds");
+    }
+
     /** ***************************************************************
      * Parallel build using CompletableFuture with a dependency-wave graph.
      *
@@ -2473,62 +2497,54 @@ public class KBcache implements Serializable {
         CompletableFuture<Void> f1c = CompletableFuture.runAsync(this::buildTransitiveRelationsSet,   KButilities.EXECUTOR_SERVICE);
         CompletableFuture<Void> f1d = CompletableFuture.runAsync(this::buildDirectParentTerms,        KButilities.EXECUTOR_SERVICE);
         CompletableFuture.allOf(f1a, f1b, f1c, f1d).join();
-        System.out.printf("KBcache._p_buildCaches(): Wave 1 done:                     %d m/s%n", System.currentTimeMillis() - startMillis);
-
+        LoggingUtils.printProgressBar("INFO", "Wave 1:", 1, 10);
         // --- Wave 2: buildParents and buildChildren both need transRels; write to different maps ---
         long w2 = System.currentTimeMillis();
         CompletableFuture<Void> f2a = CompletableFuture.runAsync(this::buildParents,  KButilities.EXECUTOR_SERVICE);
         CompletableFuture<Void> f2b = CompletableFuture.runAsync(this::buildChildren, KButilities.EXECUTOR_SERVICE);
         CompletableFuture.allOf(f2a, f2b).join();
-        System.out.printf("KBcache._p_buildCaches(): Wave 2 (parents+children):       %d m/s%n", System.currentTimeMillis() - w2);
+        LoggingUtils.printProgressBar("INFO", "Wave 2:", 2, 10);
 
         // --- Wave 3: collectDomains and buildDirectInstances write to different fields ---
         long w3 = System.currentTimeMillis();
         CompletableFuture<Void> f3a = CompletableFuture.runAsync(this::collectDomains,       KButilities.EXECUTOR_SERVICE);
         CompletableFuture<Void> f3b = CompletableFuture.runAsync(this::buildDirectInstances, KButilities.EXECUTOR_SERVICE);
         CompletableFuture.allOf(f3a, f3b).join();
-        System.out.printf("KBcache._p_buildCaches(): Wave 3 (domains+directInsts):    %d m/s%n", System.currentTimeMillis() - w3);
+        LoggingUtils.printProgressBar("INFO", "  Wave 3:", 3, 10);
 
         // --- Wave 4: sequential — each step depends on the previous ---
         long w4 = System.currentTimeMillis();
         buildInstTransRels();
-        System.out.printf("KBcache._p_buildCaches(): buildInstTransRels:              %d m/s%n", System.currentTimeMillis() - w4);
+        LoggingUtils.printProgressBar("INFO", "buildInstTransRels:", 4, 10);
         w4 = System.currentTimeMillis();
         addTransitiveInstances();
-        System.out.printf("KBcache._p_buildCaches(): addTransitiveInstances:          %d m/s%n", System.currentTimeMillis() - w4);
         w4 = System.currentTimeMillis();
+        LoggingUtils.printProgressBar("INFO", "addTransitiveInstances:", 5, 10);
         buildTransInstOf();
         correctValences();
-        System.out.printf("KBcache._p_buildCaches(): buildTransInstOf+correctValences:%d m/s%n", System.currentTimeMillis() - w4);
         w4 = System.currentTimeMillis();
+        LoggingUtils.printProgressBar("INFO", "buildTransInstOf+correctValences:", 6, 10);
         buildFunctionsSet();
-        System.out.printf("KBcache._p_buildCaches(): buildFunctionsSet:               %d m/s%n", System.currentTimeMillis() - w4);
 
+        LoggingUtils.printProgressBar("INFO", "buildFunctionsSet:", 7, 10);
         // --- Wave 5: optional disjoint maps ---
         if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
             long wd = System.currentTimeMillis();
             buildExplicitDisjointMap();
-            System.out.printf("KBcache._p_buildCaches(): buildExplicitDisjointMap:        %d m/s%n", System.currentTimeMillis() - wd);
             wd = System.currentTimeMillis();
             buildDisjointRelationsMap();
-            System.out.printf("KBcache._p_buildCaches(): buildDisjointRelationsMap:       %d m/s%n", System.currentTimeMillis() - wd);
             wd = System.currentTimeMillis();
             buildDisjointMap();
-            System.out.printf("KBcache._p_buildCaches(): buildDisjointMap:                %d m/s%n", System.currentTimeMillis() - wd);
         }
-
         long ws = System.currentTimeMillis();
         storeCacheAsFormulas();
-        System.out.printf("KBcache._p_buildCaches(): storeCacheAsFormulas:            %d m/s%n", System.currentTimeMillis() - ws);
-
-        System.out.printf("INFO in KBcache._p_buildCaches(): size: %d%n", instanceOf.keySet().size());
+        LoggingUtils.printProgressBar("INFO", "storeCacheAsFormulas:", 8, 10);
 
         // Build int-indexed symbol taxonomy (M5)
         long wsym = System.currentTimeMillis();
         buildSymbolTaxonomy();
-        System.out.printf("KBcache._p_buildCaches(): buildSymbolTaxonomy:             %d m/s%n", System.currentTimeMillis() - wsym);
-
-        System.out.printf("KBcache._p_buildCaches(): total:                           %d m/s%n", System.currentTimeMillis() - startMillis);
+        LoggingUtils.printProgressBar("INFO", "buildSymbolTaxonomy:", 9, 10);
+        LoggingUtils.printProgressBar("INFO", "Completed cache:", 10, 10, String.valueOf(System.currentTimeMillis() - startMillis) + " milleseconds");
         initialized = true;
     }
 

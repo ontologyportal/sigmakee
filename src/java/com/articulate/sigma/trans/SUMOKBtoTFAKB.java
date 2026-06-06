@@ -4,6 +4,7 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -314,7 +315,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         int endIndex = sig.size();
         if (KButilities.isVariableArity(kb,SUMOtoTFAform.withoutSuffix(t)))
             endIndex = getVariableAritySuffix(t) + 1;
-        if (endIndex > 9) {
+        if (endIndex > Formula.MAX_PREDICATE_ARITY) {
             pw.println("% SUMOKBtoTFAKB.writeRelationSort(): size too large: " + t);
             return;
         }
@@ -463,7 +464,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (kb.isFunction(t))
             suffix = FormulaAST.FN_SUFF;
         String newRel = t + "__" + e + suffix;
-        if (kb.terms.contains(newRel))
+        if (kb.kbCache.signatures.containsKey(newRel))
             return;
         List<String> sig = kb.kbCache.signatures.get(t);
         if (sig == null || sig.isEmpty()) {
@@ -474,13 +475,10 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         List<String> extsig = SUMOtoTFAform.relationExtractUpdateSigFromName(newRel);
         List<String> combinedSig = new ArrayList<>();
         int sigmax = sig.size();
-        if (extsig.size() > sigmax)
-            sigmax = extsig.size();
+        if (extsig.size() > sigmax) sigmax = extsig.size();
         for (int i = 0; i < sigmax; i++) {
-            if (i < extsig.size() && !StringUtil.emptyString(extsig.get(i)))
-                SUMOtoTFAform.safeSet(combinedSig,i,extsig.get(i));
-            else
-                SUMOtoTFAform.safeSet(combinedSig,i,sig.get(i));
+            if (i < extsig.size() && !StringUtil.emptyString(extsig.get(i))) SUMOtoTFAform.safeSet(combinedSig,i,extsig.get(i));
+            else SUMOtoTFAform.safeSet(combinedSig,i,sig.get(i));
         }
         kb.kbCache.signatures.put(newRel,combinedSig);
     }

@@ -1,4 +1,4 @@
-<%@ include file="Prelude.jsp" %>
+<%@ include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
     Infosys (c) 2017-present.
@@ -23,44 +23,37 @@
 <html>
 <HEAD><TITLE>Knowledge Base Picture Browser - <%=term%></TITLE></HEAD>
 <BODY BGCOLOR="#FFFFFF">
-
 <%
  StringBuilder show = new StringBuilder();
-
  show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
  if (!StringUtil.emptyString(term)) {
      term = term.intern();
      show.append(term);
      show.append("</b></FONT>");
      if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
-         Map<String, String> fm = kb.getFormatMap(language);
+         Map<String, String> fm = kb.getFormatMap(lang);
          String fmValue = null;
-         if (fm != null)
-             fmValue = fm.get(term);
+         if (fm != null) fmValue = fm.get(term);
          if (fmValue == null)
-             System.out.println("INFO in BrowseBody.jsp: No format map entry for \"" +
-                                term + "\" in language " + language);
+             System.out.println("INFO in fragments/browse/BrowseBody.jspf: No format map entry for \"" +
+                                term + "\" in language " + lang);
      }
      else {
-         Map<String, String> tfm = kb.getTermFormatMap(language);
+         Map<String, String> tfm = kb.getTermFormatMap(lang);
          String tfmValue = null;
-         if (tfm != null)
-             tfmValue = tfm.get(term);
-         if (tfmValue != null)
-             show.append("(" + tfmValue + ")");
+         if (tfm != null) tfmValue = tfm.get(term);
+         if (tfmValue != null) show.append("(" + tfmValue + ")");
          else
-             System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" +
-                                term + "\" in language " + language);
+             System.out.println("INFO in fragments/browse/BrowseBody.jspf: No term format map entry for \"" +
+                                term + "\" in language " + lang);
      }
      show.append("</td></tr>\n<tr><td>");
      show.append(HTMLformatter.showNumberPictures(kb,term,200));
      show.append("</td></tr></table><P>\n");
  }
 %>
-
 <br>
  <%=show.toString() %><BR>
-
-<%@ include file="Postlude.jsp" %>
+<%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>

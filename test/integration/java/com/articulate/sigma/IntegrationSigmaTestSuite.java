@@ -25,6 +25,7 @@ import org.junit.runners.Suite;
     TPTP3Test.class,
     WSDwKBtest.class,
     // DiagnosticsTest.class
+    JspCompileTest.class
 })
 public class IntegrationSigmaTestSuite extends IntegrationTestBase {
 
