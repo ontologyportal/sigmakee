@@ -2,7 +2,6 @@
 <%@include file="fragments/universal/Prelude.jspf" %>
 <%@ page import="com.articulate.sigma.parsing.FormulaAST" %>
 <%@ page import="com.articulate.sigma.parsing.Expr" %>
-<%@include file="Prelude.jsp" %>
 <%
     /** Copyright header omitted for brevity; keep your original text **/
     if (!role.equalsIgnoreCase("admin")) {
