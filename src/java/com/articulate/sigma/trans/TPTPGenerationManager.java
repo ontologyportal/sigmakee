@@ -140,9 +140,6 @@ public class TPTPGenerationManager {
         }
         Date infFileDate = new Date(inferenceFile.lastModified());
         Date newestSourceDate = KBmanager.newestBaseConfigOrConstituentDateIgnoringUserAssertions();
-        System.out.println("Inference file: " + inferenceFilePath);
-        System.out.println("Inference file modified: " + infFileDate);
-        System.out.println("Newest base source modified: " + newestSourceDate);
         if (infFileDate.compareTo(newestSourceDate) < 0) {
             LoggingUtils.log(inferenceFilePath + " is old! Needs regeneration...");
             return true;
@@ -184,27 +181,34 @@ public class TPTPGenerationManager {
     private static void rebuildAxiomKey(KB kb) {
 
         try {
-            // if (debug>0) System.out.println("TPTPGenerationManager: Rebuilding axiomKey in background (warm start, no I/O)...");
             long start = System.currentTimeMillis();
             String kbDir = KBmanager.getMgr().getPref("kbDir");
-            String infFilename = kbDir + java.io.File.separator + kb.name + ".tptp";
-            SUMOKBtoTPTPKB.setLang("fof");
-            SUMOformulaToTPTPformula.setLang("fof");
-            // if (debug>0) System.out.println("TPTPGenerationManager.rebuildAxiomKey(): setHideNumbers true");
-            SUMOformulaToTPTPformula.setHideNumbers(true);
-            if (kb.kbCache != null && kb.kbCache.relations != null)
-                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
-            // Null writer: we want the axiomKey side-effect only, not file output.
-            try (java.io.PrintWriter pw = new java.io.PrintWriter(java.io.Writer.nullWriter())) {
-                SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-                skb.kb = kb;
-                skb.writeFile(infFilename, null, false, pw);
+            String infFilename = kbDir + File.separator + kb.name + ".tptp";
+
+            synchronized (GEN_LOCK) {
+                SUMOKBtoTPTPKB.setLang("fof");
+                SUMOformulaToTPTPformula.setLang("fof");
+                SUMOformulaToTPTPformula.setHideNumbers(true);
+
+                if (kb.kbCache != null && kb.kbCache.relations != null)
+                    ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
+
+                // Null writer: rebuild axiomKey only; do not write SUMO.tptp.
+                try (PrintWriter pw = new PrintWriter(Writer.nullWriter())) {
+                    SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                    skb.kb = kb;
+                    skb.writeFile(infFilename, null, false, pw);
+                }
             }
+
             long elapsed = System.currentTimeMillis() - start;
-            System.out.println("INFO  [TPTPGenerationManager.rebuildAxiomKey()]  axiomKey rebuilt in " + (elapsed / 1000.0) + " seconds — " + SUMOKBtoTPTPKB.axiomKey.size() + " entries");
+            System.out.println("INFO  [TPTPGenerationManager.rebuildAxiomKey()]  axiomKey rebuilt in "
+                    + (elapsed / 1000.0) + " seconds — "
+                    + SUMOKBtoTPTPKB.axiomKey.size() + " entries");
         }
         catch (Exception e) {
-            System.err.println("ERROR  [TPTPGenerationManager.rebuildAxiomKey()]  Failed to rebuild axiomKey: " + e.getMessage());
+            System.err.println("ERROR  [TPTPGenerationManager.rebuildAxiomKey()]  Failed to rebuild axiomKey: "
+                    + e.getMessage());
             e.printStackTrace();
         }
         finally {
@@ -227,8 +231,8 @@ public class TPTPGenerationManager {
         Path tmp    = java.nio.file.Paths.get(infFilename + ".tmp");
         try {
             if (!isInferenceFileOld(baseKbDir + ".tptp")) {
-                new Thread(() -> rebuildAxiomKey(kb), "axiomKey-rebuild-" + kb.name).start();
                 LoggingUtils.log(baseKbDir + ".tptp is current! Rebuilding axiom key.");
+                rebuildAxiomKey(kb);
                 fofReady.set(true);
                 return;
             }

@@ -9,27 +9,31 @@ import com.articulate.sigma.trans.*;
 import com.articulate.sigma.tp.*;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.LoggingUtils;
+import com.articulate.sigma.parsing.CLIMapParser;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.util.*;
 
 public class InferenceTest {
 
     private String filePath;
-    private String minLang = "tff";
+    private String minLang = "fof";
     private boolean tptpRegenRequired = false;
     private String note;
     private int timeout = 30;
     private String query;
-    private List<String> assertions;
-    private List<String> requiredConstituents;
-    private List<String> expectedAnswers;
-    public InferenceTestResult result;
+    private List<String> assertions = new ArrayList<>();
+    private List<String> requiredConstituents = new ArrayList<>();
+    private List<String> expectedAnswers = new ArrayList<>();
+    public InferenceTestResult result = new InferenceTestResult();
 
     public class InferenceTestResult {
-        boolean success;
+        public boolean success;
         public float execTime;
         public String szsStatus;
-        private List<String> proof;
-        public List<String> answers;
+        public List<String> proof = new ArrayList<>();
+        public List<String> answers = new ArrayList<>();
         public boolean contradictionFound;
     }
 
@@ -45,12 +49,34 @@ public class InferenceTest {
     }
 
     public void runTest(KB kb, String proverType, String language, String vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout, int maxAnswers) {
-    
         String sessionId = "tq-" + UUID.randomUUID();
         TheoremProverController tpc = new TheoremProverController();
-        applyAssertions(kb, sessionId, language);
-        populateResult(kb, tpc.runQuery(kb, sessionId, this.query, this.filePath, "TEST_FILE", proverType, language, vampireMode, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals, timeout, maxAnswers));
-        reset(kb, sessionId);
+        try {
+            TPTPGenerationManager.waitForAllTPTP(600);
+            applyAssertions(kb, sessionId, language);
+            populateResult(
+                kb,
+                tpc.runQuery(
+                    kb,
+                    sessionId,
+                    this.query,
+                    this.filePath,
+                    "TEST_FILE",
+                    proverType,
+                    language,
+                    vampireMode,
+                    closedWorldAssumption,
+                    modusPonens,
+                    dropOnePremise,
+                    holUseModals,
+                    timeout,
+                    maxAnswers
+                )
+            );
+        }
+        finally {
+            reset(kb, sessionId);
+        }
     }
 
         /****************************************************************
@@ -183,9 +209,9 @@ public class InferenceTest {
 
     public void validateTestData() {
 
-        if (!this.minLang.equals("fof") || !minLang.equals("tff") || !minLang.equals("thf")) LoggingUtils.log("ERROR", "Invalid minLang!: " + this.minLang);
+        if (!this.minLang.equals("fof") && !minLang.equals("tff") && !minLang.equals("thf")) LoggingUtils.log("ERROR", "Invalid minLang!: " + this.minLang);
         if (this.timeout < 0) LoggingUtils.log("ERROR", "Invalid timeout!: " + this.timeout);
-        if (StringUtil.emptyString(expectedAnswers)) LoggingUtils.log("ERROR", "No expected answers provided!");
+        if (StringUtil.emptyString(this.expectedAnswers)) LoggingUtils.log("ERROR", "No expected answers provided!");
         if (this.assertions.isEmpty()) LoggingUtils.log("WARN", "No assertions provided!");
         if (StringUtil.emptyString(this.query)) LoggingUtils.log("ERROR", "INVALID QUERY!: " + this.query);
     }
@@ -194,18 +220,26 @@ public class InferenceTest {
 
         File testFile = new File(this.filePath);
         if (!isValidTestPath(testFile)) return;
-        KIF testKif = new KIF();
-        for (Formula orderedFormulas : testKif.formulasOrdered.values()) {
-            String formula = orderedFormulas.getFormula();
-            if (formula.contains(";")) formula = formula.substring(0, formula.indexOf(";"));
-            if (formula.startsWith("(file")) this.requiredConstituents.add(formula.substring(6, formula.length() - 1));
-            else if (formula.startsWith("(minLang")) this.minLang = formula.substring(9, formula.length() - 1).trim().toLowerCase();
-            else if (formula.startsWith("(regen")) this.tptpRegenRequired = formula.substring(7, formula.length() - 1).trim().equals("true");
-            else if (formula.startsWith("(note")) this.note = formula.substring(6, formula.length() - 1);
-            else if (formula.startsWith("(time")) this.timeout = Integer.parseInt(formula.substring(6, formula.length() - 1));
-            else if (formula.startsWith("(query")) this.query = formula.substring(7, formula.length() - 1);
-            else if (formula.startsWith("(answer")) parseAnswers(formula);
-            else this.assertions.add(formula);
+        try {
+            KIF testKif = new KIF();
+            testKif.readFile(testFile.getCanonicalPath());
+            System.out.println("Forms=" + testKif.formulasOrdered.values());
+            for (Formula orderedFormulas : testKif.formulasOrdered.values()) {
+                String formula = orderedFormulas.getFormula();
+                if (formula.contains(";")) formula = formula.substring(0, formula.indexOf(";"));
+                if (formula.startsWith("(file")) this.requiredConstituents.add(formula.substring(6, formula.length() - 1));
+                else if (formula.startsWith("(minLang")) this.minLang = formula.substring(9, formula.length() - 1).trim().toLowerCase();
+                else if (formula.startsWith("(regen")) this.tptpRegenRequired = formula.substring(7, formula.length() - 1).trim().equals("true");
+                else if (formula.startsWith("(note")) this.note = formula.substring(6, formula.length() - 1);
+                else if (formula.startsWith("(time")) this.timeout = Integer.parseInt(formula.substring(6, formula.length() - 1));
+                else if (formula.startsWith("(query")) this.query = formula.substring(7, formula.length() - 1);
+                else if (formula.startsWith("(answer")) parseAnswers(formula);
+                else this.assertions.add(formula);
+            }
+        }
+        catch (Exception e) {
+            LoggingUtils.log("ERROR", "Failed reading test file: " + this.filePath);
+            e.printStackTrace();
         }
     }
 
@@ -226,6 +260,11 @@ public class InferenceTest {
     public boolean isValidTestPath(File testFile) {
 
         try {
+            Path path = Paths.get(filePath);
+            if (!Files.exists(Paths.get(filePath))) {
+                LoggingUtils.log("ERROR", filePath + "does not exist!");
+                return false;
+            }
             if (testFile.getCanonicalPath().endsWith(".tq")) return true;
             return false;
         }
@@ -256,5 +295,61 @@ public class InferenceTest {
         else if ("TFF".equalsIgnoreCase(language)) return "tff";
         else if ("THF".equalsIgnoreCase(language)) return "thf";
         return language.toLowerCase();
+    }
+
+    public void printResult() {
+
+        System.out.println();
+        System.out.println("====================================");
+        System.out.println("Inference Test Result");
+        System.out.println("====================================");
+        System.out.println("File:       " + this.filePath);
+        System.out.println("Note:       " + this.note);
+        System.out.println("Query:      " + this.query);
+        System.out.println("Timeout:    " + this.timeout + " seconds");
+        if (this.result == null) {
+            System.out.println("Result:     null");
+            System.out.println("====================================");
+            return;
+        }
+        System.out.println("Success:    " + this.result.success);
+        System.out.println("SZS:        " + this.result.szsStatus);
+        System.out.println("Expected:   " + this.expectedAnswers);
+        System.out.println("Actual:     " + this.result.answers);
+        System.out.println("Exec time:  " + this.result.execTime + " ms");
+        System.out.println("Contradiction: " + this.result.contradictionFound);
+        if (this.result.proof != null && !this.result.proof.isEmpty()) {
+            System.out.println();
+            System.out.println("---- Proof / Prover Output ----");
+            for (String line : this.result.proof) {
+                if (!StringUtil.emptyString(line))
+                    System.out.println(line);
+            }
+        }
+        System.out.println("====================================");
+    }
+
+    private static void printHelp() {
+        System.out.println("InferenceTest.main():");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  --r <pathToTest> run this test");
+    }
+
+    public static void main (String[] args) throws Exception {
+
+        Map<String, List<String>> argMap = CLIMapParser.parse(args);
+        if (argMap.isEmpty() || argMap.containsKey("h")) {
+            printHelp();
+            return;
+        }
+        if(argMap.containsKey("r") && argMap.get("r").size() == 1) {
+                
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            InferenceTest test = new InferenceTest(argMap.get("r").get(0));
+            test.runTest(kb, "VAMPIRE", false, false, false, false);
+            test.printResult();
+        }
     }
 }

@@ -1049,7 +1049,6 @@ public class Vampire {
      */
     public boolean assertFormula(String userAssertionTPTP, KB kb, List<Formula> parsedFormulas, boolean tptp) {
 
-        System.out.printf("\nVampire.assertFormula(%s, %s, %s, %b)", userAssertionTPTP, kb.name, parsedFormulas, tptp);
         boolean allAdded = false;
         Set<Formula> processedFormulas = new HashSet();
         FormulaPreprocessor fp = new FormulaPreprocessor();
