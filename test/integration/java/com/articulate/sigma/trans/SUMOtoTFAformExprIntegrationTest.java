@@ -4,7 +4,7 @@ import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.SuokifVisitor;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.FormulaPreprocessor;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -14,9 +14,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import static org.junit.Assert.*;
 
@@ -69,7 +67,7 @@ public class SUMOtoTFAformExprIntegrationTest extends IntegrationTestBase {
         SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
         assertNotNull("visitor.result null for: " + kif, visitor.result);
         assertFalse("visitor.result empty for: " + kif, visitor.result.isEmpty());
-        FormulaAST ast = visitor.result.get(0);
+        Formula ast = visitor.result.get(0);
         assertNotNull("FormulaAST null for: " + kif, ast);
         assertNotNull("expr null for: " + kif, ast.expr);
         return ast.expr;
@@ -111,7 +109,7 @@ public class SUMOtoTFAformExprIntegrationTest extends IntegrationTestBase {
         SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
         assertNotNull(visitor.result);
         assertFalse(visitor.result.isEmpty());
-        FormulaAST fa = visitor.result.get(0);
+        Formula fa = visitor.result.get(0);
         assertNotNull(fa);
         // Run full preProcessExpr — must not return null or empty
         FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -131,7 +129,7 @@ public class SUMOtoTFAformExprIntegrationTest extends IntegrationTestBase {
         SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
         assertNotNull(visitor.result);
         assertFalse(visitor.result.isEmpty());
-        FormulaAST fa = visitor.result.get(0);
+        Formula fa = visitor.result.get(0);
         assertNotNull(fa);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         Set<Expr> result = fp.preProcessExpr(fa, false, kb);
@@ -155,7 +153,7 @@ public class SUMOtoTFAformExprIntegrationTest extends IntegrationTestBase {
         SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
         assertNotNull(visitor.result);
         assertFalse(visitor.result.isEmpty());
-        FormulaAST fa = visitor.result.get(0);
+        Formula fa = visitor.result.get(0);
         assertNotNull(fa);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         Set<Expr> result = fp.preProcessExpr(fa, false, kb);

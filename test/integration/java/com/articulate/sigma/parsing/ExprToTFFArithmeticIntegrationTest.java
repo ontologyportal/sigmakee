@@ -76,7 +76,7 @@ public class ExprToTFFArithmeticIntegrationTest extends IntegrationTestBase {
         SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
         assertNotNull("visitor.result null for: " + kif, visitor.result);
         assertFalse("visitor.result empty for: " + kif, visitor.result.isEmpty());
-        FormulaAST ast = visitor.result.get(0);
+        Formula ast = visitor.result.get(0);
         assertNotNull("FormulaAST null for: " + kif, ast);
         assertNotNull("expr null for: " + kif, ast.expr);
         return ast.expr;
@@ -94,7 +94,7 @@ public class ExprToTFFArithmeticIntegrationTest extends IntegrationTestBase {
      */
     private void arithmeticDualRun(String kif) {
         Expr expr = parse(kif);
-        String oldResult = SUMOtoTFAform.processExpr(new FormulaAST(kif).expr, false);
+        String oldResult = SUMOtoTFAform.processExpr(new Formula(kif).expr, false);
         String newResult = ExprToTFF.translate(expr, false, kb);
         System.out.println("kif: " + kif);
         System.out.println("old: " + oldResult);
@@ -114,7 +114,7 @@ public class ExprToTFFArithmeticIntegrationTest extends IntegrationTestBase {
      */
     private void arithmeticDualRunStructural(String kif) {
         Expr expr = parse(kif);
-        String oldResult = SUMOtoTFAform.processExpr(new FormulaAST(kif).expr, false);
+        String oldResult = SUMOtoTFAform.processExpr(new Formula(kif).expr, false);
         String newResult = ExprToTFF.translate(expr, false, kb);
         System.out.println("kif: " + kif);
         System.out.println("old: " + oldResult);
@@ -292,7 +292,7 @@ public class ExprToTFFArithmeticIntegrationTest extends IntegrationTestBase {
         // (instance Pi RealNumber) → vacuous / empty in both paths
         String kif = "(instance Pi RealNumber)";
         Expr expr = parse(kif);
-        String oldResult = SUMOtoTFAform.processExpr(new FormulaAST(kif).expr, false);
+        String oldResult = SUMOtoTFAform.processExpr(new Formula(kif).expr, false);
         String newResult = ExprToTFF.translate(expr, false, kb);
         System.out.println("kif: " + kif);
         System.out.println("old: " + oldResult);

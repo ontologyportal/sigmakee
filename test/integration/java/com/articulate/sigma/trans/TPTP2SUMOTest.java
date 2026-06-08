@@ -6,7 +6,7 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -40,7 +40,7 @@ public class TPTP2SUMOTest {
             for (String s : hm.keySet()) {
                 System.out.println(hm.get(s));
                 System.out.println("\t" + hm.get(s).sumo + "\n");
-                System.out.println(TPTP2SUMO.collapseConnectives(new FormulaAST(hm.get(s).sumo)));
+                System.out.println(TPTP2SUMO.collapseConnectives(new Formula(hm.get(s).sumo)));
             }
         }
         catch (Exception e) {
@@ -54,7 +54,7 @@ public class TPTP2SUMOTest {
     public void testCollapse() {
 
         System.out.println("TPTP2SUMOTest.testPartition()");
-        FormulaAST f = new FormulaAST("(and (and (foo A B) (foo B B)) (bar C))");
+        Formula f = new Formula("(and (and (foo A B) (foo B B)) (bar C))");
         String result = TPTP2SUMO.collapseConnectives(f).toString();
         String expected = "(and\n" +
                 "  (foo A B)\n" +
@@ -70,7 +70,7 @@ public class TPTP2SUMOTest {
     public void testCollapse2() {
 
         System.out.println("TPTP2SUMOTest.testPartition2()");
-        FormulaAST f = new FormulaAST("(=> (and (and (foo A B) (foo B B)) (bar C)) (blah F G))");
+        Formula f = new Formula("(=> (and (and (foo A B) (foo B B)) (bar C)) (blah F G))");
         String result = TPTP2SUMO.collapseConnectives(f).toString();
         String expected = "(=>\n" +
                 "  (and\n" +
@@ -90,7 +90,7 @@ public class TPTP2SUMOTest {
         KBmanager.prefOverride.put("loadLexicons","false");
         KBmanager.getMgr().initializeOnce();
         System.out.println("TPTP2SUMOTest.testPartition3()");
-        FormulaAST f = new FormulaAST("(forall (?X155 ?X156 ?X157 ?X158)\n" +
+        Formula f = new Formula("(forall (?X155 ?X156 ?X157 ?X158)\n" +
                 "  (=>\n" +
                 "    (and\n" +
                 "      (instance ?X158 Organism)\n" +
@@ -150,8 +150,8 @@ public class TPTP2SUMOTest {
                 "      (plays ?G3 ?A2))))))";
         System.out.println("result: " + result);
         System.out.println("expected: " + expected);
-        FormulaAST fresult = new FormulaAST(result);
-        FormulaAST fexpected = new FormulaAST(expected);
+        Formula fresult = new Formula(result);
+        Formula fexpected = new Formula(expected);
         assertTrue(fexpected.deepEquals(fresult));
     }
 }

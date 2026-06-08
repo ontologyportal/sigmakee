@@ -15,7 +15,7 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 
 import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlg.NLGUtils;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.TPTP2SUMO;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
@@ -35,7 +35,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
+
 import tptp_parser.*;
 
 /** A utility class that creates HTML-formatting Strings for various purposes. */
@@ -204,10 +204,10 @@ public class HTMLformatter {
 
         if (debug) System.out.println("Info in HTMLformatter.proofTableFormat(): " + step);
         StringBuilder result = new StringBuilder();
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         KB kb = KBmanager.getMgr().getKB(kbName);
         f.read(step.sumo);
-        f.read(FormulaAST.postProcess(f.getFormula()));
+        f.read(Formula.postProcess(f.getFormula()));
         f.read(ProofProcessor.removeNestedAnswerClause(f.getFormula()));
         String kbHref = HTMLformatter.createKBHref(kbName, language);
 
@@ -244,7 +244,7 @@ public class HTMLformatter {
                 else {
                     result.append("[KB -");
                     String key = step.infRule;
-                    FormulaAST originalF = SUMOKBtoTPTPKB.axiomKey.get(key);
+                    Formula originalF = SUMOKBtoTPTPKB.axiomKey.get(key);
                     if (originalF != null)
                         result.append(originalF.startLine).append(":").append(FileUtil.noPath(originalF.getSourceFile()));
                     result.append("]");
@@ -408,12 +408,12 @@ public class HTMLformatter {
      */
     public static String showMap(KB kb, String term) {
 
-        List<FormulaAST> lats = kb.askWithRestriction(0, "latitude", 1, term);
-        List<FormulaAST> lons = kb.askWithRestriction(0, "longitude", 1, term);
+        List<Formula> lats = kb.askWithRestriction(0, "latitude", 1, term);
+        List<Formula> lons = kb.askWithRestriction(0, "longitude", 1, term);
         String result = "";
         int zoom = 12;
         if (lats != null && !lats.isEmpty() && lons != null && !lons.isEmpty()) {
-            FormulaAST f = lats.get(0);
+            Formula f = lats.get(0);
             String lat = f.getStringArgument(2);
             f = lons.get(0);
             String lon = f.getStringArgument(2);
@@ -445,7 +445,7 @@ public class HTMLformatter {
     public static String showNumberPictures(KB kb, String term, int count) {
 
         StringBuilder show = new StringBuilder();
-        List<FormulaAST> pictures = kb.askWithRestriction(0, "externalImage", 1, term);   // Handle picture display
+        List<Formula> pictures = kb.askWithRestriction(0, "externalImage", 1, term);   // Handle picture display
         if (pictures != null && !pictures.isEmpty()) {
             show.append("<br>");
             int numPictures = pictures.size();
@@ -455,7 +455,7 @@ public class HTMLformatter {
                 more = true;
             }
 
-            FormulaAST f;
+            Formula f;
             String url;
             String imageFile, domain;
             for (int i = 0; i < numPictures; i++) {
@@ -676,7 +676,7 @@ public class HTMLformatter {
      * Create the HTML for a section of the Sigma term browser page.
      * Needs a <table>...</table> enclosure to format HTML properly.
      */
-    public static String formatFormulaList(List<FormulaAST> forms, String header, KB kb,
+    public static String formatFormulaList(List<Formula> forms, String header, KB kb,
                                            String language, String flang, int start, int localLimit, String limitString) {
 
         Set<String> printedForms = new HashSet<>();
@@ -689,7 +689,7 @@ public class HTMLformatter {
             localLimit = forms.size();
 
         String strForm, arg0, formattedFormula, sourceFilename, jeditcmd, pph = null;
-        FormulaAST f;
+        Formula f;
         File srcfile;
         for (int i = start; i < localLimit; i++) {
             //System.out.println("formatFormulaList(): " + forms.get(i).getClass().getName());
@@ -698,7 +698,7 @@ public class HTMLformatter {
                 continue;
             printedForms.add(strForm);
             //System.out.println("INFO in HTMLformatter.formatFormulaList(): formula: " + strForm);
-            f = (FormulaAST) kb.formulaMap.get(strForm);
+            f = (Formula) kb.formulaMap.get(strForm);
 //            if (f.sourceFile.equals("<unknown>")) continue;
             if (f == null) {
                 System.out.println("Error in HTMLformatter.formatFormulaList(): null formula object for " +
@@ -714,7 +714,7 @@ public class HTMLformatter {
                     formattedFormula = TPTPutil.htmlTPTPFormat(f, kbHref, traditionalLogic) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
                 else
                     formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
-                if (FormulaAST.DOC_PREDICATES.contains(arg0))
+                if (Formula.DOC_PREDICATES.contains(arg0))
                     show.append(kb.formatDocumentation(kbHref, formattedFormula, language));
                 else
                     show.append(formattedFormula);
@@ -732,7 +732,7 @@ public class HTMLformatter {
                 }
                 show.append("</a>");
                 show.append("</td>\n<td width=\"40%\" valign=\"top\">");
-                if (!FormulaAST.DOC_PREDICATES.contains(arg0))
+                if (!Formula.DOC_PREDICATES.contains(arg0))
                     pph = NLGUtils.htmlParaphrase(kbHref, f.getFormula(),
                             kb.getFormatMap(language),
                             kb.getTermFormatMap(language),
@@ -793,7 +793,7 @@ public class HTMLformatter {
 
         if (!StringUtil.emptyString(term))
             term = ValidationUtils.sanitizeSumoTerm(term);
-        List<FormulaAST> forms = kb.ask(type, arg, term);
+        List<Formula> forms = kb.ask(type, arg, term);
         StringBuilder show = new StringBuilder();
         String limitString = "";
         int localLimit = start + limit;
@@ -939,7 +939,7 @@ public class HTMLformatter {
         StringBuilder result = new StringBuilder();
         int p;
         String begin, end;
-        FormulaAST f;
+        Formula f;
         for (String err : list) {
             err = err.replaceAll("\\n", "<br>");
             p = err.indexOf(":");
@@ -948,7 +948,7 @@ public class HTMLformatter {
             if (p > -1) {
                 begin += err.substring(0, p + 1);
                 end = err.substring(p + 1);
-                f = new FormulaAST();
+                f = new Formula();
                 f.read(end);
                 //end = f.htmlFormat(kbHref);
                 end = f.htmlFormat(kb, kbHref);
@@ -1249,7 +1249,7 @@ public class HTMLformatter {
             if (args != null && args.length > 0 && args[0].equals("-t")) {
                 System.out.println("INFO in HTMLformatter.main()");
                 System.out.println("INFO in HTMLformatter.main(): " + showStatistics(kb));
-                List<FormulaAST> forms = KButilities.termIntersection(kb, "ShapeChange", "ShapeAttribute");
+                List<Formula> forms = KButilities.termIntersection(kb, "ShapeChange", "ShapeAttribute");
                     /* should get from Merge.kif 15034-15041
                      * (=>
                 (and

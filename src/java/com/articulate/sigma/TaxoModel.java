@@ -1,6 +1,6 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,11 +48,11 @@ public class TaxoModel {
     /** ***************************************************************
      * Remove any cached formulas from a list.
      */
-    public static List<FormulaAST> removeCached (List<FormulaAST> forms) {
+    public static List<Formula> removeCached (List<Formula> forms) {
 
-        List<FormulaAST> result = new ArrayList<>();
+        List<Formula> result = new ArrayList<>();
         for (int i = 0; i < forms.size(); i++) {
-            FormulaAST f = (FormulaAST) forms.get(i);
+            Formula f = (Formula) forms.get(i);
             //if (f == null || f.sourceFile == null) {
             //	System.out.println("Error in TaxoModel.removeCached(): null formula or sourceFile field: " + f);
             //	System.out.println(f.sourceFile);
@@ -102,10 +102,10 @@ public class TaxoModel {
         n.parents = new ArrayList<>();
         rootList.clear();  // = new HashMap();
         KB kb = KBmanager.getMgr().getKB(kbName);
-        List<FormulaAST> forms = kb.askWithPredicateSubsumption(relation,1,nodeName);
+        List<Formula> forms = kb.askWithPredicateSubsumption(relation,1,nodeName);
         forms = removeCached(forms);
         for (int i = 0; i < forms.size(); i++) {
-            FormulaAST form = (FormulaAST) forms.get(i);
+            Formula form = (Formula) forms.get(i);
             TaxoNode parent = new TaxoNode();
             parent.name = form.getStringArgument(2);
             if (parent.name.equals(n.name))
@@ -169,7 +169,7 @@ public class TaxoModel {
         // kb.askWithRestriction(0,relation,2,nodeName);
         forms = removeCached(forms);
         for (int i = 0; i < forms.size(); i++) {
-            FormulaAST form = (FormulaAST) forms.get(i);
+            Formula form = (Formula) forms.get(i);
             TaxoNode child = new TaxoNode();
             child.name = form.getStringArgument(1);
             n.children.add(child);

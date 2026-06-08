@@ -19,7 +19,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.File;
@@ -85,12 +85,12 @@ public class SInE extends InferenceEngine {
 
     static Set<String> nonSymbols=new HashSet<>();
     static {
-        nonSymbols.add(FormulaAST.AND);
-        nonSymbols.add(FormulaAST.OR);
-        nonSymbols.add(FormulaAST.XOR);
-        nonSymbols.add(FormulaAST.NOT);
-        nonSymbols.add(FormulaAST.UQUANT);
-        nonSymbols.add(FormulaAST.EQUANT);
+        nonSymbols.add(Formula.AND);
+        nonSymbols.add(Formula.OR);
+        nonSymbols.add(Formula.XOR);
+        nonSymbols.add(Formula.NOT);
+        nonSymbols.add(Formula.UQUANT);
+        nonSymbols.add(Formula.EQUANT);
     }
 
     List<String> formulas;

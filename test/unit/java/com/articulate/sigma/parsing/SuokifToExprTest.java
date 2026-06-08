@@ -3,8 +3,6 @@ package com.articulate.sigma.parsing;
 import com.articulate.sigma.UnitTestBase;
 import org.junit.Test;
 
-import java.util.Map;
-
 import static org.junit.Assert.*;
 
 /**
@@ -17,7 +15,7 @@ public class SuokifToExprTest extends UnitTestBase {
     private static Expr parse(String kif) {
         SuokifVisitor visitor = SuokifVisitor.parseString(kif);
         assertFalse("Parse should succeed for: " + kif, visitor.result.isEmpty());
-        FormulaAST f = visitor.result.values().iterator().next();
+        Formula f = visitor.result.values().iterator().next();
         assertNotNull("expr field must be populated", f.expr);
         return f.expr;
     }
@@ -190,7 +188,7 @@ public class SuokifToExprTest extends UnitTestBase {
     public void multipleFormulas() {
         SuokifVisitor visitor = SuokifVisitor.parseString("(likes John Mary)\n(part Wheel1 Car2)\n");
         assertEquals(2, visitor.result.size());
-        for (FormulaAST f : visitor.result.values()) {
+        for (Formula f : visitor.result.values()) {
             assertNotNull("Every formula must have an expr", f.expr);
         }
     }

@@ -1,7 +1,7 @@
 package com.articulate.sigma.mlpipeline;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
@@ -23,7 +23,7 @@ public class TestSQUAD {
         int correctCount = 0;
         String resp;
         KIFAST kif;
-        FormulaAST f;
+        Formula f;
         boolean termMissing, typeError;
         Collection<String> terms;
         for (String s : lines) {
@@ -46,7 +46,7 @@ public class TestSQUAD {
                     SUMOtoTFAform.errors.clear();
                     typeError = !KButilities.hasCorrectTypes(kb,f);
                     for (String t : terms) {
-                        if (!kb.containsTerm(t) && !t.startsWith(FormulaAST.V_PREF) && !t.equals("You") &&
+                        if (!kb.containsTerm(t) && !t.startsWith(Formula.V_PREF) && !t.equals("You") &&
                                 !t.equals("Now") && !StringUtil.isNumeric(t) && !StringUtil.quoted(t)) {
                             System.out.println("term not in KB: " + t);
                             termMissing = true;

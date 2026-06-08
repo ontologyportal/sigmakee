@@ -1,7 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.parsing.CLIMapParser;
@@ -10,8 +10,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 //This software is released under the GNU Public License
 //<http://www.gnu.org/copyleft/gpl.html>.
@@ -227,7 +225,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         String label;
         label = translateName(t) + "_sig";
         pw.println("% writeSort(): term: " + t);
-        if (t.equals(FormulaAST.LOG_TRUE) || t.equals(FormulaAST.LOG_FALSE)) {
+        if (t.equals(Formula.LOG_TRUE) || t.equals(Formula.LOG_FALSE)) {
             pw.println("% writeSort(): skipping terms True and False");
             return;
         }
@@ -242,30 +240,30 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             sortLabels.add(label);
         }
         String output;
-        if (FormulaAST.isInequality(bareTerm))
+        if (Formula.isInequality(bareTerm))
             t = translateName(t);
-        if (!t.startsWith(FormulaAST.TERM_SYMBOL_PREFIX))
-            t = FormulaAST.TERM_SYMBOL_PREFIX + t;
+        if (!t.startsWith(Formula.TERM_SYMBOL_PREFIX))
+            t = Formula.TERM_SYMBOL_PREFIX + t;
         output = "tff(" + label + ",type," + t;
         //if (FormulaAST.isLogicalOperator(bareTerm) ||
         if (kb.isRelation(bareTerm) ||
-                bareTerm.equals(FormulaAST.EQUAL)) {
+                bareTerm.equals(Formula.EQUAL)) {
           //  ||
         //        (kb.isRelation(bareTerm) && !FormulaAST.isMathFunction(bareTerm))) {
 //                       && !FormulaAST.isInequality(bareTerm))) {
-            pw.println("% logop: " + FormulaAST.isLogicalOperator(bareTerm));
+            pw.println("% logop: " + Formula.isLogicalOperator(bareTerm));
             pw.println("% is relation: " + kb.isRelation(bareTerm));
-            pw.println("% is inequality: " + FormulaAST.isInequality(bareTerm));
-            pw.println("% is math: " + FormulaAST.isMathFunction(bareTerm));
-            if (!output.endsWith(FormulaAST.TERM_MENTION_SUFFIX))
-                output = output + FormulaAST.TERM_MENTION_SUFFIX;
+            pw.println("% is inequality: " + Formula.isInequality(bareTerm));
+            pw.println("% is math: " + Formula.isMathFunction(bareTerm));
+            if (!output.endsWith(Formula.TERM_MENTION_SUFFIX))
+                output = output + Formula.TERM_MENTION_SUFFIX;
         }
         output = output + " : $i  ).";
         pw.println(output);
         // Also declare the non-__m version so formulas using the symbol without __m are typed
-        if (t.endsWith(FormulaAST.TERM_MENTION_SUFFIX)) {
+        if (t.endsWith(Formula.TERM_MENTION_SUFFIX)) {
             String labelNoM = label + "_noM";
-            String symbolNoM = t.substring(0, t.length() - FormulaAST.TERM_MENTION_SUFFIX.length());
+            String symbolNoM = t.substring(0, t.length() - Formula.TERM_MENTION_SUFFIX.length());
             pw.println("tff(" + labelNoM + ",type," + symbolNoM + " : $i  ).");
         }
     }
@@ -290,14 +288,14 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     public void writeRelationSort(String t, PrintWriter pw) {
 
         pw.println("% SUMOKBtoTFAKB.writeRelationSort(): " + t);
-        if (t.endsWith(FormulaAST.FN_SUFF) != kb.isFunction(t))
+        if (t.endsWith(Formula.FN_SUFF) != kb.isFunction(t))
             System.err.println("Error in writeRelationSort(): is function mismatch with term name : " + t + ", " + kb.isFunction(t));
         String bareTerm = SUMOtoTFAform.getBareTerm(t);
-        boolean isLeoUnsupportedMath = SUMOtoTFAform.targetLeo && (bareTerm.equals(FormulaAST.REMAINDERFN) ||
-                bareTerm.equals(FormulaAST.DIVIDEFN) || bareTerm.equals(FormulaAST.FLOORFN) ||
-                bareTerm.equals(FormulaAST.CEILINGFN) || bareTerm.equals(FormulaAST.ROUNDFN));
-        if (FormulaAST.isLogicalOperator(t) || (FormulaAST.isMathFunction(bareTerm) && !isLeoUnsupportedMath)
-                || FormulaAST.isComparisonOperator(t)) {
+        boolean isLeoUnsupportedMath = SUMOtoTFAform.targetLeo && (bareTerm.equals(Formula.REMAINDERFN) ||
+                bareTerm.equals(Formula.DIVIDEFN) || bareTerm.equals(Formula.FLOORFN) ||
+                bareTerm.equals(Formula.CEILINGFN) || bareTerm.equals(Formula.ROUNDFN));
+        if (Formula.isLogicalOperator(t) || (Formula.isMathFunction(bareTerm) && !isLeoUnsupportedMath)
+                || Formula.isComparisonOperator(t)) {
             String label = translateName(t);
             String output = "tff(" + label + ",type," + label +
                     " : $i ).";
@@ -315,7 +313,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         int endIndex = sig.size();
         if (KButilities.isVariableArity(kb,SUMOtoTFAform.withoutSuffix(t)))
             endIndex = getVariableAritySuffix(t) + 1;
-        if (endIndex > FormulaAST.MAX_PREDICATE_ARITY) {
+        if (endIndex > Formula.MAX_PREDICATE_ARITY) {
             pw.println("% SUMOKBtoTFAKB.writeRelationSort(): size too large: " + t);
             return;
         }
@@ -335,7 +333,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         //if (kb.isFunction(t))
         //    sigBuf.append(FormulaAST.SPACE + translateSort(sig.get(0)) + " *");
         for (String s : sig.subList(1,endIndex))
-            sigBuf.append(FormulaAST.SPACE).append(translateSort(kb,s)).append(" *");
+            sigBuf.append(Formula.SPACE).append(translateSort(kb,s)).append(" *");
         if (sigBuf.length() == 0) {
             pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): " + t);
             pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): signature: " + sig);
@@ -349,11 +347,11 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         }
         String sigStr = sigBuf.toString().substring(0,sigBuf.length()-1);
         String relname = translateName(t);
-        if (relname.endsWith(FormulaAST.TERM_MENTION_SUFFIX))
+        if (relname.endsWith(Formula.TERM_MENTION_SUFFIX))
             relname = relname.substring(0,relname.length()-3);
         String range = sig.get(0);
         String label = translateName(t);
-        if (label.endsWith(FormulaAST.TERM_MENTION_SUFFIX))
+        if (label.endsWith(Formula.TERM_MENTION_SUFFIX))
             label = label.substring(0,label.length()-2);
         label = label + "_sig_rel";
         if (sortLabels.contains(label)) {
@@ -374,7 +372,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                     " : ( " + sigStr + " ) > $o ).";
             pw.println(output);
         }
-        String output = "tff(" + label + FormulaAST.TERM_MENTION_SUFFIX + ",type," + relname + FormulaAST.TERM_MENTION_SUFFIX +
+        String output = "tff(" + label + Formula.TERM_MENTION_SUFFIX + ",type," + relname + Formula.TERM_MENTION_SUFFIX +
                 " : $i ).";
         pw.println(output);
     }
@@ -462,7 +460,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
         String suffix = "";
         if (kb.isFunction(t))
-            suffix = FormulaAST.FN_SUFF;
+            suffix = Formula.FN_SUFF;
         String newRel = t + "__" + e + suffix;
         if (kb.kbCache.signatures.containsKey(newRel))
             return;
@@ -490,13 +488,13 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     private void handleMathAndComp(Map<String,Set<String>> toExtend) {
 
         if (debug) System.out.println("SUMOKBtoTFAKB.handleMathAndComp():");
-        for (String t : FormulaAST.COMPARISON_OPERATORS) {                 // EQUAL,GT,GTET,LT,LTET
+        for (String t : Formula.COMPARISON_OPERATORS) {                 // EQUAL,GT,GTET,LT,LTET
             MapUtils.addToMap(toExtend, t, "1Re2Re");
             MapUtils.addToMap(toExtend, t, "1Ra2Ra");
             MapUtils.addToMap(toExtend, t, "1In2In");
         }
-        for (String t : FormulaAST.MATH_FUNCTIONS) {  // PLUSFN,MINUSFN,TIMESFN,DIVIDEFN,FLOORFN,CEILINGFN,ROUNDFN
-            if (t.equals(FormulaAST.FLOORFN) || t.equals(FormulaAST.CEILINGFN) || t.equals(FormulaAST.ROUNDFN))
+        for (String t : Formula.MATH_FUNCTIONS) {  // PLUSFN,MINUSFN,TIMESFN,DIVIDEFN,FLOORFN,CEILINGFN,ROUNDFN
+            if (t.equals(Formula.FLOORFN) || t.equals(Formula.CEILINGFN) || t.equals(Formula.ROUNDFN))
                 MapUtils.addToMap(toExtend, t, "0In1Re");
             else {
                 MapUtils.addToMap(toExtend, t, "0Re1Re2Re");
@@ -601,7 +599,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             }
             fnSuffix = "";
             if (kb.isFunction(r))
-                fnSuffix = FormulaAST.FN_SUFF;
+                fnSuffix = Formula.FN_SUFF;
             if (hasNumericArg(r) || listOperator(r)) {
                 for (int i = 1; i <= 7; i++) {
                     inStr.append(Integer.toString(i)).append("In");
@@ -649,12 +647,12 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): bareTerm: " + bareTerm);
             if (debug) System.out.println("kb.isRelation(t) " + kb.isRelation(t));
             if (debug) System.out.println("!alreadyExtended(t): " + !alreadyExtended(t));
-            if (debug) System.out.println("!Formula.isComparisonOperator(t)): " + !FormulaAST.isComparisonOperator(t));
-            if (debug) System.out.println("!Formula.isMathFunction(t)): " + !FormulaAST.isMathFunction(t));
-            if (!Character.isLetter(t.charAt(0)) || FormulaAST.isTrueFalse(t))
+            if (debug) System.out.println("!Formula.isComparisonOperator(t)): " + !Formula.isComparisonOperator(t));
+            if (debug) System.out.println("!Formula.isMathFunction(t)): " + !Formula.isMathFunction(t));
+            if (!Character.isLetter(t.charAt(0)) || Formula.isTrueFalse(t))
                 continue;
             if (kb.isFunction(bareTerm)) {
-                if (FormulaAST.isLogicalOperator(bareTerm) || t.equals(FormulaAST.EQUAL) ) {
+                if (Formula.isLogicalOperator(bareTerm) || t.equals(Formula.EQUAL) ) {
                     continue;
                 }
                 else {
@@ -664,7 +662,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                 }
             }
             else if (kb.isRelation(bareTerm) && !alreadyExtended(t) && !bareTerm.equals("ListFn")
-                    && !FormulaAST.isComparisonOperator(bareTerm) && !FormulaAST.isMathFunction(bareTerm)) {
+                    && !Formula.isComparisonOperator(bareTerm) && !Formula.isMathFunction(bareTerm)) {
                 if (hasNumericSuperArg(bareTerm) || listOperator(bareTerm)) {
                     writeRelationSort(t, pw);
                     processRelationSort(toExtend, t);
@@ -682,8 +680,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             bareTerm = SUMOtoTFAform.getBareTerm(k);
             vals = toExtend.get(k);
             fnSuffix = "";
-            if (kb.isFunction(bareTerm) || bareTerm.endsWith(FormulaAST.FN_SUFF))  // variable arity functions with numerical suffixes not in kb yet
-                fnSuffix = FormulaAST.FN_SUFF;
+            if (kb.isFunction(bareTerm) || bareTerm.endsWith(Formula.FN_SUFF))  // variable arity functions with numerical suffixes not in kb yet
+                fnSuffix = Formula.FN_SUFF;
             for (String e : vals) {
                 kb.kbCache.extendInstance(k, e + fnSuffix);
                 sep = "__";
@@ -699,9 +697,9 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         // a first-class term (e.g. identityElement AdditionFn 0) becomes s__AdditionFn__m
         // rather than the TPTP built-in $sum__m. We must declare it.
         // Use TERM_SYMBOL_PREFIX directly — translateName() would add __m itself (no-arg path).
-        for (String mathFn : FormulaAST.MATH_FUNCTIONS) {
-            String symbol = FormulaAST.TERM_SYMBOL_PREFIX + mathFn;
-            String mentionSymbol = symbol + FormulaAST.TERM_MENTION_SUFFIX;
+        for (String mathFn : Formula.MATH_FUNCTIONS) {
+            String symbol = Formula.TERM_SYMBOL_PREFIX + mathFn;
+            String mentionSymbol = symbol + Formula.TERM_MENTION_SUFFIX;
             pw.println("tff(" + symbol + "_m,type," + mentionSymbol + " : $i ).");
         }
         pw.flush();

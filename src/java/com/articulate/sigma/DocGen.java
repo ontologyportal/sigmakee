@@ -14,7 +14,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 package com.articulate.sigma;
 
 import com.articulate.sigma.nlg.NLGUtils;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.SetUtil;
 import com.articulate.sigma.utils.StringUtil;
@@ -469,9 +469,9 @@ public class DocGen {
                 if (candidates.isEmpty()) {
                     // Next, we check for explicit
                     // ontologyNamespace statements.
-                    List<FormulaAST> formulae = kb.ask("arg", 0, "ontologyNamespace");
+                    List<Formula> formulae = kb.ask("arg", 0, "ontologyNamespace");
                     if ((formulae != null) && !formulae.isEmpty()) {
-                        for (FormulaAST f : formulae) {
+                        for (Formula f : formulae) {
                             candidates.add(f.getStringArgument(1));
                         }
                     }
@@ -754,9 +754,9 @@ public class DocGen {
                 if (kb != null) {
                     List formulae = kb.ask("arg", 0, "docGenCodeMapTranslation");
                     if (formulae != null) {
-                        FormulaAST f = null;
+                        Formula f = null;
                         for (Iterator it = formulae.iterator(); it.hasNext();) {
-                            f = (FormulaAST) it.next();
+                            f = (Formula) it.next();
                             srMap.put(StringUtil.removeEnclosingQuotes(f.getStringArgument(2)),
                                       StringUtil.removeEnclosingQuotes(f.getStringArgument(4)));
                         }
@@ -1077,7 +1077,7 @@ public class DocGen {
                                                                     ontology,
                                                                     2);
                 if (StringUtil.isNonEmptyString(flist)) {
-                    FormulaAST f = new FormulaAST();
+                    Formula f = new Formula();
                     f.read(flist);
                     if (f.listP()) {
                         List pathnameComponents = new ArrayList();
@@ -1435,7 +1435,7 @@ public class DocGen {
                 String kifList = range.get(0);
                 if (StringUtil.isNonEmptyString(kifList)) {
                     kifList = StringUtil.removeEnclosingQuotes(kifList);
-                    FormulaAST f = new FormulaAST();
+                    Formula f = new Formula();
                     f.read(kifList);
                     String term;
                     for (int i = 0; f.listP() && !f.empty(); i++) {
@@ -2541,13 +2541,13 @@ public class DocGen {
                     }
                 }
                 List formulae = null;
-                FormulaAST f = null;
+                Formula f = null;
                 for (it = p0List.iterator(); it.hasNext();) {
                     p0 = (String) it.next();
                     formulae = kb.ask("arg", 0, p0);
                     if (formulae != null) {
                         for (it2 = formulae.iterator(); it2.hasNext();) {
-                            f = (FormulaAST) it2.next();
+                            f = (Formula) it2.next();
                             p1 = f.getStringArgument(1);
                             if (requireNamespace) {
                                 namespace = getTermNamespace(kb, p1);
@@ -2693,11 +2693,11 @@ public class DocGen {
                     forms = kb.askWithRestriction(2, term, 0, "termFormat");
                 if (!forms.isEmpty()) {
                     String ctx = null;
-                    FormulaAST f = null;
+                    Formula f = null;
                     for (int i = 0; i < contexts.size(); i++) {
                         ctx = (String) contexts.get(i);
                         for (int j = 0; j < forms.size(); j++) {
-                            f = (FormulaAST) forms.get(j);
+                            f = (Formula) forms.get(j);
                             if (f.getArgument(1).equals(ctx)) {
                                 ans = f.getStringArgument(3);
                                 break;
@@ -2744,9 +2744,9 @@ public class DocGen {
             if (StringUtil.isNonEmptyString(term)) {
                 List forms = kb.askWithRestriction(1, term, 0, "documentation");
                 if ((forms != null) && !forms.isEmpty()) {
-                    FormulaAST f = null;
+                    Formula f = null;
                     if (StringUtil.isLocalTermReference(term) && (forms.size() == 1)) {
-                        f = (FormulaAST) forms.get(0);
+                        f = (Formula) forms.get(0);
                         ans = f.getStringArgument(3);
                     }
                     else {
@@ -2763,7 +2763,7 @@ public class DocGen {
                         for (Iterator itc = contexts.iterator(); itc.hasNext();) {
                             ctx = (String) itc.next();
                             for (itf = forms.iterator(); itf.hasNext();) {
-                                f = (FormulaAST) itf.next();
+                                f = (Formula) itf.next();
                                 if (f.getStringArgument(2).equals(ctx)) {
                                     ans = f.getStringArgument(3);
                                     break;
@@ -3221,10 +3221,10 @@ public class DocGen {
         if (isLegalForDisplay(term)) {
             List formulae = kb.askWithRestriction(0,"comment",1,term);
             if (formulae != null && !formulae.isEmpty()) {
-                FormulaAST f;
+                Formula f;
                 List docs = new ArrayList();
                 for (int c = 0; c < formulae.size(); c++) {
-                    f = (FormulaAST) formulae.get(c);
+                    f = (Formula) formulae.get(c);
                     docs.add(f.getArgument(3));
                 }
                 Collections.sort(docs);
@@ -3285,13 +3285,13 @@ public class DocGen {
                         String presentationName = getTermPresentationName(kb, term);
                         String basePresentationName = stripNamespacePrefix(kb, presentationName);
                         List<String> synonyms = new ArrayList<>();
-                        FormulaAST f;
+                        Formula f;
                         String syn, hwsuff = "_hw";
                         int sidx;
                         String namespace;
                         String prefix;
                         for (Iterator it = alternates.iterator(); it.hasNext();) {
-                            f = (FormulaAST) it.next();
+                            f = (Formula) it.next();
                             namespace = f.getStringArgument(1);
                             prefix = stripNamespacePrefix(kb, namespace);
                             syn = StringUtil.removeEnclosingQuotes(f.getStringArgument(3));
@@ -3656,7 +3656,7 @@ public class DocGen {
             if (StringUtil.emptyString(kbHref))
                 suffix = ".html";
             // System.out.println("4. forms == " + forms);
-            List<FormulaAST> forms = new ArrayList();
+            List<Formula> forms = new ArrayList();
             Set<String> parents = new HashSet<>();
             List<String> relations = Arrays.asList("subclass",
                                                    "subrelation",
@@ -3667,9 +3667,9 @@ public class DocGen {
                     forms.addAll(kb.askWithPredicateSubsumption(pred, 1, term));
                 }
                 String s;
-                FormulaAST f;
+                Formula f;
                 for (Iterator it = forms.iterator(); it.hasNext();) {
-                    f = (FormulaAST) it.next();
+                    f = (Formula) it.next();
                     if (!KButilities.isCacheFile(f.sourceFile)) {
                         s = f.getStringArgument(2);
                         if (isLegalForDisplay(s)) {
@@ -3760,9 +3760,9 @@ public class DocGen {
             suffix = ".html";
         StringBuilder result = new StringBuilder();
         String[] relns = {"subclass", "subrelation", "subAttribute", "subentity"};
-        List<FormulaAST> forms = new ArrayList();
+        List<Formula> forms = new ArrayList();
         if (StringUtil.isNonEmptyString(term)) {
-            List<FormulaAST> tmp;
+            List<Formula> tmp;
             for (String reln : relns) {
                 tmp = kb.askWithPredicateSubsumption(reln, 2, term);
                 if ((tmp != null) && !tmp.isEmpty()) {
@@ -3773,9 +3773,9 @@ public class DocGen {
         // System.out.println("5. forms == " + forms);
         if (forms != null && !forms.isEmpty()) {
             List kids = new ArrayList();
-            FormulaAST f;
+            Formula f;
             String s;
-            for (Iterator<FormulaAST> it = forms.iterator(); it.hasNext();) {
+            for (Iterator<Formula> it = forms.iterator(); it.hasNext();) {
                 f = it.next();
                 if (!KButilities.isCacheFile(f.sourceFile)) {
                     s = f.getStringArgument(1);
@@ -3867,10 +3867,10 @@ public class DocGen {
                 }
                 List<String> instances = new ArrayList();
                 String inst;
-                List<FormulaAST> forms;
+                List<Formula> forms;
                 for (String subent : working) {
                     forms = kb.askWithPredicateSubsumption("instance", 2, subent);
-                    for (FormulaAST f : forms) {
+                    for (Formula f : forms) {
                         if (!KButilities.isCacheFile(f.sourceFile)) {
                             inst = f.getStringArgument(1);
                             if (!excluded.contains(inst) && isLegalForDisplay(inst)) {
@@ -3990,18 +3990,18 @@ public class DocGen {
                 previousTerm = previousTerm.trim();
             if (currentTerm.matches(".*\\w+.*"))
                 currentTerm = currentTerm.trim();
-            if (FormulaAST.listP(currentTerm)) {
-                if (FormulaAST.empty(currentTerm)) {
+            if (Formula.listP(currentTerm)) {
+                if (Formula.empty(currentTerm)) {
                     sb.append(currentTerm);
                 }
                 else {
-                    FormulaAST f = new FormulaAST();
+                    Formula f = new Formula();
                     f.read(currentTerm);
                     List tuple = f.literalToArrayList();
-                    boolean isQuantifiedVarlist = FormulaAST.isQuantifier(previousTerm);
+                    boolean isQuantifiedVarlist = Formula.isQuantifier(previousTerm);
                     Iterator it = tuple.iterator();
                     while (isQuantifiedVarlist && it.hasNext()) {
-                        isQuantifiedVarlist = FormulaAST.isVariable((String) it.next());
+                        isQuantifiedVarlist = Formula.isVariable((String) it.next());
                     }
                     if (!isQuantifiedVarlist && (level > 0)) {
                         sb.append("<br>");
@@ -4029,8 +4029,8 @@ public class DocGen {
                     sb.append(")");
                 }
             }
-            else if (FormulaAST.isVariable(currentTerm)
-                     || FormulaAST.isLogicalOperator(currentTerm)
+            else if (Formula.isVariable(currentTerm)
+                     || Formula.isLogicalOperator(currentTerm)
                      || kb.isFunction(currentTerm)
                      || StringUtil.isQuotedString(currentTerm)
                      || StringUtil.isDigitString(currentTerm)) {
@@ -4121,7 +4121,7 @@ public class DocGen {
                             if (!statements.isEmpty()) {
                                 List vals = new ArrayList();
                                 for (Iterator its = statements.iterator(); its.hasNext();) {
-                                    FormulaAST f = (FormulaAST) its.next();
+                                    Formula f = (Formula) its.next();
                                     if (!KButilities.isCacheFile(f.sourceFile)) {
                                         vals.add(f.getArgument(2));
                                     }
@@ -4235,7 +4235,7 @@ public class DocGen {
             List cardForms = kb.askWithPredicateSubsumption("hasExactCardinality", 1, term);
             // kb.askWithRestriction(0,"exactCardinality",2,term);
             if (cardForms != null && !cardForms.isEmpty()) {
-                FormulaAST f = (FormulaAST) cardForms.get(0);
+                Formula f = (Formula) cardForms.get(0);
                 // if (context.equals("") || context.equals(f.getArgument(1)))
                 //     return f.getArgument(3);
                 cardVal = f.getStringArgument(2);
@@ -4246,7 +4246,7 @@ public class DocGen {
                 cardForms = kb.askWithPredicateSubsumption("hasMinCardinality", 1, term);
                 // kb.askWithRestriction(0,"minCardinality",2,term);
                 if (cardForms != null && !cardForms.isEmpty()) {
-                    FormulaAST f = (FormulaAST) cardForms.get(0);
+                    Formula f = (Formula) cardForms.get(0);
                     // if (context == "" || context.equals(f.getArgument(1)))
                     //     minCard = f.getArgument(3);
                     minCard = f.getStringArgument(2);
@@ -4254,7 +4254,7 @@ public class DocGen {
                 cardForms = kb.askWithPredicateSubsumption("hasMaxCardinality", 1, term);
                 // kb.askWithRestriction(0,"maxCardinality",2,term);
                 if (cardForms != null && !cardForms.isEmpty()) {
-                    FormulaAST f = (FormulaAST) cardForms.get(0);
+                    Formula f = (Formula) cardForms.get(0);
                     // if (context.equals("") || context.equals(f.getArgument(1)))
                     //     maxCard = f.getArgument(3);
                     maxCard = f.getStringArgument(2);
@@ -4321,7 +4321,7 @@ public class DocGen {
             List instanceForms = kb.askWithPredicateSubsumption("instance", 1, term);
             // System.out.println("1. instanceForms == " + instanceForms);
             if (instanceForms != null && !instanceForms.isEmpty()) {
-                FormulaAST f = (FormulaAST) instanceForms.get(0);
+                Formula f = (Formula) instanceForms.get(0);
                 parentClass = f.getStringArgument(2);
             }
             List termForms = null;
@@ -4332,7 +4332,7 @@ public class DocGen {
                 boolean isAttribute = isXmlAttribute(kb, term);
                 if (!isAttribute) isAttribute = isXmlAttribute(kb, parentClass);
                 for (Iterator ita = termForms.iterator(); ita.hasNext();) {
-                    FormulaAST f = (FormulaAST) ita.next();
+                    Formula f = (Formula) ita.next();
                     sb.append(indentChars("&nbsp;&nbsp;",indent));
                     String termFormat = StringUtil.removeEnclosingQuotes(f.getStringArgument(3));
                     sb.append("<a href=\"");
@@ -4650,10 +4650,10 @@ public class DocGen {
                 StringBuilder sb = new StringBuilder();
                 String suffix = (StringUtil.emptyString(kbHref) ? ".html" : "");
                 List docForms = kb.askWithRestriction(0,"documentation",1,instance);
-                FormulaAST f = null;
+                Formula f = null;
                 String context = null;
                 for (Iterator it = docForms.iterator(); it.hasNext();) {
-                    f = (FormulaAST) it.next();
+                    f = (Formula) it.next();
                     context = f.getStringArgument(2);
                     if (context.equals(containingComp)) {
                         sb.append("<tr>");
@@ -4987,7 +4987,7 @@ public class DocGen {
                                        + " statements of each type.<p>"
                                        + StringUtil.getLineSeparator());
                     for (int i = 0; i < localLimit; i++) {
-                        FormulaAST form = (FormulaAST) forms.get(i);
+                        Formula form = (Formula) forms.get(i);
                         result.append(NLGUtils.htmlParaphrase(kbHref,
                                 form.getFormula(),
                                 kb.getFormatMap(language),
@@ -5010,7 +5010,7 @@ public class DocGen {
                                    + " statements of each type.<p>"
                                    + StringUtil.getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
-                    FormulaAST form = (FormulaAST) forms.get(i);
+                    Formula form = (Formula) forms.get(i);
                     result.append(NLGUtils.htmlParaphrase(kbHref,
                             form.getFormula(),
                             kb.getFormatMap(language),
@@ -5032,7 +5032,7 @@ public class DocGen {
                                    + " statements of each type.<p>"
                                    + StringUtil.getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
-                    FormulaAST form = (FormulaAST) forms.get(i);
+                    Formula form = (Formula) forms.get(i);
                     result.append(NLGUtils.htmlParaphrase(kbHref,
                             form.getFormula(),
                             kb.getFormatMap(language),
@@ -5054,7 +5054,7 @@ public class DocGen {
                                    + " statements of each type.<p>"
                                    + StringUtil.getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
-                    FormulaAST form = (FormulaAST) forms.get(i);
+                    Formula form = (Formula) forms.get(i);
                     result.append(NLGUtils.htmlParaphrase(kbHref,
                             form.getFormula(),
                             kb.getFormatMap(language),
@@ -5076,7 +5076,7 @@ public class DocGen {
                                    + " statements of each type.<p>"
                                    + StringUtil.getLineSeparator());
                 for (int i = 0; i < localLimit; i++) {
-                    FormulaAST form = (FormulaAST) forms.get(i);
+                    Formula form = (Formula) forms.get(i);
                     result.append(NLGUtils.htmlParaphrase(kbHref,
                             form.getFormula(),
                             kb.getFormatMap(language),
@@ -5730,7 +5730,7 @@ public class DocGen {
             String term;
             String printableTerm;
             List docs;
-                FormulaAST f;
+                Formula f;
             String docStr;
             for (Iterator it = alphaList.keySet().iterator(); it.hasNext();) {
                 letter = (String) it.next();
@@ -5748,7 +5748,7 @@ public class DocGen {
                             docStr = "";
                             docs = kb.askWithRestriction(0, "documentation", 1, term);
                             if ((docs != null) && !docs.isEmpty()) {
-                                f = (FormulaAST) docs.get(0);
+                                f = (Formula) docs.get(0);
                                 docStr = processDocString(kb,
                                                           "",
                                                           language,

@@ -6,7 +6,7 @@ import java.util.*;
 
 import static junit.framework.TestCase.assertTrue;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -96,7 +96,7 @@ public class SUMOtoTFAKBTest extends IntegrationTestBase {
         SUMOtoTFAform stfa = new SUMOtoTFAform();
         // KIF formula — missingSortsExpr walks a KIF Expr tree, not a TPTP string
         String f = "(instance (ListFn__2ReFn ?ROW1 ?ROW2) Entity)";
-        FormulaAST f1 = new FormulaAST(f);
+        Formula f1 = new Formula(f);
         Set<String> result = stfa.missingSortsExpr(f1.expr);
         String expectedRes = "s__ListFn__2ReFn : (  $i * $real  ) > $i";
         String resultStr = "";

@@ -229,7 +229,7 @@ public class ClausifierExpr {
                 String rnv = scopedRenames.getOrDefault(v.name(),
                              topLevelVars.get(v.name()));
                 if (rnv == null) {
-                    rnv = FormulaAST.VX + (++varIdx[0]);
+                    rnv = Formula.VX + (++varIdx[0]);
                     topLevelVars.put(v.name(), rnv);
                 }
                 yield new Expr.Var(rnv);
@@ -238,7 +238,7 @@ public class ClausifierExpr {
                 String rnv = scopedRenames.getOrDefault(rv.name(),
                              topLevelVars.get(rv.name()));
                 if (rnv == null) {
-                    rnv = FormulaAST.RVAR + "VAR" + (++varIdx[0]);
+                    rnv = Formula.RVAR + "VAR" + (++varIdx[0]);
                     topLevelVars.put(rv.name(), rnv);
                 }
                 yield new Expr.RowVar(rnv);
@@ -256,8 +256,8 @@ public class ClausifierExpr {
                         if (old != null) {
                             boolean isRow = (v instanceof Expr.RowVar);
                             String fresh = isRow
-                                    ? FormulaAST.RVAR + "VAR" + (++varIdx[0])
-                                    : FormulaAST.VX   + (++varIdx[0]);
+                                    ? Formula.RVAR + "VAR" + (++varIdx[0])
+                                    : Formula.VX   + (++varIdx[0]);
                             childScope.put(old, fresh);
                             newVarList.add(isRow ? new Expr.RowVar(fresh) : new Expr.Var(fresh));
                         } else {
@@ -384,11 +384,11 @@ public class ClausifierExpr {
     private static Expr newSkolemTerm(Set<String> uqVars, int[] skolemIdx) {
         int idx = ++skolemIdx[0];
         if (uqVars.isEmpty())
-            return new Expr.Atom(FormulaAST.SK_PREF + idx);
+            return new Expr.Atom(Formula.SK_PREF + idx);
         List<Expr> args = uqVars.stream()
-                .map(v -> v.startsWith(FormulaAST.R_PREF) ? (Expr) new Expr.RowVar(v) : new Expr.Var(v))
+                .map(v -> v.startsWith(Formula.R_PREF) ? (Expr) new Expr.RowVar(v) : new Expr.Var(v))
                 .collect(Collectors.toList());
-        return sexpr(FormulaAST.SK_PREF + FormulaAST.FN_SUFF + idx, args);
+        return sexpr(Formula.SK_PREF + Formula.FN_SUFF + idx, args);
     }
 
     // -----------------------------------------------------------------------
@@ -548,11 +548,11 @@ public class ClausifierExpr {
                                             int[] varIdx) {
         return switch (expr) {
             case Expr.Var v -> {
-                String rnv = renames.computeIfAbsent(v.name(), k -> FormulaAST.VX + (++varIdx[0]));
+                String rnv = renames.computeIfAbsent(v.name(), k -> Formula.VX + (++varIdx[0]));
                 yield new Expr.Var(rnv);
             }
             case Expr.RowVar rv -> {
-                String rnv = renames.computeIfAbsent(rv.name(), k -> FormulaAST.RVAR + (++varIdx[0]));
+                String rnv = renames.computeIfAbsent(rv.name(), k -> Formula.RVAR + (++varIdx[0]));
                 yield new Expr.RowVar(rnv);
             }
             case Expr.SExpr se -> {
@@ -575,13 +575,13 @@ public class ClausifierExpr {
 
     /**
      * Full CNF clausification, starting from a {Formula}.
-     * If the formula is already a {@link FormulaAST} with a populated {@code expr}
+     * If the formula is already a {@link Formula} with a populated {@code expr}
      * field, the Expr is used directly; otherwise the formula string is parsed first.
      */
-    public static FormulaAST clausify(FormulaAST f) {
+    public static Formula clausify(Formula f) {
         Expr expr = exprOf(f);
         if (expr == null) return f;
-        return new FormulaAST(clausify(expr).toKifString());
+        return new Formula(clausify(expr).toKifString());
     }
 
     /**
@@ -599,7 +599,7 @@ public class ClausifierExpr {
      */
     public static String normalizeVariables(String input, boolean replaceSkolemTerms) {
         if (input == null || input.isEmpty()) return input;
-        Expr expr = exprOf(new FormulaAST(input));
+        Expr expr = exprOf(new Formula(input));
         if (expr == null) return input;
         return normalizeVariables(expr, replaceSkolemTerms).toKifString();
     }
@@ -619,7 +619,7 @@ public class ClausifierExpr {
      *       than an exception.
      * </ol>
      */
-    public static List toNegAndPosLitsWithRenameInfo(FormulaAST f) {
+    public static List toNegAndPosLitsWithRenameInfo(Formula f) {
         List ans = new ArrayList();
         Expr expr = exprOf(f);
         if (expr == null) return ans;
@@ -634,10 +634,10 @@ public class ClausifierExpr {
             clauseExprs.add(cnf);
         }
 
-        List<List<List<FormulaAST>>> newClauses = new ArrayList<>();
+        List<List<List<Formula>>> newClauses = new ArrayList<>();
         for (Expr clauseExpr : clauseExprs) {
-            List<FormulaAST> negLits = new ArrayList<>();
-            List<FormulaAST> posLits = new ArrayList<>();
+            List<Formula> negLits = new ArrayList<>();
+            List<Formula> posLits = new ArrayList<>();
 
             // Collect the literals for this clause
             List<Expr> literals = new ArrayList<>();
@@ -657,13 +657,13 @@ public class ClausifierExpr {
                     isNegLit = true;
                 }
                 String litStr = litExpr.toKifString();
-                if (FormulaAST.LOG_FALSE.equals(litStr)) isNegLit = true;
-                FormulaAST litF = new FormulaAST(litStr);
+                if (Formula.LOG_FALSE.equals(litStr)) isNegLit = true;
+                Formula litF = new Formula(litStr);
                 if (isNegLit) negLits.add(litF);
                 else          posLits.add(litF);
             }
 
-            List<List<FormulaAST>> clause = new ArrayList<>();
+            List<List<Formula>> clause = new ArrayList<>();
             clause.add(negLits);
             clause.add(posLits);
             newClauses.add(clause);
@@ -675,10 +675,10 @@ public class ClausifierExpr {
         return ans;
     }
 
-    /** Extract the {@link Expr} from a formula, parsing via {@link FormulaAST} if needed. */
-    private static Expr exprOf(FormulaAST f) {
-        if (f instanceof FormulaAST fa && fa.expr != null) return fa.expr;
-        FormulaAST parsed = new FormulaAST(f.getFormula());
+    /** Extract the {@link Expr} from a formula, parsing via {@link Formula} if needed. */
+    private static Expr exprOf(Formula f) {
+        if (f instanceof Formula fa && fa.expr != null) return fa.expr;
+        Formula parsed = new Formula(f.getFormula());
         return parsed.expr;
     }
 
@@ -713,23 +713,23 @@ public class ClausifierExpr {
                                               boolean replaceSkolemTerms) {
         return switch (expr) {
             case Expr.Var v -> {
-                String nv = vmap.computeIfAbsent(v.name(), k -> FormulaAST.VVAR + (idxs[0]++));
+                String nv = vmap.computeIfAbsent(v.name(), k -> Formula.VVAR + (idxs[0]++));
                 yield new Expr.Var(nv);
             }
             case Expr.RowVar rv -> {
-                String nv = vmap.computeIfAbsent(rv.name(), k -> FormulaAST.RVAR + "VAR" + (idxs[1]++));
+                String nv = vmap.computeIfAbsent(rv.name(), k -> Formula.RVAR + "VAR" + (idxs[1]++));
                 yield new Expr.RowVar(nv);
             }
-            case Expr.Atom a when replaceSkolemTerms && FormulaAST.isSkolemTerm(a.name()) -> {
-                String nv = vmap.computeIfAbsent(a.name(), k -> FormulaAST.VVAR + (idxs[0]++));
+            case Expr.Atom a when replaceSkolemTerms && Formula.isSkolemTerm(a.name()) -> {
+                String nv = vmap.computeIfAbsent(a.name(), k -> Formula.VVAR + (idxs[0]++));
                 yield new Expr.Var(nv);
             }
             case Expr.SExpr se when replaceSkolemTerms
                     && se.head() instanceof Expr.Atom ha
-                    && FormulaAST.isSkolemTerm(ha.name()) -> {
+                    && Formula.isSkolemTerm(ha.name()) -> {
                 // Skolem function term: treat the whole term as a variable
                 String key = se.toKifString();
-                String nv  = vmap.computeIfAbsent(key, k -> FormulaAST.VVAR + (idxs[0]++));
+                String nv  = vmap.computeIfAbsent(key, k -> Formula.VVAR + (idxs[0]++));
                 yield new Expr.Var(nv);
             }
             case Expr.SExpr se -> {

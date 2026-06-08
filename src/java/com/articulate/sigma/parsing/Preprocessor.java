@@ -34,14 +34,14 @@ public class Preprocessor {
 
     /** ***************************************************************
      */
-    public Collection<FormulaAST> preprocess(Set<FormulaAST> rowvar,
-                                            Set<FormulaAST> predvar,
-                                            Set<FormulaAST> rules) { // includes rowvar and predvar
+    public Collection<Formula> preprocess(Set<Formula> rowvar,
+                                          Set<Formula> predvar,
+                                          Set<Formula> rules) { // includes rowvar and predvar
 
         System.out.println("Preprocessor.preprocess()");
         long start = System.currentTimeMillis();
         if (debug) System.out.println("Preprocessor.preprocess() # rules: " + rules.size());
-        Set<FormulaAST> mismatch = new HashSet<>();
+        Set<Formula> mismatch = new HashSet<>();
         mismatch.addAll(predvar);
         mismatch.removeAll(rowvar);
         if (!mismatch.isEmpty()) {
@@ -67,7 +67,7 @@ public class Preprocessor {
         start = System.currentTimeMillis();
 
         Sortals sortals = new Sortals(kb);
-        for (FormulaAST f : rules)
+        for (Formula f : rules)
             if (!f.higherOrder && !f.containsNumber)
                 sortals.elimSubsumedTypes(f);
         end = (System.currentTimeMillis()-start)/1000;
@@ -75,27 +75,27 @@ public class Preprocessor {
         start = System.currentTimeMillis();
 
         PredVarInst pvi = new PredVarInst(kb);
-        Set<FormulaAST> pviResults = pvi.processAll(predvar);
+        Set<Formula> pviResults = pvi.processAll(predvar);
         end = (System.currentTimeMillis()-start)/1000;
         System.out.println("# Preprocessor.preprocess(): # time to instantiate pred vars: " + end);
         start = System.currentTimeMillis();
 
         RowVar rv = new RowVar(kb);
-        Set<FormulaAST> rvResults = rv.expandRowVar(pviResults);
+        Set<Formula> rvResults = rv.expandRowVar(pviResults);
         end = (System.currentTimeMillis()-start)/1000;
         System.out.println("# Preprocessor.preprocess(): # time to expand row vars: " + end);
         start = System.currentTimeMillis();
 
         if (debug) {
-            for (FormulaAST r : rvResults) {
-                if (r.getFormula().contains(FormulaAST.R_PREF))
+            for (Formula r : rvResults) {
+                if (r.getFormula().contains(Formula.R_PREF))
                     System.err.println("Error in Preprocessor.preprocess(): rvresults contains rowvar: " + r);
             }
         }
-        Set<FormulaAST> newRules = new HashSet<>();
-        for (FormulaAST r : rules) {
+        Set<Formula> newRules = new HashSet<>();
+        for (Formula r : rules) {
             if (!rowvar.contains(r) && !predvar.contains(r) && !r.higherOrder && !r.containsNumber) { // only add rules without pred and row vars
-                if (r.getFormula().contains(FormulaAST.R_PREF))
+                if (r.getFormula().contains(Formula.R_PREF))
                     System.err.println("Error in Preprocessor.preprocess(): contains rowvar: " + r);
                 else
                     newRules.add(r);
@@ -103,7 +103,7 @@ public class Preprocessor {
         }
         // newRules.addAll(pviResults); // now add the new rules expanded from pred vars <- should not be needed
         newRules.addAll(rvResults); // now add the new rules expanded from row vars
-        List<FormulaAST> finalRuleSet = new ArrayList<>();
+        List<Formula> finalRuleSet = new ArrayList<>();
         if (debug)
             System.out.println("Preprocessor.preprocess(): before reparse");
         newRules = reparse(newRules);
@@ -115,7 +115,7 @@ public class Preprocessor {
             System.out.println("Preprocessor.preprocess(): after reparse");
         long crossStart, sortalStart, reparseStart, addallStart;
         SuokifVisitor visitor;
-        for (FormulaAST r : newRules) {
+        for (Formula r : newRules) {
             if (r.higherOrder || r.containsNumber) continue;
             crossStart = System.currentTimeMillis();
             if (debug) System.out.println("Preprocessor.preprocess(): add sortals to r: " + r);
@@ -123,7 +123,7 @@ public class Preprocessor {
             sortals.addSortals(r);
             sortalTimes = sortalTimes + (System.currentTimeMillis()-sortalStart);
             if (debug) System.out.println("Preprocessor.preprocess(): result adding sortals to r: " + r);
-            if (r.getFormula().contains(FormulaAST.R_PREF))
+            if (r.getFormula().contains(Formula.R_PREF))
                 System.err.println("Error in Preprocessor.preprocess(): before reparsing, contains rowvar: " + r);
             else {
                 reparseStart = System.currentTimeMillis();
@@ -144,8 +144,8 @@ public class Preprocessor {
         System.out.println("# Preprocessor.preprocess(): # of which, " + addallTimes + " ms was addall");
         System.out.println("# Preprocessor.preprocess(): # of which, " + crossCheck + " ms cross-check");
         start = System.currentTimeMillis();
-        Map<String,FormulaAST> res = new HashMap<>();
-        for (FormulaAST f : finalRuleSet)
+        Map<String, Formula> res = new HashMap<>();
+        for (Formula f : finalRuleSet)
             res.put(f.getFormula(),f);
         end = (System.currentTimeMillis()-start)/1000;
         System.out.println("# Preprocessor.preprocess(): time to remove duplicates: " + end);
@@ -156,14 +156,14 @@ public class Preprocessor {
      * After preprocessing, parse the new formula string in order to
      * set the caches correctly
      */
-    public Set<FormulaAST> reparse(Collection<FormulaAST> rules) {
+    public Set<Formula> reparse(Collection<Formula> rules) {
 
         if (debug) System.out.println("Preprocessor.reparse()");
-        Set<FormulaAST> result = new HashSet<>();
+        Set<Formula> result = new HashSet<>();
         SuokifVisitor visitor;
-        for (FormulaAST f : rules) {
+        for (Formula f : rules) {
             if (f.higherOrder) continue;
-            if (f.getFormula().contains(FormulaAST.R_PREF)) {
+            if (f.getFormula().contains(Formula.R_PREF)) {
                 System.err.println("Error in Preprocessor.reparse(): Shouldn't have row variable after preprocessing: " + f);
                 continue;
             }

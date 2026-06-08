@@ -1,17 +1,16 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.KB;
 import org.junit.Test;
-import java.util.Collections;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import static org.junit.Assert.*;
 
-public class FormulaASTTest {
+public class FormulaTest {
 
-    private FormulaAST parse(String input) {
+    private Formula parse(String input) {
         SuokifVisitor visitor = SuokifVisitor.parseSentence(input);
         return visitor.result.get(0);
     }
@@ -19,18 +18,18 @@ public class FormulaASTTest {
     @Test
     public void testFunctionalTerm() {
         // False case — predicate, not a function application
-        FormulaAST faInst = parse("(instance John Human)");
+        Formula faInst = parse("(instance John Human)");
         assertFalse(faInst.isFunctionalTerm());
 
         // True case — construct FormulaAST directly with an Expr whose head ends with "Fn"
-        FormulaAST faFn = new FormulaAST();
+        Formula faFn = new Formula();
         faFn.setFormula("(AdditionFn 1 2)");
         faFn.expr = new Expr.SExpr(
                 new Expr.Atom("AdditionFn"),
                 List.of(new Expr.NumLiteral("1"), new Expr.NumLiteral("2")));
         assertTrue(faFn.isFunctionalTerm());
 
-        FormulaAST faFn2 = new FormulaAST();
+        Formula faFn2 = new Formula();
         faFn2.setFormula("(MultiplicationFn 3 4)");
         faFn2.expr = new Expr.SExpr(
                 new Expr.Atom("MultiplicationFn"),
@@ -41,12 +40,12 @@ public class FormulaASTTest {
     @Test
     public void testTransformation() {
         String s = "(instance ?X ?Y)";
-        FormulaAST fa = parse(s);
+        Formula fa = parse(s);
         Map<String, String> m = new HashMap<>();
         m.put("?X", "John");
         m.put("?Y", "Human");
 
-        FormulaAST faSub = fa.substituteVariables(m);
+        Formula faSub = fa.substituteVariables(m);
         assertEquals("(instance John Human)", faSub.getFormula());
         assertNotNull(faSub.expr);
 
@@ -55,7 +54,7 @@ public class FormulaASTTest {
         assertTrue(faSub.collectAllVariables().isEmpty());
 
         // replaceVar — replaces one variable, leaves the other
-        FormulaAST faRep = fa.replaceVar("?X", "Mary");
+        Formula faRep = fa.replaceVar("?X", "Mary");
         assertEquals("(instance Mary ?Y)", faRep.getFormula());
 
         // "Mary" is a constant — only ?Y should remain as a variable
@@ -68,15 +67,15 @@ public class FormulaASTTest {
     // substituteVariables must infer the correct Expr node type from the replacement string.
     @Test
     public void testSubstitutionExprTypes() {
-        FormulaAST fa = parse("(loves ?X ?Y)");
+        Formula fa = parse("(loves ?X ?Y)");
 
         // Var → Atom (constant replacement)
-        FormulaAST sub1 = fa.substituteVariables(Map.of("?X", "John", "?Y", "Mary"));
+        Formula sub1 = fa.substituteVariables(Map.of("?X", "John", "?Y", "Mary"));
         assertTrue(sub1.isGround());
         assertTrue(sub1.collectAllVariables().isEmpty());
 
         // Var → Var (rename)
-        FormulaAST sub2 = fa.substituteVariables(Map.of("?X", "?Z"));
+        Formula sub2 = fa.substituteVariables(Map.of("?X", "?Z"));
         assertFalse(sub2.isGround());
         Set<String> vars2 = sub2.collectAllVariables();
         assertTrue(vars2.contains("?Z"));
@@ -84,7 +83,7 @@ public class FormulaASTTest {
         assertTrue(vars2.contains("?Y"));  // untouched var remains
 
         // Var → RowVar
-        FormulaAST sub3 = fa.substituteVariables(Map.of("?X", "@ROW"));
+        Formula sub3 = fa.substituteVariables(Map.of("?X", "@ROW"));
         Set<String> vars3 = sub3.collectAllVariables();
         assertTrue(vars3.contains("@ROW"));
         assertFalse(vars3.contains("?X"));
@@ -95,9 +94,9 @@ public class FormulaASTTest {
     public void testRowVariablesInCollection() {
         // Build a FormulaAST with a RowVar in the Expr tree directly,
         // since formulas with @ROW in argument position are preprocessed.
-        FormulaAST fa = parse("(instance ?X Human)");
+        Formula fa = parse("(instance ?X Human)");
         // Inject @ROW via substituteVariables to get a known Expr tree
-        FormulaAST faRow = fa.substituteVariables(Map.of("?X", "@ROW"));
+        Formula faRow = fa.substituteVariables(Map.of("?X", "@ROW"));
 
         Set<String> vars = faRow.collectAllVariables();
         assertTrue(vars.contains("@ROW"));

@@ -3,7 +3,7 @@ package com.articulate.sigma.tp;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.KButilities;
 import com.articulate.sigma.SimpleElement;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.StringUtil;
 
@@ -20,8 +20,8 @@ public class GenPropFormulas {
     public static final String NOT = "~";
     public static final String OR = "|";
     public static final String AND = "&";
-    public static final String IMPLIES = FormulaAST.IF;
-    public static final String IFF = FormulaAST.IFF;
+    public static final String IMPLIES = Formula.IF;
+    public static final String IFF = Formula.IFF;
     public static final String PARENS = "()"; // they go around a formula
 
     public static boolean debug = false;
@@ -104,7 +104,7 @@ public class GenPropFormulas {
         if (atom != null)
             return atom;
         if (operator == null ? PARENS == null : operator.equals(PARENS))
-            return FormulaAST.LP + f1.toString() + FormulaAST.RP;
+            return Formula.LP + f1.toString() + Formula.RP;
         if (operator == null ? NOT == null : operator.equals(NOT))
             return NOT + f1.toString();
         return f1.toString() + operator + f2.toString();
@@ -132,7 +132,7 @@ public class GenPropFormulas {
             for (String l : literals)
                 newclause.add(l);
             String newClauseStr = newclause.toString().replace(",","|");
-            newclauseset.add(FormulaAST.LP + StringUtil.removeEnclosingCharPair(newClauseStr,1,'[',']') + FormulaAST.RP);
+            newclauseset.add(Formula.LP + StringUtil.removeEnclosingCharPair(newClauseStr,1,'[',']') + Formula.RP);
         }
         System.out.println("simplifyCNF(): after: " + newclauseset);
         return StringUtil.removeEnclosingCharPair(newclauseset.toString(),1,'[',']');
@@ -158,7 +158,7 @@ public class GenPropFormulas {
                 int thirdComma = s.indexOf(",",secondComma+1);
                 if (thirdComma > -1)
                     end = thirdComma;
-                String firstParam = s.substring(s.indexOf(FormulaAST.LP)+1,firstComma).trim();
+                String firstParam = s.substring(s.indexOf(Formula.LP)+1,firstComma).trim();
                 String secondParam = s.substring(firstComma+1,secondComma).trim();
                 //System.out.println("formatCNF(): firstParam: " + firstParam);
                 //System.out.println("formatCNF(): secondParam: " + secondParam);
@@ -485,7 +485,7 @@ private static void cleanupTempProbFiles() {
 
         StringBuilder sb = new StringBuilder();
         for (String s : input)
-            sb.append(s).append(FormulaAST.SPACE);
+            sb.append(s).append(Formula.SPACE);
         return sb.toString();
     }
 
@@ -496,8 +496,8 @@ private static void cleanupTempProbFiles() {
      */
     public static String encodeTT(String s) {
 
-        String result = s.replace(FormulaAST.IFF,"<->");
-        result = result.replace(FormulaAST.IF,"->");
+        String result = s.replace(Formula.IFF,"<->");
+        result = result.replace(Formula.IF,"->");
         result = URLEncoder.encode(result, Charset.defaultCharset());
         return "https://www.emathhelp.net/calculators/discrete-mathematics/truth-table-calculator/?f=" + result;
     }
@@ -511,8 +511,8 @@ private static void cleanupTempProbFiles() {
         String result = s.replace("~","¬");
         result = result.replace("|","∨");
         result = result.replace("&","∧");
-        result = result.replace(FormulaAST.IFF,"↔");
-        result = result.replace(FormulaAST.IF,"→");
+        result = result.replace(Formula.IFF,"↔");
+        result = result.replace(Formula.IF,"→");
         result = URLEncoder.encode(result,Charset.defaultCharset());
         return "https://mathlogic.lv/tableau.html?f=" + result;
      }
@@ -585,7 +585,7 @@ private static void cleanupTempProbFiles() {
             SZSonto result = run(stmts,filename);
             HashSet<String> negstmts = new HashSet<>();
             String negWrappedForm = "fof(conj,axiom,~(" + form + ")).";
-            String negForm = "~(" + form + FormulaAST.RP;
+            String negForm = "~(" + form + Formula.RP;
             System.out.println("generateFormulas(): neg form: " + negForm);
             System.out.println("generateFormulas(): neg wrapped: " + negWrappedForm);
             negstmts.add(negWrappedForm);

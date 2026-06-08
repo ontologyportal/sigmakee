@@ -2,8 +2,8 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.UnitTestBase;
 import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.parsing.SuokifVisitor;
-import com.articulate.sigma.parsing.FormulaAST;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -37,7 +37,7 @@ public class SUMOtoTFAformExprTest extends UnitTestBase {
         SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
         assertNotNull("visitor.result null for: " + kif, visitor.result);
         assertFalse("visitor.result empty for: " + kif, visitor.result.isEmpty());
-        FormulaAST ast = visitor.result.get(0);
+        Formula ast = visitor.result.get(0);
         assertNotNull("FormulaAST null for: " + kif, ast);
         assertNotNull("expr null for: " + kif, ast.expr);
         return ast.expr;

@@ -1,6 +1,6 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.tp.EProver;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
@@ -75,9 +75,9 @@ public class ProofProcessor {
                 variableBinding = binding.subelements.get(j);
                 variable = variableBinding.attributes.get("name");
                 value = variableBinding.attributes.get("value");
-                result = result.append(FormulaAST.LP).append(variable).append(FormulaAST.SPACE).append(value).append(FormulaAST.RP);
+                result = result.append(Formula.LP).append(variable).append(Formula.SPACE).append(value).append(Formula.RP);
                 if (j < binding.subelements.size()-1)
-                    result = result.append(FormulaAST.SPACE);
+                    result = result.append(Formula.SPACE);
             }
     	}
     	return result.toString().equalsIgnoreCase(expectedAnswer);
@@ -92,9 +92,9 @@ public class ProofProcessor {
      */
     public static List<String> returnSkolemStmt(String skolem, List<TPTPFormula> proofSteps) {
 
-    	if (skolem.startsWith(FormulaAST.LP) && skolem.endsWith(FormulaAST.RP))
+    	if (skolem.startsWith(Formula.LP) && skolem.endsWith(Formula.RP))
     		skolem = skolem.substring(1, skolem.length()-1);
-    	skolem = skolem.split(FormulaAST.SPACE)[0];
+    	skolem = skolem.split(Formula.SPACE)[0];
     	Pattern pattern = Pattern.compile("(\\([^\\(|.]*?\\(" + skolem + " .+?\\).*?\\)|\\([^\\(|.]*?" + skolem + "[^\\)|.]*?\\))");
     	Matcher match;
 
@@ -118,7 +118,7 @@ public class ProofProcessor {
     /** ***************************************************************
      * if the answer clause is found, return null
      */
-    private static FormulaAST removeNestedAnswerClauseRecurse(FormulaAST f) {
+    private static Formula removeNestedAnswerClauseRecurse(Formula f) {
 
     	if (StringUtil.emptyString(f.getFormula().trim()))
     		return null;
@@ -127,46 +127,46 @@ public class ProofProcessor {
     	String relation = f.car();
     	if (relation.equals("answer"))
     		return null;
-    	if (relation.equals(FormulaAST.NOT)) {
-            FormulaAST fcdar = f.cdrAsFormula().carAsFormula();
+    	if (relation.equals(Formula.NOT)) {
+            Formula fcdar = f.cdrAsFormula().carAsFormula();
             if (fcdar == null) {
                 System.err.println("Error in ProofProcessor.removeNestedAnswerClauseRecurse(): bad arg to not: '" + f.getFormula() + "'");
                 return null;
             }
-            FormulaAST fnew = removeNestedAnswerClauseRecurse(fcdar);
+            Formula fnew = removeNestedAnswerClauseRecurse(fcdar);
             if (fnew == null)
                 return null;
             else {
-                FormulaAST result = new FormulaAST();
-                result.read(FormulaAST.LP + FormulaAST.NOT + FormulaAST.SPACE + fnew.getFormula() + FormulaAST.RP);
+                Formula result = new Formula();
+                result.read(Formula.LP + Formula.NOT + Formula.SPACE + fnew.getFormula() + Formula.RP);
                 return result;
             }
     	}
     	boolean connective = false;
-    	if (relation.equals(FormulaAST.OR) || relation.equals(FormulaAST.XOR) || relation.equals(FormulaAST.AND))
+    	if (relation.equals(Formula.OR) || relation.equals(Formula.XOR) || relation.equals(Formula.AND))
             connective = true;
     	int arg = 1;
     	boolean foundAnswer = false;
     	String strArgs = "";
-        FormulaAST argForm, argRes;
+        Formula argForm, argRes;
     	while (!StringUtil.emptyString(f.getArgument(arg))) {
-            argForm = new FormulaAST();
+            argForm = new Formula();
             argForm.setFormula(f.getStringArgument(arg));
             argRes = removeNestedAnswerClauseRecurse(argForm);
             if (argRes == null)
                     foundAnswer = true;
             else {
                 if (arg > 1)
-                        strArgs = strArgs + FormulaAST.SPACE;
+                        strArgs = strArgs + Formula.SPACE;
                 strArgs = strArgs + argRes.getFormula();
             }
             arg = arg + 1;
     	}
-        FormulaAST result = new FormulaAST();
+        Formula result = new Formula();
     	if (connective && foundAnswer && arg < 4)
             result.read(strArgs);
     	else
-            result.read(FormulaAST.LP + relation + FormulaAST.SPACE + strArgs + FormulaAST.RP);
+            result.read(Formula.LP + relation + Formula.SPACE + strArgs + Formula.RP);
     	return result;
     }
 
@@ -179,11 +179,11 @@ public class ProofProcessor {
     	if (st == null || !st.contains("answer"))
     		return st;
     	// clean the substring with "answer" in it
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
     	f.read(st);
 
 		// if there are no nested answers, return the original one
-        FormulaAST removeNestedAnswerFormula = removeNestedAnswerClauseRecurse(f);
+        Formula removeNestedAnswerFormula = removeNestedAnswerClauseRecurse(f);
 		if (removeNestedAnswerFormula == null)
 			return st;
     	return removeNestedAnswerFormula.getFormula();
@@ -326,10 +326,10 @@ public class ProofProcessor {
     		  String stmt = "(subclass ?X Entity)";
 			  EProver eprover = new EProver(kb, "tptp", 30, 3);
 			  eprover.askEProver(stmt);
-    		  String result = eprover.toString() + FormulaAST.SPACE;
+    		  String result = eprover.toString() + Formula.SPACE;
                   TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
                   StringBuilder qlist = new StringBuilder();
-                  qlist.append(FormulaAST.VX);
+                  qlist.append(Formula.VX);
                   tpp.parseProofOutput(result,kb);
     		  result = HTMLformatter.formatTPTP3ProofResult(tpp,stmt,"<hr>\n",
 					  KBmanager.getMgr().getPref("sumokbname"),"EnglishLanguage");

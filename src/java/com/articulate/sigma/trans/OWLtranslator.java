@@ -10,7 +10,7 @@ import java.io.Reader;
 import java.io.Writer;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
@@ -179,13 +179,13 @@ public class OWLtranslator {
         while (it.hasNext()) {
             String functionTerm = (String) it.next();
             String term = (String) functionTable.get(functionTerm);
-            FormulaAST f = new FormulaAST();
+            Formula f = new Formula();
             f.read(functionTerm);
             String func = f.getStringArgument(0);
             List ranges = kb.askWithRestriction(0,"range",1,func);
             String range;
             if (!ranges.isEmpty()) {
-                FormulaAST f2 = (FormulaAST) ranges.get(0);
+                Formula f2 = (Formula) ranges.get(0);
                 range = f2.getStringArgument(2);
                 pw.println("<owl:Thing rdf:about=\"#" + term + "\">");
                 pw.println("  <rdf:type rdf:resource=\"" + (range.equals("Entity") ? "&owl;Thing" : "#" + range) + "\"/>");
@@ -199,7 +199,7 @@ public class OWLtranslator {
             else {
                 List subranges = kb.askWithRestriction(0,"rangeSubclass",1,functionTerm);
                 if (!subranges.isEmpty()) {
-                    FormulaAST f2 = (FormulaAST) subranges.get(0);
+                    Formula f2 = (Formula) subranges.get(0);
                     range = f2.getStringArgument(2);
                     pw.println("<owl:Class rdf:about=\"#" + term + "\">");
                     pw.println("  <rdfs:subClassOf rdf:resource=\"" + (range.equals("Entity") ? "&owl;Thing" : "#" + range) + "\"/>");
@@ -502,7 +502,7 @@ public class OWLtranslator {
         List al = kb.askWithRestriction(0,"termFormat",2,term);
         if (!al.isEmpty()) {
             for (int i = 0; i < al.size(); i++) {
-                FormulaAST form = (FormulaAST) al.get(i);
+                Formula form = (Formula) al.get(i);
                 String lang = form.getStringArgument(1);
                 if (lang.equals("EnglishLanguage"))
                     lang = "en";
@@ -520,7 +520,7 @@ public class OWLtranslator {
         List syn = kb.askWithRestriction(0,"synonymousExternalConcept",2,term);
         if (!syn.isEmpty()) {
             for (int i = 0; i < syn.size(); i++) {
-                FormulaAST form = (FormulaAST) syn.get(i);
+                Formula form = (Formula) syn.get(i);
                 String st = form.getStringArgument(1);
                 st = StringUtil.stringToKIFid(st);
                 String lang = form.getStringArgument(3);
@@ -547,13 +547,13 @@ public class OWLtranslator {
 
         List al = kb.ask("ant",0,term);
         for (int i = 0; i < al.size(); i++) {
-            FormulaAST f = (FormulaAST) al.get(i);
+            Formula f = (Formula) al.get(i);
             String st = f.createID();
             pw.println("  <kbd:axiom rdf:resource=\"#axiom-" + st + "\"/>");
         }
         al = kb.ask("cons",0,term);
         for (int i = 0; i < al.size(); i++) {
-            FormulaAST f = (FormulaAST) al.get(i);
+            Formula f = (Formula) al.get(i);
             String st = f.createID();
             pw.println("  <kbd:axiom rdf:resource=\"#axiom-" + st + "\"/>");
         }
@@ -597,10 +597,10 @@ public class OWLtranslator {
      */
     private void createAxiomMap() {
 
-        axiomMap = new TreeMap<String,FormulaAST>();
+        axiomMap = new TreeMap<String, Formula>();
         Iterator it = kb.formulaMap.values().iterator();
         while (it.hasNext()) {
-            FormulaAST f = (FormulaAST) it.next();
+            Formula f = (Formula) it.next();
             if (f.isRule()) {
                 axiomMap.put("axiom-" + f.createID(),f);
                 //System.out.println("INFO in OWLtranslator.createAxiomMap(): key: " + "axiom-" + f.createID());
@@ -612,14 +612,14 @@ public class OWLtranslator {
      */
     private void writeAxioms(PrintWriter pw) {
 
-        Set<FormulaAST> ts = new TreeSet();
+        Set<Formula> ts = new TreeSet();
         ts.addAll(kb.formulaMap.values());
         String form;
-        for (FormulaAST f : ts) {
+        for (Formula f : ts) {
             if (f.isRule()) {
                 form = f.toString();
-                form = form.replaceAll(FormulaAST.IFF,"iff");
-                form = form.replaceAll(FormulaAST.IF,"implies");
+                form = form.replaceAll(Formula.IFF,"iff");
+                form = form.replaceAll(Formula.IF,"implies");
                 form = processDoc(form);
                 pw.println("<owl:Thing rdf:about=\"#axiom-" + f.createID() + "\">");
                 pw.println("  <rdfs:comment xml:lang=\"en\">A SUO-KIF axiom that may not be directly expressible in OWL. " +
@@ -635,11 +635,11 @@ public class OWLtranslator {
     private void writeOneAxiom(PrintWriter pw, String id) {
 
         //System.out.println("INFO in OWLtranslator.writeOneAxiom(): write axiom ID: " + id);
-        FormulaAST f = (FormulaAST) axiomMap.get(id);
+        Formula f = (Formula) axiomMap.get(id);
         if (f != null && f.isRule()) {
             String form = f.toString();
-            form = form.replaceAll(FormulaAST.IFF,"iff");
-            form = form.replaceAll(FormulaAST.IF,"implies");
+            form = form.replaceAll(Formula.IFF,"iff");
+            form = form.replaceAll(Formula.IF,"implies");
             form = processDoc(form);
             pw.println("<owl:Thing rdf:about=\"#" + id + "\">");
             pw.println("  <rdfs:comment xml:lang=\"en\">A SUO-KIF axiom that may not be directly expressible in OWL. " +
@@ -658,7 +658,7 @@ public class OWLtranslator {
         List doc = kb.askWithRestriction(0,"documentation",1,term);    // Class expressions for term.
         if (!doc.isEmpty()) {
             for (int i = 0; i < doc.size(); i++) {
-                FormulaAST form = (FormulaAST) doc.get(i);
+                Formula form = (Formula) doc.get(i);
                 String lang = form.getStringArgument(2);
                 String documentation = form.getStringArgument(3);
                 String langString = "";
@@ -701,38 +701,38 @@ public class OWLtranslator {
 
         if (!argTypes.isEmpty()) {
             for (int i = 0; i < argTypes.size(); i++) {
-                FormulaAST form = (FormulaAST) argTypes.get(i);
+                Formula form = (Formula) argTypes.get(i);
                 if (form.isCached())
                     continue;
                 String arg = form.getStringArgument(2);
                 String argType = form.getStringArgument(3);
-                if (arg.equals("1") && FormulaAST.atom(argType))
+                if (arg.equals("1") && Formula.atom(argType))
                     pw.println("  <rdfs:domain rdf:resource=\"" + (argType.equals("Entity") ? "&owl;Thing" : "#" + argType) + "\" />");
-                if (arg.equals("2") && FormulaAST.atom(argType))
+                if (arg.equals("2") && Formula.atom(argType))
                     pw.println("  <rdfs:range rdf:resource=\"" + (argType.equals("Entity") ? "&owl;Thing" : "#" + argType) + "\" />");
             }
         }
 
         List ranges = kb.askWithRestriction(0,"range",1,term);  // domain expressions for term.
         if (ranges.size() > 0) {
-            FormulaAST form = (FormulaAST) ranges.get(0);
+            Formula form = (Formula) ranges.get(0);
             String argType = form.getStringArgument(2);
-            if (FormulaAST.atom(argType) && !form.isCached())
+            if (Formula.atom(argType) && !form.isCached())
                 pw.println("  <rdfs:range rdf:resource=\"" + (argType.equals("Entity") ? "&owl;Thing" : "#" + argType) + "\" />");
         }
 
         List inverses = kb.askWithRestriction(0,"inverse",1,term);  // inverse expressions for term.
         if (!inverses.isEmpty()) {
-            FormulaAST form = (FormulaAST) inverses.get(0);
+            Formula form = (Formula) inverses.get(0);
             String arg = form.getStringArgument(2);
-            if (FormulaAST.atom(arg) && !form.isCached())
+            if (Formula.atom(arg) && !form.isCached())
                 pw.println("  <owl:inverseOf rdf:resource=\"" + (arg.equals("Entity") ? "&owl;Thing" : "#" + arg) + "\" />");
         }
 
         List subs = kb.askWithRestriction(0,"subrelation",1,term);  // subrelation expressions for term.
         if (!subs.isEmpty()) {
             for (int i = 0; i < subs.size(); i++) {
-                FormulaAST form = (FormulaAST) subs.get(i);
+                Formula form = (Formula) subs.get(i);
                 String superProp = form.getStringArgument(2);
                 if (!form.isCached())
                     pw.println("  <owl:subPropertyOf rdf:resource=\"" + (superProp.equals("Entity") ? "&owl;Thing" : "#" + superProp) + "\" />");
@@ -756,15 +756,15 @@ public class OWLtranslator {
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         pw.println("  <rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/" + kbName + ".owl\"/>");
         for (int i = 0; i < instances.size(); i++) {
-            FormulaAST form = (FormulaAST) instances.get(i);
+            Formula form = (Formula) instances.get(i);
             String parent = form.getStringArgument(2);
-            if (FormulaAST.atom(parent))
+            if (Formula.atom(parent))
                 pw.println("  <rdf:type rdf:resource=\"" + (parent.equals("Entity") ? "&owl;Thing" : "#" + parent) + "\"/>");
         }
         writeDocumentation(pw,term);
         List statements = kb.ask("arg",1,term);
         for (int i = 0; i < statements.size(); i++) {
-            FormulaAST form = (FormulaAST) statements.get(i);
+            Formula form = (Formula) statements.get(i);
             String rel = form.getStringArgument(0);
             if (!rel.equals("instance") && !rel.equals("subclass") &&
                !rel.equals("documentation") &&
@@ -774,7 +774,7 @@ public class OWLtranslator {
                     System.out.println("Error in OWLtranslator.writeInstance(): missing range in statement: " + form);
                     continue;
                 }
-                if (FormulaAST.listP(range))
+                if (Formula.listP(range))
                     range = instantiateFunction(range);
                 if (range.charAt(0) == '"' && range.charAt(range.length()-1) == '"') {
                     range = removeQuotes(range);
@@ -815,21 +815,21 @@ public class OWLtranslator {
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         pw.println("  <rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/" + kbName + ".owl\"/>");
         for (int i = 0; i < classes.size(); i++) {
-            FormulaAST form = (FormulaAST) classes.get(i);
+            Formula form = (Formula) classes.get(i);
             String parent = form.getStringArgument(2);
-            if (FormulaAST.atom(parent))
+            if (Formula.atom(parent))
                 pw.println("  <rdfs:subClassOf rdf:resource=\"" + (parent.equals("Entity") ? "&owl;Thing" : "#" + parent) + "\"/>");
         }
         writeDocumentation(pw,term);
         List statements = kb.ask("arg",1,term);
         for (int i = 0; i < statements.size(); i++) {
-             FormulaAST form = (FormulaAST) statements.get(i);
+             Formula form = (Formula) statements.get(i);
              String rel = form.getStringArgument(0);
              if (!rel.equals("instance") && !rel.equals("subclass") &&
                 !rel.equals("documentation") &&
                 !rel.equals("subrelation") && kb.childOf(rel,"BinaryRelation")) {
                  String range = form.getStringArgument(2);
-                 if (FormulaAST.listP(range))
+                 if (Formula.listP(range))
                      range = instantiateFunction(range);
                  if (rel.equals("disjoint"))
                      pw.println("  <owl:disjointWith rdf:resource=\"" + (range.equals("Entity") ? "&owl;Thing" : "#" + range) + "\" />");
@@ -856,7 +856,7 @@ public class OWLtranslator {
         List syn = kb.askWithRestriction(0,"synonymousExternalConcept",2,term);
         if (!syn.isEmpty()) {
             for (int i = 0; i < syn.size(); i++) {
-                FormulaAST form = (FormulaAST) syn.get(i);
+                Formula form = (Formula) syn.get(i);
                 String st = form.getStringArgument(1);
                 st = StringUtil.stringToKIFid(st);
                 String lang = form.getStringArgument(3);
@@ -949,7 +949,7 @@ public class OWLtranslator {
              List instances = kb.askWithRestriction(0,"instance",1,term);  // Instance expressions for term.
              List classes = kb.askWithRestriction(0,"subclass",1,term);    // Class expressions for term.
              String documentation = null;
-             FormulaAST form;
+             Formula form;
              if (!instances.isEmpty() && !kb.childOf(term,"BinaryRelation"))
                  writeInstances(pw,term,instances);
              boolean isInstance = false;

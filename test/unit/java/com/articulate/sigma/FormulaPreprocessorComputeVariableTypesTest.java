@@ -1,6 +1,6 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -21,7 +21,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
     @Test
     public void testComputeVariableTypesNoVariables()     {
         String stmt = "(domain date 1 Physical)";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -37,7 +37,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
     @Test
     public void testComputeVariableTypesNames()     {
         String stmt = "(names \"John\" ?H)";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -59,7 +59,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
                 "               (instance ?D Driving)\n" +
                 "               (instance ?H Human)\n" +
                 "               (agent ?D ?H)))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -83,7 +83,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
                 "           (and\n" +
                 "               (instance ?D Driving)\n" +
                 "               (agent ?D ?H)))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -110,7 +110,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
                 "               (instance ?Car Automobile)\n" +
                 "               (agent ?D ?H)\n" +
                 "               (patient ?D ?Car)))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -134,7 +134,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
                 "                   (element ?ELEMENT ?SET1) " +
                 "                   (element ?ELEMENT ?SET2))) " +
                 "           (equal ?SET1 ?SET2))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -156,7 +156,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
     @Test
     public void testComputeVariableTypesSubclass()     {
         String stmt =   "(subclass ?Cougar Feline)";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -176,7 +176,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         String stmt =   "(exists (?M) " +
                 "           (time JohnsBirth (MonthFn ?M (YearFn 2000))))";
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -197,7 +197,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
                 "           (instance (GovernmentFn ?Place) StateGovernment) " +
                 "           (instance ?Place StateOrProvince))) ";
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -217,7 +217,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         String stmt =   "(=> " +
                 "           (subclass ?Cougar Feline) " +
                 "           (subclass ?Cougar Carnivore))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
@@ -239,7 +239,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
 
         String stmt = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" +
                 " (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         Map<String, Set<String>> actualMap = fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
@@ -259,7 +259,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
                 "(forall (?INST1 ?INST2 ?INST3) " +
                 "(=> (and (?REL ?INST1 ?INST2) " +
                 "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         System.out.println("Var types: " + fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb));
@@ -280,7 +280,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
 
         String stmt = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
                 "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         System.out.println("Formula: " + f);
@@ -307,7 +307,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
                 "           (holdsDuring\n" +
                 "               (WhenFn ?PROC)\n" +
                 "               (attribute ?HUMAN Awake)))";
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         FormulaPreprocessor fp = new FormulaPreprocessor();
         System.out.println("Formula: " + f);

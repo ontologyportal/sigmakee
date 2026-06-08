@@ -40,7 +40,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal
 package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.tp.Vampire;
@@ -623,7 +623,7 @@ public class InferenceTestSuite {
             itd.expectedAnswers.add(answerstring);
         }
         else {
-            FormulaAST ansForm = new FormulaAST(answerstring);
+            Formula ansForm = new Formula(answerstring);
             List<String> answers = ansForm.complexArgumentsToArrayListString(1);
             //answerstring = normalizeSkolem(answerstring);
             //answerstring = StringUtil.removeEnclosingCharPair(answerstring,1,'(',')');
@@ -651,7 +651,7 @@ public class InferenceTestSuite {
                 test.readFile(f.getCanonicalPath());
                 System.out.println("INFO in InferenceTestSuite.readTestFile(): num formulas: " +
                         String.valueOf(test.formulaMap.size()));
-                for (FormulaAST orderedF : test.formulaMap.values()) {
+                for (Formula orderedF : test.formulaMap.values()) {
                     String formula = orderedF.getFormula();
                     if (formula.contains(";"))
                         formula = formula.substring(0, formula.indexOf(";"));
@@ -812,7 +812,7 @@ public class InferenceTestSuite {
         List<InfTestData> tests = readTestFiles(files);
         System.out.println("INFO in InferenceTestSuite.test(): number of files: " + files.size());
         int counter = 0;
-        FormulaAST theQuery;
+        Formula theQuery;
         FormulaPreprocessor fp;
         SUMOKBtoTFAKB stfa;
         Set<Expr> theQueries;
@@ -832,7 +832,7 @@ public class InferenceTestSuite {
                 System.out.println("====================================");
                 System.out.println("INFO in InferenceTestSuite.test(): Note: " + itd.note);
                 System.out.println("INFO in InferenceTestSuite.test(): Query: " + itd.query);
-                theQuery = new FormulaAST();
+                theQuery = new Formula();
                 theQuery.read(itd.query);
                 fp = new FormulaPreprocessor();
                 stfa = new SUMOKBtoTFAKB();
@@ -840,7 +840,7 @@ public class InferenceTestSuite {
                 SUMOtoTFAform.initOnce();
                 theQueries = fp.preProcessExpr(theQuery, true, kb);
                 for (Expr ex : theQueries) {
-                    FormulaAST processed = new FormulaAST(ex.toKifString());
+                    Formula processed = new Formula(ex.toKifString());
                     if (processed.isHigherOrder(kb)) {
                         System.out.println("Error in InferenceTestSuite.test(): skipping higher order query: " +
                                 processed + " in test " + itd.note);
@@ -959,7 +959,7 @@ public class InferenceTestSuite {
              kb.tell(formula);
         System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): expected answers: " + itd.expectedAnswers);
         int maxAnswers = itd.expectedAnswers.size();
-        FormulaAST theQuery = new FormulaAST();
+        Formula theQuery = new Formula();
         theQuery.read(itd.query);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         Set<Expr> theQueries = fp.preProcessExpr(theQuery,true,kb);
@@ -969,7 +969,7 @@ public class InferenceTestSuite {
         com.articulate.sigma.tp.EProver eprover = new EProver(kb, "tptp", itd.timeout, maxAnswers);
         com.articulate.sigma.tp.LEO leo = new LEO(kb, "tptp", itd.timeout, maxAnswers, null);
         for (Expr ex : theQueries) {
-            FormulaAST f = new FormulaAST(ex.toKifString());
+            Formula f = new Formula(ex.toKifString());
             processedStmt = f.getFormula();
             if (f.isHigherOrder(kb) && !SUMOformulaToTPTPformula.getLang().equals("thf")) {
                 System.out.println("Error in InferenceTestSuite.inferenceUnitTest(): skipping higher order query: " +

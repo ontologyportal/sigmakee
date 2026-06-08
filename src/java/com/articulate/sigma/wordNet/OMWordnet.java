@@ -6,9 +6,9 @@ import java.util.*;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.KButilities;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.*;
 
-import com.articulate.sigma.parsing.FormulaAST;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
@@ -76,25 +76,25 @@ August 9, Acapulco, Mexico.
             for (String key : WordNet.wn.nounSUMOHash.keySet()) {
                 SUMOterm = WordNet.wn.nounSUMOHash.get(key);
                 mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
-                if (!SUMOterm.contains(FormulaAST.SPACE))
+                if (!SUMOterm.contains(Formula.SPACE))
                     pw.println(key + "-n\tsumo:xref\t" + WordNetUtilities.getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
             }
             for (String key : WordNet.wn.verbSUMOHash.keySet()) {
                 SUMOterm = WordNet.wn.verbSUMOHash.get(key);
                 mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
-                if (!SUMOterm.contains(FormulaAST.SPACE))
+                if (!SUMOterm.contains(Formula.SPACE))
                     pw.println(key + "-n\tsumo:xref\t" + WordNetUtilities.getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
             }
             for (String key : WordNet.wn.adjectiveSUMOHash.keySet()) {
                 SUMOterm = WordNet.wn.adjectiveSUMOHash.get(key);
                 mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
-                if (!SUMOterm.contains(FormulaAST.SPACE))
+                if (!SUMOterm.contains(Formula.SPACE))
                     pw.println(key + "-n\tsumo:xref\t" + WordNetUtilities.getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
             }
             for (String key : WordNet.wn.adverbSUMOHash.keySet()) {
                 SUMOterm = WordNet.wn.adverbSUMOHash.get(key);
                 mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
-                if (!SUMOterm.contains(FormulaAST.SPACE))
+                if (!SUMOterm.contains(Formula.SPACE))
                     pw.println(key + "-n\tsumo:xref\t" + WordNetUtilities.getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
             }
         }

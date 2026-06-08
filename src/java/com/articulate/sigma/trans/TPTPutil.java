@@ -15,18 +15,16 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
-import com.articulate.sigma.utils.FileUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,8 +50,8 @@ public class TPTPutil {
      */
     private static String removeTPTPSuffix(String t) {
 
-        if (t.endsWith(FormulaAST.TERM_MENTION_SUFFIX) || t.endsWith(FormulaAST.TERM_MENTION_SUFFIX))
-            return t.substring(0,t.length()-FormulaAST.TERM_MENTION_SUFFIX.length());
+        if (t.endsWith(Formula.TERM_MENTION_SUFFIX) || t.endsWith(Formula.TERM_MENTION_SUFFIX))
+            return t.substring(0,t.length()- Formula.TERM_MENTION_SUFFIX.length());
         else
             return t;
     }
@@ -78,7 +76,7 @@ public class TPTPutil {
      *
      * @param hyperlink - the URL to be referenced to a hyperlinked term.
      */
-    public static String htmlTPTPFormat(FormulaAST f, String hyperlink, boolean traditionalLogic) {
+    public static String htmlTPTPFormat(Formula f, String hyperlink, boolean traditionalLogic) {
 
 //        String indentChars = "  ";
 //        String eolChars = "\n";
@@ -197,7 +195,7 @@ public class TPTPutil {
                         if ((i+1 < formString.length()) && formString.charAt(i+1) != ')')
                         	result.append(returnAndIndent(level));
                     }
-                    else if (formString.substring(i).startsWith(FormulaAST.IF)) {
+                    else if (formString.substring(i).startsWith(Formula.IF)) {
                         i++;
                         if (traditionalLogic)
                             result.append("&rArr;");
@@ -206,7 +204,7 @@ public class TPTPutil {
                         result.append(returnAndIndent(level));
                     }
                     else {
-                        if (formString.substring(i).startsWith(FormulaAST.TERM_SYMBOL_PREFIX)) {
+                        if (formString.substring(i).startsWith(Formula.TERM_SYMBOL_PREFIX)) {
                             inToken = true;
                             i = i + 2;
                         }
@@ -243,15 +241,15 @@ public class TPTPutil {
                 if (!Character.isJavaIdentifierPart(ch) && ch != '_') {
                     // end of token
                     String tok = token.toString();
-                    String base = tok.startsWith(FormulaAST.TERM_SYMBOL_PREFIX)
-                            ? tok.substring(FormulaAST.TERM_SYMBOL_PREFIX.length()) : tok;
+                    String base = tok.startsWith(Formula.TERM_SYMBOL_PREFIX)
+                            ? tok.substring(Formula.TERM_SYMBOL_PREFIX.length()) : tok;
                     String termForUrl = SUMOtoTFAform.withoutSuffix(base);
                     result.append("<a href=\"")
                           .append(hyperlink)
                           .append("&term=")
                           .append(termForUrl)
                           .append("\">")
-                          .append(FormulaAST.TERM_SYMBOL_PREFIX).append(termForUrl)
+                          .append(Formula.TERM_SYMBOL_PREFIX).append(termForUrl)
                           .append("</a>");
                     token.setLength(0);
                     inToken = false;
@@ -327,16 +325,16 @@ public class TPTPutil {
      */
     public static String getCitationString(String sumoStep, String stepName, KB kb) {
 
-        List<FormulaAST> ciAxioms = kb.ask("arg",0,"containsFormula");
+        List<Formula> ciAxioms = kb.ask("arg",0,"containsFormula");
         //System.out.println("TPTPutil.getCitationString: stepName: " + stepName);
         //System.out.println("TPTPutil.getCitationString: sumo: " + sumoStep);
-        FormulaAST arg;
+        Formula arg;
         String term;
-        List<FormulaAST> comments;
-        for (FormulaAST f : ciAxioms) {
+        List<Formula> comments;
+        for (Formula f : ciAxioms) {
             arg = f.getArgument(2);
             if (arg != null && arg.listP()) {
-                if (arg.equals(new FormulaAST(sumoStep))) {
+                if (arg.equals(new Formula(sumoStep))) {
                     //System.out.println("TPTPutil.getCitationString: formula arg: " + arg);
                     term = f.getStringArgument(1);
                     comments = kb.askWithRestriction(0,"comment",1,term);
@@ -352,7 +350,7 @@ public class TPTPutil {
      */
     public static void test() {
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         //f.theTptpFormulas.add("fof(kb_ArabicCulture_20,axiom,(( s__subclass(s__Hajj,s__Translocation) ))).");
         f.theTptpFormulas.add("(! [V__P] : (s__instance(V__P,s__Agent) => ((s__attribute(V__P,s__Muslim) & s__capability(s__Hajj,s__agent__m,V__P)) => " +
                 "s__modalAttribute('(? [V__H] : (s__instance(V__H,s__Process) & s__instance(V__H,s__Hajj) & s__agent(V__H,V__P)))',s__Obligation))))");
@@ -565,7 +563,7 @@ public class TPTPutil {
         // Clear file before processing
         List<String> lines = clearProofFile(inputLines);
 
-        String query = FormulaAST.LP;
+        String query = Formula.LP;
         StringBuilder answerVars = new StringBuilder("");
 
         // Parse proof output
@@ -666,16 +664,16 @@ public class TPTPutil {
                     // Clear file before processing from TPTP3ProofProcessor.parseProofOutput
                     lines = clearProofFile(lines);
 
-                    String query = FormulaAST.LP;
+                    String query = Formula.LP;
                     StringBuilder answerVars = new StringBuilder("");
 //                    System.out.println("input: \n" + lines + "\n");
                     tpp.parseProofOutput(lines, query, kb,answerVars);
                     System.out.println("TPTPutil.main(): " + tpp.proof.size() + " steps ");
                     System.out.println("TPTPutil.main(): showing only source axioms ");
-                    FormulaAST f;
+                    Formula f;
                     for (TPTPFormula step : tpp.proof) { // all steps not only authored & derived
                         if (TPTPutil.sourceAxiom(step)) { // filters only the authored axioms
-                            f = new FormulaAST(step.sumo);
+                            f = new Formula(step.sumo);
                             System.out.println(f.format("","  ","\n"));
                         }
                     }
@@ -716,17 +714,17 @@ public class TPTPutil {
                     //System.out.println("TPTPutil.main(): axiomKey: " + KB.axiomKey);
                     String id, str, name;
                     int firstParen, firstComma, secondParen;
-                    FormulaAST f;
+                    Formula f;
                     for (TPTPFormula step : tpp.proof) {
                         //System.out.println("TPTPutil.main(): step: " + step);
                         if (TPTPutil.sourceAxiom(step)) {
-                            f = new FormulaAST(step.sumo);
+                            f = new Formula(step.sumo);
                             name = step.infRule;
                             //System.out.println("TPTPutil.main(): name: " + name);
                             if (name.startsWith("file(")) {
-                                firstParen = name.indexOf(FormulaAST.LP);
+                                firstParen = name.indexOf(Formula.LP);
                                 firstComma = name.indexOf(",");
-                                secondParen = name.indexOf(FormulaAST.RP, firstComma + 1);
+                                secondParen = name.indexOf(Formula.RP, firstComma + 1);
                                 id = name.substring(firstComma + 1, secondParen);
                                 //System.out.println("TPTPutil.main(): id: " + id);
                                 if (KB.axiomKey.keySet().contains(id)) {

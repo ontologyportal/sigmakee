@@ -28,7 +28,7 @@ being present in the ontology in order to function as intended.  They are:
 
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.StringUtil;
@@ -930,7 +930,7 @@ public class KBcache implements Serializable {
         Set<String> iset = instanceOf.get(term);
         if (iset != null) instanceOf.put(newTerm, iset);
         relations.add(newTerm);
-        if (newTerm.endsWith(FormulaAST.FN_SUFF))
+        if (newTerm.endsWith(Formula.FN_SUFF))
             functions.add(newTerm);
         else
             predicates.add(newTerm);
@@ -963,7 +963,7 @@ public class KBcache implements Serializable {
          * '+' appended to the class name.
          **/
         List<String> sig = signatures.get(term);
-        if (sig == null && term != null && term.equals(FormulaAST.EQUAL)) {
+        if (sig == null && term != null && term.equals(Formula.EQUAL)) {
             sig = new ArrayList<>();
             sig.add("Entity");
             sig.add("Entity");
@@ -973,7 +973,7 @@ public class KBcache implements Serializable {
         signatures.put(newTerm, newsig);
         Integer val = valences.get(term);
         if (val != null) valences.put(newTerm, val);
-        if (term.endsWith(FormulaAST.FN_SUFF)) functions.add(newTerm);
+        if (term.endsWith(Formula.FN_SUFF)) functions.add(newTerm);
     }
 
     /** ***************************************************************
@@ -981,8 +981,8 @@ public class KBcache implements Serializable {
      */
     public void buildDirectInstances() {
 
-        List<FormulaAST> forms = kb.ask("arg", 0, "instance");
-        FormulaAST f;
+        List<Formula> forms = kb.ask("arg", 0, "instance");
+        Formula f;
         String child, parent;
         Map<String,Set<String>> superclasses;
         Set<String> iset;
@@ -1009,8 +1009,8 @@ public class KBcache implements Serializable {
     public void buildDirectParentTerms() {
 
         for (String rel : new String[]{"subclass", "instance", "subrelation", "subAttribute"}) {
-            List<FormulaAST> forms = kb.ask("arg", 0, rel);
-            for (FormulaAST f : forms) {
+            List<Formula> forms = kb.ask("arg", 0, rel);
+            for (Formula f : forms) {
                 if (!f.isCached()) {
                     String child = f.getStringArgument(1);
                     String parent = f.getStringArgument(2);
@@ -1039,11 +1039,11 @@ public class KBcache implements Serializable {
     public void buildDisjointRelationsMap() {
 
         Set<String> pairs = new HashSet<>();
-        List<FormulaAST> explicitDisjointFormulae = new ArrayList<>();
+        List<Formula> explicitDisjointFormulae = new ArrayList<>();
         explicitDisjointFormulae.addAll(kb.ask("arg", 0, "disjointRelation"));
         String arg1, arg2;
         Set<String> children1, children2;
-        for (FormulaAST f : explicitDisjointFormulae) {
+        for (Formula f : explicitDisjointFormulae) {
             arg1 = f.getStringArgument(1);
             arg2 = f.getStringArgument(2);
             pairs.add(arg1 + "\t" + arg2);
@@ -1072,7 +1072,7 @@ public class KBcache implements Serializable {
     public void buildExplicitDisjointMap() {
 
         if (debug) System.out.println("buildExplicitDisjointMap()");
-        List<FormulaAST> explicitDisjointFormulae = new ArrayList<>();
+        List<Formula> explicitDisjointFormulae = new ArrayList<>();
         explicitDisjointFormulae.addAll(kb.ask("arg",0,"partition"));
         explicitDisjointFormulae.addAll(kb.ask("arg",0,"disjoint"));
         explicitDisjointFormulae.addAll(kb.ask("arg",0,"disjointDecomposition"));
@@ -1080,7 +1080,7 @@ public class KBcache implements Serializable {
         //System.out.println("buildExplicitDisjointMap(): all explicit: " + explicitDisjointFormulae);
         List<String> arguments;
         Set<String> vals;
-        for (FormulaAST f : explicitDisjointFormulae) {
+        for (Formula f : explicitDisjointFormulae) {
             if (debug) System.out.println("buildExplicitDisjointMap(): check formula: " + f.getFormula());
             if (f.car().equals("disjoint"))
                 arguments = f.argumentsToArrayListString(1);
@@ -1171,14 +1171,14 @@ public class KBcache implements Serializable {
      */
     public boolean checkDisjoint(KB kb, String c1, String c2) {
 
-        if (!StringUtil.emptyString(c1) && FormulaAST.listP(c1)) {
-            FormulaAST c1f = new FormulaAST(c1);
+        if (!StringUtil.emptyString(c1) && Formula.listP(c1)) {
+            Formula c1f = new Formula(c1);
             String pred = c1f.car();
             if (KButilities.isFunction(kb,pred))
                 c1 = getRange(pred);
         }
-        if (!StringUtil.emptyString(c2) && FormulaAST.listP(c2)) {
-            FormulaAST c2f = new FormulaAST(c2);
+        if (!StringUtil.emptyString(c2) && Formula.listP(c2)) {
+            Formula c2f = new Formula(c2);
             String pred = c2f.car();
             if (KButilities.isFunction(kb,pred))
                 c2 = getRange(pred);
@@ -1232,14 +1232,14 @@ public class KBcache implements Serializable {
     public void buildTransInstOf() {
 
         // Iterate through the temporary list of instances built during creation of the @see children map
-        List<FormulaAST> forms, forms2;
+        List<Formula> forms, forms2;
         String rel, cl;
         Map<String,Set<String>> prentList, superclasses;
         Set<String> prents, pset, iset, supers;
         for (String child : insts) {
             forms = kb.ask("arg",1,child);
             if (debug) System.out.println("buildTransInstOf(): forms: " + forms);
-            for (FormulaAST f : forms) {
+            for (Formula f : forms) {
                 rel = f.getStringArgument(0);
                 if (debug) System.out.println("buildTransInstOf(): rel: " + rel);
                 if (instTransRels.contains(rel) && intendedTransRels.contains(rel) &&
@@ -1253,7 +1253,7 @@ public class KBcache implements Serializable {
                             for (String p : prents) {
                                 forms2 = kb.askWithRestriction(0,"instance",1,p);
                                 if (debug) System.out.println("buildTransInstOf(): forms2: " + forms2);
-                                for (FormulaAST f2 : forms2) {
+                                for (Formula f2 : forms2) {
                                     cl = f2.getStringArgument(2);
                                     if (debug) System.out.println("buildTransInstOf(): cl: " + cl);
                                     superclasses = parents.get("subclass");
@@ -1545,11 +1545,11 @@ public class KBcache implements Serializable {
     /** ***************************************************************
      * Get the HashSet of the given arguments from an ArrayList of Formulas.
      */
-    public static Set<String> collectArgFromFormulas(int arg, List<FormulaAST> forms) {
+    public static Set<String> collectArgFromFormulas(int arg, List<Formula> forms) {
 
         Set<String> subs = new HashSet<>();
         String sub;
-        for (FormulaAST f : forms) {
+        for (Formula f : forms) {
             sub = f.getStringArgument(arg);
             //System.out.println("collectArgFromFormulas(): " + f + "\n" + arg + "\n" + sub);
             subs.add(sub);
@@ -1570,7 +1570,7 @@ public class KBcache implements Serializable {
         Set<String> rels = new HashSet<>();
         rels.add("TransitiveRelation");
         Set<String> relSubs;
-        List<FormulaAST> forms;
+        List<Formula> forms;
         while (!rels.isEmpty()) {
             relSubs = new HashSet<>();
             for (String rel : rels) {
@@ -1613,7 +1613,7 @@ public class KBcache implements Serializable {
 
         Set<String> rels = new HashSet<>();
         rels.add("Relation");
-        List<FormulaAST> forms;
+        List<Formula> forms;
         Set<String> relSubs;
         while (!rels.isEmpty()) {
             if (debug) System.out.println("INFO in KBcache.buildRelationsSet(): rels: " + rels);
@@ -1661,7 +1661,7 @@ public class KBcache implements Serializable {
     private Set<String> findRoots(String rel) {
 
         Set<String> result = new HashSet<>();
-        List<FormulaAST> forms = kb.ask("arg",0,rel);
+        List<Formula> forms = kb.ask("arg",0,rel);
         Set<String> arg1s = collectArgFromFormulas(1,forms);
         Set<String> arg2s = collectArgFromFormulas(2,forms);
         arg2s.removeAll(arg1s);
@@ -1677,7 +1677,7 @@ public class KBcache implements Serializable {
     private Set<String> findLeaves(String rel) {
 
         Set<String> result = new HashSet<>();
-        List<FormulaAST> forms = kb.ask("arg",0,rel);
+        List<Formula> forms = kb.ask("arg",0,rel);
         Set<String> arg1s = collectArgFromFormulas(1,forms);
         Set<String> arg2s = collectArgFromFormulas(2,forms);
         arg1s.removeAll(arg2s);
@@ -1700,7 +1700,7 @@ public class KBcache implements Serializable {
         Deque<String> Q = new ArrayDeque<>();
         Q.add(root);
         String t;
-        List<FormulaAST> forms;
+        List<Formula> forms;
         Set<String> newParents, oldParents, newTermParents;
         while (!Q.isEmpty()) {
             t = Q.remove();
@@ -1751,7 +1751,7 @@ public class KBcache implements Serializable {
         Q.add(leaf);
         V.add(leaf);
         String child;
-        List<FormulaAST> forms;
+        List<Formula> forms;
         Set<String> newChildren, oldChildren, newTermChildren;
         while (!Q.isEmpty()) {
             child = Q.remove();
@@ -1804,14 +1804,14 @@ public class KBcache implements Serializable {
             return allChildren.get(term);
         visited.add(term);
         if (debug) System.out.println("buildChildrenNew(): " + kb.ask("arg",0,"subrelation"));
-        List<FormulaAST> forms = kb.askWithRestriction(0,rel,2,term); // argument 2 is the "parent" in any binary relation
+        List<Formula> forms = kb.askWithRestriction(0,rel,2,term); // argument 2 is the "parent" in any binary relation
         if (debug) System.out.println("buildChildrenNew(): forms  " + forms);
         if (forms == null || forms.isEmpty())
             return new HashSet<>();
         Set<String> collectedChildren = new HashSet<>();
         String newTerm;
         Set<String> lclChildren;
-        for (FormulaAST f : forms) {
+        for (Formula f : forms) {
             if (f.isCached() || StringUtil.emptyString(f.sourceFile))
                 continue;
             //System.out.println(f.sourceFile);
@@ -1841,12 +1841,12 @@ public class KBcache implements Serializable {
         rels.add("instance");
         rels.add("subAttribute");
         rels.add("subField");
-        List<FormulaAST> forms;
+        List<Formula> forms;
         String arg;
         for (String r : rels) {
             //System.out.println("buildInsts(): rel:  " + r);
             forms = kb.ask("arg",0,r);
-            for (FormulaAST f : forms) {
+            for (Formula f : forms) {
                 //System.out.println("buildInsts(): form:  " + f);
                 arg = f.getStringArgument(1);
                 insts.add(arg);
@@ -1940,12 +1940,12 @@ public class KBcache implements Serializable {
         if (debug) System.out.println("INFO in KBcache.collectDomains(): relations " + relations);
         String[] domainArray;
         int maxIndex, arg;
-        List<FormulaAST> forms;
+        List<Formula> forms;
         List<String> domains;
-        FormulaAST form;
+        Formula form;
         String arg2, type;
         for (String rel : relations) {
-            domainArray = new String[FormulaAST.MAX_PREDICATE_ARITY];
+            domainArray = new String[Formula.MAX_PREDICATE_ARITY];
             maxIndex = 0;
             domainArray[0] = "";
             forms = kb.askWithRestriction(0,"domain",1,rel);
@@ -2032,7 +2032,7 @@ public class KBcache implements Serializable {
         V.add(root);
         String t, childArgType, parentArgType;
         List<String> tdomains, newDomains;
-        List<FormulaAST> forms;
+        List<Formula> forms;
         while (!Q.isEmpty()) {
             t = Q.remove();
             tdomains = signatures.get(t);
@@ -2095,7 +2095,7 @@ public class KBcache implements Serializable {
                     for (String child : valSet.keySet()) {
                         prents = valSet.get(child);
                         for (String parent : prents) {
-                            tuple = FormulaAST.LP + rel + FormulaAST.SPACE + child + FormulaAST.SPACE + parent + FormulaAST.RP;
+                            tuple = Formula.LP + rel + Formula.SPACE + child + Formula.SPACE + parent + Formula.RP;
                             if (!kb.formulaMap.containsKey(tuple)) {
                                 fw.write(tuple + System.getProperty("line.separator"));
                             }
@@ -2106,7 +2106,7 @@ public class KBcache implements Serializable {
                 for (String inst : instanceOf.keySet()) {
                     vSet = instanceOf.get(inst);
                     for (String parent : vSet) {
-                        tuple = "(instance " + inst + FormulaAST.SPACE + parent + FormulaAST.RP;
+                        tuple = "(instance " + inst + Formula.SPACE + parent + Formula.RP;
                         if (!kb.formulaMap.containsKey(tuple)) {
                             fw.write(tuple + System.getProperty("line.separator"));
                         }
@@ -2145,7 +2145,7 @@ public class KBcache implements Serializable {
             for (String child : valSet.keySet()) {
                 prents = valSet.get(child);
                 for (String parent : prents) {
-                    tuple = FormulaAST.LP + rel + FormulaAST.SPACE + child + FormulaAST.SPACE + parent + FormulaAST.RP;
+                    tuple = Formula.LP + rel + Formula.SPACE + child + Formula.SPACE + parent + Formula.RP;
                     if (!kb.formulaMap.containsKey(tuple)) {
                         sb.append(tuple);
                         cacheCount++;
@@ -2156,7 +2156,7 @@ public class KBcache implements Serializable {
         for (String inst : instanceOf.keySet()) {
             vSet = instanceOf.get(inst);
             for (String parent : vSet) {
-                tuple = "(instance " + inst + FormulaAST.SPACE + parent + FormulaAST.RP;
+                tuple = "(instance " + inst + Formula.SPACE + parent + Formula.RP;
                 if (!kb.formulaMap.containsKey(tuple)) {
                     sb.append(tuple);
                     cacheCount++;
@@ -2424,7 +2424,7 @@ public class KBcache implements Serializable {
 
         long startMillis = System.currentTimeMillis();
         // Pre-warm Formula.stringArgs single-threaded.
-        for (FormulaAST f : kb.formulaMap.values())
+        for (Formula f : kb.formulaMap.values())
             f.getStringArgument(0);
         // Former Wave 1
         buildInsts();
@@ -2488,7 +2488,7 @@ public class KBcache implements Serializable {
         // Formula.getStringArgument() lazily initialises a non-thread-safe ArrayList
         // via loadArguments(); calling it now (single-threaded) ensures every formula
         // is fully parsed before Wave 1 threads read argument positions concurrently.
-        for (FormulaAST f : kb.formulaMap.values())
+        for (Formula f : kb.formulaMap.values())
             f.getStringArgument(0);
 
         // --- Wave 1: four fully-independent methods, no shared writes ---

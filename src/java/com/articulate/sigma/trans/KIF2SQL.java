@@ -1,7 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
@@ -66,26 +66,26 @@ Articulate Software
      * Create a new formula, inserting a new first argument that is the
      * database table foreign key that identifies the function
      */
-    private FormulaAST createNewFunction(FormulaAST f, String funcID) {
+    private Formula createNewFunction(Formula f, String funcID) {
 
         StringBuilder sb = new StringBuilder();
         String pred = f.getStringArgument(0);
         List<String> l = f.complexArgumentsToArrayListString(1);
         if (l == null || l.isEmpty())
             System.err.println("Error in KIF2SQL.createNewFunction(): null argument list for: " + f);
-        sb.append(FormulaAST.LP).append(pred).append(FormulaAST.SPACE).append(funcID);
+        sb.append(Formula.LP).append(pred).append(Formula.SPACE).append(funcID);
         for (String s : l)
-            sb.append(FormulaAST.SPACE).append(s);
-        sb.append(FormulaAST.RP);
-        return new FormulaAST(sb.toString());
+            sb.append(Formula.SPACE).append(s);
+        sb.append(Formula.RP);
+        return new Formula(sb.toString());
     }
 
    /** ***************************************************************
      */
     private String processArg(String arg, int limit) {
 
-        if (!FormulaAST.atom(arg)) {
-            FormulaAST f = new FormulaAST(arg);
+        if (!Formula.atom(arg)) {
+            Formula f = new Formula(arg);
             if (kb.isFunctional(f)) {
                 System.out.println("EIF2SQL.createNewFunction(): f: " + f);
                 String pred = f.getStringArgument(0);
@@ -146,7 +146,7 @@ Articulate Software
      * note that for the function tables, the first argument is a key
      * used in the original relation to point to this function
      */
-    private void writeBinary(FormulaAST form) {
+    private void writeBinary(Formula form) {
 
         String rel = form.getStringArgument(0);
         String table = "edges";
@@ -161,7 +161,7 @@ Articulate Software
      *  note that for the function tables, the first argument is a key
      *  used in the original relation to point to this function
      */
-    private void writeTernary(FormulaAST form) {
+    private void writeTernary(Formula form) {
 
         String rel = form.getStringArgument(0);
         String table = "ternary";
@@ -175,7 +175,7 @@ Articulate Software
 
     /** ***************************************************************
      */
-    private void writeQuaternary(FormulaAST form) {
+    private void writeQuaternary(Formula form) {
 
         String rel = form.getStringArgument(0);
         String table = "quaternary";
@@ -190,7 +190,7 @@ Articulate Software
 
     /** ***************************************************************
      */
-    private void writeQuinntary(FormulaAST form) {
+    private void writeQuinntary(Formula form) {
 
         String rel = form.getStringArgument(0);
         String table = "quintary";
@@ -206,7 +206,7 @@ Articulate Software
 
     /** ***************************************************************
      */
-    private void writeAxiom(FormulaAST f) {
+    private void writeAxiom(Formula f) {
 
         if (f.isRule())
             pw.println("INSERT INTO doc (lang, term, doc)  values ('SUOKIF', 'axiom-" + f.createID() + "', '" + processArg(f.getFormula(),500) + "');");
@@ -228,7 +228,7 @@ Articulate Software
      */
     private void writeAxioms() {
 
-        for (FormulaAST f : kb.formulaMap.values()) {
+        for (Formula f : kb.formulaMap.values()) {
             System.out.println("writeAxioms(): f: " + f);
             writeAxiom(f);
         }
@@ -241,7 +241,7 @@ Articulate Software
         List doc = kb.askWithRestriction(0,"documentation",1,term);    // Class expressions for term.
         if (!doc.isEmpty()) {
             for (int i = 0; i < doc.size(); i++) {
-                FormulaAST form = (FormulaAST) doc.get(i);
+                Formula form = (Formula) doc.get(i);
                 String lang = form.getStringArgument(2);
                 String documentation = form.getStringArgument(3);
                 if (documentation != null)

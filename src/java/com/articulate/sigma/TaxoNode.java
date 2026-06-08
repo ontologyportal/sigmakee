@@ -1,6 +1,6 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +39,7 @@ public class TaxoNode {
         int width = indentLevel * 10;
         if (parents == null || parents.isEmpty()) {
             KB kb = KBmanager.getMgr().getKB(TaxoModel.kbName);
-            List<FormulaAST> forms = kb.askWithRestriction(0,TaxoModel.relation,1,name);
+            List<Formula> forms = kb.askWithRestriction(0,TaxoModel.relation,1,name);
             forms = TaxoModel.removeCached(forms);
             if (!forms.isEmpty())
                 sb.append("<span style='white-space: nowrap;'><img src='pixmaps/trans.gif' width=").append(width).append(" height=5><a href=\"").append(kbHref).append(name).append("&up=").append(name).append("\"><img border=0 height=11 src='pixmaps/arrowup.gif'></a>&nbsp;");

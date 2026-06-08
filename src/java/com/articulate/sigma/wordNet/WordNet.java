@@ -18,12 +18,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 package com.articulate.sigma.wordNet;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.LoggingUtils;
 import com.articulate.sigma.utils.StringUtil;
-import com.articulate.sigma.wordNet.WordNetUtilities;
 
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -2874,7 +2873,7 @@ public class WordNet implements Serializable {
         Set<String> stringSynsets;
         boolean uppercase, instance;
         char mapping;
-        List<FormulaAST> al;
+        List<Formula> al;
         while (it.hasNext()) {
             word = (String) it.next();
             stringSynsets = nounSynsetHash.get(word);
@@ -3214,9 +3213,9 @@ public class WordNet implements Serializable {
     public String nounSynsetFromTermFormat(String tf, String SUMOterm, KB kb) {
 
         String synsetID = generateNounSynsetID();
-        List<FormulaAST> forms = kb.askWithRestriction(0, "documentation", 1, SUMOterm);
+        List<Formula> forms = kb.askWithRestriction(0, "documentation", 1, SUMOterm);
         if (!forms.isEmpty()) {
-            FormulaAST f = forms.get(0);
+            Formula f = forms.get(0);
             String doc = f.getStringArgument(3);
             if (StringUtil.emptyString(doc))
                 doc = "no gloss";
@@ -3237,9 +3236,9 @@ public class WordNet implements Serializable {
     public String verbSynsetFromTermFormat(String tf, String SUMOterm, KB kb) {
 
         String synsetID = generateVerbSynsetID();
-        List<FormulaAST> forms = kb.askWithRestriction(0, "documentation", 1, SUMOterm);
+        List<Formula> forms = kb.askWithRestriction(0, "documentation", 1, SUMOterm);
         if (!forms.isEmpty()) {
-            FormulaAST f = forms.get(0);
+            Formula f = forms.get(0);
             String doc = f.getStringArgument(3);
             if (StringUtil.emptyString(doc))
                 doc = "no gloss";
@@ -3275,7 +3274,7 @@ public class WordNet implements Serializable {
      *           underscores
      * @param SUMOterm is the SUMO term that the lexical item is mapped to
      */
-    public void synsetFromTermFormat(FormulaAST form, String tf, String SUMOterm, KB kb) {
+    public void synsetFromTermFormat(Formula form, String tf, String SUMOterm, KB kb) {
 
         long millis = System.currentTimeMillis();
         //System.out.println("INFO in WordNet.synsetFromTermFormat(): " + tf);
@@ -3356,12 +3355,12 @@ public class WordNet implements Serializable {
 
         int counter = 0;
         int totalcount = 0;
-        List<FormulaAST> forms = kb.ask("arg", 0, "termFormat");
+        List<Formula> forms = kb.ask("arg", 0, "termFormat");
         if (debug>0) System.out.println("WordNet.termFormatsToSynsets(): just the ask in seconds: " + (System.currentTimeMillis() - millis) / 1000);
         if (debug>0) System.out.println("WordNet.termFormatsToSynsets(): termFormats: " + forms.size());
         List<String> args;
         String errStr, SUMOterm, tf;
-        for (FormulaAST form : forms) {
+        for (Formula form : forms) {
             //System.out.println("WordNet.termFormatsToSynsets(): form: " + form);
             args = form.argumentsToArrayListString(0);
             //System.out.println("WordNet.termFormatsToSynsets(): args: " + args);

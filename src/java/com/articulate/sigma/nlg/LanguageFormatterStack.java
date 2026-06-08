@@ -1,7 +1,7 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.KB;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -116,7 +116,7 @@ public class LanguageFormatterStack {
      * Insert the given formula arguments into the topmost element of the stack.
      * @param formula
      */
-    public void insertFormulaArgs(FormulaAST formula) {
+    public void insertFormulaArgs(Formula formula) {
 
         List<String> args = formula.complexArgumentsToArrayListString(1);
         if (! isEmpty() && args != null) {
@@ -389,7 +389,7 @@ public class LanguageFormatterStack {
      * @param formula
      *   a formula for the instantiation of a process, e.g. (instance ?event Classifying)
      */
-    public void translateCurrProcessInstantiation(KB kb, FormulaAST formula) {
+    public void translateCurrProcessInstantiation(KB kb, Formula formula) {
 
         // Expecting the instantiation of a process, e.g. (instance ?FLY FlyingAircraft)
         String process = formula.complexArgumentsToArrayListString(2).get(0);
@@ -465,7 +465,7 @@ public class LanguageFormatterStack {
         // If the original formula begins with "(not" + existential quantifier, it won't be in the formula args.
         // In this case, iterate through the stack from top down, looking for the quantifier. For example, if the
         // original begins "(not  (exists (?D ?H) ...", we will find "(exists (?D ?H) ..." in the formula args.
-        FormulaAST formula = new FormulaAST(statement);
+        Formula formula = new Formula(statement);
         statement = formula.cdrAsFormula().car();
         iterator = theStack.listIterator(theStack.size());
         while(iterator.hasPrevious())   {

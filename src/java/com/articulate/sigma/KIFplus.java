@@ -14,7 +14,7 @@ August 9, Acapulco, Mexico.
 
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -33,8 +33,8 @@ import java.util.List;
 public class KIFplus {
 
     String filename;
-    String[] spcl = {"!" , "$" , "%" , "&" , "*" , "+" , "-" , "." , "/" , "<" , "=" , ">" , FormulaAST.V_PREF , FormulaAST.R_PREF , "_" , "~"};
-    String[] wht = {FormulaAST.SPACE, "\t", "\n"};
+    String[] spcl = {"!" , "$" , "%" , "&" , "*" , "+" , "-" , "." , "/" , "<" , "=" , ">" , Formula.V_PREF , Formula.R_PREF , "_" , "~"};
+    String[] wht = {Formula.SPACE, "\t", "\n"};
     List<String> special = new ArrayList<>(Arrays.asList(spcl));
 /*
 upper ::= A | B | C | D | E | F | G | H | I | J | K | L | M |
@@ -104,7 +104,7 @@ quantsent ::= (forall (variable+) sentence) |
                 ch = fr.read();
                 predicate = predicate.append(ch);
             }
-            if (predicate.toString().equalsIgnoreCase(FormulaAST.UQUANT)) {
+            if (predicate.toString().equalsIgnoreCase(Formula.UQUANT)) {
                 readLogsent(fr);
             }
         }

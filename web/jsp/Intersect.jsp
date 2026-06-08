@@ -1,4 +1,5 @@
-<%@page import="com.articulate.sigma.parsing.FormulaAST"%>
+<%@page import="com.articulate.sigma.parsing.Formula"%>
+<%@ page import="com.articulate.sigma.parsing.Formula" %>
 <%@ include	file="fragments/universal/Prelude.jspf" %>
 
 <html>
@@ -23,7 +24,7 @@
 
     String term1 = ValidationUtils.sanitizeSumoTerm(request.getParameter("term1"), "Object");
     String term2 = ValidationUtils.sanitizeSumoTerm(request.getParameter("term2"), "subclass");
-    List<FormulaAST> forms = KButilities.termIntersection(kb,term1,term2);
+    List<Formula> forms = KButilities.termIntersection(kb,term1,term2);
   %>
 
   <form action="Intersect.jsp">

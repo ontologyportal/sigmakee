@@ -3,17 +3,15 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.parsing.CLIMapParser;
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.ExprToTPTP;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.StringUtil;
 
-import java.io.IOException;
 import java.io.StreamTokenizer;
-import java.text.ParseException;
 import java.util.*;
 
 public class SUMOformulaToTPTPformula {
 
-    public FormulaAST _f = null;
+    public Formula _f = null;
     public static boolean debug = false;
 
     // ThreadLocal fields to allow parallel FOF/TFF generation
@@ -76,7 +74,7 @@ public class SUMOformulaToTPTPformula {
             result = translateWord_1(st, type, hasArguments, lang);
             if (result == null) return "";
             if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
-            if (result.equals("$true" + FormulaAST.TERM_MENTION_SUFFIX) || result.equals("$false" + FormulaAST.TERM_MENTION_SUFFIX))
+            if (result.equals("$true" + Formula.TERM_MENTION_SUFFIX) || result.equals("$false" + Formula.TERM_MENTION_SUFFIX))
                 result = "'" + result + "'";
             //System.out.println("SUMOformulaToTPTPformula.translateWord(): getHideNumbers(): " + getHideNumbers());
             //System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
@@ -118,23 +116,23 @@ public class SUMOformulaToTPTPformula {
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): hasArguments: " + hasArguments);
         int translateIndex;
 
-        List<String> kifOps = Arrays.asList(FormulaAST.UQUANT, FormulaAST.EQUANT,
-                FormulaAST.NOT, FormulaAST.AND, FormulaAST.OR, FormulaAST.XOR,
-                FormulaAST.IF, FormulaAST.IFF,FormulaAST.EQUAL);
+        List<String> kifOps = Arrays.asList(Formula.UQUANT, Formula.EQUANT,
+                Formula.NOT, Formula.AND, Formula.OR, Formula.XOR,
+                Formula.IF, Formula.IFF, Formula.EQUAL);
         List<String> tptpOps = Arrays.asList("! ", "? ", "~ ", " & ", " | ", " <~> " , " => ", " <=> ", " = ");
 
         List<String> kifPredicates =
                 Arrays.asList("<=","<",">",">=",
-                        FormulaAST.LTET,FormulaAST.LT,FormulaAST.GT,FormulaAST.GTET);
+                        Formula.LTET, Formula.LT, Formula.GT, Formula.GTET);
         List<String> tptpPredicates = Arrays.asList("lesseq","less","greater","greatereq",
                 "lesseq","less","greater","greatereq");
 
         List<String> kifConstants =
-                Arrays.asList(FormulaAST.LOG_TRUE, FormulaAST.LOG_FALSE);
+                Arrays.asList(Formula.LOG_TRUE, Formula.LOG_FALSE);
         List<String> tptpConstants = Arrays.asList("$true","$false");
 
-        List<String> kifFunctions = Arrays.asList(FormulaAST.TIMESFN, FormulaAST.DIVIDEFN,
-                FormulaAST.PLUSFN, FormulaAST.MINUSFN);
+        List<String> kifFunctions = Arrays.asList(Formula.TIMESFN, Formula.DIVIDEFN,
+                Formula.PLUSFN, Formula.MINUSFN);
         List<String> tptpFunctions = Arrays.asList("product","quotient","sum","difference");
 
         List<String> kifRelations = new ArrayList<>();
@@ -146,7 +144,7 @@ public class SUMOformulaToTPTPformula {
         // turned on, or not.  If it is on, then we do not want to add
         // the "mentions" suffix to relation names used as arguments
         // to other relations.
-        String mentionSuffix = FormulaAST.TERM_MENTION_SUFFIX;
+        String mentionSuffix = Formula.TERM_MENTION_SUFFIX;
         KBmanager mgr = KBmanager.getMgr();
         boolean holdsPrefixInUse = ((mgr != null) && mgr.getPref("holdsPrefix").equalsIgnoreCase("yes"));
         if (holdsPrefixInUse && !kifRelations.contains(st))
@@ -157,7 +155,7 @@ public class SUMOformulaToTPTPformula {
         //    return("'" + st.replaceAll("[\n\t\r\f]",Formula.SPACE).replaceAll("'","") + "'");
         //---- replace \n by space
         if (type == 34)
-            return(st.replaceAll("[\n\t\r\f]",FormulaAST.SPACE).replaceAll("'",""));
+            return(st.replaceAll("[\n\t\r\f]", Formula.SPACE).replaceAll("'",""));
         //----Fix variables to have leading V_
         char ch0 = ((st.length() > 0)
                     ? st.charAt(0)
@@ -167,12 +165,12 @@ public class SUMOformulaToTPTPformula {
                     : 'x');
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here1: ");
         if (ch0 == '?' || ch0 == '@')
-            return(FormulaAST.TERM_VARIABLE_PREFIX + st.substring(1).replace('-','_'));
+            return(Formula.TERM_VARIABLE_PREFIX + st.substring(1).replace('-','_'));
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here2: ");
         //----Inequality predicates used as terms need __m in all languages to avoid
         // the predicate/term symbol clash that TPTP parsers reject as a type error.
-        if (FormulaAST.isInequality(st) && !hasArguments)
-            return FormulaAST.TERM_SYMBOL_PREFIX + st + FormulaAST.TERM_MENTION_SUFFIX;
+        if (Formula.isInequality(st) && !hasArguments)
+            return Formula.TERM_SYMBOL_PREFIX + st + Formula.TERM_MENTION_SUFFIX;
         //----Translate special predicates
         if ("tff".equals(lang)) {
             translateIndex = kifPredicates.indexOf(st);
@@ -207,22 +205,22 @@ public class SUMOformulaToTPTPformula {
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here7: ");
         if (!hasArguments) {
             if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): no arguments: " + term);
-            if (!FormulaAST.isInequality(term)) {
+            if (!Formula.isInequality(term)) {
                 if ((!term.endsWith(mentionSuffix) && Character.isLowerCase(ch0))
-                        || term.endsWith(FormulaAST.FN_SUFF)
+                        || term.endsWith(Formula.FN_SUFF)
                         || KB.isRelationInAnyKB(term)) {
                     term += mentionSuffix;
                 }
             }
             else {
-                return (FormulaAST.TERM_SYMBOL_PREFIX + st.replace('-','_'));
+                return (Formula.TERM_SYMBOL_PREFIX + st.replace('-','_'));
             }
 
         }
         if (kifOps.contains(term) && hasArguments)
             return(term);
         else
-            return(FormulaAST.TERM_SYMBOL_PREFIX + term);
+            return(Formula.TERM_SYMBOL_PREFIX + term);
     }
 
     /** ***************************************************************
@@ -234,8 +232,8 @@ public class SUMOformulaToTPTPformula {
     private static int operatorArity(StreamTokenizer_s st) {
 
         int translateIndex;
-        String kifOps[] = {FormulaAST.UQUANT, FormulaAST.EQUANT, FormulaAST.NOT,
-                FormulaAST.AND, FormulaAST.OR, FormulaAST.XOR, FormulaAST.IF, FormulaAST.IFF};
+        String kifOps[] = {Formula.UQUANT, Formula.EQUANT, Formula.NOT,
+                Formula.AND, Formula.OR, Formula.XOR, Formula.IF, Formula.IFF};
 
         translateIndex = 0;
         while (translateIndex < kifOps.length &&
@@ -273,7 +271,7 @@ public class SUMOformulaToTPTPformula {
 
     /** *************************************************************
      */
-    private static String processQuant(FormulaAST f, FormulaAST car, String op,
+    private static String processQuant(Formula f, Formula car, String op,
                                        List<String> args, String lang) {
 
         if (debug) System.out.println("SUMOformulaToTPTPformula.processQuant(): quantifier");
@@ -285,7 +283,7 @@ public class SUMOformulaToTPTPformula {
             //if (debug) System.out.println("SUMOformulaToTPTPformula.processQuant(): correct # of args");
             if (args.get(0) != null) {
                 //if (debug) System.out.println("SUMOtoTFAform.processQuant(): valid varlist: " + args.get(0));
-                FormulaAST varlist = new FormulaAST(args.get(0));
+                Formula varlist = new Formula(args.get(0));
                 List<String> vars = varlist.argumentsToArrayListString(0);
                 //if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): valid vars: " + vars);
                 StringBuilder varStr = new StringBuilder();
@@ -299,8 +297,8 @@ public class SUMOformulaToTPTPformula {
                 if (op.equals("exists"))
                     opStr = " ? ";
                 //if (debug) System.out.println("SUMOformulaToTPTPformula.processQuant(): quantified formula: " + args.get(1));
-                return FormulaAST.LP + opStr + "[" + varStr.toString().substring(0,varStr.length()-2) + "] : (" +
-                        processRecurse(new FormulaAST(args.get(1)), lang) + "))";
+                return Formula.LP + opStr + "[" + varStr.toString().substring(0,varStr.length()-2) + "] : (" +
+                        processRecurse(new Formula(args.get(1)), lang) + "))";
             }
             else {
                 System.err.println("Error in SUMOformulaToTPTPformula.processQuant(): null arguments to " + op + " in " + f);
@@ -311,7 +309,7 @@ public class SUMOformulaToTPTPformula {
 
     /** *************************************************************
      */
-    private static String processConjDisj(FormulaAST f, FormulaAST car,
+    private static String processConjDisj(Formula f, Formula car,
                                           List<String> args, String lang) {
 
         String op = car.getFormula();
@@ -320,16 +318,16 @@ public class SUMOformulaToTPTPformula {
             return "";
         }
         String tptpOp = "&";
-        if (op.equals(FormulaAST.OR))
+        if (op.equals(Formula.OR))
             tptpOp = "|";
-        if (op.equals(FormulaAST.XOR))
+        if (op.equals(Formula.XOR))
             tptpOp = "<~>";
         StringBuilder sb = new StringBuilder();
-        sb.append(FormulaAST.LP).append(processRecurse(new FormulaAST(args.get(0)), lang));
+        sb.append(Formula.LP).append(processRecurse(new Formula(args.get(0)), lang));
         for (int i = 1; i < args.size(); i++) {
-            sb.append(FormulaAST.SPACE).append(tptpOp).append(FormulaAST.SPACE).append(processRecurse(new FormulaAST(args.get(i)), lang));
+            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE).append(processRecurse(new Formula(args.get(i)), lang));
         }
-        sb.append(FormulaAST.RP);
+        sb.append(Formula.RP);
         return sb.toString();
     }
 
@@ -341,51 +339,51 @@ public class SUMOformulaToTPTPformula {
 //    }
 
     /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
-    public static String processLogOp(FormulaAST f, FormulaAST car, List<String> args, String lang) {
+    public static String processLogOp(Formula f, Formula car, List<String> args, String lang) {
 
         String op = car.getFormula();
         if (debug) System.out.println("processLogOp(): op: " + op);
         if (debug) System.out.println("processLogOp(): args: " + args);
-        if (op.equals(FormulaAST.AND))
+        if (op.equals(Formula.AND))
             return processConjDisj(f, car, args, lang);
-        if (op.equals(FormulaAST.IF)) {
+        if (op.equals(Formula.IF)) {
             if (args.size() < 2) {
                 System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
             else {
                 if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
-                    return FormulaAST.LP + processRecurse(new FormulaAST(args.get(0)), lang) + " => " +
-                            FormulaAST.LP + processRecurse(new FormulaAST(args.get(1)), lang) + "))";
+                    return Formula.LP + processRecurse(new Formula(args.get(0)), lang) + " => " +
+                            Formula.LP + processRecurse(new Formula(args.get(1)), lang) + "))";
                 else
-                    return FormulaAST.LP + processRecurse(new FormulaAST(args.get(0)), lang) + " => " +
-                            processRecurse(new FormulaAST(args.get(1)), lang) + FormulaAST.RP;
+                    return Formula.LP + processRecurse(new Formula(args.get(0)), lang) + " => " +
+                            processRecurse(new Formula(args.get(1)), lang) + Formula.RP;
             }
         }
-        if (op.equals(FormulaAST.IFF)) {
+        if (op.equals(Formula.IFF)) {
             if (args.size() < 2) {
                 System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
             else
-                return "((" + processRecurse(new FormulaAST(args.get(0)), lang) + " => " +
-                        processRecurse(new FormulaAST(args.get(1)), lang) + ") & (" +
-                        processRecurse(new FormulaAST(args.get(1)), lang) + " => " +
-                        processRecurse(new FormulaAST(args.get(0)), lang) + "))";
+                return "((" + processRecurse(new Formula(args.get(0)), lang) + " => " +
+                        processRecurse(new Formula(args.get(1)), lang) + ") & (" +
+                        processRecurse(new Formula(args.get(1)), lang) + " => " +
+                        processRecurse(new Formula(args.get(0)), lang) + "))";
         }
-        if (op.equals(FormulaAST.OR))
+        if (op.equals(Formula.OR))
             return processConjDisj(f, car, args, lang);
-        if (op.equals(FormulaAST.XOR))
+        if (op.equals(Formula.XOR))
             return processConjDisj(f, car, args, lang);
-        if (op.equals(FormulaAST.NOT)) {
+        if (op.equals(Formula.NOT)) {
             if (args.size() != 1) {
                 System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
             else
-                return "~(" + processRecurse(new FormulaAST(args.get(0)), lang) + FormulaAST.RP;
+                return "~(" + processRecurse(new Formula(args.get(0)), lang) + Formula.RP;
         }
-        if (op.equals(FormulaAST.UQUANT) || op.equals(FormulaAST.EQUANT))
+        if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
             return processQuant(f, car, op, args, lang);
         System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): bad logical operator " + op + " in " + f);
         return "";
@@ -399,16 +397,16 @@ public class SUMOformulaToTPTPformula {
 //    }
 
     /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
-    public static String processEquals(FormulaAST f, FormulaAST car, List<String> args, String lang) {
+    public static String processEquals(Formula f, Formula car, List<String> args, String lang) {
 
         String op = car.getFormula();
         if (args.size() != 2) {
             System.err.println("Error in SUMOformulaToTPTPformula.processCompOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
-        if (op.startsWith(FormulaAST.EQUAL)) {
-            return FormulaAST.LP + processRecurse(new FormulaAST(args.get(0)), lang) + " = " +
-                    processRecurse(new FormulaAST(args.get(1)), lang) + FormulaAST.RP;
+        if (op.startsWith(Formula.EQUAL)) {
+            return Formula.LP + processRecurse(new Formula(args.get(0)), lang) + " = " +
+                    processRecurse(new Formula(args.get(1)), lang) + Formula.RP;
         }
         System.err.println("Error in SUMOformulaToTPTPformula.processCompOp(): bad comparison operator " + op + " in " + f);
         return "";
@@ -422,7 +420,7 @@ public class SUMOformulaToTPTPformula {
 //    }
 
     /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
-    public static String processRecurse(FormulaAST f, String lang) {
+    public static String processRecurse(Formula f, String lang) {
 
         if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): " + f);
         if (f == null)
@@ -433,7 +431,7 @@ public class SUMOformulaToTPTPformula {
                 ttype = StreamTokenizer_s.TT_NUMBER;
             return SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false,lang);
         }
-        FormulaAST car = f.carAsFormula();
+        Formula car = f.carAsFormula();
         //System.out.println("SUMOformulaToTPTPformula.processRecurse(): car: " + car);
         //System.out.println("SUMOformulaToTPTPformula.processRecurse(): car: " + car.theFormula);
         List<String> args = f.complexArgumentsToArrayListString(1);
@@ -441,9 +439,9 @@ public class SUMOformulaToTPTPformula {
             System.err.println("Error in SUMOformulaToTPTPformula.processRecurse(): formula " + f);
             return "";
         }
-        if (FormulaAST.isLogicalOperator(car.getFormula()))
+        if (Formula.isLogicalOperator(car.getFormula()))
             return processLogOp(f,car,args,lang);
-        else if (car.getFormula().equals(FormulaAST.EQUAL))
+        else if (car.getFormula().equals(Formula.EQUAL))
             return processEquals(f,car,args,lang);
         else {
             if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): not math or comparison op: " + car);
@@ -454,15 +452,15 @@ public class SUMOformulaToTPTPformula {
                     ttype = f.getFormula().charAt(0);
                     if (Character.isDigit(ttype))
                         ttype = StreamTokenizer_s.TT_NUMBER;
-                    if (FormulaAST.atom(s))
+                    if (Formula.atom(s))
                         argStr.append(SUMOformulaToTPTPformula.translateWord(s,ttype,false,lang)).append(",");
                     else
-                        argStr.append(processRecurse(new FormulaAST(s),lang)).append(",");
+                        argStr.append(processRecurse(new Formula(s),lang)).append(",");
                 }
                 else
-                    argStr.append(processRecurse(new FormulaAST(s),lang)).append(",");
+                    argStr.append(processRecurse(new Formula(s),lang)).append(",");
             }
-            String result = translateWord(car.getFormula(), StreamTokenizer.TT_WORD,true,lang) + FormulaAST.LP + argStr.substring(0,argStr.length()-1) + FormulaAST.RP;
+            String result = translateWord(car.getFormula(), StreamTokenizer.TT_WORD,true,lang) + Formula.LP + argStr.substring(0,argStr.length()-1) + Formula.RP;
             //if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): result: " + result);
             return result;
         }
@@ -471,12 +469,12 @@ public class SUMOformulaToTPTPformula {
     /** *************************************************************
      */
     /** Backward-compatible overload — reads lang from ThreadLocal. */
-    public static void generateQList(FormulaAST f) {
+    public static void generateQList(Formula f) {
         generateQList(f, getLang());
     }
 
     /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
-    public static void generateQList(FormulaAST f, String lang) {
+    public static void generateQList(Formula f, String lang) {
         Set<String> UqVars = f.collectUnquantifiedVariables();
         List<String> sortedVars = new ArrayList<>(UqVars);
         Collections.sort(sortedVars);
@@ -536,15 +534,15 @@ public class SUMOformulaToTPTPformula {
         if ("tff".equals(requestedLang))
             return "( " + ExprToTPTP.translateKifString(s,q, requestedLang) + " )";
         if ("thf".equals(requestedLang)) {
-            FormulaAST fa = new FormulaAST(s);
+            Formula fa = new Formula(s);
             Map<String, Set<String>> typeMap = new HashMap<>();
-            FormulaAST modalized = new FormulaAST(Modals.processModalsExpr(fa.expr, kb).getKey());
-            return "( " + THFnew.process(new FormulaAST(modalized.getFormula()), typeMap, q) + " )";
+            Formula modalized = new Formula(Modals.processModalsExpr(fa.expr, kb).getKey());
+            return "( " + THFnew.process(new Formula(modalized.getFormula()), typeMap, q) + " )";
         }
         if ("fof".equals(requestedLang))
-            return "( " + process(new FormulaAST(s), q, requestedLang) + " )";
+            return "( " + process(new Formula(s), q, requestedLang) + " )";
         System.err.println("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): unknown language type: " + requestedLang);
-        return "( " + process(new FormulaAST(s), q, requestedLang) + " )";
+        return "( " + process(new Formula(s), q, requestedLang) + " )";
     }
 
     /** ***************************************************************
@@ -562,12 +560,12 @@ public class SUMOformulaToTPTPformula {
      * formula and returns a TPTP formula.
      */
     /** Backward-compatible overload — reads lang from ThreadLocal. */
-    public static String process(FormulaAST f, boolean query) {
+    public static String process(Formula f, boolean query) {
         return process(f, query, getLang());
     }
 
     /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
-    public static String process(FormulaAST f, boolean query, String lang) {
+    public static String process(Formula f, boolean query, String lang) {
 
         if (f == null) {
             if (debug) System.err.println("Error in SUMOformulaToTPTPformula.process(): null formula: ");
@@ -578,7 +576,7 @@ public class SUMOformulaToTPTPformula {
         if (f.listP()) {
             String result = processRecurse(f, lang);
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): result 1: " + result);
-            generateQList(new FormulaAST(f.getFormula()), lang);
+            generateQList(new Formula(f.getFormula()), lang);
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): qlist: " + getQlist());
             if (getQlist().length() > 1) {
                 String quantification = "! [";

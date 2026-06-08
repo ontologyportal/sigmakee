@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
 */
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import junit.framework.AssertionFailedError;
 import org.junit.Test;
 
@@ -39,7 +39,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
                 "   (or\n" +
                 "      (subclass ?CLASS1 ?CLASS2)\n" +
                 "      (subclass ?CLASS2 ?CLASS1)))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
         assertNull(output);
@@ -53,7 +53,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
                 "      (subrelation ?REL1 ?REL2 Car)\n" +
                 "      (domainSubclass ?REL2 ?NUMBER ?CLASS1))\n" +
                 "   (domainSubclass ?REL1 ?NUMBER ?CLASS1))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
         assertNotNull(output);
@@ -63,7 +63,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
     public void testArityCheck3() throws AssertionFailedError {
 
         String input = "(instance ?x)";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
         assertNotNull(output);
@@ -73,7 +73,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
     public void testArityCheck4() throws AssertionFailedError {
 
         String input = "(instance ?x ?y)";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
         assertNull(output);
@@ -83,7 +83,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
     public void testArityCheck5() throws AssertionFailedError {
 
         String input = "(=> (instance ?x) (instance ?y Human))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
         assertNotNull(output);
@@ -93,7 +93,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
     public void testArityCheck6() throws AssertionFailedError {
 
         String input = "(exists (?x) (instance ?x))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
         assertNotNull(output);
@@ -103,7 +103,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
     public void testArityCheck7() throws AssertionFailedError {
 
         String input = "(exists (?x) (and (instance ?x) (instance ?y Human))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
         assertNotNull(output);
@@ -113,7 +113,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
     public void testArityCheck8() throws AssertionFailedError {
 
         String input = "(exists (?x ?y ?z) (and (instance ?x ?y) (instance ?z Human))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
         assertNull(output);
@@ -124,7 +124,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
     public void testArityCheck9() throws AssertionFailedError {
 
         String input = "(=> (instance ?x ?y) (instance ?y ?z)";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
         assertNull(output);

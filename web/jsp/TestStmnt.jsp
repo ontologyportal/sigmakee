@@ -1,4 +1,5 @@
-<%@page import="com.articulate.sigma.parsing.FormulaAST,com.articulate.sigma.parsing.Expr"%>
+<%@page import="com.articulate.sigma.parsing.Formula,com.articulate.sigma.parsing.Expr"%>
+<%@ page import="com.articulate.sigma.parsing.Formula" %>
 <%@include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
@@ -49,7 +50,7 @@ if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
             error = true;
         }
         else {
-            FormulaAST f = new FormulaAST(stmt);
+            Formula f = new Formula(stmt);
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Expr> res = fp.preProcessExpr(f,false,kb);
             if (f.errors != null && f.errors.size() > 0) {
@@ -82,7 +83,7 @@ if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
             Set<String> terms = f.collectTerms();
             if (terms != null) {
                 for (String s : terms) {
-                    if (!kb.terms.contains(s) && !FormulaAST.isVariable(s)) {
+                    if (!kb.terms.contains(s) && !Formula.isVariable(s)) {
                         status.append("Unknown term: " + s + "<P>\n");
                       error = true;
                     }

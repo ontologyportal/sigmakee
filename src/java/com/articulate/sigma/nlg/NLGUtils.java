@@ -1,7 +1,7 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.*;
 
@@ -169,7 +169,7 @@ public class NLGUtils implements Serializable {
      */
     static String prettyPrint(String term) {
 
-        if (term.endsWith(FormulaAST.FN_SUFF))
+        if (term.endsWith(Formula.FN_SUFF))
             term = term.substring(0,term.length()-2);
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < term.length(); i++) {
@@ -180,7 +180,7 @@ public class NLGUtils implements Serializable {
                     result.append(term.charAt(i));
                 else {
                     if (i != 0)
-                        result.append(FormulaAST.SPACE);
+                        result.append(Formula.SPACE);
                     result.append(Character.toLowerCase(term.charAt(i)));
                 }
             }
@@ -278,20 +278,20 @@ public class NLGUtils implements Serializable {
 
         StringBuilder result = new StringBuilder();
         String comma = NLGUtils.getKeyword(",", language);
-        String space = FormulaAST.SPACE;
+        String space = Formula.SPACE;
         String[] arr = strseq.split(space);
         int lastIdx = (arr.length - 1);
         String val;
         for (int i = 0; i < arr.length; i++) {
             val = arr[i];
             if (i > 0) {
-                if (val.equals(NLGUtils.getKeyword(FormulaAST.AND, language))) {
+                if (val.equals(NLGUtils.getKeyword(Formula.AND, language))) {
                     // Make behavior for lists that include "and" the same as for those that don't.
                     continue;
                 }
                 if (i == lastIdx) {
                     result.append(space);
-                    result.append(NLGUtils.getKeyword(FormulaAST.AND, language));
+                    result.append(NLGUtils.getKeyword(Formula.AND, language));
                 }
                 else {
                     result.append(comma);
@@ -453,13 +453,13 @@ public class NLGUtils implements Serializable {
                 if (isArabic)
                     return ordinal;
                 else
-                    return (NLGUtils.getKeyword("the", language) + FormulaAST.SPACE + ordinal);
+                    return (NLGUtils.getKeyword("the", language) + Formula.SPACE + ordinal);
             }
             else {
                 if (isArabic)
-                    return (NLGUtils.getKeyword("the", language) + FormulaAST.SPACE + NLGUtils.getKeyword("other", language));
+                    return (NLGUtils.getKeyword("the", language) + Formula.SPACE + NLGUtils.getKeyword("other", language));
                 else
-                    return (NLGUtils.getKeyword("the", language) + FormulaAST.SPACE + NLGUtils.getKeyword("other", language));
+                    return (NLGUtils.getKeyword("the", language) + Formula.SPACE + NLGUtils.getKeyword("other", language));
             }
         }
         // count = 1 (first occurrence of a type)
@@ -592,7 +592,7 @@ public class NLGUtils implements Serializable {
      * @return A format string with all relevant argument pointers
      * expanded.
      */
-    public static String expandStar(FormulaAST f, String strFormat, String lang) {
+    public static String expandStar(Formula f, String strFormat, String lang) {
 
         String result = strFormat;
         List<String> problems = new ArrayList<>();
@@ -630,7 +630,7 @@ public class NLGUtils implements Serializable {
                         for (int k = 0 ; k < argsToPrint.length ; k++) {
                             argsToPrint[k] = false;
                         }
-                        delim = FormulaAST.SPACE;
+                        delim = Formula.SPACE;
                         nArgsSet = 0;
                         lb = null;
                         lbi = p1;
@@ -685,7 +685,7 @@ public class NLGUtils implements Serializable {
                             lbi = p1;
                             if (lbi < slen) { lb = strFormat.substring(lbi, (lbi + 1)); }
                         }
-                        AND = NLGUtils.getKeyword(FormulaAST.AND, lang);
+                        AND = NLGUtils.getKeyword(Formula.AND, lang);
                         if (StringUtil.emptyString(AND))
                             AND = "+";
                         nAdded = 0;
@@ -695,17 +695,17 @@ public class NLGUtils implements Serializable {
                             if (addAll || argsToPrint[i]) {
                                 if (nAdded >= 1) {
                                     if (nToAdd == 2) {
-                                        sb.append(FormulaAST.SPACE);
+                                        sb.append(Formula.SPACE);
                                         sb.append(AND);
-                                        sb.append(FormulaAST.SPACE);
+                                        sb.append(Formula.SPACE);
                                     }
                                     else {
                                         sb.append(delim);
-                                        sb.append(FormulaAST.SPACE);
+                                        sb.append(Formula.SPACE);
                                     }
                                     if ((nToAdd > 2) && ((nAdded + 1) == nToAdd)) {
                                         sb.append(AND);
-                                        sb.append(FormulaAST.SPACE);
+                                        sb.append(Formula.SPACE);
                                     }
                                 }
                                 sb.append("%").append(i);

@@ -13,7 +13,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net.
 package com.articulate.sigma;
 
 import com.articulate.sigma.dataProc.Hotel;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WSD;
@@ -24,7 +24,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,7 +31,6 @@ import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
-import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -606,7 +604,7 @@ public class DB {
             if (!statements.isEmpty()) {
                 // System.out.println("  writing ");
                 String stmt;
-                FormulaAST printF = new FormulaAST();
+                Formula printF = new Formula();
                 for (Iterator it = statements.iterator(); it.hasNext(); n++) {
                     stmt = StringUtil.normalizeSpaceChars((String) it.next());
                     if (stmt.startsWith("(contentRegexPattern"))

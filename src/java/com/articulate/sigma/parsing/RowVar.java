@@ -33,7 +33,7 @@ public class RowVar {
         StringBuilder sb = new StringBuilder();
         String varName = var.substring(1), varList;
         for (int i = 1; i <= 7; i++) {
-            sb.append(FormulaAST.V_PREF).append(varName).append(i).append(FormulaAST.SPACE);
+            sb.append(Formula.V_PREF).append(varName).append(i).append(Formula.SPACE);
             varList = sb.toString();
             varList = varList.substring(0, varList.length() - 1);
             result.add(varList);
@@ -43,23 +43,23 @@ public class RowVar {
 
     /** ***************************************************************
      */
-    public Set<FormulaAST> expandVariableArityRowVar(Set<FormulaAST> flist, String var) {
+    public Set<Formula> expandVariableArityRowVar(Set<Formula> flist, String var) {
 
         List<String> varLists = getVarSubStrings(var);
-        Set<FormulaAST> result = new HashSet<>();
-        List<FormulaAST> formulaList;
-        FormulaAST f2, fnew;
+        Set<Formula> result = new HashSet<>();
+        List<Formula> formulaList;
+        Formula f2, fnew;
         String literal, pred, varName, varList, newliteral, fnSuffix, newPredName;
         StringBuilder sb = new StringBuilder();
         int predArity;
-        for (FormulaAST f : flist) {
+        for (Formula f : flist) {
             formulaList = new ArrayList<>();
             for (int i = 1; i <= 7; i++) {
-                f2 = new FormulaAST(f);
+                f2 = new Formula(f);
                 formulaList.add(f2);
             }
             if (debug) System.out.println("expandVariableArityRowVar(): row var structs " + f.rowVarStructs);
-            for (FormulaAST.RowStruct rs : f.rowVarStructs.get(var)) {
+            for (Formula.RowStruct rs : f.rowVarStructs.get(var)) {
                 if (debug) System.out.println("expandVariableArityRowVar(): variable row struct " + rs);
                 literal = rs.literal;
                 pred = rs.pred;
@@ -70,9 +70,9 @@ public class RowVar {
                     varList = varLists.get(i);
                     if (debug) System.out.println("expandVariableArityRowVar(): replace varname : @" +
                             varName + " with varlist: " + varList);
-                    newliteral = literal.replace(FormulaAST.R_PREF + varName, varList);
-                    fnSuffix = FormulaAST.FN_SUFF;
-                    if (!pred.endsWith(FormulaAST.FN_SUFF))
+                    newliteral = literal.replace(Formula.R_PREF + varName, varList);
+                    fnSuffix = Formula.FN_SUFF;
+                    if (!pred.endsWith(Formula.FN_SUFF))
                         fnSuffix = "";
                     if (debug) System.out.println("expandVariableArityRowVar(): literal arity: " + rs.arity);
                     if (debug) System.out.println("expandVariableArityRowVar(): i: " + i);
@@ -94,7 +94,7 @@ public class RowVar {
                         fnew.setFormula(fnew.getFormula().replace(literal, newliteral));
                     else {
                         if (debug) System.out.println("expandVariableArityRowVar(): replace (" + literal + ") with (" + newliteral + ")");
-                        fnew.setFormula(fnew.getFormula().replace(FormulaAST.LP + literal + FormulaAST.RP, FormulaAST.LP + newliteral + FormulaAST.RP));
+                        fnew.setFormula(fnew.getFormula().replace(Formula.LP + literal + Formula.RP, Formula.LP + newliteral + Formula.RP));
                     }
                     if (debug) System.out.println("expandVariableArityRowVar(): fnew after " + fnew.getFormula());
                 }
@@ -111,7 +111,7 @@ public class RowVar {
      * if the pred var is only an argument to variable arity relations, return -1
      *
      */
-    public Map<String, Integer> findArities(FormulaAST f) {
+    public Map<String, Integer> findArities(Formula f) {
 
         if (debug && f.getFormula().contains(" maxValue ")) {
             System.out.println("findArities():" + f);
@@ -119,14 +119,14 @@ public class RowVar {
         }
         Map<String, Integer> arities = new HashMap<>();
         int predArity, rowVarArity;
-        for (Set<FormulaAST.RowStruct> rshs : f.rowVarStructs.values()) {
+        for (Set<Formula.RowStruct> rshs : f.rowVarStructs.values()) {
             // Sort by predicate name so the "last wins" overwrite is deterministic across JVM runs.
             // RowStruct uses default Object.hashCode() (identity-based), so HashSet iteration order
             // varies between JVM instances; sorting by pred name makes it stable.
-            List<FormulaAST.RowStruct> sortedRshs = rshs.stream()
+            List<Formula.RowStruct> sortedRshs = rshs.stream()
                     .sorted(Comparator.comparing(rs -> rs.pred))
                     .collect(Collectors.toList());
-            for (FormulaAST.RowStruct rs : sortedRshs) {
+            for (Formula.RowStruct rs : sortedRshs) {
                 if (debug) System.out.println("findArities(): variable " + rs.rowvar + " pred: " + rs.pred);
                 if (KB.isVariable(rs.pred)) {
                     System.err.println("Error in RowVar.findArities(): variable pred: " + rs.pred + " in "  + f);
@@ -176,13 +176,13 @@ public class RowVar {
             int rvArity = entry.getValue();
             if (rvArity <= 0) continue; // already conflicted or variable-arity
 
-            Set<FormulaAST.RowStruct> rsSet = f.rowVarStructs.get(rowVarName);
+            Set<Formula.RowStruct> rsSet = f.rowVarStructs.get(rowVarName);
             if (rsSet == null) continue;
 
             // For each expansion position (1..rvArity), collect the domain types
             // contributed by each predicate that uses this row var.
             Map<Integer, Set<String>> posTypes = new HashMap<>();
-            for (FormulaAST.RowStruct rs : rsSet) {
+            for (Formula.RowStruct rs : rsSet) {
                 if (rs.pred.equals("__quantList")) continue;
                 List<String> sig = kb.kbCache.signatures.get(rs.pred);
                 if (sig == null) continue;
@@ -231,13 +231,13 @@ public class RowVar {
      * variables are arguments to VariableArityRelations then there will
      * be multiple returned formulas
      */
-    public Set<FormulaAST> expandRowVar(FormulaAST f) {
+    public Set<Formula> expandRowVar(Formula f) {
 
         if (debug) System.out.println("expandRowVar(): f: " + f);
         Map<String, Integer> varArities = findArities(f);
-        Set<FormulaAST> result = new HashSet<>();
+        Set<Formula> result = new HashSet<>();
         if (debug) System.out.println("expandRowVar(): variable arity vars list " + varArities);
-        Set<FormulaAST> flist = new HashSet<>();
+        Set<Formula> flist = new HashSet<>();
         flist.add(f);
         String varName, literal, pred, newliteral, fnSuffix, newPredName;
         StringBuilder sb = new StringBuilder();
@@ -259,7 +259,7 @@ public class RowVar {
                 varName = var.substring(1);
                 sb.setLength(0); // reset
                 for (int i = 1; i <= arity; i++)
-                    sb.append(FormulaAST.V_PREF).append(varName).append(i).append(FormulaAST.SPACE);
+                    sb.append(Formula.V_PREF).append(varName).append(i).append(Formula.SPACE);
                 if (sb.length() > 0)
                     sb.deleteCharAt(sb.length() - 1);
                 else{
@@ -267,7 +267,7 @@ public class RowVar {
                     continue;
                 }
 
-                for (FormulaAST.RowStruct rs : f.rowVarStructs.get(var)) {
+                for (Formula.RowStruct rs : f.rowVarStructs.get(var)) {
                     if (debug) System.out.println("expandRowVar(): variable row struct " + rs);
                     literal = rs.literal;
                     pred = rs.pred;
@@ -276,10 +276,10 @@ public class RowVar {
                         continue;
                     }
                     if (kb.kbCache.valences.get(pred) == -1 && rs.rowvar.equals(var)) {
-                        newliteral = literal.replace(FormulaAST.R_PREF + varName, sb.toString());
+                        newliteral = literal.replace(Formula.R_PREF + varName, sb.toString());
                         // and we don't want a false match to a part of a var name
-                        fnSuffix = FormulaAST.FN_SUFF;
-                        if (!pred.endsWith(FormulaAST.FN_SUFF))
+                        fnSuffix = Formula.FN_SUFF;
+                        if (!pred.endsWith(Formula.FN_SUFF))
                             fnSuffix = "";
                         newPredName = pred;
                         if (!pred.equals("__quantList"))
@@ -302,8 +302,8 @@ public class RowVar {
             flist.addAll(result);
             if (debug) System.out.println("expandRowVar() result for var: " + var);
             if (debug) {
-                for (FormulaAST fp : flist) {
-                    if (fp.getFormula().contains(FormulaAST.R_PREF))
+                for (Formula fp : flist) {
+                    if (fp.getFormula().contains(Formula.R_PREF))
                         System.err.println("Error in RowVar.expandRowVar(): row var in output -");
                     System.out.println(fp.getFormula() + "\n");
                 }
@@ -316,18 +316,18 @@ public class RowVar {
 
     /** ***************************************************************
      */
-    public Set<FormulaAST> expandRowVar(Set<FormulaAST> rowvars) {
+    public Set<Formula> expandRowVar(Set<Formula> rowvars) {
 
         kb.kbCache.valences.put("__quantList",-1); // quantifier list doesn't have a real predicate
-        Set<FormulaAST> result = new HashSet<>();
-        for (FormulaAST f : rowvars)
+        Set<Formula> result = new HashSet<>();
+        for (Formula f : rowvars)
             if (!f.higherOrder && !f.containsNumber)
             result.addAll(expandRowVar(f));
         return result;
     }
 
     /** ***************************************************************
-     * Expr-based row-variable expansion.  Mirrors {@link #expandRowVar(FormulaAST)}
+     * Expr-based row-variable expansion.  Mirrors {@link #expandRowVar(Formula)}
      * but operates on the structured {@link Expr} AST instead of the KIF string,
      * avoiding all string-level find/replace operations.
      *
@@ -335,7 +335,7 @@ public class RowVar {
      * @return set of expanded Expr trees (one per arity combination);
      *         returns a singleton containing {@code fa.expr} if no row vars found
      */
-    public Set<Expr> expandRowVarExpr(FormulaAST fa) {
+    public Set<Expr> expandRowVarExpr(Formula fa) {
 
         kb.kbCache.valences.put("__quantList", -1); // quantifier list doesn't have a real predicate
         Map<String, Integer> arities = findArities(fa);
@@ -384,7 +384,7 @@ public class RowVar {
      * VariableArityRelation (valence == -1), the head is renamed to
      * {@code pred_totalArity[Fn]}.  Does NOT mutate any RowStruct fields.
      */
-    private Expr spliceRowVar(Expr expr, String rowVarName, List<Expr> vars, FormulaAST fa, int n) {
+    private Expr spliceRowVar(Expr expr, String rowVarName, List<Expr> vars, Formula fa, int n) {
 
         if (!(expr instanceof Expr.SExpr se)) return expr;
 
@@ -411,7 +411,7 @@ public class RowVar {
                     // same pred appears with different arities under the same row variable
                     // (e.g. (ListFn @ROW ?ITEM) and (ListFn @ROW) in the same formula).
                     int totalArity = newArgs.size();
-                    String fnSuffix = pred.endsWith(FormulaAST.FN_SUFF) ? FormulaAST.FN_SUFF : "";
+                    String fnSuffix = pred.endsWith(Formula.FN_SUFF) ? Formula.FN_SUFF : "";
                     String newPredName = pred + "__" + totalArity + fnSuffix;
                     newHead = new Expr.Atom(newPredName);
                     kb.kbCache.copyNewPredFromVariableArity(newPredName, pred, totalArity);
@@ -424,13 +424,13 @@ public class RowVar {
     /** ***************************************************************
      * Compute the total predicate arity after splicing {@code n} expanded
      * row-var arguments into a VariableArityRelation.  Mirrors the arithmetic
-     * in {@link #expandVariableArityRowVar} and {@link #expandRowVar(FormulaAST)}.
+     * in {@link #expandVariableArityRowVar} and {@link #expandRowVar(Formula)}.
      */
-    private int computeTotalArity(String pred, String rowVarName, int n, FormulaAST fa) {
+    private int computeTotalArity(String pred, String rowVarName, int n, Formula fa) {
 
-        Set<FormulaAST.RowStruct> rsSet = fa.rowVarStructs.get(rowVarName);
+        Set<Formula.RowStruct> rsSet = fa.rowVarStructs.get(rowVarName);
         if (rsSet != null) {
-            for (FormulaAST.RowStruct rs : rsSet) {
+            for (Formula.RowStruct rs : rsSet) {
                 if (rs.pred.equals(pred))
                     return rs.arity > 1 ? rs.arity - 1 + n : n;
             }

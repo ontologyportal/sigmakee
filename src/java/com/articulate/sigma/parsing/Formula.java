@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 
-public class FormulaAST implements Comparable, Serializable {
+public class Formula implements Comparable, Serializable {
 
     // ---------------------------------------------------------------
     // Static constants — copied verbatim from Formula
@@ -120,7 +120,7 @@ public class FormulaAST implements Comparable, Serializable {
     public boolean isTFF        = false;
     public String relation      = null;
     public List<String> stringArgs = new ArrayList<>();
-    public List<FormulaAST> args      = new ArrayList<>();
+    public List<Formula> args      = new ArrayList<>();
     public Set<String> allVarsCache      = new HashSet<>();
     public List<Set<String>> allVarsPairCache = new ArrayList<>();
     public Set<String> quantVarsCache   = new HashSet<>();
@@ -223,7 +223,7 @@ public class FormulaAST implements Comparable, Serializable {
             String element = sb.toString();
             if (!element.isEmpty()) {
                 stringArgs.add(element);
-                args.add(new FormulaAST(element));
+                args.add(new Formula(element));
             } else if (i < end && input.charAt(i) == ')') {
                 i++;
             }
@@ -272,13 +272,13 @@ public class FormulaAST implements Comparable, Serializable {
 
     /** ***************************************************************
      */
-    public FormulaAST() {
+    public Formula() {
 
     }
 
     /** ***************************************************************
      */
-    public FormulaAST(FormulaAST f) {
+    public Formula(Formula f) {
 
         this.endLine = f.endLine;
         this.startLine = f.startLine;
@@ -379,7 +379,7 @@ public class FormulaAST implements Comparable, Serializable {
 
     /** ***************************************************************
      */
-    public FormulaAST(String f) {
+    public Formula(String f) {
         read(f);
     }
 
@@ -388,7 +388,7 @@ public class FormulaAST implements Comparable, Serializable {
      * Populates formula string, predVarCache, rowVarCache, rowVarStructs, and varTypes
      * by walking the Expr tree in O(n).
      */
-    public FormulaAST(Expr expr) {
+    public Formula(Expr expr) {
         setFormula(expr.toKifString());
         this.expr = expr;
         this.predVarCache = new HashSet<>();
@@ -474,7 +474,7 @@ public class FormulaAST implements Comparable, Serializable {
         if (sv.errors != null)
             this.errors.addAll(sv.errors);
         if (sv.result.containsKey(0)) {
-            FormulaAST parsed = sv.result.get(0);
+            Formula parsed = sv.result.get(0);
             this.expr = parsed.expr;
             this.parsedFormula = parsed.parsedFormula;
             this.argMap = parsed.argMap;
@@ -518,7 +518,7 @@ public class FormulaAST implements Comparable, Serializable {
      * Merge arguments to a predicate, which may themselves be complex
      * formulas, with an existing formula.
      */
-    public FormulaAST mergeFormulaAST(FormulaAST f2) {
+    public Formula mergeFormulaAST(Formula f2) {
 
         this.allVarsCache.addAll(f2.allVarsCache);
         this.allVarsPairCache.addAll(f2.allVarsPairCache);
@@ -595,7 +595,7 @@ public class FormulaAST implements Comparable, Serializable {
      * Merge arguments to a predicate, which may themselves be complex
      * formulas, with an existing formula.
      */
-    public FormulaAST mergeFormulaAST(List<FormulaAST> ar) {
+    public Formula mergeFormulaAST(List<Formula> ar) {
 
         if (this.predVarCache == null)
             this.predVarCache = new HashSet<>();
@@ -604,7 +604,7 @@ public class FormulaAST implements Comparable, Serializable {
         Map<Integer, Set<SuokifParser.ArgumentContext>> argnummap, newargnummap;
         Set<SuokifParser.ArgumentContext> largs, newargs;
         Set<String> newtypes, existingTypes;
-        for (FormulaAST arf : ar) {
+        for (Formula arf : ar) {
             this.allVarsCache.addAll(arf.allVarsCache);
             this.allVarsPairCache.addAll(arf.allVarsPairCache);
             this.quantVarsCache.addAll(arf.quantVarsCache);
@@ -739,9 +739,9 @@ public class FormulaAST implements Comparable, Serializable {
     /** *****************************************************************
      * the textual version of the formula
      */
-    public static FormulaAST createComment(String input) {
+    public static Formula createComment(String input) {
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.setFormula(input);
         f.comment = true;
         return f;
@@ -821,9 +821,9 @@ public class FormulaAST implements Comparable, Serializable {
         String head = se.headName();
         if (head == null) return false; // var-list node inside a quantifier
         List<String> sig = kb.kbCache.getSignature(head);
-        if (sig != null && !FormulaAST.isVariable(head) && sig.contains("Formula"))
+        if (sig != null && !Formula.isVariable(head) && sig.contains("Formula"))
             return true;
-        boolean logop = FormulaAST.isLogicalOperator(head);
+        boolean logop = Formula.isLogicalOperator(head);
         for (Expr arg : se.args()) {
             if (!(arg instanceof Expr.SExpr argSe)) continue; // atom/var/literal — not HOL
             String argHead = argSe.headName();
@@ -942,7 +942,7 @@ public class FormulaAST implements Comparable, Serializable {
     public String cddr() {
 
         if (expr != null) {
-            FormulaAST fCdr = this.cdrAsFormula();
+            Formula fCdr = this.cdrAsFormula();
             if (fCdr != null)
                 return fCdr.cdr();
             return null;
@@ -955,13 +955,13 @@ public class FormulaAST implements Comparable, Serializable {
 
     /*****************************************************************
      */
-    public FormulaAST carAsFormula() {
+    public Formula carAsFormula() {
 
         if (expr != null) {
             List<Expr> elements = getElements();
             if (elements.isEmpty()) return null;
             Expr target = elements.get(0);
-            FormulaAST f = new FormulaAST();
+            Formula f = new Formula();
             f.setFormula(target.toKifString());
             f.expr = target;
             return f;
@@ -973,11 +973,11 @@ public class FormulaAST implements Comparable, Serializable {
 
     /*****************************************************************
      */
-    public FormulaAST cdrAsFormula() {
+    public Formula cdrAsFormula() {
 
         if (expr != null) {
             List<Expr> elements = getElements();
-            FormulaAST f = new FormulaAST();
+            Formula f = new Formula();
             if (elements.size() <= 1) {
                 f.setFormula("()");
                 f.expr = new Expr.SExpr(null, Collections.emptyList());
@@ -991,25 +991,25 @@ public class FormulaAST implements Comparable, Serializable {
         System.out.println("Formula string-based method used: cdrAsFormula");
         if (!listP()) return null;
         if (empty()) {
-            FormulaAST emptyF = new FormulaAST();
+            Formula emptyF = new Formula();
             emptyF.setFormula("()");
             emptyF.expr = new Expr.SExpr(null, Collections.emptyList());
             return emptyF;
         }
         loadArguments();
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.setFormula("(" + String.join(" ", stringArgs.subList(1, stringArgs.size())) + ")");
         return f;
     }
 
     /*****************************************************************
      */
-    public FormulaAST cddrAsFormula() {
+    public Formula cddrAsFormula() {
 
         if (expr != null) {
-            FormulaAST cdr = cdrAsFormula();
+            Formula cdr = cdrAsFormula();
             if (cdr == null || cdr.getFormula().equals("()")) {
-                FormulaAST f = new FormulaAST();
+                Formula f = new Formula();
                 f.setFormula("()");
                 return f;
             }
@@ -1017,7 +1017,7 @@ public class FormulaAST implements Comparable, Serializable {
         }
         System.out.println("Formula string-based method used: cddrAsFormula");
         loadArguments();
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.setFormula("(" + String.join(" ", stringArgs.subList(Math.min(2, stringArgs.size()), stringArgs.size())) + ")");
         return f;
     }
@@ -1038,13 +1038,13 @@ public class FormulaAST implements Comparable, Serializable {
 
     /*****************************************************************
      */
-    public FormulaAST getArgument(int argnum) {
+    public Formula getArgument(int argnum) {
 
         if (expr != null) {
             List<Expr> elements = getElements();
             if (argnum < 0 || argnum >= elements.size()) return null;
             Expr target = elements.get(argnum);
-            FormulaAST f = new FormulaAST();
+            Formula f = new Formula();
             f.setFormula(target.toKifString());
             f.expr = target;
             return f;
@@ -1109,15 +1109,15 @@ public class FormulaAST implements Comparable, Serializable {
 
     /*****************************************************************
      */
-    public List<FormulaAST> complexArgumentsToArrayList(int start) {
+    public List<Formula> complexArgumentsToArrayList(int start) {
 
         if (expr != null) {
             List<Expr> elements = getElements();
             if (start < 0 || start >= elements.size()) return null;
-            List<FormulaAST> res = new ArrayList<>();
+            List<Formula> res = new ArrayList<>();
             for (int i = start; i < elements.size(); i++) {
                 Expr e = elements.get(i);
-                FormulaAST f = new FormulaAST();
+                Formula f = new Formula();
                 f.setFormula(e.toKifString());
                 f.expr = e;
                 res.add(f);
@@ -1161,7 +1161,7 @@ public class FormulaAST implements Comparable, Serializable {
             return allVarsCache;
         }
         System.out.println("Formula string-based method used: collectAllVariables");
-        return new FormulaAST(getFormula()).collectAllVariables();
+        return new Formula(getFormula()).collectAllVariables();
     }
 
     /*****************************************************************
@@ -1194,7 +1194,7 @@ public class FormulaAST implements Comparable, Serializable {
             return quantVarsCache;
         }
         System.out.println("Formula string-based method used: collectQuantifiedVariables");
-        return new FormulaAST(getFormula()).collectQuantifiedVariables();
+        return new Formula(getFormula()).collectQuantifiedVariables();
     }
 
     /** ***************************************************************
@@ -1239,7 +1239,7 @@ public class FormulaAST implements Comparable, Serializable {
             return this.termCache;
         }
         System.out.println("Formula string-based method used: collectTerms");
-        return new FormulaAST(getFormula()).collectTerms();
+        return new Formula(getFormula()).collectTerms();
     }
 
 
@@ -1256,23 +1256,23 @@ public class FormulaAST implements Comparable, Serializable {
 
         if (varTypeCache == null || varTypeCache.keySet().isEmpty()) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            varTypeCache = fp.findAllTypeRestrictions(new FormulaAST(getFormula()),kb);
+            varTypeCache = fp.findAllTypeRestrictions(new Formula(getFormula()),kb);
         }
         if (!KBmanager.initialized)
             return false;
         if (this.listP()) {
             String pred = this.car();
             List<String> sig = kb.kbCache.getSignature(pred);
-            if (sig != null && !FormulaAST.isVariable(pred) && sig.contains("Formula"))
+            if (sig != null && !Formula.isVariable(pred) && sig.contains("Formula"))
                 return true;
             boolean logop = isLogicalOperator(pred);
             List<String> al = literalToArrayList();
-            FormulaAST f;
+            Formula f;
             for (String arg : al) {
-                f = new FormulaAST();
+                f = new Formula();
                 f.read(arg);
                 f.varTypeCache = this.varTypeCache;
-                if (!atom(arg) && !kb.isFunctional(new FormulaAST(f.getFormula()))) {
+                if (!atom(arg) && !kb.isFunctional(new Formula(f.getFormula()))) {
                     if (logop) {
                         if (f.isHigherOrder(kb)) {
                             higherOrder = true;
@@ -1300,7 +1300,7 @@ public class FormulaAST implements Comparable, Serializable {
             return collectAllVariables().isEmpty();
         }
         System.out.println("Formula string-based method used: isGround");
-        return new FormulaAST(getFormula()).isGround();
+        return new Formula(getFormula()).isGround();
     }
 
     /*****************************************************************
@@ -1324,7 +1324,7 @@ public class FormulaAST implements Comparable, Serializable {
         }
         if (expr != null) return false;
         System.out.println("Formula string-based method used: isSimpleClause");
-        return new FormulaAST(getFormula()).isSimpleClause(kb);
+        return new Formula(getFormula()).isSimpleClause(kb);
     }
 
     /*****************************************************************
@@ -1334,7 +1334,7 @@ public class FormulaAST implements Comparable, Serializable {
         if (expr instanceof Expr.SExpr se && "not".equals(se.headName()) && se.args().size() == 1) {
             Expr arg = se.args().getFirst();
             if (arg instanceof Expr.SExpr) {
-                FormulaAST fa = new FormulaAST();
+                Formula fa = new Formula();
                 fa.setFormula(arg.toKifString());
                 fa.expr = arg;
                 return fa.isSimpleClause(kb);
@@ -1342,7 +1342,7 @@ public class FormulaAST implements Comparable, Serializable {
         }
         if (expr != null) return false;
         System.out.println("Formula string-based method used: isSimpleNegatedClause");
-        return new FormulaAST(getFormula()).isSimpleNegatedClause(kb);
+        return new Formula(getFormula()).isSimpleNegatedClause(kb);
     }
 
     /*****************************************************************
@@ -1355,7 +1355,7 @@ public class FormulaAST implements Comparable, Serializable {
         }
         if (expr != null) return false;
         System.out.println("Formula string-based method used: isFunctionalTerm");
-        return new FormulaAST(getFormula()).isFunctionalTerm();
+        return new Formula(getFormula()).isFunctionalTerm();
     }
 
     /*****************************************************************
@@ -1367,7 +1367,7 @@ public class FormulaAST implements Comparable, Serializable {
         }
         if (expr != null) return false;
         System.out.println("Formula string-based method used: isBinary");
-        return new FormulaAST(getFormula()).isBinary();
+        return new Formula(getFormula()).isBinary();
     }
 
     /** ***************************************************************
@@ -1377,7 +1377,7 @@ public class FormulaAST implements Comparable, Serializable {
         if (expr instanceof Expr.SExpr se) return "exists".equals(se.headName());
         if (expr != null) return false;
         System.out.println("Formula string-based method used: isExistentiallyQuantified");
-        return new FormulaAST(getFormula()).isExistentiallyQuantified();
+        return new Formula(getFormula()).isExistentiallyQuantified();
     }
 
     /*****************************************************************
@@ -1387,7 +1387,7 @@ public class FormulaAST implements Comparable, Serializable {
         if (expr instanceof Expr.SExpr se) return "forall".equals(se.headName());
         if (expr != null) return false;
         System.out.println("Formula string-based method used: isUniversallyQuantified");
-        return new FormulaAST(getFormula()).isUniversallyQuantified();
+        return new Formula(getFormula()).isUniversallyQuantified();
     }
 
     /*****************************************************************
@@ -1420,7 +1420,7 @@ public class FormulaAST implements Comparable, Serializable {
 
     /*****************************************************************
      */
-    public FormulaAST substituteVariables(Map<String, String> m) {
+    public Formula substituteVariables(Map<String, String> m) {
 
         if (expr != null) {
             Expr newExpr = substituteExpr(expr, m);
@@ -1429,7 +1429,7 @@ public class FormulaAST implements Comparable, Serializable {
             // Without this, expandRowVarExpr() sees empty rowVarStructs, findArities()
             // returns {}, and every @ROW stays unexpanded → ListFn__1Fn(V__ROW) instead
             // of ListFn__NFn(V__ROW1,...,V__ROWN).
-            FormulaAST fa = new FormulaAST(newExpr);
+            Formula fa = new Formula(newExpr);
             // Preserve source metadata for ordering and comment output
             fa.sourceFile     = this.sourceFile;
             fa.startLine      = this.startLine;
@@ -1439,16 +1439,16 @@ public class FormulaAST implements Comparable, Serializable {
             return fa;
         }
         System.out.println("Formula string-based method used: substituteVariables");
-        FormulaAST base = new FormulaAST(getFormula()).substituteVariables(m);
+        Formula base = new Formula(getFormula()).substituteVariables(m);
         if (base == null) return null;
-        FormulaAST wrapped = new FormulaAST();
+        Formula wrapped = new Formula();
         wrapped.setFormula(base.getFormula());
         return wrapped;
     }
 
     /*****************************************************************
      */
-    public FormulaAST replaceVar(String var, String term) {
+    public Formula replaceVar(String var, String term) {
 
         if (expr != null) {
             Map<String, String> m = new HashMap<>();
@@ -1456,9 +1456,9 @@ public class FormulaAST implements Comparable, Serializable {
             return substituteVariables(m);
         }
         System.out.println("Formula string-based method used: replaceVar");
-        FormulaAST base = new FormulaAST(getFormula()).replaceVar(var, term);
+        Formula base = new Formula(getFormula()).replaceVar(var, term);
         if (base == null) return null;
-        FormulaAST wrapped = new FormulaAST();
+        Formula wrapped = new Formula();
         wrapped.setFormula(base.getFormula());
         return wrapped;
     }
@@ -1492,7 +1492,7 @@ public class FormulaAST implements Comparable, Serializable {
         if (o == null) return false;
         String other;
         Expr otherExpr = null;
-        if (o instanceof FormulaAST fa2) {
+        if (o instanceof Formula fa2) {
             other = fa2.getFormula();
             otherExpr = fa2.expr;
         } else {
@@ -1517,7 +1517,7 @@ public class FormulaAST implements Comparable, Serializable {
         if (formulaASTClausalForm == null) {
             String s = getFormula();
             if (s != null && !s.isEmpty())
-                formulaASTClausalForm = ClausifierExpr.toNegAndPosLitsWithRenameInfo(new FormulaAST(this.getFormula()));
+                formulaASTClausalForm = ClausifierExpr.toNegAndPosLitsWithRenameInfo(new Formula(this.getFormula()));
         }
         return formulaASTClausalForm;
     }
@@ -1535,19 +1535,19 @@ public class FormulaAST implements Comparable, Serializable {
     // ---------------------------------------------------------------
 
     //TODO: copy from Formula — refactor to use Expr AST instead of String manipulation
-    private List<FormulaAST> parseList(String s) {
+    private List<Formula> parseList(String s) {
 
-        List<FormulaAST> result = new ArrayList<>();
-        FormulaAST f = new FormulaAST();
+        List<Formula> result = new ArrayList<>();
+        Formula f = new Formula();
         f.read(LP + s + RP);
         if (f.empty())
             return result;
         String car;
-        FormulaAST newForm;
+        Formula newForm;
         while (!f.empty()) {
             car = f.car();
             f.read(f.cdr());
-            newForm = new FormulaAST();
+            newForm = new Formula();
             newForm.read(car);
             result.add(newForm);
         }
@@ -1557,8 +1557,8 @@ public class FormulaAST implements Comparable, Serializable {
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
     private boolean compareFormulaSets(String s) {
 
-        List<FormulaAST> thisList = parseList(this.getFormula().substring(1, this.getFormula().length() - 1));
-        List<FormulaAST> sList = parseList(s.substring(1, s.length() - 1));
+        List<Formula> thisList = parseList(this.getFormula().substring(1, this.getFormula().length() - 1));
+        List<Formula> sList = parseList(s.substring(1, s.length() - 1));
         if (thisList.size() != sList.size())
             return false;
         for (int i = 0; i < thisList.size(); i++) {
@@ -1577,20 +1577,20 @@ public class FormulaAST implements Comparable, Serializable {
 
         if (formula == null)
             return null;
-        if (!FormulaAST.listP(formula)) {
+        if (!Formula.listP(formula)) {
             if (varPlaceholders && isVariable(formula))
                 return "?XYZ";
             else
                 return formula;
         }
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(formula);
         List<String> args = f.complexArgumentsToArrayListString(1);
         if (args == null || args.isEmpty())
             return formula;
         List<String> orderedArgs = new ArrayList<>();
         for (String arg : args)
-            orderedArgs.add(FormulaAST.normalizeParameterOrder(arg, kb, varPlaceholders));
+            orderedArgs.add(Formula.normalizeParameterOrder(arg, kb, varPlaceholders));
         String head = f.car();
         if (isCommutative(head) || (kb != null && kb.isInstanceOf(head, "SymmetricRelation")))
             Collections.sort(orderedArgs);
@@ -1619,21 +1619,21 @@ public class FormulaAST implements Comparable, Serializable {
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    private String validArgsRecurse(FormulaAST f, String filename, Integer lineNo) {
+    private String validArgsRecurse(Formula f, String filename, Integer lineNo) {
 
         if ("".equals(f.getFormula()) || !f.listP() || f.atom() || f.empty())
             return "";
         String pred = f.car();
         String rest = f.cdr();
-        FormulaAST restF = new FormulaAST();
+        Formula restF = new Formula();
         restF.read(rest);
         int argCount = 0;
         String arg, result, errString;
-        FormulaAST argF;
+        Formula argF;
         while (!restF.empty()) {
             argCount++;
             arg = restF.car();
-            argF = new FormulaAST();
+            argF = new Formula();
             argF.read(arg);
             result = validArgsRecurse(argF, filename, lineNo);
             if (!"".equals(result))
@@ -1657,7 +1657,7 @@ public class FormulaAST implements Comparable, Serializable {
                 return errString;
             }
             else {
-                FormulaAST quantF = new FormulaAST();
+                Formula quantF = new Formula();
                 quantF.read(rest);
                 if (!listP(quantF.car())) {
                     errString = "No var list for quantifier " + location + ": " + f.toString();
@@ -1711,10 +1711,10 @@ public class FormulaAST implements Comparable, Serializable {
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    static class SortByLine implements Comparator<FormulaAST> {
+    static class SortByLine implements Comparator<Formula> {
 
         @Override
-        public int compare(FormulaAST a, FormulaAST b) {
+        public int compare(Formula a, Formula b) {
             return a.startLine - b.startLine;
         }
     }
@@ -1739,10 +1739,10 @@ public class FormulaAST implements Comparable, Serializable {
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public FormulaAST copy() { return new FormulaAST(this); }
+    public Formula copy() { return new Formula(this); }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public FormulaAST deepCopy() { return copy(); }
+    public Formula deepCopy() { return copy(); }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
     public List getClauses() {
@@ -1793,7 +1793,7 @@ public class FormulaAST implements Comparable, Serializable {
             throw new ClassCastException("Error in Formula.compareTo(): null formula");
         }
         String fFormula;
-        if (f instanceof FormulaAST fa) {
+        if (f instanceof Formula fa) {
             fFormula = fa.getFormula();
         } else {
             throw new ClassCastException("Error in Formula.compareTo(): "
@@ -1852,9 +1852,9 @@ public class FormulaAST implements Comparable, Serializable {
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public FormulaAST cons(String obj) {
+    public Formula cons(String obj) {
 
-        FormulaAST ans = this;
+        Formula ans = this;
         String fStr = this.getFormula();
         if (!StringUtil.emptyString(obj) && !StringUtil.emptyString(fStr)) {
             String theNewFormula;
@@ -1867,7 +1867,7 @@ public class FormulaAST implements Comparable, Serializable {
             else
                 theNewFormula = (LP + obj + " . " + fStr + RP);
             if (theNewFormula != null) {
-                ans = new FormulaAST();
+                ans = new Formula();
                 ans.read(theNewFormula);
             }
         }
@@ -1875,15 +1875,15 @@ public class FormulaAST implements Comparable, Serializable {
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public FormulaAST cons(FormulaAST f) {
+    public Formula cons(Formula f) {
 
         return cons(f.getFormula());
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public FormulaAST append(FormulaAST f) {
+    public Formula append(Formula f) {
 
-        FormulaAST newFormula = new FormulaAST();
+        Formula newFormula = new Formula();
         newFormula.read(getFormula());
         if (newFormula.equals("") || newFormula.atom()) {
             System.err.println("Error in Formula.append(): attempt to append to non-list: " + getFormula());
@@ -1907,7 +1907,7 @@ public class FormulaAST implements Comparable, Serializable {
 
         if (getFormula() == null || "".equals(getFormula()))
             return "";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(getFormula());
         return validArgsRecurse(f, filename, lineNo);
     }
@@ -1954,8 +1954,8 @@ public class FormulaAST implements Comparable, Serializable {
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public void collectQuantifiedUnquantifiedVariablesRecurse(FormulaAST f, Map<String, Boolean> varFlag,
-                  Set<String> unquantifiedVariables, Set<String> quantifiedVariables) {
+    public void collectQuantifiedUnquantifiedVariablesRecurse(Formula f, Map<String, Boolean> varFlag,
+                                                              Set<String> unquantifiedVariables, Set<String> quantifiedVariables) {
 
         if (f == null || StringUtil.emptyString(f.getFormula()) || f.empty())
             return;
@@ -1966,13 +1966,13 @@ public class FormulaAST implements Comparable, Serializable {
                 String[] varArray = (varString.substring(1, varString.length() - 1)).split(SPACE);
                 quantifiedVariables.addAll(Arrays.asList(varArray));
                 for (int i = 2; i < f.listLength(); i++) {
-                    collectQuantifiedUnquantifiedVariablesRecurse(new FormulaAST(f.getArgument(i).getFormula()),
+                    collectQuantifiedUnquantifiedVariablesRecurse(new Formula(f.getArgument(i).getFormula()),
                             varFlag, unquantifiedVariables, quantifiedVariables);
                 }
             }
             else {
                 for (int i = 1; i < f.listLength(); i++) {
-                    collectQuantifiedUnquantifiedVariablesRecurse(new FormulaAST(f.getArgument(i).getFormula()),
+                    collectQuantifiedUnquantifiedVariablesRecurse(new Formula(f.getArgument(i).getFormula()),
                             varFlag, unquantifiedVariables, quantifiedVariables);
                 }
             }
@@ -1988,7 +1988,7 @@ public class FormulaAST implements Comparable, Serializable {
                     }
                 }
                 else {
-                    collectQuantifiedUnquantifiedVariablesRecurse(new FormulaAST(arg),
+                    collectQuantifiedUnquantifiedVariablesRecurse(new Formula(arg),
                             varFlag, unquantifiedVariables, quantifiedVariables);
                 }
             }
@@ -2001,7 +2001,7 @@ public class FormulaAST implements Comparable, Serializable {
         List<String> result = new ArrayList<>();
         if (listLength() < 1)
             return result;
-        FormulaAST fcar = new FormulaAST();
+        Formula fcar = new Formula();
         fcar.read(this.car());
         if (fcar.isVariable())
             result.add(fcar.getFormula());
@@ -2009,7 +2009,7 @@ public class FormulaAST implements Comparable, Serializable {
             if (fcar.listP())
                 result.addAll(fcar.collectAllVariablesOrdered());
         }
-        FormulaAST fcdr = new FormulaAST();
+        Formula fcdr = new Formula();
         fcdr.read(this.cdr());
         if (fcdr.isVariable())
             result.add(fcdr.getFormula());
@@ -2029,9 +2029,9 @@ public class FormulaAST implements Comparable, Serializable {
             return true;
         if (atom(s) && s.compareTo(getFormula()) != 0)
             return false;
-        FormulaAST form = new FormulaAST();
+        Formula form = new Formula();
         form.read(this.getFormula());
-        FormulaAST sform = new FormulaAST();
+        Formula sform = new Formula();
         sform.read(s);
         if (AND.equals(form.car().intern()) || OR.equals(form.car().intern()) || XOR.equals(form.car().intern())) {
             if (sform.car().intern() == null ? sform.car().intern() != null : !sform.car().intern().equals(sform.car().intern()))
@@ -2041,9 +2041,9 @@ public class FormulaAST implements Comparable, Serializable {
             return form.compareFormulaSets(sform.getFormula());
         }
         else {
-            FormulaAST newForm = new FormulaAST();
+            Formula newForm = new Formula();
             newForm.read(form.car());
-            FormulaAST newSform = new FormulaAST();
+            Formula newSform = new Formula();
             newSform.read(sform.cdr());
             return newForm.logicallyEquals(sform.car()) &&
                 newSform.logicallyEquals(form.cdr());
@@ -2051,7 +2051,7 @@ public class FormulaAST implements Comparable, Serializable {
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public boolean logicallyEquals(FormulaAST f) {
+    public boolean logicallyEquals(Formula f) {
 
         boolean equalStrings = this.equals(f);
         if (equalStrings)
@@ -2064,23 +2064,23 @@ public class FormulaAST implements Comparable, Serializable {
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
     @Deprecated
-    public boolean unifyWith(FormulaAST f) {
+    public boolean unifyWith(Formula f) {
 
         if (debug) System.out.println("Formula.unifyWith(): input f : " + f);
         if (debug) System.out.println("Formula.unifyWith(): input this : " + this);
-        FormulaAST f1 = ClausifierExpr.clausify(new FormulaAST(this.getFormula()));
-        FormulaAST f2 = ClausifierExpr.clausify(new FormulaAST(f.getFormula()));
+        Formula f1 = ClausifierExpr.clausify(new Formula(this.getFormula()));
+        Formula f2 = ClausifierExpr.clausify(new Formula(f.getFormula()));
         if (debug) System.out.println("Formula.unifyWith(): after clausify f : " + f2);
         if (debug) System.out.println("Formula.unifyWith(): after clausify  this : " + f1);
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         Map<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap = new HashMap<>();
-        List<Set<VariableMapping>> result = mapFormulaVariables(new FormulaAST(f1.getFormula()), new FormulaAST(f2.getFormula()), kb, memoMap);
+        List<Set<VariableMapping>> result = mapFormulaVariables(new Formula(f1.getFormula()), new Formula(f2.getFormula()), kb, memoMap);
         if (debug) System.out.println("Formula.unifyWith(): variable mapping : " + result);
         return result != null;
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public boolean deepEquals(FormulaAST f) {
+    public boolean deepEquals(Formula f) {
 
         if (debug)
             System.out.println("deepEquals(): this: " + this + " arg: " + f);
@@ -2089,15 +2089,15 @@ public class FormulaAST implements Comparable, Serializable {
         boolean stringsEqual = Objects.equals(this.getFormula(), f.getFormula());
         if (stringsEqual || (this.getFormula() == null || f.getFormula() == null))
             return stringsEqual;
-        FormulaAST tmp1 = ClausifierExpr.clausify(new FormulaAST(this.getFormula()));
-        FormulaAST tmp2 = ClausifierExpr.clausify(new FormulaAST(f.getFormula()));
+        Formula tmp1 = ClausifierExpr.clausify(new Formula(this.getFormula()));
+        Formula tmp2 = ClausifierExpr.clausify(new Formula(f.getFormula()));
         if (debug)
             System.out.println("deepEquals(): clausified this: " + tmp1 + " arg: " + tmp2);
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        String normalized1 = FormulaAST.normalizeParameterOrder(tmp1.getFormula(), kb, true);
-        String normalized2 = FormulaAST.normalizeParameterOrder(tmp2.getFormula(), kb, true);
-        FormulaAST f1 = new FormulaAST(normalized1);
-        FormulaAST f2 = new FormulaAST(normalized2);
+        String normalized1 = Formula.normalizeParameterOrder(tmp1.getFormula(), kb, true);
+        String normalized2 = Formula.normalizeParameterOrder(tmp2.getFormula(), kb, true);
+        Formula f1 = new Formula(normalized1);
+        Formula f2 = new Formula(normalized2);
         if (debug)
             System.out.println("deepEquals(): normalized this: \n" + f1.format("", "  ", "\n") + "\n arg: \n" + f2.format("", "  ", "\n"));
         normalized1 = ClausifierExpr.normalizeVariables(f1.getFormula(), true);
@@ -2138,7 +2138,7 @@ public class FormulaAST implements Comparable, Serializable {
             if (isQuantifier(arg0)) {
                 String arg2 = this.getStringArgument(2);
                 if (listP(arg2)) {
-                    FormulaAST newF = new FormulaAST();
+                    Formula newF = new Formula();
                     newF.read(arg2);
                     ans = newF.isRule();
                 }
@@ -2161,10 +2161,10 @@ public class FormulaAST implements Comparable, Serializable {
             return false;
         if (getFormula().contains(EQUANT) || getFormula().contains(UQUANT))
             return false;
-        FormulaAST antecedent = cdrAsFormula().carAsFormula();
+        Formula antecedent = cdrAsFormula().carAsFormula();
         if (!antecedent.isSimpleClause(kb) && !antecedent.car().equals(AND))
             return false;
-        FormulaAST consequent = cdrAsFormula().cdrAsFormula().carAsFormula();
+        Formula consequent = cdrAsFormula().cdrAsFormula().carAsFormula();
         return !(!consequent.isSimpleClause(kb) && !consequent.car().equals(AND));
     }
 
@@ -2240,7 +2240,7 @@ public class FormulaAST implements Comparable, Serializable {
         if (this.listP() && !this.empty())
             accumulator.add(this.getFormula());
         List<String> kifLists = new ArrayList<>();
-        FormulaAST f;
+        Formula f;
         String klist, arg;
         while (!accumulator.isEmpty()) {
             kifLists.clear();
@@ -2249,7 +2249,7 @@ public class FormulaAST implements Comparable, Serializable {
             for (Iterator<String> it = kifLists.iterator(); it.hasNext();) {
                 klist = it.next();
                 if (listP(klist)) {
-                    f = new FormulaAST();
+                    f = new Formula();
                     f.read(klist);
                     for (int i = 0; !f.empty(); i++) {
                         arg = f.car();
@@ -2294,17 +2294,17 @@ public class FormulaAST implements Comparable, Serializable {
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public FormulaAST renameVariableArityRelations(KB kb, Map<String, String> relationMap) {
+    public Formula renameVariableArityRelations(KB kb, Map<String, String> relationMap) {
 
-        FormulaAST result = this;
+        Formula result = this;
         if (result.listP()) {
             StringBuilder sb = new StringBuilder();
-            FormulaAST f = new FormulaAST();
+            Formula f = new Formula();
             f.read(this.getFormula());
             int flen = f.listLength();
             String suffix = ("__" + (flen - 1));
             String arg, func;
-            FormulaAST argF;
+            Formula argF;
             sb.append(LP);
             for (int i = 0; i < flen; i++) {
                 arg = f.getStringArgument(i);
@@ -2318,14 +2318,14 @@ public class FormulaAST implements Comparable, Serializable {
                     arg += suffix + func;
                 }
                 else if (listP(arg)) {
-                    argF = new FormulaAST();
+                    argF = new Formula();
                     argF.read(arg);
                     arg = argF.renameVariableArityRelations(kb, relationMap).getFormula();
                 }
                 sb.append(arg);
             }
             sb.append(RP);
-            f = new FormulaAST();
+            f = new Formula();
             f.read(sb.toString());
             result = f;
         }
@@ -2357,16 +2357,16 @@ public class FormulaAST implements Comparable, Serializable {
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public FormulaAST replaceQuantifierVars(String quantifier, List<String> vars) throws Exception {
+    public Formula replaceQuantifierVars(String quantifier, List<String> vars) throws Exception {
 
         if (!quantifier.equals(this.car()))
             throw new Exception("The formula is not properly quantified: " + this);
-        FormulaAST param = new FormulaAST();
+        Formula param = new Formula();
         param.read(this.cadr());
         List<String> existVars = param.complexArgumentsToArrayListString(0);
         if (existVars.size() != vars.size())
             throw new Exception("Wrong number of variables: " + vars + " to substitute in existentially quantified formula: " + this);
-        FormulaAST result = this;
+        Formula result = this;
         for (int i = 0; i < existVars.size(); i++)
             result = result.replaceVar(existVars.get(i), vars.get(i));
         return result;
@@ -2533,7 +2533,7 @@ public class FormulaAST implements Comparable, Serializable {
         }
         StringBuilder result = new StringBuilder();
         String rel = car();
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.setFormula(cdr());
         if (!atom(rel)) {
             System.out.println("Error in Formula.toProlog(): Relation not an atom: " + rel);
@@ -2568,9 +2568,9 @@ public class FormulaAST implements Comparable, Serializable {
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public FormulaAST rename(String term2, String term1) {
+    public Formula rename(String term2, String term1) {
 
-        FormulaAST newFormula = new FormulaAST();
+        Formula newFormula = new Formula();
         newFormula.read("()");
         if (this.atom()) {
             if (getFormula().equals(term2))
@@ -2578,13 +2578,13 @@ public class FormulaAST implements Comparable, Serializable {
             return this;
         }
         if (!this.empty()) {
-            FormulaAST f1 = new FormulaAST();
+            Formula f1 = new Formula();
             f1.read(this.car());
             if (f1.listP())
                 newFormula = newFormula.cons(f1.rename(term2, term1));
             else
                 newFormula = newFormula.append(f1.rename(term2, term1));
-            FormulaAST f2 = new FormulaAST();
+            Formula f2 = new Formula();
             f2.read(this.cdr());
             newFormula = newFormula.append(f2.rename(term2, term1));
         }
@@ -2592,9 +2592,9 @@ public class FormulaAST implements Comparable, Serializable {
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public FormulaAST negate() {
+    public Formula negate() {
 
-        return new FormulaAST(LP + NOT + SPACE + getFormula() + RP);
+        return new Formula(LP + NOT + SPACE + getFormula() + RP);
     }
 
     // ---------------------------------------------------------------
@@ -2721,7 +2721,7 @@ public class FormulaAST implements Comparable, Serializable {
     @Deprecated
     public static boolean isFunctionalTerm(String s) {
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(s);
         return f.isFunctionalTerm();
     }
@@ -2752,7 +2752,7 @@ public class FormulaAST implements Comparable, Serializable {
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
     public static boolean isQuery(String query, String formula) {
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(formula);
         return f.equals(query);
     }
@@ -2763,7 +2763,7 @@ public class FormulaAST implements Comparable, Serializable {
         boolean result = false;
         String fstr = formulaString.trim();
         if (fstr.startsWith("(not")) {
-            FormulaAST f = new FormulaAST();
+            Formula f = new Formula();
             f.read(fstr);
             result = query.equals(f.getArgument(1));
         }
@@ -2783,18 +2783,18 @@ public class FormulaAST implements Comparable, Serializable {
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
     public static String textFormat(String input) {
 
-        FormulaAST f = new FormulaAST(input);
+        Formula f = new Formula(input);
         return f.format("", "  ", Character.valueOf((char) 10).toString());
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
     public static String removeTemporalRelations(String p_f, KB kb) {
 
-        FormulaAST f = new FormulaAST(p_f);
+        Formula f = new Formula(p_f);
         String newFormula = "";
         String nextCar = f.car();
         String nextCdr, subFormula, formulaArg;
-        FormulaAST subF;
+        Formula subF;
         while (nextCar != null && !nextCar.equals("")) {
             nextCdr = f.cdr();
             if (kb.isChildOf(nextCar, "TemporalRelation")) {
@@ -2802,7 +2802,7 @@ public class FormulaAST implements Comparable, Serializable {
             }
             else if (nextCar.matches("^\\s*\\(\\s*and.*")) {
                 subFormula = removeTemporalRelations(nextCar, kb);
-                subF = new FormulaAST(LP + subFormula + RP);
+                subF = new Formula(LP + subFormula + RP);
                 if (subF.cddr() == null || subF.cddr().isEmpty() || subF.cddr().equals("()")) {
                     subFormula = subFormula.replaceFirst("^\\s*and\\s+", "");
                 }
@@ -2829,15 +2829,15 @@ public class FormulaAST implements Comparable, Serializable {
             else {
                 newFormula += nextCar + SPACE + removeTemporalRelations(nextCar, kb);
             }
-            f = new FormulaAST(nextCdr);
+            f = new Formula(nextCdr);
             nextCar = f.car();
         }
         return newFormula;
     }
 
     //TODO: pure copy from Formula — refactor to use Expr AST instead of String manipulation
-    public static List<Set<VariableMapping>> mapFormulaVariables(FormulaAST f1, FormulaAST f2, KB kb,
-                                     Map<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap) {
+    public static List<Set<VariableMapping>> mapFormulaVariables(Formula f1, Formula f2, KB kb,
+                                                                 Map<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap) {
 
         FormulaUtil.FormulaMatchMemoMapKey key = FormulaUtil.createFormulaMatchMemoMapKey(f1.getFormula(), f2.getFormula());
         if (memoMap.containsKey(key))
@@ -2872,9 +2872,9 @@ public class FormulaAST implements Comparable, Serializable {
         else if (f1.atom() || f2.atom()) {
             return null;
         }
-        FormulaAST head1 = new FormulaAST();
+        Formula head1 = new Formula();
         head1.read(f1.car());
-        FormulaAST head2 = new FormulaAST();
+        Formula head2 = new Formula();
         head2.read(f2.car());
         List<Set<VariableMapping>> headMaps = mapFormulaVariables(head1, head2, kb, memoMap);
         memoMap.put(FormulaUtil.createFormulaMatchMemoMapKey(head1.getFormula(), head2.getFormula()), headMaps);
@@ -2887,11 +2887,11 @@ public class FormulaAST implements Comparable, Serializable {
         if (!isCommutative(head1.getFormula()) && !(kb != null && kb.isInstanceOf(head1.getFormula(), "SymmetricRelation"))) {
             List<Set<VariableMapping>> runningMaps = headMaps;
             List<Set<VariableMapping>> parameterMaps;
-            FormulaAST parameter1, parameter2;
+            Formula parameter1, parameter2;
             for (int i = 0; i < args1.size(); i++) {
-                parameter1 = new FormulaAST();
+                parameter1 = new Formula();
                 parameter1.read(args1.get(i));
-                parameter2 = new FormulaAST();
+                parameter2 = new Formula();
                 parameter2.read(args2.get(i));
                 parameterMaps = mapFormulaVariables(parameter1, parameter2, kb, memoMap);
                 memoMap.put(FormulaUtil.createFormulaMatchMemoMapKey(parameter1.getFormula(), parameter2.getFormula()), parameterMaps);
@@ -2904,17 +2904,17 @@ public class FormulaAST implements Comparable, Serializable {
         else {
             List<Set<VariableMapping>> unionMaps = new ArrayList<>();
             List<int[]> permutations = FormulaUtil.getPermutations(args1.size(),
-                    (a, b) -> mapFormulaVariables(new FormulaAST(args1.get(a)), new FormulaAST(args2.get(b)), kb, memoMap) != null);
+                    (a, b) -> mapFormulaVariables(new Formula(args1.get(a)), new Formula(args2.get(b)), kb, memoMap) != null);
             List<Set<VariableMapping>> currentMaps, parameterMaps;
             boolean currentPairingValid;
-            FormulaAST parameter1, parameter2;
+            Formula parameter1, parameter2;
             for (int[] perm : permutations) {
                 currentMaps = headMaps;
                 currentPairingValid = true;
                 for (int i = 0; i < args1.size(); i++) {
-                    parameter1 = new FormulaAST();
+                    parameter1 = new Formula();
                     parameter1.read(args1.get(i));
-                    parameter2 = new FormulaAST();
+                    parameter2 = new Formula();
                     parameter2.read(args2.get(perm[i]));
                     parameterMaps = mapFormulaVariables(parameter1, parameter2, kb, memoMap);
                     memoMap.put(FormulaUtil.createFormulaMatchMemoMapKey(parameter1.getFormula(), parameter2.getFormula()), parameterMaps);
@@ -2955,7 +2955,7 @@ public class FormulaAST implements Comparable, Serializable {
             String kbName = KBmanager.getMgr().getPref("sumokbname");
             KB kb = KBmanager.getMgr().getKB(kbName);
             if (argMap.containsKey("type") && argMap.get("type").size() == 1) {
-                FormulaAST f = new FormulaAST(argMap.get("type").get(0));
+                Formula f = new Formula(argMap.get("type").get(0));
                 System.out.println("Formula.main() formula type of " + argMap.get("type").get(0) + " : " + f.findType(kb));
             }
             else if (argMap.containsKey("format") && argMap.get("format").size() == 1) {

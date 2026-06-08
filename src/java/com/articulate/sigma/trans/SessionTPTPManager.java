@@ -11,7 +11,7 @@ This prevents TQ tests from overwriting the shared base TPTP files.
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.LoggingUtils;
 
@@ -55,7 +55,7 @@ public class SessionTPTPManager {
      *
      * <p>Entries are removed in {@link #cleanupSession}.
      */
-    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, FormulaAST>>
+    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>>
             sessionAxiomKeys = new ConcurrentHashMap<>();
 
     /** Sessions currently in batch-tell mode (Case B/default TPTP regens suppressed). */
@@ -64,14 +64,14 @@ public class SessionTPTPManager {
     /** Per-session lazy flag for askVampireForTQ(). */
     private static final ConcurrentHashMap<String, Boolean> precomputedRegenRequired = new ConcurrentHashMap<>();
 
-    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, FormulaAST>> sessionDerivedTypeFacts = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>> sessionDerivedTypeFacts = new ConcurrentHashMap<>();
 
     /*********************************************************************************
      * Return the session-specific axiom key for {@code sessionId}, creating an empty map on the first call.
      * @param sessionId The HTTP session ID
      * @return The session-specific axiom key
      */
-    public static Map<String, FormulaAST> getOrCreateSessionAxiomKey(String sessionId) {
+    public static Map<String, Formula> getOrCreateSessionAxiomKey(String sessionId) {
 
         return sessionAxiomKeys.computeIfAbsent(sessionId, id -> new ConcurrentHashMap<>());
     }
@@ -81,7 +81,7 @@ public class SessionTPTPManager {
      * @param sessionId The HTTP session ID
      * @return The session axiom key, or null
      */
-    public static Map<String, FormulaAST> getSessionAxiomKey(String sessionId) {
+    public static Map<String, Formula> getSessionAxiomKey(String sessionId) {
 
         return sessionAxiomKeys.get(sessionId);
     }
@@ -163,15 +163,15 @@ public class SessionTPTPManager {
      * @param lang      TPTP language ("fof"/"tptp" or "tff")
      * @return path to the (updated) session TPTP file, or null if sessionId is empty
      */
-    public static Path applyIncrementalUpdate(KB kb, String sessionId, FormulaAST formula, String lang) {
+    public static Path applyIncrementalUpdate(KB kb, String sessionId, Formula formula, String lang) {
 
         if (sessionId == null || sessionId.isEmpty() || formula == null) return null;
         String pred = formula.car();
         if (pred == null) return null;
         final String fileLang = "fof".equals(lang) ? "tptp" : lang;
         KBcache sessionCache = getOrCreateSessionCache(sessionId, kb);
-        Set<FormulaAST> affected = Collections.emptySet();
-        Set<FormulaAST> newFormulas = new LinkedHashSet<>();
+        Set<Formula> affected = Collections.emptySet();
+        Set<Formula> newFormulas = new LinkedHashSet<>();
         newFormulas.add(formula);
         try {
             switch (pred) {
@@ -328,7 +328,7 @@ public class SessionTPTPManager {
         Object lock = sessionLocks.computeIfAbsent(sessionId, k -> new Object());
         synchronized (lock) {
             if (isSessionFileValid(sessionId, kb, lang)) {
-                Set<FormulaAST> derivedFacts = getSessionDerivedTypeFacts(sessionId);
+                Set<Formula> derivedFacts = getSessionDerivedTypeFacts(sessionId);
                 if (!derivedFacts.isEmpty()) patchSessionTPTP(sessionId, kb, lang, Collections.emptySet(), derivedFacts, getOrCreateSessionCache(sessionId, kb));
                 return getSessionTPTPPath(sessionId, kb.name, lang);
             }
@@ -355,7 +355,7 @@ public class SessionTPTPManager {
                 catch (AtomicMoveNotSupportedException e) {
                     Files.move(tmpFile, sessionFile, StandardCopyOption.REPLACE_EXISTING);
                 }
-                Set<FormulaAST> derivedFacts = getSessionDerivedTypeFacts(sessionId);
+                Set<Formula> derivedFacts = getSessionDerivedTypeFacts(sessionId);
                 if (!derivedFacts.isEmpty()) patchSessionTPTP(sessionId, kb, lang, Collections.emptySet(), derivedFacts, getOrCreateSessionCache(sessionId, kb));
                 sessionGenerationTimestamps.put(sessionId, System.currentTimeMillis());
                 return sessionFile;
@@ -382,7 +382,7 @@ public class SessionTPTPManager {
      */
     public static Path patchSessionTPTP(
             String sessionId, KB kb, String lang,
-            Set<FormulaAST> affected, Set<FormulaAST> newFormulas, KBcache sessionCache) {
+            Set<Formula> affected, Set<Formula> newFormulas, KBcache sessionCache) {
 
         final String normalizedLang = "tptp".equals(lang) ? "fof" : lang;
         final String ext            = "fof".equals(normalizedLang) ? "tptp" : normalizedLang;
@@ -406,20 +406,20 @@ public class SessionTPTPManager {
                 long startTime = System.currentTimeMillis();
 
                 // 1. Build reverse index merging global axiomKey + this session's patch key
-                Map<FormulaAST, Set<String>> reverseIndex = buildReverseIndex(sessionId);
+                Map<Formula, Set<String>> reverseIndex = buildReverseIndex(sessionId);
 
                 // 2. Collect axiom names that must be commented out (retranslated formulas only)
                 Set<String> toSkip = new HashSet<>();
                 if (hasAffected) {
-                    for (FormulaAST f : affected) {
+                    for (Formula f : affected) {
                         Set<String> names = reverseIndex.get(f);
                         if (names != null) toSkip.addAll(names);
                     }
                 }
                 KBcache sharedCache = kb.kbCache;
                 kb.kbCache = sessionCache;
-                Map<FormulaAST, List<String>> retranslated;
-                Map<FormulaAST, List<String>> newTranslations;
+                Map<Formula, List<String>> retranslated;
+                Map<Formula, List<String>> newTranslations;
                 try {
                     retranslated    = hasAffected ? SUMOKBtoTPTPKB.retranslateFormulas(kb, affected, normalizedLang, sessionId) : Collections.emptyMap();
                     newTranslations = hasNewForms ? SUMOKBtoTPTPKB.retranslateFormulas(kb, newFormulas, normalizedLang, sessionId) : Collections.emptyMap();
@@ -429,7 +429,7 @@ public class SessionTPTPManager {
                 if (debugPatch) writePatchDebugLog(sessionDir, sessionId, normalizedLang, affected, toSkip, retranslated, newFormulas, newTranslations);
                 String sanitizedKBName = kb.name.replaceAll("\\W", "_");
                 // Session axiom key — isolated from the global axiomKey
-                Map<String, FormulaAST> sessionAxiomKey = getOrCreateSessionAxiomKey(sessionId);
+                Map<String, Formula> sessionAxiomKey = getOrCreateSessionAxiomKey(sessionId);
                 // Build a session-specific prefix so axiom names are globally unique
                 // even when two sessions patch concurrently.
                 // Use Math.abs(hashCode) of sessionId for a compact numeric discriminator;
@@ -458,7 +458,7 @@ public class SessionTPTPManager {
                     Set<String> patchWritten = new HashSet<>(); // within-patch dedup
 
                     // Retranslated base formulas
-                    for (Map.Entry<FormulaAST, List<String>> entry : retranslated.entrySet()) {
+                    for (Map.Entry<Formula, List<String>> entry : retranslated.entrySet()) {
                         for (String body : entry.getValue()) {
                             if (alreadyInBase.contains(body)) continue;
                             if (!patchWritten.add(body)) continue;
@@ -468,7 +468,7 @@ public class SessionTPTPManager {
                             sessionAxiomKey.put(name, entry.getKey());
                         }
                     }
-                    for (Map.Entry<FormulaAST, List<String>> entry : newTranslations.entrySet()) {
+                    for (Map.Entry<Formula, List<String>> entry : newTranslations.entrySet()) {
                         for (String body : entry.getValue()) {
                             if (alreadyInBase.contains(body)) continue;
                             if (!patchWritten.add(body)) continue;
@@ -503,11 +503,11 @@ public class SessionTPTPManager {
             Path sessionDir,
             String sessionId,
             String lang,
-            Set<FormulaAST> affected,
+            Set<Formula> affected,
             Set<String> toSkip,
-            Map<FormulaAST, List<String>> retranslated,
-            Set<FormulaAST> newFormulas,
-            Map<FormulaAST, List<String>> newTranslations) {
+            Map<Formula, List<String>> retranslated,
+            Set<Formula> newFormulas,
+            Map<Formula, List<String>> newTranslations) {
 
         Path logFile = sessionDir.resolve("patch-debug-" + System.currentTimeMillis() + ".log");
         try (BufferedWriter w = Files.newBufferedWriter(logFile, StandardCharsets.UTF_8)) {
@@ -521,20 +521,20 @@ public class SessionTPTPManager {
             w.newLine();
             if (affected != null && !affected.isEmpty()) {
                 int idx = 1;
-                for (FormulaAST f : affected) {
+                for (Formula f : affected) {
                     w.newLine();
                     w.write("[" + idx++ + "] KIF: " + f.getFormula().replace('\n', ' '));
                     w.newLine();
                     w.write("    Source : " + f.sourceFile + " line " + f.startLine);
                     w.newLine();
                     Set<String> names = new java.util.HashSet<>();
-                    for (Map.Entry<String, FormulaAST> e : SUMOKBtoTPTPKB.axiomKey.entrySet()) {
+                    for (Map.Entry<String, Formula> e : SUMOKBtoTPTPKB.axiomKey.entrySet()) {
                         if (e.getValue().equals(f)) names.add(e.getKey());
                     }
                     // Also check session axiom keys
-                    Map<String, FormulaAST> sessKey = sessionAxiomKeys.get(sessionId);
+                    Map<String, Formula> sessKey = sessionAxiomKeys.get(sessionId);
                     if (sessKey != null) {
-                        for (Map.Entry<String, FormulaAST> e : sessKey.entrySet()) {
+                        for (Map.Entry<String, Formula> e : sessKey.entrySet()) {
                             if (e.getValue().equals(f)) names.add(e.getKey());
                         }
                     }
@@ -564,7 +564,7 @@ public class SessionTPTPManager {
             w.newLine();
             if (newFormulas != null && !newFormulas.isEmpty()) {
                 int idx = 1;
-                for (FormulaAST f : newFormulas) {
+                for (Formula f : newFormulas) {
                     w.newLine();
                     w.write("[" + idx++ + "] KIF: " + f.getFormula().replace('\n', ' '));
                     w.newLine();
@@ -601,12 +601,12 @@ public class SessionTPTPManager {
      * Build a reverse index: Formula → Set of axiom names.
      * @param sessionId the HTTP session ID
      */
-    private static Map<FormulaAST, Set<String>> buildReverseIndex(String sessionId) {
+    private static Map<Formula, Set<String>> buildReverseIndex(String sessionId) {
 
-        Map<FormulaAST, Set<String>> rev = new HashMap<>();
-        for (Map.Entry<String, FormulaAST> e : SUMOKBtoTPTPKB.axiomKey.entrySet()) rev.computeIfAbsent(e.getValue(), k -> new HashSet<>()).add(e.getKey());
-        Map<String, FormulaAST> sessionKey = sessionAxiomKeys.get(sessionId);
-        if (sessionKey != null) for (Map.Entry<String, FormulaAST> e : sessionKey.entrySet()) rev.computeIfAbsent(e.getValue(), k -> new HashSet<>()).add(e.getKey());
+        Map<Formula, Set<String>> rev = new HashMap<>();
+        for (Map.Entry<String, Formula> e : SUMOKBtoTPTPKB.axiomKey.entrySet()) rev.computeIfAbsent(e.getValue(), k -> new HashSet<>()).add(e.getKey());
+        Map<String, Formula> sessionKey = sessionAxiomKeys.get(sessionId);
+        if (sessionKey != null) for (Map.Entry<String, Formula> e : sessionKey.entrySet()) rev.computeIfAbsent(e.getValue(), k -> new HashSet<>()).add(e.getKey());
         return rev;
     }
 
@@ -654,7 +654,7 @@ public class SessionTPTPManager {
 
         kb.withUserAssertionLock(() -> {
             Set<String> toRemove = new HashSet<>();
-            for (Map.Entry<String, FormulaAST> e : kb.formulaMap.entrySet()) if (sessionId.equals(e.getValue().uaSessionId)) toRemove.add(e.getKey());
+            for (Map.Entry<String, Formula> e : kb.formulaMap.entrySet()) if (sessionId.equals(e.getValue().uaSessionId)) toRemove.add(e.getKey());
             if (toRemove.isEmpty()) return null;
             for (List<String> list : kb.formulas.values()) list.removeAll(toRemove);
             toRemove.forEach(kb.formulaMap::remove);
@@ -824,21 +824,21 @@ public class SessionTPTPManager {
      * @param sessionCache the session-specific KBcache
      * @return derived type facts as Formula objects
      */
-    private static Set<FormulaAST> materializeInheritedInstanceFacts(String sessionId, KB kb, String inst, String directClass, KBcache sessionCache) {
+    private static Set<Formula> materializeInheritedInstanceFacts(String sessionId, KB kb, String inst, String directClass, KBcache sessionCache) {
 
-        Set<FormulaAST> result = new LinkedHashSet<>();
+        Set<Formula> result = new LinkedHashSet<>();
         if (StringUtil.emptyString(inst) || StringUtil.emptyString(directClass) || sessionCache == null || sessionCache.instanceOf == null) return result;
         Set<String> classes = sessionCache.instanceOf.get(inst);
         if (classes == null || classes.isEmpty()) return result;
-        ConcurrentHashMap<String, FormulaAST> stored = getOrCreateSessionDerivedTypeFacts(sessionId);
+        ConcurrentHashMap<String, Formula> stored = getOrCreateSessionDerivedTypeFacts(sessionId);
         for (String cls : new TreeSet<>(classes)) {
             if (StringUtil.emptyString(cls)) continue;
             if (cls.equals(directClass)) continue;
             if ("Entity".equals(cls)) continue;
             String kif = "(instance " + inst + " " + cls + ")";
-            FormulaAST f = stored.get(kif);
+            Formula f = stored.get(kif);
             if (f == null) {
-                f = new FormulaAST();
+                f = new Formula();
                 f.read(kif);
                 f.uaSessionId = sessionId;
                 stored.put(kif, f);
@@ -854,7 +854,7 @@ public class SessionTPTPManager {
      * @param sessionId the session id
      * @return derived type fact map
      */
-    private static ConcurrentHashMap<String, FormulaAST> getOrCreateSessionDerivedTypeFacts(String sessionId) {
+    private static ConcurrentHashMap<String, Formula> getOrCreateSessionDerivedTypeFacts(String sessionId) {
 
         return sessionDerivedTypeFacts.computeIfAbsent(sessionId, id -> new ConcurrentHashMap<>());
     }
@@ -865,9 +865,9 @@ public class SessionTPTPManager {
      * @param sessionId the session id
      * @return derived type facts
      */
-    private static Set<FormulaAST> getSessionDerivedTypeFacts(String sessionId) {
+    private static Set<Formula> getSessionDerivedTypeFacts(String sessionId) {
 
-        Map<String, FormulaAST> facts = sessionDerivedTypeFacts.get(sessionId);
+        Map<String, Formula> facts = sessionDerivedTypeFacts.get(sessionId);
         if (facts == null || facts.isEmpty()) return Collections.emptySet();
         return new LinkedHashSet<>(facts.values());
     }

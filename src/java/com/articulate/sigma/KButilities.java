@@ -17,7 +17,7 @@ http://sigmakee.sourceforge.net
 package com.articulate.sigma;
 
 import com.articulate.sigma.nlg.NLGUtils;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.MapUtils;
@@ -289,7 +289,7 @@ public class KButilities implements ServletContextListener {
      * @param kb the knowledge base to check typing against
      * @param f the formula to check
      */
-    public static boolean hasCorrectTypes(KB kb, FormulaAST f) {
+    public static boolean hasCorrectTypes(KB kb, Formula f) {
 
         SUMOtoTFAform.initOnce();
         SUMOtoTFAform.setVarmap(SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb));
@@ -345,7 +345,7 @@ public class KButilities implements ServletContextListener {
             if (debug) System.out.println("isValidFormula(): Error: " + result);
             return false;
         }
-        FormulaAST f = new FormulaAST(form);
+        Formula f = new Formula(form);
         String term = PredVarInst.hasCorrectArity(f, kb);
         if (!StringUtil.emptyString(term)) {
             String error = "Formula rejected due to arity error of predicate " + term
@@ -385,10 +385,10 @@ public class KButilities implements ServletContextListener {
      */
     public static String getDocumentation(KB kb, String term) {
 
-        List<FormulaAST> forms = kb.askWithRestriction(0,"documentation",1,term);
+        List<Formula> forms = kb.askWithRestriction(0,"documentation",1,term);
         if (forms == null || forms.isEmpty())
             return null;
-        FormulaAST form = forms.get(0);
+        Formula form = forms.get(0);
         if (form == null)
             return null;
         if (form.complexArgumentsToArrayList(0).size() < 3)
@@ -401,7 +401,7 @@ public class KButilities implements ServletContextListener {
      */
     public static int getCountTermFormats(KB kb, String lang) {
 
-        List<FormulaAST> forms = kb.askWithRestriction(0,"termFormat",1,lang);
+        List<Formula> forms = kb.askWithRestriction(0,"termFormat",1,lang);
         return forms.size();
     }
 
@@ -412,10 +412,10 @@ public class KButilities implements ServletContextListener {
      */
     public static int getCountUniqueTermFormats(KB kb, String lang) {
 
-        List<FormulaAST> forms = kb.askWithRestriction(0,"termFormat",1,lang);
+        List<Formula> forms = kb.askWithRestriction(0,"termFormat",1,lang);
         Set<String> terms = new HashSet<>();
         String s;
-        for (FormulaAST f : forms) {
+        for (Formula f : forms) {
             s = f.getStringArgument(2);
             terms.add(s);
         }
@@ -430,7 +430,7 @@ public class KButilities implements ServletContextListener {
     public static Map<String,Integer> countFormulaTypes(KB kb) {
 
         Map<String,Integer> result = new HashMap<>();
-        for (FormulaAST f : kb.formulaMap.values()) {
+        for (Formula f : kb.formulaMap.values()) {
             Set<String> terms = f.collectTerms();
             if (f.isRule()) {
                 MapUtils.addToFreqMap(result, "rules", 1);
@@ -494,26 +494,26 @@ public class KButilities implements ServletContextListener {
     /** *************************************************************
      * Get all formulas that contain both terms.
      */
-    public static List<FormulaAST> termIntersection(KB kb, String term1, String term2) {
+    public static List<Formula> termIntersection(KB kb, String term1, String term2) {
 
-    	List<FormulaAST> ant1 = kb.ask("ant",0,term1);
-    	List<FormulaAST> ant2 = kb.ask("ant",0,term2);
-        List<FormulaAST> cons1 = kb.ask("cons",0,term1);
-        List<FormulaAST> cons2 = kb.ask("cons",0,term2);
-        Set<FormulaAST> hrule1 = new HashSet<>();
+    	List<Formula> ant1 = kb.ask("ant",0,term1);
+    	List<Formula> ant2 = kb.ask("ant",0,term2);
+        List<Formula> cons1 = kb.ask("cons",0,term1);
+        List<Formula> cons2 = kb.ask("cons",0,term2);
+        Set<Formula> hrule1 = new HashSet<>();
         hrule1.addAll(ant1);
         hrule1.addAll(cons1);
-        Set<FormulaAST> hrule2 = new HashSet<>();
+        Set<Formula> hrule2 = new HashSet<>();
         hrule2.addAll(ant2);
         hrule2.addAll(cons2);
-        List<FormulaAST> result = new ArrayList<>();
+        List<Formula> result = new ArrayList<>();
         result.addAll(hrule1);
         result.retainAll(hrule2);
-        List<FormulaAST> stmt1 = kb.ask("stmt",0,term1);
-        List<FormulaAST> stmt2 = kb.ask("stmt",0,term2);
+        List<Formula> stmt1 = kb.ask("stmt",0,term1);
+        List<Formula> stmt2 = kb.ask("stmt",0,term2);
         stmt1.retainAll(stmt2);
         result.addAll(stmt1);
-        List<FormulaAST> stmt;
+        List<Formula> stmt;
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 7; j++) {
             	if (j != i) {
@@ -591,11 +591,11 @@ public class KButilities implements ServletContextListener {
     public static void checkURLs(KB kb) {
 
         URL u;
-        List<FormulaAST> results = kb.ask("arg",0,"externalImage");
-        FormulaAST f;
+        List<Formula> results = kb.ask("arg",0,"externalImage");
+        Formula f;
         String url;
         for (int i = 0; i < results.size(); i++) {
-            f = (FormulaAST) results.get(i);
+            f = (Formula) results.get(i);
             url = StringUtil.removeEnclosingQuotes(f.getStringArgument(2));
             if (!uRLexists(url))
                 System.err.println(f + " doesn't exist");
@@ -698,7 +698,7 @@ public class KButilities implements ServletContextListener {
         Set<String> s = generateSemanticNetwork(kb, cached, strings);
         List<GraphArc> al = new ArrayList();
         for (String st : s) {
-            String[] sp = st.split(FormulaAST.SPACE);
+            String[] sp = st.split(Formula.SPACE);
             GraphArc ga = this.new GraphArc(sp[0],sp[1],sp[2]);
             al.add(ga);
         }
@@ -718,7 +718,7 @@ public class KButilities implements ServletContextListener {
         GraphArc ga;
         String predicate, arg1, arg2;
         List<String> args;
-        for (FormulaAST f : kb.formulaMap.values()) {          // look at all formulas in the KB
+        for (Formula f : kb.formulaMap.values()) {          // look at all formulas in the KB
             //if (debug) System.out.println("generateSemNetNeighbors(): check formula: " + f);
             if (isCacheFile(f.sourceFile)  && !cached) {
                 if (debug) System.out.println("generateSemNetNeighbors(): cached: ");
@@ -730,10 +730,10 @@ public class KButilities implements ServletContextListener {
                 for (String term1 : terms) {
                     if (!term1.equals(term))
                         continue;
-                    if (FormulaAST.isLogicalOperator(term1) || FormulaAST.isVariable(term1) || (!strings && StringUtil.isQuotedString(term1)))
+                    if (Formula.isLogicalOperator(term1) || Formula.isVariable(term1) || (!strings && StringUtil.isQuotedString(term1)))
                         continue;
                     for (String term2 : terms) {
-                        if (FormulaAST.isLogicalOperator(term2) || FormulaAST.isVariable(term2) || (!strings && StringUtil.isQuotedString(term2)))
+                        if (Formula.isLogicalOperator(term2) || Formula.isVariable(term2) || (!strings && StringUtil.isQuotedString(term2)))
                             continue;
                         if (!term1.equals(term2)) {
                             ga = new GraphArc(term1,"link",term2);
@@ -756,7 +756,7 @@ public class KButilities implements ServletContextListener {
                         arg2 = f.getStringArgument(2);
                         if (args.get(0).equals("documentation"))
                             arg2 = f.getStringArgument(3);
-                        if (!FormulaAST.isVariable(arg1) && !FormulaAST.isVariable(arg2) &&
+                        if (!Formula.isVariable(arg1) && !Formula.isVariable(arg2) &&
                                 (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2))) {
                             if (StringUtil.isQuotedString(arg2))
                                 arg2 = StringUtil.removeEnclosingQuotes(arg2);
@@ -769,7 +769,7 @@ public class KButilities implements ServletContextListener {
                     if (arg1.equals(term)) {
                         if (debug) System.out.println("generateSemNetNeighbors(): check ground formula: " + f);
                         arg2 = f.getStringArgument(1);
-                        if (!FormulaAST.isVariable(arg1) && !FormulaAST.isVariable(arg2) &&
+                        if (!Formula.isVariable(arg1) && !Formula.isVariable(arg2) &&
                                 (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2))) {
                             if (StringUtil.isQuotedString(arg1))
                                 arg2 = StringUtil.removeEnclosingQuotes(arg1);
@@ -807,23 +807,23 @@ public class KButilities implements ServletContextListener {
         Set<String> terms;
         String predicate, arg1, arg2;
         List<String> args;
-        for (FormulaAST f : kb.formulaMap.values()) {          // look at all formulas in the KB
+        for (Formula f : kb.formulaMap.values()) {          // look at all formulas in the KB
             if (isCacheFile(f.sourceFile))
                 continue;
             if (!f.isSimpleClause(kb) || !f.isGround()) {
                 terms = f.collectTerms();
                 for (String term1 : terms) {
-                    if (FormulaAST.isLogicalOperator(term1) || FormulaAST.isVariable(term1) || (!strings && StringUtil.isQuotedString(term1)))
+                    if (Formula.isLogicalOperator(term1) || Formula.isVariable(term1) || (!strings && StringUtil.isQuotedString(term1)))
                         continue;
                     for (String term2 : terms) {
-                        if (FormulaAST.isLogicalOperator(term2) || FormulaAST.isVariable(term2) || (!strings && StringUtil.isQuotedString(term2)))
+                        if (Formula.isLogicalOperator(term2) || Formula.isVariable(term2) || (!strings && StringUtil.isQuotedString(term2)))
                             continue;
                         //resultSet.add("(link " + term1 + Formula.SPACE + term2 + Formula.RP);
                         if (!term1.equals(term2) && !StringUtil.isNumeric(term1) && !StringUtil.isNumeric(term2))
                             resultSet.add(term1 + " link " +  term2);
                     }
-                    if (!f.getFormula().contains("\"") && (!f.getFormula().contains(FormulaAST.LP)) &&
-                            (!f.getFormula().contains(FormulaAST.RP)))
+                    if (!f.getFormula().contains("\"") && (!f.getFormula().contains(Formula.LP)) &&
+                            (!f.getFormula().contains(Formula.RP)))
                     resultSet.add(term1 + " inAxiom \"" + f.getFormula() + "\"");
                 }
             }
@@ -833,12 +833,12 @@ public class KButilities implements ServletContextListener {
                 if (args != null && args.size() == 2) { // could have a function which would return null
                     arg1 = f.getStringArgument(1);
                     arg2 = f.getStringArgument(2);
-                    if (arg1.contains(FormulaAST.LP) || arg1.contains(FormulaAST.RP) || arg2.contains(FormulaAST.LP) || arg2.contains(FormulaAST.RP))
+                    if (arg1.contains(Formula.LP) || arg1.contains(Formula.RP) || arg2.contains(Formula.LP) || arg2.contains(Formula.RP))
                         System.out.println("error in generateSemanticNetwork(): for formula: " + f);
-                    else if (!FormulaAST.isLogicalOperator(arg1) && !FormulaAST.isLogicalOperator(arg2) &&
-                            !FormulaAST.isVariable(arg1) && !FormulaAST.isVariable(arg1) &&
+                    else if (!Formula.isLogicalOperator(arg1) && !Formula.isLogicalOperator(arg2) &&
+                            !Formula.isVariable(arg1) && !Formula.isVariable(arg1) &&
                             (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2)))
-                        resultSet.add(arg1 + FormulaAST.SPACE + predicate + FormulaAST.SPACE +  arg2);
+                        resultSet.add(arg1 + Formula.SPACE + predicate + Formula.SPACE +  arg2);
                 }
             }
         }
@@ -853,7 +853,7 @@ public class KButilities implements ServletContextListener {
         sb.append("graph G {");
         String[] tuple;
         for (String s : triples) {
-            tuple = s.split(FormulaAST.SPACE);
+            tuple = s.split(Formula.SPACE);
             sb.append("  \"").append(tuple[0]).append("\" -- \"").append(tuple[2]).append("\" [ label=\"").append(tuple[1]).append("\" ];\n");
         }
         sb.append("}");
@@ -875,11 +875,11 @@ public class KButilities implements ServletContextListener {
         sb.append("            \"type\": \"SUMO-graph\",\n");
         sb.append("            \"label\": \"").append(kb.name).append("\",\n");
         sb.append("            \"nodes\": {\n");
-        List<FormulaAST> forms;
+        List<Formula> forms;
         String formStr;
-        FormulaAST form;
+        Formula form;
         for (String s : kb.getTerms()) {
-            if (FormulaAST.isLogicalOperator(s))
+            if (Formula.isLogicalOperator(s))
                 continue;
             sb.append("                \"").append(s).append("\": {\n");
             forms = kb.askWithTwoRestrictions(0,"termFormat",1,language,2,s);
@@ -901,7 +901,7 @@ public class KButilities implements ServletContextListener {
         sb.append("            \"edges\": [\n");
         String[] tuple;
         for (String s : triples) {
-            tuple = s.split(FormulaAST.SPACE);
+            tuple = s.split(Formula.SPACE);
             sb.append("                {\n");
             sb.append("                    \"source\": \"").append(tuple[0]).append("\",\n");
             sb.append("                    \"relation\": \"").append(tuple[1]).append("\",\n");
@@ -927,13 +927,13 @@ public class KButilities implements ServletContextListener {
         if (StringUtil.emptyString(language))
             language = "EnglishLanguage";
         StringBuilder sb = new StringBuilder();
-        List<FormulaAST> forms;
+        List<Formula> forms;
         String formStr;
-        FormulaAST form;
+        Formula form;
         try (PrintWriter nodepw = new PrintWriter(new FileWriter(nodeFileStr, false)); PrintWriter edgepw = new PrintWriter(new FileWriter(edgeFileStr, false))) {
             sb.append("[\n");
             for (String s : kb.getTerms()) {
-                if (FormulaAST.isLogicalOperator(s))
+                if (Formula.isLogicalOperator(s))
                     continue;
                 sb.append("    { \"id\" : \"").append(s).append("\",\n");
                 forms = kb.askWithTwoRestrictions(0, "termFormat", 1, language, 2, s);
@@ -958,7 +958,7 @@ public class KButilities implements ServletContextListener {
             sb.append("[\n");
             String[] tuple;
             for (String s : triples) {
-                tuple = s.split(FormulaAST.SPACE);
+                tuple = s.split(Formula.SPACE);
                 sb.append("    {\n");
                 sb.append("        \"source\" : \"").append(tuple[0]).append("\",\n");
                 sb.append("        \"relation\" : \"").append(tuple[1]).append("\",\n");
@@ -985,12 +985,12 @@ public class KButilities implements ServletContextListener {
         if (StringUtil.emptyString(language))
             language = "EnglishLanguage";
         String formStr, doc;
-        List<FormulaAST> forms;
-        FormulaAST form;
+        List<Formula> forms;
+        Formula form;
         String[] tuple;
         try (PrintWriter pw = new PrintWriter(new FileWriter(fileStr, false))) {
             for (String s : kb.getTerms()) {
-                if (FormulaAST.isLogicalOperator(s))
+                if (Formula.isLogicalOperator(s))
                     continue;
                 forms = kb.askWithTwoRestrictions(0, "termFormat", 1, language, 2, s);
                 formStr = "";
@@ -1009,7 +1009,7 @@ public class KButilities implements ServletContextListener {
                     pw.println(s + "|documentation|" + doc);
             }
             for (String s : triples) {
-                tuple = s.split(FormulaAST.SPACE);
+                tuple = s.split(Formula.SPACE);
                 pw.println(tuple[0] + "|" + tuple[1] + "|" + tuple[2]);
             }
         }
@@ -1030,13 +1030,13 @@ public class KButilities implements ServletContextListener {
         if (StringUtil.emptyString(language))
             language = "EnglishLanguage";
         StringBuilder sb = new StringBuilder();
-        List<FormulaAST> forms;
+        List<Formula> forms;
         String formStr;
-        FormulaAST form;
+        Formula form;
         String[] tuple;
         try (PrintWriter nodepw = new PrintWriter(new FileWriter(nodeFileStr, false)); PrintWriter edgepw = new PrintWriter(new FileWriter(edgeFileStr, false))) {
             for (String s : kb.getTerms()) {
-                if (FormulaAST.isLogicalOperator(s))
+                if (Formula.isLogicalOperator(s))
                     continue;
                 sb.append("INSERT INTO nodes (id, label) values ('").append(s).append("',");
                 forms = kb.askWithTwoRestrictions(0, "termFormat", 1, language, 2, s);
@@ -1056,7 +1056,7 @@ public class KButilities implements ServletContextListener {
 
             sb = new StringBuilder();
             for (String s : triples) {
-                tuple = s.split(FormulaAST.SPACE);
+                tuple = s.split(Formula.SPACE);
                 sb.append(" INSERT INTO edges (source, rel, target) values ('").append(tuple[0]).append("'");
                 sb.append(", '").append(tuple[1]).append("', '").append(tuple[2]).append("');\n");
             }
@@ -1091,25 +1091,25 @@ public class KButilities implements ServletContextListener {
     public static boolean instanceOfInstanceP(KB kb) {
 
         boolean result = false;
-        List<FormulaAST> al, al2, al3;
-        FormulaAST f, f2, f3;
+        List<Formula> al, al2, al3;
+        Formula f, f2, f3;
         String term2, term3, term4;
         for (String term : kb.terms) {
             al = kb.askWithRestriction(0,"instance",1,term);
             for (int i = 0; i < al.size(); i++) {
-                f = (FormulaAST) al.get(i);
+                f = (Formula) al.get(i);
                 term2 = f.getStringArgument(2);
-                if (FormulaAST.atom(term2)) {
+                if (Formula.atom(term2)) {
                     al2 = kb.askWithRestriction(0,"instance",1,term2);
                     if (!al2.isEmpty())
                         result = true;
                     for (int j = 0; j < al2.size(); j++) {
-                        f2 = (FormulaAST) al2.get(j);
+                        f2 = (Formula) al2.get(j);
                         term3 = f2.getStringArgument(2);
-                        if (FormulaAST.atom(term3)) {
+                        if (Formula.atom(term3)) {
                             al3 = kb.askWithRestriction(0,"instance",1,term3);
                             for (int k = 0; k < al3.size(); k++) {
-                                f3 = (FormulaAST) al3.get(k);
+                                f3 = (Formula) al3.get(k);
                                 term4 = f3.getStringArgument(2);
                             }
                         }
@@ -1127,10 +1127,10 @@ public class KButilities implements ServletContextListener {
 
         try (PrintWriter pr = new PrintWriter(new FileWriter(fname, false))) {
             //get all formulas that have the display predicate as the predicate
-            List<FormulaAST> formats = kb.askWithRestriction(0, displayFormatPredicate, 1, language);
-            List<FormulaAST> terms = kb.askWithRestriction(0, displayTermPredicate, 1, language);
+            List<Formula> formats = kb.askWithRestriction(0, displayFormatPredicate, 1, language);
+            List<Formula> terms = kb.askWithRestriction(0, displayTermPredicate, 1, language);
             Map<String,String> termMap = new HashMap<>();
-            FormulaAST term;
+            Formula term;
             String key, value, argName, argNum;
             for (int i = 0; i < terms.size(); i++) {
                 term = terms.get(i);
@@ -1139,10 +1139,10 @@ public class KButilities implements ServletContextListener {
                 if (!"".equals(key) && !"".equals(value))
                     termMap.put(key, value);
             }
-            FormulaAST format, f;
+            Formula format, f;
             String sTerm, displayText;
             StringBuilder sb;
-            List<FormulaAST> predInstances, arguments;
+            List<Formula> predInstances, arguments;
             for (int i = 0; i < formats.size(); i++) {
                 format = formats.get(i);
                 // This is the current predicate whose format we are keeping track of.
@@ -1257,9 +1257,9 @@ public class KButilities implements ServletContextListener {
         rels.add("termFormat");
         rels.add("format");
         int counter = 0;
-        Set<FormulaAST> forms = new HashSet<>();
+        Set<Formula> forms = new HashSet<>();
         forms.addAll(kb.formulaMap.values());
-        for (FormulaAST f : forms) {
+        for (Formula f : forms) {
             if (!rels.contains(f.getArgument(0).toString()))
                 counter++;
         }
@@ -1284,7 +1284,7 @@ public class KButilities implements ServletContextListener {
             b = m.find();
             if (b) {
                 quoted = m.group(1);
-                ar = quoted.split(FormulaAST.SPACE);
+                ar = quoted.split(Formula.SPACE);
                 for (int i = 0; i < ar.length-1; i++) {
                     if (ar[i].matches("\\w+"))
                         total++;
@@ -1299,9 +1299,9 @@ public class KButilities implements ServletContextListener {
     /** *************************************************************
      *  Find all formulas in which the SUMO term is involved.
      */
-    public static Set<FormulaAST> getAllFormulasOfTerm(KB kb, String term) {
+    public static Set<Formula> getAllFormulasOfTerm(KB kb, String term) {
 
-        Set<FormulaAST> result = new HashSet<>();
+        Set<Formula> result = new HashSet<>();
         Pattern pattern = Pattern.compile("(\\s|\\()" + term + "(\\s|\\))");
         for (String f : kb.formulaMap.keySet()){
                 Matcher matcher = pattern.matcher(f);
@@ -1319,13 +1319,13 @@ public class KButilities implements ServletContextListener {
 
         StringBuilder sb = new StringBuilder();
         String doc;
-        Set<FormulaAST> allForms;
+        Set<Formula> allForms;
         for (String t : kb.terms) {
             doc = getDocumentation(kb,t);
             if (!StringUtil.emptyString(doc)) {
                 allForms = getAllFormulasOfTerm(kb,t);
                 sb.append("!!doc ").append(doc).append("\n");
-                for (FormulaAST f : allForms) {
+                for (Formula f : allForms) {
                     if (!FormulaUtil.isDoc(f))
                         sb.append(f.toString()).append("\n");
                 }
@@ -1340,9 +1340,9 @@ public class KButilities implements ServletContextListener {
     public static String termFormatIndex(KB kb) {
 
         StringBuilder sb = new StringBuilder();
-        List<FormulaAST> forms = kb.ask("arg", 0, "termFormat");
+        List<Formula> forms = kb.ask("arg", 0, "termFormat");
         String term, str;
-        for (FormulaAST f : forms) {
+        for (Formula f : forms) {
             term = f.getStringArgument(2);
             str = f.getStringArgument(3);
             if (!StringUtil.emptyString(term) && ! StringUtil.emptyString((str)))
@@ -1357,10 +1357,10 @@ public class KButilities implements ServletContextListener {
      */
     public static void genAllDoc(KB kb, String fname) {
 
-        List<FormulaAST> al = kb.ask("arg",0,"documentation");
+        List<Formula> al = kb.ask("arg",0,"documentation");
         try (PrintWriter pr = new PrintWriter(new FileWriter(fname, false))) {
             String arg;
-            for (FormulaAST form : al) {
+            for (Formula form : al) {
                 arg = form.getArgument(3).toString();
                 arg = arg.replace("&%", "");
                 pr.println(form.getArgument(1) + "\t" + arg);
@@ -1378,8 +1378,8 @@ public class KButilities implements ServletContextListener {
     public static void genDoc(KB kb, String fname) {
 
         System.out.println(genDocHeader(true));
-        List<FormulaAST> al = kb.ask("arg",0,"documentation");
-        for (FormulaAST form : al) {
+        List<Formula> al = kb.ask("arg",0,"documentation");
+        for (Formula form : al) {
             String arg;
             if (form.sourceFile.endsWith(fname)) {
                 arg = form.getArgument(3).toString();
@@ -1446,10 +1446,10 @@ public class KButilities implements ServletContextListener {
      */
     private static Map<String,String> genDocList(KB kb) {
 
-        List<FormulaAST> al = kb.ask("arg",0,"documentation");
+        List<Formula> al = kb.ask("arg",0,"documentation");
         Map<String,String> map = new TreeMap<>();
         String arg2;
-        for (FormulaAST form : al) {
+        for (Formula form : al) {
             if (form.getArgument(2).toString().equals("EnglishLanguage")) {
                 arg2 = form.getArgument(3).toString();
                 //arg = arg.replace("&%","");
@@ -1481,7 +1481,7 @@ public class KButilities implements ServletContextListener {
     public static List<String> getLabelsForTerm(KB kb, String term, String lang) {
 
         List<String> result = new ArrayList<>();
-        List<FormulaAST> al = kb.askWithTwoRestrictions(0,"termFormat",1,lang,2,term);
+        List<Formula> al = kb.askWithTwoRestrictions(0,"termFormat",1,lang,2,term);
         return result;
     }
 
@@ -1770,7 +1770,7 @@ public class KButilities implements ServletContextListener {
             }
             else if (args != null && args.length > 1 && args[0].equals("-a")) {
                 SUMOtoTFAform.initOnce();
-                FormulaAST f = new FormulaAST(StringUtil.removeEnclosingQuotes(args[1]));
+                Formula f = new Formula(StringUtil.removeEnclosingQuotes(args[1]));
                 System.out.println("higherOrder : " + f.isHigherOrder(kb));
                 System.out.println("temporal : " + f.isTemporal(kb));
                 System.out.println("deontic : " + f.isDeontic(kb));

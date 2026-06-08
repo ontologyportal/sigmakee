@@ -14,10 +14,10 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 package com.articulate.sigma.tp;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.*;
 import com.articulate.sigma.trans.Modals;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
-import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.trans.SessionTPTPManager;
 import com.articulate.sigma.trans.THFnew;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
@@ -25,12 +25,7 @@ import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.trans.TPTPutil;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
-import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.ExprToTHF;
-import com.articulate.sigma.parsing.ExprToTPTP;
-import com.articulate.sigma.parsing.FormulaAST;
-import com.articulate.sigma.parsing.SuokifVisitor;
-import com.articulate.sigma.parsing.CLIMapParser;
+import com.articulate.sigma.parsing.Formula;
 
 import tptp_parser.TPTPFormula;
 import java.util.regex.Matcher;
@@ -40,10 +35,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.function.Supplier;
 
 /**
  * Class for invoking the latest research version of Vampire from Java
@@ -205,7 +197,7 @@ public class Vampire {
             KIFAST kifAst = new KIFAST();
             String parseErr = kifAst.parseStatement(suoKifFormula);
             if (parseErr == null && !kifAst.formulaMap.isEmpty()) {
-                FormulaAST queryFA = kifAst.formulaMap.values().iterator().next();
+                Formula queryFA = kifAst.formulaMap.values().iterator().next();
                 processedExprs = SessionTPTPManager.withSessionCache(
                         this.sessionId, this.kb, () -> fp.preProcessExpr(queryFA, true, this.kb));
             }
@@ -396,7 +388,7 @@ public class Vampire {
                 System.err.println("Vampire.askVampireHOL(): failed to parse query: " + stmt);
                 return;
             }
-            FormulaAST fa = sv.result.get(0);
+            Formula fa = sv.result.get(0);
             if (fa.expr == null) {
                 System.err.println("Vampire.askVampireHOL(): null expr for query: " + stmt);
                 return;
@@ -565,7 +557,7 @@ public class Vampire {
     private void createCommandList(File kbFile) {
 
         if (debug > 0) System.out.printf("\nVampire.createCommandList(%s)", kbFile.getName());
-        String space = FormulaAST.SPACE;
+        String space = Formula.SPACE;
         StringBuilder options = new StringBuilder("--output_axiom_names").append(space).append("on").append(space).append("--proof").append(space).append("tptp").append(space);;
         if (this.mode == ModeType.AVATAR) {
             options.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space);
@@ -588,7 +580,7 @@ public class Vampire {
         }
         this.commands = new ArrayList<>();
         this.commands.add(this.executablePath.toString());
-        Collections.addAll(this.commands, options.toString().split(FormulaAST.SPACE));
+        Collections.addAll(this.commands, options.toString().split(Formula.SPACE));
         this.commands.add(Integer.toString(this.timeout));
         this.commands.add(kbFile.toString());
     }
@@ -603,7 +595,7 @@ public class Vampire {
     private void createCustomCommandList(File executable, int timeout, File kbFile, Collection<String> commands) {
 
         if (debug > 0) System.out.printf("\nVampire.createCustomCommandList(%s, %d, %s, %s)", executable.getName(), timeout, kbFile.getName(), commands);
-        String space = FormulaAST.SPACE;
+        String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder();
         boolean callerSuppliesMode = commands.contains("--mode");
         if (!callerSuppliesMode) {
@@ -631,7 +623,7 @@ public class Vampire {
             opts.append(timeout).append(space);
         }
         opts.append(kbFile.toString());
-        String[] optar = opts.toString().split(FormulaAST.SPACE);
+        String[] optar = opts.toString().split(Formula.SPACE);
         System.out.println("h0");
         this.commands = new ArrayList<>();
         System.out.println("h01");
@@ -1064,7 +1056,7 @@ public class Vampire {
      * TODO: This function might not be necessary if we find a way to
      * directly add assertion into opened inference engine (e_ltb_runner)
      */
-    public boolean assertFormula(String userAssertionTPTP, KB kb, List<FormulaAST> parsedFormulas, boolean tptp) {
+    public boolean assertFormula(String userAssertionTPTP, KB kb, List<Formula> parsedFormulas, boolean tptp) {
 
         System.out.printf("\nVampire.assertFormula(%s, %s, %s, %b)", userAssertionTPTP, kb.name, parsedFormulas, tptp);
         boolean allAdded = false;
@@ -1075,7 +1067,7 @@ public class Vampire {
         String tptpStr;
         int axiomIndex = 0;
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
-            for (FormulaAST parsedF : parsedFormulas) {
+            for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
                 processedFormulas.addAll(fp.preProcessExpr(parsedF,false, kb));
                 if (processedFormulas.isEmpty())
@@ -1084,7 +1076,7 @@ public class Vampire {
                     tptpFormulas.clear();
                     if (tptp) {
                         for (Expr ex : processedFormulas) {
-                            FormulaAST p = new FormulaAST();
+                            Formula p = new Formula();
                             p.setFormula(ex.toKifString());
                             p.expr = ex;
                             if (!p.isHigherOrder(kb)) {

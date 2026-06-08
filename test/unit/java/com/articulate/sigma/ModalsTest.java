@@ -1,14 +1,9 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.Modals;
 
 import org.junit.Test;
-import org.junit.Assume;
-import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -24,8 +19,8 @@ public class ModalsTest extends UnitTestBase {
                         "    (modalAttribute ?FORMULA Prohibition) " +
                         "    (not (modalAttribute ?FORMULA Permission)))";
 
-        FormulaAST f = new FormulaAST(fstr);
-        FormulaAST out = new FormulaAST(Modals.processModalsExpr(f.expr, kb).getKey());
+        Formula f = new Formula(fstr);
+        Formula out = new Formula(Modals.processModalsExpr(f.expr, kb).getKey());
 
         String result = out.getFormula();
         System.out.println("\nDuality Test:\n" + result);
@@ -49,8 +44,8 @@ public class ModalsTest extends UnitTestBase {
                         "                       (acquaintance Bill Sue) " +
                         "                       (acquaintance Bill Jane)))))))";
 
-        FormulaAST f = new FormulaAST(fstr);
-        FormulaAST out = new FormulaAST(Modals.processModalsExpr(f.expr, kb).getKey());
+        Formula f = new Formula(fstr);
+        Formula out = new Formula(Modals.processModalsExpr(f.expr, kb).getKey());
         String result = out.getFormula();
         System.out.println("\nDeep Modal Test:\n" + result);
 
@@ -77,8 +72,8 @@ public class ModalsTest extends UnitTestBase {
                         "        (wants ?AGENT ?THING) " +
                         "        (desires ?AGENT ?THING)))";
 
-        FormulaAST f = new FormulaAST(fstr);
-        FormulaAST out = new FormulaAST(Modals.processModalsExpr(f.expr, kb).getKey());
+        Formula f = new Formula(fstr);
+        Formula out = new Formula(Modals.processModalsExpr(f.expr, kb).getKey());
         String result = out.getFormula();
         System.out.println("\nPure FOL Test:\n" + result);
 
@@ -103,8 +98,8 @@ public class ModalsTest extends UnitTestBase {
                         "        (equal (PremisesFn ?ARGUMENT ?W1) ?PREMISES) " +
                         "        (conclusion ?CONCLUSION ?ARGUMENT ?W1)))))";
 
-        FormulaAST f = new FormulaAST(fstr);
-        FormulaAST out = new FormulaAST(Modals.processModalsExpr(f.expr, kb).getKey());
+        Formula f = new Formula(fstr);
+        Formula out = new Formula(Modals.processModalsExpr(f.expr, kb).getKey());
         String result = out.getFormula();
         System.out.println("\nMixed World-Sensitive Test:\n" + result);
 

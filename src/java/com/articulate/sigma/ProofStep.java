@@ -14,7 +14,7 @@ August 9, Acapulco, Mexico.
 */
 
 import com.articulate.sigma.parsing.ClausifierExpr;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.utils.FileUtil;
 
@@ -215,9 +215,9 @@ public class ProofStep {
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
-        sb.append(number).append(". ").append(new FormulaAST(axiom).format("","  ","\n")).append(FormulaAST.SPACE).append(premises).append(FormulaAST.SPACE);
+        sb.append(number).append(". ").append(new Formula(axiom).format("","  ","\n")).append(Formula.SPACE).append(premises).append(Formula.SPACE);
         if (inferenceType.startsWith("kb_")) {
-            FormulaAST originalF = SUMOKBtoTPTPKB.axiomKey.get(inferenceType);
+            Formula originalF = SUMOKBtoTPTPKB.axiomKey.get(inferenceType);
             if (originalF != null) {
                 sb.append(inferenceType).append(":").append(originalF.startLine).append(":").append(FileUtil.noPath(originalF.getSourceFile())).append("\n");
                 if (originalF.derivation != null &&

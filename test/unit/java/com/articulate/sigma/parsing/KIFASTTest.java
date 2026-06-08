@@ -29,7 +29,7 @@ public class KIFASTTest extends UnitTestBase {
     public void simpleRelsentInFormulaMap() {
         KIFAST k = parse("(likes John Mary)");
         assertTrue("formula must be in formulaMap", k.formulaMap.containsKey("(likes John Mary)"));
-        FormulaAST f = k.formulaMap.get("(likes John Mary)");
+        Formula f = k.formulaMap.get("(likes John Mary)");
         assertNotNull(f);
         assertNotNull("Expr must be populated", f.expr);
         assertEquals("(likes John Mary)", f.expr.toKifString());
@@ -55,7 +55,7 @@ public class KIFASTTest extends UnitTestBase {
         String kif = "(=> (instance ?X Man) (attribute ?X Mortal))";
         KIFAST k = parse(kif);
         assertTrue(k.formulaMap.containsKey(kif));
-        FormulaAST f = k.formulaMap.get(kif);
+        Formula f = k.formulaMap.get(kif);
         assertTrue(f.expr instanceof Expr.SExpr);
         assertEquals("=>", ((Expr.SExpr) f.expr).headName());
     }
@@ -190,7 +190,7 @@ public class KIFASTTest extends UnitTestBase {
     @Test
     public void exprFieldPopulated() {
         KIFAST k = parse("(instance Foo Bar)");
-        FormulaAST f = k.formulaMap.get("(instance Foo Bar)");
+        Formula f = k.formulaMap.get("(instance Foo Bar)");
         assertNotNull("expr must not be null", f.expr);
         assertTrue(f.expr instanceof Expr.SExpr);
     }
@@ -199,7 +199,7 @@ public class KIFASTTest extends UnitTestBase {
     public void exprRoundTrip() {
         String kif = "(=> (and (instance ?X Man) (instance ?X Person)) (instance ?X Animal))";
         KIFAST k = parse(kif);
-        FormulaAST f = k.formulaMap.get(kif);
+        Formula f = k.formulaMap.get(kif);
         assertNotNull(f.expr);
         assertEquals(kif, f.expr.toKifString());
     }
@@ -208,7 +208,7 @@ public class KIFASTTest extends UnitTestBase {
     public void multipleFormulaExprs() {
         String kif = "(likes John Mary)\n(part Wheel1 Car2)\n";
         KIFAST k = parse(kif);
-        for (FormulaAST f : k.formulaMap.values()) {
+        for (Formula f : k.formulaMap.values()) {
             assertNotNull("Every FormulaAST must have an Expr", f.expr);
             // Round-trip check
             assertEquals(f.getFormula(), f.expr.toKifString());

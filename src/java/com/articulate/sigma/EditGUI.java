@@ -15,7 +15,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net.
 /*************************************************************************************************/
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.wordNet.WordNet;
 
 import java.io.File;
@@ -99,8 +99,8 @@ public class EditGUI {
 
         List<String> parents = new ArrayList<>();
         Set<String> immedParents = new HashSet<>();
-        List<FormulaAST> res = kb.askWithRestriction(0,"instance",1,term);
-        FormulaAST f;
+        List<Formula> res = kb.askWithRestriction(0,"instance",1,term);
+        Formula f;
         for (int i = 0; i < res.size(); i++) {
             f = res.get(i);
             immedParents.add(f.getStringArgument(2));
@@ -121,8 +121,8 @@ public class EditGUI {
     public static List<String> genImmedParentList(KB kb, String term) {
 
         List<String> parents = new ArrayList<>();
-        List<FormulaAST> res = kb.askWithRestriction(0,"instance",1,term);
-        FormulaAST f;
+        List<Formula> res = kb.askWithRestriction(0,"instance",1,term);
+        Formula f;
         for (int i = 0; i < res.size(); i++) {
             f = res.get(i);
             parents.add(f.getStringArgument(2));
@@ -150,8 +150,8 @@ public class EditGUI {
         // get relations that apply
         List<String> relations = new ArrayList<>();
         String parent;
-        List<FormulaAST> res;
-        FormulaAST f;
+        List<Formula> res;
+        Formula f;
         for (int i = 0; i < parents.size(); i++) {
             parent = parents.get(i);
             res = kb.askWithRestriction(0,"domain",3,parent);
@@ -207,9 +207,9 @@ public class EditGUI {
         List<String> parents = genAllParentList(kb,term);
         // get relations that apply
         List<String> relations = new ArrayList<>();
-        List<FormulaAST> res;
+        List<Formula> res;
         String parent;
-        FormulaAST f;
+        Formula f;
         for (int i = 0; i < parents.size(); i++) {
             parent = parents.get(i);
             res = kb.askWithRestriction(0,"domainSubclass",3,parent);
@@ -352,7 +352,7 @@ public class EditGUI {
         StringBuilder sb;
         List<String> al;
         String val;
-        FormulaAST f;
+        Formula f;
         for (String rel : cbset.keySet()) {
             sb = new StringBuilder();
             sb.append("(").append(rel);
@@ -362,7 +362,7 @@ public class EditGUI {
                 sb.append(" ").append(val);
             }
             sb.append(")");
-            f = new FormulaAST();
+            f = new Formula();
             f.read(sb.toString());
             status.append(f.htmlFormat(kbHref)).append("<P>\n");
             status.append(kb.tell(sb.toString())).append("<P>\n");

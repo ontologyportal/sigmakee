@@ -1,6 +1,6 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 
 /**
  This code is copyright Articulate Software (c) 2003.
@@ -20,11 +20,11 @@ public class Prenexifier {
 
     /** ***************************************************************
      */
-    public FormulaAST binarizeConnectives(FormulaAST f) {
+    public Formula binarizeConnectives(Formula f) {
 
         if (f.empty()) return f;
         if (f.atom()) return f;
-        if (f.car().equals(FormulaAST.OR) || f.car().equals(FormulaAST.XOR) || f.car().equals(FormulaAST.AND)) {
+        if (f.car().equals(Formula.OR) || f.car().equals(Formula.XOR) || f.car().equals(Formula.AND)) {
             // TODO: do nothing?
         }
         return f;
@@ -32,7 +32,7 @@ public class Prenexifier {
 
     /** ***************************************************************
      */
-    public FormulaAST prenex(FormulaAST f) {
+    public Formula prenex(Formula f) {
         return f;
     }
 

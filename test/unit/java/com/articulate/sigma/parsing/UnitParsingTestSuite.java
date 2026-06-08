@@ -22,7 +22,7 @@ import org.junit.runners.Suite;
     ExprToTFFTest.class,
     ExprToTHFTest.class,
     ModalsExprTest.class,
-    FormulaASTTest.class
+    FormulaTest.class
 })
 public class UnitParsingTestSuite  extends UnitTestBase {
 

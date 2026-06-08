@@ -1,4 +1,5 @@
-<%@page import="com.articulate.sigma.parsing.FormulaAST"%>
+<%@page import="com.articulate.sigma.parsing.Formula"%>
+<%@ page import="com.articulate.sigma.parsing.Formula" %>
 <%@ include file="fragments/universal/Prelude.jspf" %>
 <html>
   <head>
@@ -122,18 +123,18 @@
   out.println("</details></br>");
 
   // Formulae extraneous quanitified variables
-  List<FormulaAST> noquant = Diagnostics.quantifierNotInBody(kb);
+  List<Formula> noquant = Diagnostics.quantifierNotInBody(kb);
   out.println("<details>");
   out.println("<summary><b style=\"color:#DAA520;\">Warning: Formulae with extraneous quantified variables</b><hr></summary>");
-  for (FormulaAST f : noquant)
+  for (Formula f : noquant)
 	  out.println(f.htmlFormat(kbHref) + "<p>");
   out.println("</details></br>");
 
   // Formulae with unquantified variables appearing only in consequent
-  List<FormulaAST> noquantconseq = Diagnostics.unquantsInConseq(kb);
+  List<Formula> noquantconseq = Diagnostics.unquantsInConseq(kb);
   out.println("<details>");
   out.println("<summary><b style=\"color:#DAA520;\">Warning: Formulae with unquantified variable appearing only in consequent</b><hr></summary>");
-  for (FormulaAST f : noquantconseq)
+  for (Formula f : noquantconseq)
 	  out.println(f.htmlFormat(kbHref) + "<p>");
   out.println("</details></br>");
 

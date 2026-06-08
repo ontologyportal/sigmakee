@@ -5,10 +5,9 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.parsing.CLIMapParser;
-import com.articulate.sigma.utils.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -28,7 +27,7 @@ public class CWAUNA {
         sb.append("fof(").append(name).append(",axiom,");
         sb.append("$distinct(");
         for (String arg : allArgs) {
-            sb.append(FormulaAST.TERM_SYMBOL_PREFIX).append(arg).append(",\n");
+            sb.append(Formula.TERM_SYMBOL_PREFIX).append(arg).append(",\n");
         }
         sb.delete(sb.length()-2,sb.length());
         sb.append(")).");
@@ -47,15 +46,15 @@ public class CWAUNA {
         String name = "cwa_ex_" + axiomIndex++;
         sb.append("fof(").append(name).append(",axiom,");
         sb.append("![X,Y] : (\ns__").append(rel).append("(X,Y) => (");
-        List<FormulaAST> forms = kb.ask("arg", 0, rel);
+        List<Formula> forms = kb.ask("arg", 0, rel);
         System.out.println("buildExclusions(): # formulas: " + forms.size());
         if (forms == null || forms.isEmpty())
             return "";
 
         List<String> args;
-        for (FormulaAST f : forms) {
+        for (Formula f : forms) {
             args = f.argumentsToArrayListString(1);
-            if (FormulaAST.atom(args.get(0)) && FormulaAST.atom(args.get(1))) {
+            if (Formula.atom(args.get(0)) && Formula.atom(args.get(1))) {
                 sb.append(" ( X = s__").append(args.get(0)).append(" & Y = s__").append(args.get(1)).append(" )");
                 sb.append(" | \n");
             }
@@ -75,14 +74,14 @@ public class CWAUNA {
         List<String> result = new ArrayList<>();
         Set<String> rels = kb.kbCache.getInstancesForType("ClosedWorldPredicate");
         System.out.println("CWAUNA.run(): rels: " + rels);
-        List<FormulaAST> forms;
+        List<Formula> forms;
         Set<String> allArgs;
         List<String> args;
         for (String rel : rels) {
             forms = kb.ask("arg", 0, rel);
             System.out.println("CWAUNA.run(): forms: " + forms);
             allArgs = new HashSet<>();
-            for (FormulaAST form : forms) {
+            for (Formula form : forms) {
                 if (form.isGround()) {
                     args = form.argumentsToArrayListString(1);
                     if (args != null)

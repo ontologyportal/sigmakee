@@ -1,7 +1,7 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.SigmaTestBase;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.UnitTestBase;
 
@@ -242,7 +242,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.IF,
+                Formula.IF,
                 false,
                 LanguageFormatter.RenderMode.HTML
         );
@@ -257,7 +257,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.IF,
+                Formula.IF,
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -272,13 +272,13 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String html = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.AND,
+                Formula.AND,
                 false,
                 LanguageFormatter.RenderMode.HTML
         );
         String text = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.AND,
+                Formula.AND,
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -293,7 +293,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.AND,
+                Formula.AND,
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -314,7 +314,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.IF,
+                Formula.IF,
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -334,14 +334,14 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out_neg_iff = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.IFF,
+                Formula.IFF,
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
 
         String out_xor = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.IFF,
+                Formula.IFF,
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -358,7 +358,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         String body = "some complex body ~{ X }";
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("?X", body),
-                FormulaAST.UQUANT,
+                Formula.UQUANT,
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -380,7 +380,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B", "C"),
-                FormulaAST.AND,
+                Formula.AND,
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -402,7 +402,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.IF,
+                Formula.IF,
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -424,7 +424,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.OR,
+                Formula.OR,
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -446,7 +446,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.XOR,
+                Formula.XOR,
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -468,7 +468,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.IFF,
+                Formula.IFF,
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -486,7 +486,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         // Use the fallback key "xor" explicitly to avoid dependence on FormulaAST.XOR.
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.XOR,
+                Formula.XOR,
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -504,7 +504,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
-                FormulaAST.IFF,
+                Formula.IFF,
                 true,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -522,7 +522,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A"),
-                FormulaAST.XOR,
+                Formula.XOR,
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -537,7 +537,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B", "C"),
-                FormulaAST.XOR,
+                Formula.XOR,
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -569,7 +569,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList(clause, "C"),
-                FormulaAST.OR,
+                Formula.OR,
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -601,7 +601,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList(paraphrasedClause, "C"),
-                FormulaAST.OR,
+                Formula.OR,
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -713,7 +713,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("?X", "A and B"),
-                FormulaAST.UQUANT,
+                Formula.UQUANT,
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -728,7 +728,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("?X", "A and B"),
-                FormulaAST.EQUANT,
+                Formula.EQUANT,
                 false,
                 LanguageFormatter.RenderMode.TEXT
         );
@@ -782,7 +782,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 args,
-                FormulaAST.OR,
+                Formula.OR,
                 false,
                 LanguageFormatter.RenderMode.HTML
         );
@@ -809,7 +809,7 @@ public class LanguageFormatterTest extends UnitTestBase {
 
         String out = lf.generateFormalNaturalLanguage(
                 args,
-                FormulaAST.AND,
+                Formula.AND,
                 false,
                 LanguageFormatter.RenderMode.HTML
         );

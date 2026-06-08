@@ -1,7 +1,7 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.KB;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import org.junit.Test;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
                 "                   (instance ?D Driving)\n" +
                 "                   (instance ?H Human)\n" +
                 "                   (agent ?D ?H)))";
-        FormulaAST formula = new FormulaAST(stmt);
+        Formula formula = new Formula(stmt);
 
         LanguageFormatterStack stack = new LanguageFormatterStack();
         stack.pushNew();
@@ -41,7 +41,7 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
                 "           (instance ?D Driving)\n" +
                 "           (instance ?H Human)\n" +
                 "           (agent ?D ?H))";
-        FormulaAST formula = new FormulaAST(stmt);
+        Formula formula = new Formula(stmt);
 
         LanguageFormatterStack stack = new LanguageFormatterStack();
         stack.pushNew();
@@ -74,11 +74,11 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
 
         // Push two items onto the stack.
         stack.pushNew();
-        FormulaAST formula1 = new FormulaAST(string1);
+        Formula formula1 = new Formula(string1);
         stack.insertFormulaArgs(formula1);
         stack.pushNew();
         String string2 = formula1.complexArgumentsToArrayListString(1).get(1);
-        FormulaAST formula2 = new FormulaAST(string2);
+        Formula formula2 = new Formula(string2);
         stack.insertFormulaArgs(formula2);
 
         // Verify state of bottom element's arg.
@@ -104,11 +104,11 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
 
         // Push two items onto the stack.
         stack.pushNew();
-        FormulaAST formula1 = new FormulaAST(string1);
+        Formula formula1 = new Formula(string1);
         stack.insertFormulaArgs(formula1);
         stack.pushNew();
         String string2 = formula1.complexArgumentsToArrayListString(1).get(1);
-        FormulaAST formula2 = new FormulaAST(string2);
+        Formula formula2 = new Formula(string2);
         stack.insertFormulaArgs(formula2);
 
         // Verify state of bottom element's arg.
@@ -139,11 +139,11 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
 
         // Push two items onto the stack.
         stack.pushNew();
-        FormulaAST formula1 = new FormulaAST(string1);
+        Formula formula1 = new Formula(string1);
         stack.insertFormulaArgs(formula1);
         stack.pushNew();
         String string2 = formula1.complexArgumentsToArrayListString(1).get(1);
-        FormulaAST formula2 = new FormulaAST(string2);
+        Formula formula2 = new Formula(string2);
         stack.insertFormulaArgs(formula2);
 
         // Verify state of bottom element's arg.
@@ -173,11 +173,11 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
 
         // Push two items onto the stack.
         stack.pushNew();
-        FormulaAST formula1 = new FormulaAST(string1);
+        Formula formula1 = new Formula(string1);
         stack.insertFormulaArgs(formula1);
         stack.pushNew();
         String string2 = formula1.complexArgumentsToArrayListString(1).get(1);
-        FormulaAST formula2 = new FormulaAST(string2);
+        Formula formula2 = new Formula(string2);
         stack.insertFormulaArgs(formula2);
 
         // Nothing marked as processed except for var quantifier in first element at bottom of stack.
@@ -213,15 +213,15 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
 
         // Push items onto the stack.
         stack.pushNew();
-        FormulaAST formula1 = new FormulaAST(string1);
+        Formula formula1 = new Formula(string1);
         stack.insertFormulaArgs(formula1);
         stack.pushNew();
         String string2 = formula1.complexArgumentsToArrayListString(1).get(1);
-        FormulaAST formula2 = new FormulaAST(string2);
+        Formula formula2 = new Formula(string2);
         stack.insertFormulaArgs(formula2);
         stack.pushNew();
         String string3 = formula2.complexArgumentsToArrayListString(1).get(1);
-        FormulaAST formula3 = new FormulaAST(string3);
+        Formula formula3 = new Formula(string3);
         stack.insertFormulaArgs(formula3);
 
         // Nothing marked as processed except for var quantifier in first element at bottom of stack.

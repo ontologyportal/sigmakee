@@ -84,7 +84,7 @@ public class PredVarInst {
      * Note that if there is more than one predicate variable we have to
      * cycle through all the formulas generated for the first variable
      */
-    public List<FormulaAST> processOne(FormulaAST f) {
+    public List<Formula> processOne(Formula f) {
 
         vt = new VarTypes(null,kb); // no list of formulas since we'll just pass in one when calling constrainVars() below
         if (debug) System.out.println("PredVarInst.processOne()" + f);
@@ -92,10 +92,10 @@ public class PredVarInst {
         if (debug) System.out.println("PredVarInst.processOne(): f.predVarCache" + f.predVarCache);
         // Use ArrayList (not HashSet) to avoid triggering Formula.hashCode() → Clausifier.normalizeVariables()
         // on every add(). Each substitution produces a structurally distinct formula so deduplication is not needed.
-        List<FormulaAST> result = new ArrayList<>(), newresult;
-        result.add(new FormulaAST(f));
+        List<Formula> result = new ArrayList<>(), newresult;
+        result.add(new Formula(f));
         Set<String> types, relations = new TreeSet<>();  // TreeSet: deterministic sorted iteration
-        FormulaAST fnew;
+        Formula fnew;
         // Iterate pred vars in sorted order for deterministic output
         for (String var : new TreeSet<>(f.predVarCache)) {
             if (debug) System.out.println("PredVarInst.processOne(): substituting for var: " + var);
@@ -127,10 +127,10 @@ public class PredVarInst {
             }
             newresult = new ArrayList<>();
             outer:
-            for (FormulaAST f2 : result) {
+            for (Formula f2 : result) {
                 if (debug) System.out.println("PredVarInst.processOne(): relations: " + relations);
                 for (String rel : relations) {
-                    fnew = new FormulaAST(f2);
+                    fnew = new Formula(f2);
                     fnew = vt.constrainVars(rel, var, fnew);
                     if (debug) System.out.println("PredVarInst.processOne(): substituting: " + rel + " for " + var);
                     if (debug) System.out.println("PredVarInst.processOne(): in formula: " + fnew);
@@ -143,8 +143,8 @@ public class PredVarInst {
                         fnew.setFormula(fnew.getFormula().replace(var, rel)); // TODO: vulnerable to a match of variable name substrings
                     }
                     if (debug) System.out.println("PredVarInst.processOne(): with result: " + fnew);
-                    for (Set<FormulaAST.RowStruct> frhs : fnew.rowVarStructs.values()) {
-                        for (FormulaAST.RowStruct fr : frhs) {
+                    for (Set<Formula.RowStruct> frhs : fnew.rowVarStructs.values()) {
+                        for (Formula.RowStruct fr : frhs) {
                             if (fr.pred.equals(var)) {  // have to update the row var record to reflect the pred var substitution
                                 fr.pred = rel;
                                 fr.literal = fr.literal.replace(var, rel);
@@ -174,11 +174,11 @@ public class PredVarInst {
 
     /** ***************************************************************
      */
-    public Set<FormulaAST> processAll(Collection<FormulaAST> fs) {
+    public Set<Formula> processAll(Collection<Formula> fs) {
 
         if (debug) System.out.println("PredVarInst.processAll()");
-        Set<FormulaAST> result = new HashSet<>();
-        for (FormulaAST fast : fs) {
+        Set<Formula> result = new HashSet<>();
+        for (Formula fast : fs) {
             if (fast.higherOrder || fast.containsNumber) continue;
             result.addAll(processOne(fast));
         }

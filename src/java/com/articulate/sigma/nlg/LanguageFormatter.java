@@ -18,7 +18,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -184,14 +184,14 @@ public class LanguageFormatter {
             this.COMMA = NLGUtils.getKeyword(",", language);
             this.IF = NLGUtils.getKeyword("if", language);
             this.THEN = NLGUtils.getKeyword("then", language);
-            this.AND = NLGUtils.getKeyword(FormulaAST.AND, language);
-            this.OR = NLGUtils.getKeyword(FormulaAST.OR, language);
+            this.AND = NLGUtils.getKeyword(Formula.AND, language);
+            this.OR = NLGUtils.getKeyword(Formula.OR, language);
 
             // Formula.XOR may be empty; use same fallback you used elsewhere.
-            String xorKey = StringUtil.isNonEmptyString(FormulaAST.XOR) ? FormulaAST.XOR : "xor";
+            String xorKey = StringUtil.isNonEmptyString(Formula.XOR) ? Formula.XOR : "xor";
             this.XOR = NLGUtils.getKeyword(xorKey, language);
             this.IFF = NLGUtils.getKeyword("if and only if", language);
-            this.NOT = NLGUtils.getKeyword(FormulaAST.NOT, language);
+            this.NOT = NLGUtils.getKeyword(Formula.NOT, language);
             this.FORALL = NLGUtils.getKeyword("for all", language);
             this.EXISTS = NLGUtils.getKeyword("there exists", language);
             this.EXIST = NLGUtils.getKeyword("there exist", language);
@@ -222,7 +222,7 @@ public class LanguageFormatter {
         LanguageFormatter.kb = kb;
         this.language = language;
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(statement);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         variableTypes = fp.computeVariableTypesExpr(f.expr, kb);
@@ -303,7 +303,7 @@ public class LanguageFormatter {
 
             // Replace any variables in the template.
             if (StringUtil.isNonEmptyString(template)) {
-                FormulaAST f = new FormulaAST();
+                Formula f = new Formula();
                 f.read(statement);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 //HashMap varMap = fp.computeVariableTypes(kb);
@@ -380,7 +380,7 @@ public class LanguageFormatter {
     public String paraphraseStatement(String stmt, boolean isNegMode, boolean isQuestionMode, int depth) {
 
         if (debug) System.out.println("INFO in LanguageFormatter.paraphraseStatement(): stmt: " + stmt);
-        if (FormulaAST.empty(stmt)) {
+        if (Formula.empty(stmt)) {
             System.err.println("Error in LanguageFormatter.paraphraseStatement(): stmt is empty");
             return "";
         }
@@ -395,7 +395,7 @@ public class LanguageFormatter {
         }
         StringBuilder result = new StringBuilder();
         String ans;
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         theStack.insertFormulaArgs(f);
         if (f.atom()) {
@@ -423,13 +423,13 @@ public class LanguageFormatter {
         if (pred.equals("instance")) {
             // Do not mark as processed "complicated" clauses containing functions. They will have to be handled later in the process.
             // FIXME: The check below handles "(instance ?hamburger (FoodForFn Human))", but not "(instance (GovernmentFn ?Place) StateGovernment))".
-            if (!kb.isFunction(new FormulaAST(f.complexArgumentsToArrayList(2).get(0)).car())) {
+            if (!kb.isFunction(new Formula(f.complexArgumentsToArrayList(2).get(0)).car())) {
                 theStack.translateCurrProcessInstantiation(kb, f);
                 theStack.markFormulaArgAsProcessed(stmt);
             }
         }
 
-        if (!FormulaAST.atom(pred)) {
+        if (!Formula.atom(pred)) {
             System.err.println("Error in LanguageFormatter.paraphraseStatement(): statement "
                     + stmt
                     + " has a formula in the predicate position.");
@@ -466,7 +466,7 @@ public class LanguageFormatter {
             else if (pred.equals("names")) {
                 theStack.markFormulaArgAsProcessed(stmt);
                 // Get the name, with the quotation marks which surround it.
-                FormulaAST forumulaCdr = f.cdrAsFormula();
+                Formula forumulaCdr = f.cdrAsFormula();
                 String name = forumulaCdr.car();
                 // Get the variable.
                 String var = forumulaCdr.cdr().substring(1, forumulaCdr.cdr().length() - 1);
@@ -478,7 +478,7 @@ public class LanguageFormatter {
             return ans;
         }
         else {                              // predicate has no paraphrase
-            if (FormulaAST.isVariable(pred))
+            if (Formula.isVariable(pred))
                 result.append(pred);
             else
                 result.append(processAtom(pred, termMap));
@@ -490,8 +490,8 @@ public class LanguageFormatter {
                 if (debug) System.out.println("result: " + result);
                 arg = f.car();
                 f.read(f.cdr());
-                result.append(FormulaAST.SPACE);
-                if (FormulaAST.atom(arg))
+                result.append(Formula.SPACE);
+                if (Formula.atom(arg))
                     result.append(processAtom(arg, termMap));
                 else
                     result.append(paraphraseStatement(arg, isNegMode, isQuestionMode, depth + 1));
@@ -901,15 +901,15 @@ public class LanguageFormatter {
      * @param caseRole
      * @param isNegMode
      */
-    private void handleCaseRole(FormulaAST formula, String caseRole, boolean isNegMode) {
+    private void handleCaseRole(Formula formula, String caseRole, boolean isNegMode) {
 
         if (! doInformalNLG)
             return;
         if (kb.kbCache.isInstanceOf(caseRole, "CaseRole")) {
             try {
                 if (!theStack.isEmpty()) {
-                    String caseArgument = formula.cadr() + FormulaAST.SPACE + formula.caddr();
-                    String[] caseArgs = caseArgument.trim().split(FormulaAST.SPACE);
+                    String caseArgument = formula.cadr() + Formula.SPACE + formula.caddr();
+                    String[] caseArgs = caseArgument.trim().split(Formula.SPACE);
                     String processInstanceName = caseArgs[0];
                     String processParticipant = caseArgs[1];
 
@@ -946,7 +946,7 @@ public class LanguageFormatter {
             catch (IllegalArgumentException e) {
                 // Recover from exception by turning off full NLG.
                 this.doInformalNLG = false;
-                String temp = statement.replaceAll("\\s+", FormulaAST.SPACE);    // clean up, reducing consecutive whitespace to single space
+                String temp = statement.replaceAll("\\s+", Formula.SPACE);    // clean up, reducing consecutive whitespace to single space
                 String msg = "Handled IllegalArgumentException after finding case role.\n   Exception message:\n      " + e.getMessage() + "\n" +
                         "   Formula:\n       " + temp + "\n";
                 System.out.println("LanguageFormatter " + msg);
@@ -991,7 +991,7 @@ public class LanguageFormatter {
                 return null;
             }
             List<String> args = new ArrayList<>();
-            FormulaAST f = new FormulaAST();
+            Formula f = new Formula();
             f.read(stmt);
             String pred = f.getStringArgument(0);
             f.read(f.cdr());
@@ -1006,7 +1006,7 @@ public class LanguageFormatter {
             theStack.pushNew();
             StackElement inElement = theStack.getCurrStackElement();
 
-            if (pred.equals(FormulaAST.NOT)) {
+            if (pred.equals(Formula.NOT)) {
                 theStack.setPolarity(VerbProperties.Polarity.NEGATIVE);
                 ans = paraphraseStatement(f.car(), true, false,depth + 1);
                 inElement.setProcessPolarity(VerbProperties.Polarity.NEGATIVE);
@@ -1100,9 +1100,9 @@ public class LanguageFormatter {
             tArgs.add(maybeTranslateArg(args.get(i)));
         }
 
-        if (pred.equals(FormulaAST.IF)) {
+        if (pred.equals(Formula.IF)) {
             if (isNegMode) {
-                return tArgs.get(0) + FormulaAST.SPACE + k.AND + FormulaAST.SPACE + negateClause(tArgs.get(1));
+                return tArgs.get(0) + Formula.SPACE + k.AND + Formula.SPACE + negateClause(tArgs.get(1));
             } else {
                 if (mode == RenderMode.HTML) {
                     // Special handling for Arabic.
@@ -1125,7 +1125,7 @@ public class LanguageFormatter {
             }
         }
 
-        if (pred.equalsIgnoreCase(FormulaAST.AND)) {
+        if (pred.equalsIgnoreCase(Formula.AND)) {
             if (isNegMode) {
                 // ¬(A ∧ B ∧ ...) => ¬A ∨ ¬B ∨ ...
                 List<String> negated = new ArrayList<>(tArgs.size());
@@ -1150,9 +1150,9 @@ public class LanguageFormatter {
             for (int i = 0; i < tArgs.size(); i++) {
                 if (i > 0) {
                     if (isNegMode) {
-                        sb.append(FormulaAST.SPACE).append(k.NOT);
+                        sb.append(Formula.SPACE).append(k.NOT);
                     }
-                    sb.append(FormulaAST.SPACE).append(k.HOLDS).append(FormulaAST.SPACE);
+                    sb.append(Formula.SPACE).append(k.HOLDS).append(Formula.SPACE);
                 }
                 sb.append(tArgs.get(i));
             }
@@ -1160,7 +1160,7 @@ public class LanguageFormatter {
         }
 
 
-        if (pred.equalsIgnoreCase(FormulaAST.OR)) {
+        if (pred.equalsIgnoreCase(Formula.OR)) {
             // ¬(A ∨ B ∨ ...) => ¬A ∧ ¬B ∧ ...
             // (Note: existing behavior negates operands and flips the joiner.)
             if (isNegMode) {
@@ -1181,54 +1181,54 @@ public class LanguageFormatter {
         }
 
 
-        if (pred.equalsIgnoreCase(FormulaAST.XOR)) {
+        if (pred.equalsIgnoreCase(Formula.XOR)) {
             // Keep existing behavior (joins with XOR);
             return renderXor(tArgs);
         }
 
-        if (pred.equals(FormulaAST.IFF)) {
+        if (pred.equals(Formula.IFF)) {
             if (isNegMode) {
                 return renderXor(tArgs);
             }
-            return tArgs.get(0) + FormulaAST.SPACE + k.IFF + FormulaAST.SPACE + tArgs.get(1);
+            return tArgs.get(0) + Formula.SPACE + k.IFF + Formula.SPACE + tArgs.get(1);
         }
 
-        if (pred.equalsIgnoreCase(FormulaAST.UQUANT)) {
+        if (pred.equalsIgnoreCase(Formula.UQUANT)) {
             StringBuilder sb = new StringBuilder();
             if (isNegMode) {
-                sb.append(k.NOT).append(FormulaAST.SPACE);
+                sb.append(k.NOT).append(Formula.SPACE);
             }
 //            sb.append(k.FORALL).append(FormulaAST.SPACE);
 
             String vars = args.get(0);
-            if (vars.contains(FormulaAST.SPACE)) {
+            if (vars.contains(Formula.SPACE)) {
                 sb.append(seg_vars(translateWord(termMap, NLGUtils.formatList(vars, language))));
             } else {
                 sb.append(seg_vars(translateWord(termMap, vars)));
             }
 
-            sb.append(FormulaAST.SPACE).append(tArgs.get(1));
+            sb.append(Formula.SPACE).append(tArgs.get(1));
             return seg_forall(sb.toString());
         }
 
 
-        if (pred.equalsIgnoreCase(FormulaAST.EQUANT)) {
+        if (pred.equalsIgnoreCase(Formula.EQUANT)) {
             StringBuilder sb = new StringBuilder();
             String vars = args.get(0);
 
-            if (vars.contains(FormulaAST.SPACE)) {
+            if (vars.contains(Formula.SPACE)) {
                 sb.append(isNegMode ? k.NOTEXIST : k.EXIST)
-                        .append(FormulaAST.SPACE)
+                        .append(Formula.SPACE)
                         .append(translateWord(termMap, NLGUtils.formatList(vars, language)));
             } else {
                 sb.append(isNegMode ? k.NOTEXISTS : k.EXISTS)
-                        .append(FormulaAST.SPACE)
+                        .append(Formula.SPACE)
                         .append(translateWord(termMap, vars));
             }
 
-            sb.append(FormulaAST.SPACE)
+            sb.append(Formula.SPACE)
                     .append(k.SUCHTHAT)
-                    .append(FormulaAST.SPACE)
+                    .append(Formula.SPACE)
                     .append(tArgs.get(1));
 
             return sb.toString();
@@ -1256,7 +1256,7 @@ public class LanguageFormatter {
     }
 
     private String join(List<String> parts, String op) {
-        return String.join(FormulaAST.SPACE + op + FormulaAST.SPACE, parts);
+        return String.join(Formula.SPACE + op + Formula.SPACE, parts);
     }
 
     /** User-friendly XOR for 2 args; fallback to AND/OR expansion for others. */
@@ -1273,9 +1273,9 @@ public class LanguageFormatter {
             if (StringUtil.emptyString(either)) either = "either";
             if (StringUtil.emptyString(butNotBoth)) butNotBoth = "but not both";
 
-            return either + FormulaAST.SPACE + parts.get(0)
-                    + FormulaAST.SPACE + k.OR + FormulaAST.SPACE + parts.get(1)
-                    + k.COMMA + FormulaAST.SPACE + butNotBoth;
+            return either + Formula.SPACE + parts.get(0)
+                    + Formula.SPACE + k.OR + Formula.SPACE + parts.get(1)
+                    + k.COMMA + Formula.SPACE + butNotBoth;
         }
 
         // n-ary: parity (odd number true) in DNF.
@@ -1334,7 +1334,7 @@ public class LanguageFormatter {
 
         if (debug) System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + stmt);
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
         String pred = f.car();
         String strFormat = phraseMap.get(pred);
@@ -1360,7 +1360,7 @@ public class LanguageFormatter {
             if (debug) System.out.println("num: " + num);
             if (debug) System.out.println("str: " + strFormat);
             arg = f.getStringArgument(num);
-            if (FormulaAST.isVariable(arg))
+            if (Formula.isVariable(arg))
                 para = arg;
             else
                 para = paraphraseStatement(arg, isNegMode, isQuestionMode, 1);
@@ -1484,7 +1484,7 @@ public class LanguageFormatter {
             // and only when neg-mode and not question-mode.
             if ("n".equals(tag)) {
                 if (isNegMode && !isQuestionMode) {
-                    out.append(NLGUtils.getKeyword(FormulaAST.NOT, language));
+                    out.append(NLGUtils.getKeyword(Formula.NOT, language));
                 }
             }
             // %p without braces is a no-op historically; drop it.
@@ -1493,7 +1493,7 @@ public class LanguageFormatter {
         }
 
         // Normalize whitespace a bit (keep conservative to avoid behavior drift)
-        return out.toString().replaceAll("\\s+", FormulaAST.SPACE).trim();
+        return out.toString().replaceAll("\\s+", Formula.SPACE).trim();
     }
 
 
@@ -1528,7 +1528,7 @@ public class LanguageFormatter {
         }
 
         // Variables and digit strings: keep raw
-        if (FormulaAST.isVariable(atom)) return atom;
+        if (Formula.isVariable(atom)) return atom;
 
         if (StringUtil.isDigitString(unquoted)) return atom;
 
@@ -1550,7 +1550,7 @@ public class LanguageFormatter {
 
         String ans = word;
         try {
-            if (!FormulaAST.isVariable(word) && (termMap != null)) {
+            if (!Formula.isVariable(word) && (termMap != null)) {
                 String pph = termMap.get(word);
                 if (StringUtil.isNonEmptyString(pph))
                     ans = pph;
@@ -1578,7 +1578,7 @@ public class LanguageFormatter {
     private static void createObjectMap(String form) {
 
         form = removePreamble(form);
-        form = form + FormulaAST.SPACE;
+        form = form + Formula.SPACE;
         if (debug) System.out.println("LanguageFormatter.createObjectMap(): input " + form);
         int tokenNum = 1;
 //        boolean inQuote;
@@ -1636,7 +1636,7 @@ public class LanguageFormatter {
                     argnum = -1;
                     if (Character.isDigit(form.charAt(phraseEnd+1)))
                         argnum = Integer.parseInt(Character.toString(form.charAt(phraseEnd+1)));
-                    phraseWords = phrase.split(FormulaAST.SPACE);
+                    phraseWords = phrase.split(Formula.SPACE);
                     for (String s : phraseWords) {
                         cl = new CoreLabel();
                         cl.setOriginalText(s);
@@ -1702,7 +1702,7 @@ public class LanguageFormatter {
             outputMap.put(varString, cl); // create a "dummy" CoreLabel to hold the variable value
         }
 
-        if (!form.contains(FormulaAST.V_PREF)) // if there are variables, the replacements are not done yet
+        if (!form.contains(Formula.V_PREF)) // if there are variables, the replacements are not done yet
             createObjectMap(form);
 
         String result = form;
@@ -1746,10 +1746,10 @@ public class LanguageFormatter {
                     String lbl = getOrCreateVarLabel(varString, varLabelMap);
 //                    replacement = (article + FormulaAST.SPACE + NLGUtils.getKeyword("kind of", language)
 //                            + FormulaAST.SPACE + varPretty);
-                    replacement = (article + FormulaAST.SPACE + NLGUtils.getKeyword("kind of", language)
-                            + FormulaAST.SPACE + varPretty + FormulaAST.SPACE + lbl);
+                    replacement = (article + Formula.SPACE + NLGUtils.getKeyword("kind of", language)
+                            + Formula.SPACE + varPretty + Formula.SPACE + lbl);
                     if (isArabic)
-                        replacement = (NLGUtils.getKeyword("kind of", language) + FormulaAST.SPACE + varPretty);
+                        replacement = (NLGUtils.getKeyword("kind of", language) + Formula.SPACE + varPretty);
 
                     result = result.replaceFirst(
                             varRegex,
@@ -1760,14 +1760,14 @@ public class LanguageFormatter {
                     article = NLGUtils.getArticle(varPretty, count, occurrenceCounter, language);
                     String lbl = getOrCreateVarLabel(varString, varLabelMap);
 //                    replacement = (article + FormulaAST.SPACE + varPretty);
-                    replacement = (article + FormulaAST.SPACE + varPretty + FormulaAST.SPACE + lbl);
+                    replacement = (article + Formula.SPACE + varPretty + Formula.SPACE + lbl);
                     if (isArabic) {
                         defArt = NLGUtils.getKeyword("the", language);
                         if (article.startsWith(defArt) && !varPretty.startsWith(defArt)) {
                             // This has to be refined to insert shadda for sun letters.
                             varPretty = (defArt + varPretty);
                         }
-                        replacement = (varPretty + FormulaAST.SPACE + article);
+                        replacement = (varPretty + Formula.SPACE + article);
                     }
 
                     result = result.replaceFirst(
@@ -1861,7 +1861,7 @@ public class LanguageFormatter {
         // INFO in LanguageFormatter.paraphraseLogicalOperator(): bad result for
         String stmt =  "(and (instance ?GUIE1 GUIElement) (hasGUEState ?GUIE1 GUE_ActiveState)" +
                 " (properPart ?GUIE1 ?GUIE2) (instance ?GUIE2 GUIElement))";
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
         System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         System.out.println();
@@ -1884,7 +1884,7 @@ public class LanguageFormatter {
                 "       (instance ?D Driving)\n" +
                 "       (instance ?H Human)\n" +
                 "       (agent ?D ?H)))";
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
         System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         //LanguageFormatter lf = new LanguageFormatter(stmt, kb.getFormatMap("EnglishLanguage"),
@@ -1898,7 +1898,7 @@ public class LanguageFormatter {
                 "       (instance ?H Human)\n" +
                 "       (names ?H \"John\")\n" +
                 "       (agent ?D ?H)))";
-        f = new FormulaAST();
+        f = new Formula();
         f.read(stmt);
         System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
@@ -1912,7 +1912,7 @@ public class LanguageFormatter {
                 "       (instance ?Car Automobile)\n" +
                 "       (agent ?D ?H)\n" +
                 "       (patient ?D ?Car)))";
-        f = new FormulaAST();
+        f = new Formula();
         f.read(stmt);
         System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
@@ -1928,7 +1928,7 @@ public class LanguageFormatter {
                 "       (agent ?D ?H)\n" +
                 "       (destination ?D ?A)\n" +
                 "       (patient ?D ?C)))";
-        f = new FormulaAST();
+        f = new Formula();
         f.read(stmt);
         System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
@@ -1949,14 +1949,14 @@ public class LanguageFormatter {
         debug = true;
         // INFO in LanguageFormatter.paraphraseLogicalOperator(): bad result for
         String stmt =  "(exists (?FINANCIALTRANSACTION1 ?AGENT2 ) (broker ?FINANCIALTRANSACTION1 ?AGENT2 ))";
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
         System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         System.out.println(NLGUtils.outputMap);
         System.out.println();
 
         stmt =  "(exists (?MOTION1 ?OBJECT2 ) (moves ?MOTION1 ?OBJECT2 ))";
-        f = new FormulaAST(stmt);
+        f = new Formula(stmt);
         System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         System.out.println(NLGUtils.outputMap);
@@ -1976,7 +1976,7 @@ public class LanguageFormatter {
         debug = true;
         // INFO in LanguageFormatter.paraphraseLogicalOperator(): bad result for
         String stmt = "(or (not (subclass Human Object)) (not (instance Human Class)) spl6_2)";
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
         System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " +
                 StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
@@ -2023,7 +2023,7 @@ public class LanguageFormatter {
         }
         else if (args.length > 1 && args[0].equals("-g")) {
             KBmanager.getMgr().initializeOnce();
-            FormulaAST f = new FormulaAST(args[1]);
+            Formula f = new Formula(args[1]);
             kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("translation for\n" + f);
             String actual = toEnglish(StringUtil.removeEnclosingQuotes(args[1]));

@@ -2,12 +2,6 @@
 
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Iterator;
-
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.

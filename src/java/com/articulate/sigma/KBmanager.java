@@ -20,7 +20,7 @@ package com.articulate.sigma;
 import com.articulate.sigma.CCheckManager.CCheckStatus;
 import com.articulate.sigma.VerbNet.VerbNet;
 import com.articulate.sigma.nlg.NLGUtils;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;
@@ -28,7 +28,6 @@ import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
 import com.articulate.sigma.utils.*;
 
-import java.nio.file.*;
 import com.esotericsoftware.kryo.io.*;
 
 import py4j.GatewayServer;
@@ -42,7 +41,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.io.IOException;
-import java.util.stream.Stream;
 
 /** This is a class that manages a group of knowledge bases.  It should only
  *  have one instance, contained in its own static member variable.
@@ -1275,7 +1273,7 @@ public class KBmanager implements Serializable {
                 LoggingUtils.log("ERROR", e.getMessage());
             }
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            FormulaAST f = new FormulaAST();
+            Formula f = new Formula();
             f.read("(=> (and (wears ?A ?C) (part ?P ?C)) (wears ?A ?P))");
 
         }

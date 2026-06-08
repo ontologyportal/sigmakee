@@ -27,7 +27,7 @@ public class Sortals {
      * Add type guards to a formula by making it the consequent of a rule
      * and making type tests into a new antecedent
      */
-    public String addSortals(FormulaAST f, Map<String, Set<String>> types) {
+    public String addSortals(Formula f, Map<String, Set<String>> types) {
 
         if (types.keySet().isEmpty()) return f.getFormula();
         if (debug) System.out.println("Sortals.addSortals(): types: " + types);
@@ -42,9 +42,9 @@ public class Sortals {
             v = types.get(k);
             for (String t : v) {
                 if (t.endsWith("+"))
-                    result.append("(subclass ").append(k).append(FormulaAST.SPACE).append(t.substring(0, t.length() - 1)).append(") ");
+                    result.append("(subclass ").append(k).append(Formula.SPACE).append(t.substring(0, t.length() - 1)).append(") ");
                 else
-                    result.append("(instance ").append(k).append(FormulaAST.SPACE).append(t).append(") ");
+                    result.append("(instance ").append(k).append(Formula.SPACE).append(t).append(") ");
             }
         }
         if (!types.keySet().isEmpty())
@@ -52,7 +52,7 @@ public class Sortals {
         if (types.keySet().size() > 1)
             result.append(") ");
         result.append(f.getFormula());
-        result.append(FormulaAST.RP);
+        result.append(Formula.RP);
         if (debug) System.out.println("Sortals.addSortals(): result: " + result);
         return result.toString();
     }
@@ -122,7 +122,7 @@ public class Sortals {
      * Eliminate more general types in favor of their more specific
      * subclasses (if any)
      */
-    public void elimSubsumedTypes(FormulaAST f) {
+    public void elimSubsumedTypes(Formula f) {
 
         Set<String> types, remove;
         for (String var : f.varTypes.keySet()) {
@@ -145,7 +145,7 @@ public class Sortals {
     /** ***************************************************************
      * Find the most specific type constraint for each variable
      */
-    public void winnowAllTypes(FormulaAST f) {
+    public void winnowAllTypes(Formula f) {
 
         if (debug) System.out.println("Sortals.winnowAllTypes():input: " + f.varTypes);
         elimSubsumedTypes(f);
@@ -156,7 +156,7 @@ public class Sortals {
      * Find the most specific type constraint for each variable and
      * create a new String of the formula with type guards
      */
-    public String addSortals(FormulaAST f) {
+    public String addSortals(Formula f) {
 
         if (debug) System.out.println("Sortals.addSortals():types: " + f.varTypes);
         Map<String, Set<String>> types = removeExplicitTypes(f.varTypes,f.explicitTypes);

@@ -28,11 +28,11 @@ public class RowVarTest extends IntegrationTestBase {
 
     /***************************************************************
      * */
-    public static Set<FormulaAST> process(String input) {
+    public static Set<Formula> process(String input) {
 
         System.out.println("RowVarTest.process(): " + input);
         visitor = SuokifVisitor.parseString(input);
-        Map<Integer,FormulaAST> hm = visitor.result;
+        Map<Integer, Formula> hm = visitor.result;
         if (!visitor.hasPredVar.isEmpty()) {
             System.err.println("Error - can't have tests with pred vars in this routine.");
             return null;
@@ -41,7 +41,7 @@ public class RowVarTest extends IntegrationTestBase {
         sortals = new Sortals(kb);
         vt = new VarTypes(hm.values(),kb);
         vt.findTypes();
-        for (FormulaAST f : visitor.rules) {
+        for (Formula f : visitor.rules) {
             //System.out.println("RowVarTest.process(): before winnow");
             //f.printCaches();
             sortals.winnowAllTypes(f);
@@ -50,7 +50,7 @@ public class RowVarTest extends IntegrationTestBase {
         }
         PredVarInst.predVarInstDone = true; // because the test formulas already did it
         rv = new RowVar(kb);
-        Set<FormulaAST> rvs = rv.expandRowVar(visitor.hasRowVar);
+        Set<Formula> rvs = rv.expandRowVar(visitor.hasRowVar);
         //System.out.println("RowVarTest.process(): rvs" + rvs);
         return rvs;
     }
@@ -70,7 +70,7 @@ public class RowVarTest extends IntegrationTestBase {
                 "            (ListFn @ROW2)))\n" +
                 "    (contraryAttribute @ROW2))";
 
-        Set<FormulaAST> hm = process(input);
+        Set<Formula> hm = process(input);
         System.out.println("RowVarTest.test1(): one result: " + hm.iterator().next());
         System.out.println("RowVarTest.test1(): result size: " + hm.size());
         System.out.println("RowVarTest.test1(): expected size: " + 49);
@@ -86,9 +86,9 @@ public class RowVarTest extends IntegrationTestBase {
         System.out.println("===================== RowVarTest.test2() =====================");
         String input = "(=> (and (minValue part ?ARG ?N) (part @ARGS) (equal ?VAL (ListOrderFn (ListFn @ARGS) ?ARG))) (greaterThan ?VAL ?N))";
         String expected = "(=> (and (minValue part ?ARG ?N) (part ?ARGS1 ?ARGS2) (equal ?VAL (ListOrderFn (ListFn_2Fn ?ARGS1 ?ARGS2) ?ARG))) (greaterThan ?VAL ?N))";
-        Set<FormulaAST> hm = process(input);
+        Set<Formula> hm = process(input);
         StringBuilder sb = new StringBuilder();
-        for (FormulaAST f : hm) {
+        for (Formula f : hm) {
             f.printCaches();
             sb.append(f.getFormula()).append("\n");
         }
@@ -111,12 +111,12 @@ public class RowVarTest extends IntegrationTestBase {
                 "            (ListLengthFn\n" +
                 "                (ListFn @ROW)))))";
 
-        Set<FormulaAST> hm = process(input);
+        Set<Formula> hm = process(input);
         System.out.println("RowVarTest.test3(): result size: " + hm.size());
         System.out.println("RowVarTest.test3(): expected size: " + 7);
         System.out.println("RowVarTest.test3(): result size: " + hm);
         Set<String> results = new HashSet<>();
-        for (FormulaAST f : hm) {
+        for (Formula f : hm) {
             results.add(f.toString());
             if (f.getFormula().contains("@")) {
                 System.out.println("RowVarTest.test3(): shouldn't contain row variable " + f);

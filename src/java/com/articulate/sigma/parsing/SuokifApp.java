@@ -23,7 +23,7 @@ public class SuokifApp {
      * @param fast the SUO-KIF formula to process
      * @return and instance of the SuokifVisitor
      */
-    public static SuokifVisitor process(FormulaAST fast) {
+    public static SuokifVisitor process(Formula fast) {
         return SuokifVisitor.parseFormula(fast);
     }
 
@@ -38,9 +38,9 @@ public class SuokifApp {
 
     private static void showResults(SuokifVisitor visitor) {
 
-        Map<Integer, FormulaAST> hm = visitor.result;
+        Map<Integer, Formula> hm = visitor.result;
         StringBuilder sb = new StringBuilder();
-        for (FormulaAST f : hm.values())
+        for (Formula f : hm.values())
             sb.append(f.getFormula()).append("\n");
         System.out.println("result: " + sb);
     }
@@ -87,7 +87,7 @@ public class SuokifApp {
             System.out.println();
 
             input = "(=> (and (minValue ?R ?ARG ?N) (?R @ARGS) (equal ?VAL (ListOrderFn (ListFn @ARGS) ?ARG))) (greaterThan ?VAL ?N))";
-            FormulaAST fast = new FormulaAST();
+            Formula fast = new Formula();
             fast.setFormula(input);
             SuokifVisitor v2 = process(fast);
             System.out.println("Formula:\n " + fast);
@@ -109,7 +109,7 @@ public class SuokifApp {
             System.out.println();
         }
         else if (args.length == 2 && args[0].equals("-f")) {
-            FormulaAST fast = new FormulaAST();
+            Formula fast = new Formula();
             fast.setFormula(args[1]);
             SuokifVisitor v5 = process(fast);
             System.out.println("Formula:\n " + fast);

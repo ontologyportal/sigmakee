@@ -15,7 +15,7 @@ package com.articulate.sigma;
  * full rebuild without needing to rebuild everything.
  */
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import org.junit.Test;
 
 import java.util.*;
@@ -38,7 +38,7 @@ public class KBcacheIncrementalTest {
             kif.parseStatement(stmt);
         kb.merge(kif, "");
         // Tag all formulas so KBcache does not treat them as cached
-        for (FormulaAST f : kb.formulaMap.values())
+        for (Formula f : kb.formulaMap.values())
             f.sourceFile = "test";
         kb.kbCache.buildCaches();
         return kb;

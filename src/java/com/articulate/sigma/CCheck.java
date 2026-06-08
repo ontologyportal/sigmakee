@@ -1,7 +1,7 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.tp.EProver;
 
 /** This code is copyright Articulate Software (c) 2014.
@@ -176,9 +176,9 @@ public class CCheck implements Runnable {
 
     /** *************************************************************
      */
-    private void printReport(FormulaAST query, String processedQ,
-            String sourceFile, boolean syntaxError, String proof,
-            String testType) {
+    private void printReport(Formula query, String processedQ,
+                             String sourceFile, boolean syntaxError, String proof,
+                             String testType) {
 
         pw.println("    <entry>");
         pw.println("      <query>");
@@ -215,8 +215,8 @@ public class CCheck implements Runnable {
      * @param query - the statement that caused the error
      * @param testType - whether it is a redundancy or inconsistency
      */
-    private void reportAnswer(String proof, FormulaAST query, String testType,
-            String processedQ, String sourceFile) {
+    private void reportAnswer(String proof, Formula query, String testType,
+                              String processedQ, String sourceFile) {
 
         try {
             if (proof.contains("Syntax error detected")) {
@@ -258,7 +258,7 @@ public class CCheck implements Runnable {
      * @param sourceFile
      *            - the source file where the formula being tested came from
      */
-    private void reportError(String message, FormulaAST query, String processedQ, String sourceFile) {
+    private void reportError(String message, Formula query, String processedQ, String sourceFile) {
 
         pw.println("    <entry>");
         pw.println("      <query>");
@@ -301,10 +301,10 @@ public class CCheck implements Runnable {
             pw.println("  <kb>");
             pw.println("    " + kb.name);
             pw.println("  </kb>");
-            Collection<FormulaAST> allFormulas = kb.formulaMap.values();
-            Iterator<FormulaAST> it = allFormulas.iterator();
+            Collection<Formula> allFormulas = kb.formulaMap.values();
+            Iterator<Formula> it = allFormulas.iterator();
             pw.println("  <entries>");
-            FormulaAST query;
+            Formula query;
             FormulaPreprocessor fp;
             Set<Expr> processedQueries;
             String processedQuery, sourceFile;
@@ -315,7 +315,7 @@ public class CCheck implements Runnable {
                 processedQueries = fp.preProcessExpr(query,false, kb);
 
                 for (Expr ex : processedQueries) {
-                    FormulaAST f = new FormulaAST(ex.toKifString());
+                    Formula f = new Formula(ex.toKifString());
                     processedQuery = f.makeQuantifiersExplicit(false);
                     sourceFile = f.sourceFile;
                     sourceFile = sourceFile.replace("/", "&#47;");
@@ -328,7 +328,7 @@ public class CCheck implements Runnable {
                         System.err.println("Error from inference engine: " + e.getMessage());
                     }
                     negatedQuery = new StringBuilder();
-                    negatedQuery.append(FormulaAST.LP).append(FormulaAST.NOT).append(FormulaAST.SPACE).append(processedQuery).append(FormulaAST.RP);
+                    negatedQuery.append(Formula.LP).append(Formula.NOT).append(Formula.SPACE).append(processedQuery).append(Formula.RP);
                     try {
                         proof = askInferenceEngine(empty, negatedQuery.toString());
                         reportAnswer(proof, query ,"Inconsistency", processedQuery, sourceFile);
@@ -368,9 +368,9 @@ public class CCheck implements Runnable {
             pw.println("  <kb>");
             pw.println("    " + kb.name);
             pw.println("  </kb>");
-            Collection<FormulaAST> allFormulas = kb.formulaMap.values();
+            Collection<Formula> allFormulas = kb.formulaMap.values();
             Collection<String> allTPTP = new ArrayList<>();
-            for (FormulaAST f : allFormulas) {
+            for (Formula f : allFormulas) {
                 allTPTP.addAll(f.getTheTptpFormulas());
             }
             Iterator<String> it = allTPTP.iterator();

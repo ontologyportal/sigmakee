@@ -1,7 +1,7 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.utils.StringUtil;
 
@@ -9,7 +9,7 @@ import java.io.*;
 import java.util.*;
 
 /**
- * ANTLR-based KIF parser that produces {@link FormulaAST} objects with populated
+ * ANTLR-based KIF parser that produces {@link Formula} objects with populated
  * {@link Expr} trees. This is the Phase 2 replacement for {link KIF}.
  *
  * <p>The parsing pipeline is:
@@ -49,9 +49,9 @@ public class KIFAST {
 
     /**
      * Primary formula map. Maps the canonical KIF string of each formula to its
-     * {@link FormulaAST} (which carries the {@link Expr} tree in {@code f.expr}).
+     * {@link Formula} (which carries the {@link Expr} tree in {@code f.expr}).
      */
-    public Map<String, FormulaAST> formulaMap = new HashMap<>();
+    public Map<String, Formula> formulaMap = new HashMap<>();
 
     /** Canonical path of the file most recently read. */
     public String filename;
@@ -149,7 +149,7 @@ public class KIFAST {
 
         if (visitor == null) return;
         int dupCount = 0;
-        for (FormulaAST f : visitor.result.values()) {
+        for (Formula f : visitor.result.values()) {
             if (f == null || StringUtil.emptyString(f.getFormula())) continue;
             // Normalize whitespace (collapse sequences to single space) to match KIF's
             // normalizeSpaceChars() behaviour so that formula-map keys are identical.
@@ -397,8 +397,8 @@ public class KIFAST {
         System.out.println("formulas sample (arg-0-instance): " + kif.formulas.get("arg-0-instance"));
         System.out.println("formulas sample (ant-instance): " + kif.formulas.get("ant-instance"));
         System.out.println("formulas sample (cons-attribute): " + kif.formulas.get("cons-attribute"));
-        for (Map.Entry<String, FormulaAST> e : kif.formulaMap.entrySet()) {
-            FormulaAST f = e.getValue();
+        for (Map.Entry<String, Formula> e : kif.formulaMap.entrySet()) {
+            Formula f = e.getValue();
             System.out.println("  formula: " + f.getFormula());
             System.out.println("  expr:    " + (f.expr != null ? f.expr.toKifString() : "null"));
         }

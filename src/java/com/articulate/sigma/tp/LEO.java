@@ -17,11 +17,10 @@ import com.articulate.sigma.FormulaPreprocessor;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
-import com.articulate.sigma.parsing.CLIMapParser;
 import tptp_parser.TPTPFormula;
 
 import java.io.*;
@@ -107,7 +106,7 @@ public class LEO {
         
         if (debug>0) System.out.printf("LEO.askLeo(%s)", suoKifFormula);
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            FormulaAST query = new FormulaAST();
+            Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Expr> processedQuery = fp.preProcessExpr(query.expr, true, this.kb);
@@ -121,9 +120,9 @@ public class LEO {
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
                     for (Expr ex : processedQuery) {
-                        combined.append(ex.toKifString()).append(FormulaAST.SPACE);
+                        combined.append(ex.toKifString()).append(Formula.SPACE);
                     }
-                    combined.append(FormulaAST.RP);
+                    combined.append(Formula.RP);
                     String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + this.axiomIndex++ +
                         ",conjecture,(" +
                         SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, this.requestedTptpLanguage)
@@ -162,7 +161,7 @@ public class LEO {
         if (debug>0) System.out.printf("LEO.askLeo(%s, %b)", suoKifFormula, useSession);
         final String requestedLang = SUMOKBtoTPTPKB.getLang();
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            FormulaAST query = new FormulaAST();
+            Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Expr> processedQuery = fp.preProcessExpr(query, true, this.kb);
@@ -196,8 +195,8 @@ public class LEO {
                 StringBuilder combined = new StringBuilder();
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
-                    for (Expr p : processedQuery) combined.append(p.toKifString()).append(FormulaAST.SPACE);
-                    combined.append(FormulaAST.RP);
+                    for (Expr p : processedQuery) combined.append(p.toKifString()).append(Formula.SPACE);
+                    combined.append(Formula.RP);
                     String theTPTPstatement = requestedLang + "(query" + "_" + this.axiomIndex++ +
                             ",conjecture,(" +
                             SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, requestedLang)
@@ -263,7 +262,7 @@ public class LEO {
      * @param tptp convert formula to TPTP if tptp = true
      * @return true if all assertions are added for inference
      */
-    public boolean assertFormula(String userAssertionTPTP, List<FormulaAST> parsedFormulas, boolean tptp) {
+    public boolean assertFormula(String userAssertionTPTP, List<Formula> parsedFormulas, boolean tptp) {
 
         if (debug>0) System.out.printf("LEO.assertFormula(%s, %s, %b)", userAssertionTPTP, parsedFormulas, tptp);
         boolean allAdded = false;
@@ -272,7 +271,7 @@ public class LEO {
             FormulaPreprocessor fp;
             Set<String> tptpFormulas;
             String tptpStr;
-            for (FormulaAST parsedF : parsedFormulas) {
+            for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
                 fp = new FormulaPreprocessor();
                 processedFormulas.addAll(fp.preProcessExpr(parsedF, false, this.kb));
@@ -281,7 +280,7 @@ public class LEO {
                     tptpFormulas = new HashSet<>();
                     if (tptp) {
                         for (Expr p : processedFormulas) {
-                            String formula = THFnew.processNonModal(new FormulaAST(p.toKifString()), new HashMap<>(), false);
+                            String formula = THFnew.processNonModal(new Formula(p.toKifString()), new HashMap<>(), false);
                             tptpFormulas.add(formula);
                         }
                     }
@@ -671,7 +670,7 @@ public class LEO {
         tpp.parseProofOutput(leo.output,queryStr,kb,leo.qlist);
         for (TPTPFormula step : tpp.proof) {
             System.out.println(":: " + step);
-            FormulaAST f = new FormulaAST(step.sumo);
+            Formula f = new Formula(step.sumo);
             System.out.println(f.format("","  ","\n"));
         }
         System.out.println("Leo.main(): bindings: " + tpp.bindings);

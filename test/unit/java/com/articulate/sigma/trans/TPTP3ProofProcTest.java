@@ -1,7 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -204,7 +204,7 @@ public class TPTP3ProofProcTest extends UnitTestBase {
         String input = "(forall (?X0) (or (not (instance ?X0 Relation)) (not (ans0 ?X0))))";
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-        FormulaAST ans = tpp.extractAnswerClause(new FormulaAST(input));
+        Formula ans = tpp.extractAnswerClause(new Formula(input));
         if (ans == null)
             System.out.println("Fail ans == null");
         assertFalse(ans == null);

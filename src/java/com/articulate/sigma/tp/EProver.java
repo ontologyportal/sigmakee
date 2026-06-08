@@ -18,10 +18,9 @@ package com.articulate.sigma.tp;
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.SessionTPTPManager;
-import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.parsing.CLIMapParser;
@@ -141,7 +140,7 @@ public class EProver {
         if (StringUtil.isNonEmptyString(suoKifFormulas)) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Expr> processedStmts = SessionTPTPManager.withSessionCache(
-                    this.sessionId, this.kb, () -> fp.preProcessExpr(new FormulaAST(suoKifFormulas), true, this.kb));
+                    this.sessionId, this.kb, () -> fp.preProcessExpr(new Formula(suoKifFormulas), true, this.kb));
             if (!processedStmts.isEmpty() && this != null) {
                 String strQuery = processedStmts.iterator().next().toKifString();
                 this.submitQuery(strQuery);
@@ -164,7 +163,7 @@ public class EProver {
 
         if (debug>0) System.out.printf("\nEProver.askNoProof(%s)", suoKifFormula);
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            FormulaAST query = new FormulaAST();
+            Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Expr> processedStmts = SessionTPTPManager.withSessionCache(
@@ -228,7 +227,7 @@ public class EProver {
      * TODO: This function might not be necessary if we find a way to
      * directly add assertion into opened inference engine (e_ltb_runner)
      */
-    public boolean assertFormula(String userAssertionTPTP, List<FormulaAST> parsedFormulas, boolean tptp) {
+    public boolean assertFormula(String userAssertionTPTP, List<Formula> parsedFormulas, boolean tptp) {
 
         if (debug>0) System.out.printf("\nEProver.assertFormula(%s, %s, %b)", userAssertionTPTP, parsedFormulas, tptp);
         System.out.println("EProver.assertFormula(2): process: " + _eprover);
@@ -239,7 +238,7 @@ public class EProver {
             FormulaPreprocessor fp;
             Set<String> tptpFormulas;
             String tptpstring;
-            for (FormulaAST parsedF : parsedFormulas) {
+            for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
                 fp = new FormulaPreprocessor();
                 processedFormulas.addAll(fp.preProcessExpr(parsedF,false, this.kb));
@@ -249,7 +248,7 @@ public class EProver {
                     tptpFormulas = new HashSet<>();
                     if (tptp) {
                         for (Expr ex : processedFormulas) {
-                            FormulaAST p = new FormulaAST(ex.toKifString());
+                            Formula p = new Formula(ex.toKifString());
                             if (!p.isHigherOrder(this.kb))
                                 tptpFormulas.add(SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(), false));
                         }
@@ -484,13 +483,13 @@ public class EProver {
 
         if (debug>0) System.out.printf("\nEProver.createCustomCommandList(%s, %d, %s, %s)", executable.getName(), timeout, kbFile.getName(), commands);
         StringBuilder opts = new StringBuilder();
-        for (String s : commands) opts.append(s).append(FormulaAST.SPACE);
+        for (String s : commands) opts.append(s).append(Formula.SPACE);
         if (timeout != 0) {
-            opts.append("-t").append(FormulaAST.SPACE);
-            opts.append(timeout).append(FormulaAST.SPACE);
+            opts.append("-t").append(Formula.SPACE);
+            opts.append(timeout).append(Formula.SPACE);
         }
         opts.append(kbFile.toString());
-        String[] optar = opts.toString().split(FormulaAST.SPACE);
+        String[] optar = opts.toString().split(Formula.SPACE);
         String[] cmds = new String[optar.length + 1];
         cmds[0] = executable.toString();
         System.arraycopy(optar, 0, cmds, 1, optar.length);

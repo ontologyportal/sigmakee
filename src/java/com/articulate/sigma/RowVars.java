@@ -1,6 +1,6 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.util.*;
@@ -13,29 +13,29 @@ import java.util.*;
 public class RowVars {
 
     public static boolean DEBUG = false;
-    public static final int MAX_ARITY = FormulaAST.MAX_PREDICATE_ARITY - 2;
+    public static final int MAX_ARITY = Formula.MAX_PREDICATE_ARITY - 2;
 
     /** ***************************************************************
      * @return a HashSet, possibly empty, containing row variable
      * names, each of which will start with the row variable
      * designator '@'.
      */
-    public static Set<String> findRowVars(FormulaAST f) {
+    public static Set<String> findRowVars(Formula f) {
 
         if (DEBUG) System.out.println("Info in RowVars.findRowVars(): f: " + f);
         Set<String> result = new HashSet<>();
         if (!StringUtil.emptyString(f.getFormula())
-            && f.getFormula().contains(FormulaAST.R_PREF)) {
+            && f.getFormula().contains(Formula.R_PREF)) {
             if (DEBUG) System.out.println("Info in RowVars.findRowVars(): contains at least one");
-            FormulaAST fnew = new FormulaAST();
+            Formula fnew = new Formula();
             fnew.read(f.getFormula());
             while (fnew.listP() && !fnew.empty()) {
                 String arg = fnew.getStringArgument(0);
                 if (DEBUG) System.out.println("Info in RowVars.findRowVars(): arg: " + arg);
-                if (arg.startsWith(FormulaAST.R_PREF))
+                if (arg.startsWith(Formula.R_PREF))
                     result.add(arg);
-                else if (FormulaAST.listP(arg)) {
-                    FormulaAST argF = new FormulaAST();
+                else if (Formula.listP(arg)) {
+                    Formula argF = new Formula();
                     argF.read(arg);
                     if (argF.listP())
                         result.addAll(findRowVars(argF));
@@ -86,7 +86,7 @@ public class RowVars {
      * @result the maximum arity allowed by predicate arities, as given by
      * @seeAlso kb.kbCache.valences
      */
-    public static Map<String,Integer> getRowVarMaxAritiesWithOtherArgs(Map<String,Set<String>> ar, KB kb, FormulaAST f) {
+    public static Map<String,Integer> getRowVarMaxAritiesWithOtherArgs(Map<String,Set<String>> ar, KB kb, Formula f) {
 
         if (DEBUG) System.out.println("getRowVarMaxAritiesWithOtherArgs() predicates: " + ar);
         if (DEBUG) System.out.println("getRowVarMaxAritiesWithOtherArgs() formula: " + f);
@@ -98,16 +98,16 @@ public class RowVars {
                 // then #arguments which can be expanded = #arguments in pred - nonRowVar
                 int nonRowVar = 0;
                 boolean done = false;
-                int start = f.getFormula().indexOf(FormulaAST.LP + pred);
-                int end = f.getFormula().indexOf(FormulaAST.RP, start);
-                String simpleFS = FormulaUtil.getLiteralWithPredAndRowVar(pred, new FormulaAST(f.getFormula()));
+                int start = f.getFormula().indexOf(Formula.LP + pred);
+                int end = f.getFormula().indexOf(Formula.RP, start);
+                String simpleFS = FormulaUtil.getLiteralWithPredAndRowVar(pred, new Formula(f.getFormula()));
                 if (simpleFS == null)
                     continue;
                 if (DEBUG) System.out.println("getRowVarMaxAritiesWithOtherArgs() looking at " + simpleFS);
-                FormulaAST simpleF = new FormulaAST();
+                Formula simpleF = new Formula();
                 simpleF.read(simpleFS);
                 for (int i = 0; i < simpleF.listLength(); i++) {
-                    if (simpleF.getStringArgument(i).startsWith(FormulaAST.V_PREF)) // a '?'
+                    if (simpleF.getStringArgument(i).startsWith(Formula.V_PREF)) // a '?'
                         nonRowVar++;
                 }
 
@@ -116,7 +116,7 @@ public class RowVars {
                         kb.kbCache.valences.get(pred) != null) {
                     int arity = kb.kbCache.valences.get(pred);
                     if (kb.isInstanceOf(pred,"VariableArityRelation"))
-                        arity = FormulaAST.MAX_PREDICATE_ARITY;
+                        arity = Formula.MAX_PREDICATE_ARITY;
                     arity = arity - nonRowVar;
                     if (DEBUG)
                         System.out.println("getRowVarMaxAritiesWithOtherArgs() pred,arity " + pred + ", " + arity);
@@ -142,7 +142,7 @@ public class RowVars {
      * @seeAlso kb.kbCache.valences
      *
      */
-    public static Map<String,Integer> getRowVarMinAritiesWithOtherArgs(Map<String,Set<String>> ar, KB kb, FormulaAST f) {
+    public static Map<String,Integer> getRowVarMinAritiesWithOtherArgs(Map<String,Set<String>> ar, KB kb, Formula f) {
 
         if (DEBUG) System.out.println("getRowVarMinAritiesWithOtherArgs(): f: " + f);
         if (DEBUG) System.out.println("getRowVarMinAritiesWithOtherArgs(): ar: " + ar);
@@ -155,23 +155,23 @@ public class RowVars {
                 // then #arguments which can be expanded = #arguments in pred - nonRowVar
                 int startIndex = 0;
                 while (startIndex < f.getFormula().length()) {
-                    int start = f.getFormula().indexOf(FormulaAST.LP + pred, startIndex);
+                    int start = f.getFormula().indexOf(Formula.LP + pred, startIndex);
                     if (start == -1) {
                         startIndex = f.getFormula().length();
                         continue;
                     }
-                    int end = f.getFormula().indexOf(FormulaAST.RP, start);
+                    int end = f.getFormula().indexOf(Formula.RP, start);
                     startIndex = end + 1;
                     String simpleFS = f.getFormula().substring(start, end + 1);
-                    if (!simpleFS.contains(FormulaAST.R_PREF))
+                    if (!simpleFS.contains(Formula.R_PREF))
                         continue;
                     int nonRowVar = 0;
                     if (DEBUG)
                         System.out.println("getRowVarMinAritiesWithOtherArgs() looking at " + simpleFS);
-                    FormulaAST simpleF = new FormulaAST();
+                    Formula simpleF = new Formula();
                     simpleF.read(simpleFS);
                     for (int i = 0; i < simpleF.listLength(); i++) {
-                        if (simpleF.getStringArgument(i).startsWith(FormulaAST.V_PREF)) // a '?'
+                        if (simpleF.getStringArgument(i).startsWith(Formula.V_PREF)) // a '?'
                             nonRowVar++;
                     }
 
@@ -237,25 +237,25 @@ public class RowVars {
 
     /** ***************************************************************
      */
-    private static Map<String,Set<String>> getRowVarRelLogOps(FormulaAST f, String pred) {
+    private static Map<String,Set<String>> getRowVarRelLogOps(Formula f, String pred) {
 
         if (DEBUG) System.out.println("Info in RowVars.getRowVarRelLogOps(): pred: " + pred + " f: " + f);
         Map<String,Set<String>> result = new HashMap<>();
-        if (FormulaAST.isQuantifier(pred)) {
-            FormulaAST arg2 = f.getArgument(2);
+        if (Formula.isQuantifier(pred)) {
+            Formula arg2 = f.getArgument(2);
             if (arg2 != null)
                 return getRowVarRelations(arg2);
         }
-        else if (pred.equals(FormulaAST.NOT)) {
-            FormulaAST arg1 = f.getArgument(1);
+        else if (pred.equals(Formula.NOT)) {
+            Formula arg1 = f.getArgument(1);
             if (arg1 != null)
                 return getRowVarRelations(arg1);
             else
                 return result;
         }
-        else if (pred.equals(FormulaAST.EQUAL) || pred.equals(FormulaAST.IFF)  || pred.equals(FormulaAST.IF)) {
-            FormulaAST arg1 = f.getArgument(1);
-            FormulaAST arg2 = f.getArgument(2);
+        else if (pred.equals(Formula.EQUAL) || pred.equals(Formula.IFF)  || pred.equals(Formula.IF)) {
+            Formula arg1 = f.getArgument(1);
+            Formula arg2 = f.getArgument(2);
             if (arg1 != null && arg2 != null)
                 return mergeValueSets(getRowVarRelations(arg1),getRowVarRelations(arg2));
             else
@@ -265,7 +265,7 @@ public class RowVars {
             List<String> args = f.complexArgumentsToArrayListString(1);
             if (DEBUG) System.out.println("Info in RowVars.getRowVarRelLogOps(): args: " + args);
             for (int i = 0; i < args.size(); i++) {
-                FormulaAST f2 = new FormulaAST(args.get(i));
+                Formula f2 = new Formula(args.get(i));
                 result = mergeValueSets(result,getRowVarRelations(f2));
             }
             return result;
@@ -278,15 +278,15 @@ public class RowVars {
      * add it to a map that has row variables as keys and a set of
      * predicate names as values.
      */
-    protected static Map<String,Set<String>> getRowVarRelations(FormulaAST f) {
+    protected static Map<String,Set<String>> getRowVarRelations(Formula f) {
 
         if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): f: " + f);
         Map<String,Set<String>> result = new HashMap<>();
-        if (!f.getFormula().contains(FormulaAST.R_PREF) || f.empty() || f.atom())
+        if (!f.getFormula().contains(Formula.R_PREF) || f.empty() || f.atom())
             return result;
         String pred = f.getStringArgument(0);
         if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): pred: " + pred);
-        if (!f.getFormula().substring(1).contains(FormulaAST.LP)) {  // no higher order or functions
+        if (!f.getFormula().substring(1).contains(Formula.LP)) {  // no higher order or functions
             if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): simple clause f: " + f);
             Set<String> rowvars = findRowVars(f);
             if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): found rowvars: " + rowvars);
@@ -296,19 +296,19 @@ public class RowVars {
             }
             return result;
         }
-        if (FormulaAST.isLogicalOperator(pred)) {
+        if (Formula.isLogicalOperator(pred)) {
             return getRowVarRelLogOps(f,pred);
         }
         else {  // regular predicate
             List<String> args = f.complexArgumentsToArrayListString(1);
             for (int i = 0; i < args.size(); i++) {
-                FormulaAST f2 = new FormulaAST(args.get(i));
-                if (f2.getFormula().startsWith(FormulaAST.R_PREF)) {
+                Formula f2 = new Formula(args.get(i));
+                if (f2.getFormula().startsWith(Formula.R_PREF)) {
                     if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): adding var,pred: " +
                             f2.getFormula() + ", " + pred);
                     addToValueSet(result,f2.getFormula(),pred);
                 }
-                else if (f2.getFormula().contains(FormulaAST.R_PREF))
+                else if (f2.getFormula().contains(Formula.R_PREF))
                     result = mergeValueSets(result,getRowVarRelations(f2));
             }
         }
@@ -344,24 +344,24 @@ public class RowVars {
      * @return an ArrayList of Formulas, or an empty ArrayList.
      */
     //Deprecated
-    public static List<FormulaAST> expandRowVars(KB kb, FormulaAST f) {
+    public static List<Formula> expandRowVars(KB kb, Formula f) {
 
         List<String> result = new ArrayList<>();
-        List<FormulaAST> formresult = new ArrayList<>();
-        if (!f.getFormula().contains(FormulaAST.R_PREF)) {
+        List<Formula> formresult = new ArrayList<>();
+        if (!f.getFormula().contains(Formula.R_PREF)) {
             // If there are no row variables, return the original formula
-            formresult.add(new FormulaAST(f.getFormula()));
+            formresult.add(new Formula(f.getFormula()));
             return formresult;
         }
         if (DEBUG) System.out.println("Info in RowVars.expandRowVars(): f: " + f);
-        Map<String,Set<String>> rels = getRowVarRelations(new FormulaAST(f.getFormula()));
+        Map<String,Set<String>> rels = getRowVarRelations(new Formula(f.getFormula()));
         if (DEBUG) System.out.println("Info in RowVars.expandRowVars(): getRowVarRelations " + rels);
-        Map<String,Integer> rowVarMaxArities = getRowVarMaxAritiesWithOtherArgs(rels, kb, new FormulaAST(f.getFormula()));
+        Map<String,Integer> rowVarMaxArities = getRowVarMaxAritiesWithOtherArgs(rels, kb, new Formula(f.getFormula()));
         if (DEBUG) System.out.println("Info in RowVars.expandRowVars(): rowVarMaxArities: " + rowVarMaxArities);
-        Map<String,Integer> rowVarMinArities = getRowVarMinAritiesWithOtherArgs(rels, kb, new FormulaAST(f.getFormula()));
+        Map<String,Integer> rowVarMinArities = getRowVarMinAritiesWithOtherArgs(rels, kb, new Formula(f.getFormula()));
         if (DEBUG) System.out.println("Info in RowVars.expandRowVars(): rowVarMinArities: " + rowVarMinArities);
         result.add(f.getFormula());
-        Set<String> rowvars = findRowVars(new FormulaAST(f.getFormula()));
+        Set<String> rowvars = findRowVars(new Formula(f.getFormula()));
         for (String var : rowvars) {
             if (DEBUG)
                 System.out.println("Info in RowVars.expandRowVars(): var: " + var);
@@ -380,12 +380,12 @@ public class RowVars {
                 System.out.println("Info in RowVars.expandRowVars(): minArity: " + minArity);
             for (int j = 1; j < minArity; j++) {
                 if (j > 1)
-                    replaceString.append(FormulaAST.SPACE);
+                    replaceString.append(Formula.SPACE);
                 replaceString.append(replaceVar).append(Integer.toString(j+1));
             }
             for (int j = minArity; j <= maxArity; j++) {
                 if (j > 0)
-                    replaceString.append(FormulaAST.SPACE);
+                    replaceString.append(Formula.SPACE);
                 replaceString.append(replaceVar).append(Integer.toString(j+1));
                 //if (DEBUG)
                 //    System.out.println("Info in RowVars.expandRowVars(): replace: " + replaceString);
@@ -405,9 +405,9 @@ public class RowVars {
         }
 
         for (int i = 0; i < result.size(); i++) {
-            FormulaAST newf = new FormulaAST(result.get(i));
+            Formula newf = new Formula(result.get(i));
             newf.derivation.operator = "rowvar";
-            newf.derivation.parents.add(new FormulaAST(f.getFormula()));
+            newf.derivation.parents.add(new Formula(f.getFormula()));
             formresult.add(newf);
         }
         if (DEBUG)
@@ -421,7 +421,7 @@ public class RowVars {
 
         //String fstring = "(=> (and (subrelation ?REL1 ?REL2) (?REL1 @ROW)) (?REL2 @ROW))";
         String fstring = "(=> (and (contraryAttribute @ROW1) (identicalListItems (ListFn @ROW1) (ListFn @ROW2))) (contraryAttribute @ROW2))";
-        FormulaAST f = new FormulaAST(fstring);
+        Formula f = new Formula(fstring);
         System.out.println("Info in RowVars.main(): " + findRowVars(f));
         KBmanager.getMgr().initializeOnce();
         System.out.println("Info in RowVars.main(): finished initialization");

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.BiPredicate;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.*;
 
@@ -16,7 +16,7 @@ public class FormulaUtil {
     /** ***************************************************************
      * Get the antecedent of an implication.  If not a rule, return null
      */
-    public static String antecedent (FormulaAST f) {
+    public static String antecedent (Formula f) {
 
         if (f == null || !f.isRule())
             return null;
@@ -26,7 +26,7 @@ public class FormulaUtil {
     /** ***************************************************************
      * Get the consequent of an implication.  If not a rule, return null
      */
-    public static String consequent (FormulaAST f) {
+    public static String consequent (Formula f) {
 
         if (f == null || !f.isRule())
             return null;
@@ -36,12 +36,12 @@ public class FormulaUtil {
     /** ***************************************************************
      * Must check that this is a simple clause before calling!
      */
-    public static String toProlog(FormulaAST f) {
+    public static String toProlog(Formula f) {
 
         StringBuilder sb = new StringBuilder();
         String car = f.car();
-        sb.append(car).append(FormulaAST.LP);
-        if (FormulaAST.listP(car)) {
+        sb.append(car).append(Formula.LP);
+        if (Formula.listP(car)) {
             System.err.println("Error in FormulaUtil.toProlog(): not a simple clause: " + car);
             return "";
         }
@@ -50,22 +50,22 @@ public class FormulaUtil {
             if (i != 1)
                 sb.append(",");
             arg = f.getStringArgument(i);
-            if (FormulaAST.listP(arg)) {
+            if (Formula.listP(arg)) {
                 System.err.println("Error in FormulaUtil.toProlog(): not a simple clause: " + arg);
                 return "";
             }
             sb.append(arg);
         }
-        sb.append(FormulaAST.RP);
+        sb.append(Formula.RP);
         return sb.toString();
     }
 
     /** ***************************************************************
      */
-    public static String formatCollection(Collection<FormulaAST> c) {
+    public static String formatCollection(Collection<Formula> c) {
 
         StringBuilder sb = new StringBuilder();
-        for (FormulaAST f : c)
+        for (Formula f : c)
             sb.append(f.toString()).append("\n\n");
         return sb.toString();
     }
@@ -74,16 +74,16 @@ public class FormulaUtil {
      * @return a string consisting of a literal with the given predicate
      * that also contains a row variable, or null otherwise
      */
-    public static String getLiteralWithPredAndRowVar(String pred, FormulaAST f) {
+    public static String getLiteralWithPredAndRowVar(String pred, Formula f) {
 
         //System.out.println("getLiteralWithPredAndRowVar(): pred,f: " + pred + ", " + f);
         if (f == null || !f.listP())
             return null;
-        if (f.car().equals(pred) && f.getFormula().contains(FormulaAST.R_PREF))
+        if (f.car().equals(pred) && f.getFormula().contains(Formula.R_PREF))
             return f.getFormula();
-        List<FormulaAST> lits = f.complexArgumentsToArrayList(0);
+        List<Formula> lits = f.complexArgumentsToArrayList(0);
         String result;
-        for (FormulaAST form : lits) {
+        for (Formula form : lits) {
             result = getLiteralWithPredAndRowVar(pred,form);
             if (result != null)
                 return result;
@@ -95,7 +95,7 @@ public class FormulaUtil {
      * Test whether a formula is suitable for theorem proving or if
      * it's just a documentation statement
      */
-    public static boolean isDoc(FormulaAST f) {
+    public static boolean isDoc(Formula f) {
 
         if (f.isRule())
             return false;
@@ -220,12 +220,12 @@ public class FormulaUtil {
     /** ********************************************************************************************
      * Factory method for the memo map
      */
-    public static String removeAnswerClause(FormulaAST f) {
+    public static String removeAnswerClause(Formula f) {
 
         String s = f.getFormula();
         String result = s.replaceAll("(not)?\\s*\\(ans\\d[^\\)]*\\)", "");
         result = result.replaceAll("\\(\\s*\\)","");
-        FormulaAST fnew = new FormulaAST(result);
+        Formula fnew = new Formula(result);
         result = SUMOtoTFAform.elimUnitaryLogops(fnew);
         result = result.replaceAll("\\(\\s*\\)","");
         return result;
@@ -293,13 +293,13 @@ public class FormulaUtil {
         String s = "(or\n" +
                 "  (not  \n" +
                 "    (ans0 sK2)) spl6_1)";
-        System.out.println(removeAnswerClause(new FormulaAST(s)));
+        System.out.println(removeAnswerClause(new Formula(s)));
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("KButilities.main(): completed init");
-        List<FormulaAST> flist = kb.ask("ant",0,"Process");
+        List<Formula> flist = kb.ask("ant",0,"Process");
         sortBySourceFile(flist);
-        for (FormulaAST f : flist)
+        for (Formula f : flist)
             System.out.println(f.getSourceFile());
     }
 
@@ -314,15 +314,15 @@ public class FormulaUtil {
         return FILE_PRIORITY.getOrDefault(file, Integer.MAX_VALUE);
     }
 
-    public static void sortBySourceFile(List<FormulaAST> forms) {
+    public static void sortBySourceFile(List<Formula> forms) {
         forms.sort(
                 Comparator
                         // 1. priority files first
-                        .comparingInt((FormulaAST f) -> filePriority(FileUtil.noPath(f.getSourceFile())))
+                        .comparingInt((Formula f) -> filePriority(FileUtil.noPath(f.getSourceFile())))
                         // 2. then by sourceFile name
-                        .thenComparing(FormulaAST::getSourceFile)
+                        .thenComparing(Formula::getSourceFile)
                         // 3. then by line number
-                        .thenComparingInt(FormulaAST::getLineNumber)
+                        .thenComparingInt(Formula::getLineNumber)
         );
     }
 

@@ -1,7 +1,7 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import org.junit.Test;
 
 import java.util.Map;
@@ -20,7 +20,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
     @Test
     public void testDeepEquals() {
 
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(=>" +
                 "    (instance ?C WalkingCane)" +
                 "    (hasPurpose ?C" +
@@ -29,7 +29,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "                (instance ?W Walking)" +
                 "                (instrument ?W ?C)))))");
 
-        FormulaAST f2 = new FormulaAST();
+        Formula f2 = new Formula();
         f2.read("(=>" +
                 "    (instance ?C WalkingCane)" +
                 "    (hasPurpose ?C" +
@@ -46,7 +46,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         assertTrue(f1.deepEquals(f2));
 
         //testing unequal formulas
-        f1 = new FormulaAST();
+        f1 = new Formula();
         f1.read("(=>" +
                 "    (instance ?C WalkingCane)" +
                 "    (hasPurpose ?C" +
@@ -55,7 +55,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "                (instance ?W Walking)" +
                 "                (instrument ?W ?C)))))");
 
-        f2 = new FormulaAST();
+        f2 = new Formula();
         f2.read("(=>" +
                 "    (instance ?C WalkingCane)" +
                 "    (hasPurpose ?C" +
@@ -67,7 +67,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         assertFalse(f1.deepEquals(f2));
 
         //testing commutative terms
-        f1 = new FormulaAST();
+        f1 = new Formula();
         f1.read("(=>" +
                 "    (instance ?C WalkingCane)" +
                 "    (hasPurpose ?C" +
@@ -76,7 +76,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "                (instance ?W Walking)" +
                 "                (instrument ?W ?C)))))");
 
-        f2 = new FormulaAST();
+        f2 = new Formula();
         f2.read("(=>" +
                 "    (instance ?C WalkingCane)" +
                 "    (hasPurpose ?C" +
@@ -95,7 +95,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
     public void testDeepEquals2() {
 
         System.out.println("============= FormulaDeepEqualsTest.testDeepEquals2 ==================");
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(exists (?Leigh-1 ?baby-4 ?blankets-6 ?swaddled-2)\n" +
                 "  (and\n" +
                 "    (orientation ?swaddled-2 ?blankets-6 Inside)\n" +
@@ -110,7 +110,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "    (instance ?Leigh-1 Human)\n" +
                 "    (instance ?swaddled-2 Covering)))");
 
-        FormulaAST f2 = new FormulaAST();
+        Formula f2 = new Formula();
         f2.read("(exists (?Leigh-1 ?baby-4 ?blankets-6 ?swaddled-2)\n" +
                 "  (and\n" +
                 "    (orientation ?swaddled-2 ?blankets-6 Inside)\n" +
@@ -124,10 +124,10 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "    (instance ?blankets-6 Blanket)\n" +
                 "    (instance ?Leigh-1 Human)\n" +
                 "    (instance ?baby-4 HumanBaby)) )");
-        FormulaAST.debug = true;
+        Formula.debug = true;
         //testing equal formulas
         assertTrue(f1.deepEquals(f2));
-        FormulaAST.debug = false;
+        Formula.debug = false;
     }
 
     /***************************************************************
@@ -135,12 +135,12 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
     @Test
     public void testDeepEqualsErrorCases(){
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read("(<=> (instance ?REL SymmetricRelation) (forall (?INST1 ?INST2) (=> (?REL ?INST1 ?INST2) (?REL ?INST2 ?INST1)))))");
 
         assertFalse(f.deepEquals(null));
 
-        FormulaAST compared = new FormulaAST();
+        Formula compared = new Formula();
         assertFalse(f.deepEquals(compared));
 
         compared.read("");
@@ -157,12 +157,12 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
     @Test
     public void testLogicallyEqualsErrorCases() {
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read("(<=> (instance ?REL SymmetricRelation) (forall (?INST1 ?INST2) (=> (?REL ?INST1 ?INST2) (?REL ?INST2 ?INST1)))))");
 
-        assertFalse(f.logicallyEquals((FormulaAST)null));
+        assertFalse(f.logicallyEquals((Formula)null));
 
-        FormulaAST compared = new FormulaAST();
+        Formula compared = new Formula();
         assertFalse(f.logicallyEquals(compared));
 
         compared.read("");
@@ -179,7 +179,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
     @Test
     public void testUnifyWith() {
 
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(=>" +
                 "    (instance ?C WalkingCane)" +
                 "    (hasPurpose ?C" +
@@ -188,7 +188,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "                (instance ?W Walking)" +
                 "                (instrument ?W ?C)))))");
 
-        FormulaAST f2 = new FormulaAST();
+        Formula f2 = new Formula();
         f2.read("(=>" +
                 "    (instance ?C WalkingCane)" +
                 "    (hasPurpose ?C" +
@@ -205,7 +205,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         assertFalse(f1.unifyWith(f2));
 
         //testing unequal formulas
-        f1 = new FormulaAST();
+        f1 = new Formula();
         f1.read("(=>" +
                 "    (instance ?C WalkingCane)" +
                 "    (hasPurpose ?C" +
@@ -214,7 +214,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "                (instance ?W Walking)" +
                 "                (instrument ?W ?C)))))");
 
-        f2 = new FormulaAST();
+        f2 = new Formula();
         f2.read("(=>" +
                 "    (instance ?C WalkingCane)" +
                 "    (hasPurpose ?C" +
@@ -226,7 +226,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         assertFalse(f1.unifyWith(f2));
 
         //testing commutative terms
-        f1 = new FormulaAST();
+        f1 = new Formula();
         f1.read("(=>" +
                 "    (instance ?C WalkingCane)" +
                 "    (hasPurpose ?C" +
@@ -235,7 +235,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "                (instance ?W Walking)" +
                 "                (instrument ?W ?C)))))");
 
-        f2 = new FormulaAST();
+        f2 = new Formula();
         f2.read("(=>" +
                 "    (instance ?C WalkingCane)" +
                 "    (hasPurpose ?C" +
@@ -255,14 +255,14 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
     public void testUnifyWithMiscPredicates() {
 
         String s1 = "(=> (and (instance ?X4 Dog) (instance ?X5 Cat)) (equal ?X4 ?X5))";
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read(s1);
 
         String s2 = "(=> (and (instance ?X11 Dog) (instance ?X12 Cat)) (equal ?X12 ?X11))";
-        FormulaAST f2 = new FormulaAST();
+        Formula f2 = new Formula();
         f2.read(s2);
 
-        FormulaAST.debug = true;
+        Formula.debug = true;
         //System.out.println("testUnifyWithMiscPredicates(): deepEquals: " +  f1.deepEquals(f2));
         long start = System.nanoTime();
         assertTrue(f1.unifyWith(f2));
@@ -277,11 +277,11 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
 
         String stmt = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
                 "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
-        FormulaAST expected = new FormulaAST();
+        Formula expected = new Formula();
         String expectedString = "(=> (and (instance ?SET1 Set) (instance ?SET2 Set)) " +
                 "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) (element ?ELEMENT ?SET2))) " +
                 "(equal ?SET1 ?SET2)))";
@@ -293,7 +293,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         System.out.println("testLogicallyEqualsPerformance: actual: " + actual);
         long start = System.nanoTime();
 //        assertTrue(expected.logicallyEquals(actual));
-        assertTrue(expected.unifyWith(new FormulaAST(actual.toKifString())));
+        assertTrue(expected.unifyWith(new Formula(actual.toKifString())));
         long stop = System.nanoTime();
         System.out.println("Execution time (in microseconds): " + ((stop - start) / 1000));
     }

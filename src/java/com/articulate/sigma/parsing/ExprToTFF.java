@@ -77,7 +77,7 @@ public class ExprToTFF {
         try {
             SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
             if (visitor.result == null || visitor.result.isEmpty()) return null;
-            FormulaAST ast = visitor.result.get(0);
+            Formula ast = visitor.result.get(0);
             if (ast == null || ast.expr == null) return null;
             return translate(ast.expr, query, kb);
         } catch (Exception e) {
@@ -151,7 +151,7 @@ public class ExprToTFF {
             if (kb.isSubclass(sumoType, "RationalNumber")) return "$rat";
             if (kb.isSubclass(sumoType, "RealNumber"))     return "$real";
         }
-        return FormulaAST.TERM_SYMBOL_PREFIX + sumoType;
+        return Formula.TERM_SYMBOL_PREFIX + sumoType;
     }
 
     // -----------------------------------------------------------------------
@@ -420,7 +420,7 @@ public class ExprToTFF {
         // Logical operators: recurse into each arg using the operator's KB signature
         // (or Entity when no signature is available) — mirrors the logic-branch of
         // constrainFunctVarsRecurse.
-        if (FormulaAST.isLogicalOperator(op)) {
+        if (Formula.isLogicalOperator(op)) {
             List<String> sig = kb.kbCache.getSignature(op);
             List<Expr> newArgs = new ArrayList<>();
             List<Expr> seArgs = se.args();
@@ -497,7 +497,7 @@ public class ExprToTFF {
         if (!SUMOtoTFAform.equalTFFsig(newsig, sig, op)
                 || KButilities.isVariableArity(kb, baseOp)
                 || SUMOtoTFAform.needsForcedTypeSuffix(op)) {
-            String candidate = SUMOtoTFAform.makePredFromArgTypes(new FormulaAST(baseOp), newsig);
+            String candidate = SUMOtoTFAform.makePredFromArgTypes(new Formula(baseOp), newsig);
             // makePredFromArgTypes returns baseOp unchanged when no suffix is needed
             if (!candidate.equals(baseOp)) newOp = candidate;
         }
@@ -659,7 +659,7 @@ public class ExprToTFF {
                     String cons   = SUMOtoTFAform.numericConstraints.get(type);
                     String origVar = SUMOtoTFAform.numericVars.get(type);
                     if (cons != null && !cons.isEmpty() && origVar != null) {
-                        String newCons = cons.replace(FormulaAST.V_PREF + origVar, var);
+                        String newCons = cons.replace(Formula.V_PREF + origVar, var);
                         Expr constraintExpr = parseKifToExpr(newCons);
                         if (constraintExpr != null) return constraintExpr;
                     }
@@ -1017,7 +1017,7 @@ public class ExprToTFF {
                 String cons    = SUMOtoTFAform.numericConstraints.get(type);
                 String origVar = cons != null ? SUMOtoTFAform.numericVars.get(type) : null;
                 if (cons != null && !cons.isEmpty() && origVar != null) {
-                    String newCons = cons.replace(FormulaAST.V_PREF + origVar, v.name());
+                    String newCons = cons.replace(Formula.V_PREF + origVar, v.name());
                     Expr constraintExpr = parseKifToExpr(newCons);
                     if (constraintExpr != null) return constraintExpr;
                 }
@@ -1052,7 +1052,7 @@ public class ExprToTFF {
         try {
             SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
             if (visitor.result == null || visitor.result.isEmpty()) return null;
-            FormulaAST ast = visitor.result.get(0);
+            Formula ast = visitor.result.get(0);
             return ast != null ? ast.expr : null;
         } catch (Exception ex) {
             if (debug) System.err.println("ExprToTFF.parseKifToExpr(): parse error for: " + kif);

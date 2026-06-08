@@ -13,7 +13,7 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.parsing.CLIMapParser;
 
@@ -70,7 +70,7 @@ public class Graph {
         relations.add("subAttribute");
 
         int count = 0;
-        List<FormulaAST> children;
+        List<Formula> children;
         for (int i = 0; i < relations.size(); i++) {
             children = kb.askWithRestriction(0,relations.get(i),2,term);
             if (children != null)
@@ -100,10 +100,10 @@ public class Graph {
     private String generateDocumentationColumn(KB kb, String term, String href, String language) {
 
         String docString;
-        List<FormulaAST> docStmts = kb.askWithTwoRestrictions(0,"documentation",1,term,2,language);
-        FormulaAST doc;
+        List<Formula> docStmts = kb.askWithTwoRestrictions(0,"documentation",1,term,2,language);
+        Formula doc;
         if (!docStmts.isEmpty()) {
-            doc = (FormulaAST) docStmts.get(0);
+            doc = (Formula) docStmts.get(0);
             docString = doc.getStringArgument(3);
             if (!DB.emptyString(docString)) {
                 if (docString.length() > 100)
@@ -258,13 +258,13 @@ public class Graph {
         int graphMax = Integer.parseInt(KBmanager.getMgr().getPref("adminBrowserLimit"));
         if (!check.contains(term) && graphsize < graphMax) {
             if (above > 0) {
-                List<FormulaAST> stmtAbove;
+                List<Formula> stmtAbove;
                 if (!DB.emptyString(relation) && relation.equals("all"))
                     stmtAbove = kb.ask("arg",1,term);
                 else
                     stmtAbove = kb.askWithRestriction(0,relation,1,term);
 
-                FormulaAST f;
+                Formula f;
                 String newTerm;
                 for (int i = 0; i < stmtAbove.size(); i++) {
                     f = stmtAbove.get(i);
@@ -303,8 +303,8 @@ public class Graph {
                 }
             }
             if (below > 0) {
-                List<FormulaAST> stmtBelow = kb.askWithRestriction(0,relation,2,term);
-                FormulaAST f;
+                List<Formula> stmtBelow = kb.askWithRestriction(0,relation,2,term);
+                Formula f;
                 String newTerm;
                 for (int i = 0; i < stmtBelow.size(); i++) {
                     f = stmtBelow.get(i);
@@ -388,9 +388,9 @@ public class Graph {
 
         if (StringUtil.emptyString(s))
             return true;
-        return FormulaAST.isLogicalOperator(s) || FormulaAST.isMathFunction(s) || FormulaAST.isVariable(s) ||
-                FormulaAST.isComparisonOperator(s) || FormulaAST.DOC_PREDICATES.contains(s) ||
-                StringUtil.isNumeric(s) || FormulaAST.DEFN_PREDICATES.contains(s) ||
+        return Formula.isLogicalOperator(s) || Formula.isMathFunction(s) || Formula.isVariable(s) ||
+                Formula.isComparisonOperator(s) || Formula.DOC_PREDICATES.contains(s) ||
+                StringUtil.isNumeric(s) || Formula.DEFN_PREDICATES.contains(s) ||
                 StringUtil.isQuotedString(s);
     }
 
@@ -411,8 +411,8 @@ public class Graph {
         Iterator<String> it;
         String term, parent, rel, link, arrow, s, str;
         boolean removed;
-        List<FormulaAST> stmts, cons;
-        FormulaAST f;
+        List<Formula> stmts, cons;
+        Formula f;
         while (!startSet.isEmpty()) {
             it = startSet.iterator();
             term = it.next();
@@ -423,7 +423,7 @@ public class Graph {
                 errors.add(err);
                 System.out.println(err);
             }
-            if (StringUtil.isQuotedString(term) || FormulaAST.isLogicalOperator(term))
+            if (StringUtil.isQuotedString(term) || Formula.isLogicalOperator(term))
                 continue;
 
             stmts = kb.ask("arg",1, term);
@@ -438,7 +438,7 @@ public class Graph {
                     if (!StringUtil.emptyString(fileRestrict) && !FileUtil.noPath(f.getSourceFile()).equals(fileRestrict))
                         continue;
                     rel = f.getStringArgument(0);
-                    if (FormulaAST.DOC_PREDICATES.contains(rel))
+                    if (Formula.DOC_PREDICATES.contains(rel))
                         continue;
                     link = "[ label = \"" + rel + "\" ]";
                     arrow = " -> ";
@@ -467,7 +467,7 @@ public class Graph {
                     if (!StringUtil.emptyString(fileRestrict) && !FileUtil.noPath(f.getSourceFile()).equals(fileRestrict))
                         continue;
                     rel = f.getStringArgument(0);
-                    if (FormulaAST.DOC_PREDICATES.contains(rel))
+                    if (Formula.DOC_PREDICATES.contains(rel))
                         continue;
                     link = "[ label = \"" + rel + "\" ]";
                     arrow = " -> ";
@@ -542,8 +542,8 @@ public class Graph {
         Iterator<String> it;
         String term, child, parent, link, arrow, rel, s;
         boolean removed;
-        List<FormulaAST> stmts;
-        FormulaAST f;
+        List<Formula> stmts;
+        Formula f;
         while (!startSet.isEmpty()) {
             it = startSet.iterator();
             term = (String) it.next();

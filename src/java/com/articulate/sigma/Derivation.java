@@ -1,6 +1,6 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import java.util.List;
 public class Derivation implements Serializable {
 
     public String operator = "input";
-    public List<FormulaAST> parents = new ArrayList<>();
+    public List<Formula> parents = new ArrayList<>();
 
     /** ***************************************************************
      */
@@ -17,7 +17,7 @@ public class Derivation implements Serializable {
 
     /** ***************************************************************
      */
-    public Derivation(String op, List<FormulaAST> par) {
+    public Derivation(String op, List<Formula> par) {
 
         operator = op;
         if (par != null)
@@ -32,7 +32,7 @@ public class Derivation implements Serializable {
         result.operator = this.operator;
         result.parents = new ArrayList<>();
         if (parents != null) {
-            for (FormulaAST f : parents)
+            for (Formula f : parents)
                 result.parents.add(f.deepCopy());
         }
         return result;
@@ -48,7 +48,7 @@ public class Derivation implements Serializable {
         else {
             StringBuilder sb = new StringBuilder();
             sb.append("inference(").append(operator).append(", ");
-            for (FormulaAST f : parents) {
+            for (Formula f : parents) {
                 sb.append(f.getFormula());
                 sb.append(":").append(f.derivation.toString()).append(")");
             }
@@ -60,13 +60,13 @@ public class Derivation implements Serializable {
      * Return a list of all derived objects that are used in this
      * derivation.
      */
-    public List<FormulaAST> getParents() {
+    public List<Formula> getParents() {
 
         if (operator.equals("input"))
             return new ArrayList<>();
         else {
-            List<FormulaAST> res = new ArrayList<>();
-            for (FormulaAST p : parents)
+            List<Formula> res = new ArrayList<>();
+            for (Formula p : parents)
                 res.addAll(p.derivation.parents);
             return res;
         }

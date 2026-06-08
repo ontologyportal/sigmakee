@@ -1,6 +1,6 @@
 <%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
 <%@include file="fragments/universal/Prelude.jspf" %>
-<%@ page import="com.articulate.sigma.parsing.FormulaAST" %>
+<%@ page import="com.articulate.sigma.parsing.Formula" %>
 <%@ page import="com.articulate.sigma.parsing.Expr" %>
 <%
     /** Copyright header omitted for brevity; keep your original text **/
@@ -536,7 +536,7 @@
                                 SessionTPTPManager.endBatchTells(sid);
                             }
                             FormulaPreprocessor fp = new FormulaPreprocessor();
-                            Set<Expr> qs = SessionTPTPManager.withSessionCache(sid, kb, () -> fp.preProcessExpr(new FormulaAST(itd.query), true, kb));
+                            Set<Expr> qs = SessionTPTPManager.withSessionCache(sid, kb, () -> fp.preProcessExpr(new Formula(itd.query), true, kb));
                             for (Expr q : qs) {
                                 String qstr = q.toKifString();
                                 ATPQuery query = new ATPQuery(

@@ -25,17 +25,17 @@ public class SortalTest extends IntegrationTestBase {
 
         System.out.println("Input: " + input);
         SuokifVisitor visitor = SuokifVisitor.parseString(input);
-        Map<Integer,FormulaAST> hm = visitor.result;
+        Map<Integer, Formula> hm = visitor.result;
         VarTypes vt = new VarTypes(hm.values(),kb);
         vt.findTypes();
-        FormulaAST f = hm.values().iterator().next();
+        Formula f = hm.values().iterator().next();
         f.printCaches();
         s = new Sortals(kb);
         s.winnowAllTypes(f);
         String result = s.addSortals(f);
-        FormulaAST resultf = new FormulaAST(result);
+        Formula resultf = new Formula(result);
         System.out.println("Result: " + resultf);
-        FormulaAST expectedf = new FormulaAST(expected);
+        Formula expectedf = new Formula(expected);
         System.out.println("expected: " +expectedf);
         if (resultf.equals(expectedf))
             System.out.println("Success");
@@ -64,7 +64,7 @@ public class SortalTest extends IntegrationTestBase {
                     "(equal ?VAL (ListOrderFn (ListFn @ARGS) ?ARG))) " +
                     "(greaterThan ?VAL ?N)))";
         String result = process(input,expected);
-        assertEquals(new FormulaAST(expected),new FormulaAST(result));
+        assertEquals(new Formula(expected),new Formula(result));
     }
 
     /** ***************************************************************
@@ -90,7 +90,7 @@ public class SortalTest extends IntegrationTestBase {
                       "(equal ?OBJ (MereologicalSumFn ?PART1 ?PART2)) " +
                       "(connected ?PART1 ?PART2)))))";
         String result = process(input,expected);
-        assertEquals(new FormulaAST(expected),new FormulaAST(result));
+        assertEquals(new Formula(expected),new Formula(result));
 
     }
 
@@ -128,7 +128,7 @@ public class SortalTest extends IntegrationTestBase {
                 "        (ListLengthFn\n" +
                 "          (ListFn_2 ?ROW1 ?ROW2)) ?NUMBER)))))";
         String result = process(input,expected);
-        assertEquals(new FormulaAST(expected),new FormulaAST(result));
+        assertEquals(new Formula(expected),new Formula(result));
 
     }
 
@@ -162,10 +162,10 @@ public class SortalTest extends IntegrationTestBase {
 
         System.out.println("Input: " + input);
         SuokifVisitor visitor = SuokifVisitor.parseString(input);
-        Map<Integer,FormulaAST> hm = visitor.result;
+        Map<Integer, Formula> hm = visitor.result;
         VarTypes vt = new VarTypes(hm.values(),kb);
         vt.findTypes();
-        FormulaAST f = hm.values().iterator().next();
+        Formula f = hm.values().iterator().next();
         f.printCaches();
         s = new Sortals(kb);
         s.elimSubsumedTypes(f);

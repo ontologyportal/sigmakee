@@ -1,7 +1,6 @@
 package com.articulate.sigma;
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.FormulaAST;
-import com.articulate.sigma.KIFAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.*;
 /** This code is copyright Articulate Software (c) 2003.
  This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -16,7 +15,6 @@ import com.articulate.sigma.trans.*;
  */
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
-import tptp_parser.TPTPFormula;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.parsing.CLIMapParser;
 
@@ -36,8 +34,8 @@ public class Diagnostics {
 
     public static boolean debug = false;
 
-    public static List<String> LOG_OPS = Arrays.asList(FormulaAST.AND,FormulaAST.OR,FormulaAST.XOR,FormulaAST.NOT,FormulaAST.EQUANT,
-            FormulaAST.UQUANT,FormulaAST.IF,FormulaAST.IFF, "holds");
+    public static List<String> LOG_OPS = Arrays.asList(Formula.AND, Formula.OR, Formula.XOR, Formula.NOT, Formula.EQUANT,
+            Formula.UQUANT, Formula.IF, Formula.IFF, "holds");
 
     public static HashMap<String, HashSet<String>> varLinksParentMap = new HashMap<>(); // parent map for getVariableLinks(Formula f, KB kb)
     
@@ -55,9 +53,9 @@ public class Diagnostics {
                                                     char letter) {
 
         List<String> result = new ArrayList<>();
-        List<FormulaAST> forms;
-        Iterator<FormulaAST> it2;
-        FormulaAST formula;
+        List<Formula> forms;
+        Iterator<Formula> it2;
+        Formula formula;
         String pred;
         for (String term : kb.getTerms()) {
             if (LOG_OPS.contains(term) || StringUtil.isNumeric(term))  // Exclude the logical operators and numbers
@@ -71,7 +69,7 @@ public class Diagnostics {
                 boolean found = false;
                 it2 = forms.iterator();
                 while (it2.hasNext()) {
-                    formula = (FormulaAST) it2.next();
+                    formula = (Formula) it2.next();
                     if (formula != null) {
                         pred = formula.car();
                         if (pred.equals(rel)) {
@@ -111,12 +109,12 @@ public class Diagnostics {
 
         Set<String> result = new HashSet();
         Set<String> withDoc = new HashSet();
-        List<FormulaAST> forms = kb.ask("arg", 0, "documentation");
+        List<Formula> forms = kb.ask("arg", 0, "documentation");
         String term, key;
         double dval;
         if (!forms.isEmpty()) {
             boolean isNaN;
-            for (FormulaAST f : forms) {
+            for (Formula f : forms) {
                 term = f.getStringArgument(1);   // Append term and language to make a key.
                 isNaN = true;
                 try {
@@ -166,7 +164,7 @@ public class Diagnostics {
      */
     public static boolean termNotBelowEntity(String term, KB kb) {
 
-        if (LOG_OPS.contains(term) || term.equals(FormulaAST.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term))
+        if (LOG_OPS.contains(term) || term.equals(Formula.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term))
             return false;
         else if (!kb.kbCache.subclassOf(term,"Entity") && !kb.kbCache.transInstOf(term,"Entity"))
             return true;
@@ -207,13 +205,13 @@ public class Diagnostics {
 
         System.out.println("Partition violations:");
         List<String> result = new ArrayList<>();
-        List<FormulaAST> flist = kb.ask("arg",0,"partition");
-        for (FormulaAST f : flist) {
+        List<Formula> flist = kb.ask("arg",0,"partition");
+        for (Formula f : flist) {
             //System.out.println(f);
             String parent = f.getStringArgument(1);
             List<String> subs = f.argumentsToArrayListString(2);
-            List<FormulaAST> foundSubs = kb.askWithRestriction(0,"subclass",2,parent);
-            for (FormulaAST subf : foundSubs) {
+            List<Formula> foundSubs = kb.askWithRestriction(0,"subclass",2,parent);
+            for (Formula subf : foundSubs) {
                 if (!subf.isCached()) {
                     String newSub = subf.getStringArgument(1);
                     if (!subs.contains(newSub)) {
@@ -235,13 +233,13 @@ public class Diagnostics {
      * @param Kb - the knowledge base
      * @return Map<Formula, List<String>> - each formula in the KB with its error list. 
      */
-    private static Map<FormulaAST, Set<String>> formulaeWithTypeViolations(KB kb) {
+    private static Map<Formula, Set<String>> formulaeWithTypeViolations(KB kb) {
         
-        Map<FormulaAST, Set<String>> result = new TreeMap<>();
+        Map<Formula, Set<String>> result = new TreeMap<>();
         KButilities.clearErrors();
         kb.kbCache.errors.clear();
         SUMOtoTFAform.errors.clear();
-        for (FormulaAST f : kb.formulaMap.values()) {
+        for (Formula f : kb.formulaMap.values()) {
             if (!KButilities.hasCorrectTypes(kb,f)) {
                 result.put(f, new HashSet<>(KButilities.errors));
             }
@@ -262,9 +260,9 @@ public class Diagnostics {
      */
     public static String printFormulaeWithTypeViolations(KB kb, String kbHref) {
         
-        Map<FormulaAST, Set<String>> errors = Diagnostics.formulaeWithTypeViolations(kb);
+        Map<Formula, Set<String>> errors = Diagnostics.formulaeWithTypeViolations(kb);
         StringBuilder html = new StringBuilder();
-        for (Map.Entry<FormulaAST,Set<String>> error : errors.entrySet()) {
+        for (Map.Entry<Formula,Set<String>> error : errors.entrySet()) {
             for(String errorString : error.getValue()) {
                 html.append("Error found: " + errorString);
             }
@@ -341,15 +339,15 @@ public class Diagnostics {
             Set<String> reduce = new TreeSet<>();
             // Use all partition statements and all
             // exhaustiveDecomposition statements.
-            List<FormulaAST> forms = kb.ask("arg",0,"partition");
+            List<Formula> forms = kb.ask("arg",0,"partition");
             if (forms == null)
                 forms = new ArrayList<>();
-            List<FormulaAST> forms2 = kb.ask("arg",0,"exhaustiveDecomposition");
+            List<Formula> forms2 = kb.ask("arg",0,"exhaustiveDecomposition");
             if (forms2 != null)
                 forms.addAll(forms2);
             boolean go = true;
-            Iterator<FormulaAST> it = forms.iterator();
-            FormulaAST form;
+            Iterator<Formula> it = forms.iterator();
+            Formula form;
             String parent, inst;
             List<String> partition, instances;
             boolean isInstanceSubsumed, isNaN;
@@ -405,7 +403,7 @@ public class Diagnostics {
     public static List<String> relationsWithoutFormat(KB kb) {
 
         List<String> result = new ArrayList<>();
-        List<FormulaAST> forms;
+        List<Formula> forms;
         for (String rel : kb.kbCache.relations) {
             forms = kb.askWithRestriction(0,"format",2,rel);
             if (forms == null || forms.isEmpty())
@@ -431,8 +429,8 @@ public class Diagnostics {
         catch (NumberFormatException nex) {
         }
         if (isNaN) {
-            List<FormulaAST> forms = kb.ask("ant",0,term);
-            List<FormulaAST> forms2 = kb.ask("cons",0,term);
+            List<Formula> forms = kb.ask("ant",0,term);
+            List<Formula> forms2 = kb.ask("cons",0,term);
             if (((forms == null) || forms.isEmpty())
                     && ((forms2 == null) || forms2.isEmpty()))
                 return true;
@@ -462,7 +460,7 @@ public class Diagnostics {
     /** *****************************************************************
      * @return a list of variables used only once.
      */
-    public static Set<String> singleUseVariables(FormulaAST f) {
+    public static Set<String> singleUseVariables(Formula f) {
 
         Set<String> result = new HashSet<>();
         Set<String> vars = f.collectAllVariables();
@@ -488,13 +486,13 @@ public class Diagnostics {
      * the interior consequent has a variable not found in the interior
      * antecedent
      */
-    public static Set<String> unquantInConsequent(FormulaAST f) {
+    public static Set<String> unquantInConsequent(Formula f) {
 
         Set<String> result = new HashSet<>();
         if (!f.isRule())
             return result;
-        FormulaAST ante = new FormulaAST(FormulaUtil.antecedent(f));
-        FormulaAST conseq = new FormulaAST(FormulaUtil.consequent(f));
+        Formula ante = new Formula(FormulaUtil.antecedent(f));
+        Formula conseq = new Formula(FormulaUtil.consequent(f));
 
         Set<String> anteVars = ante.collectUnquantifiedVariables();
         Set<String> consVars = conseq.collectUnquantifiedVariables();
@@ -507,12 +505,12 @@ public class Diagnostics {
 
     /** *****************************************************************
      */
-    public static List<FormulaAST> unquantsInConseq(KB kb) {
+    public static List<Formula> unquantsInConseq(KB kb) {
 
-        List<FormulaAST> result = new ArrayList<>();
-        for (FormulaAST form : kb.formulaMap.values()) {
-            if ((form.getFormula().contains(FormulaAST.UQUANT))
-                    || (form.getFormula().contains(FormulaAST.EQUANT))) {
+        List<Formula> result = new ArrayList<>();
+        for (Formula form : kb.formulaMap.values()) {
+            if ((form.getFormula().contains(Formula.UQUANT))
+                    || (form.getFormula().contains(Formula.EQUANT))) {
                 if (!unquantInConsequent(form).isEmpty())
                     result.add(form);
             }
@@ -525,7 +523,7 @@ public class Diagnostics {
     /** *****************************************************************
      * @return true if an existential is found in the antecedent of a rule.
      */
-    public static boolean existentialInAntecedent(FormulaAST f) {
+    public static boolean existentialInAntecedent(Formula f) {
 
         if (!f.isRule())
             return false;
@@ -540,30 +538,30 @@ public class Diagnostics {
      * @return true if a quantifiers in a quantifier list is not found
      * in the body of the statement.
      */
-    public static boolean quantifierNotInStatement(FormulaAST f) {
+    public static boolean quantifierNotInStatement(Formula f) {
 
         if (f.getFormula() == null || f.getFormula().length() < 1 ||
                 !f.listP() || f.empty())
             return false;
-        if (!Arrays.asList(FormulaAST.UQUANT, FormulaAST.EQUANT).contains(f.car())) {
-            FormulaAST f1 = new FormulaAST();
+        if (!Arrays.asList(Formula.UQUANT, Formula.EQUANT).contains(f.car())) {
+            Formula f1 = new Formula();
             f1.read(f.car());
-            FormulaAST f2 = new FormulaAST();
+            Formula f2 = new Formula();
             f2.read(f.cdr());
             return (quantifierNotInStatement(f1) || quantifierNotInStatement(f2));
         }
-        FormulaAST form = new FormulaAST();
+        Formula form = new Formula();
         form.read(f.getFormula());
         if (form.car() != null && form.car().length() > 0) {    // This test shouldn't be needed.
             String rest = form.cdr();                   // Quantifier list plus rest of statement
-            FormulaAST quant = new FormulaAST();
+            Formula quant = new Formula();
             quant.read(rest);
             String q = quant.car();                     // Now just the quantifier list.
             String body = quant.cdr();
             quant.read(q);
             List<String> qList = quant.argumentsToArrayListString(0);  // Put all the quantified variables into a list.
-            if (rest.contains(FormulaAST.EQUANT) || rest.contains(FormulaAST.UQUANT)) { //nested quantifiers
-                FormulaAST restForm = new FormulaAST();
+            if (rest.contains(Formula.EQUANT) || rest.contains(Formula.UQUANT)) { //nested quantifiers
+                Formula restForm = new Formula();
                 restForm.read(rest);
                 restForm.read(restForm.cdr());
                 if (quantifierNotInStatement(restForm))
@@ -587,17 +585,17 @@ public class Diagnostics {
      * (exists (?FOO) (bar ?FLOO Shmoo))
      * @return an ArrayList of Formula(s).
      */
-    public static List<FormulaAST> quantifierNotInBody(KB kb, String fname) {
+    public static List<Formula> quantifierNotInBody(KB kb, String fname) {
 
-        List<FormulaAST> result = new ArrayList<>();
-        Iterator<FormulaAST> it = kb.formulaMap.values().iterator();
-        FormulaAST form;
+        List<Formula> result = new ArrayList<>();
+        Iterator<Formula> it = kb.formulaMap.values().iterator();
+        Formula form;
         while (it.hasNext()) {
-            form = (FormulaAST) it.next();
+            form = (Formula) it.next();
             if (!FileUtil.noPath(form.sourceFile).equals(fname))
                 continue;
-            if ((form.getFormula().contains(FormulaAST.UQUANT))
-                    || (form.getFormula().contains(FormulaAST.EQUANT))) {
+            if ((form.getFormula().contains(Formula.UQUANT))
+                    || (form.getFormula().contains(Formula.EQUANT))) {
                 if (quantifierNotInStatement(form))
                     result.add(form);
             }
@@ -613,15 +611,15 @@ public class Diagnostics {
      * (exists (?FOO) (bar ?FLOO Shmoo))
      * @return an ArrayList of Formula(s).
      */
-    public static List<FormulaAST> quantifierNotInBody(KB kb) {
+    public static List<Formula> quantifierNotInBody(KB kb) {
 
-        List<FormulaAST> result = new ArrayList<>();
-        Iterator<FormulaAST> it = kb.formulaMap.values().iterator();
-        FormulaAST form;
+        List<Formula> result = new ArrayList<>();
+        Iterator<Formula> it = kb.formulaMap.values().iterator();
+        Formula form;
         while (it.hasNext()) {
-            form = (FormulaAST) it.next();
-            if ((form.getFormula().contains(FormulaAST.UQUANT))
-                    || (form.getFormula().contains(FormulaAST.EQUANT))) {
+            form = (Formula) it.next();
+            if ((form.getFormula().contains(Formula.UQUANT))
+                    || (form.getFormula().contains(Formula.EQUANT))) {
                 if (quantifierNotInStatement(form))
                     result.add(form);
             }
@@ -670,15 +668,15 @@ public class Diagnostics {
                 "subAttribute", "domain", "domainSubclass", "range",
                 "rangeSubclass", "documentation", "subrelation");
 
-        List<FormulaAST> forms, newform;
+        List<Formula> forms, newform;
         String relation, filename;
-        FormulaAST form;
+        Formula form;
         for (String term : kb.getTerms()) {
             forms = kb.ask("arg",1,term);
             // Get every formula with the term as arg 1
             // Only definitional uses are in the arg 1 position
             if (forms != null && !forms.isEmpty()) {
-                for (FormulaAST formula : forms) {
+                for (Formula formula : forms) {
                     relation = formula.getStringArgument(0);
                     filename = formula.sourceFile;
                     if (definitionalRelations.contains(relation))
@@ -704,7 +702,7 @@ public class Diagnostics {
                 forms.addAll(newform);
             if (forms != null && !forms.isEmpty()) {
                 for (int i = 0; i < forms.size(); i++) {
-                    form = (FormulaAST) forms.get(i);
+                    form = (Formula) forms.get(i);
                     filename = form.sourceFile;
                     addToMapList(termsUsed,term,filename);
                 }
@@ -1258,7 +1256,7 @@ public class Diagnostics {
     /** *****************************************************************
      * Returns "" if answer is OK, otherwise reports it.
      */
-    private static String reportAnswer(KB kb, String proof, FormulaAST query, String pQuery, String testType) {
+    private static String reportAnswer(KB kb, String proof, Formula query, String pQuery, String testType) {
 
         String language = kb.language;
         String kbName = kb.name;
@@ -1318,8 +1316,8 @@ public class Diagnostics {
             String processedQuery;
             Set<Expr> processedQueries;
             StringBuilder a, negatedQuery;
-            Collection<FormulaAST> allFormulas = kb.formulaMap.values();
-            for (FormulaAST query : allFormulas) {
+            Collection<Formula> allFormulas = kb.formulaMap.values();
+            for (Formula query : allFormulas) {
                 fp = new FormulaPreprocessor();
                 processedQueries = fp.preProcessExpr(query, false, kb); // may be multiple because of row vars.
                 //System.out.println(" query = " + query);
@@ -1329,7 +1327,7 @@ public class Diagnostics {
                 EProver eprover = new EProver(kb, "tptp", timeout, maxAnswers);
                 for (Expr f : processedQueries) {
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.toKifString());
-                    processedQuery = new FormulaAST(f.toKifString()).makeQuantifiersExplicit(false);
+                    processedQuery = new Formula(f.toKifString()).makeQuantifiersExplicit(false);
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
                     eprover.askEProver(processedQuery);
                     proof = eprover.toString() + " ";
@@ -1338,7 +1336,7 @@ public class Diagnostics {
                     //  if (answer.length() != 0) return answer;
                     answer.append(a);
                     negatedQuery = new StringBuilder();
-                    negatedQuery.append(FormulaAST.LP).append(FormulaAST.NOT).append(FormulaAST.SPACE).append(processedQuery).append(FormulaAST.RP);
+                    negatedQuery.append(Formula.LP).append(Formula.NOT).append(Formula.SPACE).append(processedQuery).append(Formula.RP);
                     eprover.askEProver(negatedQuery.toString());
                     proof = eprover.toString() + " ";
                     a.append(reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency"));
@@ -1364,7 +1362,7 @@ public class Diagnostics {
         Set<String> alreadyCounted = new HashSet<>();
         Map<String,List<String>> termsUsed = new TreeMap<>();
         Map<String,List<String>> termsDefined = new TreeMap<>();
-        List<FormulaAST> tforms;
+        List<Formula> tforms;
         Set<String> tformstrs;
         String simpleName;
         termLinks(kb, termsUsed, termsDefined);
@@ -1376,7 +1374,7 @@ public class Diagnostics {
                 alreadyCounted.add(t);
                 tforms = kb.askWithRestriction(0, "termFormat", 2, t);
                 tformstrs = new HashSet<>();
-                for (FormulaAST f : tforms) {
+                for (Formula f : tforms) {
                     str = f.getStringArgument(3);
                     tformstrs.add(str);
                 }
@@ -1403,8 +1401,8 @@ public class Diagnostics {
         Map<String,Set<String>> termsByFile = new HashMap<>();
         String fname, simpleName, str;
         Set<String> terms, goodTerms, ts, tformstrs;
-        List<FormulaAST> tforms;
-        for (FormulaAST f : kb.formulaMap.values()) {
+        List<Formula> tforms;
+        for (Formula f : kb.formulaMap.values()) {
             if (debug) if (f.getFormula().contains("AppleComputerCorporation"))
                 System.out.println("termDefsByGivenFile(): " + f);
             fname = f.sourceFile;
@@ -1416,7 +1414,7 @@ public class Diagnostics {
             if (debug) if (f.getFormula().contains("AppleComputerCorporation"))
                 System.out.println("termDefsByGivenFile(): terms: " + terms);
             for (String t : terms) {
-                if (!FormulaAST.isVariable(t) && t.charAt(0) != '"' && !StringUtil.isNumeric(t))
+                if (!Formula.isVariable(t) && t.charAt(0) != '"' && !StringUtil.isNumeric(t))
                     goodTerms.add(t);
             }
             if (termsByFile.keySet() != null && termsByFile.keySet().contains(simpleName)) {
@@ -1449,7 +1447,7 @@ public class Diagnostics {
                     System.out.println("termDefsByGivenFile(): added to already counted (2): " + term);
                 tforms = kb.askWithRestriction(0, "termFormat", 2, term);
                 tformstrs = new HashSet<>();
-                for (FormulaAST f : tforms) {
+                for (Formula f : tforms) {
                     str = f.getStringArgument(3);
                     tformstrs.add(str);
                 }
@@ -1470,14 +1468,14 @@ public class Diagnostics {
      */
     public static void addLabels(KB kb, Set<String> file) {
 
-        List<FormulaAST> tforms;
+        List<Formula> tforms;
         Set<String> tformstrs;
         String str;
         int i;
         for (String term : file) {
             tforms = kb.askWithRestriction(0, "termFormat", 2, term);
             tformstrs = new HashSet<>();
-            for (FormulaAST f : tforms) {
+            for (Formula f : tforms) {
                 str = f.getStringArgument(3);
                 tformstrs.add(str);
             }
@@ -1526,13 +1524,13 @@ public class Diagnostics {
         Set<String> big = new HashSet<>();
         big.addAll(FileUtil.readLines(f2,false));
         big.removeAll(small);
-        List<FormulaAST> tforms;
+        List<Formula> tforms;
         Set<String> tformstrs;
         String str;
         for (String term : big) {
             tforms = kb.askWithRestriction(0, "termFormat", 2, term);
             tformstrs = new HashSet<>();
-            for (FormulaAST f : tforms) {
+            for (Formula f : tforms) {
                 str = f.getStringArgument(3);
                 tformstrs.add(str);
             }
@@ -1554,10 +1552,10 @@ public class Diagnostics {
      * @param args the list of formula arguments to examine
      * @return set of all variables found at any depth
      */
-    private static HashSet<String> collectVars(List<FormulaAST> args) {
+    private static HashSet<String> collectVars(List<Formula> args) {
 
         HashSet<String> vars = new HashSet<>();
-        for (FormulaAST arg : args) {
+        for (Formula arg : args) {
             collectAllVarsFromArg(arg, vars);
         }
         return vars;
@@ -1570,7 +1568,7 @@ public class Diagnostics {
      * @param f the formula to extract variables from
      * @param vars the set to add found variables to
      */
-    private static void collectAllVarsFromArg(FormulaAST f, HashSet<String> vars) {
+    private static void collectAllVarsFromArg(Formula f, HashSet<String> vars) {
 
         if (f == null || f.empty()) {
             return;
@@ -1586,14 +1584,14 @@ public class Diagnostics {
         }
         
         String head = f.car();
-        if (FormulaAST.isLogicalOperator(head) || head.equals(FormulaAST.UQUANT) || head.equals(FormulaAST.EQUANT)) {
+        if (Formula.isLogicalOperator(head) || head.equals(Formula.UQUANT) || head.equals(Formula.EQUANT)) {
             return;
         }
         
         // recurse into all arguments of functions/predicates
-        List<FormulaAST> args = f.complexArgumentsToArrayList(1);
+        List<Formula> args = f.complexArgumentsToArrayList(1);
         if (args != null) {
-            for (FormulaAST arg : args) {
+            for (Formula arg : args) {
                 collectAllVarsFromArg(arg, vars);
             }
         }
@@ -1604,7 +1602,7 @@ public class Diagnostics {
      * @param f the formula to analyze
      * @return map from each variable to the set of variables it co-occurs with
      */
-    public static HashMap<String,HashSet<String>> findOrphanVars(FormulaAST f) {
+    public static HashMap<String,HashSet<String>> findOrphanVars(Formula f) {
 
         HashSet<String> parents = new HashSet<>();
         return findOrphanVarsRecurse(f,parents);
@@ -1618,7 +1616,7 @@ public class Diagnostics {
      * parents = {?ACK} so ?X and ?Y will link to ?ACK
      * @return map of variable co-occurrences found in this formula and its subformulas
      */
-    private static HashMap<String,HashSet<String>> findOrphanVarsRecurse(FormulaAST f, HashSet<String> parents) {
+    private static HashMap<String,HashSet<String>> findOrphanVarsRecurse(Formula f, HashSet<String> parents) {
 
         HashMap<String,HashSet<String>> result = new HashMap<>();
         // ==== BASE CASES ====
@@ -1641,10 +1639,10 @@ public class Diagnostics {
         // case 1: quantifiers
         // skip the variable list, recurse into body with same parents
         // e.g., (exists (?A ?B) BODY), skip (?A ?B), process BODY
-        if (head.equals(FormulaAST.UQUANT) || head.equals(FormulaAST.EQUANT)) {
-            List<FormulaAST> qargs = f.complexArgumentsToArrayList(2);
+        if (head.equals(Formula.UQUANT) || head.equals(Formula.EQUANT)) {
+            List<Formula> qargs = f.complexArgumentsToArrayList(2);
             if (qargs != null && !qargs.isEmpty()) {
-                FormulaAST body = qargs.get(0); // body is 2nd argument
+                Formula body = qargs.get(0); // body is 2nd argument
                 mergeResults(result, findOrphanVarsRecurse(body, parents)); // e.g., (containsFormula ?ACK (exists (?X) (agent ?X ?Y)))
                                                                             // ?ACK should link to ?X and ?Y found in the body
             }
@@ -1652,7 +1650,7 @@ public class Diagnostics {
         }
 
         // arguments after the head
-        List<FormulaAST> args = f.complexArgumentsToArrayList(1);
+        List<Formula> args = f.complexArgumentsToArrayList(1);
         if (args == null) {
             return result;
         }
@@ -1660,10 +1658,10 @@ public class Diagnostics {
         // case 2: logical operators (and, or, not, =>, etc.)
         // modal predicates and equality are treated as non-logical
         boolean isModal = Modals.formulaPreds.contains(head) || Modals.regHOLpred.contains(head);
-        boolean isEqual = FormulaAST.EQUAL.contains(head);
-        if (FormulaAST.isLogicalOperator(head) && !isModal && !isEqual) {
+        boolean isEqual = Formula.EQUAL.contains(head);
+        if (Formula.isLogicalOperator(head) && !isModal && !isEqual) {
             // For 'and', 'or', 'not', '=>', etc
-            for (FormulaAST arg : args) {
+            for (Formula arg : args) {
                 mergeResults(result, findOrphanVarsRecurse(arg, parents));
             }
             return result;
@@ -1679,7 +1677,7 @@ public class Diagnostics {
         // coVars = {?T1} (plus any wrapper vars)
         // When we recurse into (ListOrderFn ?LIST ?N), we pass {?T1} as parents
         // ?LIST and ?N will link back to ?T1
-        for (FormulaAST arg : args)
+        for (Formula arg : args)
             mergeResults(result, findOrphanVarsRecurse(arg, coVars));
 
         // connect all variables at this level to all variables found in children
@@ -1694,7 +1692,7 @@ public class Diagnostics {
      * @param f the variable formula to link
      * @return map containing the new bidirectional edges (no self-links)
      */
-    private static HashMap<String, HashSet<String>> addLinks(HashSet<String> parents, FormulaAST f) {
+    private static HashMap<String, HashSet<String>> addLinks(HashSet<String> parents, Formula f) {
 
         HashMap<String,HashSet<String>> out = new HashMap<>();
         String var = f.getFormula(); // extracts variable name
@@ -1861,7 +1859,7 @@ public class Diagnostics {
         boolean foundAnyWarnings = false;
         Set<String> keys = kifInstance.formulaMap.keySet();
         for (String key : keys) {
-            FormulaAST f = kifInstance.formulaMap.get(key);
+            Formula f = kifInstance.formulaMap.get(key);
             HashMap<String, HashSet<String>> map = findOrphanVars(f);
             
             boolean hasOrphans = false;

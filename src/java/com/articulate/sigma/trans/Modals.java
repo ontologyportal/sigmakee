@@ -2,7 +2,7 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.util.*;
@@ -16,7 +16,7 @@ public class Modals {
     // e.g. (holdsDuring ?T ?FORMULA)
     public static final List<String> formulaPreds = new ArrayList<>(
             Arrays.asList(
-                    FormulaAST.KAPPAFN,
+                    Formula.KAPPAFN,
                     "believes",
                     "causesProposition",
                     "conditionalProbability", 
@@ -264,21 +264,21 @@ public class Modals {
      * Handle the predicates given in regHOL3pred, which have a parameter
      * followed by a formula.
      */
-    public static FormulaAST handleHOL3pred(FormulaAST f, KB kb, Map<String, Set<String>> typeMap,
+    public static Formula handleHOL3pred(Formula f, KB kb, Map<String, Set<String>> typeMap,
                                          String worldvar, Integer worldNum) {
 
         Set<String> types = new HashSet<>();
         types.add("World");
         StringBuilder fstring = new StringBuilder();
-        List<FormulaAST> flist = f.complexArgumentsToArrayList(1);
-        FormulaAST arg1 = flist.get(0);
-        FormulaAST arg2 = flist.get(1);
+        List<Formula> flist = f.complexArgumentsToArrayList(1);
+        Formula arg1 = flist.get(0);
+        Formula arg2 = flist.get(1);
         worldNum = worldNum + 1;
         if (regHOL3Modalpred.contains(f.car()))
-            fstring.append("(=> (accreln3norm ").append(f.car()).append(FormulaAST.SPACE);
+            fstring.append("(=> (accreln3norm ").append(f.car()).append(Formula.SPACE);
         else
-            fstring.append("(=> (accreln3 ").append(f.car()).append(FormulaAST.SPACE);
-        fstring.append(arg1).append(FormulaAST.SPACE).append(arg2).append(FormulaAST.SPACE);
+            fstring.append("(=> (accreln3 ").append(f.car()).append(Formula.SPACE);
+        fstring.append(arg1).append(Formula.SPACE).append(arg2).append(Formula.SPACE);
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
             fstring.append(" CW");
@@ -293,9 +293,9 @@ public class Modals {
         if (!typeMap.containsKey(worldStr))
             typeMap.put(worldStr.trim(),types);
         fstring.append(worldStr).append(") ");
-        fstring.append(FormulaAST.SPACE).append(SUMOtoTFAform.elimUnitaryLogops(processRecurse(flist.get(2),kb,typeMap,worldvar,worldNum)));
-        fstring.append(FormulaAST.RP);
-        FormulaAST result = new FormulaAST();
+        fstring.append(Formula.SPACE).append(SUMOtoTFAform.elimUnitaryLogops(processRecurse(flist.get(2),kb,typeMap,worldvar,worldNum)));
+        fstring.append(Formula.RP);
+        Formula result = new Formula();
         result.read(fstring.toString());
         return result;
     }
@@ -310,13 +310,13 @@ public class Modals {
      * where F' is recursively processed and world-indexed, and we
      * introduce a fresh world variable ?Wn.
      */
-    public static FormulaAST handleHOLpred(FormulaAST f, KB kb, Map<String, Set<String>> typeMap,
+    public static Formula handleHOLpred(Formula f, KB kb, Map<String, Set<String>> typeMap,
                                         String worldvar, Integer worldNum) {
 
 
         Set<String> types = new HashSet<>();
         types.add("World");
-        List<FormulaAST> flist = f.complexArgumentsToArrayList(1); // args after the head
+        List<Formula> flist = f.complexArgumentsToArrayList(1); // args after the head
         if (flist.size() < 2) {
             System.out.println("Error in Modals.handleHOLpred(): too few arguments in : " + f);
         }
@@ -324,13 +324,13 @@ public class Modals {
         worldNum = worldNum + 1;
 
         // Recursively process the “parameter” term as well
-        FormulaAST param = new FormulaAST(SUMOtoTFAform.elimUnitaryLogops(processRecurse(flist.get(0), kb, typeMap, worldvar, worldNum - 1)));
-        FormulaAST embedded = new FormulaAST(SUMOtoTFAform.elimUnitaryLogops(processRecurse(flist.get(1), kb, typeMap, worldvar, worldNum)));
+        Formula param = new Formula(SUMOtoTFAform.elimUnitaryLogops(processRecurse(flist.get(0), kb, typeMap, worldvar, worldNum - 1)));
+        Formula embedded = new Formula(SUMOtoTFAform.elimUnitaryLogops(processRecurse(flist.get(1), kb, typeMap, worldvar, worldNum)));
 
         StringBuilder fstring = new StringBuilder();
         fstring.append("(=> (accreln2 ")
                 .append(f.car())          // modal operator
-                .append(FormulaAST.SPACE)
+                .append(Formula.SPACE)
                 .append(param.toString()); // now world-annotated
         // Accounts for Constant World (world 0)
         if (worldNum - 1 == 0) { 
@@ -348,9 +348,9 @@ public class Modals {
         fstring.append(" ?" + worldvar).append(worldNum)
                 .append(") ")
                 .append(embedded.toString())
-                .append(FormulaAST.RP);
+                .append(Formula.RP);
 
-        FormulaAST result = new FormulaAST();
+        Formula result = new Formula();
         result.read(fstring.toString());
         return result;
     }
@@ -368,13 +368,13 @@ public class Modals {
      * where F' is recursively processed and world-indexed, and
      * we introduce a fresh world variable ?Wn.
      */
-    public static FormulaAST handleModalAttribute(FormulaAST f, KB kb, Map<String, Set<String>> typeMap,
+    public static Formula handleModalAttribute(Formula f, KB kb, Map<String, Set<String>> typeMap,
                                                String worldvar, Integer worldNum) {
 
         Set<String> types = new HashSet<>();
         types.add("World");
         StringBuilder fstring = new StringBuilder();
-        List<FormulaAST> flist = f.complexArgumentsToArrayList(1); // [F, M]
+        List<Formula> flist = f.complexArgumentsToArrayList(1); // [F, M]
         if (flist == null || flist.size() < 2) {
             System.out.println("Error in Modals.handleModalAttribute(): " + f + " at " +
                 f.getSourceFile() + ":" + f.startLine);
@@ -382,9 +382,9 @@ public class Modals {
         }
         int prevWorld = worldNum;
         int currWorld = worldNum + 1;
-        FormulaAST modality = flist.get(1); // modality is the second complex arg
-        FormulaAST formula  = flist.get(0);
-        fstring.append("(=> (accreln1 ").append(modality).append(FormulaAST.SPACE);
+        Formula modality = flist.get(1); // modality is the second complex arg
+        Formula formula  = flist.get(0);
+        fstring.append("(=> (accreln1 ").append(modality).append(Formula.SPACE);
         // Account for CW (constant world):
         if (prevWorld == 0) {
             fstring.append("CW");
@@ -398,25 +398,25 @@ public class Modals {
         String worldStr = " ?" + worldvar + (currWorld);
         if (!typeMap.containsKey(worldStr))
             typeMap.put(worldStr.trim(),types);
-        fstring.append(FormulaAST.SPACE).append("?" + worldvar).append(currWorld).append(") ");
+        fstring.append(Formula.SPACE).append("?" + worldvar).append(currWorld).append(") ");
         // Recurse once on the embedded formula at the new current world:
         fstring.append(SUMOtoTFAform.elimUnitaryLogops(processRecurse(formula, kb, typeMap, worldvar, currWorld)));
-        fstring.append(FormulaAST.RP);
-        FormulaAST result = new FormulaAST();
+        fstring.append(Formula.RP);
+        Formula result = new Formula();
         result.read(fstring.toString());
         return result;
     }
 
     /***************************************************************
      */
-    public static FormulaAST processRecurse(FormulaAST f, KB kb, Map<String, Set<String>> typeMap,
+    public static Formula processRecurse(Formula f, KB kb, Map<String, Set<String>> typeMap,
                                          String worldvar, Integer worldNum) {
 
         if (debug) System.out.println("processRecurse(): " + f);
         if (debug) System.out.println("processRecurse(): " + typeMap);
         if (f.isVariable() && typeMap.get(f.toString()) != null && typeMap.get(f.toString()).contains("Formula")) {
             if (debug) System.out.println("processRecurse(): formula variable " + f);
-            return new FormulaAST("(" + f.toString() + " ?" + worldvar + worldNum + ")");
+            return new Formula("(" + f.toString() + " ?" + worldvar + worldNum + ")");
         }
         if (f.atom())
             return f;
@@ -434,35 +434,35 @@ public class Modals {
             }
 
             int argStart = 1;
-            if (FormulaAST.isQuantifier(f.car()))
+            if (Formula.isQuantifier(f.car()))
                 argStart = 2;
 
-            List<FormulaAST> flist = f.complexArgumentsToArrayList(argStart);
+            List<Formula> flist = f.complexArgumentsToArrayList(argStart);
             if (flist == null)
                 System.out.println("processRecurse(): formula argument list is null: " + f);
             StringBuilder fstring = new StringBuilder();
-            fstring.append(FormulaAST.LP).append(f.car());
+            fstring.append(Formula.LP).append(f.car());
             // Append quantifier variable list as-is
             if (argStart == 2)
-                fstring.append(FormulaAST.SPACE).append(f.getStringArgument(1));
+                fstring.append(Formula.SPACE).append(f.getStringArgument(1));
             if (flist != null && flist.size() == 2 && f.car().equals("instance") && flist.get(0).isVariable() &&
                     flist.get(1).equals("Formula"))
-                return new FormulaAST();
+                return new Formula();
             // Recursively process arguments
-            for (FormulaAST arg : flist) {
+            for (Formula arg : flist) {
                 if (f.car().equals("instance") && arg.isVariable() &&
                         typeMap.get(arg.toString()) != null &&
                         (typeMap.get(arg.toString()).contains("Formula") ||
                          typeMap.get(arg.toString()).contains("ObjectiveNorm") ||
                          typeMap.get(arg.toString()).contains( "NormativeAttribute")))
-                    fstring.append(FormulaAST.SPACE).append(arg);
+                    fstring.append(Formula.SPACE).append(arg);
                 else
-                    fstring.append(FormulaAST.SPACE).append(SUMOtoTFAform.elimUnitaryLogops(processRecurse(arg, kb, typeMap, worldvar, worldNum)));
+                    fstring.append(Formula.SPACE).append(SUMOtoTFAform.elimUnitaryLogops(processRecurse(arg, kb, typeMap, worldvar, worldNum)));
             }
             // Close the term / formula
-            if (FormulaAST.isLogicalOperator(f.car()) || (f.car().equals(FormulaAST.EQUAL))) {
+            if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL))) {
                 // Pure logical symbols: no world argument (and, or, =>, <=>, =, etc.)
-                fstring.append(FormulaAST.RP);
+                fstring.append(Formula.RP);
             }
             else {
                 // For non-logical heads, add a world argument to ALL non-rigid,
@@ -475,7 +475,7 @@ public class Modals {
                 String baseHead = baseFunctor(head);   // <-- normalize "partition__7" -> "partition"
 
                 if (worldNum != null
-                        && !FormulaAST.isVariable(baseHead)
+                        && !Formula.isVariable(baseHead)
                         && !RIGID_RELATIONS.contains(baseHead)
                         && !Modals.RESERVED_MODAL_SYMBOLS.contains(baseHead)
                         && !modalAttributes.contains(baseHead)) {
@@ -487,16 +487,16 @@ public class Modals {
                                 fstring.append(" ?" + worldvar).append(worldNum);
                             }
                 }
-                fstring.append(FormulaAST.RP);
+                fstring.append(Formula.RP);
 
                 // Signatures are read-only here; no mutation. We only log missing ones.
                 List<String> sig = kb.kbCache.signatures.get(head);
-                if (sig == null && !FormulaAST.isVariable(head)) {
+                if (sig == null && !Formula.isVariable(head)) {
                     System.err.println("Error in processRecurse(): null signature for " + head);
                 }
             }
 
-            FormulaAST result = new FormulaAST();
+            Formula result = new Formula();
             result.read(fstring.toString());
             return result;
         }
@@ -780,9 +780,9 @@ public class Modals {
         if ("modalAttribute".equals(headName))
             return handleModalAttributeExpr(se, kb, worldvar, worldNum);
 
-        boolean isQuantifier = FormulaAST.isQuantifier(headName);
-        boolean isLogical    = FormulaAST.isLogicalOperator(headName)
-                               || FormulaAST.EQUAL.equals(headName);
+        boolean isQuantifier = Formula.isQuantifier(headName);
+        boolean isLogical    = Formula.isLogicalOperator(headName)
+                               || Formula.EQUAL.equals(headName);
 
         // Build new arg list by recursing; for quantifiers, skip the variable list
         List<Expr> args    = se.args();
@@ -802,7 +802,7 @@ public class Modals {
         // Add world argument to non-rigid, non-reserved, non-logical predicates
         if (!isLogical && !isQuantifier) {
             String baseHead = baseFunctor(headName);
-            if (!FormulaAST.isVariable(baseHead)
+            if (!Formula.isVariable(baseHead)
                     && !RIGID_RELATIONS.contains(baseHead)
                     && !RESERVED_MODAL_SYMBOLS.contains(baseHead)
                     && !modalAttributes.contains(baseHead)) {
@@ -1052,7 +1052,7 @@ public class Modals {
                     "(and " +
                       "(instance ?CHILD HumanChild) " +
                         "(located ?CHILD ?LOC)))))";
-        FormulaAST f = new FormulaAST(fstr);
+        Formula f = new Formula(fstr);
         System.out.println("Modals.worldVarTest1()");
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
     }
@@ -1070,7 +1070,7 @@ public class Modals {
                 "            (connects ?J ?W1 ?W2)\n" +
                 "            (not\n" +
                 "                (equal ?W1 ?W2)))))";
-        FormulaAST f = new FormulaAST(fstr);
+        Formula f = new Formula(fstr);
         System.out.println("Modals.worldVarTest2()");
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
     }
@@ -1085,7 +1085,7 @@ public class Modals {
                 "    (modalAttribute ?FORMULA Prohibition)\n" +
                 "    (not\n" +
                 "        (modalAttribute ?FORMULA Permission)))";
-        FormulaAST f = new FormulaAST(fstr);
+        Formula f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         fstr = "(=>\n" +
                 "    (and\n" +
@@ -1095,7 +1095,7 @@ public class Modals {
                 "    (or\n" +
                 "        (wants ?AGENT ?THING)\n" +
                 "        (desires ?AGENT ?THING)))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         fstr = "(=> " +
                 "  (instance ?ARGUMENT Argument ?W1) " +
@@ -1106,19 +1106,19 @@ public class Modals {
                 "      (and " +
                 "        (equal (PremisesFn ?ARGUMENT ?W1) ?PREMISES) " +
                 "        (conclusion ?CONCLUSION ?ARGUMENT ?W1)))))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         // this one is wrong due to the two relations not conforming to argument order
         fstr = "(=>\n" +
                 "    (confersRight ?FORMULA ?AGENT1 ?AGENT2)\n" +
                 "    (holdsRight ?FORMULA ?AGENT2))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         fstr = "(holdsDuring (YearFn 2025)\n" +
                 "  (knows John \n" +
                 "    (believes Sue \n" +
                 "      (acquaintance Bill Jane))))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         fstr =
         "(holdsDuring ?T " +
@@ -1129,7 +1129,7 @@ public class Modals {
         "                   (=> " +
         "                       (acquaintance Bill Sue) " +
         "                       (acquaintance Bill Jane)))))))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");    }
     
     /************************************************************************************
@@ -1149,7 +1149,7 @@ public class Modals {
         "        (instance ?E Entering)" +
         "        (agent ?E AgentSmith)" +
         "        (destination ?E Area51)))))";
-        FormulaAST f = new FormulaAST(fstr);
+        Formula f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         // "Agents that violate their obligations have a US government disciplinary hearing."
         // CF: Is this example correct? 
@@ -1163,7 +1163,7 @@ public class Modals {
         "      (instance ?H LegalAction)" +
         "      (plaintiff ?H USGovernment)" +
         "      (defendant ?H ?A))))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         // "Agents that violate their obligations are fired after a US government disciplinary hearing."
         // CF: Is this example correct? 
@@ -1182,7 +1182,7 @@ public class Modals {
         "        (WhenFn ?H) " +
         "        (WhenFn ?FIRE))" +
         "      (patient ?FIRE ?A))))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");    }
 
     /***************************************************************
@@ -1207,7 +1207,7 @@ public class Modals {
             "            (instance ?PART Proposition)" +
             "            (subProposition ?PART ?CONST)" +
             "            (modalAttribute ?FORMULA Permission))))";
-        FormulaAST f = new FormulaAST(fstr);
+        Formula f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         if (debug) {
             System.out.println("EASY: Obligation - If entering, must enter on path");
@@ -1223,7 +1223,7 @@ public class Modals {
             "      (and" +
             "        (entrance ?R ?F)" +
             "        (path ?E ?R))) Obligation))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         if (debug) {
             System.out.println("EASY: Prohibition, It is prohibited for Bill to walk to the store");
@@ -1238,7 +1238,7 @@ public class Modals {
             "      (names \"Bill\" ?B)\n" +
             "      (agent ?W ?B)\n" +
             "      (destination ?W ?GS))) Prohibition)";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         if (debug) {
             System.out.println("EASY: Law - Immigration and Nationality Act");
@@ -1249,7 +1249,7 @@ public class Modals {
             "    (instance ?FORMULA Formula)"+
             "    (containsInformation ?FORMULA ImmigrationAndNationalityAct_US)"+
             "    (modalAttribute ?FORMULA Law)))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         if (debug) {
             System.out.println("EASY-MEDIUM: LegislativeBill");
@@ -1263,7 +1263,7 @@ public class Modals {
             "      (holdsDuring ?TIME2" +
             "        (attribute ?TEXT LegislativeBill))" +
             "      (earlier ?TIME2 ?TIME1))))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         // EASY: InternationalLaw -> Law
         if (debug) {
@@ -1275,7 +1275,7 @@ public class Modals {
             "    (instance ?UNCLOS FORMULA)" +
             "    (modalAttribute ?UNCLOS InternationalLaw))" +
             "  (modalAttribute ?UNCLOS Law))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         
         // TODO: Illegal, Legal, and Ally (all under EASY)
@@ -1304,7 +1304,7 @@ public class Modals {
             "            (and" +
             "              (customer ?CUST2 ?AGENT)" +
             "              (instance ?CUST2 HumanChild))) Possibility)))))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         
         /* This half is Medium examples (the "Confers" family) 
@@ -1320,7 +1320,7 @@ public class Modals {
             "    (confersNorm ?USG Permission ?FORMULA))" +
             "  (not" +
             "    (confersNorm ?USG Prohibition ?F)))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         if (debug) {
             System.out.println("MEDIUM: confersNorm - Must enter restricted region through entrance");
@@ -1338,7 +1338,7 @@ public class Modals {
             "      (and" +
             "        (entrance ?R ?F)" +
             "        (path ?E ?R)))))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         if (debug) {
             System.out.println("MEDIUM: confersObligation - USG obliges Bill to use the entrance to get in");
@@ -1357,7 +1357,7 @@ public class Modals {
             "      (and" +
             "        (entrance ?R ?F)" +
             "        (path ?E ?R))) ))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         if (debug) {
             System.out.println("MEDIUM: confersObligation - The US government obliges Agent Smith not to enter Area 51");
@@ -1370,7 +1370,7 @@ public class Modals {
             "        (instance ?E Entering)" +
             "        (agent ?E AgentSmith)" +
             "        (destination ?E Area51)))) )";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         if (debug) {
             System.out.println("MEDIUM: Agents that violate their obligations have a US government disciplinary hearing");
@@ -1385,7 +1385,7 @@ public class Modals {
             "      (instance ?H LegalAction)" +
             "      (plaintiff ?H USGovernment)" +
             "      (defendant ?H ?A))))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         if (debug) {
             System.out.println("MEDIUM: Agents that violate their obligations are fired after a US government disciplinary hearing");
@@ -1405,7 +1405,7 @@ public class Modals {
             "        (WhenFn ?H)" +
             "        (WhenFn ?FIRE))" +
             "      (patient ?FIRE ?A))))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         // MEDIUM: deprivesNorm -> confersNorm
         if (debug) {
@@ -1415,7 +1415,7 @@ public class Modals {
             "(=>" +
             "  (deprivesNorm ?AGENT Prohibition ?F)" +
             "  (confersNorm ?AGENT Permission ?F))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         
         if (debug) {
@@ -1436,7 +1436,7 @@ public class Modals {
             "    (modalAttribute" +
             "        (confersRight ?AGENT ?CUST" +
             "            (uses ?X ?CUST)) Possibility))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         if (debug) { 
             System.out.println("MEDIUM: confers norm example");
@@ -1452,7 +1452,7 @@ public class Modals {
             "      (and" +
             "        (instance ?PET DomesticAnimal)" +
             "        (located ?PET ?LOC))) ))";
-        f = new FormulaAST(fstr);
+        f = new Formula(fstr);
         System.out.println(processModalsExpr(f.expr, kb) + "\n\n");
         // MEDIUM-HARD (nested): holdsDuring / Sally example
         /*if (debug) { 
@@ -1527,7 +1527,7 @@ public class Modals {
                 SUMOformulaToTPTPformula.setHideNumbers(false);
                 KBmanager.getMgr().initializeOnce();
                 KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-                System.out.println(processModalsExpr(new FormulaAST(argMap.get("form").get(0)).expr,kb));
+                System.out.println(processModalsExpr(new Formula(argMap.get("form").get(0)).expr,kb));
             }
         }
     }

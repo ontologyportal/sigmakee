@@ -12,7 +12,7 @@ import java.util.*;
  */
 public class VarTypes {
 
-    Collection<FormulaAST> formulas = null;
+    Collection<Formula> formulas = null;
     KB kb = null;
 
     /** a map of variables and the set of types that constrain them */
@@ -22,7 +22,7 @@ public class VarTypes {
 
     /** ***************************************************************
      */
-    public VarTypes(Collection<FormulaAST> set, KB kbinput) {
+    public VarTypes(Collection<Formula> set, KB kbinput) {
         formulas = set;
         kb = kbinput;
         if (set != null && debug)
@@ -110,7 +110,7 @@ public class VarTypes {
      * eqsent : '(' 'equal' term term ')' ;
      * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER ) ;
      */
-    public void findEquationType(FormulaAST f) {
+    public void findEquationType(Formula f) {
 
         // Prefer Expr-based path when available
         if (f.expr != null) {
@@ -165,12 +165,12 @@ public class VarTypes {
      * Constrain variables found in the argument list of a predicate variable
      * where the relation 'rel' will be substituted
      */
-    public FormulaAST constrainVars(String rel, String var, FormulaAST f) {
+    public Formula constrainVars(String rel, String var, Formula f) {
 
         // Prefer Expr-based path when available
         if (f.expr != null)
             return constrainVarsFromExpr(rel, var, f);
-        if (var.startsWith(FormulaAST.R_PREF))
+        if (var.startsWith(Formula.R_PREF))
             return f;
         Map<Integer, Set<SuokifParser.ArgumentContext>> argsForIndex = f.argMap.get(var);
         List<String> sig = kb.kbCache.getSignature(rel);
@@ -182,7 +182,7 @@ public class VarTypes {
                     sb.append(arg.getText()).append(", ");
             }
             if (debug) System.out.println("VarTypes.constrainVars(): " + sb.toString());
-            if (sb.toString().contains(FormulaAST.R_PREF)) {
+            if (sb.toString().contains(Formula.R_PREF)) {
                 if (debug) System.out.println("Arg mismatch caused by row variable " + argsForIndex.keySet());
             }
             else {
@@ -325,15 +325,15 @@ public class VarTypes {
      * in the literal for the constant list.  It will be used later in
      * conversion to TPTP.
      */
-    public void findRelationsAsArgs(FormulaAST f) {
+    public void findRelationsAsArgs(Formula f) {
 
-        FormulaAST.ArgStruct as;
+        Formula.ArgStruct as;
         String newc;
         for (String c : f.constants.keySet()) {
             as = f.constants.get(c);
             if (kb.kbCache.relations.contains(c)) {
-                newc = c + FormulaAST.TERM_MENTION_SUFFIX;
-                as.literal = as.literal.replace(FormulaAST.SPACE +  c, " " + newc);
+                newc = c + Formula.TERM_MENTION_SUFFIX;
+                as.literal = as.literal.replace(Formula.SPACE +  c, " " + newc);
             }
         }
     }
@@ -344,10 +344,10 @@ public class VarTypes {
 
     /**
      * Walk {@code f.expr} to infer variable types from predicate signatures.
-     * Equivalent to {@link #findType(FormulaAST)} but operates on the {@link Expr}
+     * Equivalent to {@link #findType(Formula)} but operates on the {@link Expr}
      * tree instead of the ANTLR {@code argMap}.
      */
-    public void findTypeFromExpr(FormulaAST f) {
+    public void findTypeFromExpr(Formula f) {
 
         if (f.expr == null) return;
         if (debug) System.out.println("VarTypes.findTypeFromExpr(): " + f);
@@ -355,7 +355,7 @@ public class VarTypes {
     }
 
     /** Recursively walk {@code expr} and collect type constraints into {@code f}. */
-    private void processExprForTypes(Expr expr, FormulaAST f) {
+    private void processExprForTypes(Expr expr, Formula f) {
 
         if (f.higherOrder) return;
         if (!(expr instanceof Expr.SExpr se)) return;
@@ -369,7 +369,7 @@ public class VarTypes {
             return;
         }
 
-        if (!FormulaAST.isVariable(headName)) {
+        if (!Formula.isVariable(headName)) {
             List<String> sig = kb.kbCache.getSignature(headName);
             if (sig != null) {
                 if (sig.contains("Formula")) {
@@ -409,7 +409,7 @@ public class VarTypes {
      * Variables get their type recorded; sentences-as-args flag higher-order; others
      * get warning/error checks (matching the original {@link #findType} behaviour).
      */
-    private void typeCheckArgExpr(Expr arg, String sigType, int argPos, String pred, FormulaAST f) {
+    private void typeCheckArgExpr(Expr arg, String sigType, int argPos, String pred, Formula f) {
 
         switch (arg) {
             case Expr.Var v ->
@@ -456,7 +456,7 @@ public class VarTypes {
     }
 
     /** Collect types for {@link Expr.Var} nodes directly inside a sentence-as-arg SExpr. */
-    private void collectVarsForTypeExpr(Expr.SExpr se, String sigType, FormulaAST f) {
+    private void collectVarsForTypeExpr(Expr.SExpr se, String sigType, Formula f) {
 
         for (Expr child : se.args()) {
             if (child instanceof Expr.Var v)
@@ -469,16 +469,16 @@ public class VarTypes {
     /**
      * Walk {@code f.expr} looking for {@code (equal t1 t2)} sub-expressions and
      * infer the type of any variable from the other side of the equality.
-     * Equivalent to {@link #findEquationType(FormulaAST)} but Expr-based.
+     * Equivalent to {@link #findEquationType(Formula)} but Expr-based.
      */
-    public void findEquationTypeFromExpr(FormulaAST f) {
+    public void findEquationTypeFromExpr(Formula f) {
 
         if (f.expr == null) return;
         if (debug) System.out.println("VarTypes.findEquationTypeFromExpr(): " + f);
         collectEqualTypes(f.expr, f);
     }
 
-    private void collectEqualTypes(Expr expr, FormulaAST f) {
+    private void collectEqualTypes(Expr expr, Formula f) {
 
         if (!(expr instanceof Expr.SExpr se)) return;
         if ("equal".equals(se.headName()) && se.args().size() == 2) {
@@ -512,15 +512,15 @@ public class VarTypes {
     }
 
     /**
-     * Expr-based equivalent of {@link #constrainVars(String, String, FormulaAST)}.
+     * Expr-based equivalent of {@link #constrainVars(String, String, Formula)}.
      * Searches {@code f.expr} for sub-expressions of the form {@code (var ...)} where
      * {@code var} is used as the head, and records argument types from {@code rel}'s
      * signature into {@code f.varTypes}.
      */
-    public FormulaAST constrainVarsFromExpr(String rel, String var, FormulaAST f) {
+    public Formula constrainVarsFromExpr(String rel, String var, Formula f) {
 
         if (f.expr == null) return f;
-        if (var.startsWith(FormulaAST.R_PREF)) return f;
+        if (var.startsWith(Formula.R_PREF)) return f;
         List<String> sig = kb.kbCache.getSignature(rel);
         if (sig == null) return f;
         collectConstraintTypes(f.expr, var, rel, sig, f);
@@ -528,7 +528,7 @@ public class VarTypes {
     }
 
     private void collectConstraintTypes(Expr expr, String var, String rel,
-                                        List<String> sig, FormulaAST f) {
+                                        List<String> sig, Formula f) {
         if (!(expr instanceof Expr.SExpr se)) return;
         List<Expr> args = se.args();
 
@@ -582,7 +582,7 @@ public class VarTypes {
      * sentence : (relsent | logsent | quantsent | variable) ;
      * term : (funterm | variable | string | number | FUNWORD | IDENTIFIER ) ;
      */
-    public void findType(FormulaAST f) {
+    public void findType(Formula f) {
 
         // Prefer Expr-based path when available
         if (f.expr != null) {
@@ -607,7 +607,7 @@ public class VarTypes {
                     System.out.println();
                 }
             }
-            if (argsForIndex == null || FormulaAST.isVariable(pred))
+            if (argsForIndex == null || Formula.isVariable(pred))
                 continue;
             if (debug) {
                 System.out.println("VarTypes.findType(): ");
@@ -631,7 +631,7 @@ public class VarTypes {
                         sb.append(arg.getText()).append(", ");
                 }
                 if (debug) System.out.println("VarTypes.findType(): " + sb.toString());
-                if (sb.toString().contains(FormulaAST.R_PREF)) {
+                if (sb.toString().contains(Formula.R_PREF)) {
                     if (debug) System.out.println("Arg mismatch caused by row variable " + argsForIndex.keySet());
                 }
                 else {
@@ -717,7 +717,7 @@ public class VarTypes {
      */
     public void findTypes() {
 
-        for (FormulaAST f : formulas) {
+        for (Formula f : formulas) {
             if (!f.higherOrder) // could have been found while parsing
                 findType(f);
             if (!f.higherOrder) { // or could have been found when looking at relation signatures

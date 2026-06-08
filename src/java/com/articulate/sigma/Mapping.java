@@ -1,7 +1,7 @@
 
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.OWLtranslator;
 import com.articulate.sigma.utils.StringUtil;
 
@@ -98,10 +98,10 @@ public class Mapping {
                 term2 = st.substring(i+1);
                 if (!subcheckbox)
                     pw.println("(synonymousExternalConcept \"" + term2 +
-                               "\" " + term1 + FormulaAST.SPACE + kbname2 + FormulaAST.RP);
+                               "\" " + term1 + Formula.SPACE + kbname2 + Formula.RP);
                 else
                     pw.println("(subsumedExternalConcept \"" + term2 +
-                               "\" " + term1 + FormulaAST.SPACE + kbname2 + FormulaAST.RP);
+                               "\" " + term1 + Formula.SPACE + kbname2 + Formula.RP);
 
             }
         }
@@ -147,11 +147,11 @@ public class Mapping {
                     kb2.rename(term2,term1);
                 if (cbset.contains(subName)) {
                     if (kb2.isInstance(term2)) {
-                        kb2.tell("(instance " + term2 + FormulaAST.SPACE + term1 + FormulaAST.RP);
-                        System.out.println("(instance " + term2 + FormulaAST.SPACE + term1 + ")");
+                        kb2.tell("(instance " + term2 + Formula.SPACE + term1 + Formula.RP);
+                        System.out.println("(instance " + term2 + Formula.SPACE + term1 + ")");
                     }
                     else {
-                        kb2.tell("(subclass " + term2 + FormulaAST.SPACE + term1 + FormulaAST.RP);
+                        kb2.tell("(subclass " + term2 + Formula.SPACE + term1 + Formula.RP);
                         System.out.println("(subclass " + term2 + " " + term1 + ")");
                     }
                 }
@@ -218,9 +218,9 @@ public class Mapping {
     public static String getTermFormat(KB kb, String term) {
 
         if (kb != null) {
-            List<FormulaAST> al = kb.askWithRestriction(0,"termFormat",2,term);
+            List<Formula> al = kb.askWithRestriction(0,"termFormat",2,term);
             if (al != null && !al.isEmpty()) {
-                FormulaAST f = al.get(0);
+                Formula f = al.get(0);
                 String t = f.getStringArgument(3);
                 t = OWLtranslator.removeQuotes(t);
                 return t;
@@ -349,7 +349,7 @@ public class Mapping {
      */
     public static boolean isValidTerm(String term) {
 
-        return term.length() > 2 && !FormulaAST.isLogicalOperator(term);
+        return term.length() > 2 && !Formula.isLogicalOperator(term);
     }
 
     /** *************************************************************
@@ -369,12 +369,12 @@ public class Mapping {
             else {
                 if (Character.isLetter(s.charAt(i)) && Character.isUpperCase(s.charAt(i))) {
                     if (result.length() > 0 && result.charAt(result.length()-1) != ' ')
-                        result.append(FormulaAST.SPACE);
+                        result.append(Formula.SPACE);
                     result.append(Character.toLowerCase(s.charAt(i)));
                 }
                 else
                     if (result.length() > 0 && result.charAt(result.length()-1) != ' ')
-                        result.append(FormulaAST.SPACE);
+                        result.append(Formula.SPACE);
             }
         }
         return result.toString();

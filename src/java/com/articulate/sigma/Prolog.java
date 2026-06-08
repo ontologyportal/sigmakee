@@ -1,6 +1,6 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
 
@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
@@ -20,14 +19,14 @@ public class Prolog {
 
     /** *************************************************************
      */
-    private static void writePrologFormulas(ArrayList<FormulaAST> forms, PrintWriter pw) {
+    private static void writePrologFormulas(ArrayList<Formula> forms, PrintWriter pw) {
 
-        Set<FormulaAST> ts = new TreeSet<>();
+        Set<Formula> ts = new TreeSet<>();
         ts.addAll(forms);
         if (forms != null) {
-            FormulaAST formula;
+            Formula formula;
             String result;
-            Iterator<FormulaAST> it = ts.iterator();
+            Iterator<Formula> it = ts.iterator();
             while (it.hasNext()) {
                 formula = it.next();
                 result = formula.toProlog();
@@ -39,11 +38,11 @@ public class Prolog {
 
     /** *************************************************************
      */
-    private static void writeOneHornClause(FormulaAST f, PrintWriter pw) {
+    private static void writeOneHornClause(Formula f, PrintWriter pw) {
 
         System.out.println("INFO in Prolog.writeOneHornClause(): formula: " + f);
         StringBuilder sb = new StringBuilder();
-        FormulaAST antecedent = f.cdrAsFormula().carAsFormula();
+        Formula antecedent = f.cdrAsFormula().carAsFormula();
         System.out.println("INFO in Prolog.writeOneHornClause(): antecedent: " + antecedent);
         sb.append(" :- ");
         if (antecedent.isSimpleClause(kb)) {
@@ -52,10 +51,10 @@ public class Prolog {
                 return;
             sb.append(clause);
         }
-        if (antecedent.car().equals(FormulaAST.AND)) {
-            FormulaAST consList = antecedent.cdrAsFormula();
+        if (antecedent.car().equals(Formula.AND)) {
+            Formula consList = antecedent.cdrAsFormula();
             System.out.println("INFO in Prolog.writeOneHornClause(): consList: " + consList);
-            FormulaAST car;
+            Formula car;
             String clause;
             while (!consList.empty()) {
                 car = consList.carAsFormula();
@@ -70,7 +69,7 @@ public class Prolog {
             }
         }
 
-        FormulaAST consequent = f.cdrAsFormula().cdrAsFormula().carAsFormula();
+        Formula consequent = f.cdrAsFormula().cdrAsFormula().carAsFormula();
         System.out.println("INFO in Prolog.writeOneHornClause(): consequent: " + consequent);
         if (consequent.isSimpleClause(kb)) {
             String clause = consequent.toProlog();
@@ -78,9 +77,9 @@ public class Prolog {
                 return;
             pw.println(clause + sb.toString() + ".");
         }
-        if (consequent.car().equals(FormulaAST.AND)) {
-            FormulaAST consList = consequent.cdrAsFormula();
-            FormulaAST car;
+        if (consequent.car().equals(Formula.AND)) {
+            Formula consList = consequent.cdrAsFormula();
+            Formula car;
               String carst;
               while (!consList.empty()) {
                   car = consList.carAsFormula();
@@ -97,9 +96,9 @@ public class Prolog {
      */
     private static void writeClauses(PrintWriter pw) {
 
-        for (FormulaAST f : kb.formulaMap.values()) {
-            if (f.isRule() && f.isHorn(kb) && !f.getFormula().contains(FormulaAST.EQUANT) &&
-                    !f.getFormula().contains(FormulaAST.UQUANT))
+        for (Formula f : kb.formulaMap.values()) {
+            if (f.isRule() && f.isHorn(kb) && !f.getFormula().contains(Formula.EQUANT) &&
+                    !f.getFormula().contains(Formula.UQUANT))
                 writeOneHornClause(f,pw);
             else if (f.isSimpleClause(kb))
                 pw.println(f.toProlog() + ".");
