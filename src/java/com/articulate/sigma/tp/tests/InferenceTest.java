@@ -17,15 +17,17 @@ import java.util.*;
 
 public class InferenceTest {
 
-    private String filePath;
-    private String minLang = "fof";
-    private boolean tptpRegenRequired = false;
-    private String note;
-    private int timeout = 30;
-    private String query;
-    private List<String> assertions = new ArrayList<>();
-    private List<String> requiredConstituents = new ArrayList<>();
-    private List<String> expectedAnswers = new ArrayList<>();
+    public String filePath;
+    public String minLang = "fof";
+    public boolean tptpRegenRequired = false;
+    public String note;
+    public String category;
+    public int timeout = 30;
+    public String query;
+    public List<String> errors = new ArrayList<>();
+    public List<String> assertions = new ArrayList<>();
+    public List<String> requiredConstituents = new ArrayList<>();
+    public List<String> expectedAnswers = new ArrayList<>();
     public InferenceTestResult result = new InferenceTestResult();
 
     public class InferenceTestResult {
@@ -49,6 +51,11 @@ public class InferenceTest {
     }
 
     public void runTest(KB kb, String proverType, String language, String vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout, int maxAnswers) {
+        
+        if (!this.errors.isEmpty()) {
+            LoggingUtils.log("ERROR", "Cannot run test, has errors!: " + this.errors);
+            return;
+        }
         String sessionId = "tq-" + UUID.randomUUID();
         TheoremProverController tpc = new TheoremProverController();
         try {
@@ -208,12 +215,18 @@ public class InferenceTest {
     }
 
     public void validateTestData() {
-
-        if (!this.minLang.equals("fof") && !minLang.equals("tff") && !minLang.equals("thf")) LoggingUtils.log("ERROR", "Invalid minLang!: " + this.minLang);
-        if (this.timeout < 0) LoggingUtils.log("ERROR", "Invalid timeout!: " + this.timeout);
-        if (StringUtil.emptyString(this.expectedAnswers)) LoggingUtils.log("ERROR", "No expected answers provided!");
+        
         if (this.assertions.isEmpty()) LoggingUtils.log("WARN", "No assertions provided!");
-        if (StringUtil.emptyString(this.query)) LoggingUtils.log("ERROR", "INVALID QUERY!: " + this.query);
+        if (!this.minLang.equals("fof") && !minLang.equals("tff") && !minLang.equals("thf")) errors.add("Invalid minLang!: " + this.minLang);
+        if (this.timeout < 0) errors.add("Invalid timeout!: " + this.timeout);
+        if (StringUtil.emptyString(this.expectedAnswers)) errors.add("No expected answers provided!");
+        if (StringUtil.emptyString(this.query)) errors.add("INVALID QUERY!: " + this.query);
+        for (String constituent : this.requiredConstituents) {
+           if (!KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).constituents.contains(constituent)) {
+                errors.add("Requiered constituent " + constituent + " not loaded!");
+           }
+        }
+        for (String error : errors) LoggingUtils.log("ERROR", error);
     }
 
     public void readTestFile() {
@@ -223,7 +236,6 @@ public class InferenceTest {
         try {
             KIF testKif = new KIF();
             testKif.readFile(testFile.getCanonicalPath());
-            System.out.println("Forms=" + testKif.formulasOrdered.values());
             for (Formula orderedFormulas : testKif.formulasOrdered.values()) {
                 String formula = orderedFormulas.getFormula();
                 if (formula.contains(";")) formula = formula.substring(0, formula.indexOf(";"));
@@ -231,6 +243,7 @@ public class InferenceTest {
                 else if (formula.startsWith("(minLang")) this.minLang = formula.substring(9, formula.length() - 1).trim().toLowerCase();
                 else if (formula.startsWith("(regen")) this.tptpRegenRequired = formula.substring(7, formula.length() - 1).trim().equals("true");
                 else if (formula.startsWith("(note")) this.note = formula.substring(6, formula.length() - 1);
+                else if (formula.startsWith("(category")) this.category = formula.substring(10, formula.length() - 1);
                 else if (formula.startsWith("(time")) this.timeout = Integer.parseInt(formula.substring(6, formula.length() - 1));
                 else if (formula.startsWith("(query")) this.query = formula.substring(7, formula.length() - 1);
                 else if (formula.startsWith("(answer")) parseAnswers(formula);
@@ -262,7 +275,7 @@ public class InferenceTest {
         try {
             Path path = Paths.get(filePath);
             if (!Files.exists(Paths.get(filePath))) {
-                LoggingUtils.log("ERROR", filePath + "does not exist!");
+                LoggingUtils.log("ERROR", filePath + " does not exist!");
                 return false;
             }
             if (testFile.getCanonicalPath().endsWith(".tq")) return true;
@@ -299,7 +312,6 @@ public class InferenceTest {
 
     public void printResult() {
 
-        System.out.println();
         System.out.println("====================================");
         System.out.println("Inference Test Result");
         System.out.println("====================================");
@@ -318,14 +330,6 @@ public class InferenceTest {
         System.out.println("Actual:     " + this.result.answers);
         System.out.println("Exec time:  " + this.result.execTime + " ms");
         System.out.println("Contradiction: " + this.result.contradictionFound);
-        if (this.result.proof != null && !this.result.proof.isEmpty()) {
-            System.out.println();
-            System.out.println("---- Proof / Prover Output ----");
-            for (String line : this.result.proof) {
-                if (!StringUtil.emptyString(line))
-                    System.out.println(line);
-            }
-        }
         System.out.println("====================================");
     }
 

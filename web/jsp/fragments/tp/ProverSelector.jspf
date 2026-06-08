@@ -1,3 +1,13 @@
+<%-- <% 
+int maxAnswers;
+List<String> availableProvers;
+String inferenceEngine;
+String vampireMode;
+boolean modusPonens;
+boolean dropOnePremise;
+boolean holUseModals;
+%>
+
 <fieldset class="step">
     <legend>Step 3 - Reasoner</legend>
     <div class="row inline">
@@ -72,4 +82,4 @@
             </details>
         </div>
     </div>
-</fieldset>
+</fieldset> --%>

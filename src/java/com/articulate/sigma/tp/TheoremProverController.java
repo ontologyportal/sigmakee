@@ -103,11 +103,20 @@ public class TheoremProverController {
             SUMOKBtoTPTPKB.CWA = query.isClosedWorldAssumption();
             query.getKb().modensPonens = query.isModusPonens();
             query.getKb().dropOnePremiseFormulas = query.isModusPonens() && query.isDropOnePremise();
-            Vampire vampire = new Vampire(query.getKb(), query.getLanguage().name(), query.getVampireMode().name(), query.isModusPonens(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
+            Vampire vampire = new Vampire(
+                query.getKb(),
+                query.getLanguage().name(),
+                query.getVampireMode().name(),
+                query.isModusPonens(),
+                query.getTimeout(),
+                query.getMaxAnswers(),
+                query.getUserSessionId()
+            );
             if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) vampire.askVampire(query.getQuery());
             else {
-                if (query.getTestFilePath() == null) vampire.askVampireHOL(query.getQuery(), query.isHolUseModals());
-                else vampire.askVampireTHF(query.getTestFilePath());
+                String testFilePath = query.getTestFilePath();
+                if (testFilePath != null && testFilePath.endsWith(".thf")) vampire.askVampireTHF(testFilePath);
+                else vampire.askVampireHOL(query.getQuery(), query.isHolUseModals());
             }
             return vampire.getResult();
         }

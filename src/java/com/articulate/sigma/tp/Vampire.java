@@ -826,11 +826,8 @@ public class Vampire {
         System.out.println("Vampire.runCustom(): command: " + String.join(" ", this.commands));
         result.setCommandLine(this.commands);
         ProcessBuilder _builder = new ProcessBuilder(this.commands);
-        _builder.redirectErrorStream(false);  // Keep stderr separate
-        if (kbFile != null && kbFile.getParentFile() != null) {
-            _builder.directory(kbFile.getParentFile());
-            System.out.println("Vampire CWD: " + _builder.directory().getAbsolutePath());
-        }
+        _builder.redirectErrorStream(false);
+        if (kbFile != null && kbFile.getParentFile() != null) _builder.directory(kbFile.getParentFile());
         if (debug > 0) System.out.println("Vampire.runCustom(): running with commands " + String.join(" ", this.commands));
         Process _vampire = _builder.start();
         List<String> stdoutLines = new ArrayList<>();
@@ -838,11 +835,8 @@ public class Vampire {
         Thread stderrReader = new Thread(() -> {
             try (BufferedReader r = new BufferedReader(new InputStreamReader(_vampire.getErrorStream()))) {
                 String line;
-                while ((line = r.readLine()) != null) {
-                    stderrLines.add(line);
-                }
+                while ((line = r.readLine()) != null) stderrLines.add(line);
             } catch (IOException e) {
-                // Ignore
             }
         });
         stderrReader.start();
