@@ -1,6 +1,5 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.Formula;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

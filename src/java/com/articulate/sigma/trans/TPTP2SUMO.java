@@ -15,7 +15,7 @@ http://sigmakee.sourceforge.net
 /*************************************************************************************************/
 package com.articulate.sigma.trans;
 
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.StringUtil;
 
 import tptp_parser.*;

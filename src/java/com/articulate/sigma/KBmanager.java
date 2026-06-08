@@ -20,7 +20,6 @@ package com.articulate.sigma;
 import com.articulate.sigma.CCheckManager.CCheckStatus;
 import com.articulate.sigma.VerbNet.VerbNet;
 import com.articulate.sigma.nlg.NLGUtils;
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;

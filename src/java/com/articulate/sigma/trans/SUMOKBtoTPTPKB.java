@@ -3,7 +3,7 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.*;
 import com.articulate.sigma.PredVarInst;
 import com.articulate.sigma.parsing.*;
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.*;
 

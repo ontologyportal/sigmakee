@@ -28,7 +28,6 @@ being present in the ontology in order to function as intended.  They are:
 
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.StringUtil;
@@ -2134,7 +2133,7 @@ public class KBcache implements Serializable {
 
         StringBuilder sb = new StringBuilder();
         long cacheCount = 0;
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         kif.filename = kb.name + _cacheFileSuffix;
         long millis = System.currentTimeMillis();
         Map<String,Set<String>> valSet;

@@ -15,7 +15,6 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 
 import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlg.NLGUtils;
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.TPTP2SUMO;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;

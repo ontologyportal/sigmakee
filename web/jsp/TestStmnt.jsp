@@ -1,5 +1,5 @@
-<%@page import="com.articulate.sigma.parsing.Formula,com.articulate.sigma.parsing.Expr"%>
-<%@ page import="com.articulate.sigma.parsing.Formula" %>
+<%@page import="com.articulate.sigma.Formula,com.articulate.sigma.parsing.Expr"%>
+<%@ page import="com.articulate.sigma.Formula" %>
 <%@include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
@@ -44,7 +44,7 @@ if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
     if (stmt == null || stmt.equalsIgnoreCase("null"))   // check if there is an attribute for stmt
         stmt = "(instance ?X Relation)";
     else {
-        String msg = (new KIFAST()).parseStatement(stmt);
+        String msg = (new KIF()).parseStatement(stmt);
         if (msg != null) {
             status.append("Syntax Error: " + msg + "<P>\n");
             error = true;

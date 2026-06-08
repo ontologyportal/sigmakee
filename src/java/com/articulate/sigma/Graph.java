@@ -13,7 +13,6 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.parsing.CLIMapParser;
 

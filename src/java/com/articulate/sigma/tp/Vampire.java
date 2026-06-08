@@ -25,7 +25,7 @@ import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.trans.TPTPutil;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 
 import tptp_parser.TPTPFormula;
 import java.util.regex.Matcher;
@@ -194,7 +194,7 @@ public class Vampire {
         FormulaPreprocessor fp = new FormulaPreprocessor();
         Set<Expr> processedExprs = null;
         try {
-            KIFAST kifAst = new KIFAST();
+            KIF kifAst = new KIF();
             String parseErr = kifAst.parseStatement(suoKifFormula);
             if (parseErr == null && !kifAst.formulaMap.isEmpty()) {
                 Formula queryFA = kifAst.formulaMap.values().iterator().next();

@@ -1,7 +1,5 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.Formula;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 

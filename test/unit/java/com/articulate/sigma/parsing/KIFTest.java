@@ -1,6 +1,7 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.KIFAST;
+import com.articulate.sigma.Formula;
+import com.articulate.sigma.KIF;
 import com.articulate.sigma.UnitTestBase;
 import org.junit.Test;
 
@@ -13,10 +14,10 @@ import static org.junit.Assert.*;
  * Unit tests for KIFAST: verifies that the ANTLR-based parser produces the correct
  * formulaMap, formulas (predicate-position index), terms, and Expr trees.
  */
-public class KIFASTTest extends UnitTestBase {
+public class KIFTest extends UnitTestBase {
 
-    private static KIFAST parse(String kif) {
-        KIFAST k = new KIFAST();
+    private static KIF parse(String kif) {
+        KIF k = new KIF();
         k.parse(new StringReader(kif));
         return k;
     }
@@ -27,7 +28,7 @@ public class KIFASTTest extends UnitTestBase {
 
     @Test
     public void simpleRelsentInFormulaMap() {
-        KIFAST k = parse("(likes John Mary)");
+        KIF k = parse("(likes John Mary)");
         assertTrue("formula must be in formulaMap", k.formulaMap.containsKey("(likes John Mary)"));
         Formula f = k.formulaMap.get("(likes John Mary)");
         assertNotNull(f);
@@ -37,7 +38,7 @@ public class KIFASTTest extends UnitTestBase {
 
     @Test
     public void twoFormulasInFormulaMap() {
-        KIFAST k = parse("(likes John Mary)\n(part Wheel1 Car2)\n");
+        KIF k = parse("(likes John Mary)\n(part Wheel1 Car2)\n");
         assertEquals(2, k.formulaMap.size());
         assertTrue(k.formulaMap.containsKey("(likes John Mary)"));
         assertTrue(k.formulaMap.containsKey("(part Wheel1 Car2)"));
@@ -45,7 +46,7 @@ public class KIFASTTest extends UnitTestBase {
 
     @Test
     public void noDuplicatesInFormulaMap() {
-        KIFAST k = parse("(likes John Mary)\n(likes John Mary)\n");
+        KIF k = parse("(likes John Mary)\n(likes John Mary)\n");
         // Second occurrence is a duplicate and should not be stored again
         assertEquals(1, k.formulaMap.size());
     }
@@ -53,7 +54,7 @@ public class KIFASTTest extends UnitTestBase {
     @Test
     public void implicationInFormulaMap() {
         String kif = "(=> (instance ?X Man) (attribute ?X Mortal))";
-        KIFAST k = parse(kif);
+        KIF k = parse(kif);
         assertTrue(k.formulaMap.containsKey(kif));
         Formula f = k.formulaMap.get(kif);
         assertTrue(f.expr instanceof Expr.SExpr);
@@ -66,7 +67,7 @@ public class KIFASTTest extends UnitTestBase {
 
     @Test
     public void termsCollected() {
-        KIFAST k = parse("(instance Foo Bar)");
+        KIF k = parse("(instance Foo Bar)");
         assertTrue(k.terms.contains("instance"));
         assertTrue(k.terms.contains("Foo"));
         assertTrue(k.terms.contains("Bar"));
@@ -74,7 +75,7 @@ public class KIFASTTest extends UnitTestBase {
 
     @Test
     public void variablesNotInTerms() {
-        KIFAST k = parse("(instance ?X Animal)");
+        KIF k = parse("(instance ?X Animal)");
         assertFalse("Variables must not be in terms", k.terms.contains("?X"));
         assertTrue(k.terms.contains("instance"));
         assertTrue(k.terms.contains("Animal"));
@@ -82,7 +83,7 @@ public class KIFASTTest extends UnitTestBase {
 
     @Test
     public void termFrequencyTracked() {
-        KIFAST k = parse("(instance Foo Bar)\n(instance Baz Bar)\n");
+        KIF k = parse("(instance Foo Bar)\n(instance Baz Bar)\n");
         assertEquals(2, (int) k.termFrequency.get("instance"));
         assertEquals(2, (int) k.termFrequency.get("Bar"));
         assertEquals(1, (int) k.termFrequency.get("Foo"));
@@ -95,7 +96,7 @@ public class KIFASTTest extends UnitTestBase {
     @Test
     public void argKeysForSimpleRelsent() {
         // (likes John Mary) → arg-0-likes, arg-1-John, arg-2-Mary
-        KIFAST k = parse("(likes John Mary)");
+        KIF k = parse("(likes John Mary)");
         List<String> arg0 = k.formulas.get("arg-0-likes");
         assertNotNull("arg-0-likes must exist", arg0);
         assertTrue(arg0.contains("(likes John Mary)"));
@@ -114,7 +115,7 @@ public class KIFASTTest extends UnitTestBase {
         // (=> (instance ?X Man) (attribute ?X Mortal))
         // → ant-instance, ant-Man, cons-attribute, cons-Mortal, arg-0-=>
         String kif = "(=> (instance ?X Man) (attribute ?X Mortal))";
-        KIFAST k = parse(kif);
+        KIF k = parse(kif);
 
         List<String> arg0 = k.formulas.get("arg-0-=>");
         assertNotNull("arg-0-=> must exist", arg0);
@@ -141,7 +142,7 @@ public class KIFASTTest extends UnitTestBase {
     public void stmtKeysForNested() {
         // (not (instance ?X Animal)) → arg-0-not, stmt-instance, stmt-Animal
         String kif = "(not (instance ?X Animal))";
-        KIFAST k = parse(kif);
+        KIF k = parse(kif);
 
         assertNotNull("arg-0-not must exist", k.formulas.get("arg-0-not"));
         assertNotNull("stmt-instance must exist", k.formulas.get("stmt-instance"));
@@ -151,7 +152,7 @@ public class KIFASTTest extends UnitTestBase {
     @Test
     public void iffAntConsKeys() {
         String kif = "(<=> (instance ?X Man) (instance ?X Human))";
-        KIFAST k = parse(kif);
+        KIF k = parse(kif);
         // <=> head → "arg-0-<=>"
         assertNotNull(k.formulas.get("arg-0-<=>"));
         // antecedent
@@ -166,7 +167,7 @@ public class KIFASTTest extends UnitTestBase {
     public void formulaStringIsOwnKey() {
         // The formula string is always one of its own keys in the formulas index
         String kif = "(instance Foo Bar)";
-        KIFAST k = parse(kif);
+        KIF k = parse(kif);
         List<String> selfKey = k.formulas.get(kif);
         assertNotNull("Formula string must be its own key", selfKey);
         assertTrue(selfKey.contains(kif));
@@ -177,7 +178,7 @@ public class KIFASTTest extends UnitTestBase {
         // (instance (HourFn 12 ?DAY) TimeInterval)
         // → arg-0-instance, arg-2-TimeInterval, stmt-HourFn
         String kif = "(instance (HourFn 12 ?DAY) TimeInterval)";
-        KIFAST k = parse(kif);
+        KIF k = parse(kif);
         assertNotNull("arg-0-instance", k.formulas.get("arg-0-instance"));
         assertNotNull("arg-2-TimeInterval", k.formulas.get("arg-2-TimeInterval"));
         assertNotNull("stmt-HourFn", k.formulas.get("stmt-HourFn"));
@@ -189,7 +190,7 @@ public class KIFASTTest extends UnitTestBase {
 
     @Test
     public void exprFieldPopulated() {
-        KIFAST k = parse("(instance Foo Bar)");
+        KIF k = parse("(instance Foo Bar)");
         Formula f = k.formulaMap.get("(instance Foo Bar)");
         assertNotNull("expr must not be null", f.expr);
         assertTrue(f.expr instanceof Expr.SExpr);
@@ -198,7 +199,7 @@ public class KIFASTTest extends UnitTestBase {
     @Test
     public void exprRoundTrip() {
         String kif = "(=> (and (instance ?X Man) (instance ?X Person)) (instance ?X Animal))";
-        KIFAST k = parse(kif);
+        KIF k = parse(kif);
         Formula f = k.formulaMap.get(kif);
         assertNotNull(f.expr);
         assertEquals(kif, f.expr.toKifString());
@@ -207,7 +208,7 @@ public class KIFASTTest extends UnitTestBase {
     @Test
     public void multipleFormulaExprs() {
         String kif = "(likes John Mary)\n(part Wheel1 Car2)\n";
-        KIFAST k = parse(kif);
+        KIF k = parse(kif);
         for (Formula f : k.formulaMap.values()) {
             assertNotNull("Every FormulaAST must have an Expr", f.expr);
             // Round-trip check

@@ -6,7 +6,7 @@ import java.util.*;
 
 import static junit.framework.TestCase.assertTrue;
 
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

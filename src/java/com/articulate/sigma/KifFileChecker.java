@@ -15,7 +15,6 @@ http://sigmakee.sourceforge.net
 
 package com.articulate.sigma;
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.parsing.SuokifApp;
 import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.trans.SUMOtoTFAform;
@@ -77,7 +76,7 @@ public class KifFileChecker {
             try {
                 KifFileChecker kfc = new KifFileChecker();
                 String contents = String.join("\n", FileUtil.readLines(fname));
-                KIFAST kif = StringToKif(contents, fname, new ArrayList<>());
+                KIF kif = StringToKif(contents, fname, new ArrayList<>());
                 for (Formula f : kif.formulaMap.values()) {
                     if (debug) System.out.println("Formula: " + f);
                     HashMap<String, HashSet<String>> links = Diagnostics.findOrphanVars(new Formula(f.getFormula()));
@@ -193,7 +192,7 @@ public class KifFileChecker {
         // CheckSyntaxErrors(contents, fileName, msgs);
         if (!msgs.isEmpty())
             return msgs;
-        KIFAST localKif = StringToKif(contents, fileName, msgs);
+        KIF localKif = StringToKif(contents, fileName, msgs);
         // if (!parseKif(localKif, contents, fileName, msgs))
         //     return msgs;
         for (Formula f : localKif.formulaMap.values())
@@ -289,7 +288,7 @@ public class KifFileChecker {
             return contents;
 
         // 2. Parse KIF to get canonical formula strings.
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         try (StringReader sr = new StringReader(contents)) {
             kif.parse(sr);
         } catch (Exception e) {
@@ -871,9 +870,9 @@ public static void CheckIsValidFormula(String fileName,
      * @param msgs     list to collect error records
      * @return parsed KIF object
      */
-    public static KIFAST StringToKif(String contents, String fileName, List<ErrRec> errorList) {
+    public static KIF StringToKif(String contents, String fileName, List<ErrRec> errorList) {
 
-        KIFAST localKif = new KIFAST();
+        KIF localKif = new KIF();
         try (Reader r = new StringReader(contents)) {
             localKif.parse(r);
             for (String er : localKif.errorSet) {

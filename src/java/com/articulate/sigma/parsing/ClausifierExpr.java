@@ -1,5 +1,7 @@
 package com.articulate.sigma.parsing;
 
+import com.articulate.sigma.Formula;
+
 import java.util.*;
 import java.util.stream.Collectors;
 

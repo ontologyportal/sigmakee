@@ -1,7 +1,5 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.Formula;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;

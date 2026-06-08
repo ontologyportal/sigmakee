@@ -58,7 +58,6 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.tp.ATPException;
 import com.articulate.sigma.tp.ArityException;
 import com.articulate.sigma.tp.FormulaTranslationException;
@@ -1549,7 +1548,7 @@ public class KB implements Serializable {
      * containing the old (existing) formulas, else returns an empty
      * ArrayList.
      *
-     * @deprecated replaced with {@link #merge(KIFAST kif, String pathname)}
+     * @deprecated replaced with {@link #merge(KIF kif, String pathname)}
      */
 //    public List<FormulaAST> merge(KIF kif, String pathname) {
 ////        return mergeFormulaSource(kif.terms, kif.formulas, kif.formulaMap, pathname);
@@ -1559,10 +1558,10 @@ public class KB implements Serializable {
 
     /**
      * KIFAST-based overload of {link #merge(KIF, String)}.
-     * {@link KIFAST} stores {@link Formula} values
+     * {@link KIF} stores {@link Formula} values
      * (which extend Formula), so it is compatible with the same merge logic.
      */
-    public List<Formula> merge(KIFAST kif, String pathname) {
+    public List<Formula> merge(KIF kif, String pathname) {
         return mergeFormulaSource(kif.terms, kif.formulas,
                 (Map<String, Formula>)(Map<?,?>)kif.formulaMap, pathname);
     }
@@ -1712,7 +1711,7 @@ public class KB implements Serializable {
 
             String result = "The formula could not be added";
             KBmanager mgr = KBmanager.getMgr();
-            KIFAST kif = new KIFAST(); // 1. Parse the input string via ANTLR.
+            KIF kif = new KIF(); // 1. Parse the input string via ANTLR.
             String msg = kif.parseStatement(input);
             if (msg != null) {
                 throw new FormulaTranslationException("Error parsing \"" + input + "\": " + msg, "KIF");
@@ -1876,7 +1875,7 @@ public class KB implements Serializable {
      */
     public boolean tellRequiresBaseRegeneration(String input) {
 
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         String msg = kif.parseStatement(input);
 
         // If it doesn't parse, tell() will fail anyway → no regen decision needed here
@@ -2737,10 +2736,10 @@ public class KB implements Serializable {
      * Read a constituent KIF file using the ANTLR-based KIFAST parser.
      * Controlled by the {@code useAntlrParser} preference in config.xml.
      */
-    public KIFAST readConstituentAST(String filename) {
+    public KIF readConstituentAST(String filename) {
 
         String canonicalPath = null;
-        KIFAST file = null;
+        KIF file = null;
         try {
             if (filename.endsWith(".owl") || filename.endsWith(".OWL") || filename.endsWith(".rdf")
                     || filename.endsWith(".RDF")) {
@@ -2753,7 +2752,7 @@ public class KB implements Serializable {
                 errors.add("Error. " + canonicalPath + " already loaded.");
                 return null;
             }
-            file = new KIFAST();
+            file = new KIF();
             file.readFile(canonicalPath);
             warnings.addAll(file.warningSet);
         }
@@ -2769,10 +2768,10 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Merge a {@link KIFAST}-parsed constituent into the KB.
+     * Merge a {@link KIF}-parsed constituent into the KB.
      * Mirrors {@link #addConstituentInfo(KIF)} but works with the typed AST maps.
      */
-    public void addConstituentInfoAST(KIFAST file) {
+    public void addConstituentInfoAST(KIF file) {
 
         // Term frequencies
         for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
@@ -2899,7 +2898,7 @@ public class KB implements Serializable {
     public void addConstituent(String filename) {
 
         long millis = System.currentTimeMillis();
-        KIFAST file = readConstituentAST(filename);
+        KIF file = readConstituentAST(filename);
         addConstituentInfoAST(file);
         System.out.println("\nINFO in KB.addConstituent(ANTLR): added " + file.formulaMap.values().size()
                 + " formulas and " + file.terms.size() + " terms.");

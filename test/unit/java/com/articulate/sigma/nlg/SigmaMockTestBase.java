@@ -2,7 +2,7 @@ package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBcache;
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.wordNet.WordNet;
 
 import com.google.common.collect.ImmutableList;

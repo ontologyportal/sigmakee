@@ -1,6 +1,5 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.tp.ProverTimeoutException;
 import com.articulate.sigma.tp.ATPException;

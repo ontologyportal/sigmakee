@@ -17,7 +17,6 @@ http://sigmakee.sourceforge.net
 package com.articulate.sigma;
 
 import com.articulate.sigma.nlg.NLGUtils;
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.MapUtils;
@@ -331,7 +330,7 @@ public class KButilities implements ServletContextListener {
 
         SUMOtoTFAform.initOnce();
         String result;
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         try {
             result = kif.parseStatement(form);
         }

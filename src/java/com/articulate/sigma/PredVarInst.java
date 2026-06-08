@@ -15,7 +15,6 @@ package com.articulate.sigma;
  and this depends on double underscore in the names of those predicates
  */
 
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.StringUtil;
 

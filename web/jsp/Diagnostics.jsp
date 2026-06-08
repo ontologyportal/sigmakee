@@ -1,5 +1,5 @@
-<%@page import="com.articulate.sigma.parsing.Formula"%>
-<%@ page import="com.articulate.sigma.parsing.Formula" %>
+<%@page import="com.articulate.sigma.Formula"%>
+<%@ page import="com.articulate.sigma.Formula" %>
 <%@ include file="fragments/universal/Prelude.jspf" %>
 <html>
   <head>

@@ -6,7 +6,6 @@ package com.articulate.sigma;
 // adam.pease@infosys.com
 
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOKBtoTFAKB;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;

@@ -2,7 +2,6 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.SuokifVisitor;
-import com.articulate.sigma.parsing.Formula;
 import org.junit.Test;
 
 import java.util.*;

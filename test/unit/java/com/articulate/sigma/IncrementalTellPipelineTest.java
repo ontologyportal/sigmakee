@@ -12,7 +12,6 @@ package com.articulate.sigma;
  *   - Successive calls accumulate in the same session KBcache
  */
 
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SessionTPTPManager;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import org.junit.*;
@@ -88,7 +87,7 @@ public class IncrementalTellPipelineTest {
         KB kb = new KB("TestM35KB");
         kb.kbCache = new KBcache(kb);
         KBmanager.getMgr().setPref("cacheDisjoint", "true");
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);
         kb.merge(kif, "");

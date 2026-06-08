@@ -1,7 +1,5 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.Formula;
-
 /**
  This code is copyright Articulate Software (c) 2003.
  This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.

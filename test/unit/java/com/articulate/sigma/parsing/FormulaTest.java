@@ -1,5 +1,6 @@
 package com.articulate.sigma.parsing;
 
+import com.articulate.sigma.Formula;
 import org.junit.Test;
 
 import java.util.HashMap;

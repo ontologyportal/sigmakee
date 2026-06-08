@@ -1,6 +1,6 @@
 package com.articulate.sigma.nlg;
 
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 import com.google.common.collect.*;
 
 import java.util.List;

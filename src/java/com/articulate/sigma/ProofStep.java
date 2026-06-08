@@ -14,7 +14,6 @@ August 9, Acapulco, Mexico.
 */
 
 import com.articulate.sigma.parsing.ClausifierExpr;
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.utils.FileUtil;
 

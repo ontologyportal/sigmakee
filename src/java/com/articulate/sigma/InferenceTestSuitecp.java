@@ -40,7 +40,6 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal
 package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.tp.Vampire;
@@ -580,7 +579,7 @@ public class InferenceTestSuitecp {
             if (f.getCanonicalPath().endsWith(".tq")) {
                 ifd = new InfTestData();
                 ifd.filename = f.getName();
-                KIFAST test = new KIFAST();
+                KIF test = new KIF();
                 test.readFile(f.getCanonicalPath());
                 System.out.println("INFO in InferenceTestSuite.readTestFile(): num formulas: " +
                         String.valueOf(test.formulaMap.size()));

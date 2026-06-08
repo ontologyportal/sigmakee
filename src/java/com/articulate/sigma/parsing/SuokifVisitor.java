@@ -265,9 +265,9 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
     public void generateRuleKeys(Formula f) {
 
         for (String s : f.antecedentTerms)
-            addToKeys(KIFAST.createKey(s,true,false,0,0),f);
+            addToKeys(KIF.createKey(s,true,false,0,0),f);
         for (String s : f.consequentTerms)
-            addToKeys(KIFAST.createKey(s,false,true,0,0),f);
+            addToKeys(KIF.createKey(s,false,true,0,0),f);
     }
 
     /** ***************************************************************
@@ -282,7 +282,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 argSet = args.get(argnum);
                 for (SuokifParser.ArgumentContext arg : argSet) {
                     if (isConstantArgument(arg))
-                        addToKeys(KIFAST.createKey(arg.getText(),false,false,argnum,0),f);
+                        addToKeys(KIF.createKey(arg.getText(),false,false,argnum,0),f);
                 }
             }
         }

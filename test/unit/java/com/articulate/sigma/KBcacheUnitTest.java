@@ -21,7 +21,6 @@ package com.articulate.sigma;
  TransitiveRelation
  Relation
  */
-import com.articulate.sigma.parsing.Formula;
 import org.junit.Test;
 import org.junit.BeforeClass;
 
@@ -40,7 +39,7 @@ public class KBcacheUnitTest {
 
         kb.kbCache = new KBcache(kb);
         KBmanager.getMgr().setPref("cacheDisjoint","true");
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         kif.parseStatement("(subAttribute Attorney Lawyer)");
         kif.parseStatement("(instance Attorney Profession)");
         kif.parseStatement("(instance Lawyer Profession)");

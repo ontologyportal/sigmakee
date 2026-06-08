@@ -21,7 +21,6 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.*;
-import com.articulate.sigma.parsing.Formula;
 // Note: com.articulate.sigma.parsing.PredVarInst is referenced by fully-qualified name below
 // to avoid shadowing com.articulate.sigma.PredVarInst (used by replacePredVarsAndRowVars).
 import com.articulate.sigma.utils.*;

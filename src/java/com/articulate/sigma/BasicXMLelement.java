@@ -15,8 +15,6 @@ August 9, Acapulco, Mexico.
 
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.Formula;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

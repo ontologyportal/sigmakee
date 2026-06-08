@@ -1,6 +1,5 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.Formula;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import java.util.*;
@@ -285,7 +284,7 @@ public class KifFileCheckerTest extends UnitTestBase {
                            "  (instance Shaun Human\n" + 
                            "  (instance Shaun DomesticDog))";
         List<ErrRec> errorList = new ArrayList<>();
-        KIFAST localKif = kfc.StringToKif(kifString, "fileName", errorList);
+        KIF localKif = kfc.StringToKif(kifString, "fileName", errorList);
         ErrRec expected = new ErrRec(ErrRec.ERROR, "fileName", 3, 1, 2,
                 "Parse error at line:charposn 3:0: -> extraneous input ')' expecting {'(', REGVAR, ROWVAR}");
         ErrRec actual = errorList.get(0);

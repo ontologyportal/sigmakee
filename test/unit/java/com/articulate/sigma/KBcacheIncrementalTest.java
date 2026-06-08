@@ -15,7 +15,6 @@ package com.articulate.sigma;
  * full rebuild without needing to rebuild everything.
  */
 
-import com.articulate.sigma.parsing.Formula;
 import org.junit.Test;
 
 import java.util.*;
@@ -33,7 +32,7 @@ public class KBcacheIncrementalTest {
         KB kb = new KB("TestIncrKB");
         kb.kbCache = new KBcache(kb);
         KBmanager.getMgr().setPref("cacheDisjoint", "true");
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);
         kb.merge(kif, "");

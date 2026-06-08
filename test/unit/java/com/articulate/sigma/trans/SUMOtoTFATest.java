@@ -11,7 +11,7 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.parsing.SuokifVisitor;
 import org.junit.Ignore;
 import org.junit.BeforeClass;

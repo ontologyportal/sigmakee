@@ -6,7 +6,7 @@ import java.util.*;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.KButilities;
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.*;
 
 import com.esotericsoftware.kryo.io.Input;

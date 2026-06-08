@@ -15,7 +15,7 @@ import org.junit.runners.Suite;
     SUOKIFCacheTest.class,
     ExprTest.class,
     SuokifToExprTest.class,
-    KIFASTTest.class,
+    KIFTest.class,
     PredVarInstExprTest.class,
     ClausifierExprTest.class,
     ExprToTPTPTest.class,

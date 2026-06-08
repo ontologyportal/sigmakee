@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.BiPredicate;
 
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.*;
 

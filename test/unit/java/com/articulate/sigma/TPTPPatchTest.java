@@ -11,7 +11,6 @@ package com.articulate.sigma;
  *   - buildReverseIndex merges global + session axiom keys
  */
 
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SessionTPTPManager;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import org.junit.*;
@@ -88,7 +87,7 @@ public class TPTPPatchTest {
         KB kb = new KB("TestPatchKB");
         kb.kbCache = new KBcache(kb);
         KBmanager.getMgr().setPref("cacheDisjoint", "true");
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);
         kb.merge(kif, "");

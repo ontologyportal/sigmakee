@@ -1,7 +1,6 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.Formula;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.junit.Ignore;

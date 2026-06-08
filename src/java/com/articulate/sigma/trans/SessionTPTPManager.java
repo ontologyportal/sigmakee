@@ -11,7 +11,7 @@ This prevents TQ tests from overwriting the shared base TPTP files.
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.LoggingUtils;
 

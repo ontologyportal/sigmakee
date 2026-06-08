@@ -4,7 +4,7 @@ import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.SuokifVisitor;
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.FormulaPreprocessor;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

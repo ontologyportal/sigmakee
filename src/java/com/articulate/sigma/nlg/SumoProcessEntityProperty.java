@@ -1,7 +1,7 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.KB;
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 import com.google.common.collect.Lists;
 
 import java.util.Arrays;

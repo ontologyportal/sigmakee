@@ -1,5 +1,6 @@
 package com.articulate.sigma.parsing;
 
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.IntegrationTestBase;
 import org.junit.Test;
 

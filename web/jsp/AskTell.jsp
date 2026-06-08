@@ -1,6 +1,6 @@
 <%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
 <%@include file="fragments/universal/Prelude.jspf" %>
-<%@ page import="com.articulate.sigma.parsing.Formula" %>
+<%@ page import="com.articulate.sigma.Formula" %>
 <%@ page import="com.articulate.sigma.parsing.Expr" %>
 <%
     /** Copyright header omitted for brevity; keep your original text **/
@@ -194,7 +194,7 @@
     else {
         if (stmt.trim().charAt(0) != '(') english = true;
         else {
-            String msg = (new KIFAST()).parseStatement(stmt);
+            String msg = (new KIF()).parseStatement(stmt);
             if (msg != null) { status.append("<font color='red'>Error: ").append(msg).append("</font><br>"); syntaxError = true; }
         }
     }

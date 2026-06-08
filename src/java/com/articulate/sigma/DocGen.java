@@ -14,7 +14,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 package com.articulate.sigma;
 
 import com.articulate.sigma.nlg.NLGUtils;
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.SetUtil;
 import com.articulate.sigma.utils.StringUtil;

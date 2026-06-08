@@ -18,7 +18,7 @@ package com.articulate.sigma.tp;
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.SessionTPTPManager;
 import com.articulate.sigma.utils.StringUtil;

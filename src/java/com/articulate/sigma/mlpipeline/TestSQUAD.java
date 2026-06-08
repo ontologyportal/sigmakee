@@ -1,7 +1,7 @@
 package com.articulate.sigma.mlpipeline;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.parsing.Formula;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
@@ -22,7 +22,7 @@ public class TestSQUAD {
         int typeErrorCount = 0;
         int correctCount = 0;
         String resp;
-        KIFAST kif;
+        KIF kif;
         Formula f;
         boolean termMissing, typeError;
         Collection<String> terms;
@@ -30,7 +30,7 @@ public class TestSQUAD {
             if (!StringUtil.emptyString(s) && s.startsWith("Response: ")) {
                 resp = s.substring(9);
                 resp = resp.replace("</s>","");
-                kif = new KIFAST();
+                kif = new KIF();
                 kif.parseStatement(resp);
                 if (kif.errorSet != null && !kif.errorSet.isEmpty()) {
                     System.err.println("Errors: " + kif.errorSet);

@@ -1,6 +1,5 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.tp.EProver;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions

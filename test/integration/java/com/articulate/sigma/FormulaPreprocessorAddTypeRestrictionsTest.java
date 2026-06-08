@@ -1,7 +1,6 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.utils.StringUtil;
 import org.junit.Ignore;

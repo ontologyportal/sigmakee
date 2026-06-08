@@ -5,7 +5,6 @@ package com.articulate.sigma;
 // Copyright 2019 Infosys, 2020- Articulate Software
 // apease@articulatesoftware.com
 
-import com.articulate.sigma.parsing.Formula;
 import com.google.common.collect.Sets;
 
 import java.util.*;

@@ -1,6 +1,5 @@
 package com.articulate.sigma;
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.Formula;
 import com.articulate.sigma.trans.*;
 /** This code is copyright Articulate Software (c) 2003.
  This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -1849,7 +1848,7 @@ public class Diagnostics {
         if (!fKif.exists())
             return links;
 
-        KIFAST kifInstance = new KIFAST();
+        KIF kifInstance = new KIF();
         try {
             kifInstance.readFile(fKif.getPath());
         } catch (Exception e) {
