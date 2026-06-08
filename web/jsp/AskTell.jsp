@@ -136,7 +136,7 @@
                 || "true".equalsIgnoreCase(request.getParameter("HolUseModals"));
         session.setAttribute("HolUseModals", holUseModals);
     }
-    if (holUseModals == null) holUseModals = false;
+    if (holUseModals == null) holUseModals = true;
 
     // Not used????
     String isModal = request.getParameter("isModal");
