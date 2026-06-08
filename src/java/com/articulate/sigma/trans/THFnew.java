@@ -1962,9 +1962,67 @@ public class THFnew {
 
             if (exclude(fmodal, kb, bw)) continue;
 
+            // Skip formulas where pred-var expansion substituted a predicate that has a
+            // Formula-typed domain argument, but the corresponding row-var (@ARGS) was
+            // expanded to a plain Var without Formula context in the typeMap.
+            // Such formulas would be quantified as $i but the predicate expects $o,
+            // producing an ill-typed THF axiom.  This mirrors the old string-based
+            // path's implicit exclusion (it never expanded the pred-var at all).
+            if (hasFormulaDomainArgMismatch(fmodal, typeMap, kb)) {
+                bw.println("% excluded (Formula-typed domain arg with untyped $i variable): "
+                        + e.toKifString().replace("\n", " ").replace("\r", " "));
+                continue;
+            }
+
             String thf = ExprToTHF.translate(fmodal, false, typeMap);
             bw.println("thf(ax" + axNum++ + ",axiom," + thf + ").\n");
         }
+    }
+
+    /**
+     * Returns true when {@code e} contains a predicate application where a
+     * Formula-typed domain argument is bound to a plain variable that is NOT
+     * typed Formula in {@code typeMap} (i.e. would be quantified as {@code $i}).
+     *
+     * <p>This happens after pred-var expansion: the row-variable {@code @ARGS}
+     * is split into fresh {@link Expr.Var} nodes ({@code ?ARGS1 ?ARGS2 ?ARGS3 …})
+     * with no type annotation.  If the predicate substituted for {@code ?REL}
+     * declares {@code Formula} as the domain type at position k, the variable
+     * {@code ?ARGSk} would be emitted as {@code $i} — but the predicate's THF
+     * type signature expects {@code $o} (or {@code w > $o} in modal mode).
+     * The result is an ill-typed THF axiom rejected by LEO-III / Vampire HOL.
+     *
+     * <p>Predicates affected: {@code attitudeForFormula} (domain 3 = Formula),
+     * {@code conclusion} (domain 2), {@code consistent} (domains 1,2),
+     * {@code fears} (domain 2), {@code hopes} (domain 2), and others.
+     */
+    private static boolean hasFormulaDomainArgMismatch(Expr e,
+                                                        Map<String, Set<String>> typeMap,
+                                                        KB kb) {
+        if (!(e instanceof Expr.SExpr se)) return false;
+        String head = se.headName();
+        if (head != null && !FormulaAST.isLogicalOperator(head)
+                && !head.equals(FormulaAST.EQUAL)) {
+            List<String> sig = kb.kbCache.signatures.get(head);
+            if (sig != null && sig.size() > 1) {
+                List<Expr> args = se.args();
+                // sig[0] = range placeholder; sig[1..N] = domain types for args 1..N
+                for (int i = 0; i < args.size() && (i + 1) < sig.size(); i++) {
+                    String domType = sig.get(i + 1);
+                    if ("Formula".equals(domType) || kb.isSubclass(domType, "Formula")) {
+                        if (args.get(i) instanceof Expr.Var v) {
+                            Set<String> varTypes = typeMap.get(v.name());
+                            if (varTypes == null || !varTypes.contains("Formula"))
+                                return true;
+                        }
+                    }
+                }
+            }
+        }
+        for (Expr arg : se.args()) {
+            if (hasFormulaDomainArgMismatch(arg, typeMap, kb)) return true;
+        }
+        return false;
     }
 
     /** ***************************************************************
