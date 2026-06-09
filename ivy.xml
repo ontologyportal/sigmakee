@@ -29,6 +29,8 @@
         <dependency org="org.apache.tomcat" name="tomcat-servlet-api" rev="9.0.107" transitive="false" conf="api->default"/>
         <!-- https://mvnrepository.com/artifact/org.apache.tomcat/tomcat-juli -->
         <dependency org="org.apache.tomcat" name="tomcat-juli" rev="9.0.107" transitive="false" conf="test->default"/>
+        <!-- https://mvnrepository.com/artifact/org.apache.tomcat/tomcat-jasper (needed by JspCompileTest) -->
+        <dependency org="org.apache.tomcat" name="tomcat-jasper" rev="9.0.107" transitive="false" conf="test->default"/>
         <!-- https://mvnrepository.com/artifact/org.apache.ant/ant -->
         <dependency org="org.apache.ant" name="ant" rev="1.10.15" transitive="false" conf="test->default"/>
         <!-- https://mvnrepository.com/artifact/org.objenesis/objenesis -->

@@ -1,6 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.DB;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.utils.StringUtil;
@@ -348,49 +349,49 @@ public class DB2KIF {
 
     /** *****************************************************************
      */
-//    public void toKIF(List<List<String>> cells, boolean print) {
-//
-//        int id = 0;
-//        String cell, header, rel, unit, kifstring;
-//        Map<String,String> map;
-//        for (List<String> row : cells.subList(2,cells.size())) { // skip header and def'n rows
-//            for (int i = 0; i < row.size(); i++) {
-//                cell = row.get(i);
-//                if (StringUtil.emptyString(cell))
-//                    continue;
-//                header = cells.get(0).get(i);
-//                rel = column2Rel.get(header);
-//                //System.out.println("toKIF(): header,cell,rel: " + header + ", " + cell + ", " + rel);
-//                if (StringUtil.emptyString(rel))
-//                    continue;
-//                if (rel.contains(" : "))
-//                    rel = rel.substring(0,rel.indexOf(" : "));
-//                if (units.containsKey(header)) {
-//                    unit = units.get(header);
-//                    //System.out.println("toKIF(): unit: " + unit);
-//                    if (unit.endsWith(Formula.FN_SUFF)) {
-//                        cell = Formula.LP + unit + Formula.SPACE + cell + Formula.RP;
-//                    }
-//                    else {
-//                        cell = "(MeasureFn " + cell  + Formula.SPACE + unit + Formula.RP;
-//                    }
-//                }
-//                else {
-//                    if (symbolMatches.containsKey(header)) {
-//                        map = symbolMatches.get(header);
-//                        if (map.containsKey(cell))
-//                            cell = map.get(cell);
-//                    }
-//                }
-//                kifstring = Formula.LP + rel + Formula.SPACE + defaultRowType + id + Formula.SPACE + cell + Formula.RP;
-//                if (print)
-//                    System.out.println(kifstring);
-//                else
-//                    KIF.add(kifstring);
-//            }
-//            id++;
-//        }
-//    }
+    public void toKIF(List<List<String>> cells, boolean print) {
+
+        int id = 0;
+        String cell, header, rel, unit, kifstring;
+        Map<String,String> map;
+        for (List<String> row : cells.subList(2,cells.size())) { // skip header and def'n rows
+            for (int i = 0; i < row.size(); i++) {
+                cell = row.get(i);
+                if (StringUtil.emptyString(cell))
+                    continue;
+                header = cells.get(0).get(i);
+                rel = column2Rel.get(header);
+                //System.out.println("toKIF(): header,cell,rel: " + header + ", " + cell + ", " + rel);
+                if (StringUtil.emptyString(rel))
+                    continue;
+                if (rel.contains(" : "))
+                    rel = rel.substring(0,rel.indexOf(" : "));
+                if (units.containsKey(header)) {
+                    unit = units.get(header);
+                    //System.out.println("toKIF(): unit: " + unit);
+                    if (unit.endsWith(Formula.FN_SUFF)) {
+                        cell = Formula.LP + unit + Formula.SPACE + cell + Formula.RP;
+                    }
+                    else {
+                        cell = "(MeasureFn " + cell  + Formula.SPACE + unit + Formula.RP;
+                    }
+                }
+                else {
+                    if (symbolMatches.containsKey(header)) {
+                        map = symbolMatches.get(header);
+                        if (map.containsKey(cell))
+                            cell = map.get(cell);
+                    }
+                }
+                kifstring = Formula.LP + rel + Formula.SPACE + defaultRowType + id + Formula.SPACE + cell + Formula.RP;
+                if (print)
+                    System.out.println(kifstring);
+                else
+                    KIF.add(kifstring);
+            }
+            id++;
+        }
+    }
 
     /** *****************************************************************
      */
