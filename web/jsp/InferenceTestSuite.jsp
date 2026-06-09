@@ -115,7 +115,11 @@
         }
         String status = (test.errors != null && !test.errors.isEmpty()) ? "ERROR" : (test.result == null ? "NOT RUN" : (test.result.success ? "PASS" : "FAIL"));
         String actual = test.result == null ? "" : String.valueOf(test.result.answers);
-        String szs = test.result == null ? "" : String.valueOf(test.result.szsStatus);
+        String szs = "";
+        if (test.result != null) {
+            szs = test.result.szsStatus;
+            if (StringUtil.emptyString(szs) || "null".equalsIgnoreCase(szs)) szs = "See Proof for Details";
+        }
         String execTime = test.result == null ? "" : String.valueOf(test.result.execTime);
         boolean hasProof = test.result != null && test.result.proof != null && !test.result.proof.isEmpty();
         out.print("{"

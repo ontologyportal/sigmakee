@@ -177,16 +177,18 @@ public class InferenceTest {
      * @param atpResult ATP result to convert into a test result. 
      */
     public void populateResult(KB kb, ATPResult atpResult) {
-        
+
+        if (this.result == null) this.result = new InferenceTestResult();
         this.result.execTime = atpResult.getElapsedTimeMs();
-        this.result.szsStatus = atpResult.getSzsStatus().getTptpName();
-        if (this.result.szsStatus == null) this.result.szsStatus = "See Proof for Details";
+        String atpSzs = null;
+        if (atpResult.getSzsStatus() != null) atpSzs = atpResult.getSzsStatus().getTptpName();
         this.result.proof = new ArrayList<>();
         this.result.proof.addAll(atpResult.getStdout());
         this.result.proof.addAll(atpResult.getStderr());
-        this.result.proof.add(atpResult.getPrimaryError());
+        if (atpResult.getPrimaryError() != null) this.result.proof.add(atpResult.getPrimaryError());
         TPTP3ProofProcessor tpp = atpResult.getParsedProofProcessor(kb, this.query);
         this.result.szsStatus = tpp.status;
+        if (StringUtil.emptyString(this.result.szsStatus)) this.result.szsStatus = StringUtil.emptyString(atpSzs) ? "See Proof for Details" : atpSzs;
         this.result.answers = new ArrayList<>();
         this.result.answers.addAll(tpp.bindings);
         if (tpp.status != null && tpp.status.startsWith("Theorem") && this.result.answers.isEmpty()) this.result.answers.add("yes");

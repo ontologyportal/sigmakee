@@ -50,20 +50,10 @@ public final class UserManager {
      * @param notRobot the user's verification statement
      * @return true if the user was created successfully
      */
-    public boolean createUser(HttpServletRequest request,
-                          String username,
-                          String password,
-                          String email,
-                          String role,
-                          String firstName,
-                          String lastName,
-                          String organization,
-                          String notRobot) {
+    public boolean createUser(HttpServletRequest request, String username, String password, String email, String role, String firstName, String lastName, String organization, String notRobot) {
 
         requireAdmin(request);
-        if (!"user".equals(role) && !"admin".equals(role) && !"guest".equals(role)) {
-            throw new IllegalArgumentException("Invalid role: " + role);
-        }
+        if (!"user".equals(role) && !"admin".equals(role) && !"guest".equals(role)) throw new IllegalArgumentException("Invalid role: " + role);
         User user = new User(username, password, email, role, firstName, lastName, organization, notRobot);
         return this.userDatabase.insertUser(user);
     }
@@ -103,19 +93,13 @@ public final class UserManager {
         if (StringUtil.emptyString(tokenHash)) return false;
         if (StringUtil.emptyString(username)) return false;
         if (StringUtil.emptyString(newPassword)) return false;
-
         User user = this.userDatabase.getUserForValidPasswordResetToken(tokenHash);
-
         if (user == null) return false;
         if (!username.equals(user.getUsername())) return false;
-
         boolean updated = this.userDatabase.updatePassword(username, newPassword);
-
         if (!updated) return false;
-
         this.userDatabase.markPasswordResetTokenUsed(tokenHash);
         this.userDatabase.invalidatePasswordResetTokensForUser(username);
-
         return true;
     }
 
@@ -217,14 +201,26 @@ public final class UserManager {
      * @return true if the guest user was registered successfully
      */
     public boolean registerGuest(String username, String password, String email, String firstName, String lastName, String organization, String notRobot) {
-        
-        User user = new User(username, password, email, "guest", firstName, lastName, organization, notRobot);
-        if (this.userDatabase.insertUser(user)) {
-            EmailService emailService = new EmailService();
-            emailService.requestAdminApprovalForUser(user, this.userDatabase.getAdminEmails());
-            return true;
+
+        username = username == null ? null : username.trim().toLowerCase(Locale.ROOT);
+        email = email == null ? null : email.trim().toLowerCase(Locale.ROOT);
+        if (StringUtil.emptyString(username)) return false;
+        if (StringUtil.emptyString(password)) return false;
+        if (StringUtil.emptyString(email)) return false;
+        if (this.userDatabase.userExists(username)) {
+            System.err.println("UserManager.registerGuest(): username already exists: " + username);
+            return false;
         }
-        else return false;
+        if (this.userDatabase.getUserByEmail(email) != null) {
+            System.err.println("UserManager.registerGuest(): email already exists: " + email);
+            return false;
+        }
+        User user = new User(username, password, email, "guest", firstName, lastName, organization, notRobot);
+        boolean created = this.userDatabase.insertUser(user);
+        if (!created) return false;
+        EmailService emailService = new EmailService();
+        emailService.requestAdminApprovalForUser(user, this.userDatabase.getAdminEmails());
+        return true;
     }
 
     /********************************************************************
@@ -237,7 +233,6 @@ public final class UserManager {
         if (StringUtil.emptyString(email)) return true;
         User user = this.userDatabase.getUserByEmail(email.trim());
         if (user == null) return true;
-
         String rawToken = PasswordService.generateResetToken();
         boolean created = this.userDatabase.createPasswordResetToken(user.getUsername(), PasswordService.hashResetToken(rawToken));
         if (!created) return true;
