@@ -46,7 +46,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
 
         Map<String, List> actualMap = f.gatherRelationsWithArgTypes(SigmaTestBase.kb);
 
-        List<String> expectedList = Lists.newArrayList(null, "Process", "AutonomousAgent", null, null, null, null, null, null, null, null);
+        List<String> expectedList = Lists.newArrayList(null, "Process", "AutonomousAgent", null, null, null, null, null);
         Map<String, List> expectedMap = Maps.newHashMap();
         expectedMap.put("agent", expectedList);
 
