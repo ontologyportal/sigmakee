@@ -126,10 +126,10 @@ public class TPTPGenerationManager {
     }
 
     /*****************************************************************
-     * Check whether config file or any .kif constituent is newer than its
-     * corresponding TPTP/TFF/THF file.
-     * @param lang inference file extension, such as tptp, tff, or thf
-     * @return true if the inference file is older than config/constituents
+     * Check whether config file, any .kif constituent, or SIGMAKEE code is newer
+     * than its corresponding TPTP/TFF/THF file.
+     * @param inferenceFilePath path to inference file, such as SUMO.tptp, SUMO.tff, or SUMO.thf
+     * @return true if the inference file is older than config/constituents/source code
      */
     public static boolean isInferenceFileOld(String inferenceFilePath) {
 
@@ -139,11 +139,11 @@ public class TPTPGenerationManager {
             return true;
         }
         Date infFileDate = new Date(inferenceFile.lastModified());
-        Date newestSourceDate = KBmanager.newestBaseConfigOrConstituentDateIgnoringUserAssertions();
-        if (infFileDate.compareTo(newestSourceDate) < 0) {
-            LoggingUtils.log(inferenceFilePath + " is old! Needs regeneration...");
+        Date newestKbSourceDate = KBmanager.newestBaseConfigOrConstituentDateIgnoringUserAssertions();
+        Date newestCodeDate = KBmanager.newestSigmakeeCodeDate();
+        Date newestSourceDate = newestKbSourceDate.after(newestCodeDate) ? newestKbSourceDate : newestCodeDate;
+        if (infFileDate.compareTo(newestSourceDate) < 0)
             return true;
-        }
         return false;
     }
 
@@ -508,7 +508,7 @@ public class TPTPGenerationManager {
                     Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8))) {
 
                 if (!kb.formulaMap.isEmpty()) {
-                    THFnew.transPlainTHF(kb, pw);
+                    THFnew.transPlainTHF(kb);
                 }
             }
 

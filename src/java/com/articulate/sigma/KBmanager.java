@@ -40,6 +40,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.io.IOException;
+import java.util.stream.Stream;
 
 /** This is a class that manages a group of knowledge bases.  It should only
  *  have one instance, contained in its own static member variable.
@@ -214,17 +215,99 @@ public class KBmanager implements Serializable {
     }
 
     /*****************************************************************
-     * Check whether KB constituents/config are newer than serialized version.
+     * Check whether KB constituents/config/source code are newer than serialized version.
      * @param configuration SimpleElement representing config.xml
-     * @return true if serialized is older than constituents/config
+     * @return true if serialized cache is missing or older than constituents/config/source
      */
     public static boolean isSerializedOld(SimpleElement configuration) {
 
         String kbDir = KButilities.SIGMA_HOME + File.separator + "KBs";
         File serfile = new File(kbDir + File.separator + "kbmanager.ser");
+        if (!serfile.exists() || serfile.length() == 0) return true;
         Date kbserDate = new Date(serfile.lastModified());
-        Date newestSourceDate = newestConfigOrConstituentDate(configuration);
+        Date newestKbSourceDate = newestConfigOrConstituentDate(configuration);
+        Date newestCodeDate = newestSigmakeeCodeDate();
+        Date newestSourceDate = newestKbSourceDate.after(newestCodeDate) ? newestKbSourceDate : newestCodeDate;
         return kbserDate.compareTo(newestSourceDate) < 0;
+    }
+
+    /*****************************************************************
+     * Finds the newest SIGMAKEE source/deployed-code modification date.
+     * @return newest source or deployed code date, or epoch if unavailable
+     */
+    public static Date newestSigmakeeCodeDate() {
+
+        long newest = 0L;
+        newest = Math.max(newest, newestPathModifiedTime(sourcePathFromEnv()));
+        return new Date(newest);
+    }
+
+    /*****************************************************************
+     * Finds the newest relevant file modification time under a path.
+     * @param root root file or directory
+     * @return newest modification time in milliseconds, or 0 if unavailable
+     */
+    private static long newestPathModifiedTime(Path root) {
+
+        if (root == null || !Files.exists(root)) return 0L;
+        try {
+            if (Files.isRegularFile(root)) return Files.getLastModifiedTime(root).toMillis();
+            try (Stream<Path> paths = Files.walk(root)) {
+                return paths
+                        .filter(Files::isRegularFile)
+                        .filter(KBmanager::isCodeOrWebFile)
+                        .mapToLong(KBmanager::lastModifiedMillis)
+                        .max()
+                        .orElse(0L);
+            }
+        }
+        catch (Exception e) {
+            System.err.println("WARN KBmanager.newestPathModifiedTime(): " + e.getMessage());
+            return 0L;
+        }
+    }
+
+    /*****************************************************************
+     * Checks whether a file should be considered source/deployed code.
+     * @param path file path
+     * @return true if file is code relevant to cache compatibility
+     */
+    private static boolean isCodeOrWebFile(Path path) {
+
+        String name = path.getFileName().toString().toLowerCase();
+        return name.endsWith(".java") ||
+                name.endsWith(".class") ||
+                name.endsWith(".jar") ||
+                name.endsWith(".jsp") ||
+                name.endsWith(".jspf") ||
+                name.endsWith(".xml") ||
+                name.endsWith(".properties");
+    }
+
+    /*****************************************************************
+     * Gets last modified millis for a path.
+     * @param path file path
+     * @return last modified time, or 0 on error
+     */
+    private static long lastModifiedMillis(Path path) {
+
+        try {
+            return Files.getLastModifiedTime(path).toMillis();
+        }
+        catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    /*****************************************************************
+     * Gets SIGMAKEE source path from ONTOLOGYPORTAL_GIT.
+     * @return sigmakee source path, or null if unavailable
+     */
+    private static Path sourcePathFromEnv() {
+
+        String gitRoot = System.getenv("ONTOLOGYPORTAL_GIT");
+        if (StringUtil.emptyString(gitRoot)) return null;
+        return Paths.get(gitRoot, "sigmakee");
     }
 
     /*****************************************************************

@@ -291,7 +291,7 @@ public class InferenceTest {
         try {
             KIF testKif = new KIF();
             testKif.readFile(testFile.getCanonicalPath());
-            for (Formula orderedFormulas : testKif.formulasOrdered.values()) {
+            for (Formula orderedFormulas : testKif.lexicalOrder()) {
                 String formula = orderedFormulas.getFormula();
                 if (formula.contains(";")) formula = formula.substring(0, formula.indexOf(";"));
                 if (formula.startsWith("(file")) this.requiredConstituents.add(formula.substring(6, formula.length() - 1));
