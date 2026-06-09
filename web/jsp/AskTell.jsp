@@ -529,20 +529,11 @@
                     else {
                         try {
                             final String sid = session.getId();
-                            SessionTPTPManager.beginBatchTells(sid);
-                            try {
-                                for (String s : itd.statements) {
-                                    if (!StringUtil.emptyString(s)) kb.tell(s, sid);
-                                }
-                            }
-                            finally {
-                                SessionTPTPManager.endBatchTells(sid);
-                            }
-                            FormulaPreprocessor fp = new FormulaPreprocessor();
-                            Set<Expr> qs = SessionTPTPManager.withSessionCache(sid, kb, () -> fp.preProcessExpr(new Formula(itd.query), true, kb));
-                            for (Expr q : qs) {
-                                String qstr = q.toKifString();
-                                ATPQuery query = new ATPQuery(
+                            String effectiveLang = "HOL".equalsIgnoreCase(translationMode) ? "thf" : test.minLang;
+
+                            test.applyAssertions(kb, sid, effectiveLang);
+
+                            ATPQuery query = new ATPQuery(
                                     kb,
                                     sid,
                                     test.query,
@@ -600,6 +591,7 @@
                                 out.println("Expected: <code>" + htmlEncode(String.valueOf(test.expectedAnswers)) + "</code><br>");
                                 out.println("Actual: <code>" + htmlEncode(String.valueOf(test.result.answers)) + "</code><br>");
                                 out.println("Test result: <b>" + (test.result.success ? "PASS" : "FAIL") + "</b>");
+                                out.println("</div>");
                                 out.println("</div>");
                             }
                         }
