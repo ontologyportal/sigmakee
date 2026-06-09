@@ -7,7 +7,7 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
@@ -490,124 +490,121 @@ public class SUMOtoTFAform {
     /***************************************************************
      * @deprecated replaced with {@link #processQuantExpr}
      */
-    @Deprecated
-    private static String processQuant(Formula f, Formula car, String parentType, String op,
-                                       List<String> args) {
-
-        //if (debug) System.out.println("SUMOtoTFAform.processQuant(): quantifier");
-        if (args.size() != 3) { // quant + list + formula
-            System.err.println("Error in SUMOtoTFAform.processQuant(): wrong number of arguments to " + op + " in " + f);
-            return "";
-        }
-        else {
-            //if (debug) System.out.println("SUMOtoTFAform.processQuant(): correct # of args");
-            if (args.get(1) != null) {
-                //if (debug) System.out.println("SUMOtoTFAform.processQuant(): valid varlist: " + args.get(0));
-                Formula varlist = new FormulaAST(args.get(1));
-                List<String> vars = varlist.argumentsToArrayListString(0);
-                //if (debug) System.out.println("SUMOtoTFAform.processRecurse(): valid vars: " + vars);
-                StringBuilder varStr = new StringBuilder();
-                String oneVar,type;
-                for (String v : vars) {
-                    oneVar = SUMOformulaToTPTPformula.translateWord(v,v.charAt(0),false);
-                    if (getVarmap().keySet().contains(v) && !StringUtil.emptyString(getVarmap().get(v))) {
-                        type = mostSpecificType(getVarmap().get(v));
-                        oneVar = oneVar + ":" + SUMOKBtoTFAKB.translateSort(kb,type);
-                    }
-                    else
-                        System.err.println("Error in SUMOtoTFAform.processQuant(): var type not found for " + v +
-                                " in formula " + f);
-                    varStr.append(oneVar).append(", ");
-                }
-                //if (debug) System.out.println("SUMOtoTFAform.processQuant(): valid vars: " + varStr);
-                String opStr = " ! ";
-                if (op.equals("exists"))
-                    opStr = " ? ";
-                //if (debug) System.out.println("SUMOtoTFAform.processQuant(): quantified formula: " + args.get(1));
-                return Formula.LP + opStr + "[" + varStr.toString().substring(0,varStr.length()-2) + "] : (" +
-                        processRecurse(new FormulaAST(args.get(2)),parentType) + "))";
-            }
-            else {
-                System.err.println("Error in SUMOtoTFAform.processQuant(): null arguments to " + op + " in " + f);
-                return "";
-            }
-        }
-    }
+//    private static String processQuant(Formula f, Formula car, String parentType, String op,
+//                                       List<String> args) {
+//
+//        //if (debug) System.out.println("SUMOtoTFAform.processQuant(): quantifier");
+//        if (args.size() != 3) { // quant + list + formula
+//            System.err.println("Error in SUMOtoTFAform.processQuant(): wrong number of arguments to " + op + " in " + f);
+//            return "";
+//        }
+//        else {
+//            //if (debug) System.out.println("SUMOtoTFAform.processQuant(): correct # of args");
+//            if (args.get(1) != null) {
+//                //if (debug) System.out.println("SUMOtoTFAform.processQuant(): valid varlist: " + args.get(0));
+//                Formula varlist = new Formula(args.get(1));
+//                List<String> vars = varlist.argumentsToArrayListString(0);
+//                //if (debug) System.out.println("SUMOtoTFAform.processRecurse(): valid vars: " + vars);
+//                StringBuilder varStr = new StringBuilder();
+//                String oneVar,type;
+//                for (String v : vars) {
+//                    oneVar = SUMOformulaToTPTPformula.translateWord(v,v.charAt(0),false);
+//                    if (getVarmap().keySet().contains(v) && !StringUtil.emptyString(getVarmap().get(v))) {
+//                        type = mostSpecificType(getVarmap().get(v));
+//                        oneVar = oneVar + ":" + SUMOKBtoTFAKB.translateSort(kb,type);
+//                    }
+//                    else
+//                        System.err.println("Error in SUMOtoTFAform.processQuant(): var type not found for " + v +
+//                                " in formula " + f);
+//                    varStr.append(oneVar).append(", ");
+//                }
+//                //if (debug) System.out.println("SUMOtoTFAform.processQuant(): valid vars: " + varStr);
+//                String opStr = " ! ";
+//                if (op.equals("exists"))
+//                    opStr = " ? ";
+//                //if (debug) System.out.println("SUMOtoTFAform.processQuant(): quantified formula: " + args.get(1));
+//                return Formula.LP + opStr + "[" + varStr.toString().substring(0,varStr.length()-2) + "] : (" +
+//                        processRecurse(new FormulaAST(args.get(2)),parentType) + "))";
+//            }
+//            else {
+//                System.err.println("Error in SUMOtoTFAform.processQuant(): null arguments to " + op + " in " + f);
+//                return "";
+//            }
+//        }
+//    }
 
     /***************************************************************
      * @deprecated replaced with {@link #processConjDisjExpr}
      */
-    @Deprecated
-    private static String processConjDisj(Formula f, Formula car, String parentType,
-                                          List<String> args) {
-
-        String op = car.getFormula();
-        if (args.size() < 3) {
-            System.err.println("Error in SUMOtoTFAform.processConjDisj(): wrong number of arguments to " + op + " in " + f);
-            return "";
-        }
-        String tptpOp = "&";
-        if (op.equals(Formula.OR))
-            tptpOp = "|";
-        if (op.equals(Formula.XOR))
-            tptpOp = "<~>";
-        StringBuilder sb = new StringBuilder();
-        sb.append(Formula.LP).append(processRecurse(new FormulaAST(args.get(1)),parentType));
-        for (int i = 2; i < args.size(); i++) {
-            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE).append(processRecurse(new FormulaAST(args.get(i)),parentType));
-        }
-        sb.append(Formula.RP);
-        return sb.toString();
-    }
+//    private static String processConjDisj(Formula f, Formula car, String parentType,
+//                                          List<String> args) {
+//
+//        String op = car.getFormula();
+//        if (args.size() < 3) {
+//            System.err.println("Error in SUMOtoTFAform.processConjDisj(): wrong number of arguments to " + op + " in " + f);
+//            return "";
+//        }
+//        String tptpOp = "&";
+//        if (op.equals(Formula.OR))
+//            tptpOp = "|";
+//        if (op.equals(Formula.XOR))
+//            tptpOp = "<~>";
+//        StringBuilder sb = new StringBuilder();
+//        sb.append(Formula.LP).append(processRecurse(new FormulaAST(args.get(1)),parentType));
+//        for (int i = 2; i < args.size(); i++) {
+//            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE).append(processRecurse(new FormulaAST(args.get(i)),parentType));
+//        }
+//        sb.append(Formula.RP);
+//        return sb.toString();
+//    }
 
     /***************************************************************
      * @deprecated replaced with {@link #processLogOpExpr}
      */
-    @Deprecated
-    private static String processLogOp(Formula f, Formula car, String parentType,
-                                        List<String> args) {
-        String op = car.getFormula();
-        if (debug) System.out.println("processLogOp(): f: " + f);
-        if (debug) System.out.println("processLogOp(): args: " + args);
-        if (op.equals(Formula.AND))
-            return processConjDisj(f,car,parentType,args);
-        if (op.equals(Formula.IF)) {
-            if (args.size() != 3) {  // op + 2 args
-                System.err.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
-                return "";
-            }
-            else
-                return Formula.LP + processRecurse(new FormulaAST(args.get(1)),parentType) + " => " +
-                        processRecurse(new FormulaAST(args.get(2)),parentType) + Formula.RP;
-        }
-        if (op.equals(Formula.IFF)) {
-            if (args.size() != 3) { // op + 2 args
-                System.err.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
-                return "";
-            }
-            else
-                return "((" + processRecurse(new FormulaAST(args.get(1)),parentType) + " => " +
-                        processRecurse(new FormulaAST(args.get(2)),parentType) + ") & (" +
-                        processRecurse(new FormulaAST(args.get(2)),parentType) + " => " +
-                        processRecurse(new FormulaAST(args.get(1)),parentType) + "))";
-        }
-        if (op.equals(Formula.OR))
-            return processConjDisj(f,car,parentType,args);
-        if (op.equals(Formula.XOR))
-            return processConjDisj(f,car,parentType,args);
-        if (op.equals(Formula.NOT)) {
-            if (args.size() != 2) { // op + 1 arg
-                System.err.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
-                return "";
-            }
-            else
-                return "~(" + processRecurse(new FormulaAST(args.get(1)),parentType) + Formula.RP;
-        }
-        if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
-            return processQuant(f,car,parentType,op,args);
-        System.err.println("Error in SUMOtoTFAform.processLogOp(): bad logical operator " + op + " in " + f);
-        return "";
-    }
+//    private static String processLogOp(Formula f, Formula car, String parentType,
+//                                        List<String> args) {
+//        String op = car.getFormula();
+//        if (debug) System.out.println("processLogOp(): f: " + f);
+//        if (debug) System.out.println("processLogOp(): args: " + args);
+//        if (op.equals(Formula.AND))
+//            return processConjDisj(f,car,parentType,args);
+//        if (op.equals(Formula.IF)) {
+//            if (args.size() != 3) {  // op + 2 args
+//                System.err.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
+//                return "";
+//            }
+//            else
+//                return Formula.LP + processRecurse(new FormulaAST(args.get(1)),parentType) + " => " +
+//                        processRecurse(new FormulaAST(args.get(2)),parentType) + Formula.RP;
+//        }
+//        if (op.equals(Formula.IFF)) {
+//            if (args.size() != 3) { // op + 2 args
+//                System.err.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
+//                return "";
+//            }
+//            else
+//                return "((" + processRecurse(new FormulaAST(args.get(1)),parentType) + " => " +
+//                        processRecurse(new FormulaAST(args.get(2)),parentType) + ") & (" +
+//                        processRecurse(new FormulaAST(args.get(2)),parentType) + " => " +
+//                        processRecurse(new FormulaAST(args.get(1)),parentType) + "))";
+//        }
+//        if (op.equals(Formula.OR))
+//            return processConjDisj(f,car,parentType,args);
+//        if (op.equals(Formula.XOR))
+//            return processConjDisj(f,car,parentType,args);
+//        if (op.equals(Formula.NOT)) {
+//            if (args.size() != 2) { // op + 1 arg
+//                System.err.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
+//                return "";
+//            }
+//            else
+//                return "~(" + processRecurse(new FormulaAST(args.get(1)),parentType) + Formula.RP;
+//        }
+//        if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
+//            return processQuant(f,car,parentType,op,args);
+//        System.err.println("Error in SUMOtoTFAform.processLogOp(): bad logical operator " + op + " in " + f);
+//        return "";
+//    }
 
     /***************************************************************
      * @return whether the constant is a TFF built in numeric
@@ -751,60 +748,60 @@ public class SUMOtoTFAform {
      * Generate the TFF relation corresponding to an appearance of
      * any superclass of the TFF number types by naming the
      * type-specific relations using makePredFromArgTypes()
+     *
      * @deprecated replaced with {@link #processNumericSuperArgsExpr}
      */
-    @Deprecated
-    private static String processNumericSuperArgs(Formula f, Formula car,
-                                                  String parentType,
-                                                  List<String> args,
-                                                  List<String> argTypes) {
-
-        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): f: " + f);
-        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): car: " + car);
-        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): parentType: " + parentType);
-        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): argTypes: " + argTypes);
-        List<String> newArgTypes = new ArrayList<>();
-        newArgTypes.addAll(argTypes);
-        if (kb.isFunctional(f) && argTypes != null)
-            newArgTypes.set(0,bestOfPair(parentType,argTypes.get(0)));
-        List<String> predTypes = kb.kbCache.getSignature(car.getFormula());
-        newArgTypes = bestSignature(predTypes,newArgTypes);
-        // If the call has more arguments than the predicate's declared arity, the extra
-        // numeric types came from varmap (borrowed from another predicate sharing the same
-        // row variables) and must not drive predicate-variant naming.  Using them would
-        // generate a variant (e.g. foo__1En2En3In) that has no TFF type declaration, causing
-        // a sort conflict in the prover.  Replace those positions with Entity.
-        if (predTypes != null && newArgTypes.size() > predTypes.size()) {
-            for (int i = predTypes.size(); i < newArgTypes.size(); i++) {
-                if (isNumericType(newArgTypes.get(i)))
-                    newArgTypes.set(i, "Entity");
-            }
-        }
-        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): newArgTypes: " + newArgTypes);
-        String pred = car.getFormula();
-        List<String> sig = kb.kbCache.getSignature(withoutSuffix(pred));
-        if (!equalTFFsig(newArgTypes,sig,pred) || KButilities.isVariableArity(kb,withoutSuffix(pred)) || needsForcedTypeSuffix(pred))
-            pred = makePredFromArgTypes(car,newArgTypes);
-        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): pred: " + pred);
-        List<String> processedArgs = new ArrayList<>();
-        String argType;
-        for (int i = 1; i < args.size(); i++) {
-            argType = "Entity";
-            if (i < newArgTypes.size())
-                argType = newArgTypes.get(i);
-            else
-                System.err.println("Error in SUMOtoTFAform.processNumericSuperArgs(): type list and arg list different size for " + f);
-            processedArgs.add(processRecurse(new FormulaAST(args.get(i)), argType));
-        }
-        StringBuilder result = new StringBuilder();
-        result.append(Formula.TERM_SYMBOL_PREFIX).append(pred).append(Formula.LP);
-        for (String arg : processedArgs)
-            result.append(arg).append(",");
-        result.deleteCharAt(result.length()-1);
-        result.append(Formula.RP);
-        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): result: " + result);
-        return result.toString();
-    }
+//    private static String processNumericSuperArgs(Formula f, Formula car,
+//                                                  String parentType,
+//                                                  List<String> args,
+//                                                  List<String> argTypes) {
+//
+//        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): f: " + f);
+//        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): car: " + car);
+//        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): parentType: " + parentType);
+//        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): argTypes: " + argTypes);
+//        List<String> newArgTypes = new ArrayList<>();
+//        newArgTypes.addAll(argTypes);
+//        if (kb.isFunctional(new FormulaAST(f.getFormula())) && argTypes != null)
+//            newArgTypes.set(0,bestOfPair(parentType,argTypes.get(0)));
+//        List<String> predTypes = kb.kbCache.getSignature(car.getFormula());
+//        newArgTypes = bestSignature(predTypes,newArgTypes);
+//        // If the call has more arguments than the predicate's declared arity, the extra
+//        // numeric types came from varmap (borrowed from another predicate sharing the same
+//        // row variables) and must not drive predicate-variant naming.  Using them would
+//        // generate a variant (e.g. foo__1En2En3In) that has no TFF type declaration, causing
+//        // a sort conflict in the prover.  Replace those positions with Entity.
+//        if (predTypes != null && newArgTypes.size() > predTypes.size()) {
+//            for (int i = predTypes.size(); i < newArgTypes.size(); i++) {
+//                if (isNumericType(newArgTypes.get(i)))
+//                    newArgTypes.set(i, "Entity");
+//            }
+//        }
+//        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): newArgTypes: " + newArgTypes);
+//        String pred = car.getFormula();
+//        List<String> sig = kb.kbCache.getSignature(withoutSuffix(pred));
+//        if (!equalTFFsig(newArgTypes,sig,pred) || KButilities.isVariableArity(kb,withoutSuffix(pred)) || needsForcedTypeSuffix(pred))
+//            pred = makePredFromArgTypes(new FormulaAST(car.getFormula()),newArgTypes);
+//        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): pred: " + pred);
+//        List<String> processedArgs = new ArrayList<>();
+//        String argType;
+//        for (int i = 1; i < args.size(); i++) {
+//            argType = "Entity";
+//            if (i < newArgTypes.size())
+//                argType = newArgTypes.get(i);
+//            else
+//                System.err.println("Error in SUMOtoTFAform.processNumericSuperArgs(): type list and arg list different size for " + f);
+//            processedArgs.add(processRecurse(new FormulaAST(args.get(i)), argType));
+//        }
+//        StringBuilder result = new StringBuilder();
+//        result.append(Formula.TERM_SYMBOL_PREFIX).append(pred).append(Formula.LP);
+//        for (String arg : processedArgs)
+//            result.append(arg).append(",");
+//        result.deleteCharAt(result.length()-1);
+//        result.append(Formula.RP);
+//        if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): result: " + result);
+//        return result.toString();
+//    }
 
     /***************************************************************
      * Generate the TFF function corresponding to an appearance of
@@ -814,110 +811,110 @@ public class SUMOtoTFAform {
      *                   enclosing formula content
      * @param args are all the arguments including ListFn, the arg 0
      * @param argTypes types of all arguments including arg 0
+     *
      * @deprecated replaced with {@link #processListFnExpr}
      */
-    @Deprecated
-    private static String processListFn(Formula f, Formula car,
-                                        String parentType,
-                                        List<String> args,
-                                        List<String> argTypes) {
-
-        if (debug) System.out.println("SUMOtoTFAform.processListFn(): f: " + f);
-        String pred = car.getFormula();
-        List<String> sig = kb.kbCache.getSignature(withoutSuffix(pred));
-        if (!equalTFFsig(argTypes,sig,pred) || KButilities.isVariableArity(kb,withoutSuffix(pred)))
-            pred = makePredFromArgTypes(car,argTypes);
-        List<String> processedArgs = new ArrayList<>();
-        for (int i = 1; i < args.size(); i++) // arg 0 is ListFn
-            processedArgs.add(processRecurse(new FormulaAST(args.get(i)),parentType));
-        StringBuilder result = new StringBuilder();
-        result.append(Formula.TERM_SYMBOL_PREFIX).append(pred).append(Formula.LP);
-        for (String arg : processedArgs) {
-            result.append(arg).append(",");
-        }
-        result.deleteCharAt(result.length()-1);
-        result.append(Formula.RP);
-        return result.toString();
-    }
+//    private static String processListFn(Formula f, Formula car,
+//                                        String parentType,
+//                                        List<String> args,
+//                                        List<String> argTypes) {
+//
+//        if (debug) System.out.println("SUMOtoTFAform.processListFn(): f: " + f);
+//        String pred = car.getFormula();
+//        List<String> sig = kb.kbCache.getSignature(withoutSuffix(pred));
+//        if (!equalTFFsig(argTypes,sig,pred) || KButilities.isVariableArity(kb,withoutSuffix(pred)))
+//            pred = makePredFromArgTypes(new FormulaAST(car.getFormula()),argTypes);
+//        List<String> processedArgs = new ArrayList<>();
+//        for (int i = 1; i < args.size(); i++) // arg 0 is ListFn
+//            processedArgs.add(processRecurse(new FormulaAST(args.get(i)),parentType));
+//        StringBuilder result = new StringBuilder();
+//        result.append(Formula.TERM_SYMBOL_PREFIX).append(pred).append(Formula.LP);
+//        for (String arg : processedArgs) {
+//            result.append(arg).append(",");
+//        }
+//        result.deleteCharAt(result.length()-1);
+//        result.append(Formula.RP);
+//        return result.toString();
+//    }
 
     /***************************************************************
      * equal is a special case since it needs translation to '='
      * regardless of argument types since it's polymorphic on $i also.
      * @param args includes the relation as arg 0
+     *
      * @deprecated replaced with {@link #processCompOpExpr}
      */
-    @Deprecated
-    private static String processCompOp(Formula f, Formula car,
-                                        List<String> args,
-                                        List<String> argTypes) {
-
-        String op = car.getFormula();
-        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): f: " + f);
-        if (args.size() != 3) {
-            System.err.println("Error in SUMOtoTFAform.processCompOp(): wrong number of arguments to " + op + " in " + f);
-            return "";
-        }
-        Formula lhs = new FormulaAST(args.get(1));
-        Formula rhs = new FormulaAST(args.get(2));
-        String best = "Entity";
-        if (argTypes != null && argTypes.size() > 2)
-            best = bestOfPair(argTypes.get(1),argTypes.get(2));
-        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): best of argtypes: " + best);
-        if (lhs.isVariable()) {
-            if (debug) System.out.println("SUMOtoTFAform.processCompOp(): lhs: " + lhs);
-            String bestVar = bestSpecificTerm(getVarmap().get(lhs.getFormula()));
-            if (debug) System.out.println("SUMOtoTFAform.processCompOp(): bestVar: " + bestVar);
-            best = bestOfPair(bestVar,best);
-            if (debug) System.out.println("SUMOtoTFAform.processCompOp(): bestOfPair: " + best);
-        }
-        if (rhs.isVariable()) {
-            String bestVar = bestSpecificTerm(getVarmap().get(rhs.getFormula()));
-            best = bestOfPair(bestVar,best);
-        }
-        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): builtInNumericType(best): " + builtInNumericType(best));
-        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): rhs is term: " + rhs + " : " + Formula.isTerm(rhs.getFormula()));
-        if (Formula.isTerm(rhs.getFormula())) {
-            if (builtInNumericType(best)) {
-                if (debug) System.out.println("SUMOtoTFAform.processCompOp(): found constant: " + rhs + " with type " + best);
-                getNumericConstantTypes().put(rhs.getFormula(), best);
-            }
-        }
-        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): lhs is term: " + lhs + " : " + Formula.isTerm(lhs.getFormula()));
-        if (Formula.isTerm(lhs.getFormula())) {
-            if (builtInNumericType(best)) {
-                if (debug) System.out.println("SUMOtoTFAform.processCompOp(): found constant: " + lhs + " with type " + best);
-                getNumericConstantTypes().put(lhs.getFormula(), best);
-            }
-        }
-        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): final best: " + best);
-        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): args: " + args);
-        if (!op.startsWith(Formula.LT) && !op.startsWith(Formula.GT) && !op.startsWith(Formula.EQUAL)) {
-            System.err.println("Error in SUMOtoTFAform.processCompOp(): bad comparison operator " + op + " in " + f);
-            return "";
-        }
-        String lhsResult = processRecurse(lhs,best);
-        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): lhsResult: " + lhsResult);
-        String rhsResult = processRecurse(rhs,best);
-        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): rhsResult: " + rhsResult);
-        String comparator = "";
-        String result;
-        if (op.startsWith(Formula.EQUAL)) {
-            result = lhsResult + " = " + rhsResult;
-            if (debug) System.out.println("SUMOtoTFAform.processCompOp(): result: " + result);
-            return result;
-        }
-        if (op.startsWith(Formula.GTET))
-            comparator = "$greatereq(" ;
-        else if (op.startsWith(Formula.GT))
-            comparator = "$greater(" ;
-        else if (op.startsWith(Formula.LTET))
-            comparator = "$lesseq(";
-        else if (op.startsWith(Formula.LT))
-            comparator = "$less(";
-        result = Formula.LP + comparator + lhsResult + "," + rhsResult + "))";
-        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): result: " + result);
-        return result;
-    }
+//    private static String processCompOp(Formula f, Formula car,
+//                                        List<String> args,
+//                                        List<String> argTypes) {
+//
+//        String op = car.getFormula();
+//        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): f: " + f);
+//        if (args.size() != 3) {
+//            System.err.println("Error in SUMOtoTFAform.processCompOp(): wrong number of arguments to " + op + " in " + f);
+//            return "";
+//        }
+//        FormulaAST lhs = new FormulaAST(args.get(1));
+//        FormulaAST rhs = new FormulaAST(args.get(2));
+//        String best = "Entity";
+//        if (argTypes != null && argTypes.size() > 2)
+//            best = bestOfPair(argTypes.get(1),argTypes.get(2));
+//        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): best of argtypes: " + best);
+//        if (lhs.isVariable()) {
+//            if (debug) System.out.println("SUMOtoTFAform.processCompOp(): lhs: " + lhs);
+//            String bestVar = bestSpecificTerm(getVarmap().get(lhs.getFormula()));
+//            if (debug) System.out.println("SUMOtoTFAform.processCompOp(): bestVar: " + bestVar);
+//            best = bestOfPair(bestVar,best);
+//            if (debug) System.out.println("SUMOtoTFAform.processCompOp(): bestOfPair: " + best);
+//        }
+//        if (rhs.isVariable()) {
+//            String bestVar = bestSpecificTerm(getVarmap().get(rhs.getFormula()));
+//            best = bestOfPair(bestVar,best);
+//        }
+//        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): builtInNumericType(best): " + builtInNumericType(best));
+//        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): rhs is term: " + rhs + " : " + Formula.isTerm(rhs.getFormula()));
+//        if (Formula.isTerm(rhs.getFormula())) {
+//            if (builtInNumericType(best)) {
+//                if (debug) System.out.println("SUMOtoTFAform.processCompOp(): found constant: " + rhs + " with type " + best);
+//                getNumericConstantTypes().put(rhs.getFormula(), best);
+//            }
+//        }
+//        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): lhs is term: " + lhs + " : " + Formula.isTerm(lhs.getFormula()));
+//        if (Formula.isTerm(lhs.getFormula())) {
+//            if (builtInNumericType(best)) {
+//                if (debug) System.out.println("SUMOtoTFAform.processCompOp(): found constant: " + lhs + " with type " + best);
+//                getNumericConstantTypes().put(lhs.getFormula(), best);
+//            }
+//        }
+//        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): final best: " + best);
+//        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): args: " + args);
+//        if (!op.startsWith(Formula.LT) && !op.startsWith(Formula.GT) && !op.startsWith(Formula.EQUAL)) {
+//            System.err.println("Error in SUMOtoTFAform.processCompOp(): bad comparison operator " + op + " in " + f);
+//            return "";
+//        }
+//        String lhsResult = processRecurse(lhs,best);
+//        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): lhsResult: " + lhsResult);
+//        String rhsResult = processRecurse(rhs,best);
+//        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): rhsResult: " + rhsResult);
+//        String comparator = "";
+//        String result;
+//        if (op.startsWith(Formula.EQUAL)) {
+//            result = lhsResult + " = " + rhsResult;
+//            if (debug) System.out.println("SUMOtoTFAform.processCompOp(): result: " + result);
+//            return result;
+//        }
+//        if (op.startsWith(Formula.GTET))
+//            comparator = "$greatereq(" ;
+//        else if (op.startsWith(Formula.GT))
+//            comparator = "$greater(" ;
+//        else if (op.startsWith(Formula.LTET))
+//            comparator = "$lesseq(";
+//        else if (op.startsWith(Formula.LT))
+//            comparator = "$less(";
+//        result = Formula.LP + comparator + lhsResult + "," + rhsResult + "))";
+//        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): result: " + result);
+//        return result;
+//    }
 
     /***************************************************************
      * Get just the bare SUMO term without prefixes or suffixes
@@ -941,93 +938,95 @@ public class SUMOtoTFAform {
      * Each argument is promoted individually only when its own type is
      * more specific than mgt; arguments already at the target type are
      * left unwrapped (avoids redundant $to_real on already-$real values).
+     *
+     * @Deprecated
      */
-    private static String mixedQuotient(Formula f, String op,
-                                        String parentType,
-                                        List<String> args,
-                                        List<String> argTypes) {
-
-        if (debug) System.out.println("SUMOtoTFAform.mixedQuotient(): f: " + f);
-        if (debug) System.out.println("SUMOtoTFAform.mixedQuotient(): argTypes: " + argTypes);
-        String mgt = "Entity";
-        if (argTypes != null && argTypes.size() > 2)
-            mgt = bestOfPair(argTypes.get(1), argTypes.get(2));
-        if (debug) System.out.println("SUMOtoTFAform.mixedQuotient(): most general: " + mgt);
-        Formula lhs = new FormulaAST(args.get(1));
-        Formula rhs = new FormulaAST(args.get(2));
-        String lhsResult = processRecurse(lhs, parentType);
-        String rhsResult = processRecurse(rhs, parentType);
-        return "$quotient_e" + Formula.LP + lhsResult + " ," + rhsResult + Formula.RP;
-    }
+//    private static String mixedQuotient(Formula f, String op,
+//                                        String parentType,
+//                                        List<String> args,
+//                                        List<String> argTypes) {
+//
+//        if (debug) System.out.println("SUMOtoTFAform.mixedQuotient(): f: " + f);
+//        if (debug) System.out.println("SUMOtoTFAform.mixedQuotient(): argTypes: " + argTypes);
+//        String mgt = "Entity";
+//        if (argTypes != null && argTypes.size() > 2)
+//            mgt = bestOfPair(argTypes.get(1), argTypes.get(2));
+//        if (debug) System.out.println("SUMOtoTFAform.mixedQuotient(): most general: " + mgt);
+//        FormulaAST lhs = new FormulaAST(args.get(1));
+//        FormulaAST rhs = new FormulaAST(args.get(2));
+//        String lhsResult = processRecurse(lhs, parentType);
+//        String rhsResult = processRecurse(rhs, parentType);
+//        return "$quotient_e" + Formula.LP + lhsResult + " ," + rhsResult + Formula.RP;
+//    }
 
     /***************************************************************
      *  PLUSFN, MINUSFN, TIMESFN, DIVIDEFN, FLOORFN
+     *
      * @deprecated replaced with {@link #processMathOpExpr}
      */
-    @Deprecated
-    private static String processMathOp(Formula f, Formula car,
-                                        String parentType,
-                                        List<String> args,
-                                        List<String> argTypes) {
-
-        String op = car.getFormula();
-        List<String> predType = relationExtractSigFromName(op);
-        List<String> sig = kb.kbCache.getSignature(op);
-        String best = mostGeneralNumericType(sig);
-        if (debug) System.out.println("SUMOtoTFAform.processMathOp(): f: " + f);
-        if (debug) System.out.println("SUMOtoTFAform.processMathOp(): sig: " + sig);
-        if (debug) System.out.println("SUMOtoTFAform.processMathOp(): best: " + best);
-        if (!op.startsWith(Formula.FLOORFN) && !op.startsWith(Formula.CEILINGFN) && args.size() != 3) {
-            System.err.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
-            return "";
-        }
-        if (op.startsWith(Formula.FLOORFN) && op.startsWith(Formula.CEILINGFN) && args.size() != 2) {
-            System.err.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
-            return "";
-        }
-        Formula arg1 = new FormulaAST(args.get(1));
-        String arg1Type = best;
-        String promotion = numTypePromotion(f,parentType);
-        String closeP = "";
-        if (promotion != null)
-            closeP = Formula.RP;
-        else
-            promotion = "";
-        if (op.startsWith(Formula.FLOORFN))
-            return promotion + "$floor(" + processRecurse(arg1, arg1Type) + Formula.RP + closeP;
-        if (op.startsWith(Formula.CEILINGFN))
-            return promotion + "$ceiling(" + processRecurse(arg1, arg1Type) + Formula.RP + closeP;
-        if (op.startsWith(Formula.ROUNDFN))
-            return promotion + "$round(" + processRecurse(arg1, arg1Type) + Formula.RP + closeP;
-        Formula arg2 = new FormulaAST(args.get(2));
-        String arg2Type = best;
-        if (debug) System.out.println("SUMOtoTFAform.processMathOp(): arg1Type: " + arg1Type);
-        if (debug) System.out.println("SUMOtoTFAform.processMathOp(): arg2Type: " + arg2Type);
-        if (op.startsWith(Formula.PLUSFN))
-            return promotion + "$sum(" + processRecurse(arg1,arg1Type) + " ," +
-                    processRecurse(arg2,arg2Type) + Formula.RP + closeP;
-        if (op.startsWith(Formula.MINUSFN))
-            return promotion + "$difference(" + processRecurse(arg1,arg1Type) + " ," +
-                    processRecurse(arg2,arg2Type) + Formula.RP + closeP;
-        if (op.startsWith(Formula.TIMESFN))
-            return promotion + "$product(" + processRecurse(arg1,arg1Type) + " ," +
-                    processRecurse(arg2,arg2Type) + Formula.RP + closeP;
-        if (op.startsWith(Formula.DIVIDEFN)) {
-            System.out.println("processMathOp(): allOfType() " + allOfType(args,"Integer"));
-            if (allOfType(args,"Integer"))
-                return promotion + "$quotient_e(" + processRecurse(arg1,"Integer") + " ," +
-                        processRecurse(arg2,"Integer") + Formula.RP + closeP;
-            else {
-                System.out.println("processMathOp(): allOfType() " + args);
-                return mixedQuotient(f,op,parentType,args,argTypes);
-            }
-        }
-        if (op.startsWith(Formula.REMAINDERFN))
-            return promotion + "$remainder_t(" + processRecurse(arg1, "Integer") + " ," +
-                    processRecurse(arg2, "Integer") + Formula.RP + closeP;
-        System.err.println("Error in SUMOtoTFAform.processMathOp(): bad math operator " + op + " in " + f);
-        return "";
-    }
+//    private static String processMathOp(Formula f, Formula car,
+//                                        String parentType,
+//                                        List<String> args,
+//                                        List<String> argTypes) {
+//
+//        String op = car.getFormula();
+//        List<String> predType = relationExtractSigFromName(op);
+//        List<String> sig = kb.kbCache.getSignature(op);
+//        String best = mostGeneralNumericType(sig);
+//        if (debug) System.out.println("SUMOtoTFAform.processMathOp(): f: " + f);
+//        if (debug) System.out.println("SUMOtoTFAform.processMathOp(): sig: " + sig);
+//        if (debug) System.out.println("SUMOtoTFAform.processMathOp(): best: " + best);
+//        if (!op.startsWith(Formula.FLOORFN) && !op.startsWith(Formula.CEILINGFN) && args.size() != 3) {
+//            System.err.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
+//            return "";
+//        }
+//        if (op.startsWith(Formula.FLOORFN) && op.startsWith(Formula.CEILINGFN) && args.size() != 2) {
+//            System.err.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
+//            return "";
+//        }
+//        FormulaAST arg1 = new FormulaAST(args.get(1));
+//        String arg1Type = best;
+//        String promotion = numTypePromotion(new FormulaAST(f.getFormula()),parentType);
+//        String closeP = "";
+//        if (promotion != null)
+//            closeP = Formula.RP;
+//        else
+//            promotion = "";
+//        if (op.startsWith(Formula.FLOORFN))
+//            return promotion + "$floor(" + processRecurse(arg1, arg1Type) + Formula.RP + closeP;
+//        if (op.startsWith(Formula.CEILINGFN))
+//            return promotion + "$ceiling(" + processRecurse(arg1, arg1Type) + Formula.RP + closeP;
+//        if (op.startsWith(Formula.ROUNDFN))
+//            return promotion + "$round(" + processRecurse(arg1, arg1Type) + Formula.RP + closeP;
+//        FormulaAST arg2 = new FormulaAST(args.get(2));
+//        String arg2Type = best;
+//        if (debug) System.out.println("SUMOtoTFAform.processMathOp(): arg1Type: " + arg1Type);
+//        if (debug) System.out.println("SUMOtoTFAform.processMathOp(): arg2Type: " + arg2Type);
+//        if (op.startsWith(Formula.PLUSFN))
+//            return promotion + "$sum(" + processRecurse(arg1,arg1Type) + " ," +
+//                    processRecurse(arg2,arg2Type) + Formula.RP + closeP;
+//        if (op.startsWith(Formula.MINUSFN))
+//            return promotion + "$difference(" + processRecurse(arg1,arg1Type) + " ," +
+//                    processRecurse(arg2,arg2Type) + Formula.RP + closeP;
+//        if (op.startsWith(Formula.TIMESFN))
+//            return promotion + "$product(" + processRecurse(arg1,arg1Type) + " ," +
+//                    processRecurse(arg2,arg2Type) + Formula.RP + closeP;
+//        if (op.startsWith(Formula.DIVIDEFN)) {
+//            System.out.println("processMathOp(): allOfType() " + allOfType(args,"Integer"));
+//            if (allOfType(args,"Integer"))
+//                return promotion + "$quotient_e(" + processRecurse(arg1,"Integer") + " ," +
+//                        processRecurse(arg2,"Integer") + Formula.RP + closeP;
+//            else {
+//                System.out.println("processMathOp(): allOfType() " + args);
+//                return mixedQuotient(f,op,parentType,args,argTypes);
+//            }
+//        }
+//        if (op.startsWith(Formula.REMAINDERFN))
+//            return promotion + "$remainder_t(" + processRecurse(arg1, "Integer") + " ," +
+//                    processRecurse(arg2, "Integer") + Formula.RP + closeP;
+//        System.err.println("Error in SUMOtoTFAform.processMathOp(): bad math operator " + op + " in " + f);
+//        return "";
+//    }
 
     /***************************************************************
      * @param f is the formula
@@ -1035,90 +1034,90 @@ public class SUMOtoTFAform {
      * @param parentType is the type restriction that any enclosing formula imposes on this present formula
      * @param args are the arguments in this formula, not including the predicate position (arg 0)
      * @param argTypes are the types of the arguments
+     *
      * @deprecated replaced with {@link #processOtherRelationExpr}
      */
-    @Deprecated
-    private static String processOtherRelation(Formula f, Formula car,
-                                               String parentType,
-                                               List<String> args,
-                                               List<String> argTypes) {
-
-        String op = car.getFormula();
-        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): f: " + f);
-        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): parentType: " + parentType);
-        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): argTypes: " + argTypes);
-        List<String> newArgTypes = new ArrayList<>();
-        List<String> sig = kb.kbCache.getSignature(op);
-        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): sig: " + sig);
-        newArgTypes.addAll(argTypes);
-        if (!SUMOKBtoTFAKB.alreadyExtended(op) && kb.isFunctional(f) && !argTypes.isEmpty() &&
-                kb.isSubclass("RealNumber",argTypes.get(0))) {
-            String best = bestOfPair(argTypes.get(0),parentType);
-            newArgTypes.set(0,best);
-            if (!equalTFFsig(newArgTypes,sig,op) || KButilities.isVariableArity(kb,op) || needsForcedTypeSuffix(op)) // only add the suffix if arg types are different from the original sort of the predicate
-                op = makePredFromArgTypes(car,newArgTypes);
-        }
-        List<String> origArgTypes = new ArrayList<>(newArgTypes); // save actual arg types before bestSignature
-        List<String> predTypes = kb.kbCache.getSignature(car.getFormula());
-        newArgTypes = bestSignature(predTypes,newArgTypes);
-        // If the call has more arguments than the predicate's declared arity (e.g. a binary
-        // predicate applied with 3 args due to row-variable arity mismatch), extra numeric
-        // types are borrowed from varmap via another predicate.  Don't use them for variant
-        // naming — that would generate undeclared TFF predicates causing prover sort errors.
-        if (predTypes != null && newArgTypes.size() > predTypes.size()) {
-            for (int i = predTypes.size(); i < newArgTypes.size(); i++) {
-                if (isNumericType(newArgTypes.get(i)))
-                    newArgTypes.set(i, "Entity");
-            }
-        }
-        // For predicates: if actual args are all Entity but SUMO sig has numeric types,
-        // use the all-Entity variant (e.g. defaultMaxValue__1En2En3En) to avoid $i/$int
-        // conflicts. Variables declared as $i (Entity) cannot satisfy a $int parameter.
-        if (!SUMOKBtoTFAKB.alreadyExtended(op) && !kb.isFunctional(f) &&
-                predTypes != null && hasNumeric(predTypes) && !hasNumeric(origArgTypes)) {
-            List<String> entityArgTypes = new ArrayList<>();
-            entityArgTypes.add(""); // placeholder for predicate position (index 0)
-            for (String ignored : origArgTypes)
-                entityArgTypes.add("Entity");
-            op = makePredFromArgTypes(car, entityArgTypes);
-        }
-        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): newArgTypes: " + newArgTypes);
-        StringBuilder argStr = new StringBuilder();
-        String s, type;
-        int ttype;
-        for (int i = 1; i < args.size(); i++) {  // skip the predicate (0th arg)
-            s = args.get(i);
-            type = "Entity";
-            if (i < newArgTypes.size())
-                type = newArgTypes.get(i);
-            if (car.getFormula().startsWith("instance")) {
-                if (Formula.isTerm(s) && i == 1) {
-                    if (args.size() > 2 && builtInOrSubNumericType(args.get(2))) {
-                        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): found constant: " + s + " with type " + args.get(2));
-                        getNumericConstantTypes().put(s, args.get(2));
-                    }
-                }
-                ttype = f.getFormula().charAt(0);
-                if (Character.isDigit(ttype))
-                    ttype = StreamTokenizer_s.TT_NUMBER;
-                if (Formula.atom(s))
-                    argStr.append(SUMOformulaToTPTPformula.translateWord(s,ttype,false)).append(", ");
-                else
-                    argStr.append(processRecurse(new FormulaAST(s),type)).append(", ");
-            }
-            else
-                argStr.append(processRecurse(new FormulaAST(s),type)).append(", ");
-        }
-        String promotion = numTypePromotion(f,parentType);
-        String closeP = "";
-        if (promotion != null)
-            closeP = Formula.RP;
-        else
-            promotion = "";
-        String result = promotion + Formula.TERM_SYMBOL_PREFIX + op + Formula.LP + argStr.substring(0,argStr.length()-2) + Formula.RP + closeP;
-        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): result: " + result);
-        return result;
-    }
+//    private static String processOtherRelation(Formula f, Formula car,
+//                                               String parentType,
+//                                               List<String> args,
+//                                               List<String> argTypes) {
+//
+//        String op = car.getFormula();
+//        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): f: " + f);
+//        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): parentType: " + parentType);
+//        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): argTypes: " + argTypes);
+//        List<String> newArgTypes = new ArrayList<>();
+//        List<String> sig = kb.kbCache.getSignature(op);
+//        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): sig: " + sig);
+//        newArgTypes.addAll(argTypes);
+//        if (!SUMOKBtoTFAKB.alreadyExtended(op) && kb.isFunctional(new FormulaAST(f.getFormula())) && !argTypes.isEmpty() &&
+//                kb.isSubclass("RealNumber",argTypes.get(0))) {
+//            String best = bestOfPair(argTypes.get(0),parentType);
+//            newArgTypes.set(0,best);
+//            if (!equalTFFsig(newArgTypes,sig,op) || KButilities.isVariableArity(kb,op) || needsForcedTypeSuffix(op)) // only add the suffix if arg types are different from the original sort of the predicate
+//                op = makePredFromArgTypes(new FormulaAST(car.getFormula()),newArgTypes);
+//        }
+//        List<String> origArgTypes = new ArrayList<>(newArgTypes); // save actual arg types before bestSignature
+//        List<String> predTypes = kb.kbCache.getSignature(car.getFormula());
+//        newArgTypes = bestSignature(predTypes,newArgTypes);
+//        // If the call has more arguments than the predicate's declared arity (e.g. a binary
+//        // predicate applied with 3 args due to row-variable arity mismatch), extra numeric
+//        // types are borrowed from varmap via another predicate.  Don't use them for variant
+//        // naming — that would generate undeclared TFF predicates causing prover sort errors.
+//        if (predTypes != null && newArgTypes.size() > predTypes.size()) {
+//            for (int i = predTypes.size(); i < newArgTypes.size(); i++) {
+//                if (isNumericType(newArgTypes.get(i)))
+//                    newArgTypes.set(i, "Entity");
+//            }
+//        }
+//        // For predicates: if actual args are all Entity but SUMO sig has numeric types,
+//        // use the all-Entity variant (e.g. defaultMaxValue__1En2En3En) to avoid $i/$int
+//        // conflicts. Variables declared as $i (Entity) cannot satisfy a $int parameter.
+//        if (!SUMOKBtoTFAKB.alreadyExtended(op) && !kb.isFunctional(new FormulaAST(f.getFormula())) &&
+//                predTypes != null && hasNumeric(predTypes) && !hasNumeric(origArgTypes)) {
+//            List<String> entityArgTypes = new ArrayList<>();
+//            entityArgTypes.add(""); // placeholder for predicate position (index 0)
+//            for (String ignored : origArgTypes)
+//                entityArgTypes.add("Entity");
+//            op = makePredFromArgTypes(new FormulaAST(car.getFormula()), entityArgTypes);
+//        }
+//        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): newArgTypes: " + newArgTypes);
+//        StringBuilder argStr = new StringBuilder();
+//        String s, type;
+//        int ttype;
+//        for (int i = 1; i < args.size(); i++) {  // skip the predicate (0th arg)
+//            s = args.get(i);
+//            type = "Entity";
+//            if (i < newArgTypes.size())
+//                type = newArgTypes.get(i);
+//            if (car.getFormula().startsWith("instance")) {
+//                if (Formula.isTerm(s) && i == 1) {
+//                    if (args.size() > 2 && builtInOrSubNumericType(args.get(2))) {
+//                        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): found constant: " + s + " with type " + args.get(2));
+//                        getNumericConstantTypes().put(s, args.get(2));
+//                    }
+//                }
+//                ttype = f.getFormula().charAt(0);
+//                if (Character.isDigit(ttype))
+//                    ttype = StreamTokenizer_s.TT_NUMBER;
+//                if (Formula.atom(s))
+//                    argStr.append(SUMOformulaToTPTPformula.translateWord(s,ttype,false)).append(", ");
+//                else
+//                    argStr.append(processRecurse(new FormulaAST(s),type)).append(", ");
+//            }
+//            else
+//                argStr.append(processRecurse(new FormulaAST(s),type)).append(", ");
+//        }
+//        String promotion = numTypePromotion(new FormulaAST(f.getFormula()),parentType);
+//        String closeP = "";
+//        if (promotion != null)
+//            closeP = Formula.RP;
+//        else
+//            promotion = "";
+//        String result = promotion + Formula.TERM_SYMBOL_PREFIX + op + Formula.LP + argStr.substring(0,argStr.length()-2) + Formula.RP + closeP;
+//        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): result: " + result);
+//        return result;
+//    }
 
     /***************************************************************
      * The arg type list requires expansion since it contains a superclass
@@ -1360,58 +1359,58 @@ public class SUMOtoTFAform {
      * @param f the formula to process
      * @param parentType is the type restriction that applies to this
      *                   formula, if it's part of a larger formula
+     *
      * @deprecated replaced with {@link #processRecurseExpr}
      */
-    @Deprecated
-    public static String processRecurse(Formula f, String parentType) {
-
-        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): f: " + f);
-        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): varmap: " + getVarmap());
-        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): parentType: " + parentType);
-        if (f == null)
-            return "";
-        if (f.atom()) {
-            int ttype = f.getFormula().charAt(0);
-            if (Character.isDigit(ttype))
-                ttype = StreamTokenizer_s.TT_NUMBER;
-            String promotion = numTypePromotion(f,parentType);
-            String result;
-            if (debug) System.out.println("SUMOtoTFAform.processRecurse(): promotion: " + promotion);
-            if (promotion != null)
-                result = promotion + SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false,"tff") + Formula.RP;
-            else
-                result = SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false,"tff");
-            if (debug) System.out.println("SUMOtoTFAform.processRecurse(): result: " + result);
-            return result;
-        }
-        Formula car = f.carAsFormula();
-        String op = car.getFormula();
-        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): op: " + op);
-
-        List<String> args = f.complexArgumentsToArrayListString(0);
-          // in order to handle functions and their types, always include the relation in arg list
-        List<String> argTypes = collectArgTypes(args);
-        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): argTypes: " + argTypes);
-        List<String> argsFromSig = relationExtractSigFromName(op);
-        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): argsFromSig: " + argsFromSig);
-        argTypes = bestSignature(argTypes,argsFromSig);
-        if (Formula.listP(op)) {
-            System.err.println("Error in SUMOtoTFAform.processRecurse(): formula " + f);
-            return "";
-        }
-        if (Formula.isLogicalOperator(op)) // UQUANT, EQUANT, AND, OR, NOT, IF, IFF
-            return processLogOp(f,car,parentType,args);
-        else if (isComparisonOperator(op)) //EQUAL, GT, GTET, LT, LTET
-            return processCompOp(f,car,args,argTypes);
-        else if (isMathFunction(car.getFormula())) //  PLUSFN, MINUSFN, TIMESFN, DIVIDEFN, FLOORFN
-            return processMathOp(f,car,parentType,args,argTypes);
-        else if (car.getFormula().startsWith("ListFn"))
-            return processListFn(f,car,parentType,args,argTypes);
-        else if (hasNumericSuper(argTypes))
-            return processNumericSuperArgs(f,car,parentType,args,argTypes);
-        else
-            return processOtherRelation(f,car,parentType,args,argTypes);
-    }
+//    public static String processRecurse(FormulaAST f, String parentType) {
+//
+//        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): f: " + f);
+//        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): varmap: " + getVarmap());
+//        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): parentType: " + parentType);
+//        if (f == null)
+//            return "";
+//        if (f.atom()) {
+//            int ttype = f.getFormula().charAt(0);
+//            if (Character.isDigit(ttype))
+//                ttype = StreamTokenizer_s.TT_NUMBER;
+//            String promotion = numTypePromotion(new FormulaAST(f.getFormula()),parentType);
+//            String result;
+//            if (debug) System.out.println("SUMOtoTFAform.processRecurse(): promotion: " + promotion);
+//            if (promotion != null)
+//                result = promotion + SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false,"tff") + Formula.RP;
+//            else
+//                result = SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false,"tff");
+//            if (debug) System.out.println("SUMOtoTFAform.processRecurse(): result: " + result);
+//            return result;
+//        }
+//        FormulaAST car = f.carAsFormula();
+//        String op = car.getFormula();
+//        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): op: " + op);
+//
+//        List<String> args = f.complexArgumentsToArrayListString(0);
+//          // in order to handle functions and their types, always include the relation in arg list
+//        List<String> argTypes = collectArgTypes(args);
+//        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): argTypes: " + argTypes);
+//        List<String> argsFromSig = relationExtractSigFromName(op);
+//        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): argsFromSig: " + argsFromSig);
+//        argTypes = bestSignature(argTypes,argsFromSig);
+//        if (Formula.listP(op)) {
+//            System.err.println("Error in SUMOtoTFAform.processRecurse(): formula " + f);
+//            return "";
+//        }
+//        if (Formula.isLogicalOperator(op)) // UQUANT, EQUANT, AND, OR, NOT, IF, IFF
+//            return processLogOp(new Formula(f.getFormula()),new Formula(car.getFormula()),parentType,args);
+//        else if (isComparisonOperator(op)) //EQUAL, GT, GTET, LT, LTET
+//            return processCompOp(new Formula(f.getFormula()),new Formula(car.getFormula()),args,argTypes);
+//        else if (isMathFunction(car.getFormula())) //  PLUSFN, MINUSFN, TIMESFN, DIVIDEFN, FLOORFN
+//            return processMathOp(new Formula(f.getFormula()),new Formula(car.getFormula()),parentType,args,argTypes);
+//        else if (car.getFormula().startsWith("ListFn"))
+//            return processListFn(new Formula(f.getFormula()),new Formula(car.getFormula()),parentType,args,argTypes);
+//        else if (hasNumericSuper(argTypes))
+//            return processNumericSuperArgs(new Formula(f.getFormula()),new Formula(car.getFormula()),parentType,args,argTypes);
+//        else
+//            return processOtherRelation(new Formula(f.getFormula()),new Formula(car.getFormula()),parentType,args,argTypes);
+//    }
 
     /***************************************************************
      * result is a side effect on varmap
@@ -1522,7 +1521,7 @@ public class SUMOtoTFAform {
             else if (StringUtil.isNumeric(s) && !StringUtil.isInteger(s))
                 types.add("RealNumber");
             else if (Formula.listP(s)) {
-                newf = new FormulaAST(s);
+                newf = new Formula(s);
                 if (kb.isFunctional(newf)) {
                     op = newf.car();
                     range = kb.kbCache.getRange(op);
@@ -1984,7 +1983,7 @@ public class SUMOtoTFAform {
 
         if (StringUtil.emptyString(arg) || !Formula.listP(arg))
             return "Entity";
-        Formula f = new FormulaAST(arg);
+        Formula f = new Formula(arg);
         String op = f.car();
         if (!kb.containsTerm(op)) {
             List<String> sig = SUMOtoTFAform.relationExtractSigFromName(op);
@@ -2096,7 +2095,7 @@ public class SUMOtoTFAform {
         Formula argForm;
         for (int i = 1; i < args.size(); i++) {
             arg = args.get(i);
-            argForm = new FormulaAST(arg);
+            argForm = new Formula(arg);
             type = "Entity";
             if (i <= newsig.size()-1)
                 type = newsig.get(i);
@@ -2119,7 +2118,7 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): sig: " + sig);
         String makePred = op;
         if (!equalTFFsig(newsig,sig,op) || KButilities.isVariableArity(kb,withoutSuffix(op)))  // only add the suffix if arg types are different from the original sort of the predicate
-            makePred = makePredFromArgTypes(new FormulaAST(withoutSuffix(op)),newsig);
+            makePred = makePredFromArgTypes(new Formula(withoutSuffix(op)),newsig);
         if (makePred.equals(withoutSuffix(op))) // if no signature needs to be added then don't change the predicate
             makePred = op;
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): makePred: " + makePred);
@@ -2169,7 +2168,7 @@ public class SUMOtoTFAform {
                 t = "Entity";
                 if (sig != null && i < sig.size())
                     t = sig.get(i);
-                resultString.append(Formula.SPACE).append(constrainFunctVarsRecurse(new FormulaAST(s),t));
+                resultString.append(Formula.SPACE).append(constrainFunctVarsRecurse(new Formula(s),t));
             }
             resultString.append(Formula.RP);
             //if (debug) System.out.println("SUMOtoTFAform.constrainFunctVarsRecurse(): returning: " + resultString);
@@ -2225,7 +2224,7 @@ public class SUMOtoTFAform {
             counter++;
             oldVarmap = cloneVarmap();
             newf = constrainFunctVarsRecurse(f,"Entity");
-            f = new FormulaAST(newf);
+            f = new Formula(newf);
             types = fp.findAllTypeRestrictions(f, kb);
             constrainTypeRestriction(types);
         } while (!getVarmap().equals(oldVarmap) && counter < 5);
@@ -2250,18 +2249,18 @@ public class SUMOtoTFAform {
                 return "";
             }
             if (args.size() == 2) {
-                String result = elimUnitaryLogops(new FormulaAST(args.get(1)));
+                String result = elimUnitaryLogops(new Formula(args.get(1)));
                 return result;
             }
         }
         StringBuilder result = new StringBuilder();
         result = result.append(Formula.LP).append(args.get(0));
         for (int i = 1; i < args.size(); i++) {
-            result.append(Formula.SPACE).append(elimUnitaryLogops(new FormulaAST(args.get(i))));
+            result.append(Formula.SPACE).append(elimUnitaryLogops(new Formula(args.get(i))));
         }
         result.append(Formula.RP);
         if (!result.toString().equals(f.getFormula()))
-            return elimUnitaryLogops(new FormulaAST(result.toString())); // loop again if it's changed
+            return elimUnitaryLogops(new Formula(result.toString())); // loop again if it's changed
         return result.toString();
     }
 
@@ -2280,7 +2279,7 @@ public class SUMOtoTFAform {
         if (f.car().equals("instance")) {
             if (terms.contains(constants.get(0)) ||
                 terms.contains(constants.get(1)))
-                return new FormulaAST("");
+                return new Formula("");
             else
                 return f;
         }
@@ -2289,7 +2288,7 @@ public class SUMOtoTFAform {
             s = constants.get(i);
             val = values.get(i);
             if (terms.contains(s))
-                f = new FormulaAST(f.rename(s,val).getFormula());
+                f = new Formula(f.rename(s,val).getFormula());
         }
         return f;
     }
@@ -2311,7 +2310,7 @@ public class SUMOtoTFAform {
             return s;
         if (!s.contains("instance"))
             return s;
-        Formula f = new FormulaAST(s);
+        Formula f = new Formula(s);
         if (Formula.listP(s)) {
             if (f.isSimpleClause(kb)) {
                 if (f.car().equals("instance")) {
@@ -2446,7 +2445,7 @@ public class SUMOtoTFAform {
         if (Formula.isQuantifier(op)) {
             List<String> args = f.complexArgumentsToArrayListString(1);
             for (String s : args) {
-                farg = new FormulaAST(s);
+                farg = new Formula(s);
                 farg.sourceFile = f.sourceFile;
                 if (farg.listP() && typeConflict(farg))
                     return true;
@@ -2462,7 +2461,7 @@ public class SUMOtoTFAform {
                 sigType = "";
                 if (sig != null && i < sig.size())
                     sigType = sig.get(i);
-                farg = new FormulaAST(s);
+                farg = new Formula(s);
                 farg.sourceFile = f.sourceFile;
                 if (farg.listP() && kb.isFunctional(farg)) {
                     if (typeConflict(farg, sigType)) {
@@ -2526,20 +2525,20 @@ public class SUMOtoTFAform {
      * ListFn statements that have diverse sorts
      * @deprecated replaced with {@link #missingSortsExpr}
      */
-    @Deprecated
-    public Set<String> missingSorts(Formula f) {
-
-        Set<String> result = new HashSet<>();
-        Matcher m = LIST_FN_PATTERN.matcher(f.getFormula());
-        String rel, sort;
-        while (m.find()) {
-            rel = m.group(1);
-            sort = sortFromRelation(rel);
-            if (!StringUtil.emptyString(sort))
-                result.add(sort);
-        }
-        return result;
-    }
+//    @Deprecated
+//    public Set<String> missingSorts(Formula f) {
+//
+//        Set<String> result = new HashSet<>();
+//        Matcher m = LIST_FN_PATTERN.matcher(f.getFormula());
+//        String rel, sort;
+//        while (m.find()) {
+//            rel = m.group(1);
+//            sort = sortFromRelation(rel);
+//            if (!StringUtil.emptyString(sort))
+//                result.add(sort);
+//        }
+//        return result;
+//    }
 
     /***************************************************************
      * This is the primary method of the class. It takes a SUO-KIF
@@ -2547,134 +2546,139 @@ public class SUMOtoTFAform {
      * @param f SUO-KIF formula to be translated to TFA
      * @param query ???
      * @return the translated formula in TFA form
+     *
+     * @deprecated replaced with {@link #ExprToTFF.translateKifString(String kif, boolean query, KB kb)}
+     *
      */
-    public static String process(Formula f, boolean query) {
-
-        initOnce();
-        SUMOformulaToTPTPformula.setHideNumbers(false);
-        if (kb == null) {
-            System.err.println("Error in SUMOtoTFAform.process(): null kb");
-            Thread.dumpStack();
-            return "";
-        }
-        if (f.getFormula().startsWith("(instance equal ")) { // || f.theFormula.contains("ListFn"))
-            System.err.println("Error in SUMOtoTFAform.process(): rejected (instance equal: " + f);
-            return "";
-        }
-        if (debug) System.out.println("\n =======================\nSUMOtoTFAform.process(): Converting SUO-KIF to TFA\n" + f);
-        // Generate quanitifier list for the formula
-        SUMOformulaToTPTPformula.generateQList(f);
-        if (debug) System.out.println("SUMOtoTFAform.process(): collected quantifier list=" + f.qlist);
-        // Convert Numeric names to their corresponding values
-        f = instantiateNumericConstants(f);
-        if (f == null || StringUtil.emptyString(f.getFormula())) return "";
-        // Removed type mapping for terms if Integer or real number
-        f = new FormulaAST(modifyPrecond(f));
-        if (debug) System.out.println("SUMOtoTFAform.process(): f after instantiateNumericConstants() & modifyPrecond(): \n" + f);
-        f = new FormulaAST(modifyTypesToConstraints(f));
-        if (debug) System.out.println("SUMOtoTFAform.process(): f after modify types: \n" + f);
-        // Remove empty (and... and (or... and =>...
-        String oldf;
-        int counter = 0;
-        do {
-            counter++;
-            oldf = f.getFormula();
-            f = new FormulaAST(elimUnitaryLogops(f));
-        } while (!f.getFormula().equals(oldf) && counter < 5);
-        //Find all type restrictitions for each variable and set them to varmap
-        setVarmap(fp.findAllTypeRestrictions(f, kb));
-        if (inconsistentVarTypes()) {
-            System.err.println("Error in SUMOtoTFAform.process(): rejected inconsistent variable types: " + getVarmap() + " in : " + f);
-            return "";
-        }
-        // Constrain function vars...?
-        counter = 0;
-        do {
-            counter++;
-            oldf = f.getFormula();
-            f = constrainFunctVars(f);
-        } while (!f.getFormula().equals(oldf) && counter < 5);
-        // Remove instances of numbers 
-        f = new FormulaAST(removeNumericInstance(f.getFormula()));
-        if ("".equals(f.getFormula()))
-            return "";
-        f = new FormulaAST(elimUnitaryLogops(f)); // remove empty (and... and (or... and =>...
-        // If this formula is a list and not null, continue processing.
-        if (f != null && f.listP()) {
-            String result = processRecurse(f, "Entity"); // no enclosing required type
-            StringBuilder quantifierList = new StringBuilder();
-            String type, oneVar;
-            List<String> unquantifiedVariables = new ArrayList<>(f.collectUnquantifiedVariables());
-            Collections.sort(unquantifiedVariables);
-            for (String unquantifiedVariable : unquantifiedVariables) {
-                oneVar = SUMOformulaToTPTPformula.translateWord(unquantifiedVariable, unquantifiedVariable.charAt(0),false);
-                if (getVarmap().keySet().contains(unquantifiedVariable) && !StringUtil.emptyString(getVarmap().get(unquantifiedVariable))) {
-                    type = mostSpecificType(getVarmap().get(unquantifiedVariable));
-                    if (type != null)
-                        quantifierList.append(oneVar).append(" : ").append(SUMOKBtoTFAKB.translateSort(kb, type)).append(",");
-                }
-            }
-            if (quantifierList.length() > 1) {
-                quantifierList.deleteCharAt(quantifierList.length() - 1);  // delete final comma
-                String quant = "!";
-                if (query)
-                    quant = Formula.V_PREF;
-                result = quant + " [" + quantifierList + "] : (" + result + Formula.RP;
-            }
-            if (debug) System.out.println("----------------------------------\nSUMOtoTFAform.process(): result 2: \n" + result + "\n");
-            return result;
-        }
-        return "";
-    }
+//    public static String process(FormulaAST f, boolean query) {
+//
+//        initOnce();
+//        SUMOformulaToTPTPformula.setHideNumbers(false);
+//        if (kb == null) {
+//            System.err.println("Error in SUMOtoTFAform.process(): null kb");
+//            Thread.dumpStack();
+//            return "";
+//        }
+//        if (f.getFormula().startsWith("(instance equal ")) { // || f.theFormula.contains("ListFn"))
+//            System.err.println("Error in SUMOtoTFAform.process(): rejected (instance equal: " + f);
+//            return "";
+//        }
+//        if (debug) System.out.println("\n =======================\nSUMOtoTFAform.process(): Converting SUO-KIF to TFA\n" + f);
+//        // Generate quanitifier list for the formula
+//        SUMOformulaToTPTPformula.generateQList(f);
+//        if (debug) System.out.println("SUMOtoTFAform.process(): collected quantifier list=" + f.qlist);
+//        // Convert Numeric names to their corresponding values
+//        f = instantiateNumericConstants(f);
+//        if (f == null || StringUtil.emptyString(f.getFormula())) return "";
+//        // Removed type mapping for terms if Integer or real number
+//        f = new FormulaAST(modifyPrecond(f));
+//        if (debug) System.out.println("SUMOtoTFAform.process(): f after instantiateNumericConstants() & modifyPrecond(): \n" + f);
+//        f = new FormulaAST(modifyTypesToConstraints(f));
+//        if (debug) System.out.println("SUMOtoTFAform.process(): f after modify types: \n" + f);
+//        // Remove empty (and... and (or... and =>...
+//        String oldf;
+//        int counter = 0;
+//        do {
+//            counter++;
+//            oldf = f.getFormula();
+//            f = new FormulaAST(elimUnitaryLogops(f));
+//        } while (!f.getFormula().equals(oldf) && counter < 5);
+//        //Find all type restrictitions for each variable and set them to varmap
+//        setVarmap(fp.findAllTypeRestrictions(f, kb));
+//        if (inconsistentVarTypes()) {
+//            System.err.println("Error in SUMOtoTFAform.process(): rejected inconsistent variable types: " + getVarmap() + " in : " + f);
+//            return "";
+//        }
+//        // Constrain function vars...?
+//        counter = 0;
+//        do {
+//            counter++;
+//            oldf = f.getFormula();
+//            f = constrainFunctVars(f);
+//        } while (!f.getFormula().equals(oldf) && counter < 5);
+//        // Remove instances of numbers
+//        f = new FormulaAST(removeNumericInstance(f.getFormula()));
+//        if ("".equals(f.getFormula()))
+//            return "";
+//        f = new FormulaAST(elimUnitaryLogops(f)); // remove empty (and... and (or... and =>...
+//        // If this formula is a list and not null, continue processing.
+//        if (f != null && f.listP()) {
+//            String result = processRecurse(f, "Entity"); // no enclosing required type
+//            StringBuilder quantifierList = new StringBuilder();
+//            String type, oneVar;
+//            List<String> unquantifiedVariables = new ArrayList<>(f.collectUnquantifiedVariables());
+//            Collections.sort(unquantifiedVariables);
+//            for (String unquantifiedVariable : unquantifiedVariables) {
+//                oneVar = SUMOformulaToTPTPformula.translateWord(unquantifiedVariable, unquantifiedVariable.charAt(0),false);
+//                if (getVarmap().keySet().contains(unquantifiedVariable) && !StringUtil.emptyString(getVarmap().get(unquantifiedVariable))) {
+//                    type = mostSpecificType(getVarmap().get(unquantifiedVariable));
+//                    if (type != null)
+//                        quantifierList.append(oneVar).append(" : ").append(SUMOKBtoTFAKB.translateSort(kb, type)).append(",");
+//                }
+//            }
+//            if (quantifierList.length() > 1) {
+//                quantifierList.deleteCharAt(quantifierList.length() - 1);  // delete final comma
+//                String quant = "!";
+//                if (query)
+//                    quant = Formula.V_PREF;
+//                result = quant + " [" + quantifierList + "] : (" + result + Formula.RP;
+//            }
+//            if (debug) System.out.println("----------------------------------\nSUMOtoTFAform.process(): result 2: \n" + result + "\n");
+//            return result;
+//        }
+//        return "";
+//    }
 
     /*****************************************************************
      * Parse a single formula into TPTP format.
      * @param suoString the formula entry to parse
      * @param query true if the suoString is a query
+     *
      * @deprecated replaced with {@link #processExpr}
      */
-    @Deprecated
-    public static String process(String suoString, boolean query) {
-
-        if (!SUMOKBtoTPTPKB.rapidParsing)
-            return _process(suoString, query);
-        else
-            // This must be used for threaded parsing to keep deep recursion synchronized
-            return _t_process(suoString, query);
-    }
+//    public static String process(String suoString, boolean query) {
+//
+//        if (!SUMOKBtoTPTPKB.rapidParsing)
+//            return _process(suoString, query);
+//        else
+//            // This must be used for threaded parsing to keep deep recursion synchronized
+//            return _t_process(suoString, query);
+//    }
 
     /***************************************************************
      * Conventional version
+     *
+     * @Deprecated
      */
-    private static String _process(String s, boolean q) {
-
-        setFilterMessage("");
-        if (s.contains("ListFn"))
-            setFilterMessage("SUMOtoTFAform.process(): Formula contains a list operator");
-        //if (StringUtil.emptyString(s) || numConstAxioms.contains(s))
-        if (StringUtil.emptyString(s)) // || numConstAxioms.contains(s))
-            return "";
-        Formula f = new FormulaAST(s);
-        return process(f,q);
-    }
+//    private static String _process(String s, boolean q) {
+//
+//        setFilterMessage("");
+//        if (s.contains("ListFn"))
+//            setFilterMessage("SUMOtoTFAform.process(): Formula contains a list operator");
+//        //if (StringUtil.emptyString(s) || numConstAxioms.contains(s))
+//        if (StringUtil.emptyString(s)) // || numConstAxioms.contains(s))
+//            return "";
+//        FormulaAST f = new FormulaAST(s);
+//        return process(f,q);
+//    }
 
     /*****************************************************************
      * Synchronized to keep to keep deep recursion synchronized during
      * threaded operations.
      */
-    private static String _t_process(String s, boolean q) {
-        return _process(s, q);
-    }
+//    private static String _t_process(String s, boolean q) {
+//        return _process(s, q);
+//    }
 
     /***************************************************************
      */
-    public static Collection<String> processList(Collection<Formula> l) {
-
-        List<String> result = new ArrayList<>();
-        for (Formula f : l)
-            result.add(process(f,false));
-        return result;
-    }
+//    public static Collection<String> processList(Collection<FormulaAST> l) {
+//
+//        List<String> result = new ArrayList<>();
+//        for (FormulaAST f : l)
+//            result.add(process(f,false));
+//        return result;
+//    }
 
     /***************************************************************
      * if the precondition of a rule is of the form (instance ?X term)
@@ -2706,21 +2710,21 @@ public class SUMOtoTFAform {
      * if all or part of a consequent of a rule is of the form (instance ?X term)
      * @return the name of the type in the instance statement
      */
-    private static String matchingInstanceTerm(Formula f) {
-
-        //String cons = FormulaUtil.consequent(f);
-        //System.out.println("SUMOtoTFAform.matchingPostcondTerm(): const: " + cons);
-        if (f.getFormula() == null)
-            return null;
-        Matcher m = INSTANCE_OBJ_PATTERN.matcher(f.getFormula());
-        if (m.find()) {
-            if (debug) System.out.println("SUMOtoTFAform.matchingInstanceTerm(): matches! ");
-            String type = m.group(1);
-            if (debug) System.out.println("SUMOtoTFAform.matchingInstanceTerm(): type: " + type);
-            return type;
-        }
-        return null;
-    }
+//    private static String matchingInstanceTerm(Formula f) {
+//
+//        //String cons = FormulaUtil.consequent(f);
+//        //System.out.println("SUMOtoTFAform.matchingPostcondTerm(): const: " + cons);
+//        if (f.getFormula() == null)
+//            return null;
+//        Matcher m = INSTANCE_OBJ_PATTERN.matcher(f.getFormula());
+//        if (m.find()) {
+//            if (debug) System.out.println("SUMOtoTFAform.matchingInstanceTerm(): matches! ");
+//            String type = m.group(1);
+//            if (debug) System.out.println("SUMOtoTFAform.matchingInstanceTerm(): type: " + type);
+//            return type;
+//        }
+//        return null;
+//    }
 
     /***************************************************************
      * if all or part of a rule is of the form (instance ?X term)
@@ -2771,14 +2775,14 @@ public class SUMOtoTFAform {
         Matcher m = p.matcher(f.getFormula());
         if (m.find()) {
             String var = m.group(1);
-            f = new FormulaAST(m.replaceAll(""));
+            f = new Formula(m.replaceAll(""));
         }
         type = "RealNumber";
         p = Pattern.compile("\\(instance \\?(\\w+) " + type + "\\)");
         m = p.matcher(f.getFormula());
         if (m.find()) {
             String var = m.group(1);
-            f = new FormulaAST(m.replaceAll(""));
+            f = new Formula(m.replaceAll(""));
         }
         return f.getFormula();
     }
@@ -2818,7 +2822,7 @@ public class SUMOtoTFAform {
                 else {
                     origVar = numericVars.get(type);
                     newCons = cons.replace(Formula.V_PREF + origVar, Formula.V_PREF + var);
-                    f = new FormulaAST(f.getFormula().replace(toReplace, newCons));
+                    f = new Formula(f.getFormula().replace(toReplace, newCons));
                 }
             }
             else
@@ -3126,7 +3130,7 @@ public class SUMOtoTFAform {
         List<Expr> args = se.args();
         List<String> sig = kb.kbCache.getSignature(withoutSuffix(pred));
         if (!equalTFFsig(argTypes, sig, pred) || KButilities.isVariableArity(kb, withoutSuffix(pred)))
-            pred = makePredFromArgTypes(new FormulaAST(pred), argTypes);
+            pred = makePredFromArgTypes(new Formula(pred), argTypes);
         List<String> processedArgs = new ArrayList<>();
         for (Expr arg : args)
             processedArgs.add(processRecurseExpr(arg, parentType));
@@ -3152,7 +3156,7 @@ public class SUMOtoTFAform {
         String pred = op;
         List<String> sig = kb.kbCache.getSignature(withoutSuffix(pred));
         if (!equalTFFsig(newArgTypes, sig, pred) || KButilities.isVariableArity(kb, withoutSuffix(pred)) || needsForcedTypeSuffix(pred))
-            pred = makePredFromArgTypes(new FormulaAST(pred), newArgTypes);
+            pred = makePredFromArgTypes(new Formula(pred), newArgTypes);
         List<String> processedArgs = new ArrayList<>();
         for (int i = 0; i < args.size(); i++) {
             String argType = "Entity";
@@ -3184,7 +3188,7 @@ public class SUMOtoTFAform {
             String best = bestOfPair(argTypes.get(0), parentType);
             newArgTypes.set(0, best);
             if (!equalTFFsig(newArgTypes, sig, op) || KButilities.isVariableArity(kb, op) || needsForcedTypeSuffix(op))
-                op = makePredFromArgTypes(new FormulaAST(op), newArgTypes);
+                op = makePredFromArgTypes(new Formula(op), newArgTypes);
         }
         List<String> origArgTypes = new ArrayList<>(newArgTypes); // save actual arg types before bestSignature
         List<String> predTypes = kb.kbCache.getSignature(se.headName());
@@ -3207,7 +3211,7 @@ public class SUMOtoTFAform {
             entityArgTypes.add(""); // placeholder for predicate position (index 0)
             for (String ignored : origArgTypes)
                 entityArgTypes.add("Entity");
-            op = makePredFromArgTypes(new FormulaAST(op), entityArgTypes);
+            op = makePredFromArgTypes(new Formula(op), entityArgTypes);
         }
         StringBuilder argStr = new StringBuilder();
         for (int i = 0; i < args.size(); i++) {
@@ -3288,18 +3292,18 @@ public class SUMOtoTFAform {
             return "";
         }
         // Run TFF preprocessing on the string-based Formula
-        Formula f = new FormulaAST(kifStr);
+        Formula f = new Formula(kifStr);
         SUMOformulaToTPTPformula.generateQList(f);
         f = instantiateNumericConstants(f);
-        f = new FormulaAST(modifyPrecond(f));
+        f = new Formula(modifyPrecond(f));
         if (f == null || StringUtil.emptyString(f.getFormula())) return "";
-        f = new FormulaAST(modifyTypesToConstraints(f));
+        f = new Formula(modifyTypesToConstraints(f));
         String oldf;
         int counter = 0;
         do {
             counter++;
             oldf = f.getFormula();
-            f = new FormulaAST(elimUnitaryLogops(f));
+            f = new Formula(elimUnitaryLogops(f));
         } while (!f.getFormula().equals(oldf) && counter < 5);
         setVarmap(fp.findAllTypeRestrictions(f, kb));
         if (inconsistentVarTypes()) {
@@ -3313,21 +3317,16 @@ public class SUMOtoTFAform {
             oldf = f.getFormula();
             f = constrainFunctVars(f);
         } while (!f.getFormula().equals(oldf) && counter < 5);
-        f = new FormulaAST(removeNumericInstance(f.getFormula()));
+        f = new Formula(removeNumericInstance(f.getFormula()));
         if ("".equals(f.getFormula())) return "";
-        f = new FormulaAST(elimUnitaryLogops(f));
+        f = new Formula(elimUnitaryLogops(f));
         if (f == null || !f.listP()) return "";
         // Re-parse the preprocessed KIF back to Expr for the recursive translation
         SuokifVisitor visitor = SuokifVisitor.parseSentence(f.getFormula());
         Expr preprocessedExpr = null;
         if (visitor.result != null && !visitor.result.isEmpty()) {
-            FormulaAST ast = visitor.result.get(0);
+            Formula ast = visitor.result.get(0);
             if (ast != null) preprocessedExpr = ast.expr;
-        }
-        if (preprocessedExpr == null) {
-            // Re-parse failed: fall back to string-based recursive translation
-            String result = processRecurse(f, "Entity");
-            return buildQuantifiedResult(f, result, query);
         }
         // Expr-based recursive translation (no new Formula(...) allocations in the hot path)
         String result = processRecurseExpr(preprocessedExpr, "Entity");
@@ -3336,7 +3335,7 @@ public class SUMOtoTFAform {
 
     /** Build the quantifier wrapper around a TFF body, using the varmap already set. */
     private static String buildQuantifiedResult(Formula f, String result, boolean query) {
-        Set<String> uqVars = f.collectUnquantifiedVariables();
+        Set<String> uqVars = new TreeSet<>(f.collectUnquantifiedVariables());
         StringBuilder qlist = new StringBuilder();
         for (String s : uqVars) {
             String oneVar = SUMOformulaToTPTPformula.translateWord(s, s.charAt(0), false);
@@ -3394,6 +3393,15 @@ public class SUMOtoTFAform {
         Expr.SExpr se = (Expr.SExpr) expr;
         String op = se.headName();
         if (op == null) {
+            // Head is a Var (predicate variable application), e.g. (?REL @ROW ?ITEM)
+            // Translate as: s__?REL(arg1, arg2, ...)
+            if (se.head() instanceof Expr.Var headVar) {
+                StringBuilder argStr = new StringBuilder();
+                for (Expr arg : se.args())
+                    argStr.append(processRecurseExpr(arg, "Entity")).append(", ");
+                String translatedArgs = argStr.length() >= 2 ? argStr.substring(0, argStr.length() - 2) : "";
+                return Formula.TERM_SYMBOL_PREFIX + headVar.name() + Formula.LP + translatedArgs + Formula.RP;
+            }
             System.err.println("Error in SUMOtoTFAform.processRecurseExpr(): null head in " + se.toKifString());
             return "";
         }
@@ -3442,47 +3450,47 @@ public class SUMOtoTFAform {
 
     /***************************************************************
      */
-    public static void test1() {
-
-        Formula f = new FormulaAST("(equal ?X (AdditionFn__IntegerFn 1 2))");
-        System.out.println("SUMOtoTFAform.test1(): " + processRecurse(f,"Entity"));
-        f = new FormulaAST("(equal ?X (SubtractionFn__IntegerFn 2 1))");
-        System.out.println("SUMOtoTFAform.test1(): " + processRecurse(f,"Entity"));
-    }
-
-    /***************************************************************
-     */
-    public static void test2() {
-
-        Formula f = new FormulaAST("(=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
-                "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
-                "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
-                "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
-        System.out.println("SUMOtoTFAform.test2(): " + process(f,false));
-    }
+//    public static void test1() {
+//
+//        FormulaAST f = new FormulaAST("(equal ?X (AdditionFn__IntegerFn 1 2))");
+//        System.out.println("SUMOtoTFAform.test1(): " + processRecurse(f,"Entity"));
+//        f = new FormulaAST("(equal ?X (SubtractionFn__IntegerFn 2 1))");
+//        System.out.println("SUMOtoTFAform.test1(): " + processRecurse(f,"Entity"));
+//    }
 
     /***************************************************************
      */
-    public static void test3() {
-
-        Formula f = new FormulaAST("(<=> (equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
-                "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
-        System.out.println("SUMOtoTFAform.test3(): " + process(f,false));
-    }
+//    public static void test2() {
+//
+//        FormulaAST f = new FormulaAST("(=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
+//                "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
+//                "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
+//                "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
+//        System.out.println("SUMOtoTFAform.test2(): " + process(f,false));
+//    }
 
     /***************************************************************
      */
-    public static void test4() {
+//    public static void test3() {
+//
+//        FormulaAST f = new FormulaAST("(<=> (equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
+//                "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
+//        System.out.println("SUMOtoTFAform.test3(): " + process(f,false));
+//    }
 
-        Formula f = new FormulaAST("(<=> (greaterThanOrEqualTo ?NUMBER1 ?NUMBER2) (or (equal ?NUMBER1 ?NUMBER2) (greaterThan ?NUMBER1 ?NUMBER2)))");
-        System.out.println("SUMOtoTFAform.test4(): " + process(f,false));
-    }
+    /***************************************************************
+     */
+//    public static void test4() {
+//
+//        FormulaAST f = new FormulaAST("(<=> (greaterThanOrEqualTo ?NUMBER1 ?NUMBER2) (or (equal ?NUMBER1 ?NUMBER2) (greaterThan ?NUMBER1 ?NUMBER2)))");
+//        System.out.println("SUMOtoTFAform.test4(): " + process(f,false));
+//    }
 
     /***************************************************************
      */
     public static void test5() {
 
-        Formula f = new FormulaAST("(=>\n" +
+        Formula f = new Formula("(=>\n" +
                 "(measure ?QUAKE\n" +
                 "(MeasureFn ?VALUE RichterMagnitude))\n" +
                 "(instance ?VALUE PositiveRealNumber))");
@@ -3491,91 +3499,99 @@ public class SUMOtoTFAform {
 
     /***************************************************************
      */
-    public static void test6() {
-
-        Formula f = new FormulaAST("(<=> " +
-                "(equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
-                "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
-        System.out.println("SUMOtoTFAform.test6(): " + process(f,false));
-        System.out.println("expect: ");
-        System.out.println("tff(kb_SUMO_73,axiom,(! [V__NUMBER1 : $int,V__NUMBER2 : $int,V__NUMBER : $int] : " +
-                "((s__RemainderFn(V__NUMBER1, V__NUMBER2) = V__NUMBER " +
-                "=> $sum($product(s__FloorFn__1InFn($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = " +
-                "V__NUMBER1) & " +
-                "($sum($product(s__FloorFn__1InFn($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = " +
-                "V__NUMBER1 => s__RemainderFn(V__NUMBER1, V__NUMBER2) = V__NUMBER)))).");
-    }
-
-    /***************************************************************
-     */
-    public static void test7() {
-
-        Formula f = new FormulaAST("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
-                "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
-                "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
-                "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
-        System.out.println("SUMOtoTFAform.test7(): " + process(f,false));
-        System.out.println("test7() expected: ! [V__NUMBER1 : $real,V__NUMBER2 : $real] : " +
-                "((s__AbsoluteValueFn__0Re1ReFn(V__NUMBER1) = V__NUMBER2 => s__SignumFn__0In1ReFn(V__NUMBER1) = 1 |" +
-                " s__SignumFn__0In1ReFn(V__NUMBER1) = 0 & V__NUMBER1 = V__NUMBER2 | " +
-                "s__SignumFn__0In1ReFn(V__NUMBER1) = -1 & V__NUMBER2 = $difference(0.0 ,V__NUMBER1)) & " +
-                "(s__SignumFn__0In1ReFn(V__NUMBER1) = 1 | s__SignumFn__0In1ReFn(V__NUMBER1) = 0 & " +
-                "V__NUMBER1 = V__NUMBER2 | s__SignumFn__0In1ReFn(V__NUMBER1) = -1 & " +
-                "V__NUMBER2 = $difference(0.0 ,V__NUMBER1) => s__AbsoluteValueFn__0Re1ReFn(V__NUMBER1) = V__NUMBER2)).");
-    }
+//    public static void test6() {
+//
+//        FormulaAST f = new FormulaAST("(<=> " +
+//                "(equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
+//                "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
+//        System.out.println("SUMOtoTFAform.test6(): " + process(f,false));
+//        System.out.println("expect: ");
+//        System.out.println("tff(kb_SUMO_73,axiom,(! [V__NUMBER1 : $int,V__NUMBER2 : $int,V__NUMBER : $int] : " +
+//                "((s__RemainderFn(V__NUMBER1, V__NUMBER2) = V__NUMBER " +
+//                "=> $sum($product(s__FloorFn__1InFn($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = " +
+//                "V__NUMBER1) & " +
+//                "($sum($product(s__FloorFn__1InFn($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = " +
+//                "V__NUMBER1 => s__RemainderFn(V__NUMBER1, V__NUMBER2) = V__NUMBER)))).");
+//    }
 
     /***************************************************************
      */
-    public static void test8() {
-
-        Formula f = new FormulaAST("(<=> (equal (LastFn ?LIST) ?ITEM) (exists (?NUMBER) " +
-                "(and (equal (ListLengthFn ?LIST) ?NUMBER) " +
-                "(equal (ListOrderFn ?LIST ?NUMBER) ?ITEM))))");
-        System.out.println("SUMOtoTFAform.test8(): " + process(f,false));
-        System.out.println("test8() expected: tff(kb_SUMO_138,axiom,(! [V__LIST : $i,V__ITEM : $i] : " +
-                "((s__LastFn(V__LIST) = V__ITEM =>  ? [V__NUMBER:$int] : " +
-                "(s__ListLengthFn(V__LIST) = V__NUMBER & s__ListOrderFn(V__LIST, V__NUMBER) = V__ITEM)) & " +
-                "( ? [V__NUMBER:$int] : " +
-                "(s__ListLengthFn(V__LIST) = V__NUMBER & s__ListOrderFn(V__LIST, V__NUMBER) = V__ITEM) => " +
-                "s__LastFn(V__LIST) = V__ITEM)))).");
-    }
-
-    /***************************************************************
-     */
-    public static void test9() {
-
-        Formula f = new FormulaAST("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
-                "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
-                "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
-                "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
-        System.out.println("SUMOtoTFAform.test9(): " + process(f,false));
-        System.out.println("test9() expected: tff(kb_SUMO_1,axiom,(! [V__NUMBER1 : $real,V__NUMBER2 : $real] : " +
-                "((s__AbsoluteValueFn(V__NUMBER1) = V__NUMBER2 => " +
-                "s__SignumFn(V__NUMBER1) = 1 | s__SignumFn(V__NUMBER1) = 0 & " +
-                "V__NUMBER1 = V__NUMBER2 | s__SignumFn(V__NUMBER1) = -1 & " +
-                "V__NUMBER2 = $difference(0.0 ,V__NUMBER1)) & (s__SignumFn(V__NUMBER1) = 1 | " +
-                "s__SignumFn(V__NUMBER1) = 0 & V__NUMBER1 = V__NUMBER2 | " +
-                "s__SignumFn(V__NUMBER1) = -1 & V__NUMBER2 = $difference(0.0 ,V__NUMBER1) => " +
-                "s__AbsoluteValueFn(V__NUMBER1) = V__NUMBER2)))).");
-    }
+    //TODO: replace the @Deprecated process method
+    //TODO: move the method to the actual test folder.
+//    public static void test7() {
+//
+//        FormulaAST f = new FormulaAST("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
+//                "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
+//                "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
+//                "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
+//        System.out.println("SUMOtoTFAform.test7(): " + process(f,false));
+//        System.out.println("test7() expected: ! [V__NUMBER1 : $real,V__NUMBER2 : $real] : " +
+//                "((s__AbsoluteValueFn__0Re1ReFn(V__NUMBER1) = V__NUMBER2 => s__SignumFn__0In1ReFn(V__NUMBER1) = 1 |" +
+//                " s__SignumFn__0In1ReFn(V__NUMBER1) = 0 & V__NUMBER1 = V__NUMBER2 | " +
+//                "s__SignumFn__0In1ReFn(V__NUMBER1) = -1 & V__NUMBER2 = $difference(0.0 ,V__NUMBER1)) & " +
+//                "(s__SignumFn__0In1ReFn(V__NUMBER1) = 1 | s__SignumFn__0In1ReFn(V__NUMBER1) = 0 & " +
+//                "V__NUMBER1 = V__NUMBER2 | s__SignumFn__0In1ReFn(V__NUMBER1) = -1 & " +
+//                "V__NUMBER2 = $difference(0.0 ,V__NUMBER1) => s__AbsoluteValueFn__0Re1ReFn(V__NUMBER1) = V__NUMBER2)).");
+//    }
 
     /***************************************************************
      */
-    public static void test10() {
+    //TODO: replace the @Deprecated process method
+    //TODO: move the method to the actual test folder.
+//    public static void test8() {
+//
+//        FormulaAST f = new FormulaAST("(<=> (equal (LastFn ?LIST) ?ITEM) (exists (?NUMBER) " +
+//                "(and (equal (ListLengthFn ?LIST) ?NUMBER) " +
+//                "(equal (ListOrderFn ?LIST ?NUMBER) ?ITEM))))");
+//        System.out.println("SUMOtoTFAform.test8(): " + process(f,false));
+//        System.out.println("test8() expected: tff(kb_SUMO_138,axiom,(! [V__LIST : $i,V__ITEM : $i] : " +
+//                "((s__LastFn(V__LIST) = V__ITEM =>  ? [V__NUMBER:$int] : " +
+//                "(s__ListLengthFn(V__LIST) = V__NUMBER & s__ListOrderFn(V__LIST, V__NUMBER) = V__ITEM)) & " +
+//                "( ? [V__NUMBER:$int] : " +
+//                "(s__ListLengthFn(V__LIST) = V__NUMBER & s__ListOrderFn(V__LIST, V__NUMBER) = V__ITEM) => " +
+//                "s__LastFn(V__LIST) = V__ITEM)))).");
+//    }
 
-        Formula f = new FormulaAST("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
-                "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
-                "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
-                "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
-        System.out.println("SUMOtoTFAform.test10(): " + process(f,false));
-        System.out.println("test10() expected: tff(kb_SUMO_1,axiom,(! [V__NUMBER1 : $real,V__NUMBER2 : $real] : " +
-                "((s__AbsoluteValueFn__0Re1ReFn(V__NUMBER1) = V__NUMBER2 => s__SignumFn__0In1ReFn(V__NUMBER1) = 1 | " +
-                "s__SignumFn__0In1ReFn(V__NUMBER1) = 0 & V__NUMBER1 = V__NUMBER2 | " +
-                "s__SignumFn__0In1ReFn(V__NUMBER1) = -1 & V__NUMBER2 = $difference(0.0 ,V__NUMBER1)) & " +
-                "(s__SignumFn__0In1ReFn(V__NUMBER1) = 1 | s__SignumFn__0In1ReFn(V__NUMBER1) = 0 & " +
-                "V__NUMBER1 = V__NUMBER2 | s__SignumFn__0In1ReFn(V__NUMBER1) = -1 & " +
-                "V__NUMBER2 = $difference(0.0 ,V__NUMBER1) => s__AbsoluteValueFn__0Re1ReFn(V__NUMBER1) = V__NUMBER2)))).");
-    }
+    /***************************************************************
+     */
+    //TODO: replace the @Deprecated process method
+    //TODO: move the method to the actual test folder.
+//    public static void test9() {
+//
+//        FormulaAST f = new FormulaAST("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
+//                "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
+//                "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
+//                "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
+//        System.out.println("SUMOtoTFAform.test9(): " + process(f,false));
+//        System.out.println("test9() expected: tff(kb_SUMO_1,axiom,(! [V__NUMBER1 : $real,V__NUMBER2 : $real] : " +
+//                "((s__AbsoluteValueFn(V__NUMBER1) = V__NUMBER2 => " +
+//                "s__SignumFn(V__NUMBER1) = 1 | s__SignumFn(V__NUMBER1) = 0 & " +
+//                "V__NUMBER1 = V__NUMBER2 | s__SignumFn(V__NUMBER1) = -1 & " +
+//                "V__NUMBER2 = $difference(0.0 ,V__NUMBER1)) & (s__SignumFn(V__NUMBER1) = 1 | " +
+//                "s__SignumFn(V__NUMBER1) = 0 & V__NUMBER1 = V__NUMBER2 | " +
+//                "s__SignumFn(V__NUMBER1) = -1 & V__NUMBER2 = $difference(0.0 ,V__NUMBER1) => " +
+//                "s__AbsoluteValueFn(V__NUMBER1) = V__NUMBER2)))).");
+//    }
+
+    /***************************************************************
+     */
+    //TODO: replace the @Deprecated process method
+    //TODO: move the method to the actual test folder.
+//    public static void test10() {
+//
+//        FormulaAST f = new FormulaAST("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
+//                "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
+//                "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
+//                "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
+//        System.out.println("SUMOtoTFAform.test10(): " + process(f,false));
+//        System.out.println("test10() expected: tff(kb_SUMO_1,axiom,(! [V__NUMBER1 : $real,V__NUMBER2 : $real] : " +
+//                "((s__AbsoluteValueFn__0Re1ReFn(V__NUMBER1) = V__NUMBER2 => s__SignumFn__0In1ReFn(V__NUMBER1) = 1 | " +
+//                "s__SignumFn__0In1ReFn(V__NUMBER1) = 0 & V__NUMBER1 = V__NUMBER2 | " +
+//                "s__SignumFn__0In1ReFn(V__NUMBER1) = -1 & V__NUMBER2 = $difference(0.0 ,V__NUMBER1)) & " +
+//                "(s__SignumFn__0In1ReFn(V__NUMBER1) = 1 | s__SignumFn__0In1ReFn(V__NUMBER1) = 0 & " +
+//                "V__NUMBER1 = V__NUMBER2 | s__SignumFn__0In1ReFn(V__NUMBER1) = -1 & " +
+//                "V__NUMBER2 = $difference(0.0 ,V__NUMBER1) => s__AbsoluteValueFn__0Re1ReFn(V__NUMBER1) = V__NUMBER2)))).");
+//    }
 
     /***************************************************************
      */
@@ -3584,7 +3600,7 @@ public class SUMOtoTFAform {
         String rel = "AbsoluteValueFn";
         List<String> sig = kb.kbCache.getSignature(rel);
         System.out.println("SUMOtoTFAform.testRlEmbed(): " + sig);
-        System.out.println("SUMOtoTFAform.testRlEmbed(): new name: " + makePredFromArgTypes(new FormulaAST(rel),sig));
+        System.out.println("SUMOtoTFAform.testRlEmbed(): new name: " + makePredFromArgTypes(new Formula(rel),sig));
         kb.kbCache.extendInstance(rel,"1Re");
         kb.kbCache.signatures.put(rel + "__" + "1Re",sig);
     }
@@ -3599,16 +3615,16 @@ public class SUMOtoTFAform {
 
     /***************************************************************
      */
-    public static void testCourse() {
-
-        Formula form = new
-                Formula("(=> (and (courseOverGround ?V1 ?COG1 ?TRANS1) " +
-                "(courseOverGround ?V2 ?COG2 ?TRANS2) " +
-                "(equal ?RECIP (RemainderFn (AdditionFn ?COG2 180.0) 360.0)) " +
-                "(equal ?ZERO (AbsoluteValueFn (SubtractionFn ?COG1 ?RECIP))) " +
-                "(lessThan ?ZERO 10.0)) (reciprocalCourse ?V1 ?V2))");
-        System.out.println("SUMOtoTFAform.testCourse(): " + process(form,false));
-    }
+//    public static void testCourse() {
+//
+//        FormulaAST form = new
+//                FormulaAST("(=> (and (courseOverGround ?V1 ?COG1 ?TRANS1) " +
+//                "(courseOverGround ?V2 ?COG2 ?TRANS2) " +
+//                "(equal ?RECIP (RemainderFn (AdditionFn ?COG2 180.0) 360.0)) " +
+//                "(equal ?ZERO (AbsoluteValueFn (SubtractionFn ?COG1 ?RECIP))) " +
+//                "(lessThan ?ZERO 10.0)) (reciprocalCourse ?V1 ?V2))");
+//        System.out.println("SUMOtoTFAform.testCourse(): " + process(form,false));
+//    }
 
     /*****************************************************************
      */
@@ -3663,8 +3679,8 @@ public class SUMOtoTFAform {
             else if (args != null && args.length > 1 && args[0].equals("-f")) {
                 debug = true;
                 SUMOformulaToTPTPformula.debug = true;
-                Formula f = new FormulaAST(args[1]);
-                System.out.println("===================================\nSUMOtoTFAform.main(): in TFA: \n" + process(f,false));
+                Formula f = new Formula(args[1]);
+                System.out.println("===================================\nSUMOtoTFAform.main(): in TFA: \n" + processExpr(f.expr,false));
             }
             else if (args != null && args.length > 0 && args[0].equals("-t")) {
                 String bare = getBareTerm("s__refers__1En2In");

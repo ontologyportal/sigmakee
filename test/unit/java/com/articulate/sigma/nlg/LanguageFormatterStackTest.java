@@ -1,7 +1,7 @@
 package com.articulate.sigma.nlg;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
+import com.articulate.sigma.Formula;
 import org.junit.Test;
 
 import java.util.List;
@@ -30,10 +30,7 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
 
         assertEquals(StackElement.StackState.QUANTIFIED_VARS, LanguageFormatterStack.getFormulaArg(formulaArgs, "(?D ?H)").state);
 
-        String expectedKey = "(and\n" +
-                "                   (instance ?D Driving)\n" +
-                "                   (instance ?H Human)\n" +
-                "                   (agent ?D ?H))";
+        String expectedKey = "(and (instance ?D Driving) (instance ?H Human) (agent ?D ?H))";
         assertEquals(StackElement.StackState.UNPROCESSED, LanguageFormatterStack.getFormulaArg(formulaArgs, expectedKey).state);
     }
 

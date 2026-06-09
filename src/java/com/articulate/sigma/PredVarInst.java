@@ -47,7 +47,7 @@ public class PredVarInst {
     public static final ThreadLocal<Boolean> doublesHandledTL = ThreadLocal.withInitial(() -> false);
 
     //The list of logical terms that not related to arity check, will skip these predicates
-    private static final List<String> LOGICAL_TERMS = Arrays.asList(new String[]{Formula.UQUANT,Formula.EQUANT,Formula.IF,Formula.AND,Formula.OR,Formula.XOR,Formula.IFF,Formula.NOT,Formula.EQUAL});
+    private static final List<String> LOGICAL_TERMS = Arrays.asList(new String[]{Formula.UQUANT, Formula.EQUANT, Formula.IF, Formula.AND, Formula.OR, Formula.XOR, Formula.IFF, Formula.NOT, Formula.EQUAL});
 
     /** ***************************************************************
      */
@@ -218,11 +218,11 @@ public class PredVarInst {
     /** ***************************************************************
      * @param input formula
      * @param kb knowledge base
-     * @return A list of formulas where predicate variables are instantiated;
-     *         There are three possible returns:
-     *         return null if input contains predicate variables but cannot be instantiated;
-     *         return empty if input contains no predicate variables;
-     *         return a list of instantiated formulas if the predicate variables are instantiated;
+     * @return A set of formulas where predicate variables are instantiated:
+     *         null      — double pred-var that was already handled (hard reject);
+     *         empty set — no predicate variables in input, OR pred vars exist but no KB
+     *                     instances qualify (caller should keep the original as fallback);
+     *         non-empty — successful instantiation, one entry per substituted relation.
      */
     public static Set<Formula> instantiatePredVars(Formula input, KB kb) {
 
@@ -322,11 +322,13 @@ public class PredVarInst {
                 }
             }
         }
-        if (result.isEmpty()) {   // Return null if input contains predicate variables but cannot be initialized
+        if (result.isEmpty()) {
             String errStr = "No predicate instantiations for ";
             errStr += input.getFormula();
             input.errors.add(errStr);
-            return null;
+//            return null;
+            // fall through: return empty set so callers keep the original formula as fallback.
+            // null is reserved for the "double pred-var, already handled" hard-reject case.
         }
         return result;
     }
@@ -502,6 +504,8 @@ public class PredVarInst {
         if (debug) System.out.println("INFO in PredVarInst.gatherPredVars(): " + f);
         if (f.predVarCache != null) {
             if (debug) System.out.println("INFO in PredVarInst.gatherPredVars(): returning cache " + f.predVarCache);
+            if (!f.predVarCache.isEmpty())
+                gatherPredVarRecurse(kb, f); // ensure predVarArityTL is populated (side-effect)
             return f.predVarCache;
         }
         Set<String> varlist = null;

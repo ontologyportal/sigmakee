@@ -11,11 +11,11 @@ import static org.junit.Assert.assertFalse;
 
 public class SUOKIFCacheTest extends UnitTestBase {
 
-    public static Map<Integer, FormulaAST> process(String input) {
+    public static Map<Integer, Formula> process(String input) {
 
         System.out.println(input);
         SuokifVisitor visitor = SuokifVisitor.parseString(input);
-        Map<Integer,FormulaAST> hm = visitor.result;
+        Map<Integer, Formula> hm = visitor.result;
         return hm;
     }
 
@@ -26,7 +26,7 @@ public class SUOKIFCacheTest extends UnitTestBase {
 
         System.out.println("===================== SUOKIFCacheTest.test1() =====================");
         String input = "(likes John Mary)";
-        Map<Integer,FormulaAST> hm = process(input);
+        Map<Integer, Formula> hm = process(input);
         Formula f = hm.values().iterator().next();
         f.printCaches();
         System.out.println("termCache: " + f.termCache);
@@ -42,8 +42,8 @@ public class SUOKIFCacheTest extends UnitTestBase {
 
         System.out.println("===================== SUOKIFCacheTest.test2() =====================");
         String input = "(=> (and (minValue ?R ?ARG ?N) (?R @ARGS) (equal ?VAL (ListOrderFn (ListFn @ARGS) ?ARG))) (greaterThan ?VAL ?N))";
-        Map<Integer,FormulaAST> hm = process(input);
-        FormulaAST f = hm.values().iterator().next();
+        Map<Integer, Formula> hm = process(input);
+        Formula f = hm.values().iterator().next();
         f.printCaches();
         String expected = "[minValue, ListOrderFn, ListFn, greaterThan]";
         System.out.println("SUOKIFCacheText.test2(): expected term cache: " + expected);
@@ -87,8 +87,8 @@ public class SUOKIFCacheTest extends UnitTestBase {
                 "                (attribute ?SYLLABLE2 Stressed)\n" +
                 "                (not\n" +
                 "                    (equal ?SYLLABLE2 ?SYLLABLE))))))";
-        Map<Integer,FormulaAST> hm = process(input);
-        FormulaAST f = hm.values().iterator().next();
+        Map<Integer, Formula> hm = process(input);
+        Formula f = hm.values().iterator().next();
         f.printCaches();
         String expected = "[?SYLLABLE2]";
         assertEquals(expected,f.existVarsCache.toString());
@@ -105,8 +105,8 @@ public class SUOKIFCacheTest extends UnitTestBase {
 
         System.out.println("===================== SUOKIFCacheTest.test4() =====================");
         String input = "(attribute ?SYLLABLE Stressed) ;; I am an in-line SUO-KIF comment\n";
-        Map<Integer, FormulaAST> hm = process(input);
-        FormulaAST f = hm.values().iterator().next();
+        Map<Integer, Formula> hm = process(input);
+        Formula f = hm.values().iterator().next();
         f.printCaches();
 
         assertFalse("Is not a comment",f.comment);

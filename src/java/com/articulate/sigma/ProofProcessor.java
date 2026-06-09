@@ -150,7 +150,7 @@ public class ProofProcessor {
         Formula argForm, argRes;
     	while (!StringUtil.emptyString(f.getArgument(arg))) {
             argForm = new Formula();
-            argForm.read(f.getStringArgument(arg));
+            argForm.setFormula(f.getStringArgument(arg));
             argRes = removeNestedAnswerClauseRecurse(argForm);
             if (argRes == null)
                     foundAnswer = true;
@@ -161,7 +161,7 @@ public class ProofProcessor {
             }
             arg = arg + 1;
     	}
-    	Formula result = new Formula();
+        Formula result = new Formula();
     	if (connective && foundAnswer && arg < 4)
             result.read(strArgs);
     	else
@@ -178,11 +178,11 @@ public class ProofProcessor {
     	if (st == null || !st.contains("answer"))
     		return st;
     	// clean the substring with "answer" in it
-    	Formula f = new Formula();
+        Formula f = new Formula();
     	f.read(st);
 
 		// if there are no nested answers, return the original one
-		Formula removeNestedAnswerFormula = removeNestedAnswerClauseRecurse(f);
+        Formula removeNestedAnswerFormula = removeNestedAnswerClauseRecurse(f);
 		if (removeNestedAnswerFormula == null)
 			return st;
     	return removeNestedAnswerFormula.getFormula();

@@ -15,7 +15,6 @@ import org.junit.runners.Suite;
     SUMOtoTFAKBTest.class,
     SUMOtoTFAformTest.class,
     SUMOtoTFAformExprIntegrationTest.class,
-    THFtest.class,
     TPTP2SUMOTest.class
 })
 public class IntegrationTransTestSuite extends IntegrationTestBase {

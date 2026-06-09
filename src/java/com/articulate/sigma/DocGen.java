@@ -5729,7 +5729,7 @@ public class DocGen {
             String term;
             String printableTerm;
             List docs;
-            Formula f;
+                Formula f;
             String docStr;
             for (Iterator it = alphaList.keySet().iterator(); it.hasNext();) {
                 letter = (String) it.next();

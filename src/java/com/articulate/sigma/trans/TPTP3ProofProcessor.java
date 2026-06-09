@@ -15,6 +15,7 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.nlg.LanguageFormatter;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 
@@ -31,7 +32,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import tptp_parser.*;
@@ -434,9 +434,6 @@ public class TPTP3ProofProcessor {
      */
     public Formula extractAnswerClause(Formula ax) {
 
-        if (debug) {
-            System.out.println("extractAnswerClause(): " + ax.getFormula());
-        }
         if (!ax.listP()) {
             return null;
         }

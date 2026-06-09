@@ -39,6 +39,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.tp.Vampire;
@@ -173,9 +174,10 @@ public class InferenceTestSuitecp {
             int maxAnswers = Math.max(1, itd.expectedAnswers.size());
             Formula theQuery = new Formula();
             theQuery.read(itd.query);
-            Set<Formula> theQueries = new FormulaPreprocessor().preProcess(theQuery, true, kb);
+            Set<Expr> theQueries = new FormulaPreprocessor().preProcessExpr(theQuery, true, kb);
             itd.actualAnswers = new ArrayList<>();
-            for (Formula f : theQueries) {
+            for (Expr ex : theQueries) {
+                Formula f = new Formula(ex);
                 TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
                 String q = f.getFormula();
                 if (f.isHigherOrder(kb) && !"thf".equals(SUMOformulaToTPTPformula.getLang())) {
@@ -580,8 +582,8 @@ public class InferenceTestSuitecp {
                 KIF test = new KIF();
                 test.readFile(f.getCanonicalPath());
                 System.out.println("INFO in InferenceTestSuite.readTestFile(): num formulas: " +
-                        String.valueOf(test.formulasOrdered.size()));
-                for (Formula orderedF : test.formulasOrdered.values()) {
+                        String.valueOf(test.formulaMap.size()));
+                for (Formula orderedF : test.formulaMap.values()) {
                     String formula = orderedF.getFormula();
                     if (formula.contains(";"))
                         formula = formula.substring(0, formula.indexOf(";"));
@@ -726,7 +728,7 @@ public class InferenceTestSuitecp {
         Formula theQuery;
         FormulaPreprocessor fp;
         SUMOKBtoTFAKB stfa;
-        Set<Formula> theQueries;
+        Set<Expr> theQueries;
         long start;
         String lineHtml;
         String rfn;
@@ -748,8 +750,9 @@ public class InferenceTestSuitecp {
                 stfa = new SUMOKBtoTFAKB();
                 stfa.initOnce();
                 SUMOtoTFAform.initOnce();
-                theQueries = fp.preProcess(theQuery,true,kb);
-                for (Formula processed : theQueries) {
+                theQueries = fp.preProcessExpr(theQuery,true,kb);
+                for (Expr ex : theQueries) {
+                    Formula processed = new Formula(ex);
                     if (processed.isHigherOrder(kb)) {
                         System.out.println("Error in InferenceTestSuite.test(): skipping higher order query: " +
                                 processed + " in test " + itd.note);
@@ -871,13 +874,14 @@ public class InferenceTestSuitecp {
         Formula theQuery = new Formula();
         theQuery.read(itd.query);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        Set<Formula> theQueries = fp.preProcess(theQuery,true,kb);
+        Set<Expr> theQueries = fp.preProcessExpr(theQuery,true,kb);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         String processedStmt;
         Vampire vampire = new Vampire(kb, "tptp", "CASC", false, itd.timeout, maxAnswers);
         com.articulate.sigma.tp.EProver eprover = new EProver(kb, "tptp", itd.timeout, maxAnswers);
         com.articulate.sigma.tp.LEO leo = new LEO(kb, "tptp", itd.timeout, maxAnswers, null);
-        for (Formula f : theQueries) {
+        for (Expr ex : theQueries) {
+            Formula f = new Formula(ex);
             processedStmt = f.getFormula();
             if (f.isHigherOrder(kb) && !SUMOformulaToTPTPformula.getLang().equals("thf")) {
                 System.out.println("Error in InferenceTestSuite.inferenceUnitTest(): skipping higher order query: " +

@@ -330,7 +330,7 @@ public class KButilities implements ServletContextListener {
 
         SUMOtoTFAform.initOnce();
         String result;
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         try {
             result = kif.parseStatement(form);
         }

@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * Translates {@link Expr} trees to TPTP format (FOF or TFF).
  *
  * <p>This is the Expr-based counterpart of
- * {@link com.articulate.sigma.trans.SUMOformulaToTPTPformula#processRecurse(Formula, String)}.
+ * {link com.articulate.sigma.trans.SUMOformulaToTPTPformula#processRecurse(Formula, String)}.
  * All structural traversal is done by switching on sealed {@link Expr} subtypes;
  * no string-based parsing or ANTLR context objects are involved.</p>
  *
@@ -91,7 +91,7 @@ public class ExprToTPTP {
         try {
             SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
             if (visitor.result == null || visitor.result.isEmpty()) return null;
-            FormulaAST ast = visitor.result.get(0);
+            Formula ast = visitor.result.get(0);
             if (ast == null || ast.expr == null) return null;
             return translate(ast.expr, query, lang);
         } catch (Exception e) {
@@ -115,7 +115,7 @@ public class ExprToTPTP {
         try {
             SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
             if (visitor.result == null || visitor.result.isEmpty()) return new StringBuilder();
-            FormulaAST ast = visitor.result.get(0);
+            Formula ast = visitor.result.get(0);
             if (ast == null || ast.expr == null) return new StringBuilder();
             Set<String> freeVars = collectFreeVars(ast.expr);
             StringBuilder sb = new StringBuilder();
@@ -134,7 +134,7 @@ public class ExprToTPTP {
      * for the free variables in an already-parsed {@link Expr} tree.
      *
      * <p>Use this when the caller already holds a pre-built {@link Expr} (e.g.
-     * from {@link FormulaAST#expr}) to avoid redundant ANTLR re-parsing.
+     * from {@link Formula#expr}) to avoid redundant ANTLR re-parsing.
      * Produces the same result as {@link #getQlist(String)} for the same formula.</p>
      *
      * @param expr the pre-built expression tree; {@code null} is handled safely
@@ -444,7 +444,7 @@ public class ExprToTPTP {
      * Collect all variables that appear free (unbound by any quantifier) in
      * the given expression.  The result is a {@link LinkedHashSet} to preserve
      * depth-first traversal order — matching
-     * {@link Formula#collectUnquantifiedVariables()}.
+     * {link Formula#collectUnquantifiedVariables()}.
      */
     public static Set<String> collectFreeVars(Expr expr) {
         Set<String> bound = new LinkedHashSet<>();

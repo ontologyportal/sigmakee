@@ -61,6 +61,9 @@ public class IntegrationTestBase extends SigmaTestBase {
         while (!TPTPGenerationManager.isFOFReady()){
             TPTPGenerationManager.waitForFOF(600);
         }
+        while (!TPTPGenerationManager.isTFFReady()){
+            TPTPGenerationManager.waitForTFF(600);
+        }
 
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         kbBackup = new KB(kb);

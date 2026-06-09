@@ -13,6 +13,7 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
+import com.articulate.sigma.parsing.ClausifierExpr;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.utils.FileUtil;
 
@@ -129,7 +130,7 @@ public class ProofStep {
             ps = proofSteps.get(i);
             index = ps.number;
             reverseFormulaMap.put(index,ps);
-            s = Clausifier.normalizeVariables(ps.axiom);
+            s = ClausifierExpr.normalizeVariables(ps.axiom);
             if (formulaMap.keySet().contains(s) && ps.premises.size() == 1) {   // If the step is a duplicate, relate the current step number
             	fNum = formulaMap.get(s);                   // to the existing number of the formula
             	numberingMap.put(index,fNum);
@@ -151,7 +152,7 @@ public class ProofStep {
             psNew.formulaRole = ps.formulaRole;
             psNew.formulaType = ps.formulaType;
             psNew.inferenceType = ps.inferenceType;
-            s = Clausifier.normalizeVariables(ps.axiom);
+            s = ClausifierExpr.normalizeVariables(ps.axiom);
             psNew.axiom = s;
             psNew.number = newIndex;
             psNew.input = ps.input;

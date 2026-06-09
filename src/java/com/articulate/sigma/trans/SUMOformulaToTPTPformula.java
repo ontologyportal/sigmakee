@@ -2,11 +2,11 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.parsing.CLIMapParser;
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.ExprToTPTP;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.StringUtil;
 
-import java.io.IOException;
 import java.io.StreamTokenizer;
-import java.text.ParseException;
 import java.util.*;
 
 public class SUMOformulaToTPTPformula {
@@ -118,12 +118,12 @@ public class SUMOformulaToTPTPformula {
 
         List<String> kifOps = Arrays.asList(Formula.UQUANT, Formula.EQUANT,
                 Formula.NOT, Formula.AND, Formula.OR, Formula.XOR,
-                Formula.IF, Formula.IFF,Formula.EQUAL);
+                Formula.IF, Formula.IFF, Formula.EQUAL);
         List<String> tptpOps = Arrays.asList("! ", "? ", "~ ", " & ", " | ", " <~> " , " => ", " <=> ", " = ");
 
         List<String> kifPredicates =
                 Arrays.asList("<=","<",">",">=",
-                        Formula.LTET,Formula.LT,Formula.GT,Formula.GTET);
+                        Formula.LTET, Formula.LT, Formula.GT, Formula.GTET);
         List<String> tptpPredicates = Arrays.asList("lesseq","less","greater","greatereq",
                 "lesseq","less","greater","greatereq");
 
@@ -155,7 +155,7 @@ public class SUMOformulaToTPTPformula {
         //    return("'" + st.replaceAll("[\n\t\r\f]",Formula.SPACE).replaceAll("'","") + "'");
         //---- replace \n by space
         if (type == 34)
-            return(st.replaceAll("[\n\t\r\f]",Formula.SPACE).replaceAll("'",""));
+            return(st.replaceAll("[\n\t\r\f]", Formula.SPACE).replaceAll("'",""));
         //----Fix variables to have leading V_
         char ch0 = ((st.length() > 0)
                     ? st.charAt(0)
@@ -334,9 +334,9 @@ public class SUMOformulaToTPTPformula {
     /** *************************************************************
      */
     /** Backward-compatible overload — reads lang from ThreadLocal. */
-    public static String processLogOp(Formula f, Formula car, List<String> args) {
-        return processLogOp(f, car, args, getLang());
-    }
+//    public static String processLogOp(Formula f, Formula car, List<String> args) {
+//        return processLogOp(f, car, args, getLang());
+//    }
 
     /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
     public static String processLogOp(Formula f, Formula car, List<String> args, String lang) {
@@ -354,7 +354,7 @@ public class SUMOformulaToTPTPformula {
             else {
                 if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
                     return Formula.LP + processRecurse(new Formula(args.get(0)), lang) + " => " +
-                        Formula.LP + processRecurse(new Formula(args.get(1)), lang) + "))";
+                            Formula.LP + processRecurse(new Formula(args.get(1)), lang) + "))";
                 else
                     return Formula.LP + processRecurse(new Formula(args.get(0)), lang) + " => " +
                             processRecurse(new Formula(args.get(1)), lang) + Formula.RP;
@@ -392,9 +392,9 @@ public class SUMOformulaToTPTPformula {
     /** *************************************************************
      */
     /** Backward-compatible overload — reads lang from ThreadLocal. */
-    public static String processEquals(Formula f, Formula car, List<String> args) {
-        return processEquals(f, car, args, getLang());
-    }
+//    public static String processEquals(Formula f, Formula car, List<String> args) {
+//        return processEquals(f, car, args, getLang());
+//    }
 
     /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
     public static String processEquals(Formula f, Formula car, List<String> args, String lang) {
@@ -415,9 +415,9 @@ public class SUMOformulaToTPTPformula {
     /** *************************************************************
      */
     /** Backward-compatible overload — reads lang from ThreadLocal. */
-    public static String processRecurse(Formula f) {
-        return processRecurse(f, getLang());
-    }
+//    public static String processRecurse(Formula f) {
+//        return processRecurse(f, getLang());
+//    }
 
     /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
     public static String processRecurse(Formula f, String lang) {
@@ -476,12 +476,14 @@ public class SUMOformulaToTPTPformula {
     /** Lang-parameterized overload — avoids ThreadLocal reads in hot path. */
     public static void generateQList(Formula f, String lang) {
         Set<String> UqVars = f.collectUnquantifiedVariables();
+        List<String> sortedVars = new ArrayList<>(UqVars);
+        Collections.sort(sortedVars);
         StringBuilder qlist = new StringBuilder();
         qlist.setLength(0); // reset
         String oneVar;
-        int sizeUqVars = UqVars.size();
+        int sizeUqVars = sortedVars.size();
         int count = 0;
-        for (String s : UqVars) {
+        for (String s : sortedVars) {
             oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false,lang);
             qlist.append(oneVar); // don't write a final comma
             if (count < sizeUqVars-1 && sizeUqVars > 1)
@@ -520,12 +522,7 @@ public class SUMOformulaToTPTPformula {
      * @param requestedLang the TPTP language format to use ("fof", "tff", or "thf")
      */
     public static String tptpParseSUOKIFString(String suoString, boolean query, String requestedLang) {
-
-        if (!SUMOKBtoTPTPKB.rapidParsing)
             return _tptpParseSUOKIFString(suoString, query, requestedLang);
-        else
-            // This must be used for threaded parsing to keep axiom variables synchronized
-            return _tTptpParseSUOKIFString(suoString, query, requestedLang);
     }
 
     private static String _tptpParseSUOKIFString(String s, boolean q, String requestedLang) {
@@ -535,21 +532,17 @@ public class SUMOformulaToTPTPformula {
         // Use the passed requestedLang parameter instead of static field
         // This prevents race conditions with background TPTP generation
         if ("tff".equals(requestedLang))
-            return "( " + SUMOtoTFAform.process(s,q) + " )";
+            return "( " + ExprToTPTP.translateKifString(s,q, requestedLang) + " )";
         if ("thf".equals(requestedLang)) {
-            THF thf = new THF();
-            Collection<Formula> stmts = new ArrayList<>();
-            Collection<Formula> queries = new ArrayList<>();
-            if (q)
-                queries.add(new Formula(s));
-            else
-                stmts.add(new Formula(s));
-            return "( " + thf.KIF2THF(stmts,queries,kb) + " )";
+            Formula fa = new Formula(s);
+            Map<String, Set<String>> typeMap = new HashMap<>();
+            Formula modalized = new Formula(Modals.processModalsExpr(fa.expr, kb).getKey());
+            return "( " + THFnew.process(new Formula(modalized.getFormula()), typeMap, q) + " )";
         }
         if ("fof".equals(requestedLang))
-            return "( " + process(new Formula(s),q,requestedLang) + " )";
+            return "( " + process(new Formula(s), q, requestedLang) + " )";
         System.err.println("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): unknown language type: " + requestedLang);
-        return "( " + process(new Formula(s),q,requestedLang) + " )";
+        return "( " + process(new Formula(s), q, requestedLang) + " )";
     }
 
     /** ***************************************************************
@@ -583,13 +576,13 @@ public class SUMOformulaToTPTPformula {
         if (f.listP()) {
             String result = processRecurse(f, lang);
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): result 1: " + result);
-            generateQList(f, lang);
-            if (debug) System.out.println("SUMOformulaToTPTPformula.process(): qlist: " + f.qlist);
-            if (f.qlist.length() > 1) {
+            generateQList(new Formula(f.getFormula()), lang);
+            if (debug) System.out.println("SUMOformulaToTPTPformula.process(): qlist: " + getQlist());
+            if (getQlist().length() > 1) {
                 String quantification = "! [";
                 if (query)
                     quantification = "? [";
-                result = "( " + quantification + f.qlist + "] : (" + result + " ) )";
+                result = "( " + quantification + getQlist() + "] : (" + result + " ) )";
             }
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): result 2: " + result);
             return result;
@@ -597,68 +590,68 @@ public class SUMOformulaToTPTPformula {
         return f.getFormula();
     }
 
-    // /** ***************************************************************
-    //  * Parse formulae into TPTP format
-    //  * Result is returned in _f.theTptpFormulas
-    //  */
-    // @Deprecated  // call tptpParseSUOKIFString() directly
-    // public void tptpParse(Formula input, boolean query, KB kb, Set<Formula> preProcessedForms)
-    //     throws ParseException, IOException {
+    /** ***************************************************************
+     * Parse formulae into TPTP format
+     * Result is returned in _f.theTptpFormulas
+     */
+//    @Deprecated  // call tptpParseSUOKIFString() directly
+//    public void tptpParse(Formula input, boolean query, KB kb, Set<Formula> preProcessedForms)
+//        throws ParseException, IOException {
+//
+//        if (debug)
+//            System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): input: " + input);
+//        if (debug)
+//            System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessedForms: " + preProcessedForms);
+//        _f = input;
+//        try {
+//            KBmanager mgr = KBmanager.getMgr();
+//            if (kb == null)
+//                kb = new KB("",mgr.getPref("kbDir"));
+//            if (!_f.isBalancedList()) {
+//                String errStr = "Unbalanced parentheses or quotes in: " + _f.getFormula();
+//                _f.errors.add(errStr);
+//                return;
+//            }
+//            Set<Formula> processed = preProcessedForms;
+//            if (processed == null) {
+//                FormulaPreprocessor fp = new FormulaPreprocessor();
+//                processed = fp.preProcess(_f,query, kb);
+//            }
+//            if (debug)
+//                System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessed: " + processed);
+//            if (processed != null) {
+//                _f.theTptpFormulas.clear();
+//                //----Performs function on each current processed axiom
+//                String tptpStr;
+//                for (Formula f : processed) {
+//                    if (!f.getFormula().contains(Formula.R_PREF) && !f.higherOrder) {
+//                        tptpStr = tptpParseSUOKIFString(f.getFormula(),query);
+//                        if (StringUtil.isNonEmptyString(tptpStr))
+//                            _f.theTptpFormulas.add(tptpStr);
+//                    }
+//                }
+//            }
+//        }
+//        catch (Exception ex) {
+//            System.err.println(ex.getMessage());
+//            ex.printStackTrace();
+//            if (ex instanceof ParseException)
+//                throw (ParseException) ex;
+//            if (ex instanceof IOException)
+//                throw (IOException) ex;
+//        }
+//        if (query || debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): result: " + _f.theTptpFormulas);
+//    }
 
-    //     if (debug)
-    //         System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): input: " + input);
-    //     if (debug)
-    //         System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessedForms: " + preProcessedForms);
-    //     _f = input;
-    //     try {
-    //         KBmanager mgr = KBmanager.getMgr();
-    //         if (kb == null)
-    //             kb = new KB("",mgr.getPref("kbDir"));
-    //         if (!_f.isBalancedList()) {
-    //             String errStr = "Unbalanced parentheses or quotes in: " + _f.getFormula();
-    //             _f.errors.add(errStr);
-    //             return;
-    //         }
-    //         Set<Formula> processed = preProcessedForms;
-    //         if (processed == null) {
-    //             FormulaPreprocessor fp = new FormulaPreprocessor();
-    //             processed = fp.preProcess(_f,query, kb);
-    //         }
-    //         if (debug)
-    //             System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessed: " + processed);
-    //         if (processed != null) {
-    //             _f.theTptpFormulas.clear();
-    //             //----Performs function on each current processed axiom
-    //             String tptpStr;
-    //             for (Formula f : processed) {
-    //                 if (!f.getFormula().contains(Formula.R_PREF) && !f.higherOrder) {
-    //                     tptpStr = tptpParseSUOKIFString(f.getFormula(),query);
-    //                     if (StringUtil.isNonEmptyString(tptpStr))
-    //                         _f.theTptpFormulas.add(tptpStr);
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     catch (Exception ex) {
-    //         System.err.println(ex.getMessage());
-    //         ex.printStackTrace();
-    //         if (ex instanceof ParseException)
-    //             throw (ParseException) ex;
-    //         if (ex instanceof IOException)
-    //             throw (IOException) ex;
-    //     }
-    //     if (query || debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): result: " + _f.theTptpFormulas);
-    // }
-
-    // /** ***************************************************************
-    //  * Parse formulae into TPTP format
-    //  */
-    // @Deprecated
-    // public Set<String> tptpParse(Formula input, boolean query, KB kb) throws ParseException, IOException {
-
-    //     tptpParse(input,query, kb, null);
-    //     return _f.theTptpFormulas;
-    // }
+    /*****************************************************************
+     * Parse formulae into TPTP format
+     */
+//    @Deprecated
+//    public Set<String> tptpParse(Formula input, boolean query, KB kb) throws ParseException, IOException {
+//
+//        tptpParse(input,query, kb, null);
+//        return _f.theTptpFormulas;
+//    }
 
     /** ***************************************************************
      * A test method.

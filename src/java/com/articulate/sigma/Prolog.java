@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
@@ -78,8 +77,8 @@ public class Prolog {
             pw.println(clause + sb.toString() + ".");
         }
         if (consequent.car().equals(Formula.AND)) {
-              Formula consList = consequent.cdrAsFormula();
-              Formula car;
+            Formula consList = consequent.cdrAsFormula();
+            Formula car;
               String carst;
               while (!consList.empty()) {
                   car = consList.carAsFormula();

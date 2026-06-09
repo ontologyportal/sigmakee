@@ -26,10 +26,10 @@ public class SortalTest extends IntegrationTestBase {
 
         System.out.println("Input: " + input);
         SuokifVisitor visitor = SuokifVisitor.parseString(input);
-        Map<Integer,FormulaAST> hm = visitor.result;
+        Map<Integer, Formula> hm = visitor.result;
         VarTypes vt = new VarTypes(hm.values(),kb);
         vt.findTypes();
-        FormulaAST f = hm.values().iterator().next();
+        Formula f = hm.values().iterator().next();
         f.printCaches();
         s = new Sortals(kb);
         s.winnowAllTypes(f);
@@ -163,10 +163,10 @@ public class SortalTest extends IntegrationTestBase {
 
         System.out.println("Input: " + input);
         SuokifVisitor visitor = SuokifVisitor.parseString(input);
-        Map<Integer,FormulaAST> hm = visitor.result;
+        Map<Integer, Formula> hm = visitor.result;
         VarTypes vt = new VarTypes(hm.values(),kb);
         vt.findTypes();
-        FormulaAST f = hm.values().iterator().next();
+        Formula f = hm.values().iterator().next();
         f.printCaches();
         s = new Sortals(kb);
         s.elimSubsumedTypes(f);

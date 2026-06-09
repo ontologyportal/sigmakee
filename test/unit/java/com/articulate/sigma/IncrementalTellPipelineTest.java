@@ -12,7 +12,6 @@ package com.articulate.sigma;
  *   - Successive calls accumulate in the same session KBcache
  */
 
-import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.SessionTPTPManager;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import org.junit.*;
@@ -88,7 +87,7 @@ public class IncrementalTellPipelineTest {
         KB kb = new KB("TestM35KB");
         kb.kbCache = new KBcache(kb);
         KBmanager.getMgr().setPref("cacheDisjoint", "true");
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);
         kb.merge(kif, "");
@@ -133,7 +132,7 @@ public class IncrementalTellPipelineTest {
     @Test
     public void testApplyIncrementalUpdate_subclass_cacheUpdated() {
         KB kb = buildKB(concat(CORE, "(subclass Agent Entity)"));
-        Formula formula = new FormulaAST("(subclass Robot Agent)");
+        Formula formula = new Formula("(subclass Robot Agent)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -161,7 +160,7 @@ public class IncrementalTellPipelineTest {
         KB kb = buildKB(concat(CORE,
                 "(subclass Agent Entity)",
                 "(subclass Robot Agent)"));
-        Formula formula = new FormulaAST("(instance myRobot Robot)");
+        Formula formula = new Formula("(instance myRobot Robot)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -187,7 +186,7 @@ public class IncrementalTellPipelineTest {
         KB kb = buildKB(concat(CORE,
                 "(subclass Vehicle Entity)",
                 "(instance drives BinaryRelation)"));
-        Formula formula = new FormulaAST("(domain drives 1 Vehicle)");
+        Formula formula = new Formula("(domain drives 1 Vehicle)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -215,7 +214,7 @@ public class IncrementalTellPipelineTest {
         KB kb = buildKB(concat(CORE,
                 "(subclass PositiveInteger Entity)",
                 "(instance age UnaryFunction)"));
-        Formula formula = new FormulaAST("(range age PositiveInteger)");
+        Formula formula = new Formula("(range age PositiveInteger)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -243,7 +242,7 @@ public class IncrementalTellPipelineTest {
         KB kb = buildKB(concat(CORE,
                 "(instance controls BinaryRelation)",
                 "(instance directlyControls BinaryRelation)"));
-        Formula formula = new FormulaAST("(subrelation directlyControls controls)");
+        Formula formula = new Formula("(subrelation directlyControls controls)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -272,7 +271,7 @@ public class IncrementalTellPipelineTest {
         KB kb = buildKB(concat(CORE,
                 "(subclass Animal Entity)",
                 "(subclass Plant Entity)"));
-        Formula formula = new FormulaAST("(disjoint Animal Plant)");
+        Formula formula = new Formula("(disjoint Animal Plant)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -311,7 +310,7 @@ public class IncrementalTellPipelineTest {
         SUMOKBtoTPTPKB.axiomKey.put("kb_TestM35KB_1", existing);
         writeSharedBase("tptp", "fof(kb_TestM35KB_1,axiom,(placeholder)).");
 
-        Formula formula = new FormulaAST("(partition Entity Animal Plant Fungus)");
+        Formula formula = new Formula("(partition Entity Animal Plant Fungus)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 
@@ -332,7 +331,7 @@ public class IncrementalTellPipelineTest {
     @Test
     public void testApplyIncrementalUpdate_nullSessionId_returnsNull() {
         KB kb = buildKB(CORE);
-        Formula formula = new FormulaAST("(subclass Robot Entity)");
+        Formula formula = new Formula("(subclass Robot Entity)");
         formula.sourceFile = "test";
 
         Path result = SessionTPTPManager.applyIncrementalUpdate(kb, null, formula, "fof");
@@ -345,7 +344,7 @@ public class IncrementalTellPipelineTest {
     @Test
     public void testApplyIncrementalUpdate_emptySessionId_returnsNull() {
         KB kb = buildKB(CORE);
-        Formula formula = new FormulaAST("(subclass Robot Entity)");
+        Formula formula = new Formula("(subclass Robot Entity)");
         formula.sourceFile = "test";
 
         Path result = SessionTPTPManager.applyIncrementalUpdate(kb, "", formula, "fof");
@@ -362,11 +361,11 @@ public class IncrementalTellPipelineTest {
                 "(subclass Agent Entity)",
                 "(subclass Vehicle Entity)"));
 
-        Formula f1 = new FormulaAST("(subclass Robot Agent)");
+        Formula f1 = new Formula("(subclass Robot Agent)");
         f1.sourceFile = "test";
         kb.formulaMap.put(f1.getFormula(), f1);
 
-        Formula f2 = new FormulaAST("(subclass Car Vehicle)");
+        Formula f2 = new Formula("(subclass Car Vehicle)");
         f2.sourceFile = "test";
         kb.formulaMap.put(f2.getFormula(), f2);
 
@@ -406,7 +405,7 @@ public class IncrementalTellPipelineTest {
         SUMOKBtoTPTPKB.axiomKey.put("kb_TestM35KB_1", existing);
         writeSharedBase("tptp", "fof(kb_TestM35KB_1,axiom,(placeholder)).");
 
-        Formula formula = new FormulaAST("(subclass Robot Agent)");
+        Formula formula = new Formula("(subclass Robot Agent)");
         formula.sourceFile = "test";
         kb.formulaMap.put(formula.getFormula(), formula);
 

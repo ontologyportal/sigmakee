@@ -11,6 +11,7 @@ This prevents TQ tests from overwriting the shared base TPTP files.
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.LoggingUtils;
 
@@ -43,15 +44,26 @@ public class SessionTPTPManager {
     /** Each session that performs a schema-level tell() gets its own deep copy of the shared KBcache. */
     private static final ConcurrentHashMap<String, KBcache> sessionCaches = new ConcurrentHashMap<>();
 
-    /** Per-session axiom key created from global KB: Every axiom name created by {@code patchSessionTPTP}. */
-    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>> sessionAxiomKeys = new ConcurrentHashMap<>();
+    /**
+     * Per-session axiom key: axiom name → source Formula.
+     *
+     * <p>The global {@code SUMOKBtoTPTPKB.axiomKey} is treated as <em>read-only</em>
+     * after initial KB generation — it maps base-KB axiom names ({@code kb_SUMO_N})
+     * to their source formulas.  Every axiom name created by {@code patchSessionTPTP}
+     * (both retranslated base formulas and new {@code tell()} assertions) is recorded
+     * here instead, keeping sessions fully isolated.
+     *
+     * <p>Entries are removed in {@link #cleanupSession}.
+     */
+    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>>
+            sessionAxiomKeys = new ConcurrentHashMap<>();
 
     /** Sessions currently in batch-tell mode (Case B/default TPTP regens suppressed). */
     private static final Set<String> batchModeActive = ConcurrentHashMap.newKeySet();
 
     /** Per-session lazy flag for askVampireForTQ(). */
     private static final ConcurrentHashMap<String, Boolean> precomputedRegenRequired = new ConcurrentHashMap<>();
-    
+
     private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>> sessionDerivedTypeFacts = new ConcurrentHashMap<>();
 
     /*********************************************************************************
@@ -368,8 +380,10 @@ public class SessionTPTPManager {
      * @param sessionCache the session-specific KBcache (already updated by M3.2)
      * @return the path to the session-specific TPTP file
      */
-    public static Path patchSessionTPTP(String sessionId, KB kb, String lang, Set<Formula> affected, Set<Formula> newFormulas, KBcache sessionCache) {
-        
+    public static Path patchSessionTPTP(
+            String sessionId, KB kb, String lang,
+            Set<Formula> affected, Set<Formula> newFormulas, KBcache sessionCache) {
+
         final String normalizedLang = "tptp".equals(lang) ? "fof" : lang;
         final String ext            = "fof".equals(normalizedLang) ? "tptp" : normalizedLang;
         boolean hasAffected  = affected   != null && !affected.isEmpty();
@@ -390,7 +404,11 @@ public class SessionTPTPManager {
                 int affectedCount = hasAffected  ? affected.size()   : 0;
                 int newCount      = hasNewForms  ? newFormulas.size() : 0;
                 long startTime = System.currentTimeMillis();
+
+                // 1. Build reverse index merging global axiomKey + this session's patch key
                 Map<Formula, Set<String>> reverseIndex = buildReverseIndex(sessionId);
+
+                // 2. Collect axiom names that must be commented out (retranslated formulas only)
                 Set<String> toSkip = new HashSet<>();
                 if (hasAffected) {
                     for (Formula f : affected) {
@@ -410,7 +428,12 @@ public class SessionTPTPManager {
                 }
                 if (debugPatch) writePatchDebugLog(sessionDir, sessionId, normalizedLang, affected, toSkip, retranslated, newFormulas, newTranslations);
                 String sanitizedKBName = kb.name.replaceAll("\\W", "_");
+                // Session axiom key — isolated from the global axiomKey
                 Map<String, Formula> sessionAxiomKey = getOrCreateSessionAxiomKey(sessionId);
+                // Build a session-specific prefix so axiom names are globally unique
+                // even when two sessions patch concurrently.
+                // Use Math.abs(hashCode) of sessionId for a compact numeric discriminator;
+                // prefix with "s" so the name starts with a letter (TPTP requirement).
                 String sessionTag = "s" + Math.abs(sessionId.hashCode());
                 AtomicInteger patchIdx = new AtomicInteger(1);
                 try (BufferedReader reader = Files.newBufferedReader(baseFile, StandardCharsets.UTF_8);
@@ -430,7 +453,11 @@ public class SessionTPTPManager {
                     writer.newLine();
                     writer.write("% --- Incremental patch: session " + sessionId + " ---");
                     writer.newLine();
-                    Set<String> patchWritten = new HashSet<>();
+
+                    // Helper: write one body string as a named axiom, recording in session key
+                    Set<String> patchWritten = new HashSet<>(); // within-patch dedup
+
+                    // Retranslated base formulas
                     for (Map.Entry<Formula, List<String>> entry : retranslated.entrySet()) {
                         for (String body : entry.getValue()) {
                             if (alreadyInBase.contains(body)) continue;
@@ -459,7 +486,7 @@ public class SessionTPTPManager {
                 }
                 sessionGenerationTimestamps.put(sessionId, System.currentTimeMillis());
                 return sessionFile;
-            } 
+            }
             catch (IOException e) {
                 LoggingUtils.log("ERROR", e.getMessage());
                 e.printStackTrace();
@@ -472,7 +499,15 @@ public class SessionTPTPManager {
     /*********************************************************************************
      * Write a human-readable debug log for one {@link #patchSessionTPTP} call.
      */
-    private static void writePatchDebugLog(Path sessionDir, String sessionId, String lang, Set<Formula> affected, Set<String> toSkip, Map<Formula, List<String>> retranslated, Set<Formula> newFormulas, Map<Formula, List<String>> newTranslations) {
+    private static void writePatchDebugLog(
+            Path sessionDir,
+            String sessionId,
+            String lang,
+            Set<Formula> affected,
+            Set<String> toSkip,
+            Map<Formula, List<String>> retranslated,
+            Set<Formula> newFormulas,
+            Map<Formula, List<String>> newTranslations) {
 
         Path logFile = sessionDir.resolve("patch-debug-" + System.currentTimeMillis() + ".log");
         try (BufferedWriter w = Files.newBufferedWriter(logFile, StandardCharsets.UTF_8)) {
@@ -493,11 +528,21 @@ public class SessionTPTPManager {
                     w.write("    Source : " + f.sourceFile + " line " + f.startLine);
                     w.newLine();
                     Set<String> names = new java.util.HashSet<>();
-                    for (Map.Entry<String, Formula> e : SUMOKBtoTPTPKB.axiomKey.entrySet()) if (e.getValue().equals(f)) names.add(e.getKey());
+                    for (Map.Entry<String, Formula> e : SUMOKBtoTPTPKB.axiomKey.entrySet()) {
+                        if (e.getValue().equals(f)) names.add(e.getKey());
+                    }
+                    // Also check session axiom keys
                     Map<String, Formula> sessKey = sessionAxiomKeys.get(sessionId);
-                    if (sessKey != null) for (Map.Entry<String, Formula> e : sessKey.entrySet()) if (e.getValue().equals(f)) names.add(e.getKey());
-                    if (names.isEmpty()) w.write("    Axioms : (none found in axiomKey)");
-                    else w.write("    Axioms : " + names);
+                    if (sessKey != null) {
+                        for (Map.Entry<String, Formula> e : sessKey.entrySet()) {
+                            if (e.getValue().equals(f)) names.add(e.getKey());
+                        }
+                    }
+                    if (names.isEmpty()) {
+                        w.write("    Axioms : (none found in axiomKey)");
+                    } else {
+                        w.write("    Axioms : " + names);
+                    }
                     w.newLine();
                     List<String> bodies = retranslated.get(f);
                     if (bodies == null || bodies.isEmpty()) w.write("    STATUS : *** WARNING — no retranslated bodies produced;" + " formula is effectively removed from this session ***");
@@ -508,7 +553,7 @@ public class SessionTPTPManager {
                     }
                     w.newLine();
                 }
-            } 
+            }
             else {
                 w.write("  (none)");
                 w.newLine();
@@ -532,7 +577,7 @@ public class SessionTPTPManager {
                     }
                     w.newLine();
                 }
-            } 
+            }
             else {
                 w.write("  (none)");
                 w.newLine();

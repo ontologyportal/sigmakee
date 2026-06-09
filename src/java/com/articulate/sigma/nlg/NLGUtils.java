@@ -1,6 +1,7 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.*;
 

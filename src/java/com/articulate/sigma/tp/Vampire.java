@@ -14,10 +14,10 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 package com.articulate.sigma.tp;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.*;
 import com.articulate.sigma.trans.Modals;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
-import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.trans.SessionTPTPManager;
 import com.articulate.sigma.trans.THFnew;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
@@ -25,12 +25,7 @@ import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.trans.TPTPutil;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
-import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.ExprToTHF;
-import com.articulate.sigma.parsing.ExprToTPTP;
-import com.articulate.sigma.parsing.FormulaAST;
-import com.articulate.sigma.parsing.SuokifVisitor;
-import com.articulate.sigma.parsing.CLIMapParser;
+import com.articulate.sigma.Formula;
 
 import tptp_parser.TPTPFormula;
 import java.util.regex.Matcher;
@@ -40,10 +35,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.function.Supplier;
 
 /**
  * Class for invoking the latest research version of Vampire from Java
@@ -196,34 +188,36 @@ public class Vampire {
     public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.getMgr().getPref("vampire")));}
 
     /***************************************************************
-     * @param requestedLang The TPTP language format requested by the user ("fof" or "tff")
      */
     public void askVampire(String suoKifFormula) {
 
         FormulaPreprocessor fp = new FormulaPreprocessor();
         Set<Expr> processedExprs = null;
         try {
-            KIFAST kifAst = new KIFAST();
+            KIF kifAst = new KIF();
             String parseErr = kifAst.parseStatement(suoKifFormula);
             if (parseErr == null && !kifAst.formulaMap.isEmpty()) {
-                FormulaAST queryFA = kifAst.formulaMap.values().iterator().next();
+                Formula queryFA = kifAst.formulaMap.values().iterator().next();
                 processedExprs = SessionTPTPManager.withSessionCache(
                         this.sessionId, this.kb, () -> fp.preProcessExpr(queryFA, true, this.kb));
             }
         } catch (Exception e) {
+            System.err.println("Vampire.askVampire(): FormulaAST path failed, using string fallback: " + e.getMessage());
             processedExprs = null;
         }
 
-        // String fallback path (TFF mode or AST path unavailable/empty)
-        Set<Formula> processedStmts = null;
-        if (processedExprs == null || processedExprs.isEmpty()) {
-            Formula query = new Formula();
-            query.read(suoKifFormula);
-            processedStmts = SessionTPTPManager.withSessionCache(
-                    this.sessionId, this.kb, () -> fp.preProcess(query, true, this.kb));
-        }
+//         String fallback path (TFF mode or AST path unavailable/empty)
+//        Set<Formula> processedStmts = null;
+//        if (processedExprs == null || processedExprs.isEmpty()) {
+//            System.err.println("Vampire.askVampire(): FormulaAST path failed or empty, using string fallback, for formula: " + suoKifFormula);
+//            Formula query = new Formula();
+//            query.read(suoKifFormula);
+//            processedStmts = SessionTPTPManager.withSessionCache(
+//                    this.sessionId, this.kb, () -> fp.preProcess(query, true, this.kb));
+//        }
 
-        boolean hasProcessed = (processedExprs != null && !processedExprs.isEmpty()) || (processedStmts != null && !processedStmts.isEmpty());
+        boolean hasProcessed = (processedExprs != null && !processedExprs.isEmpty());
+
         if (hasProcessed) {
             int axiomIndex = 0;
             File inferenceFile = new File(this.inferenceFilePath);
@@ -232,32 +226,32 @@ public class Vampire {
                 for (Expr e : processedExprs) {
                     String kifStr = e.toKifString();
                     String tptpBody = ExprToTPTP.translateKifString(kifStr, true, this.requestedTptpLanguage);
-                    if (tptpBody == null)
-                        tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, this.requestedTptpLanguage);
+//                    if (tptpBody == null)
+//                        tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, this.requestedTptpLanguage);
                     String theTPTPstatement = this.requestedTptpLanguage + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
                     tptpQuery.add(theTPTPstatement);
                 }
             }
-            else {
-                if (processedStmts.size() > 1) {
-                    StringBuilder combined = new StringBuilder();
-                    combined.append("(or ");
-                    for (Formula p : processedStmts) combined.append(p.getFormula()).append(Formula.SPACE);
-                    combined.append(Formula.RP);
-                    String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + axiomIndex++ +
-                        ",conjecture,(" +
-                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, this.requestedTptpLanguage)
-                        + ")).";
-                    tptpQuery.add(theTPTPstatement);
-                }
-                else {
-                    String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + axiomIndex++ +
-                        ",conjecture,(" +
-                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedStmts.iterator().next().getFormula(), true, this.requestedTptpLanguage)
-                        + ")).";
-                    tptpQuery.add(theTPTPstatement);
-                }
-            }
+//            else {
+//                if (processedStmts.size() > 1) {
+//                    StringBuilder combined = new StringBuilder();
+//                    combined.append("(or ");
+//                    for (Formula p : processedStmts) combined.append(p.getFormula()).append(Formula.SPACE);
+//                    combined.append(Formula.RP);
+//                    String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + axiomIndex++ +
+//                        ",conjecture,(" +
+//                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, this.requestedTptpLanguage)
+//                        + ")).";
+//                    tptpQuery.add(theTPTPstatement);
+//                }
+//                else {
+//                    String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + axiomIndex++ +
+//                        ",conjecture,(" +
+//                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedStmts.iterator().next().getFormula(), true, this.requestedTptpLanguage)
+//                        + ")).";
+//                    tptpQuery.add(theTPTPstatement);
+//                }
+//            }
             try {
                 this.run(inferenceFile, tptpQuery);
             } catch (ATPException e) {
@@ -394,7 +388,7 @@ public class Vampire {
                 System.err.println("Vampire.askVampireHOL(): failed to parse query: " + stmt);
                 return;
             }
-            FormulaAST fa = sv.result.get(0);
+            Formula fa = sv.result.get(0);
             if (fa.expr == null) {
                 System.err.println("Vampire.askVampireHOL(): null expr for query: " + stmt);
                 return;
@@ -642,7 +636,6 @@ public class Vampire {
     /***************************************************************
      * Creates a running instance of Vampire and collects its output
      * @param kbFile Initial knowledge base to be loaded by the Vampire executable.
-     * @param timeout the time given for Vampire to finish execution
      * @throws ExecutableNotFoundException if the Vampire executable is not found
      * @throws ProverCrashedException if Vampire crashes with a non-zero exit code
      * @throws ProverTimeoutException if Vampire times out
@@ -733,12 +726,8 @@ public class Vampire {
      * Creates a running instance of Vampire adding a set of statements
      * in TFF or TPTP language to a file and then calling Vampire.
      * Note that any query must be given as a "conjecture"
-     * @param kb the current knowledge base
      * @param kbFile the current knowledge base TPTP file
-     * @param timeout the timeout given to Vampire to find a proof
      * @param stmts a Set of user assertions
-     * @param sessionId explicit HTTP session ID for temp file isolation;
-     *                  if null, falls back to extracting sessionId from kbFile path
      * @throws Exception of something goes south
      */
     public void run(File kbFile, Set<String> stmts) throws Exception {
@@ -1071,7 +1060,8 @@ public class Vampire {
 
         System.out.printf("\nVampire.assertFormula(%s, %s, %s, %b)", userAssertionTPTP, kb.name, parsedFormulas, tptp);
         boolean allAdded = false;
-        Set<Formula> processedFormulas = new HashSet();
+//        Set<FormulaAST> processedFormulas = new HashSet();
+        Set<Expr> processedFormulas = new HashSet();
         FormulaPreprocessor fp = new FormulaPreprocessor();
         Set<String> tptpFormulas = new HashSet<>();
         String tptpStr;
@@ -1079,15 +1069,18 @@ public class Vampire {
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
             for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
-                processedFormulas.addAll(fp.preProcess(parsedF,false, kb));
+                processedFormulas.addAll(fp.preProcessExpr(parsedF,false, kb));
                 if (processedFormulas.isEmpty())
                     allAdded = false;
                 else {   // 2. Translate to TPTP/TFF.
                     tptpFormulas.clear();
                     if (tptp) {
-                        for (Formula p : processedFormulas) {
+                        for (Expr ex : processedFormulas) {
+                            Formula p = new Formula();
+                            p.setFormula(ex.toKifString());
+                            p.expr = ex;
                             if (!p.isHigherOrder(kb)) {
-                                tptpStr = SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(), false);
+                                tptpStr = ExprToTPTP.translate(ex, false, this.requestedTptpLanguage);
                                 tptpFormulas.add(tptpStr);
                             }
                         }

@@ -1,7 +1,7 @@
 package com.articulate.sigma.nlg;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.SigmaTestBase;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.UnitTestBase;
 
@@ -483,7 +483,7 @@ public class LanguageFormatterTest extends UnitTestBase {
     public void testXorTextMode_userFriendlyBinary() {
         LanguageFormatter lf = newLF();
 
-        // Use the fallback key "xor" explicitly to avoid dependence on Formula.XOR.
+        // Use the fallback key "xor" explicitly to avoid dependence on FormulaAST.XOR.
         String out = lf.generateFormalNaturalLanguage(
                 Arrays.asList("A", "B"),
                 Formula.XOR,

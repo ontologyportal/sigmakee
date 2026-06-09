@@ -18,6 +18,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -224,7 +225,7 @@ public class LanguageFormatter {
         Formula f = new Formula();
         f.read(statement);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        variableTypes = fp.computeVariableTypes(f, kb);
+        variableTypes = fp.computeVariableTypesExpr(f.expr, kb);
         variableToInstanceMap = fp.findExplicitTypes(kb,f);
         init();
     }
@@ -308,7 +309,7 @@ public class LanguageFormatter {
                 //HashMap varMap = fp.computeVariableTypes(kb);
                 Map<String, Set<String>> instanceMap = new HashMap<>();
                 Map<String, Set<String>> classMap = new HashMap<>();
-                Map<String, Set<String>> types = fp.computeVariableTypes(f, kb);
+                Map<String, Set<String>> types = fp.computeVariableTypesExpr(f.expr, kb);
                 Iterator<String> it = types.keySet().iterator();
                 String var;
                 Set<String> typeList;
@@ -1197,7 +1198,7 @@ public class LanguageFormatter {
             if (isNegMode) {
                 sb.append(k.NOT).append(Formula.SPACE);
             }
-//            sb.append(k.FORALL).append(Formula.SPACE);
+//            sb.append(k.FORALL).append(FormulaAST.SPACE);
 
             String vars = args.get(0);
             if (vars.contains(Formula.SPACE)) {
@@ -1366,9 +1367,9 @@ public class LanguageFormatter {
             if (debug) System.out.println("para: " + para);
             //outputMap.add(new AVPair(pred + "-" + argPointer, para));
             //System.out.println("para: " + para);
-            //if (!Formula.atom(para)) {
+            //if (!FormulaAST.atom(para)) {
                 // Add the hyperlink placeholder for arg.
-           //     if (Formula.isVariable(argPointer))
+           //     if (FormulaAST.isVariable(argPointer))
            //         strFormat = strFormat.replace(argPointer, para);
             //    else {
                     /**
@@ -1378,7 +1379,7 @@ public class LanguageFormatter {
                      int spLen = splitPara.size();
                      for (int i = 0; i < spLen; i++) {
                      if (i > 0) {
-                     pb.append(Formula.SPACE);
+                     pb.append(FormulaAST.SPACE);
                      }
                      pb.append("&%");
                      pb.append(arg);
@@ -1743,8 +1744,8 @@ public class LanguageFormatter {
                 if (isClass) {
                     article = NLGUtils.getArticle("kind", count, occurrenceCounter, language);
                     String lbl = getOrCreateVarLabel(varString, varLabelMap);
-//                    replacement = (article + Formula.SPACE + NLGUtils.getKeyword("kind of", language)
-//                            + Formula.SPACE + varPretty);
+//                    replacement = (article + FormulaAST.SPACE + NLGUtils.getKeyword("kind of", language)
+//                            + FormulaAST.SPACE + varPretty);
                     replacement = (article + Formula.SPACE + NLGUtils.getKeyword("kind of", language)
                             + Formula.SPACE + varPretty + Formula.SPACE + lbl);
                     if (isArabic)
@@ -1758,7 +1759,7 @@ public class LanguageFormatter {
                 else {
                     article = NLGUtils.getArticle(varPretty, count, occurrenceCounter, language);
                     String lbl = getOrCreateVarLabel(varString, varLabelMap);
-//                    replacement = (article + Formula.SPACE + varPretty);
+//                    replacement = (article + FormulaAST.SPACE + varPretty);
                     replacement = (article + Formula.SPACE + varPretty + Formula.SPACE + lbl);
                     if (isArabic) {
                         defArt = NLGUtils.getKeyword("the", language);

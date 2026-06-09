@@ -10,6 +10,7 @@ import java.io.Reader;
 import java.io.Writer;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
@@ -596,7 +597,7 @@ public class OWLtranslator {
      */
     private void createAxiomMap() {
 
-        axiomMap = new TreeMap<String,Formula>();
+        axiomMap = new TreeMap<String, Formula>();
         Iterator it = kb.formulaMap.values().iterator();
         while (it.hasNext()) {
             Formula f = (Formula) it.next();

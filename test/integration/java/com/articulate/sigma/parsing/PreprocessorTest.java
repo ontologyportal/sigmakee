@@ -1,5 +1,6 @@
 package com.articulate.sigma.parsing;
 
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
 
@@ -38,8 +39,8 @@ public class PreprocessorTest extends IntegrationTestBase {
         sv.rules.removeAll(sv.multiplePredVar);
         sv.hasRowVar.removeAll(sv.multiplePredVar);
 
-        Collection<FormulaAST> rules = pre.preprocess(sv.hasPredVar,sv.hasRowVar,sv.rules);
-        Set<FormulaAST> result = pre.reparse(rules);
+        Collection<Formula> rules = pre.preprocess(sv.hasPredVar,sv.hasRowVar,sv.rules);
+        Set<Formula> result = pre.reparse(rules);
         if (result.size() < 100)
             System.out.println("PreprocessorTest.test1(): " + result);
         else
@@ -66,9 +67,9 @@ public class PreprocessorTest extends IntegrationTestBase {
         System.out.println("PreprocessorTest.test2(): # rules: " + sv.rules.size());
         pre = new Preprocessor(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")));
         System.out.println("PreprocessorTest.test2(): # before preprocess: " + sv.rules.size());
-        Collection<FormulaAST> rules = pre.preprocess(sv.hasPredVar,sv.hasRowVar,sv.rules);
+        Collection<Formula> rules = pre.preprocess(sv.hasPredVar,sv.hasRowVar,sv.rules);
         System.out.println("PreprocessorTest.test2(): # after preprocess: " + rules.size());
-        Set<FormulaAST> result = pre.reparse(rules);
+        Set<Formula> result = pre.reparse(rules);
         if (result.size() < 100)
             System.out.println("PreprocessorTest.test2(): " + result);
         else

@@ -929,8 +929,38 @@ public class KBcache implements Serializable {
         Set<String> iset = instanceOf.get(term);
         if (iset != null) instanceOf.put(newTerm, iset);
         relations.add(newTerm);
-        if (newTerm.endsWith(Formula.FN_SUFF)) functions.add(newTerm);
-        else predicates.add(newTerm);
+        if (newTerm.endsWith(Formula.FN_SUFF))
+            functions.add(newTerm);
+        else
+            predicates.add(newTerm);
+
+        // math and logic ops are not transitive
+        //transRels = new HashSet<String>();
+        // all the transitive relations between instances in the kb
+        //instTransRels = new HashSet<String>();
+
+        /** All the cached "parent" relations of all transitive relations
+         * meaning the relations between all first arguments and the
+         * transitive closure of second arguments.  The external HashMap
+         * pairs relation name String keys to values that are the parent
+         * relationships.  The interior HashMap is the set of terms and
+         * their transitive closure of parents.
+         */
+        //parents = new HashMap<String, HashMap<String, HashSet<String>>>();
+
+        // all the instances of a class key, including through subrelation
+        // and subAttribute
+        //instances = new HashMap<>();
+
+        // logic, math op are not transitive so no need to update "children"
+
+        /** Relation name keys and argument types with 0th arg always ""
+         * except in the case of Functions where the 0th arg will be the
+         * function range.
+         * Note that types can be functions, rather than just terms. Note that
+         * types (when there's a domainSubclass etc) are designated by a
+         * '+' appended to the class name.
+         **/
         List<String> sig = signatures.get(term);
         if (sig == null && term != null && term.equals(Formula.EQUAL)) {
             sig = new ArrayList<>();
@@ -2042,9 +2072,9 @@ public class KBcache implements Serializable {
     /** *************************************************************
      * Delete and writes the cache .kif file then call addConstituent() so
      * that the file can be processed and loaded by the inference engine.
+     *
      * @deprecated This is not needed since we have storeCacheAsFormulas()
      */
-    @Deprecated
     public void writeCacheFile() {
 
         long millis = System.currentTimeMillis();
@@ -2103,7 +2133,7 @@ public class KBcache implements Serializable {
 
         StringBuilder sb = new StringBuilder();
         long cacheCount = 0;
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         kif.filename = kb.name + _cacheFileSuffix;
         long millis = System.currentTimeMillis();
         Map<String,Set<String>> valSet;
@@ -2451,6 +2481,8 @@ public class KBcache implements Serializable {
     private void p_buildCaches() {
 
         long startMillis = System.currentTimeMillis();
+        if (debug) System.out.println("INFO in KBcache._p_buildCaches(): begin");
+
         // Pre-warm Formula.stringArgs on all formulas before parallel access.
         // Formula.getStringArgument() lazily initialises a non-thread-safe ArrayList
         // via loadArguments(); calling it now (single-threaded) ensures every formula

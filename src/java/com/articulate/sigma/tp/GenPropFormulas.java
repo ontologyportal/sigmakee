@@ -1,9 +1,9 @@
 package com.articulate.sigma.tp;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.KButilities;
 import com.articulate.sigma.SimpleElement;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.StringUtil;
 

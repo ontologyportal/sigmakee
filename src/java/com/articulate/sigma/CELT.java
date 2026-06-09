@@ -1,5 +1,5 @@
 
-/** This code is copyright Articulate Software (c) 2003.  Some portions
+/* This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
@@ -28,7 +28,6 @@ import java.io.OutputStreamWriter;
  */
 public class CELT {
 
-    private Process _CELT;
     private BufferedReader _reader;
     private BufferedWriter _writer;
     private BufferedReader _error;

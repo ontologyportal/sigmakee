@@ -1,6 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.parsing.CLIMapParser;
@@ -9,8 +10,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 //This software is released under the GNU Public License
 //<http://www.gnu.org/copyleft/gpl.html>.
@@ -246,12 +245,12 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (!t.startsWith(Formula.TERM_SYMBOL_PREFIX))
             t = Formula.TERM_SYMBOL_PREFIX + t;
         output = "tff(" + label + ",type," + t;
-        //if (Formula.isLogicalOperator(bareTerm) ||
+        //if (FormulaAST.isLogicalOperator(bareTerm) ||
         if (kb.isRelation(bareTerm) ||
                 bareTerm.equals(Formula.EQUAL)) {
           //  ||
-        //        (kb.isRelation(bareTerm) && !Formula.isMathFunction(bareTerm))) {
-//                       && !Formula.isInequality(bareTerm))) {
+        //        (kb.isRelation(bareTerm) && !FormulaAST.isMathFunction(bareTerm))) {
+//                       && !FormulaAST.isInequality(bareTerm))) {
             pw.println("% logop: " + Formula.isLogicalOperator(bareTerm));
             pw.println("% is relation: " + kb.isRelation(bareTerm));
             pw.println("% is inequality: " + Formula.isInequality(bareTerm));
@@ -332,7 +331,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         }
         StringBuilder sigBuf = new StringBuilder();
         //if (kb.isFunction(t))
-        //    sigBuf.append(Formula.SPACE + translateSort(sig.get(0)) + " *");
+        //    sigBuf.append(FormulaAST.SPACE + translateSort(sig.get(0)) + " *");
         for (String s : sig.subList(1,endIndex))
             sigBuf.append(Formula.SPACE).append(translateSort(kb,s)).append(" *");
         if (sigBuf.length() == 0) {

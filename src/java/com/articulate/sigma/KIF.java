@@ -1,443 +1,273 @@
-/**
- * This code is copyright Articulate Software (c) 2003.  Some portions
- * copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
- * This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
- * Users of this code also consent, by use of this code, to credit Articulate Software
- * and Teknowledge in any writings, briefings, publications, presentations, or
- * other representations of any software which incorporates, builds on, or uses this
- * code.  Please cite the following article in any publication with references:
- * <p>
- * Pease, A., (2003). The Sigma Ontology Development Environment,
- * in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
- * August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforget.net
- *
- * Authors:
- * Adam Pease
- * Infosys LTD.
- */
 package com.articulate.sigma;
 
-import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
-import java.text.ParseException;
 import java.util.*;
 
-/******************************************************************
- * A class designed to read a file in SUO-KIF format into memory. See
- * <http://sigmakee.cvs.sourceforge.net/viewvc/sigmakee/sigma/suo-kif.pdf> for a
- * language specification. readFile() and writeFile() are the primary entry
- * points and parse() does all the real work.
+/**
+ * ANTLR-based KIF parser that produces {@link Formula} objects with populated
+ * {@link Expr} trees. This is the Phase 2 replacement for {link KIF}.
  *
- * @author Adam Pease
+ * <p>The parsing pipeline is:
+ * <ol>
+ *   <li>ANTLR {@code SuokifLexer + SuokifParser} → Concrete Syntax Tree</li>
+ *   <li>{@link SuokifVisitor} → {@code FormulaAST} objects (each has {@code expr} populated
+ *       by {@link com.articulate.sigma.parsing.SuokifToExpr})</li>
+ *   <li>This class walks the {@code Expr} tree to build the same indexing maps that
+ *       {link KIF} builds with {@code StreamTokenizer}.</li>
+ * </ol>
+ *
+ * <p>Produces the same three maps as {link KIF}:
+ * <ul>
+ *   <li>{@code formulaMap : Map<String, FormulaAST>} — canonical formula string → FormulaAST</li>
+ *   <li>{@code formulas   : Map<String, List<String>>} — predicate-position key → formula strings</li>
+ *   <li>{@code terms      : Set<String>} — all non-variable constants seen</li>
+ *   <li>{@code termFrequency : Map<String, Integer>} — occurrence count per term</li>
+ * </ul>
+ *
+ * <p>The {@code formulas} map uses the same key scheme as {link KIF#createKey}: {@code arg-N-term},
+ * {@code ant-term}, {@code cons-term}, {@code stmt-term}.
  */
 public class KIF {
 
-    /*****************************************************************
-     * A numeric constant denoting normal parse mode, in which syntax constraints are
-     * enforced.
-     */
-    public static final int NORMAL_PARSE_MODE = 1;
-    public static int count = 0;
-
-    /****************************************************************
-     * A numeric constant denoting relaxed parse mode, in which fewer syntax constraints
-     * are enforced than in NORMAL_PARSE_MODE.
-     */
-    public static final int RELAXED_PARSE_MODE = 2;
-
-    private int parseMode = NORMAL_PARSE_MODE;
-
-    /** The set of all terms in the knowledge base. This is a set of Strings. */
+    /** All non-variable constant symbols in the parsed input. */
     public Set<String> terms = new TreeSet<>();
 
-    /** A hashMap to store term frequencies for each term in knowledge base */
+    /** Occurrence count per term. */
     public Map<String, Integer> termFrequency = new HashMap<>();
 
     /**
-     * A HashMap of ArrayLists of Formulas. Each String key points to a list of
-     * String formulas that correspond to that key. For example, "arg-1-Foo"
-     * would be one of several keys for "(instance Foo Bar)".
-     *
-     * @see #createKey(String, boolean, boolean, int, int) for key format.
+     * Predicate-position index. Each key (e.g. {@code "arg-0-instance"}) maps to the list of
+     * canonical formula strings that contain the corresponding term in that position.
+     * This has the same structure as {link KIF#formulas}.
      */
     public Map<String, List<String>> formulas = new HashMap<>();
 
     /**
-     * A HashMap of String keys representing the formula, and Formula values.
-     * For example, "(instance Foo Bar)" is a String key that might point to a
-     * Formula that is that string, along with information about at what line
-     * number and in what file it appears.
+     * Primary formula map. Maps the canonical KIF string of each formula to its
+     * {@link Formula} (which carries the {@link Expr} tree in {@code f.expr}).
      */
     public Map<String, Formula> formulaMap = new HashMap<>();
 
-    // all the formulas ordered by their start line
-    public Map<Integer, Formula> formulasOrdered = new TreeMap<>();
-
+    /** Canonical path of the file most recently read. */
     public String filename;
-    private File file;
-    private int totalLinesForComments = 0;
 
-    /** warnings generated during parsing */
+    /** Warnings produced during parsing. */
     public Set<String> warningSet = new TreeSet<>();
-    /** errors generated during parsing */
+
+    /** Errors produced during parsing. */
     public Set<String> errorSet = new TreeSet<>();
 
-    /*****************************************************************
-     */
-    @Deprecated(since = "KIFAST", forRemoval = false)
-    public KIF() {
-    }
+    // -----------------------------------------------------------------------
+    // Public API — mirrors KIF
+    // -----------------------------------------------------------------------
 
-    /*****************************************************************
-     * Pre-allocate space for hashes, based on file size
-     */
-    @Deprecated(since = "KIFAST", forRemoval = false)
-    public KIF(String fname) {
-
-        long size = getKIFFileSize(fname);
-        if (size != 0) {
-            termFrequency = new HashMap<>((int) size/25, (float) 0.75);
-            formulas = new HashMap<>((int) size/3, (float) 0.75);
-            formulaMap = new HashMap<>((int) size/3, (float) 0.75);
-            //formulasOrdered = new TreeMap<Integer, Formula>((int) size/3, (float) 0.75);
-        }
-        filename = fname;
-    }
-
-    /*****************************************************************
-     * @return long file size in bytes handling any errors
-     */
-    public long getKIFFileSize(String filename) {
-
-        try {
-            File f = new File(filename);
-            if (!f.exists()) {
-                System.err.println("KIF.getKIFFileSize(): error file " + filename + " does not exist");
-                return 0;
-            }
-            return f.length();
-        }
-        catch (Exception ex) {
-            System.err.println("KIF.getKIFFileSize(): error file " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        return 0;
-    }
-
-    /*****************************************************************
-     * @return int Returns an integer value denoting the current parse mode.
-     */
-    public int getParseMode() {
-
-        return this.parseMode;
-    }
-
-    /*****************************************************************
-     * Sets the current parse mode to the input value mode.
+    /**
+     * Parse a KIF file into this instance.
      *
-     * @param mode
-     *            An integer value denoting a parsing mode.
+     * @param fname canonical path of the file to read
+     * @return set of warning strings (may be empty)
+     * @throws IOException if the file cannot be read
      */
-    public void setParseMode(int mode) {
+    public Set<String> readFile(String fname) throws IOException {
 
-        this.parseMode = mode;
+        File file = new File(fname);
+        if (!file.exists()) {
+            String err = "error file " + fname + " does not exist";
+            KBmanager.getMgr().setError(KBmanager.getMgr().getError() + "\n<br/>" + err + "\n<br/>");
+            System.err.println("Error in KIFAST.readFile(): " + err);
+            return warningSet;
+        }
+        this.filename = file.getCanonicalPath();
+        SuokifVisitor visitor = SuokifVisitor.parseFile(file);
+        integrateVisitorResult(visitor);
+        return warningSet;
     }
 
-    /****************************************************************
-     * This routine sets up the StreamTokenizer_s so that it parses SUO-KIF. = < >
-     * are treated as word characters, as are normal alphanumerics. ; is the
-     * line comment character and " is the quote character.
-     */
-    public static void setupStreamTokenizer(StreamTokenizer_s st) {
-
-        st.whitespaceChars(0, 32);
-        st.ordinaryChars(33, 44); // !"#$%&'()*+,
-        st.wordChars(45, 46); // -.
-        st.ordinaryChar(47); // /
-        st.wordChars(48, 58); // 0-9:
-        st.ordinaryChar(59); // ;
-        st.wordChars(60, 64); // <=>?@
-        st.wordChars(65, 90); // A-Z
-        st.ordinaryChars(91, 94); // [\]^
-        st.wordChars(95, 95); // _
-        st.ordinaryChar(96); // `
-        st.wordChars(97, 122); // a-z
-        st.ordinaryChars(123, 255); // {|}~
-        // st.parseNumbers();
-        st.quoteChar('"');
-        st.commentChar(';');
-        st.eolIsSignificant(true);
-    }
-
-    /*****************************************************************
-     */
-    private void display(StreamTokenizer_s st, boolean inRule, boolean inAntecedent, boolean inConsequent,
-                         int argumentNum, int parenLevel, String key) {
-
-        StringBuilder result = new StringBuilder();
-        result.append(inRule);
-        result.append("\t");
-        result.append(inAntecedent);
-        result.append("\t");
-        result.append(inConsequent);
-        result.append("\t");
-        result.append(st.ttype);
-        result.append("\t");
-        result.append(argumentNum);
-        result.append("\t");
-        result.append(parenLevel);
-        result.append("\t");
-        result.append(st.sval);
-        result.append("\t");
-        result.append(st.nval);
-        result.append("\t");
-        result.append(st.toString());
-        result.append("\t");
-        result.append(key);
-    }
-
-    /*****************************************************************
-     * This method has the side effect of setting the contents of formulaMap and
-     * formulas as it parses the file. It throws a ParseException with file line
-     * numbers if fatal errors are encountered during parsing. Keys in variable
-     * "formulas" include the string representation of the formula.
+    /**
+     * Parse KIF from a {@link Reader}.  The entire content is read into memory first
+     * so that ANTLR can operate on a complete input stream.
      *
-     * @param r the Reader containing SUO-KIF text
-     *
-     * @return a Set of warnings that may indicate syntax errors, but not fatal
-     *         parse errors.
+     * @param r source reader
+     * @return set of warning strings (may be empty)
      */
     public Set<String> parse(Reader r) {
 
-        int mode = this.getParseMode();
-        StringBuilder expression = new StringBuilder();
-        int lastTtype;
-        Formula f = new Formula();
-        String errStart = "Parsing error in: " + ((filename==null) ? "Formula" : filename);
-        String errStr;
-        int duplicateCount = 0;
-
         if (r == null) {
-            errStr = "No Input Reader Specified";
-            errorSet.add(errStr);
-            System.err.println("Error in KIF.parse(): " + errStr);
-            return errorSet;
+            String err = "No Input Reader Specified";
+            warningSet.add(err);
+            System.err.println("Error in KIFAST.parse(): " + err);
+            return warningSet;
         }
         try {
-            count++;
-            StreamTokenizer_s st = new StreamTokenizer_s(r);
-            KIF.setupStreamTokenizer(st);
-            int parenLevel = 0;
-            boolean inRule = false;
-            int argumentNum = -1;
-            boolean inAntecedent = false;
-            boolean inConsequent = false;
-            Set<String> keySet = new HashSet<>();
-            // int lineStart = 0;
-            boolean isEOL = false;
-            List<String> list;
-            String key, fstr, validArgs, com, warning;
-            do {
-                lastTtype = st.ttype;
-                st.nextToken();
-                //System.out.println("KIF.parse(): sval: " + st.sval);
-                //System.out.println("KIF.parse(): parenLevel: " + parenLevel);
-                //System.out.println("KIF.parse(): argumentNum: " + argumentNum);
-                // check the situation when multiple KIF statements read as one
-                // This relies on extra blank line to separate KIF statements
-                if (st.ttype == StreamTokenizer.TT_EOL) {
-                    if (isEOL) {
-                        // Two line separators in a row shows a new KIF
-                        // statement is to start. Check if a new statement
-                        // has already been generated, otherwise report error
-                        if (f.startLine != 0 && (!keySet.isEmpty() || (expression.length() > 0))) {
-                            errStr = (errStart + "\n\tPossible missed closing parenthesis near start line: " + f.startLine
-                                    + " end line: " + f.endLine + "\n\tfor formula: " + expression.toString() + "\n\tand key: "
-                                    + keySet.toString() + " keyset size: " + keySet.size() + " exp length: "
-                                    + expression.length() + "\n\tcomment lines: " + totalLinesForComments);
-                            errorSet.add(errStr);
-                            throw new ParseException(errStr, f.startLine);
-                        }
-                        continue;
-                    }
-                    else { // Found a first end of line character.
-                        isEOL = true; // Turn on flag, to watch for a second consecutive one.
-                        continue;
-                    }
-                }
-                else if (isEOL)
-                    isEOL = false; // Turn off isEOL if a non-space token encountered
-                if (st.ttype == 40) { // Open paren
-                    if (parenLevel == 0) {
-                        // lineStart = st.lineno();
-                        f = new Formula();
-                        f.startLine = st.lineno() + totalLinesForComments;
-                        f.sourceFile = filename;
-                    }
-                    parenLevel++;
-                    if (inRule && !inAntecedent && !inConsequent)
-                        inAntecedent = true;
-                    else {
-                        if (inRule && inAntecedent && (parenLevel == 2)) {
-                            inAntecedent = false;
-                            inConsequent = true;
-                        }
-                    }
-                    if ((parenLevel != 0) && (lastTtype != 40) && (expression.length() > 0))
-                        expression.append(Formula.SPACE); // add back whitespace that ST removes
-                    expression.append(Formula.LP);
-                }
-                else if (st.ttype == 41) { // ) - close paren
-                    parenLevel--;
-                    expression.append(Formula.RP);
-                    if (parenLevel == 0) { // The end of the statement...
-                        fstr = StringUtil.normalizeSpaceChars(expression.toString());
-                        f.read(fstr.intern());
-                        if (formulaMap.keySet().contains(f.getFormula()) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
-                            warning = ("Duplicate axiom at line: " + f.startLine + " of " + f.sourceFile + ": "
-                                    + expression);
-                            warningSet.add(warning);
-                            System.err.println(warning);
-                            duplicateCount++;
-                        }
-                        if (mode == NORMAL_PARSE_MODE) { // Check arg validity ONLY in NORMAL_PARSE_MODE
-                            validArgs = f.validArgs((file != null ? file.getName() : null),
-                                    (file != null ? f.startLine : null));
-                            if (StringUtil.emptyString(validArgs))
-                                validArgs = f.badQuantification();
-                            if (StringUtil.isNonEmptyString(validArgs)) {
-                                errStr = (errStart + ": Invalid number of arguments near line: " + f.startLine + " : "
-                                        + validArgs);
-                                errorSet.add(errStr);
-                                throw new ParseException(errStr, f.startLine);
-                            }
-                        }
-                        keySet.add(f.getFormula()); // Make the formula itself a key
-                        keySet.add(f.createID());
-                        f.endLine = st.lineno() + totalLinesForComments;
-                        for (String fkey : keySet) {
-                            // Add the expression but ...
-                            if (formulas.containsKey(fkey)) {
-                                if (!formulaMap.keySet().contains(f.getFormula())) { // don't add keys if formula is already present
-                                    list = formulas.get(fkey);
-                                    if (StringUtil.emptyString(f.getFormula())) {
-                                        errStr = (errStart + ": Storing empty formula from line: " + f.startLine);
-                                        errorSet.add(errStr);
-                                        throw new ParseException(errStr, f.startLine);
-                                    }
-                                    else if (!list.contains(f.getFormula()))
-                                        list.add(f.getFormula());
-                                }
-                            }
-                            else {
-                                list = new ArrayList<>();
-                                if (StringUtil.emptyString(f.getFormula())) {
-                                    errStr = (errStart + ": Storing empty formula from line: " + f.startLine);
-                                    errorSet.add(errStr);
-                                    throw new ParseException(errStr, f.startLine);
-                                }
-                                else if (!list.contains(f.getFormula()))
-                                    list.add(f.getFormula());
-                                formulas.put(fkey, list);
-                            }
-                        }
-                        formulaMap.put(f.getFormula(), f);
-                        formulasOrdered.put(f.startLine,f);
-                        inConsequent = false;
-                        inRule = false;
-                        argumentNum = -1;
-                        expression.setLength(0); // reset
-                        keySet.clear();
-                    }
-                    else if (parenLevel < 0) {
-                        errStr = (errStart + ": Extra closing parenthesis found near line: " + f.startLine);
-                        errorSet.add(errStr);
-                        throw new ParseException(errStr, f.startLine);
-                    }
-                }
-                else if (st.ttype == 34) { // " - it's a string
-                    st.sval = StringUtil.escapeQuoteChars(st.sval);
-                    if (lastTtype != 40) // add back whitespace that ST removes
-                        expression.append(Formula.SPACE);
-                    expression.append("\"");
-                    com = st.sval;
-                    totalLinesForComments += StringUtil.countChar(com, (char) 0X0A);
-                    expression.append(com);
-                    expression.append("\"");
-                    if (parenLevel < 2) // Don't care if parenLevel > 1
-                        argumentNum = argumentNum + 1;
-                }
-                else if ((st.ttype == StreamTokenizer.TT_NUMBER) || // number
-                        (st.sval != null && (Character.isDigit(st.sval.charAt(0))))) {
-                    if (lastTtype != 40) // add back whitespace that ST removes
-                        expression.append(Formula.SPACE);
-                    if (st.nval == 0)
-                        expression.append(st.sval);
-                    else
-                        expression.append(Double.toString(st.nval));
-                    if (parenLevel < 2) // Don't care if parenLevel > 1
-                        argumentNum = argumentNum + 1;
-                }
-                else if (st.ttype == StreamTokenizer.TT_WORD) { // a token
-                    if ((st.sval.equals(Formula.IF) || st.sval.equals(Formula.IFF)) && parenLevel == 1)
-                        inRule = true; // implications in statements aren't rules
-                    if (parenLevel < 2) // Don't care if parenLevel > 1
-                        argumentNum = argumentNum + 1;
-                    if (lastTtype != 40) // add back whitespace that ST removes
-                        expression.append(Formula.SPACE);
-                    expression.append(st.sval);
-                    if (expression.length() > 64000) {
-                        errStr = (errStart + ": Sentence over 64000 characters new line: " + f.startLine);
-                        errorSet.add(errStr);
-                        throw new ParseException(errStr, f.startLine);
-                    }
-                    // Build the terms list and special keys ONLY if in NORMAL_PARSE_MODE
-                    if ((mode == NORMAL_PARSE_MODE) && (st.sval.charAt(0) != '?') && (st.sval.charAt(0) != '@')) { // Variables are not terms
-                        terms.add(st.sval); // collect all terms
-                        f.termCache.add(st.sval);
+            StringBuilder sb = new StringBuilder();
+            char[] buf = new char[8192];
+            int n;
+            while ((n = r.read(buf)) != -1)
+                sb.append(buf, 0, n);
+            SuokifVisitor visitor = SuokifVisitor.parseString(sb.toString());
+            integrateVisitorResult(visitor);
+        }
+        catch (IOException ex) {
+            String msg = ex.getMessage();
+            warningSet.add("Warning in KIFAST.parse(Reader): " + msg);
+            ex.printStackTrace();
+        }
+        return warningSet;
+    }
 
-                        if (!termFrequency.containsKey(st.sval)) {
-                            termFrequency.put(st.sval, 0);
-                        }
-                        termFrequency.put(st.sval, termFrequency.get(st.sval) + 1);
+    /**
+     * Parse a single formula string.
+     *
+     * @param formula the KIF formula string
+     * @return null on success, error message string on failure
+     */
+    public String parseStatement(String formula) {
 
-                        key = createKey(st.sval, inAntecedent, inConsequent, argumentNum, parenLevel);
-                        keySet.add(key); // Collect all the keys until the end of the statement is reached.
-                    }
-                }
-                else if ((mode == RELAXED_PARSE_MODE) && (st.ttype == 96)) // allow '`' in relaxed parse mode
-                    expression.append(" `");
-                else if (st.ttype != StreamTokenizer.TT_EOF) {
-                    errStr = (errStart + ": Illegal character: " + st);
-                    errorSet.add(errStr);
-                    throw new ParseException(errStr, f.startLine);
-                }
-            } while (st.ttype != StreamTokenizer.TT_EOF);
+        try {
+            SuokifVisitor visitor = SuokifVisitor.parseString(formula);
+            if (!visitor.errors.isEmpty())
+                return "Error parsing: " + formula + " — " + visitor.errors;
+            integrateVisitorResult(visitor);
+            return null;
+        }
+        catch (Exception e) {
+            System.err.println("Error parsing " + formula);
+            e.printStackTrace();
+            return e.getMessage();
+        }
+    }
 
-            if (!keySet.isEmpty() || expression.length() > 0) {
-                errStr = (errStart + ":\n\tMissed closing parenthesis near line: " + f.startLine +
-                        "\n\tfor token: " + st.sval + " and form: " + f.getFormula() +
-                        "\n\tand expression: " + expression + "\n\tand keySet: " + keySet);
-                errorSet.add(errStr);
-                throw new ParseException(errStr, f.startLine);
+    // -----------------------------------------------------------------------
+    // Internal: integrate SuokifVisitor results into this instance's maps
+    // -----------------------------------------------------------------------
+    private void integrateVisitorResult(SuokifVisitor visitor) {
+
+        if (visitor == null) return;
+        int dupCount = 0;
+        for (Formula f : visitor.result.values()) {
+            if (f == null || StringUtil.emptyString(f.getFormula())) continue;
+            // Normalize whitespace (collapse sequences to single space) to match KIF's
+            // normalizeSpaceChars() behaviour so that formula-map keys are identical.
+            // NOTE: setFormula() clears f.expr, but the Expr built by SuokifToExpr is
+            // still correct after normalization because StrLiteral nodes are already
+            // whitespace-normalized inside SuokifToExpr.convertTerm(). Save and restore.
+            String kifStr = StringUtil.normalizeSpaceChars(f.getFormula());
+            if (!kifStr.equals(f.getFormula())) {
+                Expr savedExpr = f.expr;
+                f.setFormula(kifStr);
+                f.expr = savedExpr;
+            }
+            // Duplicate detection
+            if (formulaMap.containsKey(kifStr)) {
+                if (!"no".equals(KBmanager.getMgr().getPref("reportDup"))) {
+                    String warning = "Duplicate axiom at line: " + f.startLine
+                            + " of " + (filename != null ? filename : "<string>")
+                            + ": " + kifStr;
+                    warningSet.add(warning);
+                    System.err.println(warning);
+                }
+                dupCount++;
+                continue; // skip duplicate
+            }
+            // SuokifVisitor.visitFile() always sets f.sourceFile from the ANTLR token
+            // source name.  When parsing from a string (e.g. storeCacheAsFormulas),
+            // that name is an ANTLR-internal default (e.g. "<unknown source>", "",
+            // etc.) rather than a meaningful filename.  The caller-supplied filename
+            // field is always the authoritative name, so we unconditionally apply it.
+            if (filename != null)
+                f.sourceFile = filename;
+            formulaMap.put(kifStr, f);
+            // Build predicate-position keys from the Expr tree
+            Set<String> keySet = new LinkedHashSet<>();
+            keySet.add(kifStr);          // formula string is itself a key
+            keySet.add(f.createID());    // hash-based ID key
+            if (f.expr != null)
+                generateExprKeys(f.expr, keySet);
+            for (String key : keySet) {
+                formulas.computeIfAbsent(key, k -> new ArrayList<>()).add(kifStr);
             }
         }
-        catch (IOException | ParseException ex) {
-//            String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
-            String message = ex.getMessage();
-            System.err.println("Error in KIF.parse(Reader): " + message);
-            if (ex instanceof IOException)
-                ex.printStackTrace(System.err);
-        }
-        if (duplicateCount > 0) {
-            String warning = "WARNING in KIF.parse(Reader), " + duplicateCount + " duplicate statement"
-                    + ((duplicateCount > 1) ? "s " : Formula.SPACE) + "detected in "
-                    + (StringUtil.emptyString(filename) ? " the input file" : filename);
+        if (dupCount > 0) {
+            String warning = "WARNING in KIFAST, " + dupCount + " duplicate statement"
+                    + (dupCount > 1 ? "s " : " ")
+                    + "detected in " + (filename != null ? filename : "<string>");
             warningSet.add(warning);
         }
-        return errorSet;
+        errorSet.addAll(visitor.errors);
+    }
+
+    // -----------------------------------------------------------------------
+    // Key generation from Expr tree (mirrors KIF.createKey() logic)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Walk the top-level {@link Expr} and populate {@code keySet} with all the
+     * predicate-position index keys that {link KIF} would have generated for the
+     * same formula.
+     *
+     * <p>Key scheme (identical to {link KIF#createKey}):
+     * <ul>
+     *   <li>{@code arg-N-term} — non-rule formula, term at argument position N, parenLevel 1</li>
+     *   <li>{@code ant-term}   — term inside the antecedent of a rule</li>
+     *   <li>{@code cons-term}  — term inside the consequent of a rule</li>
+     *   <li>{@code stmt-term}  — term at parenLevel > 1, not in a rule branch</li>
+     * </ul>
+     */
+    private void generateExprKeys(Expr expr, Set<String> keySet) {
+
+        if (!(expr instanceof Expr.SExpr se)) {
+            // Bare atom or variable at top level — unusual but possible
+            if (expr instanceof Expr.Atom a) {
+                addTerm(a.name());
+                keySet.add(createKey(a.name(), false, false, 0, 1));
+            }
+            return;
+        }
+
+        String headName = se.headName();
+        boolean isRule = "=>".equals(headName) || "<=>".equals(headName);
+
+        // Head atom (e.g. "instance", "=>", "and", "forall")
+        if (headName != null) {
+            addTerm(headName);
+            keySet.add(createKey(headName, false, false, 0, 1));
+        }
+
+        if (isRule) {
+            List<Expr> args = se.args();
+            // antecedent (first arg)
+            if (!args.isEmpty())
+                collectRuleKeys(args.get(0), true, false, keySet);
+            // consequent (second arg)
+            if (args.size() > 1)
+                collectRuleKeys(args.get(1), false, true, keySet);
+        } else {
+            // Non-rule: direct args at argumentNum = i+1, parenLevel = 1
+            List<Expr> args = se.args();
+            for (int i = 0; i < args.size(); i++)
+                collectArgKeys(args.get(i), i + 1, keySet);
+        }
+    }
+
+    /**
+     * Collect keys for a direct argument of a non-rule top-level formula
+     * (parenLevel = 1, argumentNum = argNum).
+     */
+    private void collectArgKeys(Expr arg, int argNum, Set<String> keySet) {
+
+        switch (arg) {
+            case Expr.Atom a -> {
+                addTerm(a.name());
+                keySet.add(createKey(a.name(), false, false, argNum, 1));
+            }
+            case Expr.SExpr se -> collectNestedKeys(se, false, false, keySet);
+            // Var, RowVar, NumLiteral, StrLiteral: no term, no key
+            default -> { }
+        }
     }
 
     /*****************************************************************
@@ -493,192 +323,90 @@ public class KIF {
         return (key);
     }
 
-    /****************************************************************
-     * Read a KIF file.
-     *
-     * @param fname - the full pathname of the file.
+    /**
+     * Recursively collect keys for all atoms inside a rule branch (antecedent or consequent).
+     * All atoms at any depth get {@code ant-term} or {@code cons-term}.
      */
-    public void readFile(String fname) throws Exception {
+    private void collectRuleKeys(Expr expr, boolean inAnt, boolean inCons, Set<String> keySet) {
 
-        Exception exThr = null;
-        this.file = new File(fname);
-        if (!this.file.exists()) {
-            String errString =  " error file " + fname + " does not exist";
-            KBmanager.getMgr()
-                    .setError(KBmanager.getMgr().getError() + "\n<br/>" + errString + "\n<br/>");
-            System.err.println("Error in KIF.readFile(): " + errString);
-            return;
-        }
-        this.filename = file.getCanonicalPath();
-        try (Reader fr = new FileReader(file); Reader br = new BufferedReader(fr)) {
-            parse(br);
-        }
-        catch (Exception ex) {
-            exThr = ex;
-            String er = ex.getMessage()
-                    + ((ex instanceof ParseException) ? " at line " + ((ParseException) ex).getErrorOffset() : "");
-            KBmanager.getMgr()
-                    .setError(KBmanager.getMgr().getError() + "\n<br/>" + er + " in file " + fname + "\n<br/>");
-        }
-        if (exThr != null)
-            throw exThr;
-    }
-
-    /****************************************************************
-     * Write a KIF file.
-     *
-     * @param fname - the name of the file to write, including full path.
-     */
-    public void writeFile(String fname) {
-
-        try (FileWriter fr = new FileWriter(fname);
-            PrintWriter pr = new PrintWriter(fr)) {
-            Iterator<Formula> it = formulaMap.values().iterator();
-            while (it.hasNext())
-                pr.println(it.next().getFormula());
-        }
-        catch (Exception ex) {
-            System.err.println(ex.getMessage());
-            ex.printStackTrace();
+        switch (expr) {
+            case Expr.Atom a -> {
+                addTerm(a.name());
+                keySet.add(createKey(a.name(), inAnt, inCons, 0, 2));
+            }
+            case Expr.SExpr se -> {
+                if (se.head() instanceof Expr.Atom head) {
+                    addTerm(head.name());
+                    keySet.add(createKey(head.name(), inAnt, inCons, 0, 2));
+                }
+                for (Expr child : se.args())
+                    collectRuleKeys(child, inAnt, inCons, keySet);
+            }
+            default -> { }
         }
     }
 
-    /*****************************************************************
-     * Return an ArrayList of Formula in the same lexical order as their
-     * source file
+    /**
+     * Recursively collect {@code stmt-term} keys for all atoms nested inside a non-rule
+     * expression (parenLevel > 1, not ant/cons).
      */
+    private void collectNestedKeys(Expr expr, boolean inAnt, boolean inCons, Set<String> keySet) {
+
+        switch (expr) {
+            case Expr.Atom a -> {
+                addTerm(a.name());
+                // parenLevel > 1 → "stmt-term" (or "ant-"/"cons-" if in rule branch)
+                keySet.add(createKey(a.name(), inAnt, inCons, 0, 2));
+            }
+            case Expr.SExpr se -> {
+                if (se.head() instanceof Expr.Atom head) {
+                    addTerm(head.name());
+                    keySet.add(createKey(head.name(), inAnt, inCons, 0, 2));
+                }
+                for (Expr child : se.args())
+                    collectNestedKeys(child, inAnt, inCons, keySet);
+            }
+            default -> { }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Term accounting
+    // -----------------------------------------------------------------------
+
+    private void addTerm(String name) {
+        terms.add(name);
+        termFrequency.merge(name, 1, Integer::sum);
+    }
+
     public List<Formula> lexicalOrder() {
 
-        List<Formula> ordered = new ArrayList<>();
-        ordered.addAll(formulaMap.values());
-        Collections.sort(ordered,new Formula.SortByLine());
+        List<Formula> ordered = new ArrayList<>(formulaMap.values());
+        Collections.sort(ordered, new Formula.SortByLine());
         return ordered;
     }
 
-    /*****************************************************************
-     * Parse a single formula.
-     */
-    public String parseStatement(String formula) {
+    // -----------------------------------------------------------------------
+    // main — smoke test
+    // -----------------------------------------------------------------------
 
-        boolean isError;
-        try (Reader r = new StringReader(formula)) {
-            isError = !parse(r).isEmpty();
-            if (isError) {
-                return "Error parsing " + formula;
-            }
-        }
-        catch (Exception e) {
-            System.err.println("Error parsing " + formula);
-            e.printStackTrace();
-            return e.getMessage();
-        }
-        return null;
-    }
+    public static void main(String[] args) {
 
-    /*****************************************************************
-     * Writes the TPTP output to a file.
-     */
-    public static void tptpOutputTest(String filename) throws IOException {
-
-        KIF kifp = new KIF();
-        int axiomCount = 0;
-        try {
-            kifp.readFile(filename);
-        }
-        catch (Exception e1) {
-            String msg = e1.getMessage();
-            if (e1 instanceof ParseException)
-                msg = msg + (" in statement starting at line " + ((ParseException) e1).getErrorOffset());
-            System.err.println(msg);
-        }
-        File outfile = new File(filename + ".tptp");
-        try (Writer fw = new FileWriter(outfile);
-            PrintWriter pw = new PrintWriter(fw)) {
-            Iterator<String> it = kifp.formulaMap.keySet().iterator();
-            String form;
-            while (it.hasNext()) {
-                axiomCount++;
-                form = it.next();
-                form = SUMOformulaToTPTPformula.tptpParseSUOKIFString(form, false); // not
-                // a
-                // query
-                form = "fof(axiom" + axiomCount + ",axiom,(" + form + ")).";
-                if (form.indexOf('"') < 0 && form.indexOf('\'') < 0)
-                    pw.println(form + '\n');
-            }
-        }
-        catch (Exception ex) {
-            System.err.println("Error writing " + outfile.getCanonicalPath() + ": " + ex.getMessage());
-            ex.printStackTrace();
-        }
-    }
-
-    /*****************************************************************
-     * Test method for this class.
-     */
-    public static void test() {
-
-        // tptpOutputTest(args[0]);
-        String exp = "(documentation foo \"(written by John Smith).\")";
-        System.out.println(exp);
+        String exp = "(documentation foo \"(written by John Smith).\")\n"
+                + "(instance Foo Bar)\n"
+                + "(=>\n  (instance ?X Man)\n  (attribute ?X Mortal))";
+        System.out.println("Input:\n" + exp);
         KIF kif = new KIF();
-        try (Reader r = new StringReader(exp)) {
-            kif.parse(r);
-        } catch (IOException ioe) {
-            System.err.println(ioe);
-        }
-        System.out.println(kif.formulaMap);
-        List<String> al = kif.formulas.get("arg-0-documentation");
-        String fstr = al.get(0);
-        Formula f = kif.formulaMap.get(fstr);
-        System.out.println(f);
-        f.read(f.cdr());
-        f.read(f.cdr());
-        System.out.println(f);
-        System.out.println(f.car());
-    }
-
-    /** ***************************************************************
-     */
-    public static void showHelp() {
-
-        System.out.println("KIF class");
-        System.out.println("  options (with a leading '-'):");
-        System.out.println("  h - show this help screen");
-        System.out.println("  p \"<statement>\" - parse and show keys");
-        System.out.println("  f <filename> - parse and show keys");
-        System.out.println("  t - run a test");
-    }
-
-    /** ***************************************************************
-     */
-    public static void main(String[] args) throws IOException {
-
-        System.out.println("INFO in KIF.main()");
-        if (args != null && args.length > 0 && args[0].equals("-h"))
-            showHelp();
-        else {
-            if (args != null && args.length > 1 && args[0].contains("p")) {
-                KIF kif = new KIF();
-                try (Reader r = new StringReader(args[1])) {
-                    kif.parse(r);
-                }
-                System.out.println("formulaMap: " + kif.formulaMap);
-                System.out.println("formulas: " + kif.formulas);
-            }
-            else if (args != null && args.length > 1 && args[0].contains("f")) {
-                try {
-                    KIF kif = new KIF();
-                    kif.readFile(args[1]);
-                    System.out.println("formulaMap: " + kif.formulaMap);
-                    System.out.println("formulas: " + kif.formulas);
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            else if (args != null && args.length > 0 && args[0].contains("t"))
-                test();
+        kif.parse(new StringReader(exp));
+        System.out.println("formulaMap keys: " + kif.formulaMap.keySet());
+        System.out.println("terms: " + kif.terms);
+        System.out.println("formulas sample (arg-0-instance): " + kif.formulas.get("arg-0-instance"));
+        System.out.println("formulas sample (ant-instance): " + kif.formulas.get("ant-instance"));
+        System.out.println("formulas sample (cons-attribute): " + kif.formulas.get("cons-attribute"));
+        for (Map.Entry<String, Formula> e : kif.formulaMap.entrySet()) {
+            Formula f = e.getValue();
+            System.out.println("  formula: " + f.getFormula());
+            System.out.println("  expr:    " + (f.expr != null ? f.expr.toKifString() : "null"));
         }
     }
 }

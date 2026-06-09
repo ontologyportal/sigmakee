@@ -13,20 +13,18 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
 package com.articulate.sigma.trans;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
-import com.articulate.sigma.utils.FileUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,7 +51,7 @@ public class TPTPutil {
     private static String removeTPTPSuffix(String t) {
 
         if (t.endsWith(Formula.TERM_MENTION_SUFFIX) || t.endsWith(Formula.TERM_MENTION_SUFFIX))
-            return t.substring(0,t.length()-Formula.TERM_MENTION_SUFFIX.length());
+            return t.substring(0,t.length()- Formula.TERM_MENTION_SUFFIX.length());
         else
             return t;
     }
@@ -87,7 +85,7 @@ public class TPTPutil {
         //System.out.println("INFO in Formula.htmlTPTPFormat(): getTheTptpFormulas().size()" + f.getTheTptpFormulas().size());
         Set<String> tptpFormulas = f.getTheTptpFormulas();
         if (tptpFormulas == null || tptpFormulas.size() < 1){
-            String tff = SUMOtoTFAform.process(f, false);
+            String tff = SUMOtoTFAform.processExpr(f.expr, false);
             if (tff != null)
                 return htmlizeSUMOTFA(tff, hyperlink);
             return "No TPTP formula.  May not be expressible in strict first order.";
@@ -302,24 +300,24 @@ public class TPTPutil {
      * Is there a citation as a containsFormula relation for this
      * axiom?
      */
-    public static boolean citation(String sumoStep, String stepName, KB kb) {
-
-        //System.out.println("\nTPTPutil.citation: sumoStep: " + sumoStep);
-        //System.out.println("TPTPutil.citation: stepName: " + stepName);
-        List<Formula> ciAxioms = kb.ask("arg",0,"containsFormula");
-        //System.out.println("TPTPutil.citation: formulas: " + ciAxioms);
-        Formula arg;
-        for (Formula f : ciAxioms) {
-            arg = f.getArgument(2);
-            //System.out.println("TPTPutil.citation: formula arg: " + arg);
-            if (arg != null && arg.listP()) {
-                if (arg.equals(new Formula(sumoStep))) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+//    public static boolean citation(String sumoStep, String stepName, KB kb) {
+//
+//        //System.out.println("\nTPTPutil.citation: sumoStep: " + sumoStep);
+//        //System.out.println("TPTPutil.citation: stepName: " + stepName);
+//        List<FormulaAST> ciAxioms = kb.ask("arg",0,"containsFormula");
+//        //System.out.println("TPTPutil.citation: formulas: " + ciAxioms);
+//        FormulaAST arg;
+//        for (FormulaAST f : ciAxioms) {
+//            arg = f.getArgument(2);
+//            //System.out.println("TPTPutil.citation: formula arg: " + arg);
+//            if (arg != null && arg.listP()) {
+//                if (arg.equals(new Formula(sumoStep))) {
+//                    return true;
+//                }
+//            }
+//        }
+//        return false;
+//    }
 
     /** ***************************************************************
      * Is there a citation as a containsFormula relation for this

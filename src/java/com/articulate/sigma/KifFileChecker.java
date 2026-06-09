@@ -14,6 +14,7 @@ http://sigmakee.sourceforge.net
 */
 
 package com.articulate.sigma;
+import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.SuokifApp;
 import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.trans.SUMOtoTFAform;
@@ -78,7 +79,7 @@ public class KifFileChecker {
                 KIF kif = StringToKif(contents, fname, new ArrayList<>());
                 for (Formula f : kif.formulaMap.values()) {
                     if (debug) System.out.println("Formula: " + f);
-                    HashMap<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
+                    HashMap<String, HashSet<String>> links = Diagnostics.findOrphanVars(new Formula(f.getFormula()));
                     for (Map.Entry<String, HashSet<String>> e : links.entrySet())
                         if (debug) System.out.println("  " + e.getKey() + " ↔ " + e.getValue());
                     if (debug) System.out.println("---------------------------------------------------");
@@ -203,14 +204,14 @@ public class KifFileChecker {
             String formulaText = extractBufferSlice(bufferLines, f.startLine, f.endLine);
             int formulaStartLine = findFormulaInBuffer(formulaText, bufferLines);
             CheckQuantifiedVariableNotInStatement(fileName, f, formulaText, formulaStartLine, msgs);
-            CheckExistentialInAntecedent(fileName, f, formulaText, formulaStartLine, msgs);
-            CheckSingleUseVariables(fileName, f, formulaText, formulaStartLine, msgs);
-            CheckOrphanVars(fileName, f, formulaText, formulaStartLine, msgs);
+            CheckExistentialInAntecedent(fileName, new Formula(f.getFormula()), formulaText, formulaStartLine, msgs);
+            CheckSingleUseVariables(fileName, new Formula(f.getFormula()), formulaText, formulaStartLine, msgs);
+            CheckOrphanVars(fileName, new Formula(f.getFormula()), formulaText, formulaStartLine, msgs);
             CheckUnquantInConsequent(fileName, f, formulaText, formulaStartLine, msgs);
-            Set<Formula> processed = CheckFormulaPreprocess(fileName, kb, f, formulaStartLine, msgs);
+            Set<Expr> processed = CheckFormulaPreprocess(fileName, kb, f, formulaStartLine, msgs);
             // CheckSUMOtoTFAformErrors(fileName, kb, f, formulaStartLine, processed, msgs);
-            CheckIsValidFormula(fileName, f, formulaStartLine, kb, formulaText, msgs);
-            CheckTermsBelowEntity(fileName, f, formulaStartLine, formulaText, kb, localIndividuals, localSubclasses, msgs);
+            CheckIsValidFormula(fileName, new Formula(f.getFormula()), formulaStartLine, kb, formulaText, msgs);
+            CheckTermsBelowEntity(fileName, new Formula(f.getFormula()), formulaStartLine, formulaText, kb, localIndividuals, localSubclasses, msgs);
         }
         SortMessages(msgs);
         // Check if file is not in KB config and has "no type information" errors.
@@ -295,11 +296,13 @@ public class KifFileChecker {
             return contents;
         }
 
-        if (kif.formulasOrdered == null || kif.formulasOrdered.isEmpty())
+        if (kif.formulaMap == null || kif.formulaMap.isEmpty())
             return contents;
 
+        List<Formula> orderedFormulas = new ArrayList<>(kif.formulaMap.values());
+        orderedFormulas.sort(Comparator.comparingInt(fa -> fa.startLine));
         List<String> formattedForms = new ArrayList<>();
-        for (Formula f : kif.formulasOrdered.values()) {
+        for (Formula f : orderedFormulas) {
             String s = (f == null) ? "" : f.toString();
             formattedForms.add(s == null ? "" : s.trim());
         }
@@ -622,11 +625,11 @@ public class KifFileChecker {
      * @param msgs             list to collect error records
      * @return processed formula set
      */
-    public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formula f,
+    public static Set<Expr> CheckFormulaPreprocess(String fileName, KB kb, Formula f,
                                                     int formulaStartLine, List<ErrRec> msgs) {
 
         FormulaPreprocessor fp = SUMOtoTFAform.fp;
-        Set<Formula> processed = fp.preProcess(f, false, kb);
+        Set<Expr> processed = fp.preProcessExpr(f, false, kb);
         String formulaText = f.getFormula();
         if (formulaText == null) formulaText = "";
         java.util.function.Function<String, String> extractToken = (String msg) -> {
@@ -641,11 +644,18 @@ public class KifFileChecker {
         if (f.errors != null) {
             for (String er : f.errors) {
                 if (debug) System.out.println("CheckFormulaPreprocess(): addingError = " + er);
-                String token = extractToken.apply(er);
                 int[] rel = {-1, -1};
-                if (token != null)
-                    rel = findLineInFormula(formulaText, token);
-                if (debug) System.out.println("CheckFormulaPreprocess(): rel = " + rel);
+                Matcher antlrPos = Pattern.compile("line:charposn (\\d+):(\\d+)").matcher(er);
+                String token = null;
+                if (antlrPos.find()) {
+                    rel[0] = Integer.parseInt(antlrPos.group(1)) - 1; // ANTLR 1-indexed → 0-indexed offset
+                    rel[1] = Integer.parseInt(antlrPos.group(2));
+                } else {
+                    token = extractToken.apply(er);
+                    if (token != null)
+                        rel = findLineInFormula(formulaText, token);
+                }
+                if (debug) System.out.println("CheckFormulaPreprocess(): rel = " + Arrays.toString(rel));
                 int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine)
                             + ((rel[0] >= 0) ? rel[0] : 0);
                 int absCol = (rel[1] >= 0) ? rel[1] : 1;
@@ -660,10 +670,17 @@ public class KifFileChecker {
         if (f.warnings != null) {
             for (String w : f.warnings) {
                 if (debug) System.out.println("CheckFormulaPreprocess(): addingWarning = " + w);
-                String token = extractToken.apply(w);
                 int[] rel = {-1, -1};
-                if (token != null)
-                    rel = findLineInFormula(formulaText, token);
+                Matcher antlrPos = Pattern.compile("line:charposn (\\d+):(\\d+)").matcher(w);
+                String token = null;
+                if (antlrPos.find()) {
+                    rel[0] = Integer.parseInt(antlrPos.group(1)) - 1;
+                    rel[1] = Integer.parseInt(antlrPos.group(2));
+                } else {
+                    token = extractToken.apply(w);
+                    if (token != null)
+                        rel = findLineInFormula(formulaText, token);
+                }
 
                 int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine)
                             + ((rel[0] >= 0) ? rel[0] : 0);
@@ -691,30 +708,30 @@ public class KifFileChecker {
      *   (4) Compute line/column using token matching
      *   (5) Clear for next formula
      */
-    public static void CheckSUMOtoTFAformErrors(
-            String fileName,
-            KB kb,
-            Formula f,
-            int formulaStartLine,
-            Set<Formula> processed,
-            List<ErrRec> msgs) {
-        
-        FormulaPreprocessor fp = SUMOtoTFAform.fp;
-        SUMOtoTFAform.errors.clear();
-        processed = fp.preProcess(f, false, kb);
-        try {
-            SUMOtoTFAform.process(f, false);
-        } catch (Exception ex) {
-            SUMOtoTFAform.errors.add("TFA translation exception: " + ex.getMessage());
-        }
-        if (SUMOtoTFAform.errors.isEmpty())
-            return;
-        int line = (formulaStartLine > 0 ? formulaStartLine : f.startLine);
-        if (line < 0) line = 0;
-        for (String er : SUMOtoTFAform.errors)
-            msgs.add(new ErrRec(ErrRec.ERROR, fileName, line,0, 1, er));
-        SUMOtoTFAform.errors.clear();
-    }
+//    public static void CheckSUMOtoTFAformErrors(
+//            String fileName,
+//            KB kb,
+//            FormulaAST f,
+//            int formulaStartLine,
+//            Set<Expr> processed,
+//            List<ErrRec> msgs) {
+//
+//        FormulaPreprocessor fp = SUMOtoTFAform.fp;
+//        SUMOtoTFAform.errors.clear();
+//        processed = fp.preProcessExpr(f, false, kb);
+//        try {
+//            SUMOtoTFAform.process(f, false);
+//        } catch (Exception ex) {
+//            SUMOtoTFAform.errors.add("TFA translation exception: " + ex.getMessage());
+//        }
+//        if (SUMOtoTFAform.errors.isEmpty())
+//            return;
+//        int line = (formulaStartLine > 0 ? formulaStartLine : f.startLine);
+//        if (line < 0) line = 0;
+//        for (String er : SUMOtoTFAform.errors)
+//            msgs.add(new ErrRec(ErrRec.ERROR, fileName, line,0, 1, er));
+//        SUMOtoTFAform.errors.clear();
+//    }
 
     /** ***************************************************************
      * Check if the formula is structurally valid in the KB.
@@ -859,19 +876,12 @@ public static void CheckIsValidFormula(String fileName,
         try (Reader r = new StringReader(contents)) {
             localKif.parse(r);
             for (String er : localKif.errorSet) {
-                ErrRec rec = parseKifError(er, fileName);
-                errorList.add(rec);
+                int line = getLineNum(er);
+                int col  = getOffset(er);
+                errorList.add(new ErrRec(ErrRec.ERROR, fileName, line, Math.max(col, 1), Math.max(col, 1) + 1, er));
             }
         } catch (Exception e) {
-            ErrRec rec = new ErrRec(
-                ErrRec.ERROR,
-                fileName,
-                0,
-                0,
-                1,
-                e.getMessage()
-            );
-            errorList.add(rec);
+            errorList.add(new ErrRec(ErrRec.ERROR, fileName, 0, 0, 1, e.getMessage()));
         }
         return localKif;
     }
@@ -1004,31 +1014,31 @@ public static void CheckIsValidFormula(String fileName,
      * @param msgs output list for formatted error/warning records
      * @return true if parse succeeded, false otherwise
      */
-    private static boolean parseKif(KIF kif, String contents, String fileName, List<ErrRec> msgs) {
-
-        boolean retVal = false;
-        try (Reader r = new StringReader(contents)) {
-            kif.parse(r);
-            if (debug) System.out.println("parseKif(): done reading kif file");
-            retVal = true;
-        } catch (Exception e) {
-            String msg = "Error in parseKif() with: " + kif.filename + ": " + e;
-            System.err.println(msg);
-            msgs.add(new ErrRec(0, fileName, 0, 1, 2, msg));
-        } finally {
-            for (String er : kif.errorSet) {
-                int line = getLineNum(er);
-                int col  = getOffset(er);
-                msgs.add(new ErrRec(0, fileName, line == 0 ? line : line, Math.max(col, 1), Math.max(col, 1) + 1, er));
-            }
-            for (String warn : kif.warningSet) {
-                int line = getLineNum(warn);
-                int col  = getOffset(warn);
-                msgs.add(new ErrRec(1, fileName, line == 0 ? line : line, Math.max(col, 1), Math.max(col, 1) + 1, warn));
-            }
-        }
-        return retVal;
-    }
+//    private static boolean parseKif(KIF kif, String contents, String fileName, List<ErrRec> msgs) {
+//
+//        boolean retVal = false;
+//        try (Reader r = new StringReader(contents)) {
+//            kif.parse(r);
+//            if (debug) System.out.println("parseKif(): done reading kif file");
+//            retVal = true;
+//        } catch (Exception e) {
+//            String msg = "Error in parseKif() with: " + kif.filename + ": " + e;
+//            System.err.println(msg);
+//            msgs.add(new ErrRec(0, fileName, 0, 1, 2, msg));
+//        } finally {
+//            for (String er : kif.errorSet) {
+//                int line = getLineNum(er);
+//                int col  = getOffset(er);
+//                msgs.add(new ErrRec(0, fileName, line == 0 ? line : line, Math.max(col, 1), Math.max(col, 1) + 1, er));
+//            }
+//            for (String warn : kif.warningSet) {
+//                int line = getLineNum(warn);
+//                int col  = getOffset(warn);
+//                msgs.add(new ErrRec(1, fileName, line == 0 ? line : line, Math.max(col, 1), Math.max(col, 1) + 1, warn));
+//            }
+//        }
+//        return retVal;
+//    }
 
     /** ***************************************************************
      * sigmaAntlr generates line offsets

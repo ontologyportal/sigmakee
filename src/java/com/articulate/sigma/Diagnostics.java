@@ -1,4 +1,5 @@
 package com.articulate.sigma;
+import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.trans.*;
 /** This code is copyright Articulate Software (c) 2003.
  This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -13,7 +14,6 @@ import com.articulate.sigma.trans.*;
  */
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
-import tptp_parser.TPTPFormula;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.parsing.CLIMapParser;
 
@@ -33,8 +33,8 @@ public class Diagnostics {
 
     public static boolean debug = false;
 
-    public static List<String> LOG_OPS = Arrays.asList(Formula.AND,Formula.OR,Formula.XOR,Formula.NOT,Formula.EQUANT,
-            Formula.UQUANT,Formula.IF,Formula.IFF, "holds");
+    public static List<String> LOG_OPS = Arrays.asList(Formula.AND, Formula.OR, Formula.XOR, Formula.NOT, Formula.EQUANT,
+            Formula.UQUANT, Formula.IF, Formula.IFF, "holds");
 
     public static HashMap<String, HashSet<String>> varLinksParentMap = new HashMap<>(); // parent map for getVariableLinks(Formula f, KB kb)
     
@@ -232,7 +232,7 @@ public class Diagnostics {
      * @param Kb - the knowledge base
      * @return Map<Formula, List<String>> - each formula in the KB with its error list. 
      */
-    private static Map<Formula, Set<String>> formulaeWithTypeViolations(KB kb) { 
+    private static Map<Formula, Set<String>> formulaeWithTypeViolations(KB kb) {
         
         Map<Formula, Set<String>> result = new TreeMap<>();
         KButilities.clearErrors();
@@ -1313,20 +1313,20 @@ public class Diagnostics {
         try {
             FormulaPreprocessor fp;
             String processedQuery;
-            Set<Formula> processedQueries;
+            Set<Expr> processedQueries;
             StringBuilder a, negatedQuery;
             Collection<Formula> allFormulas = kb.formulaMap.values();
             for (Formula query : allFormulas) {
                 fp = new FormulaPreprocessor();
-                processedQueries = fp.preProcess(query,false,kb); // may be multiple because of row vars.
+                processedQueries = fp.preProcessExpr(query, false, kb); // may be multiple because of row vars.
                 //System.out.println(" query = " + query);
                 //System.out.println(" processedQueries = " + processedQueries);
 
                 System.out.println("INFO in Diagnostics.kbConsistencyCheck(): size = " + processedQueries.size());
                 EProver eprover = new EProver(kb, "tptp", timeout, maxAnswers);
-                for (Formula f : processedQueries) {
-                    System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.getFormula());
-                    processedQuery = f.makeQuantifiersExplicit(false);
+                for (Expr f : processedQueries) {
+                    System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.toKifString());
+                    processedQuery = new Formula(f.toKifString()).makeQuantifiersExplicit(false);
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
                     eprover.askEProver(processedQuery);
                     proof = eprover.toString() + " ";
@@ -1849,7 +1849,6 @@ public class Diagnostics {
             return links;
 
         KIF kifInstance = new KIF();
-        kifInstance.setParseMode(KIF.RELAXED_PARSE_MODE);
         try {
             kifInstance.readFile(fKif.getPath());
         } catch (Exception e) {

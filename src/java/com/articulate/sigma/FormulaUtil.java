@@ -158,7 +158,8 @@ public class FormulaUtil {
         List<String> ans = new ArrayList<>();
         try {
             if (!StringUtil.emptyString(kifListAsString)) {
-                Formula f = Formula.read(kifListAsString);
+                FormulaAST f = new FormulaAST();
+                f.read(kifListAsString);
                 ans = f.literalToArrayList();
             }
         }
@@ -179,41 +180,41 @@ public class FormulaUtil {
      * @return A new tree (String), with all occurrences of terms
      * matching oldPattern replaced by newTerm
      */
-    public static String treeReplace(String oldPattern, String newTerm, String tree) {
-
-        String result = tree;
-        try {
-            StringBuilder sb = new StringBuilder();
-            if (tree.matches(oldPattern))
-                sb.append(newTerm);
-            else if (Formula.listP(tree)) {
-                if (Formula.empty(tree)) {
-                    sb.append(tree);
-                }
-                else {
-                    Formula f = new Formula();
-                    f.read(tree);
-                    List tuple = f.literalToArrayList();
-                    sb.append(Formula.LP);
-                    int i = 0;
-                    for (Iterator it = tuple.iterator(); it.hasNext(); i++) {
-                        if (i > 0) sb.append(Formula.SPACE);
-                        sb.append(treeReplace(oldPattern,
-                                newTerm,
-                                (String) it.next()));
-                    }
-                    sb.append(Formula.RP);
-                }
-            } else {
-                sb.append(tree);
-            }
-            result = sb.toString();
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return result;
-    }
+//    public static String treeReplace(String oldPattern, String newTerm, String tree) {
+//
+//        String result = tree;
+//        try {
+//            StringBuilder sb = new StringBuilder();
+//            if (tree.matches(oldPattern))
+//                sb.append(newTerm);
+//            else if (Formula.listP(tree)) {
+//                if (Formula.empty(tree)) {
+//                    sb.append(tree);
+//                }
+//                else {
+//                    FormulaAST f = new FormulaAST();
+//                    f.read(tree);
+//                    List tuple = f.literalToArrayList();
+//                    sb.append(Formula.LP);
+//                    int i = 0;
+//                    for (Iterator it = tuple.iterator(); it.hasNext(); i++) {
+//                        if (i > 0) sb.append(Formula.SPACE);
+//                        sb.append(treeReplace(oldPattern,
+//                                newTerm,
+//                                (String) it.next()));
+//                    }
+//                    sb.append(Formula.RP);
+//                }
+//            } else {
+//                sb.append(tree);
+//            }
+//            result = sb.toString();
+//        }
+//        catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
+//        return result;
+//    }
 
     /** ********************************************************************************************
      * Factory method for the memo map

@@ -1,6 +1,10 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.Expr;
 import org.junit.Test;
+
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -282,13 +286,13 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "(equal ?SET1 ?SET2)))";
 
         expected.read(expectedString);
-
-        Formula actual = fp.addTypeRestrictions(f, SigmaTestBase.kb);
+        Map<String, Set<String>> varmap = fp.findTypeRestrictionsExpr(f.expr, kb);
+        Expr actual = fp.addTypeRestrictionsExpr(f.expr, varmap, SigmaTestBase.kb);
         System.out.println("testLogicallyEqualsPerformance: expected: " + expected);
         System.out.println("testLogicallyEqualsPerformance: actual: " + actual);
         long start = System.nanoTime();
 //        assertTrue(expected.logicallyEquals(actual));
-        assertTrue(expected.unifyWith(actual));
+        assertTrue(expected.unifyWith(new Formula(actual.toKifString())));
         long stop = System.nanoTime();
         System.out.println("Execution time (in microseconds): " + ((stop - start) / 1000));
     }

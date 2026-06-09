@@ -1,6 +1,5 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.parsing.RowVar;
 import org.junit.Test;
 
@@ -148,16 +147,16 @@ public class RowVarTest extends UnitTestBase  {
 
         System.out.println("\n=========== testFindAritiesConflictDetected =================");
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.setFormula("(=> (abstractCounterpart @ROW) (between @ROW))");
 
-        FormulaAST.RowStruct rs1 = new FormulaAST.RowStruct();
+        Formula.RowStruct rs1 = new Formula.RowStruct();
         rs1.rowvar  = "@ROW";
         rs1.pred    = "abstractCounterpart";
         rs1.literal = "(abstractCounterpart @ROW)";
         rs1.arity   = 1;
 
-        FormulaAST.RowStruct rs2 = new FormulaAST.RowStruct();
+        Formula.RowStruct rs2 = new Formula.RowStruct();
         rs2.rowvar  = "@ROW";
         rs2.pred    = "between";
         rs2.literal = "(between @ROW)";
@@ -184,16 +183,16 @@ public class RowVarTest extends UnitTestBase  {
 
         System.out.println("\n=========== testExpandRowVarDropsConflictingFormula =================");
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.setFormula("(=> (abstractCounterpart @ROW) (between @ROW))");
 
-        FormulaAST.RowStruct rs1 = new FormulaAST.RowStruct();
+        Formula.RowStruct rs1 = new Formula.RowStruct();
         rs1.rowvar  = "@ROW";
         rs1.pred    = "abstractCounterpart";
         rs1.literal = "(abstractCounterpart @ROW)";
         rs1.arity   = 1;
 
-        FormulaAST.RowStruct rs2 = new FormulaAST.RowStruct();
+        Formula.RowStruct rs2 = new Formula.RowStruct();
         rs2.rowvar  = "@ROW";
         rs2.pred    = "between";
         rs2.literal = "(between @ROW)";
@@ -203,7 +202,7 @@ public class RowVarTest extends UnitTestBase  {
         f.addRowVarStruct("@ROW", rs2);
 
         RowVar rv = new RowVar(kb);
-        Set<FormulaAST> result = rv.expandRowVar(f);
+        Set<Formula> result = rv.expandRowVar(f);
         System.out.println("testExpandRowVarDropsConflictingFormula(): result size=" + result.size());
 
         assertTrue("Formula with row-var arity conflict must be dropped (empty result)", result.isEmpty());
@@ -220,16 +219,16 @@ public class RowVarTest extends UnitTestBase  {
 
         System.out.println("\n=========== testExpandRowVarExprDropsConflictingFormula =================");
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.setFormula("(=> (abstractCounterpart @ROW) (between @ROW))");
 
-        FormulaAST.RowStruct rs1 = new FormulaAST.RowStruct();
+        Formula.RowStruct rs1 = new Formula.RowStruct();
         rs1.rowvar  = "@ROW";
         rs1.pred    = "abstractCounterpart";
         rs1.literal = "(abstractCounterpart @ROW)";
         rs1.arity   = 1;
 
-        FormulaAST.RowStruct rs2 = new FormulaAST.RowStruct();
+        Formula.RowStruct rs2 = new Formula.RowStruct();
         rs2.rowvar  = "@ROW";
         rs2.pred    = "between";
         rs2.literal = "(between @ROW)";
@@ -270,17 +269,17 @@ public class RowVarTest extends UnitTestBase  {
             return;
         }
 
-        FormulaAST f = new FormulaAST();
+        Formula f = new Formula();
         f.setFormula("(=> (abstractCounterpart @ROW) (identityElement @ROW))");
 
         // Both predicates are arity 2; @ROW is the sole arg (rs.arity=1), so rowVarArity=2
-        FormulaAST.RowStruct rs1 = new FormulaAST.RowStruct();
+        Formula.RowStruct rs1 = new Formula.RowStruct();
         rs1.rowvar  = "@ROW";
         rs1.pred    = "abstractCounterpart";
         rs1.literal = "(abstractCounterpart @ROW)";
         rs1.arity   = 1;
 
-        FormulaAST.RowStruct rs2 = new FormulaAST.RowStruct();
+        Formula.RowStruct rs2 = new Formula.RowStruct();
         rs2.rowvar  = "@ROW";
         rs2.pred    = "identityElement";
         rs2.literal = "(identityElement @ROW)";
