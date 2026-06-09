@@ -142,8 +142,7 @@ public class TPTPGenerationManager {
         Date newestKbSourceDate = KBmanager.newestBaseConfigOrConstituentDateIgnoringUserAssertions();
         Date newestCodeDate = KBmanager.newestSigmakeeCodeDate();
         Date newestSourceDate = newestKbSourceDate.after(newestCodeDate) ? newestKbSourceDate : newestCodeDate;
-        if (infFileDate.compareTo(newestSourceDate) < 0)
-            return true;
+        if (infFileDate.compareTo(newestSourceDate) < 0) return true;
         return false;
     }
 
