@@ -19,10 +19,8 @@ import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.TPTP2SUMO;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.trans.TPTPutil;
-import com.articulate.sigma.utils.FileUtil;
-import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.utils.*;
 import com.articulate.sigma.wordNet.WordNetUtilities;
-import com.articulate.sigma.security.*;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -34,7 +32,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import tptp_parser.*;
 
 /** A utility class that creates HTML-formatting Strings for various purposes. */

@@ -2,7 +2,7 @@
     import="com.articulate.sigma.user.User,
             com.articulate.sigma.user.UserManager,
             com.articulate.sigma.user.PasswordService,
-            com.articulate.sigma.security.ValidationUtils,
+            com.articulate.sigma.utils.ValidationUtils,
             com.articulate.sigma.utils.StringUtil" %>
 <!DOCTYPE html>
 <html>

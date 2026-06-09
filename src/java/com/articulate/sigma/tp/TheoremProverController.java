@@ -15,25 +15,38 @@ package com.articulate.sigma.tp;
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
-
 import com.articulate.sigma.utils.LoggingUtils;
-import com.articulate.sigma.tp.ATPQuery.ATPType;
-import com.articulate.sigma.tp.ATPQuery.RunSource;
-import com.articulate.sigma.tp.ATPQuery.TptpLanguage;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.parsing.CLIMapParser;
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
-
 public class TheoremProverController {
 
     public TheoremProverController () {}
     
+    /********************************************************************
+     * Runs the primary ask API without requiring an ATPQuery object.
+     * @param kb knowledge base to query.
+     * @param userSessionId user session identifier.
+     * @param query query to send to the prover.
+     * @param testFilePath path to the test file, if applicable.
+     * @param runSource source of the run.
+     * @param proverType prover to use.
+     * @param language target logical language.
+     * @param vampireMode Vampire execution mode.
+     * @param closedWorldAssumption whether to use the closed world assumption.
+     * @param modusPonens whether to enable modus ponens.
+     * @param dropOnePremise whether to drop one premise during inference.
+     * @param holUseModals whether HOL modal translation is enabled.
+     * @param timeout prover timeout in seconds.
+     * @param maxAnswers maximum number of answers to return.
+     * @return result object for the query.
+     */
     public ATPResult runQuery(KB kb, String userSessionId, String query, String testFilePath, String runSource, String proverType, String language, String vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout, int maxAnswers) {
 
         ATPQuery atpQuery = new ATPQuery(
@@ -58,6 +71,7 @@ public class TheoremProverController {
     /********************************************************************
      * Primary API for the class. Capable of asking all 3 provers.
      * @param query ATPQuery object used to determine which prover to ask with associated options.
+     * @return ATPQuery result object of the query.
      */
     public ATPResult ask (ATPQuery query) {
         LoggingUtils.log("Querying " + query.getProverType());

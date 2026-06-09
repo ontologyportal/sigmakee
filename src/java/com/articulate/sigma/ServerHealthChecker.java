@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import com.articulate.sigma.security.ValidationUtils;
+import com.articulate.sigma.utils.ValidationUtils;
 import com.articulate.sigma.user.EmailService;
 
 public class ServerHealthChecker {

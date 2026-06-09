@@ -2,10 +2,10 @@ package com.articulate.sigma.user;
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.security.ValidationUtils;
 import com.articulate.sigma.user.User;
 import com.articulate.sigma.user.UserManager;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.utils.ValidationUtils;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;

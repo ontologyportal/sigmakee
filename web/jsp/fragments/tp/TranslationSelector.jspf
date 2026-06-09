@@ -1,5 +1,5 @@
-<%-- <fieldset class="step" id="step2Fieldset">
-    <legend>Step 2 - Translation mode</legend>
+<fieldset class="step" id="step2Fieldset">
+    <legend>Translation Mode Selector</legend>
     <div class="row inline" >
         <label><input type="radio" id="modeFOL" name="translationMode" value="FOL"
             <%= "HOL".equalsIgnoreCase((String)session.getAttribute("translationMode")) ? "" : "checked" %> >
@@ -37,4 +37,4 @@
             "Drop One-Premise" are disabled in HOL mode.
         </div>
     </div>
-</fieldset> --%>
+</fieldset>

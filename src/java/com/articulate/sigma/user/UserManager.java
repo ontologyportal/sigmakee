@@ -9,26 +9,12 @@ code.
 package com.articulate.sigma.user;
 
 import com.articulate.sigma.utils.StringUtil;
-import com.articulate.sigma.security.ValidationUtils;
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.*;
 
-import java.net.URLEncoder;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.sql.SQLException;
 import java.util.*;
-import java.io.*;
-
-import static java.lang.System.exit;
 
 import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;

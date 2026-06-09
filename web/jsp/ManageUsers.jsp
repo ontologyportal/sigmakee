@@ -1,7 +1,7 @@
 <%@ page language="java"
     contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"
-    import="com.articulate.sigma.*, com.articulate.sigma.user.UserManager, com.articulate.sigma.user.User, com.articulate.sigma.security.*, com.articulate.sigma.utils.StringUtil, java.sql.*, java.util.*" %>
+    import="com.articulate.sigma.*, com.articulate.sigma.user.UserManager, com.articulate.sigma.user.User, com.articulate.sigma.utils.*, com.articulate.sigma.utils.StringUtil, java.sql.*, java.util.*" %>
 <!DOCTYPE html>
 <html>
 <head>
