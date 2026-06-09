@@ -14,7 +14,6 @@ Authors:
 Adam Pease
 */
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.FormulaPreprocessor;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;

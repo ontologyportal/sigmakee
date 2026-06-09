@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.tp.EProver;
 
 /** This code is copyright Articulate Software (c) 2014.
@@ -175,8 +176,8 @@ public class CCheck implements Runnable {
     /** *************************************************************
      */
     private void printReport(Formula query, String processedQ,
-            String sourceFile, boolean syntaxError, String proof,
-            String testType) {
+                             String sourceFile, boolean syntaxError, String proof,
+                             String testType) {
 
         pw.println("    <entry>");
         pw.println("      <query>");
@@ -214,7 +215,7 @@ public class CCheck implements Runnable {
      * @param testType - whether it is a redundancy or inconsistency
      */
     private void reportAnswer(String proof, Formula query, String testType,
-            String processedQ, String sourceFile) {
+                              String processedQ, String sourceFile) {
 
         try {
             if (proof.contains("Syntax error detected")) {
@@ -304,15 +305,16 @@ public class CCheck implements Runnable {
             pw.println("  <entries>");
             Formula query;
             FormulaPreprocessor fp;
-            Set<Formula> processedQueries;
+            Set<Expr> processedQueries;
             String processedQuery, sourceFile;
             StringBuilder negatedQuery;
             while (it.hasNext()) {
-                query = (Formula) it.next();
+                query = it.next();
                 fp = new FormulaPreprocessor();
-                processedQueries = fp.preProcess(query,false, kb);
+                processedQueries = fp.preProcessExpr(query,false, kb);
 
-                for (Formula f : processedQueries) {
+                for (Expr ex : processedQueries) {
+                    Formula f = new Formula(ex.toKifString());
                     processedQuery = f.makeQuantifiersExplicit(false);
                     sourceFile = f.sourceFile;
                     sourceFile = sourceFile.replace("/", "&#47;");

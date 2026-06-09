@@ -1,7 +1,6 @@
 package com.articulate.sigma.nlg;
-
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
+import com.articulate.sigma.Formula;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

@@ -9,11 +9,11 @@ import static org.junit.Assert.assertTrue;
 
 public class SUOKIFparseTest extends UnitTestBase {
 
-    public static Map<Integer,FormulaAST> process(String input) {
+    public static Map<Integer, Formula> process(String input) {
 
         System.out.println("process(): input: " + input);
         SuokifVisitor visitor = SuokifVisitor.parseString(input);
-        Map<Integer,FormulaAST> hm = visitor.result;
+        Map<Integer, Formula> hm = visitor.result;
         System.out.println("process(): result: " + hm);
         return hm;
     }
@@ -27,7 +27,7 @@ public class SUOKIFparseTest extends UnitTestBase {
         String input = "(likes John Mary)\n; and here's a comment\n(part Wheel1 Car2)\n";
         String expected = "(likes John Mary)\n(part Wheel1 Car2)\n";
 
-        Map<Integer,FormulaAST> hm = process(input);
+        Map<Integer, Formula> hm = process(input);
         StringBuilder sb = new StringBuilder();
         for (Formula f : hm.values()) {
             f.printCaches();
@@ -49,7 +49,7 @@ public class SUOKIFparseTest extends UnitTestBase {
 
         System.out.println("===================== SUOKIFparseTest.test2() =====================");
         String input = "(=> (and (minValue ?R ?ARG ?N) (?R @ARGS) (equal ?VAL (ListOrderFn (ListFn @ARGS) ?ARG))) (greaterThan ?VAL ?N))";
-        Map<Integer,FormulaAST> hm = process(input);
+        Map<Integer, Formula> hm = process(input);
         StringBuilder sb = new StringBuilder();
         for (Formula f : hm.values()) {
             f.printCaches();
@@ -71,7 +71,7 @@ public class SUOKIFparseTest extends UnitTestBase {
 
         System.out.println("===================== SUOKIFparseTest.test3() =====================");
         String input = "(=> (and (exhaustiveAttribute ?CLASS @ROW) (inList NonFullyFormed (ListFn @ROW))) (instance NonFullyFormed Attribute))";
-        Map<Integer,FormulaAST> hm = process(input);
+        Map<Integer, Formula> hm = process(input);
         StringBuilder sb = new StringBuilder();
         for (Formula f : hm.values()) {
             //f.printCaches();
@@ -93,8 +93,8 @@ public class SUOKIFparseTest extends UnitTestBase {
 
         System.out.println("===================== SUOKIFparseTest.predRowUnder() =====================");
         String input = "(=> (and (exhaustiveAttribute ?CLASS ?ROW1) (inList ?ATTR (ListFn_1Fn ?ROW1))) (instance ?ATTR Attribute))";
-        Map<Integer,FormulaAST> hm = process(input);
-        FormulaAST f = hm.values().iterator().next();
+        Map<Integer, Formula> hm = process(input);
+        Formula f = hm.values().iterator().next();
 
         f.printCaches();
         if (f.predVarCache.isEmpty())
@@ -118,8 +118,8 @@ public class SUOKIFparseTest extends UnitTestBase {
 
         System.out.println("===================== SUOKIFparseTest.predRow() =====================");
         String input = "(=> (and (exhaustiveAttribute ?CLASS @ROW) (inList ?ATTR (ListFn @ROW))) (instance ?ATTR Attribute))";
-        Map<Integer,FormulaAST> hm = process(input);
-        FormulaAST f = hm.values().iterator().next();
+        Map<Integer, Formula> hm = process(input);
+        Formula f = hm.values().iterator().next();
 
         f.printCaches();
 
@@ -144,8 +144,8 @@ public class SUOKIFparseTest extends UnitTestBase {
         System.out.println("===================== SUOKIFparseTest.withSortals() =====================");
         String input = "(=> (and (instance ?REL Predicate) (instance ?ARG PositiveInteger) (instance ?N Quantity) (instance ?VAL Quantity)) " +
                 "(=> (and (maxValue subclass ?ARG ?N) (subclass @ARGS) (equal ?VAL (ListOrderFn (ListFn @ARGS) ?ARG))) (greaterThan ?N ?VAL)))";
-        Map<Integer,FormulaAST> hm = process(input);
-        FormulaAST f = hm.values().iterator().next();
+        Map<Integer, Formula> hm = process(input);
+        Formula f = hm.values().iterator().next();
 
         f.printCaches();
         if (f.predVarCache.isEmpty())
@@ -174,8 +174,8 @@ public class SUOKIFparseTest extends UnitTestBase {
                 "      (instance ?HOUR\n" +
                 "        (HourFn 12 ?DAY))\n" +
                 "      (finishes ?HOUR ?MORNING))))";
-        Map<Integer,FormulaAST> hm = process(input);
-        FormulaAST f = hm.values().iterator().next();
+        Map<Integer, Formula> hm = process(input);
+        Formula f = hm.values().iterator().next();
         if (f.containsNumber)
             System.out.println("hasNumber(): success!");
         else
@@ -194,7 +194,7 @@ public class SUOKIFparseTest extends UnitTestBase {
                         "  (connected ?OBJ1 ?OBJ2)\n" +
                         "  (xor\n" +
                         "    (overlapsSpatially ?OBJ1 ?OBJ2)))"; // incorrect # of args (only one here)
-        Map<Integer,FormulaAST> hm = process(input);
+        Map<Integer, Formula> hm = process(input);
 //        FormulaAST f = hm.values().iterator().next();
         if (hm.isEmpty())
             System.out.println("success!");

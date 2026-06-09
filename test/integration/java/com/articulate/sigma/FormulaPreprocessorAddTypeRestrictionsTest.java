@@ -1,9 +1,13 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.utils.StringUtil;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
@@ -27,8 +31,9 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
         FormulaPreprocessor fp = new FormulaPreprocessor();
         KB kb = SigmaTestBase.kb;
         Formula f = new Formula(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.getFormula(), false);
+        Map<String, Set<String>> varmap = fp.findTypeRestrictionsExpr(f.expr, kb);
+        Expr actualF = fp.addTypeRestrictionsExpr(f.expr, varmap, kb);
+        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.toKifString(), false);
 
         Formula expectedF = new Formula(expected);
         String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.getFormula(), false);

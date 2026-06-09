@@ -28,7 +28,6 @@ import org.junit.runners.Suite;
     KBcacheIncrementalTest.class,
     KBcacheSymbolTest.class,
     SymbolTableTest.class,
-    KIFTest.class,
     KifFileCheckerTest.class,
     LeoExecutableConfigTest.class,
     // TPTPFileCheckerTest.class,

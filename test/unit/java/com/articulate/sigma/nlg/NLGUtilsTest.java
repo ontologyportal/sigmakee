@@ -1,9 +1,9 @@
 package com.articulate.sigma.nlg;
 
-import com.articulate.sigma.Formula;
 import com.articulate.sigma.SigmaTestBase;
 import com.articulate.sigma.UnitTestBase;
 
+import com.articulate.sigma.Formula;
 import com.google.common.collect.Lists;
 
 import org.junit.Ignore;

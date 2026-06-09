@@ -25,7 +25,7 @@ public class KBcacheSymbolTest {
         KB kb = new KB("TestSymKB");
         kb.kbCache = new KBcache(kb);
         KBmanager.getMgr().setPref("cacheDisjoint", "false");
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);
         kb.merge(kif, "");

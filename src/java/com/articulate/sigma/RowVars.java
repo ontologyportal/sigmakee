@@ -99,7 +99,7 @@ public class RowVars {
                 boolean done = false;
                 int start = f.getFormula().indexOf(Formula.LP + pred);
                 int end = f.getFormula().indexOf(Formula.RP, start);
-                String simpleFS = FormulaUtil.getLiteralWithPredAndRowVar(pred,f);
+                String simpleFS = FormulaUtil.getLiteralWithPredAndRowVar(pred, new Formula(f.getFormula()));
                 if (simpleFS == null)
                     continue;
                 if (DEBUG) System.out.println("getRowVarMaxAritiesWithOtherArgs() looking at " + simpleFS);
@@ -241,20 +241,20 @@ public class RowVars {
         if (DEBUG) System.out.println("Info in RowVars.getRowVarRelLogOps(): pred: " + pred + " f: " + f);
         Map<String,Set<String>> result = new HashMap<>();
         if (Formula.isQuantifier(pred)) {
-            Formula arg2 = new Formula(f.getArgument(2));
+            Formula arg2 = f.getArgument(2);
             if (arg2 != null)
                 return getRowVarRelations(arg2);
         }
         else if (pred.equals(Formula.NOT)) {
-            Formula arg1 = new Formula(f.getArgument(1));
+            Formula arg1 = f.getArgument(1);
             if (arg1 != null)
                 return getRowVarRelations(arg1);
             else
                 return result;
         }
         else if (pred.equals(Formula.EQUAL) || pred.equals(Formula.IFF)  || pred.equals(Formula.IF)) {
-            Formula arg1 = new Formula(f.getArgument(1));
-            Formula arg2 = new Formula(f.getArgument(2));
+            Formula arg1 = f.getArgument(1);
+            Formula arg2 = f.getArgument(2);
             if (arg1 != null && arg2 != null)
                 return mergeValueSets(getRowVarRelations(arg1),getRowVarRelations(arg2));
             else
@@ -342,24 +342,25 @@ public class RowVars {
      *
      * @return an ArrayList of Formulas, or an empty ArrayList.
      */
+    //Deprecated
     public static List<Formula> expandRowVars(KB kb, Formula f) {
 
         List<String> result = new ArrayList<>();
         List<Formula> formresult = new ArrayList<>();
         if (!f.getFormula().contains(Formula.R_PREF)) {
             // If there are no row variables, return the original formula
-            formresult.add(f);
+            formresult.add(new Formula(f.getFormula()));
             return formresult;
         }
         if (DEBUG) System.out.println("Info in RowVars.expandRowVars(): f: " + f);
-        Map<String,Set<String>> rels = getRowVarRelations(f);
+        Map<String,Set<String>> rels = getRowVarRelations(new Formula(f.getFormula()));
         if (DEBUG) System.out.println("Info in RowVars.expandRowVars(): getRowVarRelations " + rels);
-        Map<String,Integer> rowVarMaxArities = getRowVarMaxAritiesWithOtherArgs(rels, kb, f);
+        Map<String,Integer> rowVarMaxArities = getRowVarMaxAritiesWithOtherArgs(rels, kb, new Formula(f.getFormula()));
         if (DEBUG) System.out.println("Info in RowVars.expandRowVars(): rowVarMaxArities: " + rowVarMaxArities);
-        Map<String,Integer> rowVarMinArities = getRowVarMinAritiesWithOtherArgs(rels, kb, f);
+        Map<String,Integer> rowVarMinArities = getRowVarMinAritiesWithOtherArgs(rels, kb, new Formula(f.getFormula()));
         if (DEBUG) System.out.println("Info in RowVars.expandRowVars(): rowVarMinArities: " + rowVarMinArities);
         result.add(f.getFormula());
-        Set<String> rowvars = findRowVars(f);
+        Set<String> rowvars = findRowVars(new Formula(f.getFormula()));
         for (String var : rowvars) {
             if (DEBUG)
                 System.out.println("Info in RowVars.expandRowVars(): var: " + var);
@@ -389,7 +390,7 @@ public class RowVars {
                 //    System.out.println("Info in RowVars.expandRowVars(): replace: " + replaceString);
                 for (int i = 0; i < result.size(); i++) {
                     String form = result.get(i);
-                    form = form.replaceAll("\\"+var, replaceString.toString());
+                    form = form.replaceAll(var, replaceString.toString());
                     if (DEBUG)
                         System.out.println("Info in RowVars.expandRowVars(1): form: " + form);
                     //if (j == maxArity - 1) {
@@ -405,7 +406,7 @@ public class RowVars {
         for (int i = 0; i < result.size(); i++) {
             Formula newf = new Formula(result.get(i));
             newf.derivation.operator = "rowvar";
-            newf.derivation.parents.add(f);
+            newf.derivation.parents.add(new Formula(f.getFormula()));
             formresult.add(newf);
         }
         if (DEBUG)

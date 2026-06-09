@@ -5,6 +5,8 @@ import com.articulate.sigma.*;
 import java.util.Map;
 
 import static org.junit.Assert.*;
+
+import com.articulate.sigma.Formula;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

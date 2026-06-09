@@ -1,5 +1,6 @@
 package com.articulate.sigma.parsing;
 
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.IntegrationTestBase;
 
 import java.util.Map;
@@ -13,7 +14,7 @@ import org.junit.Test;
 
 public class TypeTest extends IntegrationTestBase {
 
-    static FormulaAST f;
+    static Formula f;
     static SuokifVisitor visitor;
 
     @After
@@ -30,7 +31,7 @@ public class TypeTest extends IntegrationTestBase {
         System.out.println("Input: " + input);
         visitor = SuokifVisitor.parseString(input);
         if (visitor.errors.isEmpty()) {
-            Map<Integer,FormulaAST> hm = visitor.result;
+            Map<Integer, Formula> hm = visitor.result;
             VarTypes vt = new VarTypes(hm.values(),kb);
             vt.findTypes();
             f = hm.values().iterator().next();

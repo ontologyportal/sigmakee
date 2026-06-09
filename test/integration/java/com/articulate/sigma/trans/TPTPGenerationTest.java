@@ -3,7 +3,7 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.*;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.parsing.SuokifVisitor;
 
 import org.junit.*;
@@ -267,7 +267,7 @@ public class TPTPGenerationTest {
         SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
         assertNotNull("SuokifVisitor result should not be null", visitor.result);
         assertFalse("SuokifVisitor result should not be empty", visitor.result.isEmpty());
-        FormulaAST fa = visitor.result.get(0);
+        Formula fa = visitor.result.get(0);
         assertNotNull("FormulaAST should not be null", fa);
         assertNotNull("FormulaAST.expr should not be null", fa.expr);
 

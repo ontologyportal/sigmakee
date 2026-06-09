@@ -18,11 +18,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 package com.articulate.sigma.wordNet;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.MapUtils;
+import com.articulate.sigma.utils.LoggingUtils;
 import com.articulate.sigma.utils.StringUtil;
-import com.articulate.sigma.wordNet.WordNetUtilities;
-import com.articulate.sigma.utils.*;
 
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -1722,7 +1722,7 @@ public class WordNet implements Serializable {
             }
         }
         return false;
-    } 
+    }
 
     /** ***************************************************************
      *  Loads the most recently saved serialized version.

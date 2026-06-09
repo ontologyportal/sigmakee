@@ -8,7 +8,6 @@ package com.articulate.sigma;
  * clears varTypeCache on every identified formula.
  */
 
-import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import org.junit.Test;
 
@@ -35,7 +34,7 @@ public class AffectedFormulasTest {
         KB kb = new KB("TestAffectedKB");
         kb.kbCache = new KBcache(kb);
         KBmanager.getMgr().setPref("cacheDisjoint", "true");
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);
         kb.merge(kif, "");
@@ -173,7 +172,7 @@ public class AffectedFormulasTest {
         KB kb = buildKB(stmts);
 
         // Manually inject a formula with a pred-var and mark its predVarCache
-        Formula predVarFormula = new FormulaAST("(=> (?REL ?X ?Y) (foo ?X ?Y))");
+        Formula predVarFormula = new Formula("(=> (?REL ?X ?Y) (foo ?X ?Y))");
         predVarFormula.predVarCache = new HashSet<>(Collections.singleton("?REL"));
         predVarFormula.sourceFile = "test";
         kb.formulaMap.put(predVarFormula.getFormula(), predVarFormula);
@@ -197,7 +196,7 @@ public class AffectedFormulasTest {
         KB kb = buildKB(stmts);
 
         // Inject a pred-var formula with no direct mention of "Robot"
-        Formula predVarFormula = new FormulaAST("(=> (?REL ?X ?Y) (bar ?X ?Y))");
+        Formula predVarFormula = new Formula("(=> (?REL ?X ?Y) (bar ?X ?Y))");
         predVarFormula.predVarCache = new HashSet<>(Collections.singleton("?REL"));
         predVarFormula.sourceFile = "test";
         kb.formulaMap.put(predVarFormula.getFormula(), predVarFormula);
@@ -220,7 +219,7 @@ public class AffectedFormulasTest {
         String[] stmts = concat(CORE, "(instance loves Relation)");
         KB kb = buildKB(stmts);
 
-        Formula unprocessed = new FormulaAST("(=> (?REL ?X ?Y) (baz ?X ?Y))");
+        Formula unprocessed = new Formula("(=> (?REL ?X ?Y) (baz ?X ?Y))");
         unprocessed.predVarCache = null;  // not yet computed
         unprocessed.sourceFile = "test";
         kb.formulaMap.put(unprocessed.getFormula(), unprocessed);
@@ -242,7 +241,7 @@ public class AffectedFormulasTest {
         String[] stmts = concat(CORE, "(instance loves Relation)");
         KB kb = buildKB(stmts);
 
-        Formula noPredVar = new FormulaAST("(subclass Cat Animal)");
+        Formula noPredVar = new Formula("(subclass Cat Animal)");
         noPredVar.predVarCache = Collections.emptySet();  // explicitly no pred vars
         noPredVar.sourceFile = "test";
         kb.formulaMap.put(noPredVar.getFormula(), noPredVar);
@@ -346,7 +345,7 @@ public class AffectedFormulasTest {
         KB kb = buildKB(stmts);
 
         // Simulate adding (instance myRobot Robot) to the formula index manually
-        Formula instF = new FormulaAST("(instance myRobot Robot)");
+        Formula instF = new Formula("(instance myRobot Robot)");
         instF.sourceFile = "test";
         kb.formulaMap.put(instF.getFormula(), instF);
         // Register in the formulas index at the expected keys
@@ -469,7 +468,7 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addSubclass("newRel", "Agent");  // newRel is a relation in the session cache
 
-        Formula predVarF = new FormulaAST("(=> (?REL ?X ?Y) (exists (?Z) (?REL ?Z ?X)))");
+        Formula predVarF = new Formula("(=> (?REL ?X ?Y) (exists (?Z) (?REL ?Z ?X)))");
         predVarF.predVarCache = new HashSet<>(Collections.singleton("?REL"));
         predVarF.sourceFile = "test";
         kb.formulaMap.put(predVarF.getFormula(), predVarF);
@@ -495,7 +494,7 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addSubclass("Robot", "Agent");
 
-        Formula predVarF = new FormulaAST("(=> (?REL ?X ?Y) (exists (?Z) (?REL ?Z ?X)))");
+        Formula predVarF = new Formula("(=> (?REL ?X ?Y) (exists (?Z) (?REL ?Z ?X)))");
         predVarF.predVarCache = new HashSet<>(Collections.singleton("?REL"));
         predVarF.sourceFile = "test";
         kb.formulaMap.put(predVarF.getFormula(), predVarF);
@@ -605,7 +604,7 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addInstance("myRel", "BinaryRelation");
 
-        Formula predVarF = new FormulaAST("(=> (?REL ?X ?Y) (foo ?X ?Y))");
+        Formula predVarF = new Formula("(=> (?REL ?X ?Y) (foo ?X ?Y))");
         predVarF.predVarCache = new HashSet<>(Collections.singleton("?REL"));
         predVarF.sourceFile = "test";
         kb.formulaMap.put(predVarF.getFormula(), predVarF);
@@ -630,7 +629,7 @@ public class AffectedFormulasTest {
         KBcache sc = kb.kbCache;
         sc.addInstance("myRobot", "Robot");
 
-        Formula predVarF = new FormulaAST("(=> (?REL ?X ?Y) (bar ?X ?Y))");
+        Formula predVarF = new Formula("(=> (?REL ?X ?Y) (bar ?X ?Y))");
         predVarF.predVarCache = new HashSet<>(Collections.singleton("?REL"));
         predVarF.sourceFile = "test";
         kb.formulaMap.put(predVarF.getFormula(), predVarF);
@@ -653,7 +652,7 @@ public class AffectedFormulasTest {
         KB kb = buildKB(stmts);
         KBcache sc = kb.kbCache;
 
-        Formula instF = new FormulaAST("(instance myRobot Robot)");
+        Formula instF = new Formula("(instance myRobot Robot)");
         instF.sourceFile = "test";
         instF.varTypeCache = new HashMap<>();
         instF.varTypeCache.put("?X", new HashSet<>(Collections.singleton("Robot")));

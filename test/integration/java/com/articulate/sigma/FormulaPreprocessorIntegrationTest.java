@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.parsing.Expr;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.junit.Ignore;
@@ -30,7 +31,7 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("Class", "Object+");
@@ -61,7 +62,7 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         f.read(strf);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
-        Map<String, Set<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actualMap = fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         assertEquals(expected, actualMap);
     }
@@ -88,9 +89,10 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
                 "(equal (?NOTPARTPROB (ProbabilityFn (not (exists (?Z) (and (instance ?Z ?WHOLE) (part ?X ?Z))))))) " +
                 "(greaterThan ?PARTPROB ?NOTPARTPROB))) ";
         expected.read(expectedString);
-        Formula actual = fp.addTypeRestrictions(f, SigmaTestBase.kb);
+        Map<String, Set<String>> varmap = fp.findTypeRestrictionsExpr(f.expr, kb);
+        Expr actual = fp.addTypeRestrictionsExpr(f.expr,varmap, SigmaTestBase.kb);
         //assertTrue("expected: " + expected.toString() + ", but was: " + actual.toString(), expected.equals(actual));
-        assertEquals(expected, actual);
+        assertEquals(expected, new Formula(actual));
     }
 
     /** ***************************************************************
@@ -107,7 +109,7 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("CognitiveAgent");

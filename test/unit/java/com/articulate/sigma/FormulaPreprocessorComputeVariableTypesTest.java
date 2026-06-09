@@ -24,7 +24,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String,Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String,Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         HashMap<String,HashSet<String>> expected = new HashMap<>();
 
@@ -40,7 +40,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         HashSet<String> set = Sets.newHashSet("Entity");
         HashMap<String, HashSet<String>> expected = Maps.newHashMap();
@@ -62,7 +62,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("AutonomousAgent");
@@ -86,7 +86,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("AutonomousAgent");
@@ -113,7 +113,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         expected.put("?H", Sets.newHashSet("AutonomousAgent"));
@@ -137,7 +137,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("Set");
@@ -159,7 +159,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("Class");
@@ -179,7 +179,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("Month+");
@@ -200,7 +200,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("GeopoliticalArea");
@@ -220,7 +220,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("Class");
@@ -241,7 +241,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        Map<String, Set<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actualMap = fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         assertEquals(expected, actualMap);
 
@@ -261,9 +261,9 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        System.out.println("Var types: " + fp.computeVariableTypes(f, SigmaTestBase.kb));
+        System.out.println("Var types: " + fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb));
 
-        Map<String, Set<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actualMap = fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         assertEquals(expected, actualMap);
     }
@@ -283,9 +283,9 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         f.read(stmt);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         System.out.println("Formula: " + f);
-        System.out.println("Var types: " + fp.computeVariableTypes(f, SigmaTestBase.kb));
+        System.out.println("Var types: " + fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb));
 
-        Map<String, Set<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actualMap = fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         assertEquals(expected, actualMap);
     }
@@ -310,9 +310,9 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
 
         FormulaPreprocessor fp = new FormulaPreprocessor();
         System.out.println("Formula: " + f);
-        System.out.println("Var types: " + fp.computeVariableTypes(f, SigmaTestBase.kb));
+        System.out.println("Var types: " + fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb));
 
-        Map<String, Set<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actualMap = fp.computeVariableTypesExpr(f.expr, SigmaTestBase.kb);
 
         assertEquals(expected, actualMap);
     }

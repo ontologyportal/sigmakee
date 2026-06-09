@@ -16,10 +16,11 @@ Infosys LTD.
 package com.articulate.sigma.tp;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.SessionTPTPManager;
-import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.parsing.CLIMapParser;
@@ -131,17 +132,17 @@ public class EProver {
 
     /***************************************************************
      * Submits a query to this E inference engine.
-     * @param suoKifFormula The String representation of the SUO-KIF query.
+     * @param suoKifFormulas The String representation of the SUO-KIF query.
      */
     public void askEProver(String suoKifFormulas) {
 
         if (debug>0) System.out.printf("\nEProver.askEProver(%s)", suoKifFormulas);
         if (StringUtil.isNonEmptyString(suoKifFormulas)) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = SessionTPTPManager.withSessionCache(
-                    this.sessionId, this.kb, () -> fp.preProcess(new Formula(suoKifFormulas), true, this.kb));
+            Set<Expr> processedStmts = SessionTPTPManager.withSessionCache(
+                    this.sessionId, this.kb, () -> fp.preProcessExpr(new Formula(suoKifFormulas), true, this.kb));
             if (!processedStmts.isEmpty() && this != null) {
-                String strQuery = processedStmts.iterator().next().getFormula();
+                String strQuery = processedStmts.iterator().next().toKifString();
                 this.submitQuery(strQuery);
                 System.out.println("ThiNGHERE");
             }
@@ -165,11 +166,11 @@ public class EProver {
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = SessionTPTPManager.withSessionCache(
-                    this.sessionId, this.kb, () -> fp.preProcess(query, true, this.kb));
+            Set<Expr> processedStmts = SessionTPTPManager.withSessionCache(
+                    this.sessionId, this.kb, () -> fp.preProcessExpr(query, true, this.kb));
             if (!processedStmts.isEmpty()) {
                 EProver.addBatchConfig(null, this.timeout);
-                String strQuery = processedStmts.iterator().next().getFormula();
+                String strQuery = processedStmts.iterator().next().toKifString();
                 this.submitQuery(strQuery);
                 if (this.output == null || this.output.isEmpty())
                     System.out.println("No response from EProver!");
@@ -232,22 +233,25 @@ public class EProver {
         System.out.println("EProver.assertFormula(2): process: " + _eprover);
         boolean allAdded = (this != null);
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
-            Set<Formula> processedFormulas = new HashSet<>();
+//            Set<Formula> processedFormulas = new HashSet<>();
+            Set<Expr> processedFormulas = new HashSet<>();
             FormulaPreprocessor fp;
             Set<String> tptpFormulas;
             String tptpstring;
             for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
                 fp = new FormulaPreprocessor();
-                processedFormulas.addAll(fp.preProcess(parsedF,false, this.kb));
+                processedFormulas.addAll(fp.preProcessExpr(parsedF,false, this.kb));
                 if (processedFormulas.isEmpty())
                     allAdded = false;
                 else {   // 2. Translate to TPTP.
                     tptpFormulas = new HashSet<>();
                     if (tptp) {
-                        for (Formula p : processedFormulas)
+                        for (Expr ex : processedFormulas) {
+                            Formula p = new Formula(ex.toKifString());
                             if (!p.isHigherOrder(this.kb))
-                                tptpFormulas.add(SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(),false));
+                                tptpFormulas.add(SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(), false));
+                        }
                     }
                     if (this != null) { // 3. Write to new tptp file
                         int axiomIndex = 0;

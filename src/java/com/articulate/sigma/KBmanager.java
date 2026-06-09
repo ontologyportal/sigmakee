@@ -27,7 +27,6 @@ import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
 import com.articulate.sigma.utils.*;
 
-import java.nio.file.*;
 import com.esotericsoftware.kryo.io.*;
 
 import py4j.GatewayServer;
@@ -41,7 +40,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.io.IOException;
-import java.util.stream.Stream;
 
 /** This is a class that manages a group of knowledge bases.  It should only
  *  have one instance, contained in its own static member variable.
@@ -235,7 +233,7 @@ public class KBmanager implements Serializable {
      * @return newest modified date among config.xml and constituents
      */
     public static Date newestConfigOrConstituentDate() {
-        
+
         String base = KButilities.SIGMA_HOME;
         return newestConfigOrConstituentDate(base + File.separator + "KBs");
     }
@@ -246,7 +244,7 @@ public class KBmanager implements Serializable {
      * @return newest modified date among config.xml and constituents
      */
     private static Date newestConfigOrConstituentDate(String configFilePath) {
-        
+
         SimpleElement configuration = KBmanager.getMgr().readConfiguration(configFilePath);
         return newestConfigOrConstituentDate(configuration);
     }
@@ -258,7 +256,7 @@ public class KBmanager implements Serializable {
      * @return newest modified date among config.xml and constituents
      */
     private static Date newestConfigOrConstituentDate(SimpleElement configuration) {
-        
+
         List<String> allConstituents = new ArrayList<>();
         for (List<String> kbFiles : kbFilenamesFromXML(configuration)) allConstituents.addAll(kbFiles);
         String kbDir = KButilities.SIGMA_HOME + File.separator + "KBs";
@@ -646,7 +644,7 @@ public class KBmanager implements Serializable {
      * Conventional/sequential version
      */
     private boolean _loadKB(String kbName, List<String> constituents, KB kb) {
-        
+
         int i = 1;
         for (String filename : constituents) {
             LoggingUtils.printProgressBar("INFO", kbName + " Adding Constituents:", i, constituents.size(), "(" + i + "/"  + constituents.size() + ")");
@@ -706,8 +704,7 @@ public class KBmanager implements Serializable {
 
     /*****************************************************************
      * @deprecated
-     */ // TODO: Not used
-    @Deprecated(forRemoval = true)
+     */
     private void fromXML(SimpleElement configuration) {
 
         if (!configuration.getTagName().equals("configuration"))
@@ -846,7 +843,7 @@ public class KBmanager implements Serializable {
      * @param configFileDir the directory of config.xml, typically ~/.sigmakee/KBs
      */
     public void initializeOnce(String configFileDir) {
-        
+
         long start = System.nanoTime();
         LoggingUtils.printSigmaWelcome();
         LoggingUtils.log("Initializing KBmanager!");
@@ -887,7 +884,7 @@ public class KBmanager implements Serializable {
             TPTPGenerationManager.startBackgroundGeneration();
             if ("true".equalsIgnoreCase(System.getenv("TPTP_BG_WAIT"))) {
                 try {
-                    Thread.sleep(120000); 
+                    Thread.sleep(120000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -903,7 +900,7 @@ public class KBmanager implements Serializable {
         double elapsedSeconds = (System.nanoTime() - start) / 1_000_000_000.0;
         LoggingUtils.log("Initialization completed in " + elapsedSeconds + " seconds!");
     }
-    
+
     /*****************************************************************
      * Check whether config.xml/Constituents are newer than its TPTP/TFF/THF file
      * @return true if tptp file is older and config/constituents
@@ -936,7 +933,7 @@ public class KBmanager implements Serializable {
 
     /*****************************************************************
      * Initialize Wordnet, NLGUtils, OMWordnet, Verbnet
-     * @param configFileDir 
+     * @param configFileDir
      */
     public void initializeLexicons(String configFileDir) {
 
@@ -1278,7 +1275,7 @@ public class KBmanager implements Serializable {
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             Formula f = new Formula();
             f.read("(=> (and (wears ?A ?C) (part ?P ?C)) (wears ?A ?P))");
-            FormulaPreprocessor fp = new FormulaPreprocessor();
+
         }
         else {
             if (args.length > 0 && args[0].equals("-p")) {

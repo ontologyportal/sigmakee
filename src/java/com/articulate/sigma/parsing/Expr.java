@@ -32,6 +32,7 @@ public sealed interface Expr
      */
     record Atom(String name) implements Expr {
         public String toKifString() { return name; }
+        @Override public String toString() { return toKifString(); }
     }
 
     /**
@@ -40,6 +41,7 @@ public sealed interface Expr
      */
     record Var(String name) implements Expr {
         public String toKifString() { return name; }
+        @Override public String toString() { return toKifString(); }
     }
 
     /**
@@ -51,6 +53,7 @@ public sealed interface Expr
      */
     record RowVar(String name) implements Expr {
         public String toKifString() { return name; }
+        @Override public String toString() { return toKifString(); }
     }
 
     /**
@@ -60,6 +63,7 @@ public sealed interface Expr
      */
     record NumLiteral(String value) implements Expr {
         public String toKifString() { return value; }
+        @Override public String toString() { return toKifString(); }
     }
 
     /**
@@ -69,6 +73,7 @@ public sealed interface Expr
      */
     record StrLiteral(String value) implements Expr {
         public String toKifString() { return value; }
+        @Override public String toString() { return toKifString(); }
     }
 
     // -----------------------------------------------------------------------
@@ -116,6 +121,8 @@ public sealed interface Expr
             sb.append(')');
             return sb.toString();
         }
+
+        @Override public String toString() { return toKifString(); }
 
         /** Convenience: the name of the head atom, or null if head is not an Atom. */
         public String headName() {

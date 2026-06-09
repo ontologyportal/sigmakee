@@ -2,7 +2,6 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.SuokifVisitor;
-import com.articulate.sigma.parsing.FormulaAST;
 import org.junit.Test;
 
 import java.util.*;
@@ -50,7 +49,7 @@ public class FormulaPreprocessorExprTest {
     private static Expr parseExpr(String kif) {
         SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
         assertFalse("Parse must succeed for: " + kif, visitor.result.isEmpty());
-        FormulaAST ast = visitor.result.get(0);
+        Formula ast = visitor.result.get(0);
         assertNotNull("AST must not be null for: " + kif, ast);
         assertNotNull("ast.expr must not be null for: " + kif, ast.expr);
         return ast.expr;

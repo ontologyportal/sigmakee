@@ -15,14 +15,14 @@ import org.junit.runners.Suite;
     SUOKIFCacheTest.class,
     ExprTest.class,
     SuokifToExprTest.class,
-    KIFASTTest.class,
+    KIFTest.class,
     PredVarInstExprTest.class,
     ClausifierExprTest.class,
     ExprToTPTPTest.class,
     ExprToTFFTest.class,
     ExprToTHFTest.class,
     ModalsExprTest.class,
-    FormulaASTTest.class
+    FormulaTest.class
 })
 public class UnitParsingTestSuite  extends UnitTestBase {
 

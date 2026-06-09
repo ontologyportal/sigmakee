@@ -113,13 +113,13 @@ public class KbIntegrationTest extends IntegrationTestBase {
 
         String stmt = "(=> " +
                 "(instance ?N SCNuclearSilo) " +
-                "(hasPurpose ?N " +
-                "  (exists (?M ?W) " +
+                "(exists (?M ?W) " +
+                "  (hasPurpose ?N " +
                 "    (and " +
                 "      (instance ?M Manufacture) " +
                 "      (located ?M ?N) " +
                 "      (instance ?W NuclearWeapon) " +
-                "      (result ?M ?W))))";
+                "      (result ?M ?W)))))";
         Formula f = new Formula(stmt);
         System.out.println("testIsHigherOrder4: " + f);
         System.out.println("testIsHigherOrder4: results: " + f.isHigherOrder(SigmaTestBase.kb));

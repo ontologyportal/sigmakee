@@ -113,48 +113,48 @@ public class SInE extends InferenceEngine {
 
     /** *************************************************************
      */
-    private SInE(String kbFileName, EngineFactory ef) throws Exception {
-
-        underlyingEngineFactory = ef;
-        formSymbols = new Hashtable<>();
-        formulas = new ArrayList<>();
-        mandatoryFormulas = new ArrayList<>();
-        degrees = new Hashtable<>();
-        requirements = new Hashtable<>();
-
-        String error = null;
-        //System.out.println("INFO in SInE(): initializing");
-        File kbFile = null;
-        if (error == null) {
-            kbFile = new File(kbFileName);
-            if (!kbFile.exists() ) {
-                error = ("The file " + kbFileName + " does not exist");
-                System.out.println("INFO in SInE(): " + error);
-                KBmanager.getMgr().setError(KBmanager.getMgr().getError()
-                                             + "\n<br/>" + error + "\n<br/>");
-            }
-        }
-
-        if (error == null) {
-            if (!kifFormat) {
-                //System.out.println("INFO in SInE(): non KIF");
-                List<String> forms = loadNonKif(kbFile);
-                if (!forms.isEmpty()) {
-                    ((ArrayList)formulas).ensureCapacity(forms.size());
-                    loadFormulas(forms);
-                }
-            }
-            else {
-                KIF kif = new KIF();
-                kif.setParseMode(KIF.RELAXED_PARSE_MODE);
-                kif.readFile(kbFile.getCanonicalPath());
-                if (!kif.formulaMap.keySet().isEmpty()) {
-                    ((ArrayList)formulas).ensureCapacity(kif.formulaMap.keySet().size());
-                    loadFormulas(kif.formulaMap.keySet());
-                }
-            }
-        }
-    }
+//    private SInE(String kbFileName, EngineFactory ef) throws Exception {
+//
+//        underlyingEngineFactory = ef;
+//        formSymbols = new Hashtable<>();
+//        formulas = new ArrayList<>();
+//        mandatoryFormulas = new ArrayList<>();
+//        degrees = new Hashtable<>();
+//        requirements = new Hashtable<>();
+//
+//        String error = null;
+//        //System.out.println("INFO in SInE(): initializing");
+//        File kbFile = null;
+//        if (error == null) {
+//            kbFile = new File(kbFileName);
+//            if (!kbFile.exists() ) {
+//                error = ("The file " + kbFileName + " does not exist");
+//                System.out.println("INFO in SInE(): " + error);
+//                KBmanager.getMgr().setError(KBmanager.getMgr().getError()
+//                                             + "\n<br/>" + error + "\n<br/>");
+//            }
+//        }
+//
+//        if (error == null) {
+//            if (!kifFormat) {
+//                //System.out.println("INFO in SInE(): non KIF");
+//                List<String> forms = loadNonKif(kbFile);
+//                if (!forms.isEmpty()) {
+//                    ((ArrayList)formulas).ensureCapacity(forms.size());
+//                    loadFormulas(forms);
+//                }
+//            }
+//            else {
+//                KIF kif = new KIF();
+//                kif.setParseMode(KIF.RELAXED_PARSE_MODE);
+//                kif.readFile(kbFile.getCanonicalPath());
+//                if (!kif.formulaMap.keySet().isEmpty()) {
+//                    ((ArrayList)formulas).ensureCapacity(kif.formulaMap.keySet().size());
+//                    loadFormulas(kif.formulaMap.keySet());
+//                }
+//            }
+//        }
+//    }
 
     /** *************************************************************
      */

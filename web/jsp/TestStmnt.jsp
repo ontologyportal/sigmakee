@@ -1,3 +1,5 @@
+<%@page import="com.articulate.sigma.Formula,com.articulate.sigma.parsing.Expr"%>
+<%@ page import="com.articulate.sigma.Formula" %>
 <%@include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
@@ -50,9 +52,12 @@ if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
         else {
             Formula f = new Formula(stmt);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> res = fp.preProcess(f,false,kb);
+            Set<Expr> res = fp.preProcessExpr(f,false,kb);
             if (f.errors != null && f.errors.size() > 0) {
                 status.append("Error:  " + f.errors.toString() + "<P>\n");
+                error = true;
+            } else if (res.isEmpty()) {
+                status.append("Warning: formula could not be preprocessed (pred-var or row-var expansion failed)<P>\n");
                 error = true;
             }
             SUMOtoTFAform.initOnce();

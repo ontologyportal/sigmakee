@@ -57,10 +57,7 @@ MA  02111-1307 USA
 package com.articulate.sigma;
 
 import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.parsing.ExprToTHF;
 import com.articulate.sigma.parsing.ExprToTPTP;
-import com.articulate.sigma.parsing.FormulaAST;
-import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.tp.ATPException;
 import com.articulate.sigma.tp.ArityException;
 import com.articulate.sigma.tp.FormulaTranslationException;
@@ -76,12 +73,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -191,7 +184,7 @@ public class KB implements Serializable {
     public KBcache kbCache = null;
 
     /** maps TPTP axiom IDs to SUMO formulas */
-    public static Map<String,Formula> axiomKey = new HashMap<>();
+    public static Map<String, Formula> axiomKey = new HashMap<>();
 
     public Map<String, Integer> termFrequency = new HashMap<>();
 
@@ -322,7 +315,7 @@ public class KB implements Serializable {
             for (Map.Entry<String, Formula> pair : kbIn.formulaMap.entrySet()) {
                 key = pair.getKey();
                 Formula src = pair.getValue();
-                newFormula = (src instanceof FormulaAST fa) ? new FormulaAST(fa) : new Formula(src);
+                newFormula = new Formula(src);
                 this.formulaMap.put(key, newFormula);
             }
         }
@@ -890,19 +883,19 @@ public class KB implements Serializable {
      * @return An ArrayList of formula tuples (ArrayLists), or an empty
      * ArrayList.
      */
-    public static List<List<String>> formulasToArrayLists(List<Formula> formulaList) {
-
-        List<List<String>> ans = new ArrayList<>();
-        if (formulaList instanceof List) {
-            Iterator<Formula> it = formulaList.iterator();
-            Formula f;
-            while (it.hasNext()) {
-                f = (Formula) it.next();
-                ans.add(f.literalToArrayList());
-            }
-        }
-        return ans;
-    }
+//    public static List<List<String>> formulasToArrayLists(List<Formula> formulaList) {
+//
+//        List<List<String>> ans = new ArrayList<>();
+//        if (formulaList instanceof List) {
+//            Iterator<Formula> it = formulaList.iterator();
+//            Formula f;
+//            while (it.hasNext()) {
+//                f = (Formula) it.next();
+//                ans.add(f.literalToArrayList());
+//            }
+//        }
+//        return ans;
+//    }
 
     /* *************************************************************
      * Converts all atoms in the input List to Formula objects.
@@ -929,20 +922,20 @@ public class KB implements Serializable {
      * @param literal A List representing a SUO-KIF formula.
      * @return A String representing a SUO-KIF formula.
      */
-    public static String literalListToString(List<String> literal) {
-
-        StringBuilder b = new StringBuilder();
-        if (literal instanceof List) {
-            b.append(Formula.LP);
-            for (int i = 0; i < literal.size(); i++) {
-                if (i > 0)
-                    b.append(Formula.SPACE);
-                b.append(literal.get(i));
-            }
-            b.append(Formula.RP);
-        }
-        return b.toString();
-    }
+//    public static String literalListToString(List<String> literal) {
+//
+//        StringBuilder b = new StringBuilder();
+//        if (literal instanceof List) {
+//            b.append(Formula.LP);
+//            for (int i = 0; i < literal.size(); i++) {
+//                if (i > 0)
+//                    b.append(Formula.SPACE);
+//                b.append(literal.get(i));
+//            }
+//            b.append(Formula.RP);
+//        }
+//        return b.toString();
+//    }
 
     /***************************************************************
      * Converts a
@@ -951,16 +944,16 @@ public class KB implements Serializable {
      * @param lit A List representing a SUO-KIF formula.
      * @return A SUO-KIF Formula object, or null if no Formula can be created.
      */
-    public static Formula literalListToFormula(List<String> lit) {
-
-        Formula f = null;
-        String theFormula = literalListToString(lit);
-        if (StringUtil.isNonEmptyString(theFormula)) {
-            f = new Formula();
-            f.read(theFormula);
-        }
-        return f;
-    }
+//    public static FormulaAST literalListToFormula(List<String> lit) {
+//
+//        FormulaAST f = null;
+//        String theFormula = literalListToString(lit);
+//        if (StringUtil.isNonEmptyString(theFormula)) {
+//            f = new FormulaAST();
+//            f.read(theFormula);
+//        }
+//        return f;
+//    }
 
     /***************************************************************
      * Returns an
@@ -1087,7 +1080,7 @@ public class KB implements Serializable {
      * @return ArrayList
      */
     public List<Formula> askWithTwoRestrictions(int argnum1, String term1, int argnum2, String term2, int argnum3,
-                                                     String term3) {
+                                                String term3) {
 
         String[] args = new String[6];
         args[0] = "argnum1 = " + argnum1;
@@ -1154,15 +1147,10 @@ public class KB implements Serializable {
                 }
             }
             if (partiala != null) {
-                Formula f, fargb, fargc;
-                for (int i = 0; i < partiala.size(); i++) {
-                    f = partiala.get(i);
-                    fargb = f.getArgument(argb);
-                    fargc = f.getArgument(argc);
-                    if (f != null && fargb != null && f.getArgument(argb).equals(termb)) {
-                        if (fargc != null && f.getArgument(argc).equals(termc))
-                            result.add(f);
-                    }
+                for (Formula f : partiala) {
+                    if (f != null && f.getStringArgument(argb).equals(termb)
+                            && f.getStringArgument(argc).equals(termc))
+                        result.add(f);
                 }
             }
         }
@@ -1268,7 +1256,6 @@ public class KB implements Serializable {
      * @return An ArrayList of Formula(s), which will be empty if no match found.
      * see KIF.createKey()
      */
-    //@Deprecated(since = "FormulaAST", forRemoval = false)
     public List<Formula> ask(String kind, int argnum, String term) {
 
         List<Formula> result = new ArrayList<>();
@@ -1523,8 +1510,9 @@ public class KB implements Serializable {
     /***************************************************************
      * Get all children of the given term following instance and
      * subclass relations as well as the indicated rel
+     *
+     * @Deprecated // should use KBcache getChildren
      */
-    @Deprecated // should use KBcache getChildren
     public Set<String> getAllSub(String term, String rel) {
 
         //System.out.println("KB.getAllSub(): "  + term + " : " + rel);
@@ -1559,26 +1547,30 @@ public class KB implements Serializable {
      * @return If any of the formulas are already present, returns an ArrayList
      * containing the old (existing) formulas, else returns an empty
      * ArrayList.
+     *
+     * @deprecated replaced with {@link #merge(KIF kif, String pathname)}
      */
-    public List<Formula> merge(KIF kif, String pathname) {
-        return mergeFormulaSource(kif.terms, kif.formulas, kif.formulaMap, pathname);
-    }
+//    public List<FormulaAST> merge(KIF kif, String pathname) {
+////        return mergeFormulaSource(kif.terms, kif.formulas, kif.formulaMap, pathname);
+//        System.out.println("[KB.merge] merge with stale KIF called");
+//        return null;
+//    }
 
     /**
-     * KIFAST-based overload of {@link #merge(KIF, String)}.
-     * {@link KIFAST} stores {@link com.articulate.sigma.parsing.FormulaAST} values
+     * KIFAST-based overload of {link #merge(KIF, String)}.
+     * {@link KIF} stores {@link Formula} values
      * (which extend Formula), so it is compatible with the same merge logic.
      */
-    public List<Formula> merge(KIFAST kif, String pathname) {
+    public List<Formula> merge(KIF kif, String pathname) {
         return mergeFormulaSource(kif.terms, kif.formulas,
                 (Map<String, Formula>)(Map<?,?>)kif.formulaMap, pathname);
     }
 
     /** Shared implementation used by both merge() overloads. */
     private List<Formula> mergeFormulaSource(Set<String> newTerms,
-            Map<String, List<String>> newFormulaIndex,
-            Map<String, Formula> newFormulaMap,
-            String pathname) {
+                                             Map<String, List<String>> newFormulaIndex,
+                                             Map<String, Formula> newFormulaMap,
+                                             String pathname) {
 
         List<Formula> formulasPresent = new ArrayList<>();
         // Add all the terms from the new formula into the KB's current list
@@ -1719,7 +1711,7 @@ public class KB implements Serializable {
 
             String result = "The formula could not be added";
             KBmanager mgr = KBmanager.getMgr();
-            KIFAST kif = new KIFAST(); // 1. Parse the input string via ANTLR.
+            KIF kif = new KIF(); // 1. Parse the input string via ANTLR.
             String msg = kif.parseStatement(input);
             if (msg != null) {
                 throw new FormulaTranslationException("Error parsing \"" + input + "\": " + msg, "KIF");
@@ -1824,7 +1816,9 @@ public class KB implements Serializable {
                                 case LEO:
                                     if (debug>1) System.out.println("KB.tell: using leo");
                                     LEO leo = new LEO(this, "tptp", 10, 1, null);
-                                    leo.assertFormula(tptpfile.getCanonicalPath(),parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                                    List<Formula> leoFormulas = new ArrayList<>();
+                                    for (Formula lf : parsedFormulas) leoFormulas.add(new Formula(lf.getFormula()));
+                                    leo.assertFormula(tptpfile.getCanonicalPath(), leoFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                                     // nothing much to do since LEO has to load it all at query time
                                     // just create a single file
                                     result += " and inference";
@@ -1881,7 +1875,7 @@ public class KB implements Serializable {
      */
     public boolean tellRequiresBaseRegeneration(String input) {
 
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         String msg = kif.parseStatement(input);
 
         // If it doesn't parse, tell() will fail anyway → no regen decision needed here
@@ -1890,7 +1884,7 @@ public class KB implements Serializable {
         if (kif.formulaMap == null || kif.formulaMap.isEmpty()) return false;
 
         return requiresBaseRegenForFormulas(
-                (java.util.Collection<Formula>)(java.util.Collection<?>)kif.formulaMap.values());
+                (Collection<Formula>)(Collection<?>)kif.formulaMap.values());
     }
 
     /** ***************************************************************
@@ -1925,46 +1919,6 @@ public class KB implements Serializable {
         return false;
     }
 
-    /** ***************************************************************
-     * Return true if the current TQ user assertions require rebuilding the base SUMO.<lang>.
-     * Conservative v1: rebuild on schema changes or ground transitive facts.
-     * Defaults to checking shared UA file (backward compatible).
-     */
-    public boolean testQueryRequiresBaseRegeneration() {
-        return testQueryRequiresBaseRegeneration(null);
-    }
-
-    /** ***************************************************************
-     * Return true if the current TQ user assertions require rebuilding the base SUMO.<lang>.
-     * Conservative v1: rebuild on schema changes or ground transitive facts.
-     *
-     * @param sessionId Optional HTTP session ID for session-specific UA files.
-     *                  If null or empty, checks shared UA file.
-     */
-    public boolean testQueryRequiresBaseRegeneration(String sessionId) {
-
-        File uaKif;
-        if (sessionId != null && !sessionId.isEmpty()) {
-            // Check session-specific UA file
-            java.nio.file.Path sessionUAPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionUAPath(sessionId, this.name);
-            uaKif = sessionUAPath.toFile();
-        } else {
-            // Check shared UA file (original behavior)
-            File dir = new File(KBmanager.getMgr().getPref("kbDir"));
-            uaKif = new File(dir, this.name + KB._userAssertionsString);
-        }
-
-        if (!uaKif.exists()) return false; // no tells => no impact
-
-        // If we cannot decide transitivity, fail-safe
-        if (kbCache == null) return true;
-
-        KIF ua = readConstituent(uaKif.getAbsolutePath());
-        if (ua == null || ua.formulaMap == null || ua.formulaMap.isEmpty()) return false;
-
-        return requiresBaseRegenForFormulas(ua.formulaMap.values());
-    }
-
     /**************************************************************
      * Submits a
      * query to specified InferenceEngine object. Returns an XML formatted
@@ -1988,10 +1942,10 @@ public class KB implements Serializable {
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = fp.preProcess(query, true, this);
+            Set<Expr> processedStmts = fp.preProcessExpr(query.expr, true, this);
             try {
                 if (!processedStmts.isEmpty()) {
-                    String strQuery = processedStmts.iterator().next().getFormula();
+                    String strQuery = processedStmts.iterator().next().toKifString();
                     result = engine.submitQuery(strQuery, timeout, maxAnswers);
                 }
             }
@@ -2108,7 +2062,7 @@ public class KB implements Serializable {
 
     /*****************************************************************
      * Analogous to compareTo(), return -1,0 or 1 depending on whether
-     * the first term is "smaller", equal to or "greater" than the
+     * the first term is "smaller", equal to, or "greater" than the
      * second, respectively.  A term that is the parent of another
      * is "smaller".  If not a parent of the other, the smaller term
      * is that which is fewer "levels" from their common parent.
@@ -2782,10 +2736,10 @@ public class KB implements Serializable {
      * Read a constituent KIF file using the ANTLR-based KIFAST parser.
      * Controlled by the {@code useAntlrParser} preference in config.xml.
      */
-    public KIFAST readConstituentAST(String filename) {
+    public KIF readConstituentAST(String filename) {
 
         String canonicalPath = null;
-        KIFAST file = null;
+        KIF file = null;
         try {
             if (filename.endsWith(".owl") || filename.endsWith(".OWL") || filename.endsWith(".rdf")
                     || filename.endsWith(".RDF")) {
@@ -2798,7 +2752,7 @@ public class KB implements Serializable {
                 errors.add("Error. " + canonicalPath + " already loaded.");
                 return null;
             }
-            file = new KIFAST();
+            file = new KIF();
             file.readFile(canonicalPath);
             warnings.addAll(file.warningSet);
         }
@@ -2814,10 +2768,10 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Merge a {@link KIFAST}-parsed constituent into the KB.
+     * Merge a {@link KIF}-parsed constituent into the KB.
      * Mirrors {@link #addConstituentInfo(KIF)} but works with the typed AST maps.
      */
-    public void addConstituentInfoAST(KIFAST file) {
+    public void addConstituentInfoAST(KIF file) {
 
         // Term frequencies
         for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
@@ -2836,7 +2790,7 @@ public class KB implements Serializable {
         }
         count = 0;
         total = file.formulaMap.size();
-        if (total > 0) for (FormulaAST f : file.formulaMap.values()) {
+        if (total > 0) for (Formula f : file.formulaMap.values()) {
             count++;
             String internedFormula = f.getFormula().intern();
             if (!formulaMap.containsKey(internedFormula))
@@ -2850,87 +2804,90 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * @deprecated replaced with {@link #readConstituentAST}
      */
-    public KIF readConstituent(String filename) {
-
-        String canonicalPath = null;
-        KIF file = null;
-        try {
-            if (filename.endsWith(".owl") || filename.endsWith(".OWL") || filename.endsWith(".rdf")
-                    || filename.endsWith(".RDF")) {
-                OWLtranslator.read(filename);
-                filename = filename + ".kif";
-            }
-            File constituent = new File(filename);
-
-            canonicalPath = constituent.getCanonicalPath();
-            if (constituents.contains(canonicalPath))
-                errors.add("Error. " + canonicalPath + " already loaded.");
-            file = new KIF(canonicalPath);
-            file.readFile(canonicalPath);
-            warnings.addAll(file.warningSet);
-        }
-        catch (Exception ex1) {
-            StringBuilder error = new StringBuilder();
-            error.append(ex1.getMessage());
-            if (ex1 instanceof ParseException)
-                error.append(" at line ").append(((ParseException) ex1).getErrorOffset());
-            error.append(" in file ").append(canonicalPath);
-            errors.add(error.toString());
-            System.err.println("Error in KB.readConstituent(): " + error.toString());
-            ex1.printStackTrace();
-        }
-        return file;
-    }
+//    public KIF readConstituent(String filename) {
+//
+//        String canonicalPath = null;
+//        KIF file = null;
+//        try {
+//            if (filename.endsWith(".owl") || filename.endsWith(".OWL") || filename.endsWith(".rdf")
+//                    || filename.endsWith(".RDF")) {
+//                OWLtranslator.read(filename);
+//                filename = filename + ".kif";
+//            }
+//            File constituent = new File(filename);
+//
+//            canonicalPath = constituent.getCanonicalPath();
+//            if (constituents.contains(canonicalPath))
+//                errors.add("Error. " + canonicalPath + " already loaded.");
+//            file = new KIF(canonicalPath);
+//            file.readFile(canonicalPath);
+//            warnings.addAll(file.warningSet);
+//        }
+//        catch (Exception ex1) {
+//            StringBuilder error = new StringBuilder();
+//            error.append(ex1.getMessage());
+//            if (ex1 instanceof ParseException)
+//                error.append(" at line ").append(((ParseException) ex1).getErrorOffset());
+//            error.append(" in file ").append(canonicalPath);
+//            errors.add(error.toString());
+//            System.err.println("Error in KB.readConstituent(): " + error.toString());
+//            ex1.printStackTrace();
+//        }
+//        return file;
+//    }
 
     /***************************************************************
      * Adds a formula or formulas into the KB
      *
      * @param file the KIF file to add to this KB
+     *
+     * @Deprecated
      */
-    public void addConstituentInfo(KIF file) {
-
-        for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
-            if (!termFrequency.containsKey(entry.getKey())) {
-                termFrequency.put(entry.getKey(), entry.getValue());
-            }
-            else {
-                termFrequency.put(entry.getKey(), termFrequency.get(entry.getKey()) + entry.getValue());
-            }
-        }
-
-        int count = 2;
-        List<String> newlist, list;
-        int total = file.formulas.keySet().size();
-        for (String key : file.formulas.keySet()) { // Iterate through keys.
-            if ((count++ % 100) == 1)
-                progressSb.append(".");
-            if ((count % 4000) == 1) {
-                System.out.print(progressSb.toString() + "x");
-                progressSb.setLength(0);
-            }
-            newlist = file.formulas.get(key);
-            list = formulas.get(key);
-            if (list != null) {
-                newlist.addAll(list);
-            }
-            formulas.put(key, newlist);
-        }
-
-        count = 2;
-        String internedFormula;
-        total = file.formulaMap.values().size();
-        for (Formula f : file.formulaMap.values()) { // Iterate through values
-            internedFormula = f.getFormula().intern();
-            if (!formulaMap.containsKey(internedFormula))
-                formulaMap.put(internedFormula, f);
-        }
-        this.getTerms().addAll(file.terms);
-        for (String t : file.terms)
-            capterms.put(t.toUpperCase(),t);
-        if (!constituents.contains(file.filename) && !file.filename.endsWith(_cacheFileSuffix)) // don't add auto-generated cache file
-            constituents.add(file.filename);
-    }
+//    public void addConstituentInfo(KIF file) {
+//
+//        for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
+//            if (!termFrequency.containsKey(entry.getKey())) {
+//                termFrequency.put(entry.getKey(), entry.getValue());
+//            }
+//            else {
+//                termFrequency.put(entry.getKey(), termFrequency.get(entry.getKey()) + entry.getValue());
+//            }
+//        }
+//
+//        int count = 2;
+//        List<String> newlist, list;
+//        int total = file.formulas.keySet().size();
+//        for (String key : file.formulas.keySet()) { // Iterate through keys.
+//            if ((count++ % 100) == 1)
+//                progressSb.append(".");
+//            if ((count % 4000) == 1) {
+//                System.out.print(progressSb.toString() + "x");
+//                progressSb.setLength(0);
+//            }
+//            newlist = file.formulas.get(key);
+//            list = formulas.get(key);
+//            if (list != null) {
+//                newlist.addAll(list);
+//            }
+//            formulas.put(key, newlist);
+//        }
+//
+//        count = 2;
+//        String internedFormula;
+//        total = file.formulaMap.values().size();
+//        for (Formula f : file.formulaMap.values()) { // Iterate through values
+//            internedFormula = f.getFormula().intern();
+//            if (!formulaMap.containsKey(internedFormula))
+//                formulaMap.put(internedFormula, new FormulaAST(f.getFormula()));
+//        }
+//        this.getTerms().addAll(file.terms);
+//        for (String t : file.terms)
+//            capterms.put(t.toUpperCase(),t);
+//        if (!constituents.contains(file.filename) && !file.filename.endsWith(_cacheFileSuffix)) // don't add auto-generated cache file
+//            constituents.add(file.filename);
+//    }
 
     /***************************************************************
      * Add a new KB constituent by reading in the file, and then merging the formulas with
@@ -2941,16 +2898,12 @@ public class KB implements Serializable {
     public void addConstituent(String filename) {
 
         long millis = System.currentTimeMillis();
-        // KIFAST (ANTLR-based) is the default parser. Opt out with useAntlrParser=false in config.xml.
-        if (!"false".equals(KBmanager.getMgr().getPref("useAntlrParser"))) {
-            KIFAST file = readConstituentAST(filename);
-            if (file == null) return;
-            addConstituentInfoAST(file);
-        } 
-        else {
-            KIF file = readConstituent(filename);
-            addConstituentInfo(file);
-        }
+        KIF file = readConstituentAST(filename);
+        addConstituentInfoAST(file);
+        System.out.println("\nINFO in KB.addConstituent(ANTLR): added " + file.formulaMap.values().size()
+                + " formulas and " + file.terms.size() + " terms.");
+        System.out.println("INFO in KB.addConstituent(ANTLR): " + file.filename + " loaded in: " +
+                (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
     }
 
     /*****************************************************************
@@ -3278,8 +3231,9 @@ public class KB implements Serializable {
      * TODO: Deprecated since it seems to do the opposite of what it should.
      * @param classNames A Set of String, containing SUO-KIF class names
      * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
+     *
+     * @Deprecated
      */
-    @Deprecated
     protected Set<String> getAllInstances(Set<String> classNames) {
 
         Set<String> ans = new TreeSet<>();
@@ -3569,7 +3523,7 @@ public class KB implements Serializable {
         FormulaPreprocessor fp = new FormulaPreprocessor();
         String form;
         Formula f;
-        Set<Formula> processed;
+        Set<Expr> processed;
         Set<String> tptp;
         int counter = 0;
         while (it.hasNext()) {
@@ -3590,10 +3544,11 @@ public class KB implements Serializable {
             }
             if (debug>1) System.out.println("INFO in KB.preProcess(): form : " + form);
             if (debug>1) System.out.println("INFO in KB.preProcess(): f : " + f);
-            processed = fp.preProcess(f, false, this); // not queries
+            processed = fp.preProcessExpr(f, false, this); // not queries
             tptp = new HashSet<>();
             if (tptpParseP) {
-                for (Formula pform : processed) {
+                for (Expr ex : processed) {
+                    Formula pform = new Formula(ex.toKifString());
                     String tptpStr = ExprToTPTP.translateKifString(pform.getFormula(), false,
                             com.articulate.sigma.trans.SUMOKBtoTPTPKB.getLang());
                     if (tptpStr == null)
@@ -3693,9 +3648,9 @@ public class KB implements Serializable {
      * by removing the axioms involved in a contradiction one-by-one and trying
      * again. @see contradictionHelp()
      */
-    public static Map<String,Formula> collectSourceAxioms(KB kb, TPTP3ProofProcessor tpp) {
+    public static Map<String, Formula> collectSourceAxioms(KB kb, TPTP3ProofProcessor tpp) {
 
-        Map<String,Formula> sourceAxioms = new HashMap<>();
+        Map<String, Formula> sourceAxioms = new HashMap<>();
         Formula f;
         for (TPTPFormula ps : tpp.proof) {
             System.out.println("KB.collectSourceAxioms(): " + ps.infRule);
@@ -3796,7 +3751,7 @@ public class KB implements Serializable {
         String prefix = KBmanager.getMgr().getPref("kbDir") + File.separator;
         String filename = prefix + "SUMO_contra.kif";
         System.out.println("KB.contradictionHelp(): prefix: " + prefix);
-        Map<String,Formula> sourceAxioms = collectSourceAxioms(kb,tpp);
+        Map<String, Formula> sourceAxioms = collectSourceAxioms(kb,tpp);
         System.out.println("KB.contradictionHelp(): source axioms: " + sourceAxioms.keySet());
         commonAxioms.addAll(sourceAxioms.keySet());
         addToAxiomCount(axiomCount,sourceAxioms.keySet());

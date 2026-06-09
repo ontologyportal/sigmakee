@@ -6,7 +6,7 @@ import java.util.*;
 
 import static junit.framework.TestCase.assertTrue;
 
-import com.articulate.sigma.parsing.FormulaAST;
+import com.articulate.sigma.Formula;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -94,13 +94,10 @@ public class SUMOtoTFAKBTest extends IntegrationTestBase {
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAKBTest.testMissingSort(): ");
         SUMOtoTFAform stfa = new SUMOtoTFAform();
-        String f = "! [V__ROW1 : $i,V__ROW2 : $real,V__CLASS : $i,V__NUMBER : $int] : " +
-                "((s__instance(V__ROW1, s__Human) & s__instance(V__CLASS, s__Class)) => " +
-                "(s__domain__2In(s__intelligenceQuotient__m, V__NUMBER, V__CLASS) & " +
-                "s__instance(s__intelligenceQuotient__m, s__Predicate) & " +
-                "s__intelligenceQuotient__2Re(V__ROW1, V__ROW2)) => " +
-                "s__instance(s__ListOrderFn__2InFn(s__ListFn__2ReFn(V__ROW1, V__ROW2), V__NUMBER), V__CLASS))";
-        Set<String> result = stfa.missingSorts(new FormulaAST(f));
+        // KIF formula — missingSortsExpr walks a KIF Expr tree, not a TPTP string
+        String f = "(instance (ListFn__2ReFn ?ROW1 ?ROW2) Entity)";
+        Formula f1 = new Formula(f);
+        Set<String> result = stfa.missingSortsExpr(f1.expr);
         String expectedRes = "s__ListFn__2ReFn : (  $i * $real  ) > $i";
         String resultStr = "";
         if (result != null && !result.isEmpty())

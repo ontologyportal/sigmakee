@@ -1,6 +1,5 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.parsing.FormulaAST;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.junit.Test;
@@ -17,16 +16,16 @@ public class FormulaTest {
     public void testFormulaRead() {
 
         String stmt = "(domain date 1 Physical)";
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
         assertEquals(stmt, f.getFormula());
 
         stmt = "(=> (and (instance ?REL ObjectAttitude) (?REL ?AGENT ?THING)) (instance ?THING Physical))";
-        f = new FormulaAST();
+        f = new Formula();
         f.read(stmt);
         assertEquals(stmt, f.getFormula());
 
         stmt = "aabbc";
-        f = new FormulaAST();
+        f = new Formula();
         f.read(stmt);
         assertEquals(stmt, f.getFormula());
 
@@ -38,7 +37,7 @@ public class FormulaTest {
     public void testRecursiveCdrSimple() {
 
         String stmt = "(exists (?M))";
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         String car = f.car();
         assertEquals("exists", car);
@@ -68,7 +67,7 @@ public class FormulaTest {
 
         System.out.println("============= testRecursiveCdrComplex ==================");
         String stmt = "(time JohnsBirth (MonthFn ?M (YearFn 2000)))";
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         String car = f.car();
         assertEquals("time", car);
@@ -88,7 +87,7 @@ public class FormulaTest {
         System.out.println("testRecursiveCdrComplex(): functionStr: " + functionStr);
         //assertTrue(FormulaAST.isFunctionalTerm(functionStr));
 
-        f = new FormulaAST();
+        f = new Formula();
         f.read(functionStr);
 
         car = f.car();
@@ -108,7 +107,7 @@ public class FormulaTest {
 
         //assertTrue(FormulaAST.isFunctionalTerm(functionStr));
 
-        f = new FormulaAST();
+        f = new Formula();
         f.read(functionStr);
 
         car = f.car();
@@ -191,7 +190,7 @@ public class FormulaTest {
     public void testCollectQuantifiedVariables() {
 
         HashSet<String> expected = new HashSet<>(Arrays.asList("?T", "?Z"));
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(=> " +
                 "  (and " +
                 "    (attribute ?H Muslim) " +
@@ -225,7 +224,7 @@ public class FormulaTest {
 
         Set<String> expected = Sets.newHashSet("?C", "?T", "?H", "?W", "?Y", "?Z");
 
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(=> " +
                 "  (and " +
                 "    (attribute ?H Muslim) " +
@@ -255,7 +254,7 @@ public class FormulaTest {
     public void testUnquantifiedVariables() {
 
         HashSet<String> expected = new HashSet<>(Arrays.asList("?C", "?W", "?H", "?Y"));
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(=> " +
                 "  (and " +
                 "    (attribute ?H Muslim) " +
@@ -289,7 +288,7 @@ public class FormulaTest {
                 "during", "?C", "monetaryValue", "FullyFormed", "greaterThan", "exists", "?H", "Zakat", "instance",
                 "0.025", "WhenFn");
 
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(=> " +
                 "  (and " +
                 "    (attribute ?H Muslim) " +
@@ -318,10 +317,10 @@ public class FormulaTest {
     @Test
     public void testReplaceVar() {
 
-        FormulaAST expected = new FormulaAST();
+        Formula expected = new Formula();
         expected.read("(<=> (instance part TransitiveRelation) (forall (?INST1 ?INST2 ?INST3) (=> (and (part ?INST1 ?INST2) (part ?INST2 ?INST3)) (part ?INST1 ?INST3))))");
 
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(<=> (instance ?REL TransitiveRelation) (forall (?INST1 ?INST2 ?INST3) " +
                 " (=> (and (?REL ?INST1 ?INST2) (?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))");
 
@@ -335,7 +334,7 @@ public class FormulaTest {
 
         List<String> expected = Lists.newArrayList("?Y", "(WhenFn ?H)");
 
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(during ?Y (WhenFn ?H))");
 
         assertEquals(expected, f1.complexArgumentsToArrayListString(1));
@@ -348,7 +347,7 @@ public class FormulaTest {
 
         List<String> expected = Lists.newArrayList("(WhenFn ?H)");
 
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(during ?Y (WhenFn ?H))");
 
         assertEquals(expected, f1.complexArgumentsToArrayListString(2));
@@ -361,7 +360,7 @@ public class FormulaTest {
 
         List<String> expected = Lists.newArrayList("?DRIVE", "Driving");
 
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(instance ?DRIVE Driving)");
 
         assertEquals(expected, f1.complexArgumentsToArrayListString(1));
@@ -374,7 +373,7 @@ public class FormulaTest {
 
         List<String> expected = Lists.newArrayList("Driving");
 
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(instance ?DRIVE Driving)");
 
         assertEquals(expected, f1.complexArgumentsToArrayListString(2));
@@ -387,7 +386,7 @@ public class FormulaTest {
 
         List<String> expected = Lists.newArrayList("(GovernmentFn ?Place)", "StateGovernment");
 
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(instance (GovernmentFn ?Place) StateGovernment))");
 
         assertEquals(expected, f1.complexArgumentsToArrayListString(1));
@@ -400,7 +399,7 @@ public class FormulaTest {
 
         List<String> expected = Lists.newArrayList("StateGovernment");
 
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(instance (GovernmentFn ?Place) StateGovernment))");
 
         assertEquals(expected, f1.complexArgumentsToArrayListString(2));
@@ -413,7 +412,7 @@ public class FormulaTest {
 
         String expected = "";
 
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(=> (instance ?AT AutomobileTransmission) (hasPurpose ?AT (exists (?C ?D ?A ?R1 ?N1 ?R2 ?R3 ?R4 ?N2 ?N3)" +
                 " (and (instance ?C Crankshaft) (instance ?D Driveshaft) (instance ?A Automobile) (part ?D ?A) (part ?AT ?A)" +
                 " (part ?C ?A) (connectedEngineeringComponents ?C ?AT) (connectedEngineeringComponents ?D ?AT) (instance ?R1 Rotating)" +
@@ -436,7 +435,7 @@ public class FormulaTest {
                 "                   (instance ?H Human)\n" +
                 "                   (agent ?D ?H)))";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.argumentsToArrayListString(0);
 
@@ -454,7 +453,7 @@ public class FormulaTest {
                 "                   (instance ?H Human)\n" +
                 "                   (agent ?D ?H)))";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.argumentsToArrayListString(1);
 
@@ -471,7 +470,7 @@ public class FormulaTest {
                 "(instance ?H Human)\n" +
                 "(agent ?D ?H)))";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.argumentsToArrayListString(0);
 
@@ -485,7 +484,7 @@ public class FormulaTest {
 
         String stmt = "(instance ?D Driving)";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.argumentsToArrayListString(0);
         List<String> expected = Lists.newArrayList("instance", "?D", "Driving");
@@ -504,7 +503,7 @@ public class FormulaTest {
                 "                   (instance ?H Human)\n" +
                 "                   (agent ?D ?H)))";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.complexArgumentsToArrayListString(0);
         String temp = "(and\n" +
@@ -527,7 +526,7 @@ public class FormulaTest {
                 "                   (instance ?H Human)\n" +
                 "                   (agent ?D ?H)))";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.complexArgumentsToArrayListString(1);
         String temp = "(and\n" +
@@ -550,7 +549,7 @@ public class FormulaTest {
                 "                   (instance ?H Human)\n" +
                 "                   (agent ?D ?H)))";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.complexArgumentsToArrayListString(2);
         String temp = "(and\n" +
@@ -573,7 +572,7 @@ public class FormulaTest {
                 "                   (instance ?H Human)\n" +
                 "                   (agent ?D ?H)))";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.complexArgumentsToArrayListString(3);
 
@@ -590,7 +589,7 @@ public class FormulaTest {
                 "           (instance ?H Human)\n" +
                 "           (agent ?D ?H))";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.complexArgumentsToArrayListString(0);
         List<String> expected = Lists.newArrayList("and", "(instance ?D Driving)", "(instance ?H Human)", "(agent ?D ?H)");
@@ -608,7 +607,7 @@ public class FormulaTest {
                 "           (instance ?H Human)\n" +
                 "           (agent ?D ?H))";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.complexArgumentsToArrayListString(1);
         List<String> expected = Lists.newArrayList("(instance ?D Driving)", "(instance ?H Human)", "(agent ?D ?H)");
@@ -626,7 +625,7 @@ public class FormulaTest {
                 "           (instance ?H Human)\n" +
                 "           (agent ?D ?H))";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.complexArgumentsToArrayListString(2);
         List<String> expected = Lists.newArrayList("(instance ?H Human)", "(agent ?D ?H)");
@@ -644,7 +643,7 @@ public class FormulaTest {
                 "           (instance ?H Human)\n" +
                 "           (agent ?D ?H))";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.complexArgumentsToArrayListString(3);
         List<String> expected = Lists.newArrayList("(agent ?D ?H)");
@@ -662,7 +661,7 @@ public class FormulaTest {
                 "           (instance ?H Human)\n" +
                 "           (agent ?D ?H))";
 
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
 
         List<String> actual = f.complexArgumentsToArrayListString(4);
 
@@ -676,7 +675,7 @@ public class FormulaTest {
 
         String stmt = "(equal\n" +
                 "  (AbsoluteValueFn ?NUMBER1) ?NUMBER2)";
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
         String expected = "[(AbsoluteValueFn ?NUMBER1), ?NUMBER2]";
         List<String> actual = f.complexArgumentsToArrayListString(1);
         System.out.println("testComplexArgumentsToArrayListAbsolute(): actual: " + actual);
@@ -690,7 +689,7 @@ public class FormulaTest {
     public void testComplexArgumentsToArrayList2() {
 
         String stmt = "(termFormat EnglishLanguage WestMakianLanguage \"west makian language\")";
-        FormulaAST f = new FormulaAST(stmt);
+        Formula f = new Formula(stmt);
         String expected = "";
         List<Formula> l = f.complexArgumentsToArrayList(1);
         System.out.println("testComplexArgumentsToArrayList2(): actual: " + l.size());
@@ -705,7 +704,7 @@ public class FormulaTest {
 
         List<String> expected = Lists.newArrayList("during","?Y", "(WhenFn ?H)");
         List<String> actual = new ArrayList<>();
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(during ?Y (WhenFn ?H))");
         for (int i = 0; i < 3; i++) {
             String arg = f1.getArgument(i).getFormula();
@@ -727,8 +726,8 @@ public class FormulaTest {
     @Test
     public void testGetArg2() {
 
-        FormulaAST expected = null;
-        FormulaAST f1 = new FormulaAST();
+        Formula expected = null;
+        Formula f1 = new Formula();
         f1.read("(during ?Y (WhenFn ?H))");
         Formula actual = f1.getArgument(3);
         System.out.println("testGetArg(): actual: " + actual);
@@ -743,7 +742,7 @@ public class FormulaTest {
 
         List<String> expected = Lists.newArrayList("during","?Y", "(WhenFn ?H)");
         List<String> actual = new ArrayList<>();
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(during ?Y (WhenFn ?H))");
         for (int i = 0; i < 3; i++) {
             String arg = f1.getStringArgument(i);
@@ -766,7 +765,7 @@ public class FormulaTest {
     public void testGetArgString2() {
 
         String expected = "";
-        FormulaAST f1 = new FormulaAST();
+        Formula f1 = new Formula();
         f1.read("(during ?Y (WhenFn ?H))");
         String actual = f1.getStringArgument(3);
         System.out.println("testGetArg(): actual: " + actual);
@@ -788,12 +787,12 @@ public class FormulaTest {
                 "        (and\n" +
                 "                (instance Drosophila Organism)\n" +
                 "        (part Bio18-1 Drosophila)))";
-        FormulaAST f = new FormulaAST(stmt);
-        FormulaAST exp = new FormulaAST(expected);
+        Formula f = new Formula(stmt);
+        Formula exp = new Formula(expected);
 
         List<String> vars = new ArrayList<>();
         vars.add("Drosophila");
-        Formula actual = f.replaceQuantifierVars(FormulaAST.EQUANT, vars);
+        Formula actual = f.replaceQuantifierVars(Formula.EQUANT, vars);
         assertTrue(actual.logicallyEquals(exp));
 
         stmt = "(exists (?JOHN ?KICKS ?CART)\n" +
@@ -811,14 +810,14 @@ public class FormulaTest {
                 "    (instance Cart_1 Wagon)\n" +
                 "    (patient Kick_2 Cart_1)\n" +
                 "    (agent Kick_2 Doyle)))\n";
-        f = new FormulaAST(stmt);
-        exp = new FormulaAST(expected);
+        f = new Formula(stmt);
+        exp = new Formula(expected);
 
         vars = new ArrayList<>();
         vars.add("Doyle");
         vars.add("Kick_2");
         vars.add("Cart_1");
-        actual = f.replaceQuantifierVars(FormulaAST.EQUANT, vars);
+        actual = f.replaceQuantifierVars(Formula.EQUANT, vars);
         assertTrue(actual.logicallyEquals(exp));
 
         stmt = "(exists (?ENTITY)\n" +
@@ -832,12 +831,12 @@ public class FormulaTest {
                 "           (subclass Ent_1 Animal) \n" +
                 "           (subclass Ent_1 CognitiveAgent)\n" +
                 "           (equal Ent_1 Human)))";
-        f = new FormulaAST(stmt);
-        exp = new FormulaAST(expected);
+        f = new Formula(stmt);
+        exp = new Formula(expected);
 
         vars = new ArrayList<>();
         vars.add("Ent_1");
-        actual = f.replaceQuantifierVars(FormulaAST.EQUANT, vars);
+        actual = f.replaceQuantifierVars(Formula.EQUANT, vars);
         assertTrue(actual.logicallyEquals(exp));
 
         stmt = "(exists (?ENTITY)\n" +
@@ -851,12 +850,12 @@ public class FormulaTest {
                 "           (subclass Ent_1 Ent_1) \n" +
                 "           (subclass Ent_1 CognitiveAgent)\n" +
                 "           (equal Ent_1 Human)))";
-        f = new FormulaAST(stmt);
-        exp = new FormulaAST(expected);
+        f = new Formula(stmt);
+        exp = new Formula(expected);
 
         vars = new ArrayList<>();
         vars.add("Ent_1");
-        actual = f.replaceQuantifierVars(FormulaAST.EQUANT, vars);
+        actual = f.replaceQuantifierVars(Formula.EQUANT, vars);
         assertFalse(actual.toString() + "\n should not be logically equal to \n" + expected, actual.logicallyEquals(exp));
     }
 

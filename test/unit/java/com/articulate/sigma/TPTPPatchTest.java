@@ -11,7 +11,6 @@ package com.articulate.sigma;
  *   - buildReverseIndex merges global + session axiom keys
  */
 
-import com.articulate.sigma.parsing.FormulaAST;
 import com.articulate.sigma.trans.SessionTPTPManager;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import org.junit.*;
@@ -88,7 +87,7 @@ public class TPTPPatchTest {
         KB kb = new KB("TestPatchKB");
         kb.kbCache = new KBcache(kb);
         KBmanager.getMgr().setPref("cacheDisjoint", "true");
-        KIFAST kif = new KIFAST();
+        KIF kif = new KIF();
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);
         kb.merge(kif, "");
@@ -149,7 +148,7 @@ public class TPTPPatchTest {
     @Test
     public void testRetranslate_nonReasoningFormula_producesNoBodies() {
         KB kb = buildKB(CORE);
-        Formula f = new FormulaAST("(termFormat EnglishLanguage Entity \"entity\")");
+        Formula f = new Formula("(termFormat EnglishLanguage Entity \"entity\")");
         f.sourceFile = "test";
 
         Map<Formula, List<String>> result =
@@ -363,7 +362,7 @@ public class TPTPPatchTest {
         String sessionId = uniqueSession();
         try {
             // First tell()
-            Formula f1 = new FormulaAST("(subclass Robot Entity)");
+            Formula f1 = new Formula("(subclass Robot Entity)");
             f1.sourceFile = "test";
             kb.formulaMap.put(f1.getFormula(), f1);
             SessionTPTPManager.patchSessionTPTP(
@@ -371,7 +370,7 @@ public class TPTPPatchTest {
                     Collections.emptySet(), Collections.singleton(f1), sessionCache);
 
             // Second tell()
-            Formula f2 = new FormulaAST("(subclass Cat Entity)");
+            Formula f2 = new Formula("(subclass Cat Entity)");
             f2.sourceFile = "test";
             kb.formulaMap.put(f2.getFormula(), f2);
             Path sessionFile = SessionTPTPManager.patchSessionTPTP(

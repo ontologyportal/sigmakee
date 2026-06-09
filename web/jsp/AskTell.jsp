@@ -1,5 +1,7 @@
 <%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
 <%@include file="fragments/universal/Prelude.jspf" %>
+<%@ page import="com.articulate.sigma.Formula" %>
+<%@ page import="com.articulate.sigma.parsing.Expr" %>
 <%
     /** Copyright header omitted for brevity; keep your original text **/
     if (!role.equalsIgnoreCase("admin")) {
@@ -34,7 +36,7 @@
 
     username = (String) session.getAttribute("username");
     role = (String) session.getAttribute("role");
-    
+
     runSource = (runSource == null && session.getAttribute("runSource") == null) ? "custom" : (String) session.getAttribute("runSource");
     session.setAttribute("runSource", runSource);
 
@@ -134,7 +136,7 @@
                 || "true".equalsIgnoreCase(request.getParameter("HolUseModals"));
         session.setAttribute("HolUseModals", holUseModals);
     }
-    if (holUseModals == null) holUseModals = false;
+    if (holUseModals == null) holUseModals = true;
 
     // Not used????
     String isModal = request.getParameter("isModal");
@@ -527,17 +529,20 @@
                     else {
                         try {
                             final String sid = session.getId();
-                            String effectiveLang = "HOL".equalsIgnoreCase(translationMode) ? "thf" : test.minLang;
-
-                            /*
-                            * Optional but matches the old behavior of clearing session-specific
-                            * test assertions before running a saved test.
-                            */
-                            SessionTPTPManager.cleanupSession(sid);
-
-                            test.applyAssertions(kb, sid, effectiveLang);
-
-                            ATPQuery query = new ATPQuery(
+                            SessionTPTPManager.beginBatchTells(sid);
+                            try {
+                                for (String s : itd.statements) {
+                                    if (!StringUtil.emptyString(s)) kb.tell(s, sid);
+                                }
+                            }
+                            finally {
+                                SessionTPTPManager.endBatchTells(sid);
+                            }
+                            FormulaPreprocessor fp = new FormulaPreprocessor();
+                            Set<Expr> qs = SessionTPTPManager.withSessionCache(sid, kb, () -> fp.preProcessExpr(new Formula(itd.query), true, kb));
+                            for (Expr q : qs) {
+                                String qstr = q.toKifString();
+                                ATPQuery query = new ATPQuery(
                                     kb,
                                     sid,
                                     test.query,
@@ -932,7 +937,13 @@
                       javax.servlet.ServletContext application,
                       javax.servlet.jsp.JspWriter out) throws java.io.IOException {
 
-        String imgPath=null; try { imgPath = tpp.createProofDotGraph(); } catch (Exception ignore) {}
+        String imgPath=null;
+        try { imgPath = tpp.createProofDotGraph(); }
+        catch (Exception e) {
+            out.println("<div class='exception-panel'><h4>Proof Graph Error</h4><p>"
+                    + htmlEncode(e.getClass().getSimpleName() + ": " + e.getMessage()) + "</p></div>");
+            return;
+        }
         if (imgPath==null || tpp.proof.size()==0) return;
         String webGraphDir = application.getRealPath("/graph"); if (webGraphDir==null) return;
         java.io.File onDisk = new java.io.File(imgPath), webDir = new java.io.File(webGraphDir);

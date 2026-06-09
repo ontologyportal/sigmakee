@@ -1,10 +1,10 @@
 package com.articulate.sigma.parsing;
 
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.IntegrationTestBase;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.After;
 import org.junit.Ignore;
@@ -27,10 +27,10 @@ public class PredVarInstTest extends IntegrationTestBase {
 
         System.out.println("PredVarInstTest Input: " + input);
         SuokifVisitor visitor = SuokifVisitor.parseString(input);
-        Map<Integer, FormulaAST> hm = visitor.result;
+        Map<Integer, Formula> hm = visitor.result;
         VarTypes vt = new VarTypes(hm.values(),kb);
         vt.findTypes();
-        FormulaAST f = hm.values().iterator().next();
+        Formula f = hm.values().iterator().next();
         f.printCaches();
         Sortals s = new Sortals(kb);
         System.out.println("PredVarInstTest.process(): varTypes:              " + f.varTypes);
@@ -39,7 +39,7 @@ public class PredVarInstTest extends IntegrationTestBase {
         String form = s.addSortals(f);
         f.setFormula(form);
         pvi = new PredVarInst(kb);
-        List<FormulaAST> result = pvi.processOne(f);
+        List<Formula> result = pvi.processOne(f);
 
         //Formula resultf = new Formula(result);
         if (result.size() < 10)

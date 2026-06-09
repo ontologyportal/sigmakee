@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
  *
  * <h3>Fallback</h3>
  * <p>Callers should fall back to
- * {@link com.articulate.sigma.trans.SUMOtoTFAform#process(Formula, boolean)}
+ * {link com.articulate.sigma.trans.SUMOtoTFAform#process(Formula, boolean)}
  * when {@link #translate} returns {@code null} (parse failure or unsupported
  * construct).</p>
  */
@@ -78,7 +78,7 @@ public class ExprToTFF {
         try {
             SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
             if (visitor.result == null || visitor.result.isEmpty()) return null;
-            FormulaAST ast = visitor.result.get(0);
+            Formula ast = visitor.result.get(0);
             if (ast == null || ast.expr == null) return null;
             return translate(ast.expr, query, kb);
         } catch (Exception e) {
@@ -123,6 +123,7 @@ public class ExprToTFF {
         if (!freeVars.isEmpty()) {
             String quantStr = query ? "? [" : "! [";
             String varList = freeVars.stream()
+                    .sorted()
                     .map(v -> ExprToTPTP.translateVarName(v) + " : "
                             + varSorts.getOrDefault(v, "$i"))
                     .collect(Collectors.joining(","));
@@ -268,7 +269,7 @@ public class ExprToTFF {
     /***************************************************************
      * Substitute numeric constants with their decimal values.
      *
-     * <p>Mirrors {@link SUMOtoTFAform#instantiateNumericConstants(Formula)}:
+     * <p>Mirrors {link SUMOtoTFAform#instantiateNumericConstants(Formula)}:
      * if the top-level formula is {@code (instance NumberE ...)} or
      * {@code (instance Pi ...)}, returns {@code null} (the formula is dropped).
      * Otherwise replaces every occurrence of {@code NumberE} / {@code Pi} with
@@ -294,7 +295,7 @@ public class ExprToTFF {
      * occurrences from the formula tree.
      *
      * <p>Mirrors the regex-based removal in
-     * {@link SUMOtoTFAform#modifyPrecond(Formula)}.  Removed nodes create
+     * {link SUMOtoTFAform#modifyPrecond(Formula)}.  Removed nodes create
      * unary logical operators that are cleaned up by
      * {@link #elimUnitaryLogopsExpr(Expr)}.</p>
      *
@@ -310,7 +311,7 @@ public class ExprToTFF {
      * sub-type that has a constraint in {@link SUMOtoTFAform#numericConstraints}
      * with the corresponding constraint expression.
      *
-     * <p>Mirrors {@link SUMOtoTFAform#modifyTypesToConstraints(Formula)} using a
+     * <p>Mirrors {link SUMOtoTFAform#modifyTypesToConstraints(Formula)} using a
      * fixed-point iteration (up to 10 passes).</p>
      *
      * @return transformed Expr, or the original if no substitutable constraints found
@@ -336,7 +337,7 @@ public class ExprToTFF {
      *   <li>{@code (op singleArg)} with one argument → replaced by {@code singleArg}</li>
      * </ul>
      *
-     * <p>Mirrors {@link SUMOtoTFAform#elimUnitaryLogops(Formula)}.  Applied
+     * <p>Mirrors {link SUMOtoTFAform#elimUnitaryLogops(Formula)}.  Applied
      * recursively; re-applies when the tree changes.</p>
      *
      * @return simplified Expr, or {@code null} if the whole formula should be dropped
@@ -373,8 +374,8 @@ public class ExprToTFF {
      * Annotate function/predicate operator names with context-derived type suffixes
      * and propagate variable types into {@code varmap}.
      *
-     * <p>Mirrors {@link SUMOtoTFAform#constrainFunctVarsRecurse} /
-     * {@link SUMOtoTFAform#constrainOp} but operates entirely on {@link Expr} trees.
+     * <p>Mirrors {link SUMOtoTFAform#constrainFunctVarsRecurse} /
+     * {link SUMOtoTFAform#constrainOp} but operates entirely on {@link Expr} trees.
      * The key purpose is to rewrite operator atoms so that, e.g.,
      * {@code (DivisionFn 10 2)} in context {@code (equal … 5)} becomes
      * {@code (DivisionFn__0In1In2InFn 10 2)}.  The type-annotated name is then read
@@ -441,7 +442,7 @@ public class ExprToTFF {
      * and returns a new {@link Expr.SExpr} whose head atom carries the
      * type-annotated operator name and whose children are recursively annotated.
      *
-     * <p>Mirrors {@link SUMOtoTFAform#constrainOp}.</p>
+     * <p>Mirrors {link SUMOtoTFAform#constrainOp}.</p>
      */
     private static Expr constrainOpExpr(Expr.SExpr se, String op, String parentType,
                                          Map<String, Set<String>> varmap, KB kb) {
@@ -518,7 +519,7 @@ public class ExprToTFF {
      * Returns the SUMO type of a single {@link Expr} node, using {@code varmap}
      * to resolve variable types.
      *
-     * <p>Mirrors {@link SUMOtoTFAform#findTypeExpr(Expr)} (private there) but
+     * <p>Mirrors {link SUMOtoTFAform#findTypeExpr(Expr)} (private there) but
      * takes explicit {@code varmap} and {@code kb} parameters.</p>
      */
     static String argTypeOf(Expr expr, Map<String, Set<String>> varmap, KB kb) {
@@ -1052,7 +1053,7 @@ public class ExprToTFF {
         try {
             SuokifVisitor visitor = SuokifVisitor.parseSentence(kif);
             if (visitor.result == null || visitor.result.isEmpty()) return null;
-            FormulaAST ast = visitor.result.get(0);
+            Formula ast = visitor.result.get(0);
             return ast != null ? ast.expr : null;
         } catch (Exception ex) {
             if (debug) System.err.println("ExprToTFF.parseKifToExpr(): parse error for: " + kif);
@@ -1158,7 +1159,9 @@ public class ExprToTFF {
                                              Map<String, Set<String>> varmap,
                                              Set<String> freeVars, KB kb) {
         StringBuilder qlist = new StringBuilder();
-        for (String var : freeVars) {
+        List<String> sortedFreeVars = new ArrayList<>(freeVars);
+        Collections.sort(sortedFreeVars);
+        for (String var : sortedFreeVars) {
             Set<String> types = varmap.get(var);
             if (types == null || types.isEmpty()) continue;
             String t = SUMOtoTFAform.mostSpecificType(types);
