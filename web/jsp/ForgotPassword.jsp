@@ -1,6 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"
     import="com.articulate.sigma.user.UserManager,
-            com.articulate.sigma.security.ValidationUtils,
+            com.articulate.sigma.utils.ValidationUtils,
             com.articulate.sigma.utils.StringUtil" %>
 <!DOCTYPE html>
 <html>

@@ -11,16 +11,12 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 */
 
 package com.articulate.sigma.tp;
-
 import com.articulate.sigma.KB;
-
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
+import com.articulate.sigma.utils.ValidationUtils;
 
 import tptp_parser.TPTPFormula;
-
 import java.util.*;
-
-import com.articulate.sigma.security.ValidationUtils;
 
 /**
  * Generic result structure for ATP (Automated Theorem Prover) runs.

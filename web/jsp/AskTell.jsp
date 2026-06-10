@@ -505,8 +505,7 @@
                 System.out.println("AskTell running test");
                 // ---- RUN SAVED TEST ----
                 // Clear All
-                try { InferenceTestSuite.resetAllForInference(kb, session.getId()); }
-                catch (IOException ignore) { System.out.println("ERROR resetAllForInference: " + ignore.getMessage()); }
+                SessionTPTPManager.cleanupSession(session.getId());
                 String testName = (String) session.getAttribute("selectedTest");
                 String testPath = KBmanager.getMgr().getPref("inferenceTestDir") + File.separator + testName;
                 String ext = testName == null ? "" : testName.toLowerCase();
@@ -518,35 +517,30 @@
                 com.articulate.sigma.trans.TPTP3ProofProcessor tpp =
                         new com.articulate.sigma.trans.TPTP3ProofProcessor();
                 if (ext.endsWith(".tq")) {
-                    // ===== tq tests =====
-                    InferenceTestSuite its = new InferenceTestSuite(kb);
-                    InferenceTestSuite.InfTestData itd = its.readTestFile(new File(testPath));
-                    if (itd == null) {
-                        out.println("<font color='red'>Could not read test file.</font>");
-                    } else {
+
+                    com.articulate.sigma.tp.InferenceTest test = new com.articulate.sigma.tp.InferenceTest(testPath);
+                    if (test.errors != null && !test.errors.isEmpty()) {
+                        out.println("<font color='red'>Invalid test file:</font><br>");
+                        out.println("<ul>");
+                        for (String err : test.errors)
+                            out.println("<li>" + htmlEncode(err) + "</li>");
+                        out.println("</ul>");
+                    }
+                    else {
                         try {
                             final String sid = session.getId();
-                            SessionTPTPManager.beginBatchTells(sid);
-                            try {
-                                for (String s : itd.statements) {
-                                    if (!StringUtil.emptyString(s)) kb.tell(s, sid);
-                                }
-                            }
-                            finally {
-                                SessionTPTPManager.endBatchTells(sid);
-                            }
-                            FormulaPreprocessor fp = new FormulaPreprocessor();
-                            Set<Expr> qs = SessionTPTPManager.withSessionCache(sid, kb, () -> fp.preProcessExpr(new Formula(itd.query), true, kb));
-                            for (Expr q : qs) {
-                                String qstr = q.toKifString();
-                                ATPQuery query = new ATPQuery(
+                            String effectiveLang = "HOL".equalsIgnoreCase(translationMode) ? "thf" : test.minLang;
+
+                            test.applyAssertions(kb, sid, effectiveLang);
+
+                            ATPQuery query = new ATPQuery(
                                     kb,
-                                    session.getId(),
-                                    qstr,
-                                    null,
-                                    runSource,
+                                    sid,
+                                    test.query,
+                                    test.filePath,
+                                    "TEST_FILE",
                                     inferenceEngine,
-                                    TPTPlang,
+                                    effectiveLang,
                                     vampireMode,
                                     "yes".equals(cwa),
                                     modensPonens,
@@ -554,63 +548,79 @@
                                     holUseModals,
                                     tmo,
                                     maxAns
-                                );
-                                ATPResult result = theoremProverController.ask(query);
-                                if (result != null) out.println(result.resultPanelToHTML());
-                                tpp.parseProofOutput(result.getStdout(), qstr, kb, result.getQList());
+                            );
+
+                            ATPResult result = theoremProverController.ask(query);
+
+                            if (result == null) {
+                                out.println("<font color='red'>No result from theorem prover.</font>");
                             }
-                            setGraphFormat(graphFormulaFormat,tpp);
-                            publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
-                            tpp.processAnswersFromProof(new StringBuilder(), itd.query);
-                            printAnswersBlock(tpp, kbName, lang, out);
-                            /* Prevent duplicate answers inside HTMLformatter */
-                            if (tpp.bindingMap != null) tpp.bindingMap.clear();
-                            if (tpp.bindings   != null) tpp.bindings.clear();
-                            out.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kbName, lang));
-                            // Generate proof summary if requested
-                            if (showProofSummary && tpp != null && tpp.proof != null && !tpp.proof.isEmpty()) {
-                                // Extract proof steps as strings
-                                List<String> proofSteps = new ArrayList<>();
-                                for (Object formula : tpp.proof) {
-                                    String stepText = "";
-                                    if (formula != null) {
-                                        // Get the string representation of the formula
-                                        stepText = formula.toString();
-                                        // Try to convert to more readable format if it's in TPTP format
-                                        if (stepText.startsWith("fof(") || stepText.startsWith("cnf(")) {
-                                            // Extract just the formula part, skipping the TPTP wrapper
-                                            int start = stepText.indexOf(',', stepText.indexOf(',') + 1) + 1;
-                                            int end = stepText.lastIndexOf(')');
-                                            if (start > 0 && end > start) {
-                                                stepText = stepText.substring(start, end).trim();
-                                            }
-                                        }
-                                        // Clean up the text
-                                        stepText = stepText.replaceAll("\\s+", " ").trim();
-                                    }
-                                    if (!stepText.isEmpty()) {
-                                        proofSteps.add(stepText);
-                                    }
+                            else {
+                                out.println(result.resultPanelToHTML());
+
+                                tpp = new TPTP3ProofProcessor();
+                                List<String> proofOutput = result.getStdout();
+
+                                if ("Vampire".equals(inferenceEngine) && "HOL".equalsIgnoreCase(translationMode)) {
+                                    List<String> cleaned = TPTPutil.clearProofFile(proofOutput);
+                                    proofOutput = THFutil.preprocessTHFProof(cleaned);
                                 }
-                                // Generate and display the summary
-                                String proofSummary = LanguageFormatter.generateProofSummary(proofSteps);
-                                if (!proofSummary.isEmpty()) {
-                                    out.println(proofSummary);
-                                }
+
+                                tpp.parseProofOutput(proofOutput, test.query, kb, result.getQList());
+
+                                setGraphFormat(graphFormulaFormat, tpp);
+                                publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
+
+                                tpp.processAnswersFromProof(result.getQList(), test.query);
+                                printAnswersBlock(tpp, kbName, lang, out);
+
+                                if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                                if (tpp.bindings != null) tpp.bindings.clear();
+
+                                out.println(HTMLformatter.formatTPTP3ProofResult(
+                                        tpp, test.query, lineHtml, kbName, lang));
+
+                                /*
+                                * Optional: populate test.result for pass/fail metadata.
+                                * Add a null guard inside InferenceTest.populateResult(), or initialize here.
+                                */
+                                test.result = new com.articulate.sigma.tp.InferenceTest.InferenceTestResult();
+                                test.populateResult(kb, result);
+
+                                out.println("<div class='answers-meta'>");
+                                out.println("Expected: <code>" + htmlEncode(String.valueOf(test.expectedAnswers)) + "</code><br>");
+                                out.println("Actual: <code>" + htmlEncode(String.valueOf(test.result.answers)) + "</code><br>");
+                                out.println("Test result: <b>" + (test.result.success ? "PASS" : "FAIL") + "</b>");
+                                out.println("</div>");
+                                out.println("</div>");
                             }
                         }
                         catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
                             renderExceptionPanel(enfe, out);
-                        } catch (ProverTimeoutException | ProverCrashedException pte) {
+                        }
+                        catch (ProverTimeoutException | ProverCrashedException pte) {
                             renderExceptionPanel(pte, out);
-                            if (pte.getResult() != null) {
+                            if (pte.getResult() != null)
                                 out.println(pte.getResult().resultPanelToHTML());
-                            }
-                        } catch (com.articulate.sigma.tp.ATPException ae) {
+                        }
+                        catch (com.articulate.sigma.tp.ATPException ae) {
                             renderExceptionPanel(ae, out);
                         }
+                        catch (Exception e) {
+                            out.println("<div class='exception-panel'><h4>Unexpected Error</h4><p>"
+                                    + htmlEncode(e.getMessage()) + "</p></div>");
+                        }
+                        finally {
+                            try {
+                                test.reset(kb, session.getId());
+                            }
+                            catch (Exception e) {
+                                System.out.println("ERROR AskTell.jsp: failed to reset test session: " + e.getMessage());
+                            }
+                        }
                     }
-                } else if (ext.endsWith(".tptp") || ext.endsWith(".tff")) {
+                }
+                else if (ext.endsWith(".tptp") || ext.endsWith(".tff")) {
                     // ===== NEW .tptp / .tff FLOW via askVampireTPTP =====
                     if (!"Vampire".equals(inferenceEngine)) {
                         out.println("<span style='color:#b00'>Only Vampire is supported for .tptp/.tff tests.</span><br>");

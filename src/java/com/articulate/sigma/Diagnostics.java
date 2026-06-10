@@ -33,12 +33,13 @@ public class Diagnostics {
 
     public static boolean debug = false;
 
-    public static List<String> LOG_OPS = Arrays.asList(Formula.AND, Formula.OR, Formula.XOR, Formula.NOT, Formula.EQUANT,
-            Formula.UQUANT, Formula.IF, Formula.IFF, "holds");
+    public static List<String> LOG_OPS = Arrays.asList(Formula.AND, Formula.OR, Formula.XOR, Formula.NOT, Formula.EQUANT, Formula.UQUANT, Formula.IF, Formula.IFF, "holds");
 
     public static HashMap<String, HashSet<String>> varLinksParentMap = new HashMap<>(); // parent map for getVariableLinks(Formula f, KB kb)
     
     private static final int RESULT_LIMIT = 100;
+
+    private static final java.util.concurrent.atomic.AtomicBoolean dependencyCacheGenerating = new java.util.concurrent.atomic.AtomicBoolean(false);
 
     /** *****************************************************************
      * Return a list of terms (for a given argument position) that do not
@@ -48,8 +49,7 @@ public class Diagnostics {
      * @param argnum the argument position of the term
      * @param letter the first letter of the term name
      */
-    public static List<String> termsWithoutRelation(KB kb, String rel, int argnum,
-                                                    char letter) {
+    public static List<String> termsWithoutRelation(KB kb, String rel, int argnum, char letter) {
 
         List<String> result = new ArrayList<>();
         List<Formula> forms;
@@ -57,12 +57,10 @@ public class Diagnostics {
         Formula formula;
         String pred;
         for (String term : kb.getTerms()) {
-            if (LOG_OPS.contains(term) || StringUtil.isNumeric(term))  // Exclude the logical operators and numbers
-                continue;
+            if (LOG_OPS.contains(term) || StringUtil.isNumeric(term)) continue;
             forms = kb.ask("arg",argnum,term);
             if (forms == null || forms.isEmpty()) {
-                if (letter < 'A' || term.charAt(0) == letter)
-                    result.add(term);
+                if (letter < 'A' || term.charAt(0) == letter) result.add(term);
             }
             else {
                 boolean found = false;
@@ -76,12 +74,10 @@ public class Diagnostics {
                             break;
                         }
                     }
-                    else
-                        System.err.println("Error in Diagnostics.termsWithoutRelation(): null formula for: " + term);
+                    else System.err.println("Error in Diagnostics.termsWithoutRelation(): null formula for: " + term);
                 }
                 if (!found) {
-                    if (letter < 'A' || term.charAt(0) == letter)
-                        result.add(term);
+                    if (letter < 'A' || term.charAt(0) == letter) result.add(term);
                 }
             }
             if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT) {
@@ -894,18 +890,17 @@ public class Diagnostics {
      */
     private static void saveDependenciesForAllKif(String serializedDependencyFilePath) {
 
-        System.out.println("saveDependenciesForAllKif KBmanager.initializeOnce()");
+        KBmanager.getMgr().setPref("loadLexicons", "false");
         KBmanager.getMgr().initializeOnce("./config_full");
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        System.out.println("Diagnostics: Completed init");
-        Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
+        Map<String, Map<String, List<String>>> fileDepends = Diagnostics.termDependency(kb);
         serializedDependencyFilePath = KButilities.SIGMA_HOME + File.separator + "cache" + File.separator + serializedDependencyFilePath;
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(serializedDependencyFilePath))) {
             out.writeObject(fileDepends);
             System.out.println("Saved term dependency to " + serializedDependencyFilePath);
         }
         catch (IOException e) {
-            throw new RuntimeException("Failed to save term dependency file to: " + serializedDependencyFilePath, e);
+            throw new RuntimeException("Failed to save term dependency file to: " + serializedDependencyFilePath,e);
         }
     }
 
@@ -1930,6 +1925,7 @@ public class Diagnostics {
         System.out.println("  -p - print all terms in KB");
         System.out.println("  -e - exhaustive decomposition violations");
         System.out.println("  --diff <f1> <f2> - print all terms in f2 not in f1");
+        System.out.println("  -a - save missing constituent dependencies");
         System.out.println("  -m - mutual dependencies");
         System.out.println("  -M - print mutual dependencies html");
         System.out.println("  -o - terms not below Entity (Orphans)");
@@ -1959,9 +1955,7 @@ public class Diagnostics {
             //resultLimit = 0; // don't limit number of results on command line
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("Diagnostics: Completed init");
-            if (argMap.containsKey("t")) {
-                termDefsByFile(kb);
-            }
+            if (argMap.containsKey("t")) termDefsByFile(kb);
             else if (argMap.containsKey("A")) {
                 Map<String,Map<String,List<String>>> missing = Diagnostics.missingConstituentDependencies(kb);
                 for (Map.Entry<String,Map<String,List<String>>> missingDepend : missing.entrySet()) {

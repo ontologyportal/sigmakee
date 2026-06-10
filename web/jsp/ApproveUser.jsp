@@ -3,7 +3,7 @@
             com.articulate.sigma.user.UserManager,
             com.articulate.sigma.user.EmailService,
             com.articulate.sigma.utils.StringUtil,
-            com.articulate.sigma.security.ValidationUtils" %>
+            com.articulate.sigma.utils.ValidationUtils" %>
 
 <!DOCTYPE html>
 <html>

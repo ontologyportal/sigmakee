@@ -126,32 +126,23 @@ public class TPTPGenerationManager {
     }
 
     /*****************************************************************
-     * Check whether config file or any .kif constituent is newer than its
-     * corresponding TPTP/TFF/THF file.
-     * @param lang inference file extension, such as tptp, tff, or thf
-     * @return true if the inference file is older than config/constituents
+     * Check whether config file, any .kif constituent, or SIGMAKEE code is newer
+     * than its corresponding TPTP/TFF/THF file.
+     * @param inferenceFilePath path to inference file, such as SUMO.tptp, SUMO.tff, or SUMO.thf
+     * @return true if the inference file is older than config/constituents/source code
      */
     public static boolean isInferenceFileOld(String inferenceFilePath) {
 
         File inferenceFile = new File(inferenceFilePath);
-
         if (!inferenceFile.exists()) {
             LoggingUtils.log(inferenceFilePath + " is missing! Needs regeneration...");
             return true;
         }
-
         Date infFileDate = new Date(inferenceFile.lastModified());
-        Date newestSourceDate = KBmanager.newestBaseConfigOrConstituentDateIgnoringUserAssertions();
-
-        System.out.println("Inference file: " + inferenceFilePath);
-        System.out.println("Inference file modified: " + infFileDate);
-        System.out.println("Newest base source modified: " + newestSourceDate);
-
-        if (infFileDate.compareTo(newestSourceDate) < 0) {
-            LoggingUtils.log(inferenceFilePath + " is old! Needs regeneration...");
-            return true;
-        }
-
+        Date newestKbSourceDate = KBmanager.newestBaseConfigOrConstituentDateIgnoringUserAssertions();
+        Date newestCodeDate = KBmanager.newestSigmakeeCodeDate();
+        Date newestSourceDate = newestKbSourceDate.after(newestCodeDate) ? newestKbSourceDate : newestCodeDate;
+        if (infFileDate.compareTo(newestSourceDate) < 0) return true;
         return false;
     }
 
@@ -189,27 +180,34 @@ public class TPTPGenerationManager {
     private static void rebuildAxiomKey(KB kb) {
 
         try {
-            // if (debug>0) System.out.println("TPTPGenerationManager: Rebuilding axiomKey in background (warm start, no I/O)...");
             long start = System.currentTimeMillis();
             String kbDir = KBmanager.getMgr().getPref("kbDir");
-            String infFilename = kbDir + java.io.File.separator + kb.name + ".tptp";
-            SUMOKBtoTPTPKB.setLang("fof");
-            SUMOformulaToTPTPformula.setLang("fof");
-            // if (debug>0) System.out.println("TPTPGenerationManager.rebuildAxiomKey(): setHideNumbers true");
-            SUMOformulaToTPTPformula.setHideNumbers(true);
-            if (kb.kbCache != null && kb.kbCache.relations != null)
-                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
-            // Null writer: we want the axiomKey side-effect only, not file output.
-            try (java.io.PrintWriter pw = new java.io.PrintWriter(java.io.Writer.nullWriter())) {
-                SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-                skb.kb = kb;
-                skb.writeFile(infFilename, null, false, pw);
+            String infFilename = kbDir + File.separator + kb.name + ".tptp";
+
+            synchronized (GEN_LOCK) {
+                SUMOKBtoTPTPKB.setLang("fof");
+                SUMOformulaToTPTPformula.setLang("fof");
+                SUMOformulaToTPTPformula.setHideNumbers(true);
+
+                if (kb.kbCache != null && kb.kbCache.relations != null)
+                    ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
+
+                // Null writer: rebuild axiomKey only; do not write SUMO.tptp.
+                try (PrintWriter pw = new PrintWriter(Writer.nullWriter())) {
+                    SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                    skb.kb = kb;
+                    skb.writeFile(infFilename, null, false, pw);
+                }
             }
+
             long elapsed = System.currentTimeMillis() - start;
-            System.out.println("INFO  [TPTPGenerationManager.rebuildAxiomKey()]  axiomKey rebuilt in " + (elapsed / 1000.0) + " seconds — " + SUMOKBtoTPTPKB.axiomKey.size() + " entries");
+            System.out.println("INFO  [TPTPGenerationManager.rebuildAxiomKey()]  axiomKey rebuilt in "
+                    + (elapsed / 1000.0) + " seconds — "
+                    + SUMOKBtoTPTPKB.axiomKey.size() + " entries");
         }
         catch (Exception e) {
-            System.err.println("ERROR  [TPTPGenerationManager.rebuildAxiomKey()]  Failed to rebuild axiomKey: " + e.getMessage());
+            System.err.println("ERROR  [TPTPGenerationManager.rebuildAxiomKey()]  Failed to rebuild axiomKey: "
+                    + e.getMessage());
             e.printStackTrace();
         }
         finally {
@@ -232,8 +230,8 @@ public class TPTPGenerationManager {
         Path tmp    = java.nio.file.Paths.get(infFilename + ".tmp");
         try {
             if (!isInferenceFileOld(baseKbDir + ".tptp")) {
-                new Thread(() -> rebuildAxiomKey(kb), "axiomKey-rebuild-" + kb.name).start();
                 LoggingUtils.log(baseKbDir + ".tptp is current! Rebuilding axiom key.");
+                rebuildAxiomKey(kb);
                 fofReady.set(true);
                 return;
             }
@@ -345,11 +343,6 @@ public class TPTPGenerationManager {
         if (!thfModalGenerating.compareAndSet(false, true)) {
             return;
         }
-        if(isInferenceFileOld(baseKbDir + "_modal.thf")) {
-            LoggingUtils.log(baseKbDir + "_modal.thf" + " is current!");
-            thfModalReady.set(true);
-            return;
-        }
         try {
             String kbDir = KBmanager.getMgr().getPref("kbDir");
             String thfFilename = kbDir + File.separator + kb.name + "_modals.thf";
@@ -384,7 +377,7 @@ public class TPTPGenerationManager {
         if (!thfPlainGenerating.compareAndSet(false, true)) {
             return; // Already generating
         }
-        if(isInferenceFileOld(baseKbDir + "_plain.thf")) {
+        if(!isInferenceFileOld(baseKbDir + "_plain.thf")) {
             LoggingUtils.log(baseKbDir + "_plain.thf" + " is current!");
             thfPlainReady.set(true);
             return;
@@ -478,6 +471,50 @@ public class TPTPGenerationManager {
             long elapsed = System.currentTimeMillis() - startTime;
             System.out.println("TPTPGenerationManager: TFF generation to custom path complete in " + (elapsed / 1000.0) + "s");
         } 
+        finally {
+            ExprToTPTP.relationsThreadLocal.remove();
+            SUMOformulaToTPTPformula.clearThreadLocal();
+            SUMOKBtoTPTPKB.clearThreadLocal();
+            SUMOtoTFAform.clearThreadLocal();
+        }
+    }
+
+    /*********************************************************************************
+     * Generate THF (Typed Higher-order Form) to a custom output path.
+     * This is used for session-specific THF generation.
+     *
+     * @param kb The knowledge base
+     * @param outputPath The path to write the THF file
+     * @throws IOException if file operations fail
+     */
+    public static void generateTHFToPath(KB kb, Path outputPath) throws IOException {
+
+        try {
+            System.out.println("TPTPGenerationManager: Generating THF to custom path: " + outputPath);
+
+            long startTime = System.currentTimeMillis();
+
+            SUMOKBtoTPTPKB.setLang("thf");
+            SUMOformulaToTPTPformula.setLang("thf");
+
+            if (kb.kbCache != null && kb.kbCache.relations != null)
+                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
+
+            Files.createDirectories(outputPath.getParent());
+            Files.deleteIfExists(outputPath);
+
+            try (PrintWriter pw = new PrintWriter(
+                    Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8))) {
+
+                if (!kb.formulaMap.isEmpty()) {
+                    THFnew.transPlainTHF(kb);
+                }
+            }
+
+            long elapsed = System.currentTimeMillis() - startTime;
+            System.out.println("TPTPGenerationManager: THF generation to custom path complete in "
+                    + (elapsed / 1000.0) + "s");
+        }
         finally {
             ExprToTPTP.relationsThreadLocal.remove();
             SUMOformulaToTPTPformula.clearThreadLocal();

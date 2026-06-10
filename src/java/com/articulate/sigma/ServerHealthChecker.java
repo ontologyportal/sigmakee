@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import com.articulate.sigma.security.ValidationUtils;
+import com.articulate.sigma.utils.ValidationUtils;
 import com.articulate.sigma.user.EmailService;
 
 public class ServerHealthChecker {
@@ -46,10 +46,7 @@ public class ServerHealthChecker {
                 failureReasons.put(url, result.reason);
             }
         }
-        if (downUrls.isEmpty()) {
-            System.out.println("All SigmaKEE URLs are up. No email sent.");
-            return;
-        }
+        if (downUrls.isEmpty()) return;
         sendDownEmail(downUrls, failureReasons);
     }
 

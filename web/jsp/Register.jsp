@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=US-ASCII" pageEncoding="US-ASCII"%>
 <%@ page import="com.articulate.sigma.user.UserManager" %>
 <%@ page import="com.articulate.sigma.utils.StringUtil" %>
-<%@ page import="com.articulate.sigma.security.ValidationUtils" %>
+<%@ page import="com.articulate.sigma.utils.ValidationUtils" %>
 
 <%
     String error = null;
