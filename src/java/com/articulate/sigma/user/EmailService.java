@@ -57,7 +57,10 @@ public class EmailService {
 
         UserDatabase userDatabase = new UserDatabase();
         try {
-            List<String> adminEmails = userDatabase.getAdminEmails();
+            // Commented out to avoid spamming all admins.
+            // List<String> adminEmails = userDatabase.getAdminEmails();
+            List<String> adminEmails = new ArrayList<>();
+            adminEmails.add("shaunrose831@gmail.com");
             return sendHtmlEmail(adminEmails, subject, htmlBody);
         }
         finally {
