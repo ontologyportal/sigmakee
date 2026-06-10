@@ -269,14 +269,21 @@ public class InferenceTest {
         if (StringUtil.emptyString(this.query)) errors.add("INVALID QUERY!: " + this.query);
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         for (String constituent : this.requiredConstituents) {
+            String requiredName = constituent.trim();
+            if (requiredName.length() >= 2 && requiredName.startsWith("\"") && requiredName.endsWith("\"")) {
+                requiredName = requiredName.substring(1, requiredName.length() - 1); 
+            }
+            requiredName = requiredName.replaceFirst("\\s+(?i:kif)$", ".kif");
+            requiredName = new File(requiredName).getName();
             boolean found = false;
             for (String loaded : kb.constituents) {
-                if (new File(loaded).getName().equals(constituent)) {
+                String loadedName = new File(loaded).getName().trim();
+                if (loadedName.equals(requiredName)) {
                     found = true;
                     break;
                 }
             }
-            if (!found) errors.add("Required constituent " + constituent + " not loaded!");
+            if (!found) errors.add("Required constituent " + requiredName + " not loaded!");
         }
         for (String error : errors) LoggingUtils.log("ERROR", error);
     }
