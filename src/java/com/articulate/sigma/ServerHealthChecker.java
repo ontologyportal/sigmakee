@@ -46,10 +46,7 @@ public class ServerHealthChecker {
                 failureReasons.put(url, result.reason);
             }
         }
-        if (downUrls.isEmpty()) {
-            System.out.println("All SigmaKEE URLs are up. No email sent.");
-            return;
-        }
+        if (downUrls.isEmpty()) return;
         sendDownEmail(downUrls, failureReasons);
     }
 

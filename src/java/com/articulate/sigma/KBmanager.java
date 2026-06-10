@@ -79,6 +79,7 @@ public class KBmanager implements Serializable {
             "leoExecutable",
             "logDir",
             "logLevel",
+            "maxPredicateArity",
             "multiWordAnnotatorType",
             "nlpTools",
             "overwrite",
@@ -411,24 +412,14 @@ public class KBmanager implements Serializable {
      */
     public boolean infBaseFileOldIgnoringUserAssertions(String lang) {
 
-        String kbDir = getPref("kbDir");
-
+        String kbDir = getPref("maxPredicateArity");
         for (String kbname : kbs.keySet()) {
-
             File base = new File(kbDir + File.separator + kbname + "." + lang);
-
-            if (!base.exists()) {
-                return true;
-            }
-
+            if (!base.exists()) return true;
             long baseTimeStamp = base.lastModified();
             Date newestSourceDate = newestBaseConfigOrConstituentDateIgnoringUserAssertions();
-
-            if (baseTimeStamp < newestSourceDate.getTime()) {
-                return true;
-            }
+            if (baseTimeStamp < newestSourceDate.getTime()) return true;
         }
-
         return false;
     }
 

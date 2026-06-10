@@ -96,7 +96,7 @@ public class Formula implements Comparable, Serializable {
             "instance", "subclass", "domain", "domainSubclass",
             "range", "rangeSubclass", "subAttribute", "subrelation");
 
-    public static final int MAX_PREDICATE_ARITY = 10;
+    public static final int MAX_PREDICATE_ARITY = getMaxPredicateArity();
 
     // ---------------------------------------------------------------
     // Instance fields — copied verbatim from Formula
@@ -197,13 +197,15 @@ public class Formula implements Comparable, Serializable {
                             sb.append(ch); insideQuote = true; quoteCharInForce = ch;
                         }
                         else sb.append(ch);
-                    } else {
+                    } 
+                    else {
                         sb.append(ch);
                         if (ch == quoteCharInForce && prev != '\\') insideQuote = false;
                     }
                     prev = ch; i++;
                 }
-            } else if (ch == '"' || ch == '\'') {
+            } 
+            else if (ch == '"' || ch == '\'') {
                 char openQuote = ch;
                 sb.append(ch); i++;
                 char prev = ch;
@@ -213,7 +215,8 @@ public class Formula implements Comparable, Serializable {
                     if (ch == openQuote && prev != '\\') break;
                     prev = ch;
                 }
-            } else {
+            } 
+            else {
                 while (i < end) {
                     ch = input.charAt(i);
                     if (Character.isWhitespace(ch) || ch == ')') break;
@@ -224,9 +227,30 @@ public class Formula implements Comparable, Serializable {
             if (!element.isEmpty()) {
                 stringArgs.add(element);
                 args.add(new Formula(element));
-            } else if (i < end && input.charAt(i) == ')') {
-                i++;
-            }
+            } 
+            else if (i < end && input.charAt(i) == ')') i++;
+        }
+    }
+
+    /******************************************************************
+     */
+    public static int getMaxPredicateArity() {
+
+        return getIntegerPreference("maxPredicateArity", 7);
+    }
+
+    /******************************************************************
+     */
+    private static int getIntegerPreference(String name, int defaultValue) {
+
+        String value = KBmanager.getMgr().getPref(name);
+        if (value == null || value.isBlank()) return defaultValue;
+        try {
+            return Integer.parseInt(value.trim());
+        }
+        catch (NumberFormatException e) {
+            System.err.println("Invalid integer preference '" + name + "': '" + value + "'. Using default " + defaultValue);
+            return defaultValue;
         }
     }
 
@@ -270,13 +294,13 @@ public class Formula implements Comparable, Serializable {
     private int formulaASTHashCode = 0;
     private List formulaASTClausalForm = null;
 
-    /** ***************************************************************
+    /******************************************************************
      */
     public Formula() {
 
     }
 
-    /** ***************************************************************
+    /******************************************************************
      */
     public Formula(Formula f) {
 
@@ -377,13 +401,13 @@ public class Formula implements Comparable, Serializable {
             this.formulaASTClausalForm = new ArrayList<>(f.formulaASTClausalForm);
     }
 
-    /** ***************************************************************
+    /******************************************************************
      */
     public Formula(String f) {
         read(f);
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Construct a FormulaAST from an already-parsed Expr without ANTLR re-parsing.
      * Populates formula string, predVarCache, rowVarCache, rowVarStructs, and varTypes
      * by walking the Expr tree in O(n).
@@ -437,7 +461,7 @@ public class Formula implements Comparable, Serializable {
         for (Expr arg : args) initCachesFromExpr(arg);
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Set 'theFormula' to the string clear all cache and populate the expr field.
      * @param s - the formula string
      */
@@ -514,7 +538,7 @@ public class Formula implements Comparable, Serializable {
     }
     
 
-    /** ***************************************************************
+    /******************************************************************
      * Merge arguments to a predicate, which may themselves be complex
      * formulas, with an existing formula.
      */
@@ -591,7 +615,7 @@ public class Formula implements Comparable, Serializable {
         return this;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Merge arguments to a predicate, which may themselves be complex
      * formulas, with an existing formula.
      */
@@ -669,7 +693,7 @@ public class Formula implements Comparable, Serializable {
         return this;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * A class for holding information about constants (non-variables) and the literal
      * in which they appear
      */
@@ -692,7 +716,7 @@ public class Formula implements Comparable, Serializable {
         }
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * A class for holding information about row variables and the literal
      * in which they appear
      */
@@ -722,7 +746,7 @@ public class Formula implements Comparable, Serializable {
         }
     }
 
-    /** *****************************************************************
+    /********************************************************************
      */
     public void addRowVarStruct(String var, RowStruct rs) {
 
@@ -736,7 +760,7 @@ public class Formula implements Comparable, Serializable {
         hrs.add(rs);
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * the textual version of the formula
      */
     public static Formula createComment(String input) {
@@ -747,7 +771,7 @@ public class Formula implements Comparable, Serializable {
         return f;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * the textual version of the formula
      */
     public void printCaches() {
@@ -860,7 +884,7 @@ public class Formula implements Comparable, Serializable {
         return atom(getFormula());
     }
 
-    /** ***************************************************************
+    /******************************************************************
      */
     public boolean empty() {
 
@@ -1197,7 +1221,7 @@ public class Formula implements Comparable, Serializable {
         return new Formula(getFormula()).collectQuantifiedVariables();
     }
 
-    /** ***************************************************************
+    /******************************************************************
      */
     public Set<String> collectUnquantifiedVariables() {
 
@@ -1370,7 +1394,7 @@ public class Formula implements Comparable, Serializable {
         return new Formula(getFormula()).isBinary();
     }
 
-    /** ***************************************************************
+    /******************************************************************
      */
     public boolean isExistentiallyQuantified() {
 
