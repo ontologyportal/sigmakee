@@ -96,7 +96,7 @@ public class Formula implements Comparable, Serializable {
             "instance", "subclass", "domain", "domainSubclass",
             "range", "rangeSubclass", "subAttribute", "subrelation");
 
-    public static final int MAX_PREDICATE_ARITY = getMaxPredicateArity();
+    public static final int MAX_PREDICATE_ARITY = 7;
 
     // ---------------------------------------------------------------
     // Instance fields — copied verbatim from Formula
