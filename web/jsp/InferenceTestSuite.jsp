@@ -1,784 +1,572 @@
-<%@ page import="java.io.File, java.util.*, com.articulate.sigma.*, com.articulate.sigma.utils.StringUtil" %>
+<%@ page import="java.io.*" buffer="64kb" trimDirectiveWhitespaces="true" %>
+<%@ page import="java.util.*" %>
+<%@ page import="com.articulate.sigma.KB" %>
+<%@ page import="com.articulate.sigma.KBmanager" %>
+<%@ page import="com.articulate.sigma.tp.TheoremProverController" %>
+<%@ page import="com.articulate.sigma.tp.InferenceTestSuite" %>
+<%@ page import="com.articulate.sigma.tp.InferenceTest" %>
+<%@ page import="com.articulate.sigma.utils.StringUtil" %>
+<%@ page import="com.articulate.sigma.utils.ValidationUtils" %>
 <%@ include file="fragments/universal/Prelude.jspf" %>
-<%
-    if (!role.equalsIgnoreCase("admin")) { response.sendRedirect("login.jsp"); return; }
+<%!
+    private static int langOrder(String lang) {
 
-    String inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
-    String engine = Optional.ofNullable(request.getParameter("engine")).orElse("Vampire");
-    int timeout = 30;
-    try { if (request.getParameter("timeout") != null) timeout = Math.max(1, Integer.parseInt(request.getParameter("timeout"))); } catch (Exception ignore) {}
-
-    String action = request.getParameter("action");   // "run" when a RUN button is pressed
-    String tqName = request.getParameter("tq");       // file name only
-    String mode   = request.getParameter("mode");     // "normal" or "mp"
-
-    // Persist per-cell results in the session
-    Map<String,Object> cellMap = (Map<String,Object>) session.getAttribute("cellMap");
-    if (cellMap == null) {
-        cellMap = new HashMap<>();
-        session.setAttribute("cellMap", cellMap);
-    }
-    if ("runAll".equalsIgnoreCase(request.getParameter("action")) && inferenceTestDir != null) {
-        String type  = Optional.ofNullable(request.getParameter("runAllType")).orElse("normal"); // normal|mp|both
-        String phase = Optional.ofNullable(request.getParameter("phase")).orElse("normal");       // normal|mp (current)
-        int idx = 0; try { idx = Integer.parseInt(Optional.ofNullable(request.getParameter("idx")).orElse("0")); } catch(Exception ignore){}
-        File dir = new File(inferenceTestDir);
-        File[] files = dir.listFiles((d, n) -> n.toLowerCase().endsWith(".tq"));
-        if (files == null) files = new File[0];
-        Arrays.sort(files, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
-        if (idx < files.length) {
-            tqName = files[idx].getName();
-            // decide mode to run this step
-            String modeAll = "normal";
-            if ("normal".equalsIgnoreCase(type)) modeAll = "normal";
-            else if ("mp".equalsIgnoreCase(type)) modeAll = "mp";
-            else /* both */ modeAll = "mp".equalsIgnoreCase(phase)  ? "mp" : "normal";
-            // ---- RUN ONE (same as your single-test block) ----
-            try {
-                InferenceTestSuite its = new InferenceTestSuite(kb);
-                String tqPath = inferenceTestDir + File.separator + tqName;
-                boolean modusPonens = "mp".equalsIgnoreCase(modeAll);
-                // Test RUN
-                InferenceTestSuite.OneResult r = its.runOne(kb, engine, timeout, tqPath, modusPonens);
-                Map<String,Object> cellMap2 = (Map<String,Object>) session.getAttribute("cellMap");
-                if (cellMap2 == null) { cellMap2 = new HashMap<>(); session.setAttribute("cellMap", cellMap2); }
-                Map<String,Object> cell = new HashMap<>();
-                String key = tqName + "|" + ("mp".equalsIgnoreCase(modeAll) ? "mp" : "normal");
-                cell.put("pass",   r.pass);
-                cell.put("millis", r.millis);
-                cell.put("meta",   "(engine=" + esc(engine) + ", t=" + timeout + "s)");
-                cell.put("expected", r.expected == null ? java.util.Collections.emptyList() : r.expected);
-                cell.put("actual",   r.actual   == null ? java.util.Collections.emptyList() : r.actual);
-                cell.put("html",     r.html);
-                // Check for Errors
-                boolean proofExists = r.proofText != null && !r.proofText.isEmpty();
-                if (proofExists){
-                    String proofsRoot = application.getRealPath("/proofs");
-                    if (proofsRoot == null) proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
-                    File sessionProofDir = new File(proofsRoot, session.getId());
-                    if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
-                    String base = (tqName + "-" + modeAll + "-" + System.currentTimeMillis() + ".txt").replaceAll("[^A-Za-z0-9._-]", "_");
-                    File proofFile = new File(sessionProofDir, base);
-                    try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
-                        if (r.proofText != null) for (String pl : r.proofText) pw.println(pl);
-                    } catch (Exception ignore) {}
-                    String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
-                    cell.put("proofUrl", proofUrl);
-                    cell.put("proofPath", proofFile.getAbsolutePath());
-                }
-
-                cellMap2.put(key, cell);
-
-            } catch (Throwable ignore) {}
-
-            // ---- compute next step ----
-            int nextIdx = idx; String nextPhase = phase; boolean hasNext = false;
-            if ("both".equalsIgnoreCase(type)) {
-                if ("normal".equalsIgnoreCase(phase)) { nextPhase = "mp"; hasNext = true; }
-                else { nextIdx = idx + 1; nextPhase = "normal"; hasNext = nextIdx < files.length; }
-            } else {
-                nextIdx = idx + 1; hasNext = nextIdx < files.length; nextPhase = "normal";
-                if ("mp".equalsIgnoreCase(type)) nextPhase = "mp";
-            }
-
-            // expose progress + next target to page
-            request.setAttribute("raType",  type);
-            request.setAttribute("raIdx",   idx);
-            request.setAttribute("raTot",   files.length);
-            request.setAttribute("raNext",  hasNext ? nextIdx : -1);
-            request.setAttribute("raNextName", hasNext ? files[nextIdx].getName() : "");
-            request.setAttribute("raNextPhase", nextPhase);
-        }
+        if ("fof".equalsIgnoreCase(lang)) return 0;
+        if ("tff".equalsIgnoreCase(lang)) return 1;
+        if ("thf".equalsIgnoreCase(lang)) return 2;
+        return 99;
     }
 
-// Handle a single test run if requested
-    if ("run".equalsIgnoreCase(action) && inferenceTestDir != null && tqName != null) {
-        String tqPath = inferenceTestDir + File.separator + tqName;
-        boolean modusPonens = "mp".equalsIgnoreCase(mode);
+    private static int statusOrder(String status) {
 
-        long t0 = System.currentTimeMillis();
-        boolean pass = false;
-        long millis = 0L;
-        String detailsHtml = null;
-
-        try {
-            InferenceTestSuite its = new InferenceTestSuite(kb);
-            // ---- call your single-test method (add this to InferenceTestSuite) ----
-            InferenceTestSuite.OneResult r = its.runOne(kb, engine, timeout, tqPath, modusPonens);
-
-            Map<String,Object> cell = new HashMap<>();
-            String key = tqName + "|" + mode;
-            cell.put("pass",   r.pass);
-            cell.put("millis", r.millis);
-            cell.put("meta",   "(engine=" + esc(engine) + ", t=" + timeout + "s)");
-            cell.put("expected", r.expected == null ? java.util.Collections.emptyList() : r.expected);
-            cell.put("actual",   r.actual   == null ? java.util.Collections.emptyList() : r.actual);
-            cell.put("html",     r.html);
-
-            cellMap.put(key, cell);
-
-            // save the proof if exist
-            boolean proofExists = r.proofText != null && !r.proofText.isEmpty();
-            if (proofExists){
-                // web-visible root for proofs (with fallback)
-                String proofsRoot = application.getRealPath("/proofs");
-                if (proofsRoot == null) {
-                    proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
-                }
-                File sessionProofDir = new File(proofsRoot, session.getId());
-                if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
-
-                // unique, safe filename
-                String base = (tqName + "-" + mode + "-" + System.currentTimeMillis() + ".txt")
-                        .replaceAll("[^A-Za-z0-9._-]", "_");
-                File proofFile = new File(sessionProofDir, base);
-
-                // write file (each proof line on its own line)
-                try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
-                    if (r.proofText != null) {
-                        for (String proof_line : r.proofText) {
-                            pw.println(proof_line);
-                        }
-                    }
-                } 
-                catch (Exception ioex) {
-                    // optional: log or display warning
-                }
-
-                // browser URL
-                String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
-
-                cell.put("proofUrl", proofUrl);                         // <-- add
-                cell.put("proofPath", proofFile.getAbsolutePath());     // optional
-            }
-
-
-        } catch (Throwable ex) {
-        }
+        if ("NOT RUN".equals(status)) return 0;
+        if ("PASS".equals(status)) return 1;
+        if ("FAIL".equals(status)) return 2;
+        if ("ERROR".equals(status)) return 3;
+        return 99;
     }
 %>
-
 <%
+    String action = request.getParameter("action");
+    String runMessage = null;
+    if ("reload".equalsIgnoreCase(action)) {
+        session.removeAttribute("newITS");
+        runMessage = "Reloaded inference tests.";
+    }
     if ("reloadKB".equalsIgnoreCase(action)) {
         long t0 = System.currentTimeMillis();
         try {
-            // FULL reload: wipe user assertions + reload base KB + rebuild inference view
             kb.deleteUserAssertionsAndReload();
-            //KBmanager.getMgr().loadKBforInference(kb);
-
+            session.removeAttribute("newITS");
             long millis = System.currentTimeMillis() - t0;
-            out.println("<div style='color:#0a0'>KB reloaded in " + millis + " ms.</div>");
+            runMessage = "KB reloaded in " + millis + " ms.";
         }
         catch (Exception e) {
-            out.println("<div style='color:#b00'>Error reloading KB: "
-                    + esc(String.valueOf(e.getMessage())) + "</div>");
+            runMessage = "Error reloading KB: " + e.getMessage();
             e.printStackTrace();
         }
     }
-%>
-
-<%
-    if ("clearSession".equalsIgnoreCase(action)) {
-        // wipe session-stored results
-        session.removeAttribute("cellMap");
-        session.removeAttribute("runMeta");
-
-        // delete this session's proofs folder
+    InferenceTestSuite inferenceTestSuite = (InferenceTestSuite) session.getAttribute("newITS");
+    if (inferenceTestSuite == null) {
+        inferenceTestSuite = new InferenceTestSuite(kb);
+        session.setAttribute("newITS", inferenceTestSuite);
+    }
+    if ("clearResults".equalsIgnoreCase(action)) {
+        inferenceTestSuite.clearAllTestResults();
+        runMessage = "Cleared test results.";
+    }
+    String translationMode = Optional.ofNullable(request.getParameter("translationMode")).orElse(Optional.ofNullable((String) session.getAttribute("translationMode")).orElse("FOL"));
+    String TPTPlang = Optional.ofNullable(request.getParameter("TPTPlang")).orElse(Optional.ofNullable((String) session.getAttribute("TPTPlang")).orElse("fof"));
+    String cwa = Optional.ofNullable(request.getParameter("CWA")).orElse(Optional.ofNullable((String) session.getAttribute("CWA")).orElse("no"));
+    int timeout = ValidationUtils.sanitizeInteger(request.getParameter("timeout"), 30);
+    int maxAnswers = ValidationUtils.sanitizeInteger(request.getParameter("maxAnswers"), 1);
+    boolean overrideLanguage = "yes".equalsIgnoreCase(request.getParameter("overrideLanguage"));
+    boolean overrideTimeout = "yes".equalsIgnoreCase(request.getParameter("overrideTimeout"));
+    List<String> availableProvers = TheoremProverController.availableProvers();
+    String inferenceEngine = Optional.ofNullable(request.getParameter("inferenceEngine")).orElse("VAMPIRE");
+    String vampireMode = Optional.ofNullable(request.getParameter("vampireMode")).orElse("CASC");
+    boolean modusPonens = "yes".equalsIgnoreCase(request.getParameter("ModusPonens"));
+    boolean dropOnePremise = "true".equalsIgnoreCase(request.getParameter("dropOnePremise"));
+    boolean holUseModals = "yes".equalsIgnoreCase(request.getParameter("HolUseModals"));
+    session.setAttribute("translationMode", translationMode);
+    session.setAttribute("TPTPlang", TPTPlang);
+    session.setAttribute("CWA", cwa);
+    if ("runOneAjax".equalsIgnoreCase(action)) {
         try {
-            String proofsRoot = application.getRealPath("/proofs");
-            java.io.File sessionDir = new java.io.File(proofsRoot, session.getId());
-            deleteRecursive(sessionDir);
-        } catch (Exception ignore) {}
-
-        // reload page immediately
-        out.println("<script>window.location.href='InferenceTestSuite.jsp';</script>");
-        return;  // stop rendering this request
-    }
-%>
-
-<%
-    if ("export".equalsIgnoreCase(request.getParameter("action"))) {
-        Map<String,Object> cellMapX = (Map<String,Object>) session.getAttribute("cellMap");
-        if (cellMapX == null || cellMapX.isEmpty()) {
-            out.println("<script>alert('Nothing to export yet. Run some tests first.');</script>");
-        } 
-        else {
-            // Resolve export root (web-visible). Falls back to tmp if running outside a WAR.
-            String root = application.getRealPath("/exports");
-            if (root == null) root = System.getProperty("java.io.tmpdir") + File.separator + "sigma_exports";
-            File exportRoot = new File(root);
-            if (!exportRoot.exists()) exportRoot.mkdirs();
-            String stamp = new java.text.SimpleDateFormat("yyyyMMdd-HHmmss").format(new java.util.Date());
-            File bundleDir   = new File(exportRoot, stamp);
-            File proofsDir   = new File(bundleDir, "proofs");
-            File testsDir    = new File(bundleDir, "tests");
-            proofsDir.mkdirs(); testsDir.mkdirs();
-            // Tally + gather tq names used.
-            int passCnt=0, failCnt=0, errCnt=0, cells=0;
-            Set<String> tqSeen = new java.util.TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-            // Copy proof files and build a rewritten link map (absolute->relative).
-            Map<String,String> proofRelMap = new HashMap<>();
-            for (Object e : cellMapX.entrySet()) {
-                Map.Entry me = (Map.Entry)e;
-                String key = (String) me.getKey();               // "<tq>|normal" or "<tq>|mp"
-                Map val    = (Map) me.getValue();
-                String[] parts = key.split("\\|", 2);
-                String tqBase = parts.length>0 ? parts[0] : "unknown.tq";
-                tqSeen.add(tqBase);
-                // Calculate the PASS/FAIL/ERROR sums for the Summary table
-                Boolean pass = (Boolean) val.get("pass");
-                if (pass != null) {
-                    cells++;
-                    if (pass) passCnt++;
-                    else {
-                        String html = (String) val.get("html");
-                        if (html != null) {
-                            String hl = html.toLowerCase();
-                            if (hl.contains("fail")) {
-                                failCnt++;
-                            }else{
-                                errCnt++;
-                            }
-                        }
-                    }
-                }
-                String proofPath = (String) val.get("proofPath"); // absolute path we stored earlier
-                if (proofPath != null) {
-                    File src = new File(proofPath);
-                    if (src.exists()) {
-                        String safeName = src.getName().replaceAll("[^A-Za-z0-9._-]","_");
-                        File dst = new File(proofsDir, safeName);
-                        try {
-                            java.nio.file.Files.copy(src.toPath(), dst.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                            proofRelMap.put(proofPath, "proofs/" + safeName);  // for offline relative linking
-                        } catch (Exception ignore) {}
-                    }
-                }
-            }
-            // Copy original .tq files into /tests
-            String itDir = KBmanager.getMgr().getPref("inferenceTestDir");
-            if (itDir != null) {
-                for (String tq : tqSeen) {
-                    try {
-                        File src = new File(itDir, tq);
-                        if (src.exists()) {
-                            File dst = new File(testsDir, tq);
-                            java.nio.file.Files.copy(src.toPath(), dst.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                        }
-                    } catch (Exception ignore) {}
-                }
-            }
-            // Build static HTML
-            String title = "Inference Test Results - " + stamp;
-            File index = new File(bundleDir, "index.html");
-            // For totals & not-run counts, list files in dir to mirror UI order
-            File dir = (itDir==null)?null:new File(itDir);
-            File[] files = (dir==null)?new File[0]:dir.listFiles((d,n)->n.toLowerCase().endsWith(".tq"));
-            if (files == null) files = new File[0];
-            Arrays.sort(files, java.util.Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
-            int totalFiles = files.length;
-            int totalTests = totalFiles * 2; // Normal + MP per file
-            Set<String> validKeys = new HashSet<>();
-            for (File tf : files) {
-                String name = tf.getName();
-                validKeys.add(name + "|normal");
-                validKeys.add(name + "|mp");
-            }
-            int runTests = 0;
-            for (Object e : cellMapX.keySet()) {
-                String k = (String) e;
-                if (validKeys.contains(k)) runTests++;
-            }
-            int notRunTests = Math.max(0, totalTests - runTests);
-            try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(index, false), true)) {
-                pw.println("<!doctype html><html><head><meta charset='utf-8'><title>"+esc(title)+"</title>");
-                pw.println("<style>");
-                pw.println("body{font-family:Arial,Helvetica,sans-serif;margin:24px;color:#222}");
-                pw.println(".summary{margin:0 auto 18px auto;max-width:1100px;padding:12px;border:1px solid #ddd;border-radius:6px;background:#fafafa}");
-                pw.println(".pill{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:700}");
-                pw.println(".pass{background:#e7f7ea;color:#1a7f2b;border:1px solid #bfe6c6}");
-                pw.println(".fail{background:#fdeaea;color:#b21c1c;border:1px solid #f1c0c0}");
-                pw.println(".error{background:#fff3cd;color:#8a6d3b;border:1px solid #f3e6a1}");
-                pw.println("table{border-collapse:collapse;width:100%;max-width:1100px;margin:0 auto;background:#fff}");
-                pw.println("th,td{border:1px solid #ddd;padding:8px;vertical-align:top;text-align:left}");
-                pw.println("th{background:#f5f7fa}");
-                pw.println(".tiny{font-size:12px;color:#666}");
-                pw.println(".file{font-weight:700}");
-                pw.println("</style></head><body>");
-                // Download .zip file button
-                pw.println("<div id='zipBtn' style='display:none;margin:10px 0;'>"
-                        + "<a id='zipLink' href='#' download "
-                        + "style='background:#555;color:#fff;text-decoration:none;border-radius:4px;padding:6px 12px;'>"
-                        + "Download ZIP</a></div>");
-                pw.println("<script>(function(){"
-                        + "var z='"+esc(request.getContextPath()+"/exports/"+stamp+".zip")+"';"
-                        + "fetch(z,{method:'HEAD'}).then(function(r){if(r.ok){"
-                        + "document.getElementById('zipLink').href=z;"
-                        + "document.getElementById('zipBtn').style.display='block';}})"
-                        + ".catch(function(){});"
-                        + "})();</script>");
-                // Summary table
-                int total = cells;
-                int passRate = (total==0)?0:(int)Math.round((passCnt*100.0)/total);
-                pw.println("<div class='summary'>");
-                pw.println("<h2 style='margin:6px 0'>Inference Test Results</h2>");
-                pw.println("<div class='tiny'>Generated: "+esc(new java.util.Date().toString())+"</div>");
-                pw.println("<div style='margin-top:8px'>");
-                pw.println("<span class='pill pass'>PASS: "+passCnt+"</span> ");
-                pw.println("<span class='pill fail' style='margin-left:6px'>FAIL: "+failCnt+"</span> ");
-                pw.println("<span class='pill error' style='margin-left:6px'>ERROR: "+errCnt+"</span> ");
-                pw.println("<span class='tiny' style='margin-left:10px'>Pass-rate: "+passRate+"%</span><br>");
-                pw.println("<span class='tiny'>Total test files: "+totalFiles+" &nbsp;&nbsp;Total tests: "+totalTests+" &nbsp;&nbsp; Run: "+runTests+" &nbsp;&nbsp; Not run: "+notRunTests+"</span><br>");
-                pw.println("</div></div>");
-                // Table header
-                pw.println("<table><thead><tr>");
-                pw.println("<th style='width:40%'>File</th><th style='width:30%'>Normal</th><th style='width:30%'>ModusPonens</th>");
-                pw.println("</tr></thead><tbody>");
-                // Table body
-                for (File tf : files) {
-                    String name = tf.getName();
-                    String kN = name + "|normal";
-                    String kM = name + "|mp";
-                    Map cN = (Map) cellMapX.get(kN);
-                    Map cM = (Map) cellMapX.get(kM);
-                    pw.println("<tr>");
-                    // File column with relative link to copied .tq if present
-                    pw.println("<td>");
-                    pw.println("<div class='file'>"+esc(name)+"</div>");
-                    if (tqSeen.contains(name)) {
-                        pw.println("<div class='tiny'><a href='tests/"+esc(name)+"' target='_blank'>View original .tq</a></div>");
-                    } 
-                    else {
-                        pw.println("<div class='tiny'>- not run yet -</div>");
-                    }
-                    pw.println("</td>");
-                    // writer for a cell WITHOUT extra PASS/FAIL pill (you already show status in your HTML)
-                    java.util.function.Consumer<Map> writeCell = (cell) -> {
-                        try {
-                            if (cell == null) { pw.println("<span class='tiny'>- not run yet -</span>"); return; }
-                            Long millis = (Long) cell.get("millis");
-                            String html = (String) cell.get("html");
-                            String meta = (String) cell.get("meta");
-                            String rel = null; String proofPath = (String) cell.get("proofPath");
-                            if (proofPath != null) rel = proofRelMap.get(proofPath);
-//                            if (millis != null) pw.println("<div class='tiny'>"+millis+" ms</div>");
-                            if (meta != null) pw.println("<div>"+meta+"</div>");
-                            if (html != null)  pw.println("<div>"+html+"</div>");
-                            if (rel != null) pw.println("<div class='tiny' style='margin-top:6px'><a href='"+esc(rel)+"' target='_blank'>View proof</a></div>");
-                        } catch(Exception ignore){}
-                    };
-                    pw.println("<td>"); writeCell.accept(cN); pw.println("</td>");
-                    pw.println("<td>"); writeCell.accept(cM); pw.println("</td>");
-                    pw.println("</tr>");
-                }
-                pw.println("</tbody></table>");
-                pw.println("<div class='tiny' style='max-width:1100px;margin:12px auto 0 auto'>");
-                pw.println("This page is a static snapshot. Proofs and tests are in ./proofs and ./tests.");
-                pw.println("</div>");
-                pw.println("</body></html>");
-            } catch (Exception ex) {
-                out.println("<script>alert('Export failed: "+esc(String.valueOf(ex))+"');</script>");
-            }
-            // --- Create ZIP file ---
-            File zipFile    = new File(exportRoot, stamp + ".zip");
-            File zipTemp    = new File(exportRoot, stamp + ".zip.part");
-            try (java.util.zip.ZipOutputStream zos =
-                         new java.util.zip.ZipOutputStream(new java.io.FileOutputStream(zipTemp))) {
-                java.nio.file.Path base = bundleDir.toPath();
-                java.nio.file.Files.walk(base).forEach(p -> {
-                    try {
-                        if (java.nio.file.Files.isDirectory(p)) return;
-                        String rel = base.relativize(p).toString().replace("\\","/");
-                        zos.putNextEntry(new java.util.zip.ZipEntry(rel));
-                        java.nio.file.Files.copy(p, zos);
-                        zos.closeEntry();
-                    } catch (Exception ignore) {}
-                });
-                // stream closes here
-            } catch (Exception ignore) {}
-            // Try atomic move; fall back to replace
-            try {
-                java.nio.file.Files.move(zipTemp.toPath(), zipFile.toPath(),
-                        java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
-            } catch (Exception moveEx) {
-                // If ATOMIC_MOVE not supported, do best-effort replace
-                try { java.nio.file.Files.move(zipTemp.toPath(), zipFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING); }
-                catch (Exception ignore) {}
-            }
-            // Redirect to the exported index (web path)
-            String webHtml = request.getContextPath() + "/exports/" + stamp + "/index.html";
-            String webZip  = request.getContextPath() + "/exports/" + stamp + ".zip";
-            out.println("<script>window.open('"+webHtml+"','_blank');</script>");
+            out.clearBuffer();
         }
-    }
-%>
-<%!
-    private static void deleteRecursive(java.io.File f) {
-        if (f == null || !f.exists()) return;
-        if (f.isDirectory()) {
-            java.io.File[] kids = f.listFiles();
-            if (kids != null) for (java.io.File k : kids) deleteRecursive(k);
+        catch (Exception ignored) {
         }
-        try { f.delete(); } catch (Exception ignore) {}
+        response.resetBuffer();
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.setHeader("Cache-Control", "no-store");
+        String testPath = request.getParameter("testPath");
+        InferenceTest test = testPath == null ? null : inferenceTestSuite.getInferenceTests().get(testPath);
+        if (test == null) {
+            out.print("{"
+                + "\"ok\":false,"
+                + "\"status\":\"ERROR\","
+                + "\"actual\":\"\","
+                + "\"szs\":\"\","
+                + "\"time\":\"\","
+                + "\"message\":\"Unknown test path\""
+                + "}");
+            out.flush();
+            return;
+        }
+        String proverType = inferenceEngine;
+        String effectiveVampireMode = vampireMode;
+        String selectedLanguage = "HOL".equalsIgnoreCase(translationMode) ? "thf" : TPTPlang;
+        String effectiveLanguage = overrideLanguage ? selectedLanguage : test.minLang;
+        int effectiveTimeout = overrideTimeout ? timeout : test.timeout;
+        boolean closedWorldAssumption = "yes".equalsIgnoreCase(cwa);
+        String message = "";
+        try {
+            inferenceTestSuite.runTestOverload(testPath, proverType, effectiveLanguage, effectiveVampireMode, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals, effectiveTimeout, maxAnswers);
+        }
+        catch (Throwable t) {
+            message = t.getClass().getSimpleName() + ": " + t.getMessage();
+            if (test.result == null) test.result = new InferenceTest.InferenceTestResult();
+            test.result.success = false;
+            test.result.szsStatus = "Exception";
+            if (test.result.proof == null) test.result.proof = new ArrayList<>();
+            test.result.proof.add(message);
+        }
+        String status = (test.errors != null && !test.errors.isEmpty()) ? "ERROR" : (test.result == null ? "NOT RUN" : (test.result.success ? "PASS" : "FAIL"));
+        String actual = test.result == null ? "" : String.valueOf(test.result.answers);
+        String szs = "";
+        if (test.result != null) {
+            szs = test.result.szsStatus;
+            if (StringUtil.emptyString(szs) || "null".equalsIgnoreCase(szs)) szs = "See Proof for Details";
+        }
+        String execTime = test.result == null ? "" : String.valueOf(test.result.execTime);
+        boolean hasProof = test.result != null && test.result.proof != null && !test.result.proof.isEmpty();
+        out.print("{"
+            + "\"ok\":true,"
+            + "\"testPath\":\"" + ValidationUtils.jsonEsc(testPath) + "\","
+            + "\"status\":\"" + ValidationUtils.jsonEsc(status) + "\","
+            + "\"actual\":\"" + ValidationUtils.jsonEsc(actual) + "\","
+            + "\"szs\":\"" + ValidationUtils.jsonEsc(szs) + "\","
+            + "\"time\":\"" + ValidationUtils.jsonEsc(execTime) + "\","
+            + "\"hasProof\":" + hasProof + ","
+            + "\"message\":\"" + ValidationUtils.jsonEsc(message) + "\""
+            + "}");
+        out.flush();
+        return;
     }
 %>
-
+<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Sigma - Inference Test Suite</title>
     <style>
-        body { font-family: Arial, Helvetica, sans-serif; }
-        .cellHead { display:flex; justify-content:space-between; align-items:center; gap:8px; }
-        .statusPass { color: #0a0; font-weight: bold; }
-        .statusFail { color: #b00; font-weight: bold; }
-        .tiny { font-size: 12px; color:#666; }
-        .controls { margin: 10px 0 16px; display:flex; gap:16px; align-items:center; }
-        .runBtn { padding:4px 10px; }
-    </style>
-    <style>
-        .testTable {
-            width: 70%;
-            margin: 25px auto;
-            border-collapse: collapse;
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 14px;
-            background: #fafafa;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            border-radius: 6px;
-            overflow: hidden;
-        }
-        .testTable th, .testTable td {
-            border: 1px solid #ddd;
-            padding: 8px 10px;
-            text-align: left;
-            vertical-align: top;
-        }
-        .testTable th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        .testTable tr:nth-child(even) { background-color: #fdfdfd; }
-        .testTable tr:hover { background-color: #f7faff; }
-        .cellHead { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
-        .runBtn {
-            background: #1d75b8;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .runBtn:hover { background: #135c91; }
-        .tiny { font-size: 12px; color: #666; }
-        .fileName { font-weight: bold; }
-        .filePath { font-size: 12px; color: #777; word-wrap: break-word; }
-    </style>
-    <style>
-        /* === Buttons === */
-        .runAllGroup { display:flex; gap:10px; align-items:center; }
-        .runAllBtn {
-            background:#22aa44; color:#fff; border:0; border-radius:8px;
-            padding:10px 18px; font-size:15px; font-weight:700; cursor:pointer;
-            box-shadow:0 2px 6px rgba(0,0,0,.15);
-        }
-        .runAllBtn:hover { filter:brightness(0.95); }
-        .runAllBtn.mp { background:#168a9e; }
-        .runAllBtn.both { background:#0a7f3f; }
-        /* === Fieldset (configuration) === */
-        .configBox {
-            border:1px solid #bbb;
-            border-radius:6px;
-            padding:8px 14px 10px 14px;
-            background:#fafafa;
-            font-size:14px;
-        }
-        .configBox legend {
-            font-size:14px;
-            padding:0 6px;
-            color:#333;
-        }
-        .configBox select, .configBox input {
-            margin-left:4px;
-            font-size:13px;
-            padding:2px 4px;
-        }
-    </style>
-    <style>
-        .spinner {
-            display:none; width:14px; height:14px;
-            border:2px solid #ccc; border-top-color:#1d75b8;
-            border-radius:50%; animation:spin .8s linear infinite; margin-left:6px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:#222;}
+        .selectorRow{display:flex;gap:14px;align-items:stretch;margin:14px 0;}
+        .overrideRow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:10px 0;}
+        .translationBox{flex:0 0 28%;}
+        .proverBox{flex:1;}
+        .selectorRow .step{height:100%;margin:0;box-sizing:border-box;}
+        @media(max-width:1000px){.selectorRow{flex-direction:column;}.translationBox,.proverBox{flex:1 1 auto;}}
+        .pageWrap{width:92%;margin:0 auto;}
+        .step{border:1px solid #bbb;border-radius:6px;padding:12px 14px;margin:14px 0;background:#fafafa;}
+        .row{margin:8px 0;}
+        .inline{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+        .grid2{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:12px;}
+        .card{border:1px solid #ddd;background:#fff;padding:10px;border-radius:6px;}
+        .engineDisabled{opacity:0.5;}
+        .sub,.muted,.tiny{color:#666;font-size:12px;}
+        .advanced{margin-top:8px;}
+        .actions{margin:16px 0;display:flex;gap:10px;align-items:center;}
+        .actionBtn{color:#fff; border:none; border-radius:5px; padding:8px 14px; cursor:pointer; font-weight:bold;}
+        .runBtn{background:#1d75b8;}
+        .clearBtn{background:#6f42c1;}
+        .reloadBtn{background:#2e7d32;}
+        .reloadKbBtn{background:#b33;}
+        .exportBtn{background:#e07a00;}
+        .actionBtn:hover{filter:brightness(0.92);}
+        .actionBtn:disabled{opacity:0.6;cursor:not-allowed;}
+        .message{border:1px solid #ccd;background:#f6f8ff;padding:8px 12px;border-radius:5px;margin:12px 0;}
+        .testTable{width:100%;border-collapse:collapse;margin-top:16px;background:#fff;font-size:13px;}
+        .testTable th,.testTable td{border:1px solid #ddd;padding:7px 8px;vertical-align:top;text-align:left;}
+        .testTable th{background:#f2f2f2;position:sticky;top:0;z-index:1;}
+        .testTable tr:nth-child(even){background:#fbfbfb;}
+        .testTable tr:hover{background:#f7faff;}
+        .fileName{font-weight:bold;}
+        .filePath{color:#777;font-size:11px;word-break:break-all;}
+        .statusPASS{color:#0a7a21;font-weight:bold;}
+        .statusFAIL,.statusERROR{color:#b00020;font-weight:bold;}
+        .statusNOTRUN{color:#777;font-weight:bold;}
+        .runningStatus{display:flex;align-items:center;gap:6px;color:#1d75b8;font-weight:bold;}
+        .statusSpinner{width:14px;height:14px;border:2px solid #ccc;border-top-color:#1d75b8;border-radius:50%;animation:spin 0.8s linear infinite;}
+        .sumoBounceSmall{width:24px;height:24px;animation:sumoBounce 0.7s infinite alternate ease-in-out;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        @keyframes sumoBounce{from{transform:translateY(0);}to{transform:translateY(-6px);}}
+        .errors{margin:4px 0 0 18px;padding:0;color:#b00020;font-weight:normal;}
+        .sortable{cursor:pointer;user-select:none;}
+        .sortable:hover{text-decoration:underline;}
+        code{white-space:pre-wrap;word-break:break-word;}
     </style>
     <script>
-        function safeId(s){ return (s||'').replace(/[^A-Za-z0-9._-]/g,'_'); }
-        function runOne(tq, mode) {
-            const sid = 'spinner-' + safeId(tq) + '-' + mode;
-            const bid = 'btn-'     + safeId(tq) + '-' + mode;
-            const sp = document.getElementById(sid);
-            if (sp) sp.style.display = 'inline-block';
-            const btn = document.getElementById(bid);
-            if (btn) { btn.disabled = true; btn.innerHTML = "Running&hellip;"; }
-            const form = document.getElementById('runnerForm');
-            form.tq.value = tq;
-            form.mode.value = mode;
-            form.submit();
+        let currentSortKey = 'file';
+        let currentSortAsc = true;
+
+        function statusOrderJS(status) {
+            if (status === 'NOT RUN') return 0;
+            if (status === 'PASS') return 1;
+            if (status === 'FAIL') return 2;
+            if (status === 'ERROR') return 3;
+            return 99;
         }
-    </script>
-    <script>
+
+        function sortTable(key) {
+            const tbody = document.querySelector('.testTable tbody');
+            if (!tbody) return;
+            if (currentSortKey === key) currentSortAsc = !currentSortAsc;
+            else {
+                currentSortKey = key;
+                currentSortAsc = true;
+            }
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            rows.sort(function(a, b) {
+                let av;
+                let bv;
+                if (key === 'file') {
+                    av = a.dataset.file || '';
+                    bv = b.dataset.file || '';
+                    return currentSortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+                }
+                if (key === 'category') {
+                    av = a.dataset.category || '';
+                    bv = b.dataset.category || '';
+                    return currentSortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+                }
+                if (key === 'meta') {
+                    av = parseInt(a.dataset.langOrder || '99', 10);
+                    bv = parseInt(b.dataset.langOrder || '99', 10);
+                    return currentSortAsc ? av - bv : bv - av;
+                }
+                if (key === 'status') {
+                    av = parseInt(a.dataset.statusOrder || '99', 10);
+                    bv = parseInt(b.dataset.statusOrder || '99', 10);
+                    return currentSortAsc ? av - bv : bv - av;
+                }
+                return 0;
+            });
+            rows.forEach( function(row) {tbody.appendChild(row); });
+            updateSortIndicators();
+        }
+
+        function updateSortIndicators() {
+            ['file', 'category', 'meta', 'status'].forEach(function(key) {
+                const el = document.getElementById('sort_' + key);
+                if (!el) return;
+                el.innerHTML = key === currentSortKey
+                    ? (currentSortAsc ? '&#9650;' : '&#9660;')
+                    : '';
+            });
+        }
+
+        function exportReport() {
+            const table = document.querySelector('.testTable');
+            if (!table) {
+                alert('No test table found.');
+                return;
+            }
+            const html =
+                '<!doctype html><html><head><meta charset="utf-8">' +
+                '<title>Inference Test Report</title>' +
+                '<style>' +
+                'body{font-family:Arial,Helvetica,sans-serif;margin:24px;color:#222;}' +
+                'table{border-collapse:collapse;width:100%;font-size:13px;}' +
+                'th,td{border:1px solid #ddd;padding:8px;vertical-align:top;text-align:left;}' +
+                'th{background:#f2f2f2;}' +
+                '.statusPASS{color:#0a7a21;font-weight:bold;}' +
+                '.statusFAIL,.statusERROR{color:#b00020;font-weight:bold;}' +
+                '.statusNOTRUN{color:#777;font-weight:bold;}' +
+                '.tiny{font-size:12px;color:#666;}' +
+                '.fileName{font-weight:bold;}' +
+                '.filePath{color:#777;font-size:11px;word-break:break-all;}' +
+                '</style></head><body>' +
+                '<h2>Inference Test Report</h2>' +
+                '<div class="tiny">Generated: ' + new Date().toString() + '</div><br>' +
+                table.outerHTML +
+                '</body></html>';
+            const blob = new Blob([html], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'inference-test-report.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
         function viewTestFile(fileName) {
             const url = 'ViewTest.jsp?name=' + encodeURIComponent(fileName);
             window.open(url, '_blank');
         }
-    </script>
-    <script>
-        function startRunAll(type){          // type: 'normal' | 'mp' | 'both'
-            const f = document.getElementById('runnerForm');
-            f.action.value = 'runAll';
-            f.runAllType.value = type;
-            f.idx.value = '0';
-            f.phase.value = (type === 'both') ? 'normal' : type; // first phase
-            f.submit();
+
+        function toggleAllTests(source) {
+            const boxes = document.querySelectorAll('input[name="selectedTests"]');
+            boxes.forEach(function(box) {
+                box.checked = source.checked;
+            });
         }
+
+        function toggleTranslationOptions() {
+            const hol = document.getElementById('modeHOL');
+            const folOptions = document.getElementById('folOptions');
+            const holOptions = document.getElementById('holOptions');
+            if (!hol || !folOptions || !holOptions) return;
+            if (hol.checked) {
+                folOptions.style.display = 'none';
+                holOptions.style.display = 'block';
+            }
+            else {
+                folOptions.style.display = 'block';
+                holOptions.style.display = 'none';
+            }
+        }
+
+        function toggleVampireOptions() {
+            const vampire = document.getElementById('engineVampire');
+            const vampireInputs = document.querySelectorAll(
+                'input[name="vampireMode"], #ModusPonens, #dropOnePremise, #HolUseModals'
+            );
+            vampireInputs.forEach(function(input) {
+                input.disabled = vampire && !vampire.checked;
+            });
+        }
+
+        function statusClassJS(status) {
+            return 'status' + status.replace(/\s+/g, '');
+        }
+
+        function setRowStatus(rowId, status, message, szs) {
+            const statusCell = document.getElementById('status_' + rowId);
+            if (!statusCell) return;
+            const row = statusCell.closest('tr');
+            if (row) row.dataset.statusOrder = statusOrderJS(status);
+            statusCell.classList.remove('statusPASS', 'statusFAIL', 'statusERROR', 'statusNOTRUN');
+            if (status === 'RUNNING') {
+                statusCell.classList.add('statusNOTRUN');
+                statusCell.innerHTML =
+                    '<div class="runningStatus">' +
+                        '<img src="pixmaps/sumo.gif" class="sumoBounceSmall" alt="Running">' +
+                        '<span>RUNNING</span>' +
+                    '</div>' +
+                    '<div class="tiny" id="szs_' + rowId + '"></div>';
+                return;
+            }
+            statusCell.classList.add(statusClassJS(status));
+            statusCell.innerHTML = status +
+                '<div class="tiny" id="szs_' + rowId + '">' +
+                    (szs ? 'SZS: ' + szs : '') +
+                '</div>';
+            if (message) {
+                const div = document.createElement('div');
+                div.className = 'tiny';
+                div.textContent = message;
+                statusCell.appendChild(div);
+            }
+        }
+
+        async function runSelectedTests() {
+            const form = document.getElementById('itsRunnerForm');
+            const boxes = Array.from(document.querySelectorAll('input[name="selectedTests"]:checked'));
+            if (boxes.length === 0) {
+                alert('Select at least one test.');
+                return;
+            }
+            const runButton = document.querySelector('.runBtn');
+            if (runButton) {
+                runButton.disabled = true;
+                runButton.textContent = 'Running...';
+            }
+            for (const box of boxes) {
+                const testPath = box.value;
+                const rowId = box.dataset.rowId;
+                setRowStatus(rowId, 'RUNNING', '');
+                const params = new URLSearchParams(new FormData(form));
+                params.set('action', 'runOneAjax');
+                params.delete('selectedTests');
+                params.set('testPath', testPath);
+                try {
+                    const response = await fetch('<%= request.getContextPath() %>/InferenceTestSuite.jsp', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: params.toString()
+                    });
+                    const text = await response.text();
+                    let data;
+                    try {
+                        data = JSON.parse(text);
+                    }
+                    catch (jsonErr) {
+                        console.error('Expected JSON but got:', text);
+                        throw new Error('Server returned HTML instead of JSON. Check the Network tab response.');
+                    }
+                    const actualCell = document.getElementById('actual_' + rowId);
+                    const timeCell = document.getElementById('time_' + rowId);
+                    const szsCell = document.getElementById('szs_' + rowId);
+                    const proofCell = document.getElementById('proof_' + rowId);
+                    if (actualCell) actualCell.textContent = data.actual || '';
+                    if (timeCell) timeCell.textContent = data.time ? data.time + ' ms' : '';
+                    if (proofCell) proofCell.style.display = data.hasProof ? '' : 'none';
+                    setRowStatus(rowId, data.status || 'ERROR', data.message || '', data.szs || '');
+                    if (szsCell && data.szs) szsCell.textContent = 'SZS: ' + data.szs;
+                }
+                catch (err) {
+                    setRowStatus(rowId, 'ERROR', err.message);
+                }
+            }
+            if (runButton) {
+                runButton.disabled = false;
+                runButton.textContent = 'Run Selected';
+            }
+        }
+
+        function reloadKB() {
+            if (!confirm('This will fully reload the KB and clear user assertions. Continue?')) return false;
+            document.getElementById('itsAction').value = 'reloadKB';
+            document.getElementById('itsRunnerForm').submit();
+            return false;
+        }
+        
+        window.addEventListener('load', function() {
+            toggleTranslationOptions();
+            toggleVampireOptions();
+            updateSortIndicators();
+            const modeFOL = document.getElementById('modeFOL');
+            const modeHOL = document.getElementById('modeHOL');
+            if (modeFOL) modeFOL.addEventListener('change', toggleTranslationOptions);
+            if (modeHOL) modeHOL.addEventListener('change', toggleTranslationOptions);
+        });
     </script>
 </head>
-<body style="face=Arial,Helvetica" bgcolor="#FFFFFF">
+<body>
 <%
     String pageName = "InferenceTestSuite";
-    String pageString = "Inference Interface";
+    String pageString = "Inference Test Suite";
 %>
-<%@include file="fragments/universal/CommonHeader.jspf" %>
-<table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
-    <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
-<h2>Inference Test Suite</h2>
-<form id="runnerForm" method="POST" action="InferenceTestSuite.jsp">
-    <!-- global controls persist across runs -->
-    <!-- === Global Controls === -->
-    <div style="width:70%;margin:0 auto 20px auto;display:flex;justify-content:space-between;align-items:flex-end;">
-        <!-- Left: Run-All buttons -->
-        <div class="runAllGroup">
-            <button type="button" class="runAllBtn" onclick="startRunAll('normal')">Run All (Normal)</button>
-            <button type="button" class="runAllBtn mp" onclick="startRunAll('mp')">Run All (MP)</button>
-            <button type="button" class="runAllBtn both" onclick="startRunAll('both')">Run All (Both)</button>
-            <button type="button" class="runAllBtn" style="background:#555;"
-                    onclick="document.getElementById('runnerForm').action.value='export';document.getElementById('runnerForm').submit();">
-                Export HTML
-            </button>
+<%@ include file="fragments/universal/CommonHeader.jspf" %>
+<div class="pageWrap">
+    <h2>Inference Test Suite</h2>
+    <% if (runMessage != null) { %>
+        <div class="message"><%= ValidationUtils.escapeHtml(runMessage) %></div>
+    <% } %>
+    <form id="itsRunnerForm" method="POST" action="InferenceTestSuite.jsp">
+        <input type="hidden" id="itsAction" name="action" value="runSelected">
+        <div class="selectorRow">
+            <div class="translationBox"><%@ include file="fragments/tp/TranslationSelector.jspf" %></div>
+            <div class="proverBox"><%@ include file="fragments/tp/ProverSelector.jspf" %></div>
         </div>
-        <!-- Right: Configuration box -->
-        <fieldset class="configBox">
-            <legend><b>Configuration</b></legend>
-            <label><b>Engine:</b>
-                <select name="engine">
-                    <option value="Vampire" <%= "Vampire".equals(engine) ? "selected" : "" %>>Vampire</option>
-                    <option value="EProver" <%= "EProver".equals(engine) ? "selected" : "" %>>EProver</option>
-                </select>
+        <div class="overrideRow">
+            <label>
+                <input type="checkbox" name="overrideLanguage" value="yes" <%= overrideLanguage ? "checked" : "" %>>
+                Override meta predicate minLang
             </label>
-            <label style="margin-left:12px;"><b>Timeout (sec):</b>
-                <span class='infoTip' title='Time for each individual prover call, not total elapsed time'>&#9432;</span>
-                <input type="number" name="timeout" min="1" value="<%=timeout%>">
+            <label>
+                <input type="checkbox" name="overrideTimeout" value="yes" <%= overrideTimeout ? "checked" : "" %>>
+                Override meta predicate timeout
             </label>
-        </fieldset>
-    </div>
-    <!-- single-run fields (keep your existing) -->
-    <input type="hidden" name="action" value="run">
-    <input type="hidden" name="tq" value="">
-    <input type="hidden" name="mode" value="">
-    <!-- run-all fields -->
-    <input type="hidden" name="runAllType" value="">
-    <input type="hidden" name="idx" value="">
-    <input type="hidden" name="phase" value="">
-</form>
-<%
-    if (inferenceTestDir == null) {
-%>
-<div style="color:#b00">No inference test directory set. Configure it in <a href="Preferences.jsp">Preferences</a>.</div>
-<%
-} 
-else {
-    File dir = new File(inferenceTestDir);
-    File[] files = dir.listFiles((d, name) -> name.toLowerCase().endsWith(".tq"));
-    Arrays.sort(files, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
-%>
-<table class="testTable">
-    <thead>
-    <tr>
-        <th style="width:40%">File</th>
-        <th style="width:30%">Normal</th>
-        <th style="width:30%">ModusPonens</th>
-    </tr>
-    </thead>
-    <tbody>
-    <%
-        if (files == null || files.length == 0) {
-    %>
-    <tr><td colspan="3" style="text-align:center;"><i>No .tq files found in <%= esc(inferenceTestDir) %></i></td></tr>
-    <%
-    } else {
-        for (File f : files) {
-            String name = f.getName();
-            String kN = name + "|normal";
-            String kM = name + "|mp";
-            String safeId = name.replaceAll("[^A-Za-z0-9._-]", "_");
-            Map cN = (Map) cellMap.get(kN);
-            Map cM = (Map) cellMap.get(kM);
-            String metaN = (cN == null) ? "" : (String)cN.get("meta");
-            String metaM = (cM == null) ? "" : (String)cM.get("meta");
-    %>
-    <tr>
-        <!-- File column -->
-        <td>
-            <div class="fileName">
-                <a href="javascript:void(0);"
-                   onclick="viewTestFile('<%=esc(name)%>')"
-                   style="color:#0073e6; text-decoration:underline;">
-                    <%= esc(name) %>
-                </a>
-            </div>
-            <div class="filePath tiny"><%= esc(f.getAbsolutePath()) %></div>
-        </td>
-        <!-- Normal column -->
-        <td>
-            <div class="cellHead">
-                <button id="btn-<%=safeId%>-normal"
-                        class="runBtn"
-                        onclick="runOne('<%=esc(name)%>','normal'); return false;">RUN</button>
-                <span class="tiny"><%= esc(metaN) %></span>
-                <span id="spinner-<%=safeId%>-normal" class="spinner" aria-label="Running&hellip;" title="Running&hellip;"></span>
-            </div>
-            <div>
-                <% if (cN == null) { %>
-                <span class='tiny'>- not run yet -</span>
-                <% } else { %>
-                <div><%= (String)cN.get("html") %></div>
-                <% } %>
-            </div>
-            <% String proofUrlN = (cN == null) ? null : (String)cN.get("proofUrl"); %>
-            <% if (proofUrlN != null && proofUrlN.length() > 0) { %>
-            <div class="tiny" style="margin-top:6px;">
-                <a href="<%= proofUrlN %>" target="_blank">View proof</a>
-            </div>
-            <% } %>
-        </td>
-        <!-- ModusPonens column -->
-        <td>
-            <div class="cellHead">
-                <button id="btn-<%=safeId%>-mp"
-                        class="runBtn"
-                        onclick="runOne('<%=esc(name)%>','mp'); return false;">RUN</button>
-                <span class="tiny"><%= esc(metaM) %></span>
-                <span id="spinner-<%=safeId%>-mp" class="spinner" aria-label="Running&hellip;" title="Running&hellip;"></span>
-            </div>
-            <div>
-                <% if (cM == null) { %>
-                <span class='tiny'>- not run yet -</span>
-                <% } else { %>
-                    <div><%= (String)cM.get("html") %></div>
-                <% } %>
-            </div>
-            <% String proofUrlM = (cM == null) ? null : (String)cM.get("proofUrl"); %>
-            <% if (proofUrlM != null && proofUrlM.length() > 0) { %>
-            <div class="tiny" style="margin-top:6px;">
-                <a href="<%= proofUrlM %>" target="_blank">View proof</a>
-            </div>
-            <% } %>
-        </td>
-    </tr>
-    <%
-            }
-        }
-    %>
-    </tbody>
-</table>
-<%
-    Integer raIdx  = (Integer)request.getAttribute("raIdx");
-    Integer raTot  = (Integer)request.getAttribute("raTot");
-    Integer raNext = (Integer)request.getAttribute("raNext");
-    String  raType = (String) request.getAttribute("raType");
-    String  raNextName  = (String) request.getAttribute("raNextName");
-    String  raNextPhase = (String) request.getAttribute("raNextPhase");
-    if (raIdx != null && raTot != null) {
-        int stepsDone = ("both".equalsIgnoreCase(raType) ? (raIdx*2 + ("mp".equalsIgnoreCase((String)request.getParameter("phase"))?2:1)) : (raIdx+1));
-        int stepsTotal = ("both".equalsIgnoreCase(raType) ? raTot*2 : raTot);
-%>
-<div style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
-              background:#eef7ee;border:1px solid #cfe6cf;padding:8px 12px;border-radius:6px;">
-    Running <b><%= esc(raType) %></b> | <b><%= stepsDone %></b> / <b><%= stepsTotal %></b>
+            <span class="tiny">
+                (Unchecked means use each test file's meta predicates/defaults.)
+            </span>
+        </div>
+        <div class="actions">
+            <button type="button" class="actionBtn runBtn" onclick="runSelectedTests()">Run Selected</button>
+            <button type="submit" class="actionBtn clearBtn" onclick="return confirm('Clear all displayed test results?') && (document.getElementById('itsAction').value='clearResults');">Clear Results</button>
+            <button type="submit" class="actionBtn reloadBtn" onclick="document.getElementById('itsAction').value='reload';">Reload Tests</button>
+            <button type="button" class="actionBtn reloadKbBtn" onclick="return reloadKB();">Reload KB</button>
+            <button type="button" class="actionBtn exportBtn" onclick="exportReport();">Export Report</button>
+            <span class="tiny">Showing <%= inferenceTestSuite.getInferenceTests().size() %> inference tests.</span>
+        </div>
+        <table class="testTable">
+            <thead>
+                <tr>
+                    <th style="width:36px;"> <input type="checkbox" onclick="toggleAllTests(this)"> </th>
+                    <th class="sortable" onclick="sortTable('file')">File <span id="sort_file"></span></th>
+                    <th class="sortable" onclick="sortTable('category')">Category <span id="sort_category"></span></th>
+                    <th class="sortable" onclick="sortTable('meta')">Meta <span id="sort_meta"></span></th>
+                    <th class="sortable" onclick="sortTable('status')">Status <span id="sort_status"></span></th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                <%
+                    int rowNum = 0;
+                    for (InferenceTest test : inferenceTestSuite.getInferenceTests().values()) {
+                        String status = (test.errors != null && !test.errors.isEmpty()) ? "ERROR" : (test.result == null ? "NOT RUN" : (test.result.success ? "PASS" : "FAIL"));
+                        String cssClass = "status" + status.replace(" ", "");
+                        String rowId = "test_" + rowNum++;
+                        String testFileName = StringUtil.removeFilePath(test.filePath);
+                        boolean hasProof = test.result != null && test.result.proof != null && !test.result.proof.isEmpty();
+                %>
+                <tr data-file="<%= ValidationUtils.escapeHtml(testFileName.toLowerCase()) %>"
+                    data-category="<%= ValidationUtils.escapeHtml(test.category == null ? "" : test.category.toLowerCase()) %>"
+                    data-lang-order="<%= langOrder(test.minLang) %>"
+                    data-status-order="<%= statusOrder(status) %>">
+                    <td>
+                        <input type="checkbox" name="selectedTests" data-row-id="<%= rowId %>" value="<%= ValidationUtils.escapeHtml(test.filePath) %>">
+                    </td>
+                    <td>
+                        <div class="fileName">
+                            <a href="javascript:void(0);"
+                            onclick="viewTestFile('<%= ValidationUtils.escapeHtml(testFileName) %>')"
+                            style="color:#0073e6;text-decoration:underline;">
+                                <%= ValidationUtils.escapeHtml(testFileName) %>
+                            </a>
+                        </div>
+                        <div class="filePath"><%= ValidationUtils.escapeHtml(test.filePath) %></div>
+                        <% if (test.note != null) { %>
+                            <div class="tiny">Note: <%= ValidationUtils.escapeHtml(test.note) %></div>
+                        <% } %>
+                    </td>
+                    <td>
+                        <%= ValidationUtils.escapeHtml(test.category) %>
+                    </td>
+                    <td>
+                        <div>file minLang: <b><%= ValidationUtils.escapeHtml(test.minLang) %></b></div>
+                        <div>file timeout: <b><%= test.timeout %></b>s</div>
+                        <div>regen: <b><%= test.tptpRegenRequired %></b></div>
+                    </td>
+                    <td id="status_<%= rowId %>" class="<%= cssClass %>">
+                        <%= status %>
+                        <% if (test.result != null && test.result.szsStatus != null) { %>
+                            <div class="tiny" id="szs_<%= rowId %>">SZS: <%= ValidationUtils.escapeHtml(test.result.szsStatus) %></div>
+                        <% } else { %>
+                            <div class="tiny" id="szs_<%= rowId %>"></div>
+                        <% } %>
+                        <% if (test.errors != null && !test.errors.isEmpty()) { %>
+                            <ul class="errors">
+                            <% for (String err : test.errors) { %>
+                                <li><%= ValidationUtils.escapeHtml(err) %></li>
+                            <% } %>
+                            </ul>
+                        <% } %>
+                        <% if (test.result != null && test.result.contradictionFound) { %>
+                            <div class="tiny">Contradiction found</div>
+                        <% } %>
+                    </td>
+                    <td id="result_<%= rowId %>">
+                        <div>
+                            <b>Expected:</b>
+                            <span><%= ValidationUtils.escapeHtml(test.expectedAnswers) %></span>
+                        </div>
+                        <div>
+                            <b>Actual:</b>
+                            <span id="actual_<%= rowId %>">
+                                <% if (test.result != null) { %>
+                                    <%= ValidationUtils.escapeHtml(test.result.answers) %>
+                                <% } %>
+                            </span>
+                        </div>
+                        <div>
+                            <b>Time:</b>
+                            <span id="time_<%= rowId %>">
+                                <% if (test.result != null && test.result.execTime > 0) { %>
+                                    <%= test.result.execTime %> ms
+                                <% } %>
+                            </span>
+                        </div>
+                        <div class="tiny" id="proof_<%= rowId %>" style="<%= hasProof ? "" : "display:none;" %>">
+                            <a href="ViewProof.jsp?path=<%= StringUtil.encode(test.filePath) %>" target="_blank" rel="noopener noreferrer"> View proof </a>
+                        </div>
+                    </td>
+                </tr>
+            <%
+                }
+            %>
+            </tbody>
+        </table>
+    </form>
 </div>
-<script>
-    (function(){
-        var next = <%= raNext == null ? -1 : raNext.intValue() %>;
-        var nextName  = "<%= esc(raNextName == null ? "" : raNextName) %>";
-        var nextPhase = "<%= esc(raNextPhase == null ? "normal" : raNextPhase) %>"; // 'normal' | 'mp'
-        if(next >= 0){
-            // show spinner on the next target row *before* submitting
-            try{
-                var sid = 'spinner-' + (nextName||'').replace(/[^A-Za-z0-9._-]/g,'_') + '-' + (nextPhase==='mp'?'mp':'normal');
-                var bid = 'btn-'     + (nextName||'').replace(/[^A-Za-z0-9._-]/g,'_') + '-' + (nextPhase==='mp'?'mp':'normal');
-                var sp = document.getElementById(sid); if (sp) sp.style.display='inline-block';
-                var bt = document.getElementById(bid); if (bt) { bt.disabled=true; bt.innerHTML="Running&hellip;"; }
-            }
-            catch(e){}
-
-            // submit next step
-            const f = document.getElementById('runnerForm');
-            f.action.value    = 'runAll';
-            f.runAllType.value= "<%= esc(raType) %>";
-            f.idx.value       = String(next);
-            f.phase.value     = nextPhase;
-            f.submit();
-        }
-    })();
-</script>
-<% } %>
-<%
-    } // inferenceTestDir != null
-%>
-<hr style="margin:24px 0; border:0; border-top:1px solid #ddd; width:70%; margin-left:auto; margin-right:auto;">
-<div style="width:70%; margin:0 auto 20px auto; display:flex; justify-content:space-between; align-items:center;">
-    <div>
-        <form method="post" onsubmit="return confirm('This will fully reload the KB and clear user assertions. Continue?');">
-            <input type="hidden" name="action" value="reloadKB">
-            <!-- preserve current UI selections (optional) -->
-            <input type="hidden" name="engine" value="<%= esc(engine) %>">
-            <input type="hidden" name="timeout" value="<%= timeout %>">
-            <button type="submit"
-                    style="background:#b33;color:#fff;border:0;border-radius:4px;padding:6px 12px;cursor:pointer;">
-                Reload KB
-            </button>
-            <span class="tiny" style="margin-left:8px;">Reloads base ontology and clears user assertions.</span>
-        </form>
-        <form method="post" style="margin-top:8px;"
-              onsubmit="return confirm('This will clear all stored test results for this page. Continue?');">
-            <input type="hidden" name="action" value="clearSession">
-            <button type="submit"
-                    style="background:#777;color:#fff;border:0;border-radius:4px;padding:6px 12px;cursor:pointer;">
-                Clear Results
-            </button>
-            <span class="tiny" style="margin-left:8px;">Removes all saved test outcomes from memory.</span>
-        </form>
-    </div>
-</div>
-<%@ include file="fragments/universal/Postlude.jspf" %>
 </body>
 </html>
-<%!
-    private static String esc(String s){
-        if (s == null) return "";
-        StringBuilder b = new StringBuilder(s.length()+16);
-        for (int i=0; i<s.length(); i++){
-            char c = s.charAt(i);
-            switch (c){
-                case '&': b.append("&amp;"); break;
-                case '<': b.append("&lt;");  break;
-                case '>': b.append("&gt;");  break;
-                case '"': b.append("&quot;");break;
-                case '\'':b.append("&#39;"); break;
-                default:  b.append(c);
-            }
-        }
-        return b.toString();
-    }
-%>

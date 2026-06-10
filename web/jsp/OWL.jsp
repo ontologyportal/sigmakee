@@ -16,7 +16,7 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
- System.out.println("in OWL.jsp");
+
  if (!KBmanager.getMgr().initialized) {
      System.out.println("OWL.jsp: kb manager not initialized, redirecting");
      response.sendRedirect("init.jsp");
@@ -40,5 +40,3 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
  OWLtranslator.initOnce(kbName);
  OWLtranslator.ot.writeTerm(new PrintWriter(out),term);
 %>
-
-

@@ -1,4 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=US-ASCII" pageEncoding="US-ASCII" import="com.articulate.sigma.user.UserManager, com.articulate.sigma.security.ValidationUtils" %>
+<%@ page language="java" contentType="text/html; charset=US-ASCII" pageEncoding="US-ASCII" import="com.articulate.sigma.user.UserManager, com.articulate.sigma.utils.ValidationUtils" %>
 <%
 String error = "";
 if ("POST".equalsIgnoreCase(request.getMethod())) {

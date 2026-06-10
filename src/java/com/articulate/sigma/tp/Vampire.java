@@ -25,6 +25,7 @@ import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.trans.TPTPutil;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.utils.LoggingUtils;
 import com.articulate.sigma.Formula;
 
 import tptp_parser.TPTPFormula;
@@ -146,7 +147,7 @@ public class Vampire {
      */
     public Vampire(KB kb, String requestedTptpLang, String mode, boolean modensPonens, int timeout, int maxAnswers, String sessionId) {
 
-        if (debug > 0) System.out.printf("\nVampire(%s, %s, %s, %b, %d, %d, %s)", kb.name, requestedTptpLang, mode, modensPonens, timeout, maxAnswers, sessionId);
+        if (debug > 0) LoggingUtils.log("");
         this.kb = kb;
         this.sessionId = sessionId;
         this.executablePath = KBmanager.getMgr().getPref("vampire");
@@ -279,10 +280,7 @@ public class Vampire {
      */
     public void askVampireModensPonens(String suoKifFormula) {
 
-        if (debug > 0) System.out.printf("\nVampire.askVampireModensPonens()");
-        // STEP 1 - use session-aware askVampire
         this.askVampire(suoKifFormula);
-        // STEPS 2-6
         this.modensPonensPostProcess();
     }
 
@@ -293,7 +291,7 @@ public class Vampire {
      */
     private void modensPonensPostProcess() {
 
-        if (debug > 0) System.out.printf("\nVampire.modensPonensPostProcess()");
+        if (debug > 0) LoggingUtils.log("");
         // STEP 2
         List<TPTPFormula> proof = TPTPutil.processProofLines(this.output);
         List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
@@ -334,28 +332,18 @@ public class Vampire {
      */
     public void askVampireHOL(String stmt, boolean useModals) {
 
-        if (debug > 0) System.out.printf("\nVampire.askVampireHOL(%s, %b)", stmt, useModals);
+        if (debug > 0) LoggingUtils.log(stmt + useModals);
         KBmanager mgr = KBmanager.getMgr();
-        if (useModals)
-            System.out.println("==== Using Modals/HOL mode ====");
-        else
-            System.out.println("==== Using plain HOL mode ====");
+        if (useModals) LoggingUtils.log("==== Using Modals/HOL mode ====");
+        else LoggingUtils.log("==== Using plain HOL mode ====");
         try {
             String dir;
-            if (this.sessionId != null && !this.sessionId.isEmpty()) {
-                dir = SessionTPTPManager.getSessionDir(this.sessionId).toString() + File.separator;
-            } else {
-                dir = mgr.getPref("kbDir") + File.separator;
-            }
-
+            if (this.sessionId != null && !this.sessionId.isEmpty()) dir = SessionTPTPManager.getSessionDir(this.sessionId).toString() + File.separator;
+            else dir = mgr.getPref("kbDir") + File.separator;
             // -------- 1. Ensure base <kb>.thf exists (modal vs plain) --------
             String kbThfFile = "";
-            if (useModals) {
-                kbThfFile = this.kb.name + "_modals.thf";
-            }
-            else {
-                kbThfFile = this.kb.name + "_plain.thf";
-            }
+            if (useModals) kbThfFile = this.kb.name + "_modals.thf";
+            else kbThfFile = this.kb.name + "_plain.thf";
             // Base THF axiom file is always in the shared kbDir (no session-specific THF versions exist)
             String kbThfPath = mgr.getPref("kbDir") + File.separator + kbThfFile;
             File thfAxioms = new File(kbThfPath);
@@ -482,24 +470,24 @@ public class Vampire {
         String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
         String includesPath = testDir + File.separator + "includes";
         File test = new File(test_path);
-        List<String> includes = TPTPutil.extractIncludesFromTPTP(test);
-        if (!includes.isEmpty()) {
-            String error = TPTPutil.validateIncludesInTPTPFiles(includes, includesPath);
-            if (error != null) System.err.println(error);
-        }
+        // List<String> includes = TPTPutil.extractIncludesFromTPTP(test);
+        // if (!includes.isEmpty()) {
+        //     String error = TPTPutil.validateIncludesInTPTPFiles(includes, includesPath);
+        //     if (error != null) System.err.println(error);
+        // }
         this.commands = new ArrayList<>(Arrays.asList(
             "--proof", "tptp",
             "--output_axiom_names","on"
         ));
         // This HOL Vampire version (4.8) does not support "-qa plain"
-        if (!includes.isEmpty()){
-            this.commands.add("--include");
-            this.commands.add(includesPath);
-        }
+        // if (!includes.isEmpty()){
+        //     this.commands.add("--include");
+        //     this.commands.add(includesPath);
+        // }
 
-        if (this.askQuestion){
-            this.commands.add("-qa plain");
-        }
+        // if (this.askQuestion){
+        //     this.commands.add("-qa plain");
+        // }
 
         this.logic = Vampire.Logic.HOL;
         try{
@@ -520,10 +508,8 @@ public class Vampire {
 
         if (debug > 0) System.out.printf("\nVampire.askVampireFormat(%s)", suoKifFormula);
         StringBuilder sb = new StringBuilder();
-        if (!StringUtil.emptyString(System.getenv("VAMPIRE_OPTS")))
-            this.mode = Vampire.ModeType.CUSTOM;
-        else
-            this.mode = Vampire.ModeType.CASC;
+        if (!StringUtil.emptyString(System.getenv("VAMPIRE_OPTS"))) this.mode = Vampire.ModeType.CUSTOM;
+        else this.mode = Vampire.ModeType.CASC;
         this.askVampire(suoKifFormula);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         tpp.parseProofOutput(this.output, suoKifFormula, this.kb, this.qlist);
@@ -617,20 +603,15 @@ public class Vampire {
             }
         }
         for (String s : commands) opts.append(s).append(space);
-        System.out.println("h-1");
         if (timeout != 0) {
             opts.append("-t").append(space);
             opts.append(timeout).append(space);
         }
         opts.append(kbFile.toString());
         String[] optar = opts.toString().split(Formula.SPACE);
-        System.out.println("h0");
         this.commands = new ArrayList<>();
-        System.out.println("h01");
         this.commands.add(executable.toString());
-        System.out.println("h1");
         Collections.addAll(this.commands, optar);
-        System.out.println("h2");
     }
 
     /***************************************************************
@@ -808,7 +789,6 @@ public class Vampire {
         output = new ArrayList<>();
         // Determine which executable to use
         String configKey = "vampire";
-        this.executablePath = KBmanager.getMgr().getPref("vampire");
         result = new ATPResult.Builder()
                 .engineName("Vampire")
                 .engineMode(this.logic == Logic.HOL ? "HOL" : (this.mode != null ? this.mode.name() : "CUSTOM"))
@@ -835,11 +815,8 @@ public class Vampire {
         System.out.println("Vampire.runCustom(): command: " + String.join(" ", this.commands));
         result.setCommandLine(this.commands);
         ProcessBuilder _builder = new ProcessBuilder(this.commands);
-        _builder.redirectErrorStream(false);  // Keep stderr separate
-        if (kbFile != null && kbFile.getParentFile() != null) {
-            _builder.directory(kbFile.getParentFile());
-            System.out.println("Vampire CWD: " + _builder.directory().getAbsolutePath());
-        }
+        _builder.redirectErrorStream(false);
+        if (kbFile != null && kbFile.getParentFile() != null) _builder.directory(kbFile.getParentFile());
         if (debug > 0) System.out.println("Vampire.runCustom(): running with commands " + String.join(" ", this.commands));
         Process _vampire = _builder.start();
         List<String> stdoutLines = new ArrayList<>();
@@ -847,11 +824,8 @@ public class Vampire {
         Thread stderrReader = new Thread(() -> {
             try (BufferedReader r = new BufferedReader(new InputStreamReader(_vampire.getErrorStream()))) {
                 String line;
-                while ((line = r.readLine()) != null) {
-                    stderrLines.add(line);
-                }
+                while ((line = r.readLine()) != null) stderrLines.add(line);
             } catch (IOException e) {
-                // Ignore
             }
         });
         stderrReader.start();
@@ -1058,7 +1032,6 @@ public class Vampire {
      */
     public boolean assertFormula(String userAssertionTPTP, KB kb, List<Formula> parsedFormulas, boolean tptp) {
 
-        System.out.printf("\nVampire.assertFormula(%s, %s, %s, %b)", userAssertionTPTP, kb.name, parsedFormulas, tptp);
         boolean allAdded = false;
 //        Set<FormulaAST> processedFormulas = new HashSet();
         Set<Expr> processedFormulas = new HashSet();
