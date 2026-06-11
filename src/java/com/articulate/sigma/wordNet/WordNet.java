@@ -72,15 +72,15 @@ public class WordNet implements Serializable {
     // @see caseMap
     public Map<String,Set<String>> ignoreCaseSynsetHash = new HashMap<>(); // uppercase keys to synsets covering all POS
 
-    public Map<String,String> verbDocumentationHash = new Hashtable<>();       // Keys are synset Strings, values
-    public Map<String,String> adjectiveDocumentationHash = new Hashtable<>();  // are documentation strings.
-    public Map<String,String> adverbDocumentationHash = new Hashtable<>();
-    public Map<String,String> nounDocumentationHash = new Hashtable<>();
+    public Map<String,String> verbDocumentationHash = new HashMap<>();       // Keys are synset Strings, values
+    public Map<String,String> adjectiveDocumentationHash = new HashMap<>();  // are documentation strings.
+    public Map<String,String> adverbDocumentationHash = new HashMap<>();
+    public Map<String,String> nounDocumentationHash = new HashMap<>();
 
-    public Map<String,String> nounSUMOHash = new Hashtable<>();   // Keys are synset Strings, values are SUMO
-    public Map<String,String> verbSUMOHash = new Hashtable<>();   // terms with the &% prefix and =, +, @ or [ suffix.
-    public Map<String,String> adjectiveSUMOHash = new Hashtable<>();
-    public Map<String,String> adverbSUMOHash = new Hashtable<>();
+    public Map<String,String> nounSUMOHash = new HashMap<>();   // Keys are synset Strings, values are SUMO
+    public Map<String,String> verbSUMOHash = new HashMap<>();   // terms with the &% prefix and =, +, @ or [ suffix.
+    public Map<String,String> adjectiveSUMOHash = new HashMap<>();
+    public Map<String,String> adverbSUMOHash = new HashMap<>();
 
     public String maxNounSynsetID = "";
     public String maxVerbSynsetID = "";
@@ -91,12 +91,12 @@ public class WordNet implements Serializable {
     /** Keys are SUMO terms, values are ArrayLists(s) of
      * POS-prefixed 9-digit synset String(s) meaning that the part of speech code is
      * prepended to the synset number. */
-    public Map<String,List<String>> SUMOHash = new Hashtable<>();
+    public Map<String,List<String>> SUMOHash = new HashMap<>();
 
     /** Keys are String POS-prefixed synsets.  Values
      * are ArrayList(s) of String(s) which are words. Note
      * that the order of words in the file is preserved. */
-    public Map<String,List<String>> synsetsToWords = new Hashtable<>();
+    public Map<String,List<String>> synsetsToWords = new HashMap<>();
 
     // key is inflected form, value is root
     public Map<String,String> exceptionVerbHash = new HashMap<>();
@@ -117,7 +117,7 @@ public class WordNet implements Serializable {
      * in which the attribute is a pointer type according to
      * http://wordnet.princeton.edu/man/wninput.5WN.html#sect3 and
      * the value is a POS-prefixed synset  @see WordNetUtilities.convertWordNetPointer */
-    public Map<String,List<AVPair>> relations = new Hashtable<>();
+    public Map<String,List<AVPair>> relations = new HashMap<>();
 
     /** a HashMap of HashMaps where the key is a word sense of the
      * form word_POS_num signifying the word, part of speech and number

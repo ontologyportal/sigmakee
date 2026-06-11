@@ -35,7 +35,7 @@ public class Edit {
 
         System.out.println("INFO in Edit.editFile(): Exec string " + execString.toString());
         try {
-            Process _edit = Runtime.getRuntime().exec(execString.toString());
+            Process _edit = Runtime.getRuntime().exec(execString.toString().split("\\s+"));
         }
         catch (IOException ioe) {
             System.out.println("Error in Edit.editFile(): Unable to start editor: " + editorCommand);

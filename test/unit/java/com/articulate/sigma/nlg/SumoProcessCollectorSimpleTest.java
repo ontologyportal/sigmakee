@@ -4,20 +4,16 @@ import com.articulate.sigma.KB;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import org.junit.*;
-import org.junit.rules.ExpectedException;
 
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 // Tests on SumoProcess that do not require KBs be loaded.
 
 public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
 
     private final KB knowledgeBase = this.kbMock;
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     // Testing for null/empty parameters.
     @Test(expected=IllegalArgumentException.class)
@@ -45,10 +41,9 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
      */
     @Test
     public void testInvalidRole() {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Invalid role: role = invalidRole; process = hi; entity = there.");
-
-        new SumoProcessCollector(knowledgeBase, "invalidRole", "hi", "there");
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () ->
+                new SumoProcessCollector(knowledgeBase, "invalidRole", "hi", "there"));
+        assertTrue(e.getMessage().contains("Invalid role: role = invalidRole; process = hi; entity = there."));
     }
 
     /**
@@ -56,10 +51,9 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
      */
     @Test
     public void testInvalidProcess() {
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Process parameter is not a Process: role = agent; process = EatingBadTastingOatmeal; entity = John.");
-
-        new SumoProcessCollector(knowledgeBase, "agent", "EatingBadTastingOatmeal", "John");
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () ->
+                new SumoProcessCollector(knowledgeBase, "agent", "EatingBadTastingOatmeal", "John"));
+        assertTrue(e.getMessage().contains("Process parameter is not a Process: role = agent; process = EatingBadTastingOatmeal; entity = John."));
     }
 
     @Test
@@ -198,9 +192,8 @@ public class SumoProcessCollectorSimpleTest extends SigmaMockTestBase {
         SumoProcessCollector process2 = new SumoProcessCollector(knowledgeBase, "agent", "Eating", "?H");
         process2.addRole("patient", "?C");
 
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage("Cannot merge because the objects do not have identical processes: process1 = Driving; process2 = Eating");
-        process1.merge(process2);
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> process1.merge(process2));
+        assertTrue(e.getMessage().contains("Cannot merge because the objects do not have identical processes: process1 = Driving; process2 = Eating"));
     }
 
     @Test

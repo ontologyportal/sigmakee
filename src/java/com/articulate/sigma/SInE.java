@@ -29,7 +29,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,8 +98,8 @@ public class SInE extends InferenceEngine {
      * Actually formulas which contain no symbols are put here.
      */
     List<String> mandatoryFormulas;
-    Hashtable<String, Set<String>> formSymbols;
-    Hashtable<String, Integer> degrees;
+    HashMap<String, Set<String>> formSymbols;
+    HashMap<String, Integer> degrees;
 
     /***
      * Relation between symbols and formulas which represents the fact that
@@ -116,7 +116,7 @@ public class SInE extends InferenceEngine {
 //    private SInE(String kbFileName, EngineFactory ef) throws Exception {
 //
 //        underlyingEngineFactory = ef;
-//        formSymbols = new Hashtable<>();
+//        formSymbols = new HashMap<>();
 //        formulas = new ArrayList<>();
 //        mandatoryFormulas = new ArrayList<>();
 //        degrees = new Hashtable<>();
@@ -167,11 +167,11 @@ public class SInE extends InferenceEngine {
     public SInE(Iterable<String> formulaSource) {
 
         //underlyingEngineFactory = Vampire.getFactory();
-        formSymbols = new Hashtable<>();
+        formSymbols = new HashMap<>();
         formulas = new ArrayList<>();
         mandatoryFormulas = new ArrayList<>();
-        degrees = new Hashtable<>();
-        requirements = new Hashtable<>();
+        degrees = new HashMap<>();
+        requirements = new HashMap<>();
 
         loadFormulas(formulaSource);
     }
