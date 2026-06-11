@@ -1804,7 +1804,7 @@ public class Diagnostics {
         for (String var : links.keySet()) {
             if (!allVisited.contains(var)) {
                 HashSet<String> group = new HashSet<>();
-                Stack<String> stack = new Stack<>();
+                Deque<String> stack = new ArrayDeque<>();
                 stack.push(var);
                 group.add(var);
                 allVisited.add(var);

@@ -339,7 +339,7 @@ public class PredVarInst {
     private static String hasCorrectArityRecurse(Formula f, KB kb)
             throws IllegalArgumentException, TypeNotPresentException {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         if (debug) System.out.println("INFO in PredVarInst.hasCorrectArityRecurse(): " + f);
         if (f == null || StringUtil.emptyString(f.getFormula()) || f.empty() ||
                 Formula.atom(f.getFormula()) || f.isVariable())

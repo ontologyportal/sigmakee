@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
@@ -106,7 +107,7 @@ public class ClientHttpRequest {
    * @throws IOException
    */
   public ClientHttpRequest(String urlString) throws IOException {
-    this(new URL(urlString));
+    this(URI.create(urlString).toURL());
   }
 
 

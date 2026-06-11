@@ -16,7 +16,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Stack;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /** *****************************************************************
  * <code>SimpleDOMParser</code> is a highly-simplified XML DOM
@@ -27,7 +28,7 @@ public class SimpleDOMParser {
     private static final int[] cdata_start = {'<', '!', '[', 'C', 'D', 'A', 'T', 'A', '['};
     private static final int[] cdata_end = {']', ']', '>'};
 
-    private final Stack elements;
+    private final Deque<SimpleElement> elements;
     private Reader reader;
     private SimpleElement currentElement;
     private boolean skipProlog = true;
@@ -37,7 +38,7 @@ public class SimpleDOMParser {
     */
     public SimpleDOMParser() {
 
-        elements = new Stack();
+        elements = new ArrayDeque<>();
         currentElement = null;
     }
 
@@ -101,10 +102,10 @@ public class SimpleDOMParser {
                     throw new IOException("Expected close tag for '" +
                                     currentElement.getTagName() + "' but got '" +
                                     tagName + "' while parsing '" + currentTag + "'.");
-                if (elements.empty())
+                if (elements.isEmpty())
                     return currentElement;                                      // document processing is over
                 else                                                            // pop up the previous open tag
-                    currentElement = (SimpleElement) elements.pop();
+                    currentElement = elements.pop();
             }
             else {                                                              // open tag or tag with both open and close tags
                 index = currentTag.indexOf(" ");

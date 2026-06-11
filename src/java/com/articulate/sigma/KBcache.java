@@ -2075,6 +2075,7 @@ public class KBcache implements Serializable {
      *
      * @deprecated This is not needed since we have storeCacheAsFormulas()
      */
+    @Deprecated
     public void writeCacheFile() {
 
         long millis = System.currentTimeMillis();

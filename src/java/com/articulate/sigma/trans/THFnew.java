@@ -460,7 +460,6 @@ public class THFnew {
 //    }
 
     /***************************************************************
-     * @deprecated replaced with {@link #oneTransExpr(KB, Formula, PrintWriter)}
      */
 //    public static void oneTrans(KB kb, FormulaAST f, PrintWriter bw) throws IOException {
 //
@@ -519,7 +518,6 @@ public class THFnew {
 //    }
 
     /***************************************************************
-     * @deprecated replaced with {@link #oneTransNonModalExpr(KB, Formula, Writer)}
      */
 //    public static void oneTransNonModal(KB kb, Formula f, Writer bw)
 //            throws IOException {
@@ -1837,7 +1835,6 @@ public class THFnew {
     }
 
     /***************************************************************
-     * @deprecated replaced with {@link #analyzeFormulaExpr(Expr, KB, Formula)}
      */
     // Recursively analyzes a single formula for typing mismatches: if a predicate's
     // argument position expects a non-Formula type (e.g., Entity/$i) but the argument

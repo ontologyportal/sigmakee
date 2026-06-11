@@ -540,7 +540,6 @@ public class Modals {
     }
 
     /***************************************************************
-     * @deprecated replaced with {@link #processModalsExpr(Expr, KB)}
      */
 //    public static FormulaAST processModals(FormulaAST f, KB kb, Map<String, Set<String>> typeMap) {
 //
@@ -872,7 +871,7 @@ public class Modals {
      */
     public static String genModalTypes(HashSet<String> allModals) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (String s : allModals)
             result.append("thf(" + Character.toLowerCase(s.charAt(0)) + s.substring(1) +
                     "_tp,type,(s__" + s + " : m)).\n");
@@ -883,7 +882,7 @@ public class Modals {
      */
     public static String genDistinctModals() {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         HashSet<String> allModals = new HashSet<>();
         allModals.addAll(regHOLpred);
         allModals.addAll(regHOL3pred);
@@ -902,7 +901,7 @@ public class Modals {
      */
     public static String genAllModalSystems() {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         HashSet<String> allModals = new HashSet<>();
         allModals.addAll(regHOLpred);
         allModals.addAll(regHOL3pred);

@@ -749,6 +749,7 @@ public class KBmanager implements Serializable {
      * situation with many constituents being loaded (tdn) 4/22/25
      * @deprecated
      */
+    @Deprecated
     private boolean _t_loadKB(String kbName, List<String> constituents, KB kb) {
 
         Future<Boolean> future;
@@ -788,6 +789,7 @@ public class KBmanager implements Serializable {
     /*****************************************************************
      * @deprecated
      */
+    @Deprecated
     private void fromXML(SimpleElement configuration) {
 
         if (!configuration.getTagName().equals("configuration"))

@@ -704,7 +704,6 @@ public class FormulaPreprocessor {
      *               the loaded .kif files. Instance restrictions have no
      *               special mark.
      *
-     * @deprecated replaced with {@link #computeVariableTypesRecurseExpr}
      */
 //    private Map<String,Set<String>> computeVariableTypesRecurse(KB kb, Formula f,
 //                                                                Map<String,Set<String>> input) {
@@ -1621,7 +1620,6 @@ public class FormulaPreprocessor {
     }
 
     /***************************************************************
-     * @deprecated replaced with {@link #preProcessExpr}
      */
 //    public Set<Formula> preProcess(Formula form, boolean isQuery, KB kb) {
 //
