@@ -225,10 +225,22 @@ public class Vampire {
             if (processedExprs != null && !processedExprs.isEmpty()) {
                 for (Expr e : processedExprs) {
                     String kifStr = e.toKifString();
-                    String tptpBody = ExprToTPTP.translateKifString(kifStr, true, this.requestedTptpLanguage);
-//                    if (tptpBody == null)
-//                        tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, this.requestedTptpLanguage);
+                    String tptpBody;
+                    if ("tff".equalsIgnoreCase(this.requestedTptpLanguage)) {
+                        tptpBody = ExprToTFF.translate(e, true, this.kb);
+                    }
+                    else {
+                        tptpBody = ExprToTPTP.translateKifString(kifStr, true, this.requestedTptpLanguage);
+                    }
+                    if (StringUtil.emptyString(tptpBody)) {
+                        tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, this.requestedTptpLanguage);
+                    }
+                    if (StringUtil.emptyString(tptpBody)) {
+                        System.err.println("Vampire.askVampire(): failed to translate " + this.requestedTptpLanguage + " query: " + kifStr);
+                        continue;
+                    }
                     String theTPTPstatement = this.requestedTptpLanguage + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
+                    System.out.println("Vampire.askVampire(): translated query: " + theTPTPstatement);
                     tptpQuery.add(theTPTPstatement);
                 }
             }
@@ -1014,7 +1026,8 @@ public class Vampire {
                             p.setFormula(ex.toKifString());
                             p.expr = ex;
                             if (!p.isHigherOrder(kb)) {
-                                tptpStr = ExprToTPTP.translate(ex, false, this.requestedTptpLanguage);
+                                if ("tff".equalsIgnoreCase(this.requestedTptpLanguage)) tptpStr = ExprToTFF.translate(ex, false, this.kb);
+                                else tptpStr = ExprToTPTP.translate(ex, false, this.requestedTptpLanguage);
                                 tptpFormulas.add(tptpStr);
                             }
                         }

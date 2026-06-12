@@ -1084,13 +1084,12 @@ public class SUMOKBtoTPTPKB {
                 }
             }
         } // end if ((fof || tff) && FormulaAST)
-
-        // Collect sort and TPTP bodies for sequential dedup+write phase (sorted for determinism)
-        for (String sort : new TreeSet<>(f.tffSorts)) {
-            if (!StringUtil.emptyString(sort))
-                res.sortBodies.add(sort);
+        if ("tff".equalsIgnoreCase(localLang)) {
+            for (String sort : new TreeSet<>(f.tffSorts)) {
+                if (!StringUtil.emptyString(sort))
+                    res.sortBodies.add(sort);
+            }
         }
-
         Set<String> formulasToWrite = localLang.equals("fof") ? f.theFofFormulas : f.theTffFormulas;
         for (String tptp : new TreeSet<>(formulasToWrite)) {
             if (!StringUtil.emptyString(tptp))

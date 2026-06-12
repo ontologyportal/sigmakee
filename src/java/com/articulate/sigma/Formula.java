@@ -28,11 +28,50 @@ import java.util.stream.Collectors;
 
 public class Formula implements Comparable, Serializable {
 
+    public static boolean debug = false;
+
+    // ---------------------------------------------------------------
+    // Instance fields — copied verbatim from Formula
+    // ---------------------------------------------------------------
+
+    public StringBuilder qlist;
+    public volatile String uaSessionId = null;
+    public String sourceFile;
+    public int startLine;
+    public int endLine;
+    public long endFilePosition = -1L;
+    public Set<String> errors   = new TreeSet<>();
+    public Set<String> warnings = new TreeSet<>();
+    public String theFormula;
+    public Derivation derivation = new Derivation();
+    public boolean higherOrder  = false;
+    public boolean simpleClause = false;
+    public boolean comment      = false;
+    public boolean isFunctional = false;
+    public boolean isGround     = true;
+    public boolean isTFF        = false;
+    public String relation      = null;
+    public List<String> stringArgs = new ArrayList<>();
+    public List<Formula> args      = new ArrayList<>();
+    public Set<String> allVarsCache      = new HashSet<>();
+    public List<Set<String>> allVarsPairCache = new ArrayList<>();
+    public Set<String> quantVarsCache   = new HashSet<>();
+    public Set<String> unquantVarsCache = new HashSet<>();
+    public Set<String> existVarsCache   = new HashSet<>();
+    public Set<String> univVarsCache    = new HashSet<>();
+    public Set<String> termCache        = new HashSet<>();
+    public Set<String> predVarCache     = null;
+    private int cachedHashCode          = 0;
+    public Set<String> rowVarCache      = null;
+    public Map<String,Set<String>> varTypeCache = new HashMap<>();
+    public Set<String> theTptpFormulas  = ConcurrentHashMap.newKeySet();
+    public Set<String> theFofFormulas   = ConcurrentHashMap.newKeySet();
+    public Set<String> theTffFormulas   = ConcurrentHashMap.newKeySet();
+    public Set<String> tffSorts         = ConcurrentHashMap.newKeySet();
+
     // ---------------------------------------------------------------
     // Static constants — copied verbatim from Formula
     // ---------------------------------------------------------------
-
-    public static boolean debug = false;
 
     private static final Pattern HAS_WHITESPACE  = Pattern.compile(".*\\s.*");
     private static final Pattern STARTS_WITH_AND = Pattern.compile("^\\s*\\(\\s*and.*");
@@ -82,67 +121,64 @@ public class Formula implements Comparable, Serializable {
     public static final String TERM_SYMBOL_PREFIX   = "s__";
     public static final String TERM_VARIABLE_PREFIX = "V__";
 
-    public static final List<String> LOGICAL_OPERATORS = Arrays.asList(
-            UQUANT, EQUANT, AND, OR, XOR, NOT, IF, IFF);
-    public static final List<String> COMPARISON_OPERATORS = Arrays.asList(
-            EQUAL, GT, GTET, LT, LTET);
+    public static final List<String> LOGICAL_OPERATORS = Arrays.asList(UQUANT, EQUANT, AND, OR, XOR, NOT, IF, IFF);
+    public static final List<String> COMPARISON_OPERATORS = Arrays.asList(EQUAL, GT, GTET, LT, LTET);
     public static final List<String> INEQUALITIES = Arrays.asList(GT, GTET, LT, LTET);
-    public static final List<String> MATH_FUNCTIONS = Arrays.asList(
-            PLUSFN, MINUSFN, TIMESFN, DIVIDEFN, FLOORFN, ROUNDFN, CEILINGFN, REMAINDERFN);
-    public static final List<String> DOC_PREDICATES = Arrays.asList(
-            "documentation", "comment", "format", "termFormat",
-            "lexicon", "externalImage", "synonymousExternalConcept");
-    public static final List<String> DEFN_PREDICATES = Arrays.asList(
-            "instance", "subclass", "domain", "domainSubclass",
-            "range", "rangeSubclass", "subAttribute", "subrelation");
+    public static final List<String> MATH_FUNCTIONS = Arrays.asList(PLUSFN, MINUSFN, TIMESFN, DIVIDEFN, FLOORFN, ROUNDFN, CEILINGFN, REMAINDERFN);
+    public static final List<String> DOC_PREDICATES = Arrays.asList("documentation", "comment", "format", "termFormat", "lexicon", "externalImage", "synonymousExternalConcept");
+    public static final List<String> DEFN_PREDICATES = Arrays.asList("instance", "subclass", "domain", "domainSubclass", "range", "rangeSubclass", "subAttribute", "subrelation");
 
     public static final int MAX_PREDICATE_ARITY = 7;
 
-    // ---------------------------------------------------------------
-    // Instance fields — copied verbatim from Formula
-    // ---------------------------------------------------------------
+        // arguments to relations in order to find the types of arg in a second pass
+    // first key is a relation name, interior key is argument number starting at 1
+    // transient: ANTLR ParserRuleContext objects are not Kryo-serializable
+    public transient Map<String, Map<Integer, Set<SuokifParser.ArgumentContext>>> argMap = new HashMap<>();
 
-    public StringBuilder qlist;
-    public volatile String uaSessionId = null;
-    public String sourceFile;
-    public int startLine;
-    public int endLine;
-    public long endFilePosition = -1L;
-    public Set<String> errors   = new TreeSet<>();
-    public Set<String> warnings = new TreeSet<>();
-    public String theFormula;
-    public Derivation derivation = new Derivation();
-    public boolean higherOrder  = false;
-    public boolean simpleClause = false;
-    public boolean comment      = false;
-    public boolean isFunctional = false;
-    public boolean isGround     = true;
-    public boolean isTFF        = false;
-    public String relation      = null;
-    public List<String> stringArgs = new ArrayList<>();
-    public List<Formula> args      = new ArrayList<>();
-    public Set<String> allVarsCache      = new HashSet<>();
-    public List<Set<String>> allVarsPairCache = new ArrayList<>();
-    public Set<String> quantVarsCache   = new HashSet<>();
-    public Set<String> unquantVarsCache = new HashSet<>();
-    public Set<String> existVarsCache   = new HashSet<>();
-    public Set<String> univVarsCache    = new HashSet<>();
-    public Set<String> termCache        = new HashSet<>();
-    public Set<String> predVarCache     = null;
-    private int cachedHashCode          = 0;
-    public Set<String> rowVarCache      = null;
-    public Map<String,Set<String>> varTypeCache = new HashMap<>();
-    public Set<String> theTptpFormulas  = ConcurrentHashMap.newKeySet();
-    public Set<String> theFofFormulas   = ConcurrentHashMap.newKeySet();
-    public Set<String> theTffFormulas   = ConcurrentHashMap.newKeySet();
-    public Set<String> tffSorts         = ConcurrentHashMap.newKeySet();
+    // all the equality statements in a formula.  The interior ArrayList must have
+    // only two elements, one for each side of the equation
+    // transient: ANTLR ParserRuleContext objects are not Kryo-serializable
+    public transient List<List<SuokifParser.TermContext>> eqList = new ArrayList<>();
+
+    // a map of all variables that have an explicit type declaration
+    public Map<String,Set<String>> explicitTypes = new HashMap<>();
+
+    // a map of variables and all their inferred types
+    public Map<String,Set<String>> varTypes = new HashMap<>();
+
+    // transient: ANTLR ParserRuleContext objects are not Kryo-serializable
+    public transient Set<ParserRuleContext> rowvarLiterals = new HashSet<>(); // this can have a RelsentContext, FuntermContext,
+      // as well as ForallContext or ExistsContext for vars in a quantifier list
+
+    public Map<String,ArgStruct> constants = new HashMap<>(); // constants as arguments and their enclosing literal
+
+    public Map<String,Set<RowStruct>> rowVarStructs = new HashMap<>(); // row var keys
+
+    //public HashMap<String,String> predVarSub = new HashMap<>();
+
+    // transient: ANTLR SentenceContext is not Kryo-serializable
+    public transient SuokifParser.SentenceContext parsedFormula = null;
+
+    /** Structured AST representation of this formula. Null until SuokifVisitor populates it. */
+    public Expr expr = null;
+
+    public boolean isDoc = false; // a documentation statement that is excluded from theorem proving
+    public boolean isRule = false;
+    public boolean containsNumber = false;
+    public Set<String> antecedentTerms = new HashSet<>();
+    public Set<String> consequentTerms = new HashSet<>();
+    private int formulaASTHashCode = 0;
+    private List formulaASTClausalForm = null;
 
     // ---------------------------------------------------------------
     // Getters / setters for fields that Formula exposed as methods
     // ---------------------------------------------------------------
-
+    /******************************************************************
+     */
     public String getFormula() { return theFormula; }
 
+    /******************************************************************
+     */
     public void setFormula(String f) {
         theFormula = f;
         cachedHashCode = 0;
@@ -152,22 +188,36 @@ public class Formula implements Comparable, Serializable {
         stringArgs = new ArrayList<>();
     }
 
+    /******************************************************************
+     */
     public String getSourceFile() { return this.sourceFile; }
 
+    /******************************************************************
+     */
     public void setSourceFile(String filename) { this.sourceFile = filename; }
 
+    /******************************************************************
+     */
     public int getLineNumber() { return startLine; }
 
+    /******************************************************************
+     */
     public Set<String> getErrors() { return this.errors; }
 
+    /******************************************************************
+     */
     public Set<String> getTheTptpFormulas() {
-        if (!theTffFormulas.isEmpty()) return theTffFormulas;
-        if (!theFofFormulas.isEmpty()) return theFofFormulas;
+        
+        // if (!theTffFormulas.isEmpty()) return theTffFormulas;
+        // if (!theFofFormulas.isEmpty()) return theFofFormulas;
         return theTptpFormulas;
     }
 
     //TODO: copy from Formula — refactor to use Expr AST instead of String manipulation
+    /******************************************************************
+     */
     private void loadArguments() {
+        
         args = new ArrayList<>();
         stringArgs = new ArrayList<>();
         if (!listP(theFormula) || empty(theFormula)) return;
@@ -254,46 +304,6 @@ public class Formula implements Comparable, Serializable {
         }
     }
 
-    // arguments to relations in order to find the types of arg in a second pass
-    // first key is a relation name, interior key is argument number starting at 1
-    // transient: ANTLR ParserRuleContext objects are not Kryo-serializable
-    public transient Map<String, Map<Integer, Set<SuokifParser.ArgumentContext>>> argMap = new HashMap<>();
-
-    // all the equality statements in a formula.  The interior ArrayList must have
-    // only two elements, one for each side of the equation
-    // transient: ANTLR ParserRuleContext objects are not Kryo-serializable
-    public transient List<List<SuokifParser.TermContext>> eqList = new ArrayList<>();
-
-    // a map of all variables that have an explicit type declaration
-    public Map<String,Set<String>> explicitTypes = new HashMap<>();
-
-    // a map of variables and all their inferred types
-    public Map<String,Set<String>> varTypes = new HashMap<>();
-
-    // transient: ANTLR ParserRuleContext objects are not Kryo-serializable
-    public transient Set<ParserRuleContext> rowvarLiterals = new HashSet<>(); // this can have a RelsentContext, FuntermContext,
-      // as well as ForallContext or ExistsContext for vars in a quantifier list
-
-    public Map<String,ArgStruct> constants = new HashMap<>(); // constants as arguments and their enclosing literal
-
-    public Map<String,Set<RowStruct>> rowVarStructs = new HashMap<>(); // row var keys
-
-    //public HashMap<String,String> predVarSub = new HashMap<>();
-
-    // transient: ANTLR SentenceContext is not Kryo-serializable
-    public transient SuokifParser.SentenceContext parsedFormula = null;
-
-    /** Structured AST representation of this formula. Null until SuokifVisitor populates it. */
-    public Expr expr = null;
-
-    public boolean isDoc = false; // a documentation statement that is excluded from theorem proving
-    public boolean isRule = false;
-    public boolean containsNumber = false;
-    public Set<String> antecedentTerms = new HashSet<>();
-    public Set<String> consequentTerms = new HashSet<>();
-    private int formulaASTHashCode = 0;
-    private List formulaASTClausalForm = null;
-
     /******************************************************************
      */
     public Formula() {
@@ -342,7 +352,6 @@ public class Formula implements Comparable, Serializable {
         this.theFofFormulas.addAll(f.theFofFormulas);
         this.theTffFormulas.addAll(f.theTffFormulas);
         this.tffSorts.addAll(f.tffSorts);
-
         Map<Integer, Set<SuokifParser.ArgumentContext>> argnummap, newargnummap;
         Set<SuokifParser.ArgumentContext> largs, newargs;
         for (String pred : f.argMap.keySet()) {
@@ -356,9 +365,7 @@ public class Formula implements Comparable, Serializable {
             }
             this.argMap.put(pred, newargnummap);
         }
-
         this.eqList.addAll(f.eqList);
-
         Set<String> newtypes, existingTypes;
         for (String var : f.explicitTypes.keySet()) {
             newtypes = f.explicitTypes.get(var);
@@ -370,11 +377,9 @@ public class Formula implements Comparable, Serializable {
                 existingTypes.addAll(newtypes);
             }
         }
-
         for (String var : f.varTypes.keySet()) {
             newtypes = f.varTypes.get(var);
-            if (varTypes.containsKey(var))
-                varTypes.get(var).addAll(newtypes);
+            if (varTypes.containsKey(var)) varTypes.get(var).addAll(newtypes);
             else {
                 existingTypes = new HashSet<>();
                 varTypes.put(var,existingTypes);
@@ -384,21 +389,17 @@ public class Formula implements Comparable, Serializable {
 
         this.isRule = this.isRule || f.isRule;
         this.isDoc = this.isDoc || f.isDoc;
-        if (f.containsNumber)
-            this.containsNumber = true;
+        if (f.containsNumber) this.containsNumber = true;
         this.rowvarLiterals.addAll(f.rowvarLiterals);
         this.constants.putAll(f.constants);
         Set<RowStruct> hsrs;
         for (String var : f.rowVarStructs.keySet()) {
             hsrs = f.rowVarStructs.get(var);
-            if (debug) System.out.println("merge from rowVarStructs: " + hsrs);
-            for (RowStruct rs : hsrs)
-                this.addRowVarStruct(var, new RowStruct(rs));
+            for (RowStruct rs : hsrs) this.addRowVarStruct(var, new RowStruct(rs));
         }
         this.antecedentTerms.addAll(f.antecedentTerms);
         this.consequentTerms.addAll(f.consequentTerms);
-        if (f.formulaASTClausalForm != null)
-            this.formulaASTClausalForm = new ArrayList<>(f.formulaASTClausalForm);
+        if (f.formulaASTClausalForm != null) this.formulaASTClausalForm = new ArrayList<>(f.formulaASTClausalForm);
     }
 
     /******************************************************************
@@ -413,6 +414,7 @@ public class Formula implements Comparable, Serializable {
      * by walking the Expr tree in O(n).
      */
     public Formula(Expr expr) {
+
         setFormula(expr.toKifString());
         this.expr = expr;
         this.predVarCache = new HashSet<>();
@@ -422,16 +424,13 @@ public class Formula implements Comparable, Serializable {
 
     private void initCachesFromExpr(Expr e) {
         if (!(e instanceof Expr.SExpr sexpr)) {
-            if (e instanceof Expr.RowVar rv)
-                rowVarCache.add(rv.name());
+            if (e instanceof Expr.RowVar rv) rowVarCache.add(rv.name());
             return;
         }
         Expr head = sexpr.head();
         List<Expr> args = sexpr.args();
-        // Variable in predicate position → pred var
         if (head instanceof Expr.Var v)
             predVarCache.add(v.name());
-        // instance/subclass → varTypes
         if (head instanceof Expr.Atom a && args.size() >= 2
                 && args.get(0) instanceof Expr.Var varNode
                 && args.get(1) instanceof Expr.Atom typeAtom) {
@@ -456,7 +455,6 @@ public class Formula implements Comparable, Serializable {
                 }
             }
         }
-        // Recurse
         if (head != null) initCachesFromExpr(head);
         for (Expr arg : args) initCachesFromExpr(arg);
     }
@@ -468,7 +466,6 @@ public class Formula implements Comparable, Serializable {
     public void read(String s) {
 
         setFormula(s);
-
         allVarsCache = new HashSet<>();
         allVarsPairCache = new ArrayList<>();
         quantVarsCache = new HashSet<>();
@@ -476,7 +473,6 @@ public class Formula implements Comparable, Serializable {
         existVarsCache = new HashSet<>();
         univVarsCache = new HashSet<>();
         termCache = new HashSet<>();
-
         this.argMap = new HashMap<>();
         this.eqList = new ArrayList<>();
         this.explicitTypes = new HashMap<>();
@@ -493,10 +489,8 @@ public class Formula implements Comparable, Serializable {
         this.consequentTerms = new HashSet<>();
         this.formulaASTHashCode = 0;
         this.formulaASTClausalForm = null;
-
         SuokifVisitor sv = SuokifVisitor.parseAny(s);
-        if (sv.errors != null)
-            this.errors.addAll(sv.errors);
+        if (sv.errors != null) this.errors.addAll(sv.errors);
         if (sv.result.containsKey(0)) {
             Formula parsed = sv.result.get(0);
             this.expr = parsed.expr;
@@ -511,29 +505,19 @@ public class Formula implements Comparable, Serializable {
             this.isDoc = parsed.isDoc;
             this.isRule = parsed.isRule;
             this.containsNumber = parsed.containsNumber;
-            if (parsed.predVarCache != null) {
-                this.predVarCache = new HashSet<>(parsed.predVarCache);
-            }
-            if (parsed.rowVarCache != null) {
-                this.rowVarCache = new HashSet<>(parsed.rowVarCache);
-            }
-        } else {
+            if (parsed.predVarCache != null) this.predVarCache = new HashSet<>(parsed.predVarCache);
+            if (parsed.rowVarCache != null) this.rowVarCache = new HashSet<>(parsed.rowVarCache);
+        } 
+        else {
             String trimmed = s.trim();
             if (!trimmed.startsWith("(")) {
-                // bare atom/variable/literal: set expr directly without SuokifVisitor
-                if (trimmed.startsWith("?"))
-                    this.expr = new Expr.Var(trimmed);
-                else if (trimmed.startsWith("@"))
-                    this.expr = new Expr.RowVar(trimmed);
-                else if (trimmed.startsWith("\""))
-                    this.expr = new Expr.StrLiteral(trimmed);
-                else if (trimmed.matches("-?\\d+(\\.\\d+)?([eE][+-]?\\d+)?"))
-                    this.expr = new Expr.NumLiteral(trimmed);
-                else
-                    this.expr = new Expr.Atom(trimmed);
-            } else {
-                System.out.println("[FormulaAST - read] : SuokifVisitor couldn't parse the formula: " + s);
-            }
+                if (trimmed.startsWith("?")) this.expr = new Expr.Var(trimmed);
+                else if (trimmed.startsWith("@")) this.expr = new Expr.RowVar(trimmed);
+                else if (trimmed.startsWith("\"")) this.expr = new Expr.StrLiteral(trimmed);
+                else if (trimmed.matches("-?\\d+(\\.\\d+)?([eE][+-]?\\d+)?")) this.expr = new Expr.NumLiteral(trimmed);
+                else this.expr = new Expr.Atom(trimmed);
+            } 
+            else System.out.println("[FormulaAST - read] : SuokifVisitor couldn't parse the formula: " + s);
         }
     }
     
@@ -551,17 +535,12 @@ public class Formula implements Comparable, Serializable {
         this.existVarsCache.addAll(f2.existVarsCache);
         this.univVarsCache.addAll(f2.univVarsCache);
         this.termCache.addAll(f2.termCache);
-        if (this.rowVarCache == null)
-            this.rowVarCache = new HashSet<>();
-        if (f2.rowVarCache == null)
-            f2.rowVarCache = new HashSet<>();
+        if (this.rowVarCache == null) this.rowVarCache = new HashSet<>();
+        if (f2.rowVarCache == null) f2.rowVarCache = new HashSet<>();
         this.rowVarCache.addAll(f2.rowVarCache);
-        if (this.predVarCache == null)
-            this.predVarCache = new HashSet<>();
-        if (f2.predVarCache == null)
-            f2.predVarCache = new HashSet<>();
+        if (this.predVarCache == null) this.predVarCache = new HashSet<>();
+        if (f2.predVarCache == null) f2.predVarCache = new HashSet<>();
         this.predVarCache.addAll(f2.predVarCache);
-
         Map<Integer, Set<SuokifParser.ArgumentContext>> argnummap, newargnummap;
         Set<SuokifParser.ArgumentContext> largs, newargs;
         for (String pred : f2.argMap.keySet()) {
@@ -578,39 +557,33 @@ public class Formula implements Comparable, Serializable {
         Set<String> newtypes, existingTypes;
         for (String var : f2.explicitTypes.keySet()) {
             newtypes = f2.explicitTypes.get(var);
-            if (explicitTypes.containsKey(var))
-                explicitTypes.get(var).addAll(newtypes);
+            if (explicitTypes.containsKey(var)) explicitTypes.get(var).addAll(newtypes);
             else {
                 existingTypes = new HashSet<>();
                 explicitTypes.put(var,existingTypes);
                 existingTypes.addAll(newtypes);
             }
         }
-
         for (String var : f2.varTypes.keySet()) {
             newtypes = f2.varTypes.get(var);
-            if (varTypes.containsKey(var))
-                varTypes.get(var).addAll(newtypes);
+            if (varTypes.containsKey(var)) varTypes.get(var).addAll(newtypes);
             else {
                 existingTypes = new HashSet<>();
                 varTypes.put(var,existingTypes);
                 existingTypes.addAll(newtypes);
             }
         }
-
         this.eqList.addAll(f2.eqList);
         this.isRule = this.isRule || f2.isRule;
         this.isDoc = this.isDoc || f2.isDoc;
-        if (f2.containsNumber)
-            this.containsNumber = true;
+        if (f2.containsNumber) this.containsNumber = true;
         this.rowvarLiterals.addAll(f2.rowvarLiterals);
         this.constants.putAll(f2.constants);
         Set<RowStruct> hsrs;
         for (String var : f2.rowVarStructs.keySet()) {
             hsrs = f2.rowVarStructs.get(var);
             if (debug) System.out.println("merge from rowVarStructs: " + hsrs);
-            for (RowStruct rs : hsrs)
-                this.addRowVarStruct(var, new RowStruct(rs));
+            for (RowStruct rs : hsrs) this.addRowVarStruct(var, new RowStruct(rs));
         }
         return this;
     }

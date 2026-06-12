@@ -92,7 +92,8 @@ public class TPTPGenerationManager {
             return;
         }
         // Use 4 threads: FOF, TFF, THF Modal, THF Plain all in parallel
-        executor = Executors.newFixedThreadPool(4);
+        // executor = Executors.newFixedThreadPool(4);
+        executor = Executors.newSingleThreadExecutor();
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         for (KB kb : KBmanager.getMgr().kbs.values()) {
             executor.submit(() -> {

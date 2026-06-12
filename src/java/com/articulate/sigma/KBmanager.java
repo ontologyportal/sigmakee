@@ -924,7 +924,7 @@ public class KBmanager implements Serializable {
         boolean loaded = false;
         if (initializing || initialized) return;
         initializing = true;
-        KBmanager.getMgr().setPref("kbDir",configFileDir);
+        KBmanager.getMgr().setPref("kbDir", configFileDir);
         try {
             SimpleElement configuration = readConfiguration(configFileDir);
             LoggingUtils.log("Loading English Lexicons...");

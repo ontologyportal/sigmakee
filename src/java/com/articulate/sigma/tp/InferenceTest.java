@@ -108,6 +108,7 @@ public class InferenceTest {
      */
     public void runTest(KB kb, String proverType, String language, String vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout, int maxAnswers) {
         
+        boolean success = false;
         if (!this.errors.isEmpty()) {
             LoggingUtils.log("ERROR", "Cannot run test, has errors!: " + this.errors);
             return;
@@ -119,9 +120,11 @@ public class InferenceTest {
             TPTPGenerationManager.waitForAllTPTP(600);
             applyAssertions(kb, sessionId, language);
             populateResult(kb, tpc.runQuery(kb, sessionId, this.query, this.filePath, "TEST_FILE", proverType, language, vampireMode, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals, timeout, maxAnswers));
+            success = this.result != null && this.result.success;
         }
         finally {
-            reset(kb, sessionId);
+            if (success) reset(kb, sessionId);
+            else LoggingUtils.log("ERROR", "Test failed, saved session directory: " + SessionTPTPManager.getSessionDir(sessionId));
         }
     }
 

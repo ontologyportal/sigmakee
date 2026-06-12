@@ -17,6 +17,7 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.parsing.Expr;
 
 import java.util.*;
 
@@ -262,7 +263,6 @@ public class PredVarInst {
         Collection<String> rels;
         Integer arityInteger;
         boolean ok;
-        Formula f, f2;
         int arity;
         for (String var : varTypes.keySet()) {
             if (var == null || predVarArityTL.get().get(var) == null)
@@ -309,15 +309,28 @@ public class PredVarInst {
                     }
                     // 4. If ok, instantiate the predicate variable using the candidate relation
                     if (ok) {
-                        if (debug) System.out.println("instantiatePredVars(): replacing: " + var + " with " + rel);
-                        f = input.deepCopy();
-                        f = f.replaceVar(var, rel);
-                        if (debug) System.out.println("instantiatePredVars(): replaced: " + f);
-                        f2 = input.deepCopy();
-                        f2.read(f.getFormula());
-                        f.derivation.operator = "predvar";
-                        f.derivation.parents.add(input);
-                        result.add(f);
+                        Formula instantiated;
+                        if (input.expr != null) {
+                            Expr substituted =
+                                    com.articulate.sigma.parsing.PredVarInst.substituteVar(
+                                            input.expr,
+                                            var,
+                                            rel);
+                            instantiated = new Formula(substituted);
+                        }
+                        else {
+                            // Fallback only when no Expr tree exists.
+                            Formula substituted = input.deepCopy();
+                            substituted = substituted.replaceVar(var, rel);
+                            instantiated = new Formula(substituted.getFormula());
+                        }
+                        instantiated.sourceFile = input.sourceFile;
+                        instantiated.startLine = input.startLine;
+                        instantiated.higherOrder = input.higherOrder;
+                        instantiated.containsNumber = input.containsNumber;
+                        instantiated.derivation.operator = "predvar";
+                        instantiated.derivation.parents.add(input);
+                        result.add(instantiated);
                     }
                 }
             }
