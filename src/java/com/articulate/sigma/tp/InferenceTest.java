@@ -294,7 +294,7 @@ public class InferenceTest {
             for (Formula orderedFormulas : testKif.lexicalOrder()) {
                 String formula = orderedFormulas.getFormula();
                 if (formula.contains(";")) formula = formula.substring(0, formula.indexOf(";"));
-                if (formula.startsWith("(file")) this.requiredConstituents.add(formula.substring(6, formula.length() - 1));
+                if (formula.startsWith("(file")) this.requiredConstituents.add(formula.substring(6, formula.length() - 1).trim().replaceFirst("(?i)\\s+kif$", ".kif"));
                 else if (formula.startsWith("(minLang")) this.minLang = formula.substring(9, formula.length() - 1).trim().toLowerCase();
                 else if (formula.startsWith("(regen")) this.tptpRegenRequired = formula.substring(7, formula.length() - 1).trim().equals("true");
                 else if (formula.startsWith("(note")) this.note = formula.substring(6, formula.length() - 1);
