@@ -74,8 +74,9 @@ public class TheoremProverController {
      * @return ATPQuery result object of the query.
      */
     public ATPResult ask (ATPQuery query) {
-        LoggingUtils.log("Querying " + query.getProverType());
-        TPTPGenerationManager.waitForAllTPTP(600);
+        
+        boolean generationReady = TPTPGenerationManager.waitForLanguage(query.getLanguage().name(), query.isHolUseModals(), 600);
+        if (!generationReady) throw new IllegalStateException("Timed out waiting for " + query.getLanguage().name() + " generation");
         switch (query.getProverType()) {
             case EPROVER:
                 return this.askEProver(query);

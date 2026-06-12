@@ -160,10 +160,6 @@ public class Vampire {
         } else {
             this.requestedTptpLanguage = "thf";
             this.inferenceFileExtension = "thf";
-            this.executablePath = this.executablePath.replace(
-            File.separator + "build" + File.separator,
-            File.separator + "build_hol" + File.separator
-        );
         }
         this.modensPonens = modensPonens;
         if (mode.equalsIgnoreCase(ModeType.AVATAR.name())) this.mode = ModeType.AVATAR;
@@ -845,6 +841,7 @@ public class Vampire {
                 if (result.getStderr().size() > 1 && result.getStderr().get(1) != null) {
                     Matcher m = Pattern.compile("Parsing Error on line\\s+(\\d+)").matcher(result.getStderr().get(1));
                     if (m.find()) lineNo = Integer.parseInt(m.group(1));
+                    System.out.println("\n\n\n\n\n\n\n" + result.getStderr());
                 }
                 String msg = "Vampire: exception at proof search level" + (lineNo > 0 ? " (Parsing Error on line " + lineNo + ")" : "");
                 throw new FormulaTranslationException(msg, result.getInputLanguage(), lineNo, stdoutLines, stderrLines);

@@ -91,7 +91,7 @@ public class InferenceTestSuite {
      * @param timeout prover timeout in seconds.
      * @param maxAnswers maximum number of answers to return. 
      */
-    public void runTestOverload(String testPath, String proverType, String language, String vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout, int maxAnswers) {
+    public void runTest(String testPath, String proverType, String language, String vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout, int maxAnswers) {
         
         this.inferenceTests.get(testPath).runTest(this.kb, proverType, language, vampireMode, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals, timeout, maxAnswers);
     }

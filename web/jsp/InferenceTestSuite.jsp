@@ -96,21 +96,25 @@
             return;
         }
         String proverType = inferenceEngine;
-        String effectiveVampireMode = vampireMode;
         String selectedLanguage = "HOL".equalsIgnoreCase(translationMode) ? "thf" : TPTPlang;
         String effectiveLanguage = overrideLanguage ? selectedLanguage : test.minLang;
         int effectiveTimeout = overrideTimeout ? timeout : test.timeout;
-        boolean closedWorldAssumption = "yes".equalsIgnoreCase(cwa);
+        boolean usingVampire = "VAMPIRE".equalsIgnoreCase(inferenceEngine);
+        boolean usingTHF = "thf".equalsIgnoreCase(effectiveLanguage);
+        boolean usingTFF = "tff".equalsIgnoreCase(effectiveLanguage);
+        boolean effectiveModusPonens = usingVampire && !usingTHF && modusPonens;
+        boolean effectiveDropOnePremise = effectiveModusPonens && dropOnePremise;
+        boolean effectiveHolUseModals = usingVampire && usingTHF && holUseModals;
+        boolean effectiveCWA = usingTFF && "yes".equalsIgnoreCase(cwa);
         String message = "";
         try {
-            inferenceTestSuite.runTestOverload(testPath, proverType, effectiveLanguage, effectiveVampireMode, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals, effectiveTimeout, maxAnswers);
+            inferenceTestSuite.runTest(testPath, inferenceEngine, effectiveLanguage, vampireMode, effectiveCWA, effectiveModusPonens, effectiveDropOnePremise, effectiveHolUseModals, effectiveTimeout, maxAnswers);
         }
         catch (Throwable t) {
             message = t.getClass().getSimpleName() + ": " + t.getMessage();
             if (test.result == null) test.result = new InferenceTest.InferenceTestResult();
             test.result.success = false;
             test.result.szsStatus = "Exception";
-            if (test.result.proof == null) test.result.proof = new ArrayList<>();
             test.result.proof.add(message);
         }
         String status = (test.errors != null && !test.errors.isEmpty()) ? "ERROR" : (test.result == null ? "NOT RUN" : (test.result.success ? "PASS" : "FAIL"));
