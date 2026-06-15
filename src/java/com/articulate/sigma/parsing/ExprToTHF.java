@@ -1,6 +1,10 @@
 package com.articulate.sigma.parsing;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -293,21 +297,38 @@ public class ExprToTHF {
      * a dependency from the {@code parsing} package to the {@code trans} package.</p>
      */
     public static String thfType(String kifVar, Map<String, Set<String>> typeMap,
-                                  boolean modalMode) {
+                                boolean modalMode) {
+
+        if (kifVar == null) return "$i";
+
+        // Generated row variables are term variables, not formula variables.
+        // They can accidentally inherit Formula from broad type restrictions.
+        if (kifVar.matches("\\?ROW\\d+") || kifVar.matches("V__ROW\\d+"))
+            return "$i";
+
         if (modalMode) {
-            Set<String> types = typeMap.get(kifVar);
+            Set<String> types = typeMap == null ? null : typeMap.get(kifVar);
+
+            // Defensive fallback in case caller passes translated TPTP var name.
+            if (types == null && kifVar.startsWith("V__"))
+                types = typeMap == null ? null : typeMap.get("?" + kifVar.substring(3));
+
             if (types == null) {
-                // Fallback: ?W<n> variables may be absent from typeMap when worldNum
-                // is not propagated back from deep recursive calls.
-                if (kifVar.matches("\\?W+\\d+")) return "w";
+                if (kifVar.matches("\\?W+\\d+") || kifVar.matches("V__W+\\d+"))
+                    return "w";
                 return "$i";
             }
-            if (types.contains("World"))   return "w";
+
+            if (types.contains("World")) return "w";
             if (types.contains("Formula")) return "(w > $o)";
-            if (types.contains("Modal"))   return "m";
+            if (types.contains("Modal")) return "m";
             return "$i";
-        } else {
-            Set<String> types = typeMap.get(kifVar);
+        }
+        else {
+            Set<String> types = typeMap == null ? null : typeMap.get(kifVar);
+            if (types == null && kifVar.startsWith("V__"))
+                types = typeMap == null ? null : typeMap.get("?" + kifVar.substring(3));
+
             if (types == null) return "$i";
             if (types.contains("Formula")) return "$o";
             return "$i";

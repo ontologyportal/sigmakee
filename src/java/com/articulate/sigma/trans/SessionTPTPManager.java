@@ -14,6 +14,9 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.LoggingUtils;
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.ExprToTHF;
+import com.articulate.sigma.FormulaPreprocessor;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -707,6 +710,62 @@ public class SessionTPTPManager {
     public static boolean hasSessionFiles(String sessionId) {
 
         return sessionGenerationTimestamps.containsKey(sessionId);
+    }
+
+    public static Set<String> getUserAssertionsTHFStatements(KB kb, String sessionId, boolean useModals) {
+
+        Set<String> result = new LinkedHashSet<>();
+        if (kb == null) return result;
+        return kb.withUserAssertionLock(() -> {
+            String uaBase = kb.name + KB._userAssertionsString; // SUMO_UserAssertions.kif
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            int axNum = 0;
+            for (Formula f : kb.formulaMap.values()) {
+                if (f == null || f.sourceFile == null || f.expr == null)
+                    continue;
+                String srcBase = new File(f.sourceFile).getName();
+                boolean isUAFile = uaBase.equals(srcBase);
+                boolean isUASession = !StringUtil.emptyString(sessionId) && sessionId.equals(f.uaSessionId);
+                if (!isUAFile && !isUASession)
+                    continue;
+                try {
+                    Set<Expr> processed = withSessionCache(sessionId, kb, () -> fp.preProcessExpr(f, false, kb));
+                    if (processed == null || processed.isEmpty())
+                        continue;
+                    for (Expr e : processed) {
+                        if (e == null || SUMOKBtoTPTPKB.hasUnresolvedPredVar(e))
+                            continue;
+                        Map<String, Set<String>> foundTypes =
+                                withSessionCache(sessionId, kb, () -> fp.findTypeRestrictionsExpr(e, kb));
+                        final Map<String, Set<String>> typeMap =
+                                foundTypes == null ? new HashMap<>() : new HashMap<>(foundTypes);
+                        String thf;
+                        if (useModals) {
+                            Modals.markModalAttributeFormulaVarsExpr(e, typeMap);
+
+                            Map.Entry<Expr, Map<String, Set<String>>> modalResult =
+                                    withSessionCache(sessionId, kb, () -> Modals.processModalsExpr(e, kb, typeMap));
+                            Expr modalExpr = modalResult.getKey();
+                            if (modalExpr == null)
+                                continue;
+
+                            typeMap.putAll(modalResult.getValue());
+                            thf = ExprToTHF.translate(modalExpr, false, typeMap);
+                        }
+                        else {
+                            thf = ExprToTHF.translateNonModal(e, false, typeMap);
+                        }
+                        if (!StringUtil.emptyString(thf))
+                            result.add("thf(user_assert_" + (axNum++) + ",axiom," + thf + ").");
+                    }
+                }
+                catch (Exception ex) {
+                    LoggingUtils.log("ERROR", "SessionTPTPManager.getUserAssertionsTHFStatements(): failed on "
+                            + f.getFormula() + " : " + ex.getMessage());
+                }
+            }
+            return result;
+        });
     }
 
     /*********************************************************************************

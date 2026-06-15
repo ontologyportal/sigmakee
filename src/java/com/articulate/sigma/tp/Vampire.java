@@ -341,6 +341,7 @@ public class Vampire {
         KBmanager mgr = KBmanager.getMgr();
         if (useModals) LoggingUtils.log("==== Using Modals/HOL mode ====");
         else LoggingUtils.log("==== Using plain HOL mode ====");
+        Modals.formulaConstants.clear();
         try {
             String dir;
             if (this.sessionId != null && !this.sessionId.isEmpty()) dir = SessionTPTPManager.getSessionDir(this.sessionId).toString() + File.separator;
@@ -392,9 +393,12 @@ public class Vampire {
             Map<String, Set<String>> typeMap = new HashMap<>();
             Set<Expr> processed;
             if (useModals) {
-                Map.Entry<Expr, Map<String, Set<String>>> modalResult = SessionTPTPManager.withSessionCache(
-                        this.sessionId, this.kb, () -> Modals.processModalsExpr(fa.expr, this.kb));
-                Expr resExpr = modalResult.getKey();
+                Map.Entry<Expr, Map<String, Set<String>>> modalResult =
+                        SessionTPTPManager.withSessionCache(
+                                this.sessionId,
+                                this.kb,
+                                () -> Modals.processModalsExpr(fa.expr, this.kb));
+            Expr resExpr = modalResult.getKey();
                 if (resExpr == null) {
                     System.err.println("Vampire.askVampireHOL(): processModalsExpr returned null for: " + stmt);
                     return;
@@ -431,12 +435,18 @@ public class Vampire {
                 if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(e)) continue;
                 String thfQuery;
                 if (useModals) {
-                    Map.Entry<Expr, Map<String, Set<String>>> fmodalResult = SessionTPTPManager.withSessionCache(
-                            this.sessionId, this.kb, () -> Modals.processModalsExpr(e, this.kb));
+                    Map.Entry<Expr, Map<String, Set<String>>> fmodalResult =
+                        SessionTPTPManager.withSessionCache(
+                                this.sessionId,
+                                this.kb,
+                                () -> Modals.processModalsExpr(e, this.kb, typeMap));
                     Expr fmodal = fmodalResult.getKey();
-                    if (fmodal == null) continue;
+                    if (fmodal == null)
+                        continue;
+                    typeMap.putAll(fmodalResult.getValue());
                     thfQuery = ExprToTHF.translate(fmodal, true, typeMap);
-                } else {
+                }
+                else {
                     thfQuery = ExprToTHF.translateNonModal(e, true, typeMap);
                 }
                 if (thfQuery == null || thfQuery.isEmpty()) continue;
@@ -445,17 +455,28 @@ public class Vampire {
                 conjectureStmts.add(final_query);
                 if (debug>1) System.out.println("Vampire.askVampireHOL(): final query: " + final_query);
             }
-            List<String> userAsserts = getUserAssertions(this.kb, this.sessionId);
+            Set<String> userAsserts = SessionTPTPManager.getUserAssertionsTHFStatements(this.kb, this.sessionId, useModals);
             Set<String> allStmts = new LinkedHashSet<>(userAsserts);
+            allStmts.addAll(conjectureStmts);
+            Set<String> formulaConstDecls = new LinkedHashSet<>();
+            for (String c : Modals.formulaConstants) {
+                String tptp = SUMOformulaToTPTPformula.translateWord(c, StreamTokenizer.TT_WORD, true);
+                formulaConstDecls.add("thf(" + tptp + "_tp,type,(" + tptp + " : (w > $o))).");
+            }
+
+            allStmts = new LinkedHashSet<>(formulaConstDecls);
+            allStmts.addAll(userAsserts);
             allStmts.addAll(conjectureStmts);
             writeStatements(allStmts);
             writeIncludeProblem(kbThfPath, stmtFile, outfile);
             // -------- 6. Actually call Vampire on temp-comb.thf --------
             if (debug>1) System.out.println("------ Vampire.askVampireHOL(): Asking Vampire");
             this.askVampireTHF(outfile);
-        } catch (ATPException e) {
+        } 
+        catch (ATPException e) {
             throw e; // Preserve type + payload for proper error handling in UI
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             System.out.println("Vampire.askVampireHOL(): Exception: " + e.getMessage());
             e.printStackTrace();
             throw new ATPException("Vampire HOL execution failed: " + e.getMessage(), "Vampire");

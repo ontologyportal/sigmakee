@@ -307,8 +307,9 @@ public class THFnew {
      */
     public static String getTHFtype(String v, Map<String, Set<String>> typeMap) {
 
+        if (v.matches("\\?ROW\\d+") || v.matches("V__ROW\\d+")) return "$i";
         if (typeMap.get(v) == null) {
-            if (v.matches("\\?W+\\d+")) return "w";
+            if (v.matches("\\?W+\\d+") || v.matches("V__W+\\d+")) return "w";
             return "$i";
         }
         if (typeMap.get(v).contains("World")) return "w";
@@ -1171,7 +1172,9 @@ public class THFnew {
         Modals.markModalAttributeFormulaVarsExpr(fa.expr, typeMap);
         for (Expr e : processed) {
             if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(e)) continue;
-            Map.Entry<Expr, Map<String, Set<String>>> fmodalResult = Modals.processModalsExpr(e, kb);
+            Modals.markModalAttributeFormulaVarsExpr(e, typeMap);
+            Map.Entry<Expr, Map<String, Set<String>>> fmodalResult = Modals.processModalsExpr(e, kb, typeMap);
+            typeMap.putAll(fmodalResult.getValue());
             Expr fmodal = fmodalResult.getKey();
             if (fmodal == null) continue;
             if (exclude(fmodal, kb, bw)) continue;

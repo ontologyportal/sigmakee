@@ -251,7 +251,7 @@ public class ModalsExprTest {
         Expr.SExpr varList = new Expr.SExpr(null, List.of(var("?X")));
         Expr expr = new Expr.SExpr(atom("forall"), List.of(varList,
                 se("instance", var("?X"), atom("Dog"))));
-        Expr out = Modals.processRecurseExpr(expr, null, "W", 1);
+        Expr out = Modals.processRecurseExpr(expr, null, new HashMap<>(), "W", 1);
         assertTrue(out instanceof Expr.SExpr);
         Expr.SExpr outSe = (Expr.SExpr) out;
         assertEquals("forall preserved", "forall", outSe.headName());

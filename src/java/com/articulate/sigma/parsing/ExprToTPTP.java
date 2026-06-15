@@ -478,6 +478,8 @@ public class ExprToTPTP {
                 collectFreeVars(se.args().get(1), childBound, free);
             }
             case Expr.SExpr se -> {
+                if (se.head() != null)
+                    collectFreeVars(se.head(), bound, free);
                 for (Expr child : se.args())
                     collectFreeVars(child, bound, free);
             }
