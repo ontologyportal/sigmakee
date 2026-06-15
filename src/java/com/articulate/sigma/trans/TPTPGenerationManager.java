@@ -341,9 +341,7 @@ public class TPTPGenerationManager {
      */
     private static void generateTHFModal(KB kb) {
 
-        if (!thfModalGenerating.compareAndSet(false, true)) {
-            return;
-        }
+        if (!thfModalGenerating.compareAndSet(false, true)) return;
         try {
             String kbDir = KBmanager.getMgr().getPref("kbDir");
             String thfFilename = kbDir + File.separator + kb.name + "_modals.thf";
@@ -372,12 +370,11 @@ public class TPTPGenerationManager {
 
     /*********************************************************************************
      * Generate THF Plain (Higher-order Form without modals) file for a KB.
+     * @param KB the knowledge base
      */
     private static void generateTHFPlain(KB kb) {
 
-        if (!thfPlainGenerating.compareAndSet(false, true)) {
-            return; // Already generating
-        }
+        if (!thfPlainGenerating.compareAndSet(false, true)) return;
         if(!isInferenceFileOld(baseKbDir + "_plain.thf")) {
             LoggingUtils.log(baseKbDir + "_plain.thf" + " is current!");
             thfPlainReady.set(true);
@@ -385,8 +382,7 @@ public class TPTPGenerationManager {
         }
         String thfFilename = baseKbDir + "_plain.thf";
         try {
-            if (kb.kbCache != null && kb.kbCache.relations != null)
-                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
+            if (kb.kbCache != null && kb.kbCache.relations != null) ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
             THFnew.transPlainTHF(kb);
             thfPlainReady.set(true);
         }

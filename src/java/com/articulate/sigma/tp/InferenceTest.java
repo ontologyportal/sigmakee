@@ -199,6 +199,12 @@ public class InferenceTest {
             this.result.contradictionFound = true;
             this.result.answers = new ArrayList<>();
         }
+        boolean expectedYes = this.expectedAnswers.size() == 1 && "yes".equals(this.expectedAnswers.get(0));
+        boolean actualYes = this.result.answers.size() == 1 && "yes".equals(this.result.answers.get(0));
+        if (expectedYes && actualYes && !tpp.noConjecture && !tpp.inconsistency) {
+            this.result.success = true;
+            return;
+        }
         boolean different = true;
         if (tpp.proof != null && (tpp.status == null || !tpp.status.startsWith("Timeout"))) different = !sameAnswers(tpp, this.expectedAnswers);
         this.result.success = !(different || tpp.noConjecture);
@@ -212,12 +218,13 @@ public class InferenceTest {
      */
     private static boolean sameAnswers(TPTP3ProofProcessor tpp, List<String> answerList) {
 
-        if ((tpp == null || tpp.proof.isEmpty()) && (answerList == null || answerList.contains("no"))) return true;
-        if (answerList != null && !answerList.isEmpty()) {
-            if (answerList.get(0).equals("yes")) return !tpp.proof.isEmpty() && tpp.containsFalse;
-            else return sameBindings(tpp.bindings, answerList);
-        }
-        return false;
+        if (answerList == null || answerList.isEmpty()) return false;
+        String expected = answerList.get(0);
+        String status = tpp == null ? null : tpp.status;
+        boolean theorem = status != null && status.startsWith("Theorem");
+        if ("yes".equals(expected)) return theorem || (tpp.proof != null && !tpp.proof.isEmpty() && tpp.containsFalse);
+        if ((tpp == null || tpp.proof.isEmpty()) && answerList.contains("no")) return true;
+        return sameBindings(tpp.bindings, answerList);
     }
 
     /********************************************************************

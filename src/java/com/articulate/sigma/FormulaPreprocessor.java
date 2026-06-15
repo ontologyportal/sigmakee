@@ -643,44 +643,33 @@ public class FormulaPreprocessor {
      *         {@link com.articulate.sigma.parsing.ExprToTPTP#translate};
      *         empty if pred-var instantiation yields no results
      */
-    public Set<Expr> preProcessExpr(Formula fa, boolean isQuery, KB kb) {
+    public Set<Expr> preProcessExpr(Formula formula, boolean isQuery, KB kb) {
 
-        if (fa == null || fa.expr == null) return Set.of();
+        if (formula == null || formula.expr == null) return Set.of();
         // Phase A: predicate-variable expansion
         Collection<Formula> afterPredVar;
-        if (fa.predVarCache != null && !fa.predVarCache.isEmpty()) {
-            Set<Formula> pviResult = PredVarInst.instantiatePredVars(fa, kb);
+        if (formula.predVarCache != null && !formula.predVarCache.isEmpty()) {
+            Set<Formula> pviResult = PredVarInst.instantiatePredVars(formula, kb);
             if (pviResult == null) return Set.of();
-            afterPredVar = pviResult.isEmpty() ? List.of(fa) : pviResult;
+            afterPredVar = pviResult.isEmpty() ? List.of(formula) : pviResult;
         }
-        else {
-            afterPredVar = List.of(fa);
-        }
+        else afterPredVar = List.of(formula);
         // Phase B: row-variable expansion
         Set<Expr> afterRowVar = new TreeSet<>(Comparator.comparing(Expr::toKifString));
-        RowVar rv = new RowVar(kb);
+        RowVar rowVariable = new RowVar(kb);
         for (Formula fa2 : afterPredVar) {
             if (fa2.expr == null) continue;
             boolean hasRows = fa2.rowVarCache != null && !fa2.rowVarCache.isEmpty();
             if (hasRows) {
-                Set<Expr> expanded = rv.expandRowVarExpr(fa2);
-                if (expanded == null || expanded.isEmpty()) {
-                    afterRowVar.add(fa2.expr);
-                }
-                else {
-                    afterRowVar.addAll(expanded);
-                }
+                Set<Expr> expanded = rowVariable.expandRowVarExpr(fa2);
+                if (expanded == null || expanded.isEmpty()) afterRowVar.add(fa2.expr);
+                else afterRowVar.addAll(expanded);
                 if (afterRowVar.size() > AXIOM_EXPANSION_LIMIT) {
-                    System.err.println(
-                            "Error in FormulaPreprocessor.preProcessExpr(): " +
-                            "AXIOM_EXPANSION_LIMIT EXCEEDED: " +
-                            AXIOM_EXPANSION_LIMIT);
+                    LoggingUtils.log("ERROR", "AXIOM_EXPANSION_LIMIT EXCEEDED: " + AXIOM_EXPANSION_LIMIT);
                     break;
                 }
             }
-            else {
-                afterRowVar.add(fa2.expr);
-            }
+            else afterRowVar.add(fa2.expr);
         }
         if (afterRowVar.isEmpty()) return Set.of();
         // Phase C: Variable-arity renaming + type restrictions (unchanged from no-var fast path)
@@ -694,9 +683,7 @@ public class FormulaPreprocessor {
                 Map<String, Set<String>> varmap = findTypeRestrictionsExpr(renamed, kb);
                 results.add(addTypeRestrictionsExpr(renamed, varmap, kb));
             } 
-            else {
-                results.add(renamed);
-            }
+            else results.add(renamed);
         }
         return results;
     }

@@ -60,8 +60,6 @@ public class Vampire {
     private KB kb;
     /** The path where the vampire executable is found */
     private String executablePath;
-    /** The path where the vampire executable is found */
-    private String holExecutablePath;
     /** Directory of the knowledge base vampire will query against */
     private String inferenceFilePath;
     /** .tptp / .tff / .thf */
@@ -160,10 +158,6 @@ public class Vampire {
         } else {
             this.requestedTptpLanguage = "thf";
             this.inferenceFileExtension = "thf";
-            this.executablePath = this.executablePath.replace(
-            File.separator + "build" + File.separator,
-            File.separator + "build_hol" + File.separator
-        );
         }
         this.modensPonens = modensPonens;
         if (mode.equalsIgnoreCase(ModeType.AVATAR.name())) this.mode = ModeType.AVATAR;
