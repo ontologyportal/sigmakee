@@ -119,7 +119,7 @@ public class InferenceTest {
         try {
             TPTPGenerationManager.waitForAllTPTP(600);
             applyAssertions(kb, sessionId, language);
-            populateResult(kb, tpc.runQuery(kb, sessionId, this.query, this.filePath, "TEST_FILE", proverType, language, vampireMode, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals, timeout, maxAnswers));
+            populateResult(kb, tpc.runQuery(kb, sessionId, this.query, this.filePath, "TEST_FILE", proverType, language, vampireMode, closedWorldAssumption, modusPonens, dropOnePremise, true, timeout, maxAnswers));
             success = this.result != null && this.result.success;
         }
         finally {

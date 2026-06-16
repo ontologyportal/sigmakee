@@ -31,6 +31,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class TPTPGenerationManager {
 
+    public static boolean debug = false;
+
     private static final AtomicBoolean fofGenerating = new AtomicBoolean(false);
     private static final AtomicBoolean tffGenerating = new AtomicBoolean(false);
     private static final AtomicBoolean thfModalGenerating = new AtomicBoolean(false);
@@ -184,15 +186,12 @@ public class TPTPGenerationManager {
             long start = System.currentTimeMillis();
             String kbDir = KBmanager.getMgr().getPref("kbDir");
             String infFilename = kbDir + File.separator + kb.name + ".tptp";
-
             synchronized (GEN_LOCK) {
                 SUMOKBtoTPTPKB.setLang("fof");
                 SUMOformulaToTPTPformula.setLang("fof");
                 SUMOformulaToTPTPformula.setHideNumbers(true);
-
                 if (kb.kbCache != null && kb.kbCache.relations != null)
                     ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
-
                 // Null writer: rebuild axiomKey only; do not write SUMO.tptp.
                 try (PrintWriter pw = new PrintWriter(Writer.nullWriter())) {
                     SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
@@ -200,11 +199,8 @@ public class TPTPGenerationManager {
                     skb.writeFile(infFilename, null, false, pw);
                 }
             }
-
             long elapsed = System.currentTimeMillis() - start;
-            System.out.println("INFO  [TPTPGenerationManager.rebuildAxiomKey()]  axiomKey rebuilt in "
-                    + (elapsed / 1000.0) + " seconds — "
-                    + SUMOKBtoTPTPKB.axiomKey.size() + " entries");
+            LoggingUtils.log("axiomKey rebuilt in " + (elapsed / 1000.0) + " seconds — " + SUMOKBtoTPTPKB.axiomKey.size() + " entries");
         }
         catch (Exception e) {
             System.err.println("ERROR  [TPTPGenerationManager.rebuildAxiomKey()]  Failed to rebuild axiomKey: "
@@ -408,11 +404,10 @@ public class TPTPGenerationManager {
     public static void generateFOFToPath(KB kb, Path outputPath) throws IOException {
 
         try {
-            System.out.println("TPTPGenerationManager: Generating FOF to custom path: " + outputPath);
+            LoggingUtils.log("Generating FOF to custom path: " + outputPath);
             long startTime = System.currentTimeMillis();
             SUMOKBtoTPTPKB.setLang("fof");
             SUMOformulaToTPTPformula.setLang("fof");
-            System.out.println("TPTPGenerationManager.generateFOFToPath(): setHideNumbers true");
             SUMOformulaToTPTPformula.setHideNumbers(true);
             if (kb.kbCache != null && kb.kbCache.relations != null) ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
             SUMOKBtoTPTPKB.localAxiomKeyOverride.set(new HashMap<>());
@@ -446,7 +441,7 @@ public class TPTPGenerationManager {
     public static void generateTFFToPath(KB kb, Path outputPath) throws IOException {
 
         try {
-            System.out.println("TPTPGenerationManager: Generating TFF to custom path: " + outputPath);
+            if (debug) LoggingUtils.log("Generating TFF to custom path: " + outputPath);
             SUMOKBtoTPTPKB.resetPathCounters();
             long startTime = System.currentTimeMillis();
             SUMOKBtoTPTPKB.setLang("tff");
@@ -466,7 +461,7 @@ public class TPTPGenerationManager {
                 }
             }
             long elapsed = System.currentTimeMillis() - startTime;
-            System.out.println("TPTPGenerationManager: TFF generation to custom path complete in " + (elapsed / 1000.0) + "s");
+            if (debug) LoggingUtils.log("TFF generation to custom path complete in " + (elapsed / 1000.0) + "s");
         } 
         finally {
             ExprToTPTP.relationsThreadLocal.remove();
@@ -487,30 +482,18 @@ public class TPTPGenerationManager {
     public static void generateTHFToPath(KB kb, Path outputPath) throws IOException {
 
         try {
-            System.out.println("TPTPGenerationManager: Generating THF to custom path: " + outputPath);
-
+            if (debug) LoggingUtils.log("Generating THF to custom path: " + outputPath);
             long startTime = System.currentTimeMillis();
-
             SUMOKBtoTPTPKB.setLang("thf");
             SUMOformulaToTPTPformula.setLang("thf");
-
-            if (kb.kbCache != null && kb.kbCache.relations != null)
-                ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
-
+            if (kb.kbCache != null && kb.kbCache.relations != null) ExprToTPTP.relationsThreadLocal.set(kb.kbCache.relations);
             Files.createDirectories(outputPath.getParent());
             Files.deleteIfExists(outputPath);
-
-            try (PrintWriter pw = new PrintWriter(
-                    Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8))) {
-
-                if (!kb.formulaMap.isEmpty()) {
-                    THFnew.transPlainTHF(kb);
-                }
+            try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8))) {
+                if (!kb.formulaMap.isEmpty()) THFnew.transPlainTHF(kb);
             }
-
             long elapsed = System.currentTimeMillis() - startTime;
-            System.out.println("TPTPGenerationManager: THF generation to custom path complete in "
-                    + (elapsed / 1000.0) + "s");
+            if (debug) LoggingUtils.log("THF generation to custom path complete in " + (elapsed / 1000.0) + "s");
         }
         finally {
             ExprToTPTP.relationsThreadLocal.remove();
@@ -542,11 +525,8 @@ public class TPTPGenerationManager {
         try {
             LoggingUtils.log("Waiting for FOF generation (timeout: " + timeoutSec + "s)...");
             boolean completed = fofLatch.await(timeoutSec, TimeUnit.SECONDS);
-            if (completed) {
-                System.out.println("TPTPGenerationManager: FOF generation wait completed");
-            } else {
-                System.out.println("TPTPGenerationManager: FOF generation wait timed out");
-            }
+            if (completed) if (debug) LoggingUtils.log("FOF generation wait completed");
+            else if (debug) LoggingUtils.log("FOF generation wait timed out");
             return completed && fofReady.get();
         }
         catch (InterruptedException e) {
@@ -566,11 +546,8 @@ public class TPTPGenerationManager {
         try {
             LoggingUtils.log("Waiting for TFF generation (timeout: " + timeoutSec + "s)...");
             boolean completed = tffLatch.await(timeoutSec, TimeUnit.SECONDS);
-            if (completed) {
-                LoggingUtils.log("TFF generation wait completed in " + timeoutSec + " seconds!");
-            } else {
-                LoggingUtils.log("TFF generation wait timed out");
-            }
+            if (completed) if (debug) LoggingUtils.log("TFF generation wait completed in " + timeoutSec + " seconds!");
+            else if (debug) LoggingUtils.log("TFF generation wait timed out");
             return completed && tffReady.get();
         }
         catch (InterruptedException e) {
@@ -590,11 +567,8 @@ public class TPTPGenerationManager {
         try {
             LoggingUtils.log("Waiting for THF Modal generation (timeout: " + timeoutSec + "s)...");
             boolean completed = thfModalLatch.await(timeoutSec, TimeUnit.SECONDS);
-            if (completed) {
-                LoggingUtils.log("THF Modal generation wait completed");
-            } else {
-                LoggingUtils.log("THF Modal generation wait timed out");
-            }
+            if (completed) if (debug) LoggingUtils.log("THF Modal generation wait completed");
+            else if (debug) LoggingUtils.log("THF Modal generation wait timed out");
             return completed && thfModalReady.get();
         }
         catch (InterruptedException e) {
@@ -614,11 +588,8 @@ public class TPTPGenerationManager {
         try {
             LoggingUtils.log("Waiting for THF Plain generation (timeout: " + timeoutSec + "s)...");
             boolean completed = thfPlainLatch.await(timeoutSec, TimeUnit.SECONDS);
-            if (completed) {
-                LoggingUtils.log("THF Plain generation wait completed");
-            } else {
-                LoggingUtils.log("THF Plain generation wait timed out");
-            }
+            if (completed) if (debug) LoggingUtils.log("THF Plain generation wait completed");
+            else if (debug) LoggingUtils.log("THF Plain generation wait timed out");
             return completed && thfPlainReady.get();
         }
         catch (InterruptedException e) {
