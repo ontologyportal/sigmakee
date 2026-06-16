@@ -508,6 +508,41 @@ public class SUMOKBtoTPTPKB {
         }
     }
 
+    private void printListFnSemanticAxioms(PrintWriter pw, String sanitizedKBName, AtomicInteger axiomIndex) {
+
+        final int maxArity = 7;
+
+        for (int arity = 1; arity <= maxArity; arity++) {
+
+            String fn = "s__ListFn__" + arity + "Fn";
+            String vars = IntStream.rangeClosed(1, arity)
+                    .mapToObj(i -> "V__X" + i)
+                    .collect(Collectors.joining(","));
+            String args = IntStream.rangeClosed(1, arity)
+                    .mapToObj(i -> "V__X" + i)
+                    .collect(Collectors.joining(","));
+
+            String name = "kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement();
+            pw.println("fof(" + name + ",axiom,(! [" + vars + "] : " +
+                    "s__instance(" + fn + "(" + args + "),s__List))).");
+
+            name = "kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement();
+            pw.println("fof(" + name + ",axiom,(! [" + vars + "] : " +
+                    "(s__ListLengthFn(" + fn + "(" + args + ")) = n__" + arity + "))).");
+
+            for (int i = 1; i <= arity; i++) {
+
+                name = "kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement();
+                pw.println("fof(" + name + ",axiom,(! [" + vars + "] : " +
+                        "(s__ListOrderFn(" + fn + "(" + args + "),n__" + i + ") = V__X" + i + "))).");
+
+                name = "kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement();
+                pw.println("fof(" + name + ",axiom,(! [" + vars + "] : " +
+                        "s__inList(V__X" + i + "," + fn + "(" + args + ")))).");
+            }
+        }
+    }
+
     /******************************************************************
      * Print the sorts of any numeric constants encountered during processing.
      * They are stored in SUMOtoTFAform.getNumericConstantTypes()
@@ -1232,6 +1267,9 @@ public class SUMOKBtoTPTPKB {
             // Write all lines for this formula to the output file
             for (String line : linesBuf)
                 pw.println(line);
+        }
+        if ("fof".equalsIgnoreCase(localLang)) {
+            printListFnSemanticAxioms(pw, getSanitizedKBname(), axiomIndex);
         }
         printVariableArityRelationContent(pw, relationMap, getSanitizedKBname(), axiomIndex);
         if ("tff".equalsIgnoreCase(localLang)) {
