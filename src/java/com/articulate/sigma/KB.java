@@ -68,6 +68,7 @@ import com.articulate.sigma.parsing.CLIMapParser;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.*;
 
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -1708,11 +1709,6 @@ public class KB implements Serializable {
                     tptpfile = new File(dir, (userAssertionTHF));
                 String filename = kiffile.getCanonicalPath();
                 List<Formula> formulasAlreadyPresent = merge(kif, filename);
-                // only check formulasAlreadyPresent when filterSimpleOnly = false;
-                // otherwise, some user assertions/axioms will not be asserted for
-                // inference, since these axioms do exist in formulasAlreadyPresent but not in
-                // SUMO.tptp. In the future, when SUMO can completely run using whole KB, we
-                // can remove SUMOKBtoTPTPKB.fitlerSimpleOnly==false;
                 if (!SUMOKBtoTPTPKB.FILTER_SIMPLE_ONLY && !formulasAlreadyPresent.isEmpty()) {
                     String sf = formulasAlreadyPresent.get(0).sourceFile;
                     result = "The formula was already added from " + sf;
@@ -1748,45 +1744,24 @@ public class KB implements Serializable {
                         }
                         result = "The formula has been added for browsing";
                         // 5. Write the formula to the kb.name_UserAssertions.tptp/tff
-                        if (null == KBmanager.getMgr().prover) result += " but not for local inference";
-                        else
-                            switch (KBmanager.getMgr().prover) {
-                                case EPROVER:
-                                    try {
-                                        EProver eprover = new EProver(this, "tptp", 30, 1);
-                                        if (debug>1) System.out.println("KB.tell: using eprover: " + eprover);
-                                        eprover.assertFormula(tptpfile.getCanonicalPath(), parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
-                                        EProver.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
-                                        result += " and inference";
-                                        break;
-                                    }
-                                    catch (IOException e) {
-                                        System.err.println(e);
-                                        return "";
-                                    }
-                                case VAMPIRE:
-                                    if (debug>1) System.out.println("KB.tell: using vampire");
-                                    Vampire vampire = new Vampire(this, "tptp", "CASC", false, 30, 1);
-                                    vampire.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
+                        if (null == KBmanager.getMgr().prover) {
+                            result += " but not for local inference";
+                        }
+                        else {
+                            String tptpLang = SUMOKBtoTPTPKB.getLang();
+                            if ("tptp".equalsIgnoreCase(tptpLang))
+                                tptpLang = "fof";
+                            boolean wroteInferenceAssertions =
+                                    SessionTPTPManager.writeUserAssertionsForSession(
+                                            this,
+                                            sessionId,
+                                            parsedFormulas,
+                                            tptpfile.toPath(),
+                                            tptpLang,
                                             !mgr.getPref("TPTP").equalsIgnoreCase("no"));
-                                    // nothing much to do since Vampire has to load it all at query time
-                                    // just create a single file
-                                    result += " and inference";
-                                    break;
-                                case LEO:
-                                    if (debug>1) System.out.println("KB.tell: using leo");
-                                    LEO leo = new LEO(this, "tptp", 10, 1, null);
-                                    List<Formula> leoFormulas = new ArrayList<>();
-                                    for (Formula lf : parsedFormulas) leoFormulas.add(new Formula(lf.getFormula()));
-                                    leo.assertFormula(tptpfile.getCanonicalPath(), leoFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
-                                    // nothing much to do since LEO has to load it all at query time
-                                    // just create a single file
-                                    result += " and inference";
-                                    break;
-                                default:
-                                    result += " but not for local inference";
-                                    break;
-                            }
+                            if (wroteInferenceAssertions) result += " and inference";
+                            else result += " but not for local inference";
+                        }
                         // Incremental TPTP pipeline for schema-level tells in a session.
                         // Runs after merge() and UA-file write; keeps the session TPTP up to date.
                         // Two cases from requiresBaseRegenForFormulas():

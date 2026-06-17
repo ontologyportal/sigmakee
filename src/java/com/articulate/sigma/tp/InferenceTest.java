@@ -257,6 +257,11 @@ public class InferenceTest {
      */
     public void applyAssertions(KB kb, String sessionId, String language) {
 
+        System.out.println("DEBUG applyAssertions(): file=" + this.filePath);
+        System.out.println("DEBUG applyAssertions(): sessionId=" + sessionId);
+        System.out.println("DEBUG applyAssertions(): assertions.size=" + this.assertions.size());
+        for (String a : this.assertions)
+            System.out.println("DEBUG assertion: " + a);
         if (this.tptpRegenRequired) SessionTPTPManager.beginBatchTells(sessionId);
         try {
             for (String statement : this.assertions) if (!StringUtil.emptyString(statement)) kb.tell(statement, sessionId);

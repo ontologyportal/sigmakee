@@ -17,6 +17,8 @@ import com.articulate.sigma.utils.LoggingUtils;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTHF;
 import com.articulate.sigma.FormulaPreprocessor;
+import com.articulate.sigma.parsing.ExprToTPTP;
+import com.articulate.sigma.parsing.ExprToTFF;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -34,19 +36,14 @@ import java.util.function.Supplier;
 public class SessionTPTPManager {
 
     private static final boolean debug = false;
-
     /** When true, each {@link #patchSessionTPTP} call writes a human-readable log file to the session directory. */
     public static boolean debugPatch = true;
-
     /** Per-session locks for thread-safe generation */
     private static final ConcurrentHashMap<String, Object> sessionLocks = new ConcurrentHashMap<>();
-
     /** Track which sessions have generated files (avoids redundant regeneration) */
     private static final ConcurrentHashMap<String, Long> sessionGenerationTimestamps = new ConcurrentHashMap<>();
-
     /** Each session that performs a schema-level tell() gets its own deep copy of the shared KBcache. */
     private static final ConcurrentHashMap<String, KBcache> sessionCaches = new ConcurrentHashMap<>();
-
     /**
      * Per-session axiom key: axiom name → source Formula.
      *
@@ -60,13 +57,10 @@ public class SessionTPTPManager {
      */
     private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>>
             sessionAxiomKeys = new ConcurrentHashMap<>();
-
     /** Sessions currently in batch-tell mode (Case B/default TPTP regens suppressed). */
     private static final Set<String> batchModeActive = ConcurrentHashMap.newKeySet();
-
     /** Per-session lazy flag for askVampireForTQ(). */
     private static final ConcurrentHashMap<String, Boolean> precomputedRegenRequired = new ConcurrentHashMap<>();
-
     private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>> sessionDerivedTypeFacts = new ConcurrentHashMap<>();
 
     /*********************************************************************************
@@ -372,7 +366,6 @@ public class SessionTPTPManager {
             }
         }
     }
-
 
     /*********************************************************************************
      * Incrementally patch the session-specific TPTP file.
@@ -710,6 +703,203 @@ public class SessionTPTPManager {
     public static boolean hasSessionFiles(String sessionId) {
 
         return sessionGenerationTimestamps.containsKey(sessionId);
+    }
+
+
+    /*********************************************************************************
+     * @author AI
+     * Translate newly-told user assertions to a session/shared UserAssertions TPTP file.
+     *
+     * This replaces prover-specific assertion writers such as Vampire.assertFormula().
+     * It intentionally lives here because user assertion translation depends on the
+     * session KBcache, not on any specific theorem prover.
+     *
+     * @param kb             The KB
+     * @param sessionId      Optional session id; if non-empty, use the session KBcache
+     * @param parsedFormulas Formulas just parsed and written to *_UserAssertions.kif
+     * @param outputPath     Path to SUMO_UserAssertions.tptp/.tff
+     * @param lang           "fof"/"tptp" or "tff"
+     * @param tptpEnabled    false if TPTP output is disabled by prefs
+     * @return true if at least one assertion was written
+     */
+    public static boolean writeUserAssertionsForSession(
+            KB kb,
+            String sessionId,
+            List<Formula> parsedFormulas,
+            Path outputPath,
+            String lang,
+            boolean tptpEnabled) {
+
+        if (!tptpEnabled)
+            return false;
+
+        if (kb == null || parsedFormulas == null || parsedFormulas.isEmpty() || outputPath == null)
+            return false;
+
+        final String normalizedLang =
+                "tptp".equalsIgnoreCase(lang) ? "fof" :
+                "fof".equalsIgnoreCase(lang)  ? "fof" :
+                "tff".equalsIgnoreCase(lang)  ? "tff" :
+                lang;
+
+        if (!"fof".equalsIgnoreCase(normalizedLang) && !"tff".equalsIgnoreCase(normalizedLang)) {
+            LoggingUtils.log("ERROR",
+                    "SessionTPTPManager.writeUserAssertionsForSession(): unsupported lang: " + lang);
+            return false;
+        }
+
+        return kb.withUserAssertionLock(() -> {
+            try {
+                Files.createDirectories(outputPath.getParent());
+
+                KBcache sessionCache = null;
+
+                if (!StringUtil.emptyString(sessionId)) {
+                    sessionCache = getOrCreateSessionCache(sessionId, kb);
+
+                    for (Formula f : parsedFormulas)
+                        applyFormulaToSessionCacheOnly(sessionCache, f);
+
+                    sessionCache.correctValences();
+                }
+
+                Map<Formula, List<String>> translations;
+
+                if (!StringUtil.emptyString(sessionId) && sessionCache != null) {
+                    KBcache sharedCache = kb.kbCache;
+                    kb.kbCache = sessionCache;
+                    try {
+                        translations = SUMOKBtoTPTPKB.retranslateFormulas(
+                                kb,
+                                new LinkedHashSet<>(parsedFormulas),
+                                normalizedLang,
+                                sessionId);
+                    }
+                    finally {
+                        kb.kbCache = sharedCache;
+                    }
+                }
+                else {
+                    translations = SUMOKBtoTPTPKB.retranslateFormulas(
+                            kb,
+                            new LinkedHashSet<>(parsedFormulas),
+                            normalizedLang,
+                            sessionId);
+                }
+
+                if (translations == null || translations.isEmpty())
+                    return false;
+
+                String sanitizedKBName = kb.name.replaceAll("\\W", "_");
+                String batchTag = "u" + Long.toUnsignedString(System.nanoTime(), 36);
+                int axiomIndex = 1;
+                boolean wroteAny = false;
+
+                try (BufferedWriter writer = Files.newBufferedWriter(
+                        outputPath,
+                        StandardCharsets.UTF_8,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.APPEND)) {
+
+                    for (Map.Entry<Formula, List<String>> entry : translations.entrySet()) {
+                        Formula src = entry.getKey();
+                        List<String> bodies = entry.getValue();
+
+                        if (bodies == null)
+                            continue;
+
+                        for (String body : bodies) {
+                            if (StringUtil.emptyString(body))
+                                continue;
+
+                            String name = "kb_" + sanitizedKBName + "_UserAssertion_" +
+                                    batchTag + "_" + axiomIndex++;
+
+                            writer.write(normalizedLang + "(" + name + ",axiom,(" + body + ")).");
+                            writer.newLine();
+
+                            if (!StringUtil.emptyString(sessionId))
+                                getOrCreateSessionAxiomKey(sessionId).put(name, src);
+
+                            wroteAny = true;
+                        }
+                    }
+                }
+
+                return wroteAny;
+            }
+            catch (Exception e) {
+                LoggingUtils.log("ERROR",
+                        "SessionTPTPManager.writeUserAssertionsForSession(): " + e.getMessage());
+                e.printStackTrace();
+                return false;
+            }
+        });
+    }
+
+    /*********************************************************************************
+     * @author AI
+     * Apply only the KBcache side-effect of simple schema assertions.
+     *
+     * This is intentionally cache-only. It does not patch or regenerate TPTP files.
+     * The normal incremental pipeline in KB.tell() can still run afterward.
+     */
+    private static void applyFormulaToSessionCacheOnly(KBcache cache, Formula f) {
+
+        if (cache == null || f == null)
+            return;
+
+        String pred = f.car();
+        if (StringUtil.emptyString(pred))
+            return;
+
+        try {
+            switch (pred) {
+                case "subclass":
+                case "immediateSubclass":
+                    cache.addSubclass(f.getStringArgument(1), f.getStringArgument(2));
+                    break;
+
+                case "instance":
+                case "immediateInstance":
+                    cache.addInstance(f.getStringArgument(1), f.getStringArgument(2));
+                    break;
+
+                case "domain":
+                    cache.addDomain(
+                            f.getStringArgument(1),
+                            Integer.parseInt(f.getStringArgument(2).trim()),
+                            f.getStringArgument(3));
+                    break;
+
+                case "domainSubclass":
+                    cache.addDomain(
+                            f.getStringArgument(1),
+                            Integer.parseInt(f.getStringArgument(2).trim()),
+                            f.getStringArgument(3));
+                    break;
+
+                case "range":
+                case "rangeSubclass":
+                    cache.addRange(f.getStringArgument(1), f.getStringArgument(2));
+                    break;
+
+                case "subrelation":
+                    cache.addSubrelation(f.getStringArgument(1), f.getStringArgument(2));
+                    break;
+
+                case "disjoint":
+                    cache.addDisjoint(f.getStringArgument(1), f.getStringArgument(2));
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        catch (Exception e) {
+            LoggingUtils.log("ERROR", "SessionTPTPManager.applyFormulaToSessionCacheOnly(): failed on " +
+                    f.getFormula() + " : " + e.getMessage());
+        }
     }
 
     public static Set<String> getUserAssertionsTHFStatements(KB kb, String sessionId, boolean useModals) {

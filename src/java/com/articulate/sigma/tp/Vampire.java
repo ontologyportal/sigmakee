@@ -1009,60 +1009,6 @@ public class Vampire {
         });
     }
 
-    /***************************************************************
-     * Add an assertion for inference.
-     * @param userAssertionTPTP asserted formula in the TPTP/TFF syntax
-     * @param kb Knowledge base
-     * @param parsedFormulas a lit of parsed formulas in KIF syntax
-     * @param tptp convert formula to TPTP if tptp = true
-     * @return true if all assertions are added for inference
-     *
-     * TODO: This function might not be necessary if we find a way to
-     * directly add assertion into opened inference engine (e_ltb_runner)
-     */
-    public boolean assertFormula(String userAssertionTPTP, KB kb, List<Formula> parsedFormulas, boolean tptp) {
-
-        boolean allAdded = false;
-        Set<Expr> processedFormulas = new HashSet();
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        Set<String> tptpFormulas = new HashSet<>();
-        String tptpStr;
-        int axiomIndex = 0;
-        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
-            for (Formula parsedF : parsedFormulas) {
-                processedFormulas.clear();
-                processedFormulas.addAll(fp.preProcessExpr(parsedF,false, kb));
-                if (processedFormulas.isEmpty()) allAdded = false;
-                else {
-                    tptpFormulas.clear();
-                    if (tptp) {
-                        for (Expr ex : processedFormulas) {
-                            Formula p = new Formula();
-                            p.setFormula(ex.toKifString());
-                            p.expr = ex;
-                            if (!p.isHigherOrder(kb)) {
-                                if ("tff".equalsIgnoreCase(this.requestedTptpLanguage)) tptpStr = ExprToTFF.translate(ex, false, this.kb);
-                                else tptpStr = ExprToTPTP.translate(ex, false, this.requestedTptpLanguage);
-                                tptpFormulas.add(tptpStr);
-                            }
-                        }
-                    }
-                    for (String theTPTPFormula : tptpFormulas) {
-                        pw.print(SUMOformulaToTPTPformula.getLang() + "(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
-                        pw.println(",axiom,(" + theTPTPFormula + ")).");
-                        tptpStr = SUMOformulaToTPTPformula.getLang() + "(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
-                    }
-                    pw.flush();
-                }
-            }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-            if (this.sessionId != null && !this.sessionId.isEmpty()) LoggingUtils.log("ERROR", "Using session dir for temp files, sessionId=" + sessionId);
-        }
-        return allAdded;
-    }
-
     /*****************************************************************
      */
     @Override
