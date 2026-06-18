@@ -187,10 +187,67 @@
         .sortable{cursor:pointer;user-select:none;}
         .sortable:hover{text-decoration:underline;}
         code{white-space:pre-wrap;word-break:break-word;}
+        .dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:14px 0;}
+        .dashCard{border:1px solid #ddd;background:#fff;border-radius:7px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
+        .dashLabel{font-size:12px;color:#666;margin-bottom:4px;}
+        .dashValue{font-size:24px;font-weight:bold;line-height:1.1;}
+        .dashSub{font-size:11px;color:#777;margin-top:3px;}
+        .dashPASS .dashValue{color:#0a7a21;}
+        .dashFAIL .dashValue,.dashERROR .dashValue{color:#b00020;}
+        .dashQUEUE .dashValue{color:#1d75b8;}
     </style>
     <script>
         let currentSortKey = 'file';
         let currentSortAsc = true;
+
+        let dashboardQueueOverride = null;
+
+        function setDash(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        }
+
+        function updateDashboard(queueOverride) {
+            const rows = Array.from(document.querySelectorAll('.testTable tbody tr'));
+            const counts = {
+                fof: 0,
+                tff: 0,
+                thf: 0,
+                other: 0,
+                pass: 0,
+                fail: 0,
+                error: 0,
+                notRun: 0,
+                running: 0
+            };
+
+            rows.forEach(function(row) {
+                const type = (row.dataset.type || '').toLowerCase();
+                if (counts.hasOwnProperty(type)) counts[type]++;
+                else counts.other++;
+
+                const status = row.dataset.status || 'NOT RUN';
+                if (status === 'PASS') counts.pass++;
+                else if (status === 'FAIL') counts.fail++;
+                else if (status === 'ERROR') counts.error++;
+                else if (status === 'RUNNING') counts.running++;
+                else counts.notRun++;
+            });
+
+            const selectedCount = document.querySelectorAll('input[name="selectedTests"]:checked').length;
+            const queueCount = typeof queueOverride === 'number' ? queueOverride : selectedCount;
+
+            setDash('dashTotal', rows.length);
+            setDash('dashFOF', counts.fof);
+            setDash('dashTFF', counts.tff);
+            setDash('dashTHF', counts.thf);
+            setDash('dashQueue', queueCount);
+            setDash('dashPass', counts.pass);
+            setDash('dashFail', counts.fail);
+            setDash('dashError', counts.error);
+            setDash('dashNotRun', counts.notRun);
+            setDash('dashRunning', counts.running);
+        }
 
         function statusOrderJS(status) {
             if (status === 'NOT RUN') return 0;
@@ -294,6 +351,7 @@
             boxes.forEach(function(box) {
                 box.checked = source.checked;
             });
+            updateDashboard();
         }
 
         function toggleTranslationOptions() {
@@ -329,7 +387,10 @@
             const statusCell = document.getElementById('status_' + rowId);
             if (!statusCell) return;
             const row = statusCell.closest('tr');
-            if (row) row.dataset.statusOrder = statusOrderJS(status);
+            if (row) {
+                row.dataset.statusOrder = statusOrderJS(status);
+                row.dataset.status = status;
+            }
             statusCell.classList.remove('statusPASS', 'statusFAIL', 'statusERROR', 'statusNOTRUN');
             if (status === 'RUNNING') {
                 statusCell.classList.add('statusNOTRUN');
@@ -339,6 +400,7 @@
                         '<span>RUNNING</span>' +
                     '</div>' +
                     '<div class="tiny" id="szs_' + rowId + '"></div>';
+                updateDashboard(dashboardQueueOverride);
                 return;
             }
             statusCell.classList.add(statusClassJS(status));
@@ -352,11 +414,14 @@
                 div.textContent = message;
                 statusCell.appendChild(div);
             }
+            updateDashboard(dashboardQueueOverride);
         }
 
         async function runSelectedTests() {
             const form = document.getElementById('itsRunnerForm');
             const boxes = Array.from(document.querySelectorAll('input[name="selectedTests"]:checked'));
+            dashboardQueueOverride = boxes.length;
+            updateDashboard(dashboardQueueOverride);
             if (boxes.length === 0) {
                 alert('Select at least one test.');
                 return;
@@ -405,7 +470,11 @@
                 catch (err) {
                     setRowStatus(rowId, 'ERROR', err.message);
                 }
+                dashboardQueueOverride = Math.max(0, dashboardQueueOverride - 1);
+                updateDashboard(dashboardQueueOverride);
             }
+            dashboardQueueOverride = null;
+            updateDashboard();
             if (runButton) {
                 runButton.disabled = false;
                 runButton.textContent = 'Run Selected';
@@ -427,6 +496,12 @@
             const modeHOL = document.getElementById('modeHOL');
             if (modeFOL) modeFOL.addEventListener('change', toggleTranslationOptions);
             if (modeHOL) modeHOL.addEventListener('change', toggleTranslationOptions);
+            document.querySelectorAll('input[name="selectedTests"]').forEach(function(box) {
+                box.addEventListener('change', function() {
+                    updateDashboard();
+                });
+            });
+            updateDashboard();
         });
     </script>
 </head>
@@ -468,6 +543,58 @@
             <button type="button" class="actionBtn exportBtn" onclick="exportReport();">Export Report</button>
             <span class="tiny">Showing <%= inferenceTestSuite.getInferenceTests().size() %> inference tests.</span>
         </div>
+        <div class="dashboard" id="testDashboard">
+            <div class="dashCard">
+                <div class="dashLabel">Total Tests</div>
+                <div class="dashValue" id="dashTotal">0</div>
+                <div class="dashSub">All loaded tests</div>
+            </div>
+            <div class="dashCard">
+                <div class="dashLabel">FOF</div>
+                <div class="dashValue" id="dashFOF">0</div>
+                <div class="dashSub">minLang fof</div>
+            </div>
+            <div class="dashCard">
+                <div class="dashLabel">TFF</div>
+                <div class="dashValue" id="dashTFF">0</div>
+                <div class="dashSub">minLang tff</div>
+            </div>
+            <div class="dashCard">
+                <div class="dashLabel">THF</div>
+                <div class="dashValue" id="dashTHF">0</div>
+                <div class="dashSub">minLang thf</div>
+            </div>
+            <div class="dashCard dashQUEUE">
+                <div class="dashLabel">Queued</div>
+                <div class="dashValue" id="dashQueue">0</div>
+                <div class="dashSub">Selected / remaining</div>
+            </div>
+            <div class="dashCard">
+                <div class="dashLabel">Running</div>
+                <div class="dashValue" id="dashRunning">0</div>
+                <div class="dashSub">Currently active</div>
+            </div>
+            <div class="dashCard dashPASS">
+                <div class="dashLabel">Passed</div>
+                <div class="dashValue" id="dashPass">0</div>
+                <div class="dashSub">Successful tests</div>
+            </div>
+            <div class="dashCard dashFAIL">
+                <div class="dashLabel">Failed</div>
+                <div class="dashValue" id="dashFail">0</div>
+                <div class="dashSub">Completed failures</div>
+            </div>
+            <div class="dashCard dashERROR">
+                <div class="dashLabel">Errors</div>
+                <div class="dashValue" id="dashError">0</div>
+                <div class="dashSub">Invalid / exception</div>
+            </div>
+            <div class="dashCard">
+                <div class="dashLabel">Not Run</div>
+                <div class="dashValue" id="dashNotRun">0</div>
+                <div class="dashSub">Pending results</div>
+            </div>
+        </div>
         <table class="testTable">
             <thead>
                 <tr>
@@ -491,6 +618,8 @@
                 %>
                 <tr data-file="<%= ValidationUtils.escapeHtml(testFileName.toLowerCase()) %>"
                     data-category="<%= ValidationUtils.escapeHtml(test.category == null ? "" : test.category.toLowerCase()) %>"
+                    data-type="<%= ValidationUtils.escapeHtml(test.minLang == null ? "other" : test.minLang.toLowerCase()) %>"
+                    data-status="<%= ValidationUtils.escapeHtml(status) %>"
                     data-lang-order="<%= langOrder(test.minLang) %>"
                     data-status-order="<%= statusOrder(status) %>">
                     <td>
