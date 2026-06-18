@@ -115,16 +115,21 @@ public class InferenceTest {
         }
         this.result = new InferenceTestResult();
         String sessionId = "tq-" + UUID.randomUUID();
+        SessionTPTPManager.purgeSessionMemoryOnly(sessionId);
         TheoremProverController tpc = new TheoremProverController();
         try {
             TPTPGenerationManager.waitForAllTPTP(600);
             applyAssertions(kb, sessionId, language);
-            populateResult(kb, tpc.runQuery(kb, sessionId, this.query, this.filePath, "TEST_FILE", proverType, language, vampireMode, closedWorldAssumption, modusPonens, dropOnePremise, true, timeout, maxAnswers));
+            populateResult(kb, tpc.runQuery(kb, sessionId, this.query, this.filePath, "TEST_FILE", proverType, language, vampireMode, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals, timeout, maxAnswers));
             success = this.result != null && this.result.success;
         }
         finally {
             if (success) reset(kb, sessionId);
-            else LoggingUtils.log("ERROR", "Test failed, saved session directory: " + SessionTPTPManager.getSessionDir(sessionId));
+            else {
+                SessionTPTPManager.purgeSessionMemoryOnly(sessionId);
+                LoggingUtils.log("ERROR", "Test failed, saved session directory: " + SessionTPTPManager.getSessionDir(sessionId));
+                LoggingUtils.log("UA in memory after failure purge: " + kb.countUserAssertionFormulasInMemory());
+            }
         }
     }
 
@@ -257,11 +262,6 @@ public class InferenceTest {
      */
     public void applyAssertions(KB kb, String sessionId, String language) {
 
-        System.out.println("DEBUG applyAssertions(): file=" + this.filePath);
-        System.out.println("DEBUG applyAssertions(): sessionId=" + sessionId);
-        System.out.println("DEBUG applyAssertions(): assertions.size=" + this.assertions.size());
-        for (String a : this.assertions)
-            System.out.println("DEBUG assertion: " + a);
         if (this.tptpRegenRequired) SessionTPTPManager.beginBatchTells(sessionId);
         try {
             for (String statement : this.assertions) if (!StringUtil.emptyString(statement)) kb.tell(statement, sessionId);

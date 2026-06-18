@@ -196,7 +196,7 @@ public class ExprToTPTP {
      * @param name    the KIF symbol name
      * @param isHead  {@code true} when used as a predicate/function head
      */
-    static String translateAtom(String name, boolean isHead, String lang) {
+    public static String translateAtom(String name, boolean isHead, String lang) {
 
         if (name == null || name.isEmpty()) return "";
 

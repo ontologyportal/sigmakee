@@ -44,19 +44,8 @@ public class SessionTPTPManager {
     private static final ConcurrentHashMap<String, Long> sessionGenerationTimestamps = new ConcurrentHashMap<>();
     /** Each session that performs a schema-level tell() gets its own deep copy of the shared KBcache. */
     private static final ConcurrentHashMap<String, KBcache> sessionCaches = new ConcurrentHashMap<>();
-    /**
-     * Per-session axiom key: axiom name → source Formula.
-     *
-     * <p>The global {@code SUMOKBtoTPTPKB.axiomKey} is treated as <em>read-only</em>
-     * after initial KB generation — it maps base-KB axiom names ({@code kb_SUMO_N})
-     * to their source formulas.  Every axiom name created by {@code patchSessionTPTP}
-     * (both retranslated base formulas and new {@code tell()} assertions) is recorded
-     * here instead, keeping sessions fully isolated.
-     *
-     * <p>Entries are removed in {@link #cleanupSession}.
-     */
-    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>>
-            sessionAxiomKeys = new ConcurrentHashMap<>();
+    /** Per-session axiom key: axiom name → source Formula. */
+    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>> sessionAxiomKeys = new ConcurrentHashMap<>();
     /** Sessions currently in batch-tell mode (Case B/default TPTP regens suppressed). */
     private static final Set<String> batchModeActive = ConcurrentHashMap.newKeySet();
     /** Per-session lazy flag for askVampireForTQ(). */
@@ -114,16 +103,13 @@ public class SessionTPTPManager {
      * @param sessionId The HTTP session ID
      */
     public static void setForceGeneration(String sessionId) {
-        if (sessionId != null)
-            precomputedRegenRequired.put(sessionId, Boolean.TRUE);
+        if (sessionId != null) precomputedRegenRequired.put(sessionId, Boolean.TRUE);
     }
 
     /*********************************************************************************
      * Read and clear the batch flag (one-shot).
      * @param sessionId The HTTP session ID
      * @return null if session was not in batch context;
-     *         Boolean.TRUE if a Case B/default tell was deferred;
-     *         Boolean.FALSE if only Case A patches were applied (no full regen needed)
      */
     public static Boolean consumeBatchFlag(String sessionId) {
         return precomputedRegenRequired.remove(sessionId);
@@ -660,6 +646,23 @@ public class SessionTPTPManager {
         });
     }
 
+    public static void purgeSessionMemoryOnly(String sessionId) {
+
+        if (StringUtil.emptyString(sessionId))
+            return;
+
+        sessionLocks.remove(sessionId);
+        sessionGenerationTimestamps.remove(sessionId);
+        sessionCaches.remove(sessionId);
+        sessionDerivedTypeFacts.remove(sessionId);
+        sessionAxiomKeys.remove(sessionId);
+        batchModeActive.remove(sessionId);
+        precomputedRegenRequired.remove(sessionId);
+
+        for (KB kb : KBmanager.getMgr().kbs.values())
+            purgeSessionFormulas(kb, sessionId);
+    }
+
     /*********************************************************************************
      * Clean up all session-specific files for a given session.
      * Called when a session is destroyed.
@@ -906,6 +909,7 @@ public class SessionTPTPManager {
 
         Set<String> result = new LinkedHashSet<>();
         if (kb == null) return result;
+        
         return kb.withUserAssertionLock(() -> {
             String uaBase = kb.name + KB._userAssertionsString; // SUMO_UserAssertions.kif
             FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -913,11 +917,18 @@ public class SessionTPTPManager {
             for (Formula f : kb.formulaMap.values()) {
                 if (f == null || f.sourceFile == null || f.expr == null)
                     continue;
+                LoggingUtils.log("THF UA include session=" + sessionId + " formulaSession=" + f.uaSessionId + " formula=" + f.getFormula());
                 String srcBase = new File(f.sourceFile).getName();
-                boolean isUAFile = uaBase.equals(srcBase);
-                boolean isUASession = !StringUtil.emptyString(sessionId) && sessionId.equals(f.uaSessionId);
-                if (!isUAFile && !isUASession)
-                    continue;
+                boolean hasSession = !StringUtil.emptyString(sessionId);
+
+                if (hasSession) {
+                    if (!sessionId.equals(f.uaSessionId))
+                        continue;
+                }
+                else {
+                    if (!uaBase.equals(srcBase))
+                        continue;
+                }
                 try {
                     Set<Expr> processed = withSessionCache(sessionId, kb, () -> fp.preProcessExpr(f, false, kb));
                     if (processed == null || processed.isEmpty())
@@ -943,6 +954,10 @@ public class SessionTPTPManager {
                             thf = ExprToTHF.translate(modalExpr, false, typeMap);
                         }
                         else {
+                            for (String atom : ExprToTHF.collectPlainFormulaAtoms(e)) {
+                                String p = ExprToTHF.plainFormulaAtomName(atom);
+                                result.add("thf(" + p + "_tp,type,(" + p + " : $o)).");
+                            }
                             thf = ExprToTHF.translateNonModal(e, false, typeMap);
                         }
                         if (!StringUtil.emptyString(thf))
@@ -1035,7 +1050,6 @@ public class SessionTPTPManager {
      * KBcache for {@code sessionId}, if one exists.  If no session cache exists (no schema-
      * level tell() has been made this session), {@code op} runs against the shared cache
      * unchanged.
-     *
      * @param <T>       the return type of the operation
      * @param sessionId the HTTP session ID (null or empty ⟹ no swap)
      * @param kb        the shared KB whose kbCache field is temporarily replaced
@@ -1053,20 +1067,15 @@ public class SessionTPTPManager {
             kb.kbCache = sessionCache;
             try {
                 return op.get();
-            } finally {
+            } 
+            finally {
                 kb.kbCache = shared;
             }
         }
     }
 
     /********************************************************************
-     * Materialize inherited type facts for a session instance assertion.
-     * Example:
-     *   (instance John Human)
-     * becomes:
-     *   (instance John Human)
-     *   (instance John Physical)
-     *   (instance John Object)
+     * Materialize inherited type facts for an instance assertion.
      * @author AI (needs careful review)
      * @param sessionId the session id
      * @param kb the KB

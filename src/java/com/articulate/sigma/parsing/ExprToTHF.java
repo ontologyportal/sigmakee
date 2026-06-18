@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.articulate.sigma.Formula;
+
 /**
  * Translates {@link Expr} trees to THF (Typed Higher-order Form) TPTP syntax.
  *
@@ -74,20 +76,98 @@ public class ExprToTHF {
      * @return the THF formula string
      */
     public static String translateNonModal(Expr expr, boolean query,
-                                           Map<String, Set<String>> typeMap) {
-        String body = translateExpr(expr, false, typeMap, false);
-        Set<String> freeVars = ExprToTPTP.collectFreeVars(expr);
+                                        Map<String, Set<String>> typeMap) {
+
+        Map<String, Set<String>> localTypeMap = copyTypeMap(typeMap);
+        markPlainFormulaVars(expr, localTypeMap);
+        String body = translateExpr(expr, false, localTypeMap, false);
+        Set<String> freeVars = collectFreeVarsNonModal(expr);
+
         if (!freeVars.isEmpty()) {
             String quantStr = query ? "? [" : "! [";
-            String varList = buildTypedVarList(freeVars, typeMap, false);
+            String varList = buildTypedVarList(freeVars, localTypeMap, false);
             return "( " + quantStr + varList + "] : (" + body + " ) )";
         }
         return body;
     }
 
+    private static Map<String, Set<String>> copyTypeMap(Map<String, Set<String>> typeMap) {
+
+        Map<String, Set<String>> result = new java.util.HashMap<>();
+        if (typeMap == null)
+            return result;
+
+        for (Map.Entry<String, Set<String>> e : typeMap.entrySet())
+            result.put(e.getKey(), new java.util.HashSet<>(e.getValue()));
+
+        return result;
+    }
+
+    private static void addFormulaType(String var, Map<String, Set<String>> typeMap) {
+
+        typeMap.computeIfAbsent(var, k -> new java.util.HashSet<>()).add("Formula");
+    }
+
+    /**
+     * Plain THF uses SUMO Formula variables as THF propositions ($o).
+     * Detect the common cases directly so user assertions do not emit
+     * V__A:$i together with (~ V__A).
+     */
+    private static void markPlainFormulaVars(Expr e, Map<String, Set<String>> typeMap) {
+
+        if (!(e instanceof Expr.SExpr se))
+            return;
+
+        String headName = se.headName();
+        List<Expr> args = se.args();
+
+        if ("instance".equals(headName) && args.size() == 2 &&
+                args.get(0) instanceof Expr.Var v &&
+                args.get(1) instanceof Expr.Atom a &&
+                "Formula".equals(a.name())) {
+            addFormulaType(v.name(), typeMap);
+        }
+
+        if (("not".equals(headName) || "~".equals(headName)) && args.size() == 1 &&
+                args.get(0) instanceof Expr.Var v) {
+            addFormulaType(v.name(), typeMap);
+        }
+
+        if ("modalAttribute".equals(headName) && !args.isEmpty() &&
+                args.get(0) instanceof Expr.Var v) {
+            addFormulaType(v.name(), typeMap);
+        }
+
+        if (se.head() != null)
+            markPlainFormulaVars(se.head(), typeMap);
+
+        for (Expr arg : args)
+            markPlainFormulaVars(arg, typeMap);
+    }
+
     // -----------------------------------------------------------------------
     // Core translation
     // -----------------------------------------------------------------------
+
+    private static boolean isHead(Expr.SExpr se, String name) {
+        return se.head() instanceof Expr.Atom a && name.equals(a.name());
+    }
+
+
+    private static String translateKappaFnNonModal(Expr.SExpr se, Map<String, Set<String>> typeMap) {
+
+        List<Expr> args = se.args();
+        if (args.size() != 2)
+            return translateApplicationTHF(se, typeMap, false);
+        Expr varExpr = args.get(0);
+        Expr bodyExpr = args.get(1);
+        if (!(varExpr instanceof Expr.Var v))
+            return translateApplicationTHF(se, typeMap, false);
+        String vName = ExprToTPTP.translateVarName(v.name());
+        String vType = "$i";
+        String body = translateExpr(bodyExpr, false, typeMap, false);
+        return "(s__KappaFn @ (^ [" + vName + ":" + vType + "] : (" + body + ")))";
+    }
 
     /**
      * Translate a single {@link Expr} node.
@@ -112,27 +192,94 @@ public class ExprToTHF {
         };
     }
 
+    public static Set<String> collectPlainFormulaAtoms(Expr e) {
+
+        Set<String> result = new java.util.LinkedHashSet<>();
+        collectPlainFormulaAtoms(e, result);
+        return result;
+    }
+
+    public static String plainFormulaAtomName(String name) {
+
+        String t = ExprToTPTP.translateAtom(name, true, "fof");
+        if (t.startsWith("s__"))
+            return "p__" + t.substring(3);
+        return "p__" + t;
+    }
+
+    private static String translatePlainFormulaArg(Expr e, Map<String, Set<String>> typeMap) {
+
+        if (e instanceof Expr.Atom a)
+            return plainFormulaAtomName(a.name());
+        return translateExpr(e, false, typeMap, false);
+    }
+
+    private static void collectPlainFormulaAtoms(Expr e, Set<String> result) {
+
+        if (!(e instanceof Expr.SExpr se))
+            return;
+
+        String headName = se.headName();
+        List<Expr> args = se.args();
+
+        if ("instance".equals(headName) && args.size() == 2 &&
+                args.get(0) instanceof Expr.Atom a0 &&
+                args.get(1) instanceof Expr.Atom a1 &&
+                "Formula".equals(a1.name())) {
+            result.add(a0.name());
+        }
+
+        if ("modalAttribute".equals(headName) && args.size() >= 1 &&
+                args.get(0) instanceof Expr.Atom a) {
+            result.add(a.name());
+        }
+
+        if (("not".equals(headName) || "~".equals(headName)) && args.size() == 1 &&
+                args.get(0) instanceof Expr.Atom a) {
+            result.add(a.name());
+        }
+
+        if (se.head() != null)
+            collectPlainFormulaAtoms(se.head(), result);
+
+        for (Expr arg : args)
+            collectPlainFormulaAtoms(arg, result);
+    }
+
     private static String translateSExprTHF(Expr.SExpr se,
-                                             Map<String, Set<String>> typeMap,
-                                             boolean modalMode) {
+                                         Map<String, Set<String>> typeMap,
+                                         boolean modalMode) {
+        
         String headName = se.headName();
         if (headName == null) {
             if (se.head() == null) {
-                // Explicit null head: variable list inside a quantifier (e.g. [?X, ?Y])
                 return se.args().stream()
                         .map(a -> translateExpr(a, false, typeMap, modalMode))
                         .collect(Collectors.joining(","));
-            } else {
-                // Var/RowVar head: higher-order predicate application, e.g. (?REL ?X ?Y)
-                // → (V__REL @ V__X @ V__Y)   (valid THF higher-order application)
-                return translateApplicationTHF(se, typeMap, modalMode);
             }
+            return translateApplicationTHF(se, typeMap, modalMode);
         }
 
+        if (!modalMode && "KappaFn".equals(headName)) {
+            String kappa = translateKappaFnNonModal(se, typeMap);
+            if (kappa != null)
+                return kappa;
+        }
+        if (!modalMode && "instance".equals(headName) && se.args().size() == 2) {
+            Expr arg0 = se.args().get(0);
+            Expr arg1 = se.args().get(1);
+            if ((arg0 instanceof Expr.Var || arg0 instanceof Expr.Atom) && arg1 instanceof Expr.Atom a && "Formula".equals(a.name()))
+                return "$true";
+        }
+        if (!modalMode && "modalAttribute".equals(headName) && se.args().size() == 2) {
+            String formulaArg = translatePlainFormulaArg(se.args().get(0), typeMap);
+            String attrArg = translateExpr(se.args().get(1), false, typeMap, false);
+            return "(s__modalAttribute @ " + formulaArg + " @ " + attrArg + ")";
+        }
         return switch (headName) {
             case "not" -> {
                 if (se.args().size() != 1) yield errorStr("not");
-                yield "~(" + translateExpr(se.args().get(0), false, typeMap, modalMode) + ")";
+                yield "(~ " + translateExpr(se.args().get(0), false, typeMap, modalMode) + ")";
             }
             case "and" -> {
                 if (se.args().size() < 2) yield errorStr("and");
@@ -370,5 +517,55 @@ public class ExprToTHF {
         if (debug)
             System.err.println("ExprToTHF: wrong number of arguments to " + op);
         return "";
+    }
+
+    private static Set<String> collectFreeVarsNonModal(Expr e) {
+
+        Set<String> free = new java.util.LinkedHashSet<>();
+        collectFreeVarsNonModal(e, new java.util.HashSet<>(), free);
+        return free;
+    }
+
+    private static void collectFreeVarsNonModal(Expr e, Set<String> bound, Set<String> free) {
+
+        if (e instanceof Expr.Var v) {
+            if (!bound.contains(v.name()))
+                free.add(v.name());
+            return;
+        }
+        if (!(e instanceof Expr.SExpr se))
+            return;
+        if ("KappaFn".equals(se.headName()) &&
+                se.args().size() == 2 &&
+                se.args().get(0) instanceof Expr.Var v) {
+            Set<String> scoped = new java.util.HashSet<>(bound);
+            scoped.add(v.name());
+            collectFreeVarsNonModal(se.args().get(1), scoped, free);
+            return;
+        }
+        if ((Formula.EQUANT.equals(se.headName()) || Formula.UQUANT.equals(se.headName())) &&
+                se.args().size() >= 2) {
+            Set<String> scoped = new java.util.HashSet<>(bound);
+            collectQuantifierVars(se.args().get(0), scoped);
+            collectFreeVarsNonModal(se.args().get(1), scoped, free);
+            return;
+        }
+        if (se.head() != null)
+            collectFreeVarsNonModal(se.head(), bound, free);
+        for (Expr arg : se.args())
+            collectFreeVarsNonModal(arg, bound, free);
+    }
+
+    private static void collectQuantifierVars(Expr varListExpr, Set<String> bound) {
+
+        if (!(varListExpr instanceof Expr.SExpr varList))
+            return;
+        for (Expr v : varList.args()) {
+            switch (v) {
+                case Expr.Var vv -> bound.add(vv.name());
+                case Expr.RowVar rv -> bound.add(rv.name());
+                default -> { }
+            }
+        }
     }
 }

@@ -21,6 +21,11 @@ public class THFnew {
     private static final int PC_STR_LITERAL = 1;  // any StrLiteral node
     private static final int PC_TRUE_FALSE  = 2;  // Atom("True") or Atom("False")
     private static final int PC_FORMULA_ARG = 4;
+    private static final Map<String,String> PLAIN_TYPE_OVERRIDES = Map.of(
+        "KappaFn", "($i > $o) > $i",
+        "cardinality", "$i > $i > $o",
+        "modalAttribute", "$o > $i > $o"
+    );
 
     /*****************************************************************
      * Write the knowledge base to the file directory SUMO_plain.thf
@@ -67,6 +72,28 @@ public class THFnew {
         }
         catch (IOException ex) {
             ex.printStackTrace();
+        }
+    }
+
+    public static void transPlainTHF(KB kb, Writer out) throws IOException {
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        for (Formula f : kb.formulaMap.values()) {
+            if (f instanceof Formula fa && fa.expr != null) fp.preProcessExpr(fa, false, kb);
+            else LoggingUtils.log("ERROR", "Error in parsing FormulaAST");
+        }
+        writeTypesNonModal(kb, out);
+        analyzeBadUsages(kb);
+        for (Formula f : kb.formulaMap.values()) {
+            boolean excluded;
+            if (f instanceof Formula fa && fa.expr != null) {
+                excluded = excludeNonModal(fa, kb, out);
+                if (!excluded) oneTransNonModalExpr(kb, fa, out);
+            }
+            else {
+                excluded = excludeNonModal(f, kb, out);
+                LoggingUtils.log("ERROR", "Error in parsing FormulaAST");
+            }
         }
     }
 
@@ -124,7 +151,7 @@ public class THFnew {
         for (String pred : kb.kbCache.signatures.keySet()) {
             String base = pred;
             Matcher m = Pattern.compile("^(.+?)__(\\d+)(Fn)?$").matcher(pred);
-            if (m.matches()) base = m.group(1) + (m.group(3) == null ? "" : m.group(3));
+            if (m.matches()) base = m.group(1);
             if (!kb.isInstanceOf(base, "Relation")) continue;
             List<String> sig = new ArrayList<>(kb.kbCache.signatures.get(pred));
             boolean isFunction = kb.isInstanceOf(base, "Function");
@@ -139,9 +166,16 @@ public class THFnew {
         for (String t : kb.terms) {
             if (alreadyDeclared.contains(t)) continue;
             if (excludeForTypedef(t, out)) continue;
-            if (kb.isInstanceOf(t, "Relation")) continue;
             if (StringUtil.isNumeric(t)) continue;
             String functor = SUMOformulaToTPTPformula.translateWord(t, t.charAt(0), true);
+            String override = PLAIN_TYPE_OVERRIDES.get(t);
+            if (override != null) {
+                out.write("thf(" + functor + "_tp,type,(" + functor + " : (" + override + "))).\n");
+                String mentionedFunctor = SUMOformulaToTPTPformula.translateWord(t, t.charAt(0), false);
+                out.write("thf(" + functor + "_m_tp,type,(" + mentionedFunctor + " : $i)).\n");
+                continue;
+            }
+            if (kb.isInstanceOf(t, "Relation")) continue;
             out.write("thf(" + functor + "_tp,type,(" + functor + " : $i)).\n");
         }
     }
@@ -747,6 +781,12 @@ public class THFnew {
 
         List<Expr> args = se.args();
         String headName = se.head() instanceof Expr.Atom ha ? ha.name() : null;
+        if (unsupportedPlainFormulaArgHead(headName, kb)) {
+            if (out != null)
+                out.write("% excludeNonModal(): intensional/modal Formula argument requires modal THF: "
+                        + headName + "\n");
+            return true;
+        }
         List<String> problematic_terms = Arrays.asList("airTemperature", "ListFn", "AssignmentFn", "Organism");
         if (headName != null && problematic_terms.contains(headName)) {
             if (out != null) out.write("% exclude(): Problematic Term encountered: " + headName + "\n");
@@ -803,6 +843,45 @@ public class THFnew {
             }
         }
         return headName != null && excludePred(headName, out);
+    }
+
+    private static final Set<String> PLAIN_EXTENSIONAL_FORMULA_ARG_OK = Set.of(
+            "ProbabilityFn",
+            "containsFormula",
+            "increasesLikelihood"
+    );
+
+    private static boolean hasFormulaDomainArg(String headName, KB kb) {
+
+        if (headName == null || Formula.isLogicalOperator(headName) || Formula.EQUAL.equals(headName))
+            return false;
+
+        String base = Modals.baseFunctor(headName);
+        List<String> sig = kb.kbCache.signatures.get(base);
+        if (sig == null)
+            sig = kb.kbCache.signatures.get(headName);
+        if (sig == null)
+            return false;
+
+        boolean isFunction = kb.isInstanceOf(base, "Function") || kb.isInstanceOf(headName, "Function");
+        int start = isFunction ? 1 : 0;
+
+        for (int i = start; i < sig.size(); i++) {
+            String t = sig.get(i);
+            if ("Formula".equals(t) || kb.isSubclass(t, "Formula"))
+                return true;
+        }
+        return false;
+    }
+
+    private static boolean unsupportedPlainFormulaArgHead(String headName, KB kb) {
+
+        if (!hasFormulaDomainArg(headName, kb))
+            return false;
+
+        String base = Modals.baseFunctor(headName);
+        return !PLAIN_EXTENSIONAL_FORMULA_ARG_OK.contains(base)
+                && !"KappaFn".equals(base);
     }
 
     /*****************************************************************
@@ -898,10 +977,60 @@ public class THFnew {
         return sb.toString();
     }
 
+    public static String plainFormulaAtomName(String name) {
+
+        String t = ExprToTPTP.translateAtom(name, true, "fof");
+        if (t.startsWith("s__"))
+            return "p__" + t.substring(3);
+        return "p__" + t;
+    }
+    
+    public static Set<String> collectPlainFormulaAtoms(Expr e) {
+
+        Set<String> result = new java.util.LinkedHashSet<>();
+        collectPlainFormulaAtoms(e, result);
+        return result;
+    }
+
+    private static void collectPlainFormulaAtoms(Expr e, Set<String> result) {
+
+        if (!(e instanceof Expr.SExpr se))
+            return;
+
+        String headName = se.headName();
+        List<Expr> args = se.args();
+
+        if ("instance".equals(headName) && args.size() == 2 &&
+                args.get(0) instanceof Expr.Atom a0 &&
+                args.get(1) instanceof Expr.Atom a1 &&
+                "Formula".equals(a1.name())) {
+            result.add(a0.name());
+        }
+
+        if ("modalAttribute".equals(headName) && args.size() >= 1 &&
+                args.get(0) instanceof Expr.Atom a) {
+            result.add(a.name());
+        }
+
+        if (("not".equals(headName) || "~".equals(headName)) && args.size() == 1 &&
+                args.get(0) instanceof Expr.Atom a) {
+            result.add(a.name());
+        }
+
+        if (se.head() != null)
+            collectPlainFormulaAtoms(se.head(), result);
+
+        for (Expr arg : args)
+            collectPlainFormulaAtoms(arg, result);
+    }
+
     /*****************************************************************
      */
     public static String sigStringNonModal(String pred, List<String> sig, KB kb, boolean function) {
 
+        String override = PLAIN_TYPE_OVERRIDES.get(pred);
+        if (override != null)
+            return override;
         Integer suffixNum = getSuffixNumber(pred);
         if (suffixNum != null && suffixNum > 0) {
             int arity = suffixNum;
@@ -1010,9 +1139,10 @@ public class THFnew {
     /*****************************************************************
      */
     private static Integer getSuffixNumber(String functor) {
-        
-        Matcher m = Pattern.compile("^.*__(\\d+)$").matcher(functor);
-        if (m.matches()) return Integer.parseInt(m.group(1));
+
+        Matcher m = Pattern.compile("^.*__(\\d+)(Fn)?$").matcher(functor);
+        if (m.matches())
+            return Integer.parseInt(m.group(1));
         return null;
     }
 
@@ -1353,7 +1483,6 @@ public class THFnew {
         System.out.println("contains one : " + argMap.containsKey("one"));
         System.out.println("has one arg: " + (argMap.containsKey("one") && argMap.get("one").size() == 1));
         if (argMap.containsKey("one") && argMap.get("one").size() == 1) {
-            System.out.println("THFnew.main(): translate to THF (with modals)");
             PrintWriter writer = new PrintWriter(System.out, true);
             try {
                 String kifStr = argMap.get("one").get(0);

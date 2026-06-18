@@ -284,8 +284,8 @@
             URL.revokeObjectURL(url);
         }
 
-        function viewTestFile(fileName) {
-            const url = 'ViewTest.jsp?name=' + encodeURIComponent(fileName);
+        function viewTestFile(filePath) {
+            const url = 'Editor.jsp?path=' + encodeURIComponent(filePath);
             window.open(url, '_blank');
         }
 
@@ -498,9 +498,9 @@
                     </td>
                     <td>
                         <div class="fileName">
-                            <a href="javascript:void(0);"
-                            onclick="viewTestFile('<%= ValidationUtils.escapeHtml(testFileName) %>')"
-                            style="color:#0073e6;text-decoration:underline;">
+                            <a href="Editor.jsp?path=<%= StringUtil.encode(test.filePath) %>"
+                            target="_blank"
+                            rel="noopener noreferrer">
                                 <%= ValidationUtils.escapeHtml(testFileName) %>
                             </a>
                         </div>

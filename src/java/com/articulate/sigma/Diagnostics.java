@@ -600,6 +600,8 @@ public class Diagnostics {
         return result;
     }
 
+    
+
     /** *****************************************************************
      * Find cases where a variable appears in a quantifier list, but not
      * in the body of the quantified expression.  For example
@@ -620,6 +622,75 @@ public class Diagnostics {
             }
             if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT)
                 return result;
+        }
+        return result;
+    }
+
+    /** *****************************************************************
+     * @return duplicate variables that appear in the same quantifier list.
+     * Example: (exists (?A ?B ?A) (...)) returns ?A.
+     */
+    public static Set<String> duplicateQuantifiedVariables(Formula f) {
+
+        Set<String> result = new TreeSet<>();
+        duplicateQuantifiedVariablesRecurse(f, result);
+        return result;
+    }
+
+    /** *****************************************************************
+     * Recursively find duplicate variables within each individual
+     * exists/forall variable list.
+     */
+    private static void duplicateQuantifiedVariablesRecurse(Formula f, Set<String> result) {
+
+        if (f == null || f.empty() || f.atom())
+            return;
+
+        String head = f.car();
+
+        if (Formula.EQUANT.equals(head) || Formula.UQUANT.equals(head)) {
+            List<Formula> args = f.complexArgumentsToArrayList(1);
+            if (args == null || args.size() < 2)
+                return;
+            Formula varList = args.get(0);
+            List<String> qList = varList.argumentsToArrayListString(0);
+            Set<String> seen = new HashSet<>();
+            if (qList != null) {
+                for (String var : qList) {
+                    if (!seen.add(var))
+                        result.add(var);
+                }
+            }
+            duplicateQuantifiedVariablesRecurse(args.get(1), result);
+            return;
+        }
+        List<Formula> args = f.complexArgumentsToArrayList(1);
+        if (args != null) {
+            for (Formula arg : args)
+                duplicateQuantifiedVariablesRecurse(arg, result);
+        }
+    }
+
+    /** *****************************************************************
+     * Find formulas with duplicate variables in the same quantifier list.
+     */
+    public static List<String> duplicateQuantifiedVariables(KB kb) {
+
+        List<String> result = new ArrayList<>();
+        for (Formula form : kb.formulaMap.values()) {
+            String s = form.getFormula();
+            if (!s.contains(Formula.UQUANT) && !s.contains(Formula.EQUANT))
+                continue;
+            Set<String> dupes = duplicateQuantifiedVariables(form);
+            if (!dupes.isEmpty()) {
+                result.add("Duplicate quantified variable(s) " + dupes +
+                        " in " + FileUtil.noPath(form.sourceFile) +
+                        ":" + form.startLine + " " + s);
+            }
+            if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT) {
+                result.add("limited to " + RESULT_LIMIT + " results");
+                return result;
+            }
         }
         return result;
     }
@@ -2006,6 +2077,9 @@ public class Diagnostics {
             }
             else if (argMap.containsKey("c")) {
                 System.out.println(termsWithoutDoc(kb));
+            }
+            else if (argMap.containsKey("dq")) {
+                System.out.println(duplicateQuantifiedVariables(kb));
             }
             else if (argMap.containsKey("q")) {
                 System.out.println(quantifierNotInBody(kb));

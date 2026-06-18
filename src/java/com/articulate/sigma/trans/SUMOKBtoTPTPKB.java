@@ -571,7 +571,7 @@ public class SUMOKBtoTPTPKB {
                         "(s__ListOrderFn(" + fn + "(" + args + "),n__" + i + ") = V__X" + i + "))).");
                 name = "kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement();
                 pw.println("fof(" + name + ",axiom,(! [" + vars + "] : " +
-                    "s__inList(V__X" + i + "," + fn + "(" + args + ")))).");
+                        "s__inList(V__X" + i + "," + fn + "(" + args + ")))).");
             }
         }
     }
