@@ -2630,37 +2630,28 @@ public class KBcache implements Serializable {
      */
     public void copyNewPredFromVariableArity(String pred, String oldPred, int arity) {
 
-        // Fast path: pred already registered — skip expensive lock acquisition.
-        // signatures is a ConcurrentHashMap so this read is thread-safe.
+        if (pred == null || oldPred == null || arity < 1) return;
         if (signatures.containsKey(pred)) return;
-
         synchronized (this) {
-            // Double-check under lock: another thread may have registered pred
-            // between the fast-path check above and this point.
             if (signatures.containsKey(pred)) return;
-
-            if (debug) System.out.println("copyNewPredFromVariableArity(): pred,oldPred: " + pred + ", " + oldPred);
             List<String> oldSig = signatures.get(oldPred);
-            List<String> newSig = new ArrayList<>();
-            if (oldSig != null)
-                newSig = new ArrayList(oldSig);
-            if (signatures.keySet().contains(oldPred))
-                signatures.put(pred,newSig);
-            String lastType = oldSig.get(oldSig.size()-1);
-            // When the base relation has no domain declarations its last sig entry is ""
-            // (the empty range placeholder).  Filling expanded args with "" causes sigString()
-            // to skip them, producing a type like (w > $o) for a 3-arg variant instead of
-            // ($i > $i > $i > w > $o).  Default to Entity — the universal SUMO type — so
-            // that each expanded argument gets typed as $i.
-            if (lastType == null || lastType.isEmpty()) lastType = "Entity";
-            for (int i = oldSig.size(); i <= arity; i++) {
-                newSig.add(lastType);
+            List<String> newSig;
+            String lastType;
+            if (oldSig == null || oldSig.isEmpty()) {
+                newSig = new ArrayList<>();
+                newSig.add(kb.isFunction(oldPred) ? "Entity" : "");
+                lastType = "Entity";
             }
-            if (instanceOf.keySet().contains(oldPred))
-                instanceOf.put(pred, instanceOf.get(oldPred));
-            valences.put(pred,arity);
-            if (kb.isFunction(oldPred))
-                kb.kbCache.functions.add(pred);
+            else {
+                newSig = new ArrayList<>(oldSig);
+                lastType = oldSig.get(oldSig.size() - 1);
+                if (lastType == null || lastType.isEmpty()) lastType = "Entity";
+            }
+            while (newSig.size() <= arity) newSig.add(lastType);
+            signatures.put(pred, newSig);
+            if (instanceOf.containsKey(oldPred)) instanceOf.put(pred, instanceOf.get(oldPred));
+            valences.put(pred, arity);
+            if (kb.isFunction(oldPred)) kb.kbCache.functions.add(pred);
             kb.terms.add(pred);
         }
     }
