@@ -268,6 +268,9 @@ document.addEventListener("DOMContentLoaded", async function() {
       window.initialOpenFile.source || "server",
       window.initialOpenFile.path || ""
     );
+
+    const line = Number(window.initialOpenFile.line || 1);
+    jumpToLine(line, 0);
   }
   else {
     const examples = {
@@ -1082,23 +1085,47 @@ function handleTranslateClick(event, kind) {
   closeTranslateMenu();
 }
 
-function jumpToError(line, start = 0) {
+function jumpToLine(line, start = 0) {
   if (!codeEditor) return;
 
-  const lineIndex = Math.max(0, line - 1);
-
-  codeEditor.focus();
-  codeEditor.setCursor({ line: lineIndex, ch: start });
-  codeEditor.scrollIntoView(
-    { line: lineIndex, ch: start },
-    100   // margin
+  const lineIndex = Math.max(
+    0,
+    Math.min(Number(line || 1) - 1, codeEditor.lineCount() - 1)
   );
 
-  // Optional: flash the line
-  const handle = codeEditor.addLineClass(lineIndex, "background", "error-flash");
-  setTimeout(() => {
-    if (handle) codeEditor.removeLineClass(lineIndex, "background", "error-flash");
-  }, 800);
+  const ch = Math.max(0, Number(start || 0));
+  const pos = { line: lineIndex, ch };
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      codeEditor.refresh();
+
+      codeEditor.operation(() => {
+        codeEditor.focus();
+        codeEditor.setCursor(pos);
+
+        // First try CodeMirror's built-in scroll.
+        codeEditor.scrollIntoView({ from: pos, to: pos }, 120);
+
+        // Then force an explicit scroll position. This is more reliable
+        // for large files loaded immediately after page initialization.
+        const scroller = codeEditor.getScrollerElement();
+        const coords = codeEditor.charCoords(pos, "local");
+        const y = Math.max(0, coords.top - scroller.clientHeight / 3);
+        codeEditor.scrollTo(null, y);
+      });
+
+      const handle = codeEditor.addLineClass(lineIndex, "background", "error-flash");
+      setTimeout(() => {
+        if (handle)
+          codeEditor.removeLineClass(lineIndex, "background", "error-flash");
+      }, 800);
+    });
+  });
+}
+
+function jumpToError(line, start = 0) {
+  jumpToLine(line, start);
 }
 
 // ======================================================

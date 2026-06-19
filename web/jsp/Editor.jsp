@@ -77,7 +77,17 @@
   String initialName = null;
   String initialContent = null;
   String pathParam = request.getParameter("path");
+  int initialLine = 1;
 
+  try {
+      String lineParam = request.getParameter("line");
+      if (lineParam != null && !lineParam.trim().isEmpty())
+          initialLine = Math.max(1, Integer.parseInt(lineParam.trim()));
+  }
+  catch (NumberFormatException ignored) {
+      initialLine = 1;
+  }
+  
   if (pathParam != null && !pathParam.trim().isEmpty()) {
       try {
           Path serverFile = resolveServerPath(pathParam);
@@ -94,7 +104,7 @@
   <form onsubmit="return false;" enctype="multipart/form-data" style="display:none;" id="uploadForm">
     <input type="file" name="kifFile" id="kifFile" accept=".kif,.tptp,.tff,.p,.fof,.cnf,.thf,.txt" required />
   </form>
-  <script src="/sigma/javascript/editor.js"></script>
+  <script src="/sigma/javascript/editor.js?v=2"></script>
   <script>
     window.initialErrors = [
       <%
@@ -123,7 +133,8 @@
         name: "<%= jsonEsc(initialName) %>",
         path: "<%= jsonEsc(initialPath) %>",
         contents: "<%= jsonEsc(initialContent) %>",
-        source: "server"
+        source: "server",
+        line: <%= initialLine %>
       }<% } else { %>null<% } %>;
   </script>
     <div class="layout">
