@@ -113,7 +113,7 @@ public class InferenceTest {
         assertTrue("Invalid test data in " + fInput + ": " + test.errors,
                 test.errors == null || test.errors.isEmpty());
 
-        test.runTest(kb, "VAMPIRE", false, false, false, false);
+        test.runTest(kb, "VAMPIRE");
 
         assertNotNull("No result produced for " + fInput, test.result);
 

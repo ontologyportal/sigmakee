@@ -1334,9 +1334,9 @@ public class THFnew {
      * {@code conclusion} (domain 2), {@code consistent} (domains 1,2),
      * {@code fears} (domain 2), {@code hopes} (domain 2), and others.
      */
-    private static boolean hasFormulaDomainArgMismatch(Expr e,
-                                                        Map<String, Set<String>> typeMap,
-                                                        KB kb) {
+    public static boolean hasFormulaDomainArgMismatch(Expr e,
+                                           Map<String, Set<String>> typeMap,
+                                           KB kb) {
         if (!(e instanceof Expr.SExpr se)) return false;
         String head = se.headName();
         if (head != null && !Formula.isLogicalOperator(head)

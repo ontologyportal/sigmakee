@@ -1066,14 +1066,14 @@ public class Modals {
                         "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3)) => " +
                         "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)))).\n";
             case SERIAL:
-                return "thf(" + modalOp + "_ser" + ",axiom,(! [W:w" + quantArgs +
-                        "] : (?[U:w] : (" + accreln + " @ s__" + modalOp + args + " @ W @ U)))).\n";
+                return "thf(" + modalOp + "_ser,axiom,(! [W:w" + quantArgs +
+                        "] : (? [U:w] : (" + accreln + " @ s__" + modalOp + args + " @ W @ U)))).\n";
             case EUCLIDEAN:
-                return "thf(" + modalOp + "_eucl" + ",axiom,(! [W1:w,W2:2,W3:w" + quantArgs +
-                        "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
-                        "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)) => " +
-                        "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3))).\n";
-        }
+                return "thf(" + modalOp + "_eucl,axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
+                    "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
+                    "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)) => " +
+                    "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3)))).\n";
+                    }
         System.out.println("Error in genFrameAxiom() invalid frame: " + frameAx);
         return "";
     }
@@ -1094,10 +1094,10 @@ public class Modals {
                 "thf(cworld_tp,type,(s__CW : w)).\n" +
                 "thf(s__worlds_tp,type,(s__World : w)).\n" +
 
-                "thf(accreln1_tp,type,s__accreln1 : (m > w > w > $o)).\n" +
-                "thf(accreln2_tp,type, s__accreln2: (m > $i > w > w > $o) ).\n" +
-                "thf(accreln3_tp,type, s__accreln3: (m > $i > $i > w > w > $o) ).\n" +
-                "thf(accreln3norm_tp,type, s__accreln3norm: (m > $i > m > w > w > $o) ).\n" +
+                "thf(accreln1_tp,type,(s__accreln1 : (m > w > w > $o))).\n" +
+                "thf(accreln2_tp,type,(s__accreln2 : (m > $i > w > w > $o))).\n" +
+                "thf(accreln3_tp,type,(s__accreln3 : (m > $i > $i > w > w > $o))).\n" +
+                "thf(accreln3norm_tp,type,(s__accreln3norm : (m > $i > m > w > w > $o))).\n" +
 
                 genAllModalSystems();
                 //  + genDistinctModals(); // $distinct doesn't appear to be allowed by Vampire in THF

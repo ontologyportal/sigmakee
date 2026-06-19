@@ -26,7 +26,20 @@ public class EditorServlet extends HttpServlet {
     boolean debug = true;
     private static final Object TRANSLATE_LOCK = new Object();
     private static final Set<String> TQ_META_PREDICATES = new HashSet<>(Arrays.asList(
-        "note", "category", "file", "minLang", "regen", "time", "query", "answer"
+        "note",
+        "category",
+        "file",
+        "minLang",
+        "regen",
+        "time",
+        "query",
+        "answer",
+        "closedWorldAssumption",
+        "modusPonens",
+        "dropOnePremise",
+        "HOLUseModals",
+        "holUseModals",
+        "HolUseModals"
     ));
 
     @Override

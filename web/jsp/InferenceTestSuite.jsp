@@ -61,6 +61,10 @@
     int timeout = ValidationUtils.sanitizeInteger(request.getParameter("timeout"), 30);
     int maxAnswers = ValidationUtils.sanitizeInteger(request.getParameter("maxAnswers"), 1);
     boolean overrideLanguage = "yes".equalsIgnoreCase(request.getParameter("overrideLanguage"));
+    boolean overrideClosedWorldAssumption = "yes".equalsIgnoreCase(request.getParameter("overrideClosedWorldAssumption"));
+    boolean overrideModusPonens = "yes".equalsIgnoreCase(request.getParameter("overrideModusPonens"));
+    boolean overrideDropOnePremise = "yes".equalsIgnoreCase(request.getParameter("overrideDropOnePremise"));
+    boolean overrideHOLUseModals = "yes".equalsIgnoreCase(request.getParameter("overrideHOLUseModals"));
     boolean overrideTimeout = "yes".equalsIgnoreCase(request.getParameter("overrideTimeout"));
     List<String> availableProvers = TheoremProverController.availableProvers();
     String inferenceEngine = Optional.ofNullable(request.getParameter("inferenceEngine")).orElse("VAMPIRE");
@@ -82,7 +86,7 @@
         response.setCharacterEncoding("UTF-8");
         response.setHeader("Cache-Control", "no-store");
         String testPath = request.getParameter("testPath");
-        InferenceTest test = testPath == null ? null : inferenceTestSuite.getInferenceTests().get(testPath);
+        InferenceTest test = testPath == null ? null : inferenceTestSuite.reloadTest(testPath);
         if (test == null) {
             out.print("{"
                 + "\"ok\":false,"
@@ -100,10 +104,16 @@
         String selectedLanguage = "HOL".equalsIgnoreCase(translationMode) ? "thf" : TPTPlang;
         String effectiveLanguage = overrideLanguage ? selectedLanguage : test.minLang;
         int effectiveTimeout = overrideTimeout ? timeout : test.timeout;
-        boolean closedWorldAssumption = "yes".equalsIgnoreCase(cwa);
+        boolean uiClosedWorldAssumption = "yes".equalsIgnoreCase(cwa);
+        boolean effectiveClosedWorldAssumption = overrideClosedWorldAssumption ? uiClosedWorldAssumption : test.closedWorldAssumption;
+        boolean effectiveModusPonens = overrideModusPonens ? modusPonens : test.modusPonens;
+        boolean effectiveDropOnePremise = overrideDropOnePremise ? dropOnePremise : test.dropOnePremise;
+        boolean effectiveHOLUseModals = overrideHOLUseModals ? holUseModals : test.holUseModals;
         String message = "";
         try {
-            inferenceTestSuite.runTestOverload(testPath, proverType, effectiveLanguage, effectiveVampireMode, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals, effectiveTimeout, maxAnswers);
+            inferenceTestSuite.runTestOverload(testPath, proverType, effectiveLanguage, effectiveVampireMode,
+                effectiveClosedWorldAssumption, effectiveModusPonens, effectiveDropOnePremise,
+                effectiveHOLUseModals, effectiveTimeout, maxAnswers);
         }
         catch (Throwable t) {
             message = t.getClass().getSimpleName() + ": " + t.getMessage();
@@ -524,16 +534,29 @@
         </div>
         <div class="overrideRow">
             <label>
-                <input type="checkbox" name="overrideLanguage" value="yes" <%= overrideLanguage ? "checked" : "" %>>
-                Override meta predicate minLang
-            </label>
-            <label>
-                <input type="checkbox" name="overrideTimeout" value="yes" <%= overrideTimeout ? "checked" : "" %>>
-                Override meta predicate timeout
-            </label>
-            <span class="tiny">
-                (Unchecked means use each test file's meta predicates/defaults.)
-            </span>
+    <input type="checkbox" name="overrideLanguage" value="yes" <%= overrideLanguage ? "checked" : "" %>>
+        Override meta predicate minLang
+    </label>
+    <label>
+        <input type="checkbox" name="overrideTimeout" value="yes" <%= overrideTimeout ? "checked" : "" %>>
+        Override meta predicate timeout
+    </label>
+    <label>
+        <input type="checkbox" name="overrideClosedWorldAssumption" value="yes" <%= overrideClosedWorldAssumption ? "checked" : "" %>>
+        Override closedWorldAssumption
+    </label>
+    <label>
+        <input type="checkbox" name="overrideModusPonens" value="yes" <%= overrideModusPonens ? "checked" : "" %>>
+        Override modusPonens
+    </label>
+    <label>
+        <input type="checkbox" name="overrideDropOnePremise" value="yes" <%= overrideDropOnePremise ? "checked" : "" %>>
+        Override dropOnePremise
+    </label>
+    <label>
+        <input type="checkbox" name="overrideHOLUseModals" value="yes" <%= overrideHOLUseModals ? "checked" : "" %>>
+        Override HOLUseModals
+    </label>
         </div>
         <div class="actions">
             <button type="button" class="actionBtn runBtn" onclick="runSelectedTests()">Run Selected</button>
@@ -645,6 +668,10 @@
                         <div>file minLang: <b><%= ValidationUtils.escapeHtml(test.minLang) %></b></div>
                         <div>file timeout: <b><%= test.timeout %></b>s</div>
                         <div>regen: <b><%= test.tptpRegenRequired %></b></div>
+                        <div>CWA: <b><%= test.closedWorldAssumption %></b></div>
+                        <div>modusPonens: <b><%= test.modusPonens %></b></div>
+                        <div>dropOnePremise: <b><%= test.dropOnePremise %></b></div>
+                        <div>HOLUseModals: <b><%= test.holUseModals %></b></div>
                     </td>
                     <td id="status_<%= rowId %>" class="<%= cssClass %>">
                         <%= status %>

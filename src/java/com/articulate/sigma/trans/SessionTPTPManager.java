@@ -905,22 +905,87 @@ public class SessionTPTPManager {
         }
     }
 
+    private static boolean isFormulaTypeGuard(Expr e, Map<String, Set<String>> typeMap) {
+
+        if (!(e instanceof Expr.SExpr se))
+            return false;
+
+        if (!"instance".equals(se.headName()))
+            return false;
+
+        List<Expr> args = se.args();
+        if (args.size() != 2)
+            return false;
+
+        if (!(args.get(0) instanceof Expr.Var v))
+            return false;
+
+        if (!(args.get(1) instanceof Expr.Atom a))
+            return false;
+
+        if (!"Formula".equals(a.name()))
+            return false;
+
+        Set<String> types = typeMap.get(v.name());
+        return types != null && types.contains("Formula");
+    }
+
+    private static Expr stripFormulaTypeGuards(Expr e, Map<String, Set<String>> typeMap) {
+
+        if (!(e instanceof Expr.SExpr se))
+            return e;
+
+        String head = se.headName();
+        List<Expr> args = se.args();
+
+        if ("=>".equals(head) && args.size() == 2) {
+            Expr antecedent = stripFormulaTypeGuards(args.get(0), typeMap);
+            Expr consequent = stripFormulaTypeGuards(args.get(1), typeMap);
+
+            if (isFormulaTypeGuard(antecedent, typeMap))
+                return consequent;
+
+            return new Expr.SExpr(se.head(), List.of(antecedent, consequent));
+        }
+
+        if ("and".equals(head)) {
+            List<Expr> kept = new ArrayList<>();
+            for (Expr arg : args) {
+                Expr cleaned = stripFormulaTypeGuards(arg, typeMap);
+                if (!isFormulaTypeGuard(cleaned, typeMap))
+                    kept.add(cleaned);
+            }
+
+            if (kept.isEmpty())
+                return new Expr.Atom("True");
+
+            if (kept.size() == 1)
+                return kept.get(0);
+
+            return new Expr.SExpr(se.head(), kept);
+        }
+
+        List<Expr> cleanedArgs = new ArrayList<>(args.size());
+        for (Expr arg : args)
+            cleanedArgs.add(stripFormulaTypeGuards(arg, typeMap));
+
+        return new Expr.SExpr(se.head(), cleanedArgs);
+    }
+
     public static Set<String> getUserAssertionsTHFStatements(KB kb, String sessionId, boolean useModals) {
 
         Set<String> result = new LinkedHashSet<>();
-        if (kb == null) return result;
-        
+        if (kb == null)
+            return result;
         return kb.withUserAssertionLock(() -> {
-            String uaBase = kb.name + KB._userAssertionsString; // SUMO_UserAssertions.kif
+            String uaBase = kb.name + KB._userAssertionsString;
             FormulaPreprocessor fp = new FormulaPreprocessor();
             int axNum = 0;
             for (Formula f : kb.formulaMap.values()) {
                 if (f == null || f.sourceFile == null || f.expr == null)
                     continue;
-                LoggingUtils.log("THF UA include session=" + sessionId + " formulaSession=" + f.uaSessionId + " formula=" + f.getFormula());
                 String srcBase = new File(f.sourceFile).getName();
                 boolean hasSession = !StringUtil.emptyString(sessionId);
-
                 if (hasSession) {
                     if (!sessionId.equals(f.uaSessionId))
                         continue;
@@ -929,46 +994,111 @@ public class SessionTPTPManager {
                     if (!uaBase.equals(srcBase))
                         continue;
                 }
+                LoggingUtils.log("THF UA translating session=" + sessionId +
+                        " formulaSession=" + f.uaSessionId +
+                        " formula=" + f.getFormula());
                 try {
-                    Set<Expr> processed = withSessionCache(sessionId, kb, () -> fp.preProcessExpr(f, false, kb));
+                    StringWriter excludeLog = new StringWriter();
+                    boolean excluded = useModals
+                            ? THFnew.exclude(f, kb, excludeLog)
+                            : THFnew.excludeNonModal(f, kb, excludeLog);
+                    if (excluded) {
+                        LoggingUtils.log("THF UA excluded formula=" + f.getFormula() +
+                                " reason=" + excludeLog.toString().replace('\n', ' '));
+                        continue;
+                    }
+
+                    Set<Expr> processed = withSessionCache(sessionId, kb,
+                            () -> fp.preProcessExpr(f, false, kb));
+
                     if (processed == null || processed.isEmpty())
                         continue;
-                    for (Expr e : processed) {
-                        if (e == null || SUMOKBtoTPTPKB.hasUnresolvedPredVar(e))
-                            continue;
-                        Map<String, Set<String>> foundTypes =
-                                withSessionCache(sessionId, kb, () -> fp.findTypeRestrictionsExpr(e, kb));
-                        final Map<String, Set<String>> typeMap =
-                                foundTypes == null ? new HashMap<>() : new HashMap<>(foundTypes);
-                        String thf;
-                        if (useModals) {
-                            Modals.markModalAttributeFormulaVarsExpr(e, typeMap);
 
-                            Map.Entry<Expr, Map<String, Set<String>>> modalResult =
-                                    withSessionCache(sessionId, kb, () -> Modals.processModalsExpr(e, kb, typeMap));
-                            Expr modalExpr = modalResult.getKey();
-                            if (modalExpr == null)
+                    if (useModals) {
+                        Map.Entry<Expr, Map<String, Set<String>>> initialModal =
+                                withSessionCache(sessionId, kb,
+                                        () -> Modals.processModalsExpr(f.expr, kb));
+
+                        if (initialModal == null || initialModal.getKey() == null)
+                            continue;
+
+                        Expr initialModalExpr = initialModal.getKey();
+
+                        Map<String, Set<String>> typeMap = new HashMap<>();
+                        Map<String, Set<String>> foundTypes = withSessionCache(sessionId, kb,
+                                () -> fp.findTypeRestrictionsExpr(initialModalExpr, kb));
+
+                        if (foundTypes != null)
+                            typeMap.putAll(foundTypes);
+
+                        if (initialModal.getValue() != null)
+                            typeMap.putAll(initialModal.getValue());
+
+                        Set<String> worldTypes = new HashSet<>();
+                        worldTypes.add("World");
+                        typeMap.put(Modals.makeWorldVarExpr(f.expr), worldTypes);
+
+                        Modals.markModalAttributeFormulaVarsExpr(f.expr, typeMap);
+
+                        for (Expr e : processed) {
+                            if (e == null || SUMOKBtoTPTPKB.hasUnresolvedPredVar(e))
                                 continue;
 
-                            typeMap.putAll(modalResult.getValue());
-                            thf = ExprToTHF.translate(modalExpr, false, typeMap);
+                            Expr cleaned = stripFormulaTypeGuards(e, typeMap);
+
+                            Map.Entry<Expr, Map<String, Set<String>>> modalResult =
+                                    withSessionCache(sessionId, kb,
+                                            () -> Modals.processModalsExpr(cleaned, kb, typeMap));
+
+                            if (THFnew.hasFormulaDomainArgMismatch(cleaned, typeMap, kb)) {
+                                LoggingUtils.log("THF UA excluded formula-domain mismatch: " + cleaned.toKifString());
+                                continue;
+                            }
+
+                            if (modalResult == null || modalResult.getKey() == null)
+                                continue;
+
+                            if (modalResult.getValue() != null)
+                                typeMap.putAll(modalResult.getValue());
+
+                            String thf = ExprToTHF.translate(modalResult.getKey(), false, typeMap);
+
+                            if (!StringUtil.emptyString(thf))
+                                result.add("thf(user_assert_" + (axNum++) + ",axiom," + thf + ").");
                         }
-                        else {
+                    }
+                    else {
+                        for (Expr e : processed) {
+                            if (e == null || SUMOKBtoTPTPKB.hasUnresolvedPredVar(e))
+                                continue;
+
+                            Map<String, Set<String>> foundTypes =
+                                    withSessionCache(sessionId, kb,
+                                            () -> fp.findTypeRestrictionsExpr(e, kb));
+
+                            Map<String, Set<String>> typeMap =
+                                    foundTypes == null ? new HashMap<>() : new HashMap<>(foundTypes);
+
                             for (String atom : ExprToTHF.collectPlainFormulaAtoms(e)) {
                                 String p = ExprToTHF.plainFormulaAtomName(atom);
                                 result.add("thf(" + p + "_tp,type,(" + p + " : $o)).");
                             }
-                            thf = ExprToTHF.translateNonModal(e, false, typeMap);
+
+                            String thf = ExprToTHF.translateNonModal(e, false, typeMap);
+
+                            if (!StringUtil.emptyString(thf))
+                                result.add("thf(user_assert_" + (axNum++) + ",axiom," + thf + ").");
                         }
-                        if (!StringUtil.emptyString(thf))
-                            result.add("thf(user_assert_" + (axNum++) + ",axiom," + thf + ").");
                     }
                 }
                 catch (Exception ex) {
-                    LoggingUtils.log("ERROR", "SessionTPTPManager.getUserAssertionsTHFStatements(): failed on "
-                            + f.getFormula() + " : " + ex.getMessage());
+                    LoggingUtils.log("ERROR",
+                            "SessionTPTPManager.getUserAssertionsTHFStatements(): failed on " +
+                                    f.getFormula() + " : " + ex.getMessage());
+                    ex.printStackTrace();
                 }
             }
+
             return result;
         });
     }

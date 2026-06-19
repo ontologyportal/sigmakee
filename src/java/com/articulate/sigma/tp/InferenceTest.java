@@ -32,6 +32,14 @@ public class InferenceTest {
     public String minLang = "fof";
     /** Whether session TPTP files must be regenerated after applying assertions. */
     public boolean tptpRegenRequired = false;
+    /** Whether this test should use closed-world assumption. */
+    public boolean closedWorldAssumption = false;
+    /** Whether this test should use modus ponens. */
+    public boolean modusPonens = false;
+    /** Whether this test should drop one premise during inference. */
+    public boolean dropOnePremise = false;
+    /** Whether this test should use HOL modal translation. */
+    public boolean holUseModals = false;
     /** Optional descriptive note for the test. */
     public String note;
     /** Optional category used to group the test. */
@@ -88,9 +96,9 @@ public class InferenceTest {
      * @param dropOnePremise whether to drop one premise during inference.
      * @param holUseModals whether HOL modal translation is enabled. 
      */
-    public void runTest(KB kb, String proverType, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals) {
+    public void runTest(KB kb, String proverType) {
         
-        runTest(kb, proverType, this.minLang, "CASC", closedWorldAssumption, modusPonens, dropOnePremise, holUseModals, this.timeout, this.expectedAnswers.size());
+        runTest(kb, proverType, this.minLang, "CASC", this.closedWorldAssumption, this.modusPonens, this.dropOnePremise, this.holUseModals, this.timeout, this.expectedAnswers.size());
     }
 
     /********************************************************************
@@ -319,6 +327,10 @@ public class InferenceTest {
                 if (formula.startsWith("(file")) this.requiredConstituents.add(formula.substring(6, formula.length() - 1));
                 else if (formula.startsWith("(minLang")) this.minLang = formula.substring(9, formula.length() - 1).trim().toLowerCase();
                 else if (formula.startsWith("(regen")) this.tptpRegenRequired = formula.substring(7, formula.length() - 1).trim().equals("true");
+                else if (formula.startsWith("(closedWorldAssumption")) this.closedWorldAssumption = formula.substring(formula.indexOf(' ') + 1, formula.length() - 1).trim().matches("(?i)true|yes");
+                else if (formula.startsWith("(modusPonens")) this.modusPonens = formula.substring(formula.indexOf(' ') + 1, formula.length() - 1).trim().matches("(?i)true|yes");
+                else if (formula.startsWith("(dropOnePremise")) this.dropOnePremise = formula.substring(formula.indexOf(' ') + 1, formula.length() - 1).trim().matches("(?i)true|yes");
+                else if (formula.startsWith("(holUseModals")) this.holUseModals = formula.substring(14, formula.length() - 1).trim().equalsIgnoreCase("true");
                 else if (formula.startsWith("(note")) this.note = formula.substring(6, formula.length() - 1);
                 else if (formula.startsWith("(category")) this.category = formula.substring(10, formula.length() - 1);
                 else if (formula.startsWith("(time")) this.timeout = Integer.parseInt(formula.substring(6, formula.length() - 1));
@@ -441,7 +453,7 @@ public class InferenceTest {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             InferenceTest test = new InferenceTest(argMap.get("r").get(0));
-            test.runTest(kb, "VAMPIRE", false, false, false, false);
+            test.runTest(kb, "VAMPIRE");
             test.printResult();
         }
     }
