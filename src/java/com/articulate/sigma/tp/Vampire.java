@@ -28,6 +28,7 @@ import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.LoggingUtils;
 import com.articulate.sigma.Formula;
 
+
 import tptp_parser.TPTPFormula;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -82,8 +83,8 @@ public class Vampire {
     private List<String> commands;
     /** Mode to be run by vampire [AVATART|CASC|CUSTOM] */
     public ModeType mode = null;
-    /** Adds option -qa plain to the vampire command list */
-    public boolean askQuestion = true;
+    /** Adds option -qa plain to the vampire command list, finds the values for variables */
+    public boolean askQuestion = false;
     /**  */
     public boolean modensPonens = false;
     /** Storage variable for the output of Vampire */
@@ -105,7 +106,7 @@ public class Vampire {
         this.mode = ModeType.CASC;
         this.timeout = 30;
         this.maxAnswers = 1;
-        this.askQuestion = true;
+        this.askQuestion = false;
         this.logic = Logic.FOL;
         this.output = new ArrayList<>();
     }
@@ -178,6 +179,11 @@ public class Vampire {
      * Set the sessionId
      */
     public void setSessionId(String sid) { this.sessionId = sid; }
+
+    /***************************************************************
+     * Enable Vampire question-answering mode only for answer-seeking queries. Boolean conjectures should leave this false.
+     */
+    public void setAskQuestion(boolean askQuestion) {this.askQuestion = askQuestion;}
 
     public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.getMgr().getPref("vampire")));}
 
@@ -309,8 +315,9 @@ public class Vampire {
                 "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
                 "-fde","none","-updr","off","-rp","off","-bce","off"
         ));
-        if (this.askQuestion){
-            this.commands.add("-qa plain");
+        if (this.askQuestion) {
+            this.commands.add("-qa");
+            this.commands.add("plain");
         }
         try{
             this.runCustom(kbFile);

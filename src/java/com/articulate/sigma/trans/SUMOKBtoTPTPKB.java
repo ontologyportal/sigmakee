@@ -1311,7 +1311,8 @@ public class SUMOKBtoTPTPKB {
         }
         if (CWA) pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
         if (conjecture != null) {
-            String type = isQuestion ? "question" : "conjecture";
+            boolean hasAnswerVars = conjecture.collectUnquantifiedVariables() != null && !conjecture.collectUnquantifiedVariables().isEmpty();
+            String type = hasAnswerVars ? "question" : "conjecture";
             for (String theTPTPFormula : conjecture.theTptpFormulas)
                 pw.println(localLang + "(prove_from_" + getSanitizedKBname() + "," + type + ",(" + theTPTPFormula + ")).");
         }

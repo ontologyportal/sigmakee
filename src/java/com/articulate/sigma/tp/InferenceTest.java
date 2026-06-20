@@ -26,6 +26,7 @@ import java.io.File;
 /** Represents a single .tq inference test, including metadata, assertions, expected answers, and results. */
 public class InferenceTest {
 
+    public static boolean debug = true;
     /** Path to the .tq inference test file. */
     public String filePath;
     /** Minimum TPTP language required by the test. */
@@ -132,12 +133,15 @@ public class InferenceTest {
             success = this.result != null && this.result.success;
         }
         finally {
-            if (success) reset(kb, sessionId);
+            if (success) {
+                reset(kb, sessionId);
+            }
             else {
                 SessionTPTPManager.purgeSessionMemoryOnly(sessionId);
                 LoggingUtils.log("ERROR", "Test failed, saved session directory: " + SessionTPTPManager.getSessionDir(sessionId));
                 LoggingUtils.log("UA in memory after failure purge: " + kb.countUserAssertionFormulasInMemory());
             }
+            if (debug) printResult();
         }
     }
 
@@ -412,6 +416,7 @@ public class InferenceTest {
         System.out.println("    File:       " + this.filePath);
         System.out.println("    Note:       " + this.note);
         System.out.println("    Query:      " + this.query);
+        System.out.println("    Assertions:      " + this.assertions);
         System.out.println("    Timeout:    " + this.timeout + " seconds");
         if (this.result == null) {
             System.out.println("Result:     null");

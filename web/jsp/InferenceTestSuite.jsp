@@ -25,6 +25,13 @@
         if ("ERROR".equals(status)) return 3;
         return 99;
     }
+
+    private static String validationErrorMessage(InferenceTest test) {
+
+        if (test == null || test.errors == null || test.errors.isEmpty())
+            return "";
+        return String.join("; ", test.errors);
+    }
 %>
 <%
     String action = request.getParameter("action");
@@ -109,21 +116,29 @@
         boolean effectiveModusPonens = overrideModusPonens ? modusPonens : test.modusPonens;
         boolean effectiveDropOnePremise = overrideDropOnePremise ? dropOnePremise : test.dropOnePremise;
         boolean effectiveHOLUseModals = overrideHOLUseModals ? holUseModals : test.holUseModals;
-        String message = "";
-        try {
-            inferenceTestSuite.runTestOverload(testPath, proverType, effectiveLanguage, effectiveVampireMode,
-                effectiveClosedWorldAssumption, effectiveModusPonens, effectiveDropOnePremise,
-                effectiveHOLUseModals, effectiveTimeout, maxAnswers);
+        String message = validationErrorMessage(test);
+
+        if (StringUtil.emptyString(message)) {
+            try {
+                inferenceTestSuite.runTestOverload(testPath, proverType, effectiveLanguage, effectiveVampireMode,
+                    effectiveClosedWorldAssumption, effectiveModusPonens, effectiveDropOnePremise,
+                    effectiveHOLUseModals, effectiveTimeout, maxAnswers);
+            }
+            catch (Throwable t) {
+                message = t.getClass().getSimpleName() + ": " + t.getMessage();
+                if (test.result == null) test.result = new InferenceTest.InferenceTestResult();
+                test.result.success = false;
+                test.result.szsStatus = "Exception";
+                if (test.result.proof == null) test.result.proof = new ArrayList<>();
+                test.result.proof.add(message);
+            }
         }
-        catch (Throwable t) {
-            message = t.getClass().getSimpleName() + ": " + t.getMessage();
-            if (test.result == null) test.result = new InferenceTest.InferenceTestResult();
-            test.result.success = false;
-            test.result.szsStatus = "Exception";
-            if (test.result.proof == null) test.result.proof = new ArrayList<>();
-            test.result.proof.add(message);
-        }
-        String status = (test.errors != null && !test.errors.isEmpty()) ? "ERROR" : (test.result == null ? "NOT RUN" : (test.result.success ? "PASS" : "FAIL"));
+
+        String status = (test.errors != null && !test.errors.isEmpty()) ? "ERROR" :
+                (test.result == null ? "NOT RUN" : (test.result.success ? "PASS" : "FAIL"));
+
+        if ("ERROR".equals(status) && StringUtil.emptyString(message))
+            message = validationErrorMessage(test);
         String actual = test.result == null ? "" : String.valueOf(test.result.answers);
         String szs = "";
         if (test.result != null) {
@@ -419,10 +434,24 @@
                     (szs ? 'SZS: ' + szs : '') +
                 '</div>';
             if (message) {
-                const div = document.createElement('div');
-                div.className = 'tiny';
-                div.textContent = message;
-                statusCell.appendChild(div);
+                if (status === 'ERROR') {
+                    const ul = document.createElement('ul');
+                    ul.className = 'errors';
+                    message.split(';').forEach(function(part) {
+                        const text = part.trim();
+                        if (!text) return;
+                        const li = document.createElement('li');
+                        li.textContent = text;
+                        ul.appendChild(li);
+                    });
+                    statusCell.appendChild(ul);
+                }
+                else {
+                    const div = document.createElement('div');
+                    div.className = 'tiny';
+                    div.textContent = message;
+                    statusCell.appendChild(div);
+                }
             }
             updateDashboard(dashboardQueueOverride);
         }
@@ -444,7 +473,10 @@
             for (const box of boxes) {
                 const testPath = box.value;
                 const rowId = box.dataset.rowId;
-                setRowStatus(rowId, 'RUNNING', '');
+                const row = document.getElementById('status_' + rowId)?.closest('tr');
+                const preexistingError = row && row.dataset.status === 'ERROR';
+                if (!preexistingError)
+                    setRowStatus(rowId, 'RUNNING', '');
                 const params = new URLSearchParams(new FormData(form));
                 params.set('action', 'runOneAjax');
                 params.delete('selectedTests');
