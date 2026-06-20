@@ -949,29 +949,80 @@ public class Diagnostics {
         return result.toString();
     }
 
-    /** *****************************************************************
-     * @author Shaun Rose
-     * 
-     * This function loads a new kb with all kif files found in .sigmakee 
-     * (using ./config_full/config.xml, must create this file!), then maps all the term dependencies 
-     * between files. 
-     * 
-     * @param String serializedDependencyFilePath is the location where the dependency cache
-     *               for all kifs is located. Usually in .sigmakee/cache/term_dependency.ser.
+    /*****************************************************************
+     * Generate the serialized all-KIF dependency cache if missing or stale.
+     * Staleness is based on config.xml, configured constituents, and all
+     * top-level .kif files in kbDir.
+     * @param serializedDependencyFilePath file name under ~/.sigmakee/cache, usually term_dependency.ser
      */
-    private static void saveDependenciesForAllKif(String serializedDependencyFilePath) {
+    public static void saveDependenciesForAllKif(String serializedDependencyFilePath) {
 
-        KBmanager.getMgr().setPref("loadLexicons", "false");
-        KBmanager.getMgr().initializeOnce("./config_full");
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        Map<String, Map<String, List<String>>> fileDepends = Diagnostics.termDependency(kb);
-        serializedDependencyFilePath = KButilities.SIGMA_HOME + File.separator + "cache" + File.separator + serializedDependencyFilePath;
-        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(serializedDependencyFilePath))) {
-            out.writeObject(fileDepends);
-            System.out.println("Saved term dependency to " + serializedDependencyFilePath);
+        if (!dependencyCacheGenerating.compareAndSet(false, true)) return;
+        try {
+            KBmanager mgr = KBmanager.getMgr();
+            if (!KBmanager.initialized && !KBmanager.initializing) mgr.initializeOnce();
+            String kbName = mgr.getPref("sumokbname");
+            String kbDir = mgr.getPref("kbDir");
+            if (StringUtil.emptyString(kbDir)) throw new RuntimeException("Empty kbDir preference");
+            Path kbDirPath = Paths.get(kbDir).toAbsolutePath().normalize();
+            if (!Files.isDirectory(kbDirPath)) throw new RuntimeException("kbDir is not a directory: " + kbDirPath);
+            List<String> allKifs = new ArrayList<>();
+            final long[] newestKifMillis = {0L};
+            try (Stream<Path> stream = Files.list(kbDirPath)) {
+                stream
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().endsWith(".kif"))
+                    .filter(p -> {
+                        String name = p.getFileName().toString();
+                        return !name.endsWith(KB._cacheFileSuffix) &&
+                            !name.endsWith(KB._userAssertionsString) &&
+                            !name.startsWith("temp-") &&
+                            !name.startsWith(".");
+                    })
+                    .sorted()
+                    .forEach(p -> {
+                        Path abs = p.toAbsolutePath().normalize();
+                        allKifs.add(abs.toString());
+                        try {
+                            newestKifMillis[0] = Math.max(newestKifMillis[0], Files.getLastModifiedTime(abs).toMillis());
+                        }
+                        catch (IOException e) {
+                            throw new RuntimeException("Failed reading modified time for: " + abs, e);
+                        }
+                    });
+            }
+            catch (IOException e) {
+                throw new RuntimeException("Failed reading .kif files from: " + kbDirPath, e);
+            }
+            if (allKifs.isEmpty()) throw new RuntimeException("No .kif files found in kbDir: " + kbDirPath);
+            Path outPath = Paths.get(KButilities.SIGMA_HOME, "cache", serializedDependencyFilePath);
+            long newestConfigOrConstituentMillis = KBmanager.newestConfigOrConstituentDate().getTime();
+            long newestSourceMillis = Math.max(newestConfigOrConstituentMillis, newestKifMillis[0]);
+            if (Files.exists(outPath) && Files.size(outPath) > 0) {
+                long serializedMillis = Files.getLastModifiedTime(outPath).toMillis();
+                if (serializedMillis >= newestSourceMillis) return;
+            }
+            KB originalKB = mgr.getKB(kbName);
+            List<String> originalConstituents = originalKB == null || originalKB.constituents == null ? null : new ArrayList<>(originalKB.constituents);
+            try {
+                mgr.loadKB(kbName, allKifs);
+                KB kb = mgr.getKB(kbName);
+                Map<String, Map<String, List<String>>> fileDepends = Diagnostics.termDependency(kb);
+                Files.createDirectories(outPath.getParent());
+                try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(outPath.toFile()))) {
+                    out.writeObject(fileDepends);
+                    System.out.println("Saved term dependency to " + outPath);
+                }
+            }
+            finally {
+                if (originalConstituents != null && !originalConstituents.isEmpty()) mgr.loadKB(kbName, originalConstituents);
+            }
         }
         catch (IOException e) {
-            throw new RuntimeException("Failed to save term dependency file to: " + serializedDependencyFilePath,e);
+            throw new RuntimeException("Failed to save dependency cache: " + serializedDependencyFilePath, e);
+        }
+        finally {
+            dependencyCacheGenerating.set(false);
         }
     }
 

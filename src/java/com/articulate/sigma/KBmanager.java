@@ -954,6 +954,14 @@ public class KBmanager implements Serializable {
             }
             initializing = false;
             initialized = true;
+            try {
+                LoggingUtils.log("Checking diagnostic dependency cache.");
+                Diagnostics.saveDependenciesForAllKif("term_dependency.ser");
+            }
+            catch (Exception e) {
+                LoggingUtils.log("ERROR", "Could not generate diagnostic dependency cache: " + e.getMessage());
+                e.printStackTrace();
+            }
             LoggingUtils.log("Starting TPTP Background Generation...");
             TPTPGenerationManager.startBackgroundGeneration();
             if ("true".equalsIgnoreCase(System.getenv("TPTP_BG_WAIT"))) {
