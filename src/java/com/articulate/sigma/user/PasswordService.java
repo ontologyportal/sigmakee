@@ -5,13 +5,19 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.Locale;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 public class PasswordService {
 
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final int RESET_TOKEN_BYTES = 32;
-
+    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final String PBKDF2_PREFIX = "pbkdf2_sha256";
+    private static final int PBKDF2_ITERATIONS = 310000;
+    private static final int SALT_BYTES = 16;
+    private static final int HASH_BITS = 256;
     /********************************************************************
      * Generates a URL-safe random password reset token.
      * @return a URL-safe reset token
@@ -35,31 +41,109 @@ public class PasswordService {
     }
 
     /********************************************************************
-     * Hashes a password using SHA-256.
-     * @param password the password to hash
-     * @return lowercase SHA-256 hex
+     * Hashes a password using salted PBKDF2-HMAC-SHA256.
+     * Stored format: pbkdf2_sha256:iterations:base64salt:base64hash
+     * @param password raw password
+     * @return encoded salted password hash
      */
     public static String hashPassword(String password) {
 
-        if (password == null) return "";
-        return sha256Hex(password.trim());
+        if (password == null || password.isEmpty()) throw new IllegalArgumentException("Password cannot be empty");
+        byte[] salt = new byte[SALT_BYTES];
+        RANDOM.nextBytes(salt);
+        byte[] hash = pbkdf2(password.toCharArray(), salt, PBKDF2_ITERATIONS, HASH_BITS);
+        return PBKDF2_PREFIX + ":" +
+                PBKDF2_ITERATIONS + ":" +
+                Base64.getEncoder().encodeToString(salt) + ":" +
+                Base64.getEncoder().encodeToString(hash);
     }
 
     /********************************************************************
-     * Checks whether a raw password matches either a SHA-256 or legacy SHA-1 hash.
-     * @param password the raw password submitted by the user
-     * @param storedHash the password hash stored in the database
-     * @return true if the password matches
+     * Verifies raw password against current salted hashes and legacy hashes.
+     * @param password raw password
+     * @param storedHash stored password hash
+     * @return true if password matches
      */
     public static boolean verifyPassword(String password, String storedHash) {
 
-        if (password == null || storedHash == null) return false;
+        if (password == null || storedHash == null || storedHash.isEmpty()) return false;
+        if (storedHash.startsWith(PBKDF2_PREFIX + ":")) {
+            String[] parts = storedHash.split(":");
+            if (parts.length != 4) return false;
+            int iterations;
+            try {
+                iterations = Integer.parseInt(parts[1]);
+            }
+            catch (NumberFormatException e) {
+                return false;
+            }
+            byte[] salt;
+            byte[] expected;
+            try {
+                salt = Base64.getDecoder().decode(parts[2]);
+                expected = Base64.getDecoder().decode(parts[3]);
+            }
+            catch (IllegalArgumentException e) {
+                return false;
+            }
+            byte[] actual = pbkdf2(password.toCharArray(), salt, iterations, expected.length * 8);
+            return MessageDigest.isEqual(expected, actual);
+        }
+        if (isLegacySha1Hash(storedHash)) return MessageDigest.isEqual(storedHash.getBytes(StandardCharsets.UTF_8), shaHex(password, "SHA-1").getBytes(StandardCharsets.UTF_8));
+        if (isLegacySha256Hash(storedHash)) return MessageDigest.isEqual(storedHash.getBytes(StandardCharsets.UTF_8), shaHex(password, "SHA-256").getBytes(StandardCharsets.UTF_8));
+        return false;
+    }
 
-        String normalizedHash = storedHash.trim().toLowerCase(Locale.ROOT);
+    /********************************************************************
+     * @return true if hash is an old unsalted SHA-256 hex digest
+     */
+    public static boolean isLegacySha256Hash(String storedHash) {
 
-        if (hashPassword(password).equals(normalizedHash)) return true;
+        return storedHash != null && storedHash.matches("^[a-fA-F0-9]{64}$");
+    }
 
-        return encryptLegacySha1(password).equals(normalizedHash);
+    private static String shaHex(String password, String algorithm) {
+
+        try {
+            MessageDigest md = MessageDigest.getInstance(algorithm);
+            byte[] bytes = md.digest(password.trim().getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : bytes) sb.append(String.format("%02x", b));
+            return sb.toString();
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed legacy hash using " + algorithm, e);
+        }
+    }
+
+    private static byte[] pbkdf2(char[] password, byte[] salt, int iterations, int hashBits) {
+
+        try {
+            PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, hashBits);
+            SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            return skf.generateSecret(spec).getEncoded();
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to hash password", e);
+        }
+    }
+
+    /********************************************************************
+     * @return true if stored hash should be upgraded after successful login
+     */
+    public static boolean needsPasswordRehash(String storedHash) {
+
+        if (storedHash == null) return true;
+        if (isLegacySha1Hash(storedHash) || isLegacySha256Hash(storedHash)) return true;
+        if (!storedHash.startsWith(PBKDF2_PREFIX + ":")) return true;
+        String[] parts = storedHash.split(":");
+        if (parts.length != 4) return true;
+        try {
+            return Integer.parseInt(parts[1]) < PBKDF2_ITERATIONS;
+        }
+        catch (NumberFormatException e) {
+            return true;
+        }
     }
 
     /********************************************************************
@@ -69,8 +153,7 @@ public class PasswordService {
      */
     public static boolean isLegacySha1Hash(String storedHash) {
 
-        if (storedHash == null) return false;
-        return storedHash.trim().matches("(?i)[0-9a-f]{40}");
+        return storedHash != null && storedHash.matches("^[a-fA-F0-9]{40}$");
     }
 
     /********************************************************************
