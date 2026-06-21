@@ -412,7 +412,7 @@ public class KBmanager implements Serializable {
      */
     public boolean infBaseFileOldIgnoringUserAssertions(String lang) {
 
-        String kbDir = getPref("maxPredicateArity");
+        String kbDir = getPref("kbDir");
         for (String kbname : kbs.keySet()) {
             File base = new File(kbDir + File.separator + kbname + "." + lang);
             if (!base.exists()) return true;
@@ -959,7 +959,8 @@ public class KBmanager implements Serializable {
             if ("true".equalsIgnoreCase(System.getenv("TPTP_BG_WAIT"))) {
                 try {
                     Thread.sleep(120000);
-                } catch (InterruptedException e) {
+                } 
+                catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }

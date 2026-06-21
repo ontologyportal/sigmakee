@@ -259,9 +259,6 @@ public class KBTest extends UnitTestBase {
         assertFalse(motherFormats.isEmpty());
     }
 
-
-
-
     /** ***************************************************************
      * infBaseFileOldIgnoringUserAssertions(lang): missing base file => true
      */
@@ -320,7 +317,8 @@ public class KBTest extends UnitTestBase {
         String kbName = "TESTKB_INFOLD_" + System.nanoTime();
 
         // Create base translation file in SIGMA_HOME/KBs with a future timestamp (guaranteed newer than config.xml)
-        long baseTs = System.currentTimeMillis() + 60_000L;
+        long newestCodeTs = KBmanager.newestSigmakeeCodeDate().getTime();
+        long baseTs = Math.max(System.currentTimeMillis(), newestCodeTs) + 60_000L;
         java.io.File baseTptp = new java.io.File(kbDir, kbName + ".tptp");
         writeAndTouch(baseTptp, baseTs);
 
