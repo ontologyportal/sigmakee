@@ -279,7 +279,7 @@ public class ExprToTHF {
         return switch (headName) {
             case "not" -> {
                 if (se.args().size() != 1) yield errorStr("not");
-                yield "(~ " + translateExpr(se.args().get(0), false, typeMap, modalMode) + ")";
+                yield "~(" + translateExpr(se.args().get(0), false, typeMap, modalMode) + ")";
             }
             case "and" -> {
                 if (se.args().size() < 2) yield errorStr("and");
