@@ -67,26 +67,15 @@
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 <a href="WNDiag.jsp?kb=<%=kbName%>">Run WordNet diagnostics</a><p>
-<%
-  boolean termDependencyCacheExists = Diagnostics.dependencyCacheExists(Diagnostics.TERM_DEPENDENCY_CACHE_FILE);
-  String termDependencyCachePath = Diagnostics.dependencyCachePath(Diagnostics.TERM_DEPENDENCY_CACHE_FILE).toString();
-  if (termDependencyMessage != null && !termDependencyMessage.isEmpty()) {
-      out.println("<div style=\"padding:8px; border:1px solid #AAAAAA; background:#F5F5F5; margin:10px 0;\">");
-      out.println(termDependencyMessage);
-      out.println("</div>");
-  }
-  if (!termDependencyCacheExists) {
-%>
-<form method="post" action="Diagnostics.jsp" style="margin:10px 0;">
+<form id="generateTermDependencyForm" method="post" action="Diagnostics.jsp">
   <input type="hidden" name="kb" value="<%=kbName%>">
   <input type="hidden" name="lang" value="<%=lang%>">
   <input type="hidden" name="flang" value="<%=flang%>">
   <input type="hidden" name="diagAction" value="generateTermDependency">
-  <button type="submit">Generate term dependency cache</button>
-  <span style="margin-left:8px;">Required for unloaded constituent diagnostics: <%=termDependencyCachePath%></span>
 </form>
 <%
-  }
+  boolean termDependencyCacheExists = Diagnostics.dependencyCacheExists(Diagnostics.TERM_DEPENDENCY_CACHE_FILE);
+  String termDependencyCachePath = Diagnostics.dependencyCachePath(Diagnostics.TERM_DEPENDENCY_CACHE_FILE).toString();
 %>
 <%
   // Terms without parents
@@ -98,8 +87,21 @@
 
   // Terms with unloaded constituents
   out.println("<details>");
-  out.println("<summary><b style=\"color:DarkRed;\">Error: Terms with unloaded constituents</b><hr></summary>");
-  out.println(Diagnostics.printMissingConstituentDependencies(kb, kbHref));
+  out.println("<summary>");
+  out.println("<b style=\"color:DarkRed;\">Error: Terms with unloaded constituents</b>");
+  if (!termDependencyCacheExists) out.println("<button type=\"submit\" form=\"generateTermDependencyForm\" " + "onclick=\"event.stopPropagation();\" " + "style=\"margin-left:12px;\">Generate term dependency cache</button>");
+  out.println("<hr>");
+  out.println("</summary>");
+  if (termDependencyMessage != null && !termDependencyMessage.isEmpty()) {
+      out.println("<div style=\"padding:8px; border:1px solid #AAAAAA; background:#F5F5F5; margin:10px 0;\">");
+      out.println(termDependencyMessage);
+      out.println("</div>");
+  }
+  if (termDependencyCacheExists) out.println(Diagnostics.printMissingConstituentDependencies(kb, kbHref));
+  else {
+      out.println("The term dependency cache has not been generated yet.<br>");
+      out.println("Required cache file: " + termDependencyCachePath);
+  }
   out.println("</details></br>");
 
   // Children of disjoint parents

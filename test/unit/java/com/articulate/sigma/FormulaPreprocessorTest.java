@@ -38,7 +38,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
     // and none of the other tests in that class do. Maybe move the method to FormulaPreprocessor--it's the only Formula method
     // requiring a KB.
     @Test
-    public void testGatherRelationships()   {
+    public void testGatherRelationships() {
 
         System.out.println("\n============= testGatherRelationships ==================");
         String stmt = "(agent Leaving Human)";
@@ -47,7 +47,10 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
 
         Map<String, List> actualMap = f.gatherRelationsWithArgTypes(SigmaTestBase.kb);
 
-        List<String> expectedList = Lists.newArrayList(null, "Process", "AutonomousAgent", null, null, null, null, null, null, null, null);
+        List<String> expectedList = new ArrayList<>(Collections.nCopies(Formula.getMaxPredicateArity() + 1, null));
+        expectedList.set(1, "Process");
+        expectedList.set(2, "AutonomousAgent");
+
         Map<String, List> expectedMap = Maps.newHashMap();
         expectedMap.put("agent", expectedList);
 
