@@ -41,6 +41,8 @@ public class Diagnostics {
 
     private static final java.util.concurrent.atomic.AtomicBoolean dependencyCacheGenerating = new java.util.concurrent.atomic.AtomicBoolean(false);
 
+    public static final String TERM_DEPENDENCY_CACHE_FILE = "term_dependency.ser";
+
     /** *****************************************************************
      * Return a list of terms (for a given argument position) that do not
      * have a specified relation.
@@ -872,28 +874,17 @@ public class Diagnostics {
      */
     public static String printTermDependency(KB kb, String kbHref) {
 
-        // A list of String of filename1-filename2 of pairs already examined so that
-        // the routine doesn't waste time examining filename2-filename1
-
         StringBuilder result = new StringBuilder();
-
-        // A map of file name keys and TreeMap values listing file names
-        // on which the given file depends.  The interior TreeMap file name
-        // keys index ArrayLists of terms.  file -depends on-> filenames -that defines-> terms
         Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
-
         Map<String,List<String>> tm;
         List<String> al;
         String term;
         int i;
         for (String f : fileDepends.keySet()) {
-
-            // result.append("File " + f + " depends on: ");
             tm = fileDepends.get(f);
             for (String f2 : tm.keySet()) {
                 if (StringUtil.removeFilePath(f).equals("SUMO_Cache.kif") || StringUtil.removeFilePath(f2).equals("SUMO_Cache.kif")) continue;
                 al = tm.get(f2);
-
                 if (al != null && al.size() < 40) {
                     result.append("<br/>File ").append(StringUtil.removeFilePath(f)).append(" dependency size on file ").append(StringUtil.removeFilePath(f2)).append(" is ").append(al.size()).append(" with terms:<br/>");
                     for (int ix = 0; ix < al.size(); ix++) {
@@ -909,44 +900,36 @@ public class Diagnostics {
                     if (i > 0)
                         result.append("<br/>File ").append(StringUtil.removeFilePath(f)).append(" dependency size on file ").append(StringUtil.removeFilePath(f2)).append(" is ").append(i).append("<P>");
                 }
-                // if (al != null
-                // && (dependencySize(fileDepends, f, f2) > al.size() || al
-                // .size() < 40))
-                // !examined.contains(f + "-" + f2) && !examined.contains(f2 +
-                // "-" + f)
-                // { // show mutual dependencies of comparable size
-                // result.append("\nFile " + f2 + " dependency size on file " +
-                // f + " is " + dependencySize(fileDepends,f,f2) + "<br>\n");
-                // result.append("\nFile " + f + " dependency size on file " +
-                // f2 + " is " + al.size() + "\n");
-                // result.append(" with terms:<br>\n ");
-                // for (int i = 0; i < al.size(); i++) {
-                // String term = (String) al.get(i);
-                // result.append("<a href=\"" + kbHref + "&term=" + term + "\">"
-                // + term + "</a>");
-                // if (i < al.size()-1)
-                // result.append(", ");
-                // }
-                // result.append("<P>\n");
-                // }
-                // else {
-                // int i = dependencySize(fileDepends,f,f2);
-                // int j = dependencySize(fileDepends,f2,f);
-                // // && !examined.contains(f + "-" + f2) &&
-                // !examined.contains(f2 + "-" + f)
-                // if (i > 0 )
-                // result.append("\nFile " + f2 + " dependency size on file " +
-                // f + " is " + i + "<P>\n");
-                // if (j > 0 )
-                // result.append("\nFile " + f + " dependency size on file " +
-                // f2 + " is " + j + "<P>\n");
-                // }
-                // if (!examined.contains(f + "-" + f2))
-                // examined.add(f + "-" + f2);
             }
             result.append("\n\n");
         }
         return result.toString();
+    }
+
+    /*****************************************************************
+     * Return whether the serialized term dependency cache exists.
+     * @param serializedDependencyFilePath the dependency cache filename
+     * @return true if the dependency cache exists and is non-empty
+     */
+    public static boolean dependencyCacheExists(String serializedDependencyFilePath) {
+
+        try {
+            Path path = dependencyCachePath(serializedDependencyFilePath);
+            return Files.isRegularFile(path) && Files.size(path) > 0;
+        }
+        catch (IOException e) {
+            return false;
+        }
+    }
+
+    /*****************************************************************
+     * Return the path to the serialized term dependency cache.
+     * @param serializedDependencyFilePath the dependency cache filename
+     * @return the full dependency cache path
+     */
+    public static Path dependencyCachePath(String serializedDependencyFilePath) {
+
+        return Paths.get(KButilities.SIGMA_HOME, "cache", serializedDependencyFilePath);
     }
 
     /*****************************************************************
@@ -1051,34 +1034,29 @@ public class Diagnostics {
 
     /** *****************************************************************
      * @author Shaun Rose
-     * 
      * This function returns a list of error messages for missing dependencies.
      * If the user has a constituent loaded, and the file depends on another file 
      * that is not loaded as a constituent, then it will be added to the error list.
-     * 
      * @param Map<String,Map<String,List<String>>> fileDepends <Dependent, <Dependees, Terms>>
-     * @return Map<String,Map<String,List<String>>> a TreeMap with the loaded constituent files 
-     *         as the outer key, the missing dependee constituent files as the inner key, and 
-     *         dependent terms as the list. 
+     * @return Map<String,Map<String,List<String>>> TreeMap with the loaded constituent files 
+     *         as the outer key, missing dependee constituents as the inner key, and dependent terms as the list. 
     */
     private static Map<String,Map<String,List<String>>> missingConstituentDependencies(KB kb) {
 
-        //OuterKey = Loaded constituent with term dependency
-        //InterKey = Unloaded constituent containing term def
-        //ListValues = Terms the OuterKey uses from the InnerKey
         Map<String,Map<String,List<String>>> missing = new TreeMap<>();
         Map<String,Map<String,List<String>>> allDepends = Diagnostics.loadDependenciesForAllKif("term_dependency.ser");
         List<String> kbConstituentsCopy = new ArrayList<>();
-        for (String constituent : kb.constituents) {
-            kbConstituentsCopy.add(StringUtil.removeFilePath(constituent));
-        }
+        for (String constituent : kb.constituents) kbConstituentsCopy.add(StringUtil.removeFilePath(constituent));
         for (String constituent : kbConstituentsCopy) {
-            Map<String,List<String>> missingFromActiveConstituent = new TreeMap();
-            for (Map.Entry<String,List<String>> dependeeKifs : allDepends.get(StringUtil.removeFilePath(constituent)).entrySet()) {
+            String constituentName = StringUtil.removeFilePath(constituent);
+            Map<String,List<String>> depends = allDepends.get(constituentName);
+            if (depends == null || depends.isEmpty()) continue;
+            Map<String,List<String>> missingFromActiveConstituent = new TreeMap<>();
+            for (Map.Entry<String,List<String>> dependeeKifs : depends.entrySet()) {
                 if (!kbConstituentsCopy.contains(dependeeKifs.getKey()) && !dependeeKifs.getKey().equals("SUMO_Cache.kif"))
-                    missingFromActiveConstituent.put(dependeeKifs.getKey (), dependeeKifs.getValue());
+                    missingFromActiveConstituent.put(dependeeKifs.getKey(), dependeeKifs.getValue());
             }
-            missing.put(constituent, missingFromActiveConstituent);
+            if (!missingFromActiveConstituent.isEmpty()) missing.put(constituent, missingFromActiveConstituent);
         }
         return missing;
     }
@@ -1098,6 +1076,9 @@ public class Diagnostics {
     */
     public static String printMissingConstituentDependencies(KB kb, String kbHref) {
 
+        if (!Diagnostics.dependencyCacheExists(TERM_DEPENDENCY_CACHE_FILE)) {
+            return "The term dependency cache has not been generated yet. " + "Use the button above to create " + Diagnostics.dependencyCachePath(TERM_DEPENDENCY_CACHE_FILE) + ".";
+        }
         StringBuilder html = new StringBuilder();
         Map<String,Map<String, List<String>>> missing = Diagnostics.missingConstituentDependencies(kb);
         for (Map.Entry<String,Map<String,List<String>>> constituent : missing.entrySet()) {

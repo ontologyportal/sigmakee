@@ -1,12 +1,12 @@
-<%@page import="com.articulate.sigma.Formula"%>
 <%@ page import="com.articulate.sigma.Formula" %>
+<%@ page import="com.articulate.sigma.Diagnostics" %>
+<%@ page import="com.articulate.sigma.KBmanager" %>
 <%@ include file="fragments/universal/Prelude.jspf" %>
 <html>
   <head>
     <title> Knowledge base Diagnostics</title>
   </head>
   <body bgcolor="#FFFFFF">
-
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017, 2020-
     Infosys (c) 2017-2020.
@@ -20,7 +20,6 @@
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
-
   if (!role.equals("admin") && !role.equals("user")) {
     response.sendRedirect("KBs.jsp");
     return;
@@ -30,6 +29,33 @@
   String formattedFormula = null;
   Map theMap = null;
   kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + lang + "&kb=" + kbName + "&flang=" + flang;
+
+  String termDependencyMessage = "";
+  String termDependencyAction = request.getParameter("diagAction");
+
+  if ("generateTermDependency".equals(termDependencyAction)) {
+      if (Diagnostics.dependencyCacheExists(Diagnostics.TERM_DEPENDENCY_CACHE_FILE)) {
+          termDependencyMessage = "Term dependency cache already exists at " + Diagnostics.dependencyCachePath(Diagnostics.TERM_DEPENDENCY_CACHE_FILE) + ".";
+      }
+      else {
+          try {
+              long depStart = System.currentTimeMillis();
+              Diagnostics.saveDependenciesForAllKif(Diagnostics.TERM_DEPENDENCY_CACHE_FILE);
+              kb = KBmanager.getMgr().getKB(kbName);
+              double seconds = (System.currentTimeMillis() - depStart) / 1000.0;
+              if (Diagnostics.dependencyCacheExists(Diagnostics.TERM_DEPENDENCY_CACHE_FILE)) {
+                  termDependencyMessage = "Generated term dependency cache in " + seconds + " seconds at " + Diagnostics.dependencyCachePath(Diagnostics.TERM_DEPENDENCY_CACHE_FILE) + ".";
+              }
+              else {
+                  termDependencyMessage = "Term dependency cache generation completed, but the cache file was not found.";
+              }
+          }
+          catch (Exception e) {
+              termDependencyMessage = "ERROR generating term dependency cache. See server logs. " + e.getClass().getSimpleName() + ": " + e.getMessage();
+              e.printStackTrace();
+          }
+      }
+  }
 %>
 <form action="Diagnostics.jsp">
     <%
@@ -41,6 +67,27 @@
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 <a href="WNDiag.jsp?kb=<%=kbName%>">Run WordNet diagnostics</a><p>
+<%
+  boolean termDependencyCacheExists = Diagnostics.dependencyCacheExists(Diagnostics.TERM_DEPENDENCY_CACHE_FILE);
+  String termDependencyCachePath = Diagnostics.dependencyCachePath(Diagnostics.TERM_DEPENDENCY_CACHE_FILE).toString();
+  if (termDependencyMessage != null && !termDependencyMessage.isEmpty()) {
+      out.println("<div style=\"padding:8px; border:1px solid #AAAAAA; background:#F5F5F5; margin:10px 0;\">");
+      out.println(termDependencyMessage);
+      out.println("</div>");
+  }
+  if (!termDependencyCacheExists) {
+%>
+<form method="post" action="Diagnostics.jsp" style="margin:10px 0;">
+  <input type="hidden" name="kb" value="<%=kbName%>">
+  <input type="hidden" name="lang" value="<%=lang%>">
+  <input type="hidden" name="flang" value="<%=flang%>">
+  <input type="hidden" name="diagAction" value="generateTermDependency">
+  <button type="submit">Generate term dependency cache</button>
+  <span style="margin-left:8px;">Required for unloaded constituent diagnostics: <%=termDependencyCachePath%></span>
+</form>
+<%
+  }
+%>
 <%
   // Terms without parents
   List<String> termsWithoutParent = Diagnostics.termsNotBelowEntity(kb);
