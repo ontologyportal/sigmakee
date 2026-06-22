@@ -1,14 +1,14 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.Formula;
-import com.articulate.sigma.KB;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import com.articulate.sigma.Formula;
+import com.articulate.sigma.KB;
 
 // Instantiate predicate variables
 public class PredVarInst {
@@ -30,22 +30,49 @@ public class PredVarInst {
     }
 
     /**
-     * Recursively substitute all occurrences of {@code Var(varName)} with
-     * {@code Atom(atomName)} in the given {@link Expr} tree.  Returns a new
-     * tree (all nodes are immutable records; unchanged sub-trees are reused).
+     * Replaces one predicate variable and constructs a fresh Formula so that
+     * expr, predVarCache, rowVarCache, rowVarStructs, and variable metadata
+     * are rebuilt from the substituted expression.
+     */
+    private static Formula substitutePredicateVariable(Formula input, String variable, String relation) {
+
+        Formula rebuilt;
+        if (input.expr != null) {
+            Expr substituted = substituteVar(input.expr, variable, relation);
+            rebuilt = new Formula(substituted);
+        }
+        else {
+            String substituted = input.getFormula().replace(variable, relation);
+            rebuilt = new Formula(substituted);
+        }
+        rebuilt.sourceFile = input.sourceFile;
+        rebuilt.startLine = input.startLine;
+        rebuilt.higherOrder = input.higherOrder;
+        rebuilt.containsNumber = input.containsNumber;
+        rebuilt.derivation.operator = "predvar";
+        rebuilt.derivation.parents.add(input);
+        return rebuilt;
+    }
+
+    /**
+     * Recursively replaces a predicate variable with a concrete predicate
+     * in an immutable Expr tree.
+     *
+     * @param expr the expression to transform
+     * @param varName predicate variable name, such as {@code ?REL}
+     * @param atomName replacement predicate, such as {@code abstractCounterpart}
+     * @return the transformed expression
      */
     public static Expr substituteVar(Expr expr, String varName, String atomName) {
 
         return switch (expr) {
             case Expr.Var v when v.name().equals(varName) -> new Expr.Atom(atomName);
             case Expr.SExpr se -> {
-                Expr newHead = se.head() != null ? substituteVar(se.head(), varName, atomName) : null;
-                List<Expr> newArgs = se.args().stream()
-                        .map(a -> substituteVar(a, varName, atomName))
-                        .toList();
+                Expr newHead = se.head() == null ? null : substituteVar(se.head(), varName, atomName);
+                List<Expr> newArgs = se.args().stream().map(arg -> substituteVar(arg, varName, atomName)).toList();
                 yield new Expr.SExpr(newHead, newArgs);
             }
-            default -> expr; // Atom, RowVar, NumLiteral, StrLiteral, other Var — unchanged
+            default -> expr;
         };
     }
 

@@ -20,6 +20,10 @@ import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.parsing.CLIMapParser;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
+import com.articulate.sigma.Formula;
+import com.articulate.sigma.KIF;
+import com.articulate.sigma.utils.StringUtil;
+import java.util.Set;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,7 +130,10 @@ public class TheoremProverController {
                 query.getMaxAnswers(),
                 query.getUserSessionId()
             );
-            if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) vampire.askVampire(query.getQuery());
+            if (query.getLanguage().name().equals("FOF") || query.getLanguage().name().equals("TFF")) {
+                vampire.setAskQuestion(isAnswerSeekingQuery(query.getQuery()));
+                vampire.askVampire(query.getQuery());
+            }
             else {
                 String testFilePath = query.getTestFilePath();
                 if (testFilePath != null && testFilePath.endsWith(".thf")) vampire.askVampireTHF(testFilePath);
@@ -161,6 +168,28 @@ public class TheoremProverController {
         LEO leo = new LEO(query.getKb(), query.getLanguage().name(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
         leo.askLeo(query.getQuery());
         return leo.getResult();
+    }
+
+    /********************************************************************
+     * Return true only when the user is asking for bindings, not merely
+     * asking Vampire to prove a Boolean conjecture.
+     */
+    private static boolean isAnswerSeekingQuery(String stmt) {
+
+        if (StringUtil.emptyString(stmt)) return false;
+        try {
+            KIF kif = new KIF();
+            String err = kif.parseStatement(stmt);
+            if (err == null && !kif.formulaMap.isEmpty()) {
+                Formula f = kif.formulaMap.values().iterator().next();
+                Set<String> vars = f.collectUnquantifiedVariables();
+                return vars != null && !vars.isEmpty();
+            }
+        }
+        catch (Exception e) {
+            // Fall through to conservative string check below.
+        }
+        return stmt.matches(".*[?@][A-Za-z][A-Za-z0-9_-]*.*");
     }
 
     /********************************************************************

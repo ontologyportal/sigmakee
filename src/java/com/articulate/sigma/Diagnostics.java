@@ -33,12 +33,15 @@ public class Diagnostics {
 
     public static boolean debug = false;
 
-    public static List<String> LOG_OPS = Arrays.asList(Formula.AND, Formula.OR, Formula.XOR, Formula.NOT, Formula.EQUANT,
-            Formula.UQUANT, Formula.IF, Formula.IFF, "holds");
+    public static List<String> LOG_OPS = Arrays.asList(Formula.AND, Formula.OR, Formula.XOR, Formula.NOT, Formula.EQUANT, Formula.UQUANT, Formula.IF, Formula.IFF, "holds");
 
     public static HashMap<String, HashSet<String>> varLinksParentMap = new HashMap<>(); // parent map for getVariableLinks(Formula f, KB kb)
     
     private static final int RESULT_LIMIT = 100;
+
+    private static final java.util.concurrent.atomic.AtomicBoolean dependencyCacheGenerating = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    public static final String TERM_DEPENDENCY_CACHE_FILE = "term_dependency.ser";
 
     /** *****************************************************************
      * Return a list of terms (for a given argument position) that do not
@@ -48,8 +51,7 @@ public class Diagnostics {
      * @param argnum the argument position of the term
      * @param letter the first letter of the term name
      */
-    public static List<String> termsWithoutRelation(KB kb, String rel, int argnum,
-                                                    char letter) {
+    public static List<String> termsWithoutRelation(KB kb, String rel, int argnum, char letter) {
 
         List<String> result = new ArrayList<>();
         List<Formula> forms;
@@ -57,12 +59,10 @@ public class Diagnostics {
         Formula formula;
         String pred;
         for (String term : kb.getTerms()) {
-            if (LOG_OPS.contains(term) || StringUtil.isNumeric(term))  // Exclude the logical operators and numbers
-                continue;
+            if (LOG_OPS.contains(term) || StringUtil.isNumeric(term)) continue;
             forms = kb.ask("arg",argnum,term);
             if (forms == null || forms.isEmpty()) {
-                if (letter < 'A' || term.charAt(0) == letter)
-                    result.add(term);
+                if (letter < 'A' || term.charAt(0) == letter) result.add(term);
             }
             else {
                 boolean found = false;
@@ -76,12 +76,10 @@ public class Diagnostics {
                             break;
                         }
                     }
-                    else
-                        System.err.println("Error in Diagnostics.termsWithoutRelation(): null formula for: " + term);
+                    else System.err.println("Error in Diagnostics.termsWithoutRelation(): null formula for: " + term);
                 }
                 if (!found) {
-                    if (letter < 'A' || term.charAt(0) == letter)
-                        result.add(term);
+                    if (letter < 'A' || term.charAt(0) == letter) result.add(term);
                 }
             }
             if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT) {
@@ -604,6 +602,8 @@ public class Diagnostics {
         return result;
     }
 
+    
+
     /** *****************************************************************
      * Find cases where a variable appears in a quantifier list, but not
      * in the body of the quantified expression.  For example
@@ -624,6 +624,75 @@ public class Diagnostics {
             }
             if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT)
                 return result;
+        }
+        return result;
+    }
+
+    /** *****************************************************************
+     * @return duplicate variables that appear in the same quantifier list.
+     * Example: (exists (?A ?B ?A) (...)) returns ?A.
+     */
+    public static Set<String> duplicateQuantifiedVariables(Formula f) {
+
+        Set<String> result = new TreeSet<>();
+        duplicateQuantifiedVariablesRecurse(f, result);
+        return result;
+    }
+
+    /** *****************************************************************
+     * Recursively find duplicate variables within each individual
+     * exists/forall variable list.
+     */
+    private static void duplicateQuantifiedVariablesRecurse(Formula f, Set<String> result) {
+
+        if (f == null || f.empty() || f.atom())
+            return;
+
+        String head = f.car();
+
+        if (Formula.EQUANT.equals(head) || Formula.UQUANT.equals(head)) {
+            List<Formula> args = f.complexArgumentsToArrayList(1);
+            if (args == null || args.size() < 2)
+                return;
+            Formula varList = args.get(0);
+            List<String> qList = varList.argumentsToArrayListString(0);
+            Set<String> seen = new HashSet<>();
+            if (qList != null) {
+                for (String var : qList) {
+                    if (!seen.add(var))
+                        result.add(var);
+                }
+            }
+            duplicateQuantifiedVariablesRecurse(args.get(1), result);
+            return;
+        }
+        List<Formula> args = f.complexArgumentsToArrayList(1);
+        if (args != null) {
+            for (Formula arg : args)
+                duplicateQuantifiedVariablesRecurse(arg, result);
+        }
+    }
+
+    /** *****************************************************************
+     * Find formulas with duplicate variables in the same quantifier list.
+     */
+    public static List<String> duplicateQuantifiedVariables(KB kb) {
+
+        List<String> result = new ArrayList<>();
+        for (Formula form : kb.formulaMap.values()) {
+            String s = form.getFormula();
+            if (!s.contains(Formula.UQUANT) && !s.contains(Formula.EQUANT))
+                continue;
+            Set<String> dupes = duplicateQuantifiedVariables(form);
+            if (!dupes.isEmpty()) {
+                result.add("Duplicate quantified variable(s) " + dupes +
+                        " in " + FileUtil.noPath(form.sourceFile) +
+                        ":" + form.startLine + " " + s);
+            }
+            if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT) {
+                result.add("limited to " + RESULT_LIMIT + " results");
+                return result;
+            }
         }
         return result;
     }
@@ -805,28 +874,17 @@ public class Diagnostics {
      */
     public static String printTermDependency(KB kb, String kbHref) {
 
-        // A list of String of filename1-filename2 of pairs already examined so that
-        // the routine doesn't waste time examining filename2-filename1
-
         StringBuilder result = new StringBuilder();
-
-        // A map of file name keys and TreeMap values listing file names
-        // on which the given file depends.  The interior TreeMap file name
-        // keys index ArrayLists of terms.  file -depends on-> filenames -that defines-> terms
         Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
-
         Map<String,List<String>> tm;
         List<String> al;
         String term;
         int i;
         for (String f : fileDepends.keySet()) {
-
-            // result.append("File " + f + " depends on: ");
             tm = fileDepends.get(f);
             for (String f2 : tm.keySet()) {
                 if (StringUtil.removeFilePath(f).equals("SUMO_Cache.kif") || StringUtil.removeFilePath(f2).equals("SUMO_Cache.kif")) continue;
                 al = tm.get(f2);
-
                 if (al != null && al.size() < 40) {
                     result.append("<br/>File ").append(StringUtil.removeFilePath(f)).append(" dependency size on file ").append(StringUtil.removeFilePath(f2)).append(" is ").append(al.size()).append(" with terms:<br/>");
                     for (int ix = 0; ix < al.size(); ix++) {
@@ -842,70 +900,112 @@ public class Diagnostics {
                     if (i > 0)
                         result.append("<br/>File ").append(StringUtil.removeFilePath(f)).append(" dependency size on file ").append(StringUtil.removeFilePath(f2)).append(" is ").append(i).append("<P>");
                 }
-                // if (al != null
-                // && (dependencySize(fileDepends, f, f2) > al.size() || al
-                // .size() < 40))
-                // !examined.contains(f + "-" + f2) && !examined.contains(f2 +
-                // "-" + f)
-                // { // show mutual dependencies of comparable size
-                // result.append("\nFile " + f2 + " dependency size on file " +
-                // f + " is " + dependencySize(fileDepends,f,f2) + "<br>\n");
-                // result.append("\nFile " + f + " dependency size on file " +
-                // f2 + " is " + al.size() + "\n");
-                // result.append(" with terms:<br>\n ");
-                // for (int i = 0; i < al.size(); i++) {
-                // String term = (String) al.get(i);
-                // result.append("<a href=\"" + kbHref + "&term=" + term + "\">"
-                // + term + "</a>");
-                // if (i < al.size()-1)
-                // result.append(", ");
-                // }
-                // result.append("<P>\n");
-                // }
-                // else {
-                // int i = dependencySize(fileDepends,f,f2);
-                // int j = dependencySize(fileDepends,f2,f);
-                // // && !examined.contains(f + "-" + f2) &&
-                // !examined.contains(f2 + "-" + f)
-                // if (i > 0 )
-                // result.append("\nFile " + f2 + " dependency size on file " +
-                // f + " is " + i + "<P>\n");
-                // if (j > 0 )
-                // result.append("\nFile " + f + " dependency size on file " +
-                // f2 + " is " + j + "<P>\n");
-                // }
-                // if (!examined.contains(f + "-" + f2))
-                // examined.add(f + "-" + f2);
             }
             result.append("\n\n");
         }
         return result.toString();
     }
 
-    /** *****************************************************************
-     * @author Shaun Rose
-     * 
-     * This function loads a new kb with all kif files found in .sigmakee 
-     * (using ./config_full/config.xml, must create this file!), then maps all the term dependencies 
-     * between files. 
-     * 
-     * @param String serializedDependencyFilePath is the location where the dependency cache
-     *               for all kifs is located. Usually in .sigmakee/cache/term_dependency.ser.
+    /*****************************************************************
+     * Return whether the serialized term dependency cache exists.
+     * @param serializedDependencyFilePath the dependency cache filename
+     * @return true if the dependency cache exists and is non-empty
      */
-    private static void saveDependenciesForAllKif(String serializedDependencyFilePath) {
+    public static boolean dependencyCacheExists(String serializedDependencyFilePath) {
 
-        System.out.println("saveDependenciesForAllKif KBmanager.initializeOnce()");
-        KBmanager.getMgr().initializeOnce("./config_full");
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        System.out.println("Diagnostics: Completed init");
-        Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
-        serializedDependencyFilePath = KButilities.SIGMA_HOME + File.separator + "cache" + File.separator + serializedDependencyFilePath;
-        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(serializedDependencyFilePath))) {
-            out.writeObject(fileDepends);
-            System.out.println("Saved term dependency to " + serializedDependencyFilePath);
+        try {
+            Path path = dependencyCachePath(serializedDependencyFilePath);
+            return Files.isRegularFile(path) && Files.size(path) > 0;
         }
         catch (IOException e) {
-            throw new RuntimeException("Failed to save term dependency file to: " + serializedDependencyFilePath, e);
+            return false;
+        }
+    }
+
+    /*****************************************************************
+     * Return the path to the serialized term dependency cache.
+     * @param serializedDependencyFilePath the dependency cache filename
+     * @return the full dependency cache path
+     */
+    public static Path dependencyCachePath(String serializedDependencyFilePath) {
+
+        return Paths.get(KButilities.SIGMA_HOME, "cache", serializedDependencyFilePath);
+    }
+
+    /*****************************************************************
+     * Generate the serialized all-KIF dependency cache if missing or stale.
+     * Staleness is based on config.xml, configured constituents, and all
+     * top-level .kif files in kbDir.
+     * @param serializedDependencyFilePath file name under ~/.sigmakee/cache, usually term_dependency.ser
+     */
+    public static void saveDependenciesForAllKif(String serializedDependencyFilePath) {
+
+        if (!dependencyCacheGenerating.compareAndSet(false, true)) return;
+        try {
+            KBmanager mgr = KBmanager.getMgr();
+            if (!KBmanager.initialized && !KBmanager.initializing) mgr.initializeOnce();
+            String kbName = mgr.getPref("sumokbname");
+            String kbDir = mgr.getPref("kbDir");
+            if (StringUtil.emptyString(kbDir)) throw new RuntimeException("Empty kbDir preference");
+            Path kbDirPath = Paths.get(kbDir).toAbsolutePath().normalize();
+            if (!Files.isDirectory(kbDirPath)) throw new RuntimeException("kbDir is not a directory: " + kbDirPath);
+            List<String> allKifs = new ArrayList<>();
+            final long[] newestKifMillis = {0L};
+            try (Stream<Path> stream = Files.list(kbDirPath)) {
+                stream
+                    .filter(Files::isRegularFile)
+                    .filter(p -> p.getFileName().toString().endsWith(".kif"))
+                    .filter(p -> {
+                        String name = p.getFileName().toString();
+                        return !name.endsWith(KB._cacheFileSuffix) &&
+                            !name.endsWith(KB._userAssertionsString) &&
+                            !name.startsWith("temp-") &&
+                            !name.startsWith(".");
+                    })
+                    .sorted()
+                    .forEach(p -> {
+                        Path abs = p.toAbsolutePath().normalize();
+                        allKifs.add(abs.toString());
+                        try {
+                            newestKifMillis[0] = Math.max(newestKifMillis[0], Files.getLastModifiedTime(abs).toMillis());
+                        }
+                        catch (IOException e) {
+                            throw new RuntimeException("Failed reading modified time for: " + abs, e);
+                        }
+                    });
+            }
+            catch (IOException e) {
+                throw new RuntimeException("Failed reading .kif files from: " + kbDirPath, e);
+            }
+            if (allKifs.isEmpty()) throw new RuntimeException("No .kif files found in kbDir: " + kbDirPath);
+            Path outPath = Paths.get(KButilities.SIGMA_HOME, "cache", serializedDependencyFilePath);
+            long newestConfigOrConstituentMillis = KBmanager.newestConfigOrConstituentDate().getTime();
+            long newestSourceMillis = Math.max(newestConfigOrConstituentMillis, newestKifMillis[0]);
+            if (Files.exists(outPath) && Files.size(outPath) > 0) {
+                long serializedMillis = Files.getLastModifiedTime(outPath).toMillis();
+                if (serializedMillis >= newestSourceMillis) return;
+            }
+            KB originalKB = mgr.getKB(kbName);
+            List<String> originalConstituents = originalKB == null || originalKB.constituents == null ? null : new ArrayList<>(originalKB.constituents);
+            try {
+                mgr.loadKB(kbName, allKifs);
+                KB kb = mgr.getKB(kbName);
+                Map<String, Map<String, List<String>>> fileDepends = Diagnostics.termDependency(kb);
+                Files.createDirectories(outPath.getParent());
+                try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(outPath.toFile()))) {
+                    out.writeObject(fileDepends);
+                    System.out.println("Saved term dependency to " + outPath);
+                }
+            }
+            finally {
+                if (originalConstituents != null && !originalConstituents.isEmpty()) mgr.loadKB(kbName, originalConstituents);
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException("Failed to save dependency cache: " + serializedDependencyFilePath, e);
+        }
+        finally {
+            dependencyCacheGenerating.set(false);
         }
     }
 
@@ -934,34 +1034,29 @@ public class Diagnostics {
 
     /** *****************************************************************
      * @author Shaun Rose
-     * 
      * This function returns a list of error messages for missing dependencies.
      * If the user has a constituent loaded, and the file depends on another file 
      * that is not loaded as a constituent, then it will be added to the error list.
-     * 
      * @param Map<String,Map<String,List<String>>> fileDepends <Dependent, <Dependees, Terms>>
-     * @return Map<String,Map<String,List<String>>> a TreeMap with the loaded constituent files 
-     *         as the outer key, the missing dependee constituent files as the inner key, and 
-     *         dependent terms as the list. 
+     * @return Map<String,Map<String,List<String>>> TreeMap with the loaded constituent files 
+     *         as the outer key, missing dependee constituents as the inner key, and dependent terms as the list. 
     */
     private static Map<String,Map<String,List<String>>> missingConstituentDependencies(KB kb) {
 
-        //OuterKey = Loaded constituent with term dependency
-        //InterKey = Unloaded constituent containing term def
-        //ListValues = Terms the OuterKey uses from the InnerKey
         Map<String,Map<String,List<String>>> missing = new TreeMap<>();
         Map<String,Map<String,List<String>>> allDepends = Diagnostics.loadDependenciesForAllKif("term_dependency.ser");
         List<String> kbConstituentsCopy = new ArrayList<>();
-        for (String constituent : kb.constituents) {
-            kbConstituentsCopy.add(StringUtil.removeFilePath(constituent));
-        }
+        for (String constituent : kb.constituents) kbConstituentsCopy.add(StringUtil.removeFilePath(constituent));
         for (String constituent : kbConstituentsCopy) {
-            Map<String,List<String>> missingFromActiveConstituent = new TreeMap();
-            for (Map.Entry<String,List<String>> dependeeKifs : allDepends.get(StringUtil.removeFilePath(constituent)).entrySet()) {
+            String constituentName = StringUtil.removeFilePath(constituent);
+            Map<String,List<String>> depends = allDepends.get(constituentName);
+            if (depends == null || depends.isEmpty()) continue;
+            Map<String,List<String>> missingFromActiveConstituent = new TreeMap<>();
+            for (Map.Entry<String,List<String>> dependeeKifs : depends.entrySet()) {
                 if (!kbConstituentsCopy.contains(dependeeKifs.getKey()) && !dependeeKifs.getKey().equals("SUMO_Cache.kif"))
-                    missingFromActiveConstituent.put(dependeeKifs.getKey (), dependeeKifs.getValue());
+                    missingFromActiveConstituent.put(dependeeKifs.getKey(), dependeeKifs.getValue());
             }
-            missing.put(constituent, missingFromActiveConstituent);
+            if (!missingFromActiveConstituent.isEmpty()) missing.put(constituent, missingFromActiveConstituent);
         }
         return missing;
     }
@@ -981,6 +1076,9 @@ public class Diagnostics {
     */
     public static String printMissingConstituentDependencies(KB kb, String kbHref) {
 
+        if (!Diagnostics.dependencyCacheExists(TERM_DEPENDENCY_CACHE_FILE)) {
+            return "The term dependency cache has not been generated yet. " + "Use the button above to create " + Diagnostics.dependencyCachePath(TERM_DEPENDENCY_CACHE_FILE) + ".";
+        }
         StringBuilder html = new StringBuilder();
         Map<String,Map<String, List<String>>> missing = Diagnostics.missingConstituentDependencies(kb);
         for (Map.Entry<String,Map<String,List<String>>> constituent : missing.entrySet()) {
@@ -1930,6 +2028,7 @@ public class Diagnostics {
         System.out.println("  -p - print all terms in KB");
         System.out.println("  -e - exhaustive decomposition violations");
         System.out.println("  --diff <f1> <f2> - print all terms in f2 not in f1");
+        System.out.println("  -a - save missing constituent dependencies");
         System.out.println("  -m - mutual dependencies");
         System.out.println("  -M - print mutual dependencies html");
         System.out.println("  -o - terms not below Entity (Orphans)");
@@ -1959,9 +2058,7 @@ public class Diagnostics {
             //resultLimit = 0; // don't limit number of results on command line
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("Diagnostics: Completed init");
-            if (argMap.containsKey("t")) {
-                termDefsByFile(kb);
-            }
+            if (argMap.containsKey("t")) termDefsByFile(kb);
             else if (argMap.containsKey("A")) {
                 Map<String,Map<String,List<String>>> missing = Diagnostics.missingConstituentDependencies(kb);
                 for (Map.Entry<String,Map<String,List<String>>> missingDepend : missing.entrySet()) {
@@ -2012,6 +2109,9 @@ public class Diagnostics {
             }
             else if (argMap.containsKey("c")) {
                 System.out.println(termsWithoutDoc(kb));
+            }
+            else if (argMap.containsKey("dq")) {
+                System.out.println(duplicateQuantifiedVariables(kb));
             }
             else if (argMap.containsKey("q")) {
                 System.out.println(quantifierNotInBody(kb));

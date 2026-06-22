@@ -3369,8 +3369,8 @@ public class SUMOtoTFAform {
             }
             String promotion = numTypePromotionExpr(expr, parentType);
             if (promotion != null)
-                return promotion + SUMOformulaToTPTPformula.translateWord(form, ttype, false) + Formula.RP;
-            return SUMOformulaToTPTPformula.translateWord(form, ttype, false);
+            return promotion + SUMOformulaToTPTPformula.translateWord(form, ttype, false, "tff") + Formula.RP;
+            return SUMOformulaToTPTPformula.translateWord(form, ttype, false, "tff");
         }
         // ---- compound node ----
         Expr.SExpr se = (Expr.SExpr) expr;

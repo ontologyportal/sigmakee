@@ -1,5 +1,6 @@
 package com.articulate.sigma.user;
 
+import com.articulate.sigma.utils.LoggingUtils;
 import static java.lang.System.console;
 
 import java.io.Console;
@@ -97,9 +98,9 @@ public class UserDatabase {
             }
             if (storedPassword == null || role == null) return null;
             if (!PasswordService.verifyPassword(password, storedPassword)) return null;
-            if (PasswordService.isLegacySha1Hash(storedPassword)) {
+            if (PasswordService.needsPasswordRehash(storedPassword)) {
                 updatePassword(username, password);
-                System.out.println("UserDatabase.authenticateUser(): upgraded password hash to SHA-256 for " + username);
+                LoggingUtils.log("Upgraded password hash for " + username);
             }
             return role;
         }

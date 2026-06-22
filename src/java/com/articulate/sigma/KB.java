@@ -68,6 +68,7 @@ import com.articulate.sigma.parsing.CLIMapParser;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.*;
 
+
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -93,116 +94,82 @@ import tptp_parser.TPTPFormula;
 public class KB implements Serializable {
 
     private boolean isVisible = true;
-
     /** The name of the knowledge base. */
     public String name;
-
     /** An ArrayList of Strings that are the full canonical pathnames of the
      * files that comprise the KB. */
     public List<String> constituents = new ArrayList<>();
-
     /** The natural language in which axiom paraphrases should be presented. */
     public String language = "EnglishLanguage";
-
-    /** The location of preprocessed KIF files, suitable for loading into
-     * EProver.     */
+    /** The location of preprocessed KIF files, suitable for loading into EProver.     */
     public String kbDir = null;
-
     /** The instance of the CELT process. */
     public transient CELT celt = null;
-
     /** a cache built through lazy evaluation of the taxonomic depth of each term */
     public Map<String,Integer> termDepthCache = new ConcurrentHashMap<>();
-
     /** A SortedSet of Strings, which are all the terms in the KB.
      *  ConcurrentSkipListSet for thread-safe concurrent access during
      *  parallel FOF/TFF generation. */
     public Set<String> terms = new ConcurrentSkipListSet<>();
-
     /** A Map from all uppercase terms to their possibly mixed case original versions */
     public Map<String,String> capterms = new ConcurrentHashMap<>();
-
     /** The String constant that is the suffix for file of user assertions. */
     public static final String _userAssertionsString = "_UserAssertions.kif";
-
     /** The String constant that is the suffix for TPTP file of user assertions. */
     public static final String _userAssertionsTPTP = "_UserAssertions.tptp";
-
     /** The String constant that is the suffix for TFF file of user assertions. */
     public static final String _userAssertionsTFF = "_UserAssertions.tff";
-
     /** The String constant that is the suffix for THF file of user assertions. */
     public static final String _userAssertionsTHF = "_UserAssertions.thf";
-
     /** The String constant that is the suffix for files of cached assertions.     */
     public static final String _cacheFileSuffix = "_Cache.kif";
-
     /** A Map of all the Formula objects in the KB. Each key is a String
      * representation of a Formula. Each value is the Formula object
      * corresponding to the key.     */
     public Map<String, Formula> formulaMap = new HashMap<>();
-
     /** A HashMap of ArrayLists of String formulae, containing all the formulae
      * in the KB. Keys are the formula itself, a formula ID, and term indexes
      * created in KIF.createKey(). The actual formula can be retrieved by using
      * the returned String as the key for the variable formulaMap     */
     public Map<String, List<String>> formulas = new HashMap<>();
-
     /** The natural language formatting strings for relations in the KB. It is a
      * HashMap of language keys and HashMap values. The interior HashMap is term
      * name keys and String values of a format.     */
     private Map<String, Map<String, String>> formatMap = new HashMap<>();
-
     /** language keys and HashMap values. The interior HashMap is term name keys
      * and String values of a termFormat.     */
     private Map<String, Map<String, String>> termFormatMap = new HashMap<>();
-
     /** Language keys and HashMap values for relations in the KB. The interior
      * HashMap is term name keys and a list of all the associated format strings.
      */
     private Map<String, Map<String, List<String>>> formatMapAll = new HashMap<>();
-
     /** language keys and HashMap values for termFormats. The interior HashMap is
      *  is term name keys and a list of all associated termFormat strings.
      */
     private Map<String, Map<String, List<String>>> termFormatMapAll = new HashMap<>();
-
     /** Errors found during loading of the KB constituents. */
     public Set<String> errors = new TreeSet<>();
-
     /** Warnings found during loading of the KB constituents. */
     public Set<String> warnings = new TreeSet<>();
-
     /** Future: If true, the contents of the KB have been modified without
      * updating the caches     */
     public boolean modifiedContents = false;
-
     /* If true, assertions of the form (predicate x x) will be included in the
      * relation cache tables.     */
 //    private boolean cacheReflexiveAssertions = false;
-
     public KBcache kbCache = null;
-
     /** maps TPTP axiom IDs to SUMO formulas */
     public static Map<String, Formula> axiomKey = new HashMap<>();
-
     public Map<String, Integer> termFrequency = new HashMap<>();
-
     /** force regeneration of TPTP file */
     public static boolean force = false;
-
     public static int debug = 0;
-
     /** Progress bar text capture */
     private StringBuilder progressSb = new StringBuilder();
-
     /** TPTP query of a SUO-KIF formula */
     private Set<String> tptpQuery = null;
-
     public static boolean dropOnePremiseFormulas = false;
-
     public static boolean modensPonens = false;
-
     // Serialize any mutation of UserAssertions state (memory + disk + UA translation)
     private final Object uaLock = new Object();
 
@@ -304,11 +271,8 @@ public class KB implements Serializable {
             this.constituents = Lists.newArrayList(kbIn.constituents);
         this.language = kbIn.language;
         this.kbDir = kbIn.kbDir;
-
-        if (kbIn.terms != null)
-            this.terms = Collections.synchronizedSortedSet(new TreeSet<>(kbIn.terms));
-        if (kbIn.capterms != null)
-            this.capterms.putAll(kbIn.capterms);
+        if (kbIn.terms != null) this.terms = Collections.synchronizedSortedSet(new TreeSet<>(kbIn.terms));
+        if (kbIn.capterms != null) this.capterms.putAll(kbIn.capterms);
         String key;
         Formula newFormula;
         if (kbIn.formulaMap != null) {
@@ -319,7 +283,6 @@ public class KB implements Serializable {
                 this.formulaMap.put(key, newFormula);
             }
         }
-
         if (kbIn.formulas != null) {
             List<String> newList;
             for (Map.Entry<String, List<String>> pair : kbIn.formulas.entrySet()) {
@@ -337,8 +300,6 @@ public class KB implements Serializable {
             this.errors = Sets.newTreeSet(kbIn.errors);
         this.modifiedContents = kbIn.modifiedContents;
         this.kbCache = new KBcache(kbIn.kbCache, this);
-
-        // Must be done after kb manager set.
         if (kbIn.celt != null)
             this.celt = new CELT();
     }
@@ -1747,11 +1708,6 @@ public class KB implements Serializable {
                     tptpfile = new File(dir, (userAssertionTHF));
                 String filename = kiffile.getCanonicalPath();
                 List<Formula> formulasAlreadyPresent = merge(kif, filename);
-                // only check formulasAlreadyPresent when filterSimpleOnly = false;
-                // otherwise, some user assertions/axioms will not be asserted for
-                // inference, since these axioms do exist in formulasAlreadyPresent but not in
-                // SUMO.tptp. In the future, when SUMO can completely run using whole KB, we
-                // can remove SUMOKBtoTPTPKB.fitlerSimpleOnly==false;
                 if (!SUMOKBtoTPTPKB.FILTER_SIMPLE_ONLY && !formulasAlreadyPresent.isEmpty()) {
                     String sf = formulasAlreadyPresent.get(0).sourceFile;
                     result = "The formula was already added from " + sf;
@@ -1787,45 +1743,24 @@ public class KB implements Serializable {
                         }
                         result = "The formula has been added for browsing";
                         // 5. Write the formula to the kb.name_UserAssertions.tptp/tff
-                        if (null == KBmanager.getMgr().prover) result += " but not for local inference";
-                        else
-                            switch (KBmanager.getMgr().prover) {
-                                case EPROVER:
-                                    try {
-                                        EProver eprover = new EProver(this, "tptp", 30, 1);
-                                        if (debug>1) System.out.println("KB.tell: using eprover: " + eprover);
-                                        eprover.assertFormula(tptpfile.getCanonicalPath(), parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
-                                        EProver.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
-                                        result += " and inference";
-                                        break;
-                                    }
-                                    catch (IOException e) {
-                                        System.err.println(e);
-                                        return "";
-                                    }
-                                case VAMPIRE:
-                                    if (debug>1) System.out.println("KB.tell: using vampire");
-                                    Vampire vampire = new Vampire(this, "tptp", "CASC", false, 30, 1);
-                                    vampire.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
+                        if (null == KBmanager.getMgr().prover) {
+                            result += " but not for local inference";
+                        }
+                        else {
+                            String tptpLang = SUMOKBtoTPTPKB.getLang();
+                            if ("tptp".equalsIgnoreCase(tptpLang))
+                                tptpLang = "fof";
+                            boolean wroteInferenceAssertions =
+                                    SessionTPTPManager.writeUserAssertionsForSession(
+                                            this,
+                                            sessionId,
+                                            parsedFormulas,
+                                            tptpfile.toPath(),
+                                            tptpLang,
                                             !mgr.getPref("TPTP").equalsIgnoreCase("no"));
-                                    // nothing much to do since Vampire has to load it all at query time
-                                    // just create a single file
-                                    result += " and inference";
-                                    break;
-                                case LEO:
-                                    if (debug>1) System.out.println("KB.tell: using leo");
-                                    LEO leo = new LEO(this, "tptp", 10, 1, null);
-                                    List<Formula> leoFormulas = new ArrayList<>();
-                                    for (Formula lf : parsedFormulas) leoFormulas.add(new Formula(lf.getFormula()));
-                                    leo.assertFormula(tptpfile.getCanonicalPath(), leoFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
-                                    // nothing much to do since LEO has to load it all at query time
-                                    // just create a single file
-                                    result += " and inference";
-                                    break;
-                                default:
-                                    result += " but not for local inference";
-                                    break;
-                            }
+                            if (wroteInferenceAssertions) result += " and inference";
+                            else result += " but not for local inference";
+                        }
                         // Incremental TPTP pipeline for schema-level tells in a session.
                         // Runs after merge() and UA-file write; keeps the session TPTP up to date.
                         // Two cases from requiresBaseRegenForFormulas():

@@ -718,16 +718,16 @@ public class HTMLformatter {
                 srcfile = new File(f.sourceFile);
                 sourceFilename = srcfile.getName();
                 if (StringUtil.isNonEmptyString(sourceFilename)) {
-                    jeditcmd = KBmanager.getMgr().getPref("jedit");
-                    if (!StringUtil.emptyString(jeditcmd)) {
-                        show.append("<a href=\"").append(kbHref).append("&file=").append(sourceFilename).append("&line=").append(f.startLine).append("\">");
-                    }
+                    String editorHref = HTMLformatter.createHrefStart()
+                        + "/sigma/Editor.jsp?path="
+                        + java.net.URLEncoder.encode(f.sourceFile, StandardCharsets.UTF_8)
+                        + "&line="
+                        + f.startLine;
+                    show.append("<a href=\"").append(editorHref).append("\" target=\"_blank\">");
                     show.append(sourceFilename);
                     show.append(" ").append(f.startLine).append("-").append(f.endLine);
-                    if (!StringUtil.emptyString(jeditcmd))
-                        show.append("</a>");
+                    show.append("</a>");
                 }
-                show.append("</a>");
                 show.append("</td>\n<td width=\"40%\" valign=\"top\">");
                 if (!Formula.DOC_PREDICATES.contains(arg0))
                     pph = NLGUtils.htmlParaphrase(kbHref, f.getFormula(),

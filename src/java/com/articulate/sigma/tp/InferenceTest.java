@@ -26,12 +26,21 @@ import java.io.File;
 /** Represents a single .tq inference test, including metadata, assertions, expected answers, and results. */
 public class InferenceTest {
 
+    public static boolean debug = true;
     /** Path to the .tq inference test file. */
     public String filePath;
     /** Minimum TPTP language required by the test. */
     public String minLang = "fof";
     /** Whether session TPTP files must be regenerated after applying assertions. */
     public boolean tptpRegenRequired = false;
+    /** Whether this test should use closed-world assumption. */
+    public boolean closedWorldAssumption = false;
+    /** Whether this test should use modus ponens. */
+    public boolean modusPonens = false;
+    /** Whether this test should drop one premise during inference. */
+    public boolean dropOnePremise = false;
+    /** Whether this test should use HOL modal translation. */
+    public boolean holUseModals = false;
     /** Optional descriptive note for the test. */
     public String note;
     /** Optional category used to group the test. */
@@ -88,9 +97,9 @@ public class InferenceTest {
      * @param dropOnePremise whether to drop one premise during inference.
      * @param holUseModals whether HOL modal translation is enabled. 
      */
-    public void runTest(KB kb, String proverType, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals) {
+    public void runTest(KB kb, String proverType) {
         
-        runTest(kb, proverType, this.minLang, "CASC", closedWorldAssumption, modusPonens, dropOnePremise, holUseModals, this.timeout, this.expectedAnswers.size());
+        runTest(kb, proverType, this.minLang, "CASC", this.closedWorldAssumption, this.modusPonens, this.dropOnePremise, this.holUseModals, this.timeout, this.expectedAnswers.size());
     }
 
     /********************************************************************
@@ -108,20 +117,31 @@ public class InferenceTest {
      */
     public void runTest(KB kb, String proverType, String language, String vampireMode, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals, int timeout, int maxAnswers) {
         
+        boolean success = false;
         if (!this.errors.isEmpty()) {
             LoggingUtils.log("ERROR", "Cannot run test, has errors!: " + this.errors);
             return;
         }
         this.result = new InferenceTestResult();
         String sessionId = "tq-" + UUID.randomUUID();
+        SessionTPTPManager.purgeSessionMemoryOnly(sessionId);
         TheoremProverController tpc = new TheoremProverController();
         try {
             TPTPGenerationManager.waitForAllTPTP(600);
             applyAssertions(kb, sessionId, language);
             populateResult(kb, tpc.runQuery(kb, sessionId, this.query, this.filePath, "TEST_FILE", proverType, language, vampireMode, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals, timeout, maxAnswers));
+            success = this.result != null && this.result.success;
         }
         finally {
-            reset(kb, sessionId);
+            if (success) {
+                reset(kb, sessionId);
+            }
+            else {
+                SessionTPTPManager.purgeSessionMemoryOnly(sessionId);
+                LoggingUtils.log("ERROR", "Test failed, saved session directory: " + SessionTPTPManager.getSessionDir(sessionId));
+                LoggingUtils.log("UA in memory after failure purge: " + kb.countUserAssertionFormulasInMemory());
+            }
+            if (debug) printResult();
         }
     }
 
@@ -196,6 +216,12 @@ public class InferenceTest {
             this.result.contradictionFound = true;
             this.result.answers = new ArrayList<>();
         }
+        boolean expectedYes = this.expectedAnswers.size() == 1 && "yes".equals(this.expectedAnswers.get(0));
+        boolean actualYes = this.result.answers.size() == 1 && "yes".equals(this.result.answers.get(0));
+        if (expectedYes && actualYes && !tpp.noConjecture && !tpp.inconsistency) {
+            this.result.success = true;
+            return;
+        }
         boolean different = true;
         if (tpp.proof != null && (tpp.status == null || !tpp.status.startsWith("Timeout"))) different = !sameAnswers(tpp, this.expectedAnswers);
         this.result.success = !(different || tpp.noConjecture);
@@ -209,12 +235,13 @@ public class InferenceTest {
      */
     private static boolean sameAnswers(TPTP3ProofProcessor tpp, List<String> answerList) {
 
-        if ((tpp == null || tpp.proof.isEmpty()) && (answerList == null || answerList.contains("no"))) return true;
-        if (answerList != null && !answerList.isEmpty()) {
-            if (answerList.get(0).equals("yes")) return !tpp.proof.isEmpty() && tpp.containsFalse;
-            else return sameBindings(tpp.bindings, answerList);
-        }
-        return false;
+        if (answerList == null || answerList.isEmpty()) return false;
+        String expected = answerList.get(0);
+        String status = tpp == null ? null : tpp.status;
+        boolean theorem = status != null && status.startsWith("Theorem");
+        if ("yes".equals(expected)) return theorem || (tpp.proof != null && !tpp.proof.isEmpty() && tpp.containsFalse);
+        if ((tpp == null || tpp.proof.isEmpty()) && answerList.contains("no")) return true;
+        return sameBindings(tpp.bindings, answerList);
     }
 
     /********************************************************************
@@ -269,14 +296,21 @@ public class InferenceTest {
         if (StringUtil.emptyString(this.query)) errors.add("INVALID QUERY!: " + this.query);
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         for (String constituent : this.requiredConstituents) {
+            String requiredName = constituent.trim();
+            if (requiredName.length() >= 2 && requiredName.startsWith("\"") && requiredName.endsWith("\"")) {
+                requiredName = requiredName.substring(1, requiredName.length() - 1); 
+            }
+            requiredName = requiredName.replaceFirst("\\s+(?i:kif)$", ".kif");
+            requiredName = new File(requiredName).getName();
             boolean found = false;
             for (String loaded : kb.constituents) {
-                if (new File(loaded).getName().equals(constituent)) {
+                String loadedName = new File(loaded).getName().trim();
+                if (loadedName.equals(requiredName)) {
                     found = true;
                     break;
                 }
             }
-            if (!found) errors.add("Required constituent " + constituent + " not loaded!");
+            if (!found) errors.add("Required constituent " + requiredName + " not loaded!");
         }
         for (String error : errors) LoggingUtils.log("ERROR", error);
     }
@@ -297,6 +331,10 @@ public class InferenceTest {
                 if (formula.startsWith("(file")) this.requiredConstituents.add(formula.substring(6, formula.length() - 1));
                 else if (formula.startsWith("(minLang")) this.minLang = formula.substring(9, formula.length() - 1).trim().toLowerCase();
                 else if (formula.startsWith("(regen")) this.tptpRegenRequired = formula.substring(7, formula.length() - 1).trim().equals("true");
+                else if (formula.startsWith("(closedWorldAssumption")) this.closedWorldAssumption = formula.substring(formula.indexOf(' ') + 1, formula.length() - 1).trim().matches("(?i)true|yes");
+                else if (formula.startsWith("(modusPonens")) this.modusPonens = formula.substring(formula.indexOf(' ') + 1, formula.length() - 1).trim().matches("(?i)true|yes");
+                else if (formula.startsWith("(dropOnePremise")) this.dropOnePremise = formula.substring(formula.indexOf(' ') + 1, formula.length() - 1).trim().matches("(?i)true|yes");
+                else if (formula.startsWith("(holUseModals")) this.holUseModals = formula.substring(14, formula.length() - 1).trim().equalsIgnoreCase("true");
                 else if (formula.startsWith("(note")) this.note = formula.substring(6, formula.length() - 1);
                 else if (formula.startsWith("(category")) this.category = formula.substring(10, formula.length() - 1);
                 else if (formula.startsWith("(time")) this.timeout = Integer.parseInt(formula.substring(6, formula.length() - 1));
@@ -378,6 +416,7 @@ public class InferenceTest {
         System.out.println("    File:       " + this.filePath);
         System.out.println("    Note:       " + this.note);
         System.out.println("    Query:      " + this.query);
+        System.out.println("    Assertions:      " + this.assertions);
         System.out.println("    Timeout:    " + this.timeout + " seconds");
         if (this.result == null) {
             System.out.println("Result:     null");
@@ -419,7 +458,7 @@ public class InferenceTest {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             InferenceTest test = new InferenceTest(argMap.get("r").get(0));
-            test.runTest(kb, "VAMPIRE", false, false, false, false);
+            test.runTest(kb, "VAMPIRE");
             test.printResult();
         }
     }

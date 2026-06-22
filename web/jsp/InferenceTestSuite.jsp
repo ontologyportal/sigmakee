@@ -25,6 +25,13 @@
         if ("ERROR".equals(status)) return 3;
         return 99;
     }
+
+    private static String validationErrorMessage(InferenceTest test) {
+
+        if (test == null || test.errors == null || test.errors.isEmpty())
+            return "";
+        return String.join("; ", test.errors);
+    }
 %>
 <%
     String action = request.getParameter("action");
@@ -61,6 +68,10 @@
     int timeout = ValidationUtils.sanitizeInteger(request.getParameter("timeout"), 30);
     int maxAnswers = ValidationUtils.sanitizeInteger(request.getParameter("maxAnswers"), 1);
     boolean overrideLanguage = "yes".equalsIgnoreCase(request.getParameter("overrideLanguage"));
+    boolean overrideClosedWorldAssumption = "yes".equalsIgnoreCase(request.getParameter("overrideClosedWorldAssumption"));
+    boolean overrideModusPonens = "yes".equalsIgnoreCase(request.getParameter("overrideModusPonens"));
+    boolean overrideDropOnePremise = "yes".equalsIgnoreCase(request.getParameter("overrideDropOnePremise"));
+    boolean overrideHOLUseModals = "yes".equalsIgnoreCase(request.getParameter("overrideHOLUseModals"));
     boolean overrideTimeout = "yes".equalsIgnoreCase(request.getParameter("overrideTimeout"));
     List<String> availableProvers = TheoremProverController.availableProvers();
     String inferenceEngine = Optional.ofNullable(request.getParameter("inferenceEngine")).orElse("VAMPIRE");
@@ -82,7 +93,7 @@
         response.setCharacterEncoding("UTF-8");
         response.setHeader("Cache-Control", "no-store");
         String testPath = request.getParameter("testPath");
-        InferenceTest test = testPath == null ? null : inferenceTestSuite.getInferenceTests().get(testPath);
+        InferenceTest test = testPath == null ? null : inferenceTestSuite.reloadTest(testPath);
         if (test == null) {
             out.print("{"
                 + "\"ok\":false,"
@@ -100,20 +111,34 @@
         String selectedLanguage = "HOL".equalsIgnoreCase(translationMode) ? "thf" : TPTPlang;
         String effectiveLanguage = overrideLanguage ? selectedLanguage : test.minLang;
         int effectiveTimeout = overrideTimeout ? timeout : test.timeout;
-        boolean closedWorldAssumption = "yes".equalsIgnoreCase(cwa);
-        String message = "";
-        try {
-            inferenceTestSuite.runTestOverload(testPath, proverType, effectiveLanguage, effectiveVampireMode, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals, effectiveTimeout, maxAnswers);
+        boolean uiClosedWorldAssumption = "yes".equalsIgnoreCase(cwa);
+        boolean effectiveClosedWorldAssumption = overrideClosedWorldAssumption ? uiClosedWorldAssumption : test.closedWorldAssumption;
+        boolean effectiveModusPonens = overrideModusPonens ? modusPonens : test.modusPonens;
+        boolean effectiveDropOnePremise = overrideDropOnePremise ? dropOnePremise : test.dropOnePremise;
+        boolean effectiveHOLUseModals = overrideHOLUseModals ? holUseModals : test.holUseModals;
+        String message = validationErrorMessage(test);
+
+        if (StringUtil.emptyString(message)) {
+            try {
+                inferenceTestSuite.runTestOverload(testPath, proverType, effectiveLanguage, effectiveVampireMode,
+                    effectiveClosedWorldAssumption, effectiveModusPonens, effectiveDropOnePremise,
+                    effectiveHOLUseModals, effectiveTimeout, maxAnswers);
+            }
+            catch (Throwable t) {
+                message = t.getClass().getSimpleName() + ": " + t.getMessage();
+                if (test.result == null) test.result = new InferenceTest.InferenceTestResult();
+                test.result.success = false;
+                test.result.szsStatus = "Exception";
+                if (test.result.proof == null) test.result.proof = new ArrayList<>();
+                test.result.proof.add(message);
+            }
         }
-        catch (Throwable t) {
-            message = t.getClass().getSimpleName() + ": " + t.getMessage();
-            if (test.result == null) test.result = new InferenceTest.InferenceTestResult();
-            test.result.success = false;
-            test.result.szsStatus = "Exception";
-            if (test.result.proof == null) test.result.proof = new ArrayList<>();
-            test.result.proof.add(message);
-        }
-        String status = (test.errors != null && !test.errors.isEmpty()) ? "ERROR" : (test.result == null ? "NOT RUN" : (test.result.success ? "PASS" : "FAIL"));
+
+        String status = (test.errors != null && !test.errors.isEmpty()) ? "ERROR" :
+                (test.result == null ? "NOT RUN" : (test.result.success ? "PASS" : "FAIL"));
+
+        if ("ERROR".equals(status) && StringUtil.emptyString(message))
+            message = validationErrorMessage(test);
         String actual = test.result == null ? "" : String.valueOf(test.result.answers);
         String szs = "";
         if (test.result != null) {
@@ -187,10 +212,67 @@
         .sortable{cursor:pointer;user-select:none;}
         .sortable:hover{text-decoration:underline;}
         code{white-space:pre-wrap;word-break:break-word;}
+        .dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:14px 0;}
+        .dashCard{border:1px solid #ddd;background:#fff;border-radius:7px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}
+        .dashLabel{font-size:12px;color:#666;margin-bottom:4px;}
+        .dashValue{font-size:24px;font-weight:bold;line-height:1.1;}
+        .dashSub{font-size:11px;color:#777;margin-top:3px;}
+        .dashPASS .dashValue{color:#0a7a21;}
+        .dashFAIL .dashValue,.dashERROR .dashValue{color:#b00020;}
+        .dashQUEUE .dashValue{color:#1d75b8;}
     </style>
     <script>
         let currentSortKey = 'file';
         let currentSortAsc = true;
+
+        let dashboardQueueOverride = null;
+
+        function setDash(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        }
+
+        function updateDashboard(queueOverride) {
+            const rows = Array.from(document.querySelectorAll('.testTable tbody tr'));
+            const counts = {
+                fof: 0,
+                tff: 0,
+                thf: 0,
+                other: 0,
+                pass: 0,
+                fail: 0,
+                error: 0,
+                notRun: 0,
+                running: 0
+            };
+
+            rows.forEach(function(row) {
+                const type = (row.dataset.type || '').toLowerCase();
+                if (counts.hasOwnProperty(type)) counts[type]++;
+                else counts.other++;
+
+                const status = row.dataset.status || 'NOT RUN';
+                if (status === 'PASS') counts.pass++;
+                else if (status === 'FAIL') counts.fail++;
+                else if (status === 'ERROR') counts.error++;
+                else if (status === 'RUNNING') counts.running++;
+                else counts.notRun++;
+            });
+
+            const selectedCount = document.querySelectorAll('input[name="selectedTests"]:checked').length;
+            const queueCount = typeof queueOverride === 'number' ? queueOverride : selectedCount;
+
+            setDash('dashTotal', rows.length);
+            setDash('dashFOF', counts.fof);
+            setDash('dashTFF', counts.tff);
+            setDash('dashTHF', counts.thf);
+            setDash('dashQueue', queueCount);
+            setDash('dashPass', counts.pass);
+            setDash('dashFail', counts.fail);
+            setDash('dashError', counts.error);
+            setDash('dashNotRun', counts.notRun);
+            setDash('dashRunning', counts.running);
+        }
 
         function statusOrderJS(status) {
             if (status === 'NOT RUN') return 0;
@@ -284,8 +366,8 @@
             URL.revokeObjectURL(url);
         }
 
-        function viewTestFile(fileName) {
-            const url = 'ViewTest.jsp?name=' + encodeURIComponent(fileName);
+        function viewTestFile(filePath) {
+            const url = 'Editor.jsp?path=' + encodeURIComponent(filePath);
             window.open(url, '_blank');
         }
 
@@ -294,6 +376,7 @@
             boxes.forEach(function(box) {
                 box.checked = source.checked;
             });
+            updateDashboard();
         }
 
         function toggleTranslationOptions() {
@@ -329,7 +412,10 @@
             const statusCell = document.getElementById('status_' + rowId);
             if (!statusCell) return;
             const row = statusCell.closest('tr');
-            if (row) row.dataset.statusOrder = statusOrderJS(status);
+            if (row) {
+                row.dataset.statusOrder = statusOrderJS(status);
+                row.dataset.status = status;
+            }
             statusCell.classList.remove('statusPASS', 'statusFAIL', 'statusERROR', 'statusNOTRUN');
             if (status === 'RUNNING') {
                 statusCell.classList.add('statusNOTRUN');
@@ -339,6 +425,7 @@
                         '<span>RUNNING</span>' +
                     '</div>' +
                     '<div class="tiny" id="szs_' + rowId + '"></div>';
+                updateDashboard(dashboardQueueOverride);
                 return;
             }
             statusCell.classList.add(statusClassJS(status));
@@ -347,16 +434,33 @@
                     (szs ? 'SZS: ' + szs : '') +
                 '</div>';
             if (message) {
-                const div = document.createElement('div');
-                div.className = 'tiny';
-                div.textContent = message;
-                statusCell.appendChild(div);
+                if (status === 'ERROR') {
+                    const ul = document.createElement('ul');
+                    ul.className = 'errors';
+                    message.split(';').forEach(function(part) {
+                        const text = part.trim();
+                        if (!text) return;
+                        const li = document.createElement('li');
+                        li.textContent = text;
+                        ul.appendChild(li);
+                    });
+                    statusCell.appendChild(ul);
+                }
+                else {
+                    const div = document.createElement('div');
+                    div.className = 'tiny';
+                    div.textContent = message;
+                    statusCell.appendChild(div);
+                }
             }
+            updateDashboard(dashboardQueueOverride);
         }
 
         async function runSelectedTests() {
             const form = document.getElementById('itsRunnerForm');
             const boxes = Array.from(document.querySelectorAll('input[name="selectedTests"]:checked'));
+            dashboardQueueOverride = boxes.length;
+            updateDashboard(dashboardQueueOverride);
             if (boxes.length === 0) {
                 alert('Select at least one test.');
                 return;
@@ -369,7 +473,10 @@
             for (const box of boxes) {
                 const testPath = box.value;
                 const rowId = box.dataset.rowId;
-                setRowStatus(rowId, 'RUNNING', '');
+                const row = document.getElementById('status_' + rowId)?.closest('tr');
+                const preexistingError = row && row.dataset.status === 'ERROR';
+                if (!preexistingError)
+                    setRowStatus(rowId, 'RUNNING', '');
                 const params = new URLSearchParams(new FormData(form));
                 params.set('action', 'runOneAjax');
                 params.delete('selectedTests');
@@ -405,7 +512,11 @@
                 catch (err) {
                     setRowStatus(rowId, 'ERROR', err.message);
                 }
+                dashboardQueueOverride = Math.max(0, dashboardQueueOverride - 1);
+                updateDashboard(dashboardQueueOverride);
             }
+            dashboardQueueOverride = null;
+            updateDashboard();
             if (runButton) {
                 runButton.disabled = false;
                 runButton.textContent = 'Run Selected';
@@ -427,6 +538,12 @@
             const modeHOL = document.getElementById('modeHOL');
             if (modeFOL) modeFOL.addEventListener('change', toggleTranslationOptions);
             if (modeHOL) modeHOL.addEventListener('change', toggleTranslationOptions);
+            document.querySelectorAll('input[name="selectedTests"]').forEach(function(box) {
+                box.addEventListener('change', function() {
+                    updateDashboard();
+                });
+            });
+            updateDashboard();
         });
     </script>
 </head>
@@ -449,16 +566,29 @@
         </div>
         <div class="overrideRow">
             <label>
-                <input type="checkbox" name="overrideLanguage" value="yes" <%= overrideLanguage ? "checked" : "" %>>
-                Override meta predicate minLang
-            </label>
-            <label>
-                <input type="checkbox" name="overrideTimeout" value="yes" <%= overrideTimeout ? "checked" : "" %>>
-                Override meta predicate timeout
-            </label>
-            <span class="tiny">
-                (Unchecked means use each test file's meta predicates/defaults.)
-            </span>
+    <input type="checkbox" name="overrideLanguage" value="yes" <%= overrideLanguage ? "checked" : "" %>>
+        Override meta predicate minLang
+    </label>
+    <label>
+        <input type="checkbox" name="overrideTimeout" value="yes" <%= overrideTimeout ? "checked" : "" %>>
+        Override meta predicate timeout
+    </label>
+    <label>
+        <input type="checkbox" name="overrideClosedWorldAssumption" value="yes" <%= overrideClosedWorldAssumption ? "checked" : "" %>>
+        Override closedWorldAssumption
+    </label>
+    <label>
+        <input type="checkbox" name="overrideModusPonens" value="yes" <%= overrideModusPonens ? "checked" : "" %>>
+        Override modusPonens
+    </label>
+    <label>
+        <input type="checkbox" name="overrideDropOnePremise" value="yes" <%= overrideDropOnePremise ? "checked" : "" %>>
+        Override dropOnePremise
+    </label>
+    <label>
+        <input type="checkbox" name="overrideHOLUseModals" value="yes" <%= overrideHOLUseModals ? "checked" : "" %>>
+        Override HOLUseModals
+    </label>
         </div>
         <div class="actions">
             <button type="button" class="actionBtn runBtn" onclick="runSelectedTests()">Run Selected</button>
@@ -467,6 +597,58 @@
             <button type="button" class="actionBtn reloadKbBtn" onclick="return reloadKB();">Reload KB</button>
             <button type="button" class="actionBtn exportBtn" onclick="exportReport();">Export Report</button>
             <span class="tiny">Showing <%= inferenceTestSuite.getInferenceTests().size() %> inference tests.</span>
+        </div>
+        <div class="dashboard" id="testDashboard">
+            <div class="dashCard">
+                <div class="dashLabel">Total Tests</div>
+                <div class="dashValue" id="dashTotal">0</div>
+                <div class="dashSub">All loaded tests</div>
+            </div>
+            <div class="dashCard">
+                <div class="dashLabel">FOF</div>
+                <div class="dashValue" id="dashFOF">0</div>
+                <div class="dashSub">minLang fof</div>
+            </div>
+            <div class="dashCard">
+                <div class="dashLabel">TFF</div>
+                <div class="dashValue" id="dashTFF">0</div>
+                <div class="dashSub">minLang tff</div>
+            </div>
+            <div class="dashCard">
+                <div class="dashLabel">THF</div>
+                <div class="dashValue" id="dashTHF">0</div>
+                <div class="dashSub">minLang thf</div>
+            </div>
+            <div class="dashCard dashQUEUE">
+                <div class="dashLabel">Queued</div>
+                <div class="dashValue" id="dashQueue">0</div>
+                <div class="dashSub">Selected / remaining</div>
+            </div>
+            <div class="dashCard">
+                <div class="dashLabel">Running</div>
+                <div class="dashValue" id="dashRunning">0</div>
+                <div class="dashSub">Currently active</div>
+            </div>
+            <div class="dashCard dashPASS">
+                <div class="dashLabel">Passed</div>
+                <div class="dashValue" id="dashPass">0</div>
+                <div class="dashSub">Successful tests</div>
+            </div>
+            <div class="dashCard dashFAIL">
+                <div class="dashLabel">Failed</div>
+                <div class="dashValue" id="dashFail">0</div>
+                <div class="dashSub">Completed failures</div>
+            </div>
+            <div class="dashCard dashERROR">
+                <div class="dashLabel">Errors</div>
+                <div class="dashValue" id="dashError">0</div>
+                <div class="dashSub">Invalid / exception</div>
+            </div>
+            <div class="dashCard">
+                <div class="dashLabel">Not Run</div>
+                <div class="dashValue" id="dashNotRun">0</div>
+                <div class="dashSub">Pending results</div>
+            </div>
         </div>
         <table class="testTable">
             <thead>
@@ -491,6 +673,8 @@
                 %>
                 <tr data-file="<%= ValidationUtils.escapeHtml(testFileName.toLowerCase()) %>"
                     data-category="<%= ValidationUtils.escapeHtml(test.category == null ? "" : test.category.toLowerCase()) %>"
+                    data-type="<%= ValidationUtils.escapeHtml(test.minLang == null ? "other" : test.minLang.toLowerCase()) %>"
+                    data-status="<%= ValidationUtils.escapeHtml(status) %>"
                     data-lang-order="<%= langOrder(test.minLang) %>"
                     data-status-order="<%= statusOrder(status) %>">
                     <td>
@@ -498,9 +682,9 @@
                     </td>
                     <td>
                         <div class="fileName">
-                            <a href="javascript:void(0);"
-                            onclick="viewTestFile('<%= ValidationUtils.escapeHtml(testFileName) %>')"
-                            style="color:#0073e6;text-decoration:underline;">
+                            <a href="Editor.jsp?path=<%= StringUtil.encode(test.filePath) %>"
+                            target="_blank"
+                            rel="noopener noreferrer">
                                 <%= ValidationUtils.escapeHtml(testFileName) %>
                             </a>
                         </div>
@@ -516,6 +700,10 @@
                         <div>file minLang: <b><%= ValidationUtils.escapeHtml(test.minLang) %></b></div>
                         <div>file timeout: <b><%= test.timeout %></b>s</div>
                         <div>regen: <b><%= test.tptpRegenRequired %></b></div>
+                        <div>CWA: <b><%= test.closedWorldAssumption %></b></div>
+                        <div>modusPonens: <b><%= test.modusPonens %></b></div>
+                        <div>dropOnePremise: <b><%= test.dropOnePremise %></b></div>
+                        <div>HOLUseModals: <b><%= test.holUseModals %></b></div>
                     </td>
                     <td id="status_<%= rowId %>" class="<%= cssClass %>">
                         <%= status %>

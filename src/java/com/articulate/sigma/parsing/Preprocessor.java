@@ -1,8 +1,5 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.Formula;
-import com.articulate.sigma.KB;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,6 +7,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.articulate.sigma.Formula;
+import com.articulate.sigma.KB;
 
 // call the functions needed to make SUMO syntactically first order
 // and ready for conversion to TPTP

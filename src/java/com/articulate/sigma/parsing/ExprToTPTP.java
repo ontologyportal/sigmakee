@@ -196,7 +196,7 @@ public class ExprToTPTP {
      * @param name    the KIF symbol name
      * @param isHead  {@code true} when used as a predicate/function head
      */
-    static String translateAtom(String name, boolean isHead, String lang) {
+    public static String translateAtom(String name, boolean isHead, String lang) {
 
         if (name == null || name.isEmpty()) return "";
 
@@ -478,6 +478,8 @@ public class ExprToTPTP {
                 collectFreeVars(se.args().get(1), childBound, free);
             }
             case Expr.SExpr se -> {
+                if (se.head() != null)
+                    collectFreeVars(se.head(), bound, free);
                 for (Expr child : se.args())
                     collectFreeVars(child, bound, free);
             }

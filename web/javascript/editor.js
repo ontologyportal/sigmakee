@@ -261,12 +261,25 @@ document.addEventListener("DOMContentLoaded", async function() {
   initializeCodeMirror();
   if (window.initialErrors || window.initialErrorMask)
     highlightErrors(window.initialErrors || [], window.initialErrorMask || []);
-  const examples = {
-    "example.kif": `; Example Kif File\n(=>\n  (instance ?X Man)\n  (attribute ?X Mortal))`,
-    "example.tptp": `% Example TPTP file\n tff(mortal_rule, axiom, (![X]: (man(X) => mortal(X)))).`,
-  };
-  Object.entries(examples).forEach(([name, content]) => openFileInNewTab(name, content));
-  switchTab(0);
+  if (window.initialOpenFile) {
+    openFileInNewTab(
+      window.initialOpenFile.name,
+      window.initialOpenFile.contents || "",
+      window.initialOpenFile.source || "server",
+      window.initialOpenFile.path || ""
+    );
+
+    const line = Number(window.initialOpenFile.line || 1);
+    jumpToLine(line, 0);
+  }
+  else {
+    const examples = {
+      "example.kif": `; Example Kif File\n(=>\n  (instance ?X Man)\n  (attribute ?X Mortal))`,
+      "example.tptp": `% Example TPTP file\n tff(mortal_rule, axiom, (![X]: (man(X) => mortal(X)))).`,
+    };
+    Object.entries(examples).forEach(([name, content]) => openFileInNewTab(name, content));
+    switchTab(0);
+  }
   reorderTabs();
 });
 
@@ -442,12 +455,12 @@ function createTabElement(fileName, i) {
   return tab;
 }
 
-function addTab(fileName = "untitled.kif") {
+function addTab(fileName = "untitled.kif", source = "user", path = "") {
   const tabBar = $("#tabBar");
   const i = codeEditors.length;
   const tab = createTabElement(fileName, i);
   tabBar.appendChild(tab);
-  const entry = makeEditorEntry(fileName, "");
+  const entry = makeEditorEntry(fileName, "", source, path);
   codeEditors.push(entry);
 }
 
@@ -523,16 +536,17 @@ function closeTab(i) {
   }
 }
 
-
-function openFileInNewTab(name, contents = "") {
+function openFileInNewTab(name, contents = "", source = "user", path = "") {
   saveActiveTab();
-  addTab(name);
+  addTab(name, source, path);
   const newIndex = codeEditors.length - 1;
   switchTab(newIndex);
   const entry = codeEditors[newIndex];
-  entry[1]        = contents;
+  entry[1] = contents;
   entry.lastSaved = contents;
-  entry.dirty     = false;
+  entry.dirty = false;
+  entry.source = source;
+  entry.path = path;
   setEditorContent(contents);
   markTabSaved(newIndex);
 }
@@ -702,24 +716,27 @@ async function openUserFile(filename) {
 }
 
 async function openSaveFileModal() {
+  const entry = codeEditors[activeTab];
+  if (entry?.source === "server") {
+    await saveServerFile(entry);
+    return;
+  }
+
   const activeName = getActiveFileName().trim();
   const files = await loadUserFileList();
 
-  // If file exists → warn before overwriting
   if (files.includes(activeName)) {
-    const overwrite = confirm(
-      `The file "${activeName}" already exists.\n\nDo you want to overwrite it?`
-    );
-
+    const overwrite = confirm(`The file "${activeName}" already exists.\n\nDo you want to overwrite it?`);
     if (!overwrite) return;
 
     const content = getContent();
-    const res = await postToServlet("saveUserFile", {
-      fileName: activeName,
-      code: content
-    });
+    const res = await postToServlet("saveUserFile", { fileName: activeName, code: content });
 
     if (res?.success) {
+      const entry = codeEditors[activeTab];
+      entry.lastSaved = content;
+      entry[1] = content;
+      entry.dirty = false;
       markTabSaved(activeTab);
       alert(`File "${activeName}" overwritten successfully.`);
     } else {
@@ -728,12 +745,10 @@ async function openSaveFileModal() {
     return;
   }
 
-  // Show modal and populate list
   document.getElementById("saveFileNameInput").value = activeName;
   populateFileList("saveFileList");
   document.getElementById("saveFileModal").style.display = "flex";
 }
-
 
 function closeSaveFileModal() {
   document.getElementById("saveFileModal").style.display = "none";
@@ -778,8 +793,12 @@ async function saveFile() {
   }
 }
 
-
 async function openSaveAsModal() {
+  const entry = codeEditors[activeTab];
+  if (entry?.source === "server") {
+    await saveServerFileAs(entry);
+    return;
+  }
   document.getElementById("saveAsFileNameInput").value = getActiveFileName();
   populateFileList("saveAsFileList");
   document.getElementById("saveAsModal").style.display = "flex";
@@ -909,10 +928,12 @@ function validateFilename(name) {
   return null;
 }
 
-function makeEditorEntry(fileName, content = "") {
+function makeEditorEntry(fileName, content = "", source = "user", path = "") {
   const entry = [fileName, content];
   entry.lastSaved = content;
   entry.dirty = false;
+  entry.source = source;
+  entry.path = path;
   return entry;
 }
 
@@ -1064,23 +1085,47 @@ function handleTranslateClick(event, kind) {
   closeTranslateMenu();
 }
 
-function jumpToError(line, start = 0) {
+function jumpToLine(line, start = 0) {
   if (!codeEditor) return;
 
-  const lineIndex = Math.max(0, line - 1);
-
-  codeEditor.focus();
-  codeEditor.setCursor({ line: lineIndex, ch: start });
-  codeEditor.scrollIntoView(
-    { line: lineIndex, ch: start },
-    100   // margin
+  const lineIndex = Math.max(
+    0,
+    Math.min(Number(line || 1) - 1, codeEditor.lineCount() - 1)
   );
 
-  // Optional: flash the line
-  const handle = codeEditor.addLineClass(lineIndex, "background", "error-flash");
-  setTimeout(() => {
-    if (handle) codeEditor.removeLineClass(lineIndex, "background", "error-flash");
-  }, 800);
+  const ch = Math.max(0, Number(start || 0));
+  const pos = { line: lineIndex, ch };
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      codeEditor.refresh();
+
+      codeEditor.operation(() => {
+        codeEditor.focus();
+        codeEditor.setCursor(pos);
+
+        // First try CodeMirror's built-in scroll.
+        codeEditor.scrollIntoView({ from: pos, to: pos }, 120);
+
+        // Then force an explicit scroll position. This is more reliable
+        // for large files loaded immediately after page initialization.
+        const scroller = codeEditor.getScrollerElement();
+        const coords = codeEditor.charCoords(pos, "local");
+        const y = Math.max(0, coords.top - scroller.clientHeight / 3);
+        codeEditor.scrollTo(null, y);
+      });
+
+      const handle = codeEditor.addLineClass(lineIndex, "background", "error-flash");
+      setTimeout(() => {
+        if (handle)
+          codeEditor.removeLineClass(lineIndex, "background", "error-flash");
+      }, 800);
+    });
+  });
+}
+
+function jumpToError(line, start = 0) {
+  jumpToLine(line, start);
 }
 
 // ======================================================
@@ -1212,4 +1257,70 @@ function updateParenContext(cm, { highlightRange = true } = {}) {
       );
     }
   });
+}
+
+async function postToServerFile(action, data = {}) {
+  const body = new URLSearchParams({ action, ...data }).toString();
+  const res = await fetch("ServerFile.jsp", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      "Accept": "application/json"
+    },
+    body
+  });
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { success: false, message: text };
+  }
+}
+
+async function openServerPathPrompt() {
+  const path = prompt("Enter full server file path:", "/home/shaun/.sigmakee/KBs/tests/");
+  if (!path) return;
+
+  const res = await postToServerFile("load", { path });
+  if (!res?.success) {
+    alert("Error opening file:\n" + (res?.message || "Unknown error"));
+    return;
+  }
+
+  openFileInNewTab(res.name, res.contents || "", "server", res.path);
+  closeDropdown();
+}
+
+async function saveServerFile(entry, savePath = null) {
+  if (!entry) return alert("No active file.");
+
+  const path = savePath || entry.path;
+  if (!path) return alert("No server path for this file. Use Save As.");
+
+  const res = await postToServerFile("save", {
+    path,
+    code: getContent()
+  });
+
+  if (!res?.success) {
+    alert("Error saving file:\n" + (res?.message || "Unknown error"));
+    return;
+  }
+
+  entry.path = res.path || path;
+  entry[0] = entry.path.split(/[\\/]/).pop();
+  entry[1] = getContent();
+  entry.lastSaved = entry[1];
+  entry.dirty = false;
+  entry.source = "server";
+  updateTabLabels();
+  markTabSaved(activeTab);
+  alert("Saved:\n" + entry.path);
+}
+
+async function saveServerFileAs(entry) {
+  const current = entry?.path || getActiveFileName();
+  const path = prompt("Save as full server path:", current);
+  if (!path) return;
+  await saveServerFile(entry, path);
 }

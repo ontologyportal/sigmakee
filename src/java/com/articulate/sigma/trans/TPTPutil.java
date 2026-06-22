@@ -78,16 +78,10 @@ public class TPTPutil {
      */
     public static String htmlTPTPFormat(Formula f, String hyperlink, boolean traditionalLogic) {
 
-//        String indentChars = "  ";
-//        String eolChars = "\n";
-
-        //System.out.println("INFO in Formula.htmlTPTPFormat(): " + f.toString());
-        //System.out.println("INFO in Formula.htmlTPTPFormat(): getTheTptpFormulas().size()" + f.getTheTptpFormulas().size());
         Set<String> tptpFormulas = f.getTheTptpFormulas();
         if (tptpFormulas == null || tptpFormulas.size() < 1){
             String tff = SUMOtoTFAform.processExpr(f.expr, false);
-            if (tff != null)
-                return htmlizeSUMOTFA(tff, hyperlink);
+            if (tff != null) return htmlizeSUMOTFA(tff, hyperlink);
             return "No TPTP formula.  May not be expressible in strict first order.";
         }
         StringBuilder result = new StringBuilder();
@@ -97,10 +91,7 @@ public class TPTPutil {
         char ch;
         String tokenNoSuffix;
         for (String formString : tptpFormulas) {
-            if (!StringUtil.emptyString(formString)) {
-                //System.out.println("INFO in Formula.htmlTPTPFormat(): TPTP formula: " + formString);
-                formString = formString.trim();
-            }
+            if (!StringUtil.emptyString(formString)) formString = formString.trim();
             else {
                 System.err.println("Error in Formula.htmlTPTPFormat(): empty TPTP formula: " + formString);
                 continue;
@@ -115,12 +106,10 @@ public class TPTPutil {
 
             flen = formString.length();
             for (int i = 0; i < flen; i++) {
-                // System.out.println("INFO in format(): " + formatted.toString());
                 ch = formString.charAt(i);
-                if (inComment) {     // In a comment
+                if (inComment) {
                     result.append(ch);
-                    if (ch == '\'')
-                        inComment = false;
+                    if (ch == '\'') inComment = false;
                 }
                 else {
                     if (inToken) {
@@ -132,8 +121,7 @@ public class TPTPutil {
                             result.append(ch);
                             tokenNum++;
                         }
-                        else
-                            token.append(ch);
+                        else token.append(ch);
                     }
                     else if (ch == '\'') {
                         inComment = true;
@@ -144,63 +132,47 @@ public class TPTPutil {
                         result.append(ch);
                     }
                     else if (ch == ':') {
-                    	if (!traditionalLogic)
-                            result.append(ch);
+                    	if (!traditionalLogic) result.append(ch);
                         result.append(returnAndIndent(level));
                     }
                     else if (ch == '!') {
-                    	if (!traditionalLogic)
-                            result.append(ch);
-                    	else
-                            result.append("&forall;");
+                    	if (!traditionalLogic) result.append(ch);
+                    	else result.append("&forall;");
                     }
                     else if (ch == '?') {
-                    	if (!traditionalLogic)
-                            result.append(ch);
-                       	else
-                            result.append("&exist;");
+                    	if (!traditionalLogic) result.append(ch);
+                       	else result.append("&exist;");
                     }
                     else if (ch == '&') {
-                    	if (traditionalLogic)
-                            result.append("&and;");
-                    	else
-                            result.append(ch);
+                    	if (traditionalLogic) result.append("&and;");
+                    	else result.append(ch);
                         result.append(returnAndIndent(level));
                     }
                     else if (ch == '|') {
-                    	if (traditionalLogic)
-                            result.append("&or;");
-                    	else
-                            result.append(ch);
+                    	if (traditionalLogic) result.append("&or;");
+                    	else result.append(ch);
                         result.append(returnAndIndent(level));
                     }
                     else if (formString.substring(i).startsWith("<~>")) {
                         i = i + 2;
-                    	if (traditionalLogic)
-                            result.append("&xor;");
-                    	else
-                            result.append(ch);
+                    	if (traditionalLogic) result.append("&xor;");
+                    	else result.append(ch);
                         result.append(returnAndIndent(level));
                     }
                     else if (ch == '~') {
-                    	if (traditionalLogic)
-                            result.append("&not;");
-                    	else
-                            result.append(ch);
+                    	if (traditionalLogic) result.append("&not;");
+                    	else result.append(ch);
                     }
                     else if (ch == ')') {
                         level--;
                         tokenNum = 0;
                         result.append(ch);
-                        if ((i+1 < formString.length()) && formString.charAt(i+1) != ')')
-                        	result.append(returnAndIndent(level));
+                        if ((i+1 < formString.length()) && formString.charAt(i+1) != ')') result.append(returnAndIndent(level));
                     }
                     else if (formString.substring(i).startsWith(Formula.IF)) {
                         i++;
-                        if (traditionalLogic)
-                            result.append("&rArr;");
-                        else
-                            result.append("=&gt;");
+                        if (traditionalLogic) result.append("&rArr;");
+                        else result.append("=&gt;");
                         result.append(returnAndIndent(level));
                     }
                     else {
@@ -208,8 +180,7 @@ public class TPTPutil {
                             inToken = true;
                             i = i + 2;
                         }
-                        else
-                            result.append(ch);
+                        else result.append(ch);
                     }
                 }
             }

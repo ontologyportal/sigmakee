@@ -1,8 +1,5 @@
 package com.articulate.sigma.parsing;
 
-import com.articulate.sigma.Formula;
-import com.articulate.sigma.KB;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -12,6 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.articulate.sigma.Formula;
+import com.articulate.sigma.KB;
+
 public class RowVar {
 
     public KB kb = null;
@@ -20,9 +20,6 @@ public class RowVar {
     /** ***************************************************************
      */
     public RowVar(KB kbin) {
-
-        if (!PredVarInst.predVarInstDone)
-            System.err.println("Error! in RowVar(): Predicate variable instantiation is required and has not been completed");
         kb = kbin;
     }
 
@@ -69,8 +66,7 @@ public class RowVar {
                 for (int i = 0; i <= 6; i++) {
                     fnew = formulaList.get(i);
                     varList = varLists.get(i);
-                    if (debug) System.out.println("expandVariableArityRowVar(): replace varname : @" +
-                            varName + " with varlist: " + varList);
+                    if (debug) System.out.println("expandVariableArityRowVar(): replace varname : @" + varName + " with varlist: " + varList);
                     newliteral = literal.replace(Formula.R_PREF + varName, varList);
                     fnSuffix = Formula.FN_SUFF;
                     if (!pred.endsWith(Formula.FN_SUFF))
@@ -221,7 +217,6 @@ public class RowVar {
                         " (numeric and non-numeric types at same expansion position) — marking as 0");
             }
         }
-
         return arities;
     }
 

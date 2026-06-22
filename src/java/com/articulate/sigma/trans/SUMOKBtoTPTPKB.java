@@ -484,8 +484,7 @@ public class SUMOKBtoTPTPKB {
      *                    the key is the renamed relation and the
      *                    value is the original name.
      */
-    protected void printVariableArityRelationContent(PrintWriter pr, Map<String,String> relationMap,
-                                                     String sanitizedKBName, AtomicInteger axiomIndex) {
+    protected void printVariableArityRelationContent(PrintWriter pr, Map<String,String> relationMap, String sanitizedKBName, AtomicInteger axiomIndex) {
 
         Iterator<String> it = relationMap.keySet().iterator();
         String key, value;
@@ -504,6 +503,75 @@ public class SUMOKBtoTPTPKB {
                     pr.println(getLang() + "(kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement() +
                             ",axiom,(" + varArityTPTP + ")).");
                 }
+            }
+        }
+    }
+
+    /******************************************************************
+     * Emit FOF axioms connecting partition arities to ChildrenOfFn and exhaustive instance membership.
+     * @param pw the writer for the generated TPTP file
+     * @param sanitizedKBName the KB name sanitized for use in TPTP axiom names
+     * @param axiomIndex the shared counter used to generate unique axiom names
+     */
+    private void printPartitionSemanticAxioms(PrintWriter pw, String sanitizedKBName, AtomicInteger axiomIndex) {
+
+        final int maxChildren = 7;
+        for (int childCount = 2; childCount <= maxChildren; childCount++) {
+            int predArity = childCount + 1;
+            String pred = "s__partition__" + predArity;
+            String childVars = IntStream.rangeClosed(1, childCount)
+                    .mapToObj(i -> "V__C" + i)
+                    .collect(Collectors.joining(","));
+            String allVars = "V__C," + childVars;
+            String listFn = "s__ListFn__" + childCount + "Fn";
+            String listTerm = listFn + "(" + childVars + ")";
+            String partitionAtom = pred + "(V__C," + childVars + ")";
+            String name = "kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement();
+            pw.println("fof(" + name + ",axiom,(! [" + allVars + "] : " +
+                    "(" + partitionAtom + " => " +
+                    "(s__ChildrenOfFn(V__C) = " + listTerm + ")))).");
+            String objVars = "V__OBJ," + allVars;
+            String disj = IntStream.rangeClosed(1, childCount)
+                    .mapToObj(i -> "s__instance(V__OBJ,V__C" + i + ")")
+                    .collect(Collectors.joining(" | "));
+            name = "kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement();
+            pw.println("fof(" + name + ",axiom,(! [" + objVars + "] : " +
+                    "((" + partitionAtom + " & s__instance(V__OBJ,V__C)) => " +
+                    "(" + disj + ")))).");
+        }
+    }
+
+    /******************************************************************
+     * Emit FOF axioms for ListFn arities, including list instance,
+     * length, element order, and inList membership facts.
+     * @param pw the writer for the generated TPTP file
+     * @param sanitizedKBName the KB name sanitized for use in TPTP axiom names
+     * @param axiomIndex the shared counter used to generate unique axiom names
+     */
+    private void printListFnSemanticAxioms(PrintWriter pw, String sanitizedKBName, AtomicInteger axiomIndex) {
+        
+        final int maxArity = 7;
+        for (int arity = 1; arity <= maxArity; arity++) {
+            String fn = "s__ListFn__" + arity + "Fn";
+            String vars = IntStream.rangeClosed(1, arity)
+                    .mapToObj(i -> "V__X" + i)
+                    .collect(Collectors.joining(","));
+            String args = IntStream.rangeClosed(1, arity)
+                    .mapToObj(i -> "V__X" + i)
+                    .collect(Collectors.joining(","));
+            String name = "kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement();
+            pw.println("fof(" + name + ",axiom,(! [" + vars + "] : " +
+                    "s__instance(" + fn + "(" + args + "),s__List))).");
+            name = "kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement();
+            pw.println("fof(" + name + ",axiom,(! [" + vars + "] : " +
+                    "(s__ListLengthFn(" + fn + "(" + args + ")) = n__" + arity + "))).");
+            for (int i = 1; i <= arity; i++) {
+                name = "kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement();
+                pw.println("fof(" + name + ",axiom,(! [" + vars + "] : " +
+                        "(s__ListOrderFn(" + fn + "(" + args + "),n__" + i + ") = V__X" + i + "))).");
+                name = "kb_" + sanitizedKBName + "_" + axiomIndex.getAndIncrement();
+                pw.println("fof(" + name + ",axiom,(! [" + vars + "] : " +
+                        "s__inList(V__X" + i + "," + fn + "(" + args + ")))).");
             }
         }
     }
@@ -1083,13 +1151,12 @@ public class SUMOKBtoTPTPKB {
                 }
             }
         } // end if ((fof || tff) && FormulaAST)
-
-        // Collect sort and TPTP bodies for sequential dedup+write phase (sorted for determinism)
-        for (String sort : new TreeSet<>(f.tffSorts)) {
-            if (!StringUtil.emptyString(sort))
-                res.sortBodies.add(sort);
+        if ("tff".equalsIgnoreCase(localLang)) {
+            for (String sort : new TreeSet<>(f.tffSorts)) {
+                if (!StringUtil.emptyString(sort))
+                    res.sortBodies.add(sort);
+            }
         }
-
         Set<String> formulasToWrite = localLang.equals("fof") ? f.theFofFormulas : f.theTffFormulas;
         for (String tptp : new TreeSet<>(formulasToWrite)) {
             if (!StringUtil.emptyString(tptp))
@@ -1233,13 +1300,18 @@ public class SUMOKBtoTPTPKB {
             for (String line : linesBuf)
                 pw.println(line);
         }
+        if ("fof".equalsIgnoreCase(localLang)) {
+            printListFnSemanticAxioms(pw, getSanitizedKBname(), axiomIndex);
+            printPartitionSemanticAxioms(pw, getSanitizedKBname(), axiomIndex);
+        }
         printVariableArityRelationContent(pw, relationMap, getSanitizedKBname(), axiomIndex);
         if ("tff".equalsIgnoreCase(localLang)) {
             printTFFNumericConstants(pw);
         }
         if (CWA) pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
         if (conjecture != null) {
-            String type = isQuestion ? "question" : "conjecture";
+            boolean hasAnswerVars = conjecture.collectUnquantifiedVariables() != null && !conjecture.collectUnquantifiedVariables().isEmpty();
+            String type = hasAnswerVars ? "question" : "conjecture";
             for (String theTPTPFormula : conjecture.theTptpFormulas)
                 pw.println(localLang + "(prove_from_" + getSanitizedKBname() + "," + type + ",(" + theTPTPFormula + ")).");
         }

@@ -14,6 +14,11 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.LoggingUtils;
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.parsing.ExprToTHF;
+import com.articulate.sigma.FormulaPreprocessor;
+import com.articulate.sigma.parsing.ExprToTPTP;
+import com.articulate.sigma.parsing.ExprToTFF;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -31,39 +36,20 @@ import java.util.function.Supplier;
 public class SessionTPTPManager {
 
     private static final boolean debug = false;
-
     /** When true, each {@link #patchSessionTPTP} call writes a human-readable log file to the session directory. */
     public static boolean debugPatch = true;
-
     /** Per-session locks for thread-safe generation */
     private static final ConcurrentHashMap<String, Object> sessionLocks = new ConcurrentHashMap<>();
-
     /** Track which sessions have generated files (avoids redundant regeneration) */
     private static final ConcurrentHashMap<String, Long> sessionGenerationTimestamps = new ConcurrentHashMap<>();
-
     /** Each session that performs a schema-level tell() gets its own deep copy of the shared KBcache. */
     private static final ConcurrentHashMap<String, KBcache> sessionCaches = new ConcurrentHashMap<>();
-
-    /**
-     * Per-session axiom key: axiom name → source Formula.
-     *
-     * <p>The global {@code SUMOKBtoTPTPKB.axiomKey} is treated as <em>read-only</em>
-     * after initial KB generation — it maps base-KB axiom names ({@code kb_SUMO_N})
-     * to their source formulas.  Every axiom name created by {@code patchSessionTPTP}
-     * (both retranslated base formulas and new {@code tell()} assertions) is recorded
-     * here instead, keeping sessions fully isolated.
-     *
-     * <p>Entries are removed in {@link #cleanupSession}.
-     */
-    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>>
-            sessionAxiomKeys = new ConcurrentHashMap<>();
-
+    /** Per-session axiom key: axiom name → source Formula. */
+    private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>> sessionAxiomKeys = new ConcurrentHashMap<>();
     /** Sessions currently in batch-tell mode (Case B/default TPTP regens suppressed). */
     private static final Set<String> batchModeActive = ConcurrentHashMap.newKeySet();
-
     /** Per-session lazy flag for askVampireForTQ(). */
     private static final ConcurrentHashMap<String, Boolean> precomputedRegenRequired = new ConcurrentHashMap<>();
-
     private static final ConcurrentHashMap<String, ConcurrentHashMap<String, Formula>> sessionDerivedTypeFacts = new ConcurrentHashMap<>();
 
     /*********************************************************************************
@@ -117,16 +103,13 @@ public class SessionTPTPManager {
      * @param sessionId The HTTP session ID
      */
     public static void setForceGeneration(String sessionId) {
-        if (sessionId != null)
-            precomputedRegenRequired.put(sessionId, Boolean.TRUE);
+        if (sessionId != null) precomputedRegenRequired.put(sessionId, Boolean.TRUE);
     }
 
     /*********************************************************************************
      * Read and clear the batch flag (one-shot).
      * @param sessionId The HTTP session ID
      * @return null if session was not in batch context;
-     *         Boolean.TRUE if a Case B/default tell was deferred;
-     *         Boolean.FALSE if only Case A patches were applied (no full regen needed)
      */
     public static Boolean consumeBatchFlag(String sessionId) {
         return precomputedRegenRequired.remove(sessionId);
@@ -369,7 +352,6 @@ public class SessionTPTPManager {
             }
         }
     }
-
 
     /*********************************************************************************
      * Incrementally patch the session-specific TPTP file.
@@ -664,6 +646,23 @@ public class SessionTPTPManager {
         });
     }
 
+    public static void purgeSessionMemoryOnly(String sessionId) {
+
+        if (StringUtil.emptyString(sessionId))
+            return;
+
+        sessionLocks.remove(sessionId);
+        sessionGenerationTimestamps.remove(sessionId);
+        sessionCaches.remove(sessionId);
+        sessionDerivedTypeFacts.remove(sessionId);
+        sessionAxiomKeys.remove(sessionId);
+        batchModeActive.remove(sessionId);
+        precomputedRegenRequired.remove(sessionId);
+
+        for (KB kb : KBmanager.getMgr().kbs.values())
+            purgeSessionFormulas(kb, sessionId);
+    }
+
     /*********************************************************************************
      * Clean up all session-specific files for a given session.
      * Called when a session is destroyed.
@@ -707,6 +706,401 @@ public class SessionTPTPManager {
     public static boolean hasSessionFiles(String sessionId) {
 
         return sessionGenerationTimestamps.containsKey(sessionId);
+    }
+
+
+    /*********************************************************************************
+     * @author AI
+     * Translate newly-told user assertions to a session/shared UserAssertions TPTP file.
+     *
+     * This replaces prover-specific assertion writers such as Vampire.assertFormula().
+     * It intentionally lives here because user assertion translation depends on the
+     * session KBcache, not on any specific theorem prover.
+     *
+     * @param kb             The KB
+     * @param sessionId      Optional session id; if non-empty, use the session KBcache
+     * @param parsedFormulas Formulas just parsed and written to *_UserAssertions.kif
+     * @param outputPath     Path to SUMO_UserAssertions.tptp/.tff
+     * @param lang           "fof"/"tptp" or "tff"
+     * @param tptpEnabled    false if TPTP output is disabled by prefs
+     * @return true if at least one assertion was written
+     */
+    public static boolean writeUserAssertionsForSession(
+            KB kb,
+            String sessionId,
+            List<Formula> parsedFormulas,
+            Path outputPath,
+            String lang,
+            boolean tptpEnabled) {
+
+        if (!tptpEnabled)
+            return false;
+
+        if (kb == null || parsedFormulas == null || parsedFormulas.isEmpty() || outputPath == null)
+            return false;
+
+        final String normalizedLang =
+                "tptp".equalsIgnoreCase(lang) ? "fof" :
+                "fof".equalsIgnoreCase(lang)  ? "fof" :
+                "tff".equalsIgnoreCase(lang)  ? "tff" :
+                lang;
+
+        if (!"fof".equalsIgnoreCase(normalizedLang) && !"tff".equalsIgnoreCase(normalizedLang)) {
+            LoggingUtils.log("ERROR",
+                    "SessionTPTPManager.writeUserAssertionsForSession(): unsupported lang: " + lang);
+            return false;
+        }
+
+        return kb.withUserAssertionLock(() -> {
+            try {
+                Files.createDirectories(outputPath.getParent());
+
+                KBcache sessionCache = null;
+
+                if (!StringUtil.emptyString(sessionId)) {
+                    sessionCache = getOrCreateSessionCache(sessionId, kb);
+
+                    for (Formula f : parsedFormulas)
+                        applyFormulaToSessionCacheOnly(sessionCache, f);
+
+                    sessionCache.correctValences();
+                }
+
+                Map<Formula, List<String>> translations;
+
+                if (!StringUtil.emptyString(sessionId) && sessionCache != null) {
+                    KBcache sharedCache = kb.kbCache;
+                    kb.kbCache = sessionCache;
+                    try {
+                        translations = SUMOKBtoTPTPKB.retranslateFormulas(
+                                kb,
+                                new LinkedHashSet<>(parsedFormulas),
+                                normalizedLang,
+                                sessionId);
+                    }
+                    finally {
+                        kb.kbCache = sharedCache;
+                    }
+                }
+                else {
+                    translations = SUMOKBtoTPTPKB.retranslateFormulas(
+                            kb,
+                            new LinkedHashSet<>(parsedFormulas),
+                            normalizedLang,
+                            sessionId);
+                }
+
+                if (translations == null || translations.isEmpty())
+                    return false;
+
+                String sanitizedKBName = kb.name.replaceAll("\\W", "_");
+                String batchTag = "u" + Long.toUnsignedString(System.nanoTime(), 36);
+                int axiomIndex = 1;
+                boolean wroteAny = false;
+
+                try (BufferedWriter writer = Files.newBufferedWriter(
+                        outputPath,
+                        StandardCharsets.UTF_8,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.APPEND)) {
+
+                    for (Map.Entry<Formula, List<String>> entry : translations.entrySet()) {
+                        Formula src = entry.getKey();
+                        List<String> bodies = entry.getValue();
+
+                        if (bodies == null)
+                            continue;
+
+                        for (String body : bodies) {
+                            if (StringUtil.emptyString(body))
+                                continue;
+
+                            String name = "kb_" + sanitizedKBName + "_UserAssertion_" +
+                                    batchTag + "_" + axiomIndex++;
+
+                            writer.write(normalizedLang + "(" + name + ",axiom,(" + body + ")).");
+                            writer.newLine();
+
+                            if (!StringUtil.emptyString(sessionId))
+                                getOrCreateSessionAxiomKey(sessionId).put(name, src);
+
+                            wroteAny = true;
+                        }
+                    }
+                }
+
+                return wroteAny;
+            }
+            catch (Exception e) {
+                LoggingUtils.log("ERROR",
+                        "SessionTPTPManager.writeUserAssertionsForSession(): " + e.getMessage());
+                e.printStackTrace();
+                return false;
+            }
+        });
+    }
+
+    /*********************************************************************************
+     * @author AI
+     * Apply only the KBcache side-effect of simple schema assertions.
+     *
+     * This is intentionally cache-only. It does not patch or regenerate TPTP files.
+     * The normal incremental pipeline in KB.tell() can still run afterward.
+     */
+    private static void applyFormulaToSessionCacheOnly(KBcache cache, Formula f) {
+
+        if (cache == null || f == null)
+            return;
+
+        String pred = f.car();
+        if (StringUtil.emptyString(pred))
+            return;
+
+        try {
+            switch (pred) {
+                case "subclass":
+                case "immediateSubclass":
+                    cache.addSubclass(f.getStringArgument(1), f.getStringArgument(2));
+                    break;
+
+                case "instance":
+                case "immediateInstance":
+                    cache.addInstance(f.getStringArgument(1), f.getStringArgument(2));
+                    break;
+
+                case "domain":
+                    cache.addDomain(
+                            f.getStringArgument(1),
+                            Integer.parseInt(f.getStringArgument(2).trim()),
+                            f.getStringArgument(3));
+                    break;
+
+                case "domainSubclass":
+                    cache.addDomain(
+                            f.getStringArgument(1),
+                            Integer.parseInt(f.getStringArgument(2).trim()),
+                            f.getStringArgument(3));
+                    break;
+
+                case "range":
+                case "rangeSubclass":
+                    cache.addRange(f.getStringArgument(1), f.getStringArgument(2));
+                    break;
+
+                case "subrelation":
+                    cache.addSubrelation(f.getStringArgument(1), f.getStringArgument(2));
+                    break;
+
+                case "disjoint":
+                    cache.addDisjoint(f.getStringArgument(1), f.getStringArgument(2));
+                    break;
+
+                default:
+                    break;
+            }
+        }
+        catch (Exception e) {
+            LoggingUtils.log("ERROR", "SessionTPTPManager.applyFormulaToSessionCacheOnly(): failed on " +
+                    f.getFormula() + " : " + e.getMessage());
+        }
+    }
+
+    private static boolean isFormulaTypeGuard(Expr e, Map<String, Set<String>> typeMap) {
+
+        if (!(e instanceof Expr.SExpr se))
+            return false;
+
+        if (!"instance".equals(se.headName()))
+            return false;
+
+        List<Expr> args = se.args();
+        if (args.size() != 2)
+            return false;
+
+        if (!(args.get(0) instanceof Expr.Var v))
+            return false;
+
+        if (!(args.get(1) instanceof Expr.Atom a))
+            return false;
+
+        if (!"Formula".equals(a.name()))
+            return false;
+
+        Set<String> types = typeMap.get(v.name());
+        return types != null && types.contains("Formula");
+    }
+
+    private static Expr stripFormulaTypeGuards(Expr e, Map<String, Set<String>> typeMap) {
+
+        if (!(e instanceof Expr.SExpr se))
+            return e;
+
+        String head = se.headName();
+        List<Expr> args = se.args();
+
+        if ("=>".equals(head) && args.size() == 2) {
+            Expr antecedent = stripFormulaTypeGuards(args.get(0), typeMap);
+            Expr consequent = stripFormulaTypeGuards(args.get(1), typeMap);
+
+            if (isFormulaTypeGuard(antecedent, typeMap))
+                return consequent;
+
+            return new Expr.SExpr(se.head(), List.of(antecedent, consequent));
+        }
+
+        if ("and".equals(head)) {
+            List<Expr> kept = new ArrayList<>();
+            for (Expr arg : args) {
+                Expr cleaned = stripFormulaTypeGuards(arg, typeMap);
+                if (!isFormulaTypeGuard(cleaned, typeMap))
+                    kept.add(cleaned);
+            }
+
+            if (kept.isEmpty())
+                return new Expr.Atom("True");
+
+            if (kept.size() == 1)
+                return kept.get(0);
+
+            return new Expr.SExpr(se.head(), kept);
+        }
+
+        List<Expr> cleanedArgs = new ArrayList<>(args.size());
+        for (Expr arg : args)
+            cleanedArgs.add(stripFormulaTypeGuards(arg, typeMap));
+
+        return new Expr.SExpr(se.head(), cleanedArgs);
+    }
+
+    public static Set<String> getUserAssertionsTHFStatements(KB kb, String sessionId, boolean useModals) {
+
+        Set<String> result = new LinkedHashSet<>();
+        if (kb == null)
+            return result;
+        return kb.withUserAssertionLock(() -> {
+            String uaBase = kb.name + KB._userAssertionsString;
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            int axNum = 0;
+            for (Formula f : kb.formulaMap.values()) {
+                if (f == null || f.sourceFile == null || f.expr == null)
+                    continue;
+                String srcBase = new File(f.sourceFile).getName();
+                boolean hasSession = !StringUtil.emptyString(sessionId);
+                if (hasSession) {
+                    if (!sessionId.equals(f.uaSessionId))
+                        continue;
+                }
+                else {
+                    if (!uaBase.equals(srcBase))
+                        continue;
+                }
+                LoggingUtils.log("THF UA translating session=" + sessionId +
+                        " formulaSession=" + f.uaSessionId +
+                        " formula=" + f.getFormula());
+                try {
+                    StringWriter excludeLog = new StringWriter();
+                    boolean excluded = useModals
+                            ? THFnew.exclude(f, kb, excludeLog)
+                            : THFnew.excludeNonModal(f, kb, excludeLog);
+                    if (excluded) {
+                        LoggingUtils.log("THF UA excluded formula=" + f.getFormula() +
+                                " reason=" + excludeLog.toString().replace('\n', ' '));
+                        continue;
+                    }
+
+                    Set<Expr> processed = withSessionCache(sessionId, kb,
+                            () -> fp.preProcessExpr(f, false, kb));
+
+                    if (processed == null || processed.isEmpty())
+                        continue;
+
+                    if (useModals) {
+                        Map.Entry<Expr, Map<String, Set<String>>> initialModal =
+                                withSessionCache(sessionId, kb,
+                                        () -> Modals.processModalsExpr(f.expr, kb));
+
+                        if (initialModal == null || initialModal.getKey() == null)
+                            continue;
+
+                        Expr initialModalExpr = initialModal.getKey();
+
+                        Map<String, Set<String>> typeMap = new HashMap<>();
+                        Map<String, Set<String>> foundTypes = withSessionCache(sessionId, kb,
+                                () -> fp.findTypeRestrictionsExpr(initialModalExpr, kb));
+
+                        if (foundTypes != null)
+                            typeMap.putAll(foundTypes);
+
+                        if (initialModal.getValue() != null)
+                            typeMap.putAll(initialModal.getValue());
+
+                        Set<String> worldTypes = new HashSet<>();
+                        worldTypes.add("World");
+                        typeMap.put(Modals.makeWorldVarExpr(f.expr), worldTypes);
+
+                        Modals.markModalAttributeFormulaVarsExpr(f.expr, typeMap);
+
+                        for (Expr e : processed) {
+                            if (e == null || SUMOKBtoTPTPKB.hasUnresolvedPredVar(e))
+                                continue;
+
+                            Expr cleaned = stripFormulaTypeGuards(e, typeMap);
+
+                            Map.Entry<Expr, Map<String, Set<String>>> modalResult =
+                                    withSessionCache(sessionId, kb,
+                                            () -> Modals.processModalsExpr(cleaned, kb, typeMap));
+
+                            if (THFnew.hasFormulaDomainArgMismatch(cleaned, typeMap, kb)) {
+                                LoggingUtils.log("THF UA excluded formula-domain mismatch: " + cleaned.toKifString());
+                                continue;
+                            }
+
+                            if (modalResult == null || modalResult.getKey() == null)
+                                continue;
+
+                            if (modalResult.getValue() != null)
+                                typeMap.putAll(modalResult.getValue());
+
+                            String thf = ExprToTHF.translate(modalResult.getKey(), false, typeMap);
+
+                            if (!StringUtil.emptyString(thf))
+                                result.add("thf(user_assert_" + (axNum++) + ",axiom," + thf + ").");
+                        }
+                    }
+                    else {
+                        for (Expr e : processed) {
+                            if (e == null || SUMOKBtoTPTPKB.hasUnresolvedPredVar(e))
+                                continue;
+
+                            Map<String, Set<String>> foundTypes =
+                                    withSessionCache(sessionId, kb,
+                                            () -> fp.findTypeRestrictionsExpr(e, kb));
+
+                            Map<String, Set<String>> typeMap =
+                                    foundTypes == null ? new HashMap<>() : new HashMap<>(foundTypes);
+
+                            for (String atom : ExprToTHF.collectPlainFormulaAtoms(e)) {
+                                String p = ExprToTHF.plainFormulaAtomName(atom);
+                                result.add("thf(" + p + "_tp,type,(" + p + " : $o)).");
+                            }
+
+                            String thf = ExprToTHF.translateNonModal(e, false, typeMap);
+
+                            if (!StringUtil.emptyString(thf))
+                                result.add("thf(user_assert_" + (axNum++) + ",axiom," + thf + ").");
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    LoggingUtils.log("ERROR",
+                            "SessionTPTPManager.getUserAssertionsTHFStatements(): failed on " +
+                                    f.getFormula() + " : " + ex.getMessage());
+                    ex.printStackTrace();
+                }
+            }
+
+            return result;
+        });
     }
 
     /*********************************************************************************
@@ -786,7 +1180,6 @@ public class SessionTPTPManager {
      * KBcache for {@code sessionId}, if one exists.  If no session cache exists (no schema-
      * level tell() has been made this session), {@code op} runs against the shared cache
      * unchanged.
-     *
      * @param <T>       the return type of the operation
      * @param sessionId the HTTP session ID (null or empty ⟹ no swap)
      * @param kb        the shared KB whose kbCache field is temporarily replaced
@@ -804,20 +1197,15 @@ public class SessionTPTPManager {
             kb.kbCache = sessionCache;
             try {
                 return op.get();
-            } finally {
+            } 
+            finally {
                 kb.kbCache = shared;
             }
         }
     }
 
     /********************************************************************
-     * Materialize inherited type facts for a session instance assertion.
-     * Example:
-     *   (instance John Human)
-     * becomes:
-     *   (instance John Human)
-     *   (instance John Physical)
-     *   (instance John Object)
+     * Materialize inherited type facts for an instance assertion.
      * @author AI (needs careful review)
      * @param sessionId the session id
      * @param kb the KB

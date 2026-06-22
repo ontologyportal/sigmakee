@@ -5,8 +5,13 @@ import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.parsing.CLIMapParser;
 
+
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 public class Modals {
     
@@ -190,7 +195,18 @@ public class Modals {
                     "SquareRootFn",
                     "SubtractionFn",
                     "TangentFn",
-                    "YearFn"
+                    "YearFn",
+                    "WhenFn",
+                    "BeginFn",
+                    "EndFn",
+                    "PastFn",
+                    "FutureFn",
+                    "ImmediatePastFn",
+                    "ImmediateFutureFn",
+                    "TimeIntervalFn",
+                    "MonthFn",
+                    "DayFn",
+                    "MeasureFn"
             ));
 
     // ISSUE 1
@@ -239,14 +255,16 @@ public class Modals {
         K,D,T,B,S4,S5,D4,D45}
 
     public static final Set<String> noWorld = new HashSet<>(Arrays.asList(
-            "instance","subclass","domain","domainSubclass","range","rangeSubclass",
-            "immediateInstance","immediateSubclass","disjoint","partition",
-            "exhaustiveDecomposition","successorClass","partialOrderingOn",
-            "trichotomizingOn","totalOrderingOn","disjointDecomposition",
-            "AdditionFn","MultiplicationFn","ArcCosineFn","ArcSineFn",
-            "arcTangentFn","AverageFn","CosineFn","DivisionFn","ExponentiationFn",
-            "ListSumFn","LogFn","MultiplicationFn","ReciprocalFn","RoundFn",
-            "SineFn","SquareRootFn","SubtractionFn","TangentFn"));
+        "instance","subclass","domain","domainSubclass","range","rangeSubclass",
+        "immediateInstance","immediateSubclass","disjoint","partition",
+        "exhaustiveDecomposition","successorClass","partialOrderingOn",
+        "trichotomizingOn","totalOrderingOn","disjointDecomposition",
+        "AdditionFn","MultiplicationFn","ArcCosineFn","ArcSineFn",
+        "arcTangentFn","AverageFn","CosineFn","DivisionFn","ExponentiationFn",
+        "ListSumFn","LogFn","MultiplicationFn","ReciprocalFn","RoundFn",
+        "SineFn","SquareRootFn","SubtractionFn","TangentFn", "WhenFn",
+        "BeginFn", "EndFn", "PastFn", "FutureFn", "ImmediatePastFn",
+        "ImmediateFutureFn", "TimeIntervalFn", "MonthFn", "DayFn", "MeasureFn"));
 
     // Categories of modals for KBstatistics
     public static final Set<String> temporal = new HashSet<>(Arrays.asList(
@@ -259,6 +277,8 @@ public class Modals {
             "believes", "knows", "desires", "says", "describes", "expects"));
     public static final Set<String> otherModal = new HashSet<>(Arrays.asList(
             "hasPurpose", "Possibility", "Necessity", "Likely", "Unlikely"));
+
+    public static final Set<String> formulaConstants = new LinkedHashSet<>();
 
     /***************************************************************
      * Handle the predicates given in regHOL3pred, which have a parameter
@@ -298,6 +318,24 @@ public class Modals {
         Formula result = new Formula();
         result.read(fstring.toString());
         return result;
+    }
+
+    private static boolean isFormulaConstant(Expr expr) {
+
+        return expr instanceof Expr.Atom a
+                && a.name() != null
+                && !Formula.isLogicalOperator(a.name())
+                && !"True".equals(a.name())
+                && !"False".equals(a.name());
+    }
+
+    private static Expr formulaConstantAtWorld(Expr.Atom a, String worldvar, int worldNum) {
+
+        String name = a.name() + "__formula";
+        formulaConstants.add(name);
+        return new Expr.SExpr(
+                new Expr.Atom(name),
+                List.of(new Expr.Var("?" + worldvar + worldNum)));
     }
 
     /***************************************************************
@@ -577,16 +615,25 @@ public class Modals {
     // instead of Formula string manipulation.
     // =======================================================================
 
+    private static void markFormulaArgVar(Expr arg, Map<String, Set<String>> typeMap) {
+
+        if (arg instanceof Expr.Var v)
+            typeMap.computeIfAbsent(v.name(), k -> new HashSet<>()).add("Formula");
+    }
+
     /***************************************************************
      * Collect all variable names (Var and RowVar) from an Expr tree.
      * Used to find a world-variable prefix that doesn't conflict with
      * existing variables.
      */
     private static void collectAllVarsExprRecurse(Expr expr, Set<String> vars) {
+
         switch (expr) {
             case Expr.Var v      -> vars.add(v.name());
             case Expr.RowVar rv  -> vars.add(rv.name());
             case Expr.SExpr se   -> {
+                if (se.head() != null)
+                    collectAllVarsExprRecurse(se.head(), vars);
                 for (Expr child : se.args())
                     collectAllVarsExprRecurse(child, vars);
             }
@@ -623,6 +670,7 @@ public class Modals {
      */
     public static void markModalAttributeFormulaVarsExpr(Expr expr,
                                                           Map<String, Set<String>> typeMap) {
+        
         if (expr == null) return;
         switch (expr) {
             case Expr.SExpr se -> {
@@ -632,11 +680,50 @@ public class Modals {
                         typeMap.computeIfAbsent(v.name(), k -> new HashSet<>()).add("Formula");
                     }
                 }
-                for (Expr child : se.args())
-                    markModalAttributeFormulaVarsExpr(child, typeMap);
+                for (Expr child : se.args()) markModalAttributeFormulaVarsExpr(child, typeMap);
             }
             default -> { /* leaf nodes have no subformulas */ }
         }
+    }
+
+    private static void markFormulaVar(Expr expr, Map<String, Set<String>> typeMap) {
+
+        if (expr instanceof Expr.Var v) typeMap.computeIfAbsent(v.name(), k -> new HashSet<>()).add("Formula");
+    }
+
+    private static boolean isFormulaVar(Expr expr, Map<String, Set<String>> typeMap) {
+
+        return expr instanceof Expr.Var v
+                && !v.name().matches("\\?ROW\\d+")
+                && typeMap != null
+                && typeMap.get(v.name()) != null
+                && typeMap.get(v.name()).contains("Formula");
+    }
+
+    private static Expr asFormulaAtWorld(Expr expr, KB kb, Map<String, Set<String>> typeMap,
+                                        String worldvar, int worldNum) {
+
+        if (isFormulaVar(expr, typeMap))
+            return new Expr.SExpr(expr, List.of(new Expr.Var("?" + worldvar + worldNum)));
+        if (isFormulaConstant(expr))
+            return formulaConstantAtWorld((Expr.Atom) expr, worldvar, worldNum);
+        return processRecurseExpr(expr, kb, typeMap, worldvar, worldNum);
+    }
+
+    public static Expr processRecurseExpr(Expr expr, KB kb, String worldvar, int worldNum) {
+        return processRecurseExpr(expr, kb, new HashMap<>(), worldvar, worldNum);
+    }
+
+    public static Expr processRecurseExpr(Expr expr, KB kb, Map<String, Set<String>> typeMap,
+                                      String worldvar, int worldNum) {
+        return switch (expr) {
+            case Expr.Atom a       -> a;
+            case Expr.Var v        -> v; // IMPORTANT: do not apply formula vars globally
+            case Expr.RowVar rv    -> rv;
+            case Expr.NumLiteral n -> n;
+            case Expr.StrLiteral s -> s;
+            case Expr.SExpr se     -> processRecurseSExprExpr(se, kb, typeMap, worldvar, worldNum);
+        };
     }
 
     /***************************************************************
@@ -646,35 +733,26 @@ public class Modals {
      * Uses {@code accreln3norm} for {@link #regHOL3Modalpred} predicates
      * (confersNorm, deprivesNorm) where the second extra argument is Modal-typed.
      */
-    private static Expr handleHOL3predExpr(Expr.SExpr se, KB kb,
-                                            String worldvar, int worldNum) {
-        List<Expr> flist = se.args(); // args after head (but se.args() has them already)
-        // flist[0]=a1, flist[1]=a2, flist[2]=form
+    private static Expr handleHOL3predExpr(Expr.SExpr se, KB kb, Map<String, Set<String>> typeMap,
+                                        String worldvar, int worldNum) {
+        List<Expr> flist = se.args();
         if (flist.size() < 3) {
             System.out.println("Error in Modals.handleHOL3predExpr(): too few arguments in: " + se.toKifString());
             return se;
         }
+
         int prevWorld = worldNum;
         int currWorld = worldNum + 1;
 
-        Expr a1   = processRecurseExpr(flist.get(0), kb, worldvar, prevWorld);
-        Expr a2   = processRecurseExpr(flist.get(1), kb, worldvar, prevWorld);
-        Expr form = processRecurseExpr(flist.get(2), kb, worldvar, currWorld);
+        Expr a1 = processRecurseExpr(flist.get(0), kb, typeMap, worldvar, prevWorld);
+        Expr a2 = processRecurseExpr(flist.get(1), kb, typeMap, worldvar, prevWorld);
+        Expr form = asFormulaAtWorld(flist.get(2), kb, typeMap, worldvar, currWorld);
 
-        Expr prevWorldArg = (prevWorld == 0)
-                ? new Expr.Atom("CW")
-                : new Expr.Var("?" + worldvar + prevWorld);
+        Expr prevWorldArg = (prevWorld == 0) ? new Expr.Atom("CW") : new Expr.Var("?" + worldvar + prevWorld);
         Expr currWorldArg = new Expr.Var("?" + worldvar + currWorld);
 
-        // Use accreln3norm for Modal-typed predicates (confersNorm, deprivesNorm),
-        // accreln3 for the rest — mirrors the string-based handleHOL3pred() distinction.
-        String accrelnName = regHOL3Modalpred.contains(se.head().toKifString())
-                ? "accreln3norm" : "accreln3";
-        Expr accreln = new Expr.SExpr(
-                new Expr.Atom(accrelnName),
-                List.of(se.head(), a1, a2, prevWorldArg, currWorldArg));
-
-        // (=> accreln form)
+        String accrelnName = regHOL3Modalpred.contains(se.head().toKifString()) ? "accreln3norm" : "accreln3";
+        Expr accreln = new Expr.SExpr(new Expr.Atom(accrelnName), List.of(se.head(), a1, a2, prevWorldArg, currWorldArg));
         return new Expr.SExpr(new Expr.Atom("=>"), List.of(accreln, form));
     }
 
@@ -683,101 +761,67 @@ public class Modals {
      * Rewrites {@code (pred agent form)} into
      * {@code (=> (accreln2 pred agent prevWorld currWorld) form')}.
      */
-    private static Expr handleHOLpredExpr(Expr.SExpr se, KB kb,
-                                           String worldvar, int worldNum) {
-        List<Expr> flist = se.args(); // flist[0]=agent, flist[1]=form
+    private static Expr handleHOLpredExpr(Expr.SExpr se, KB kb, Map<String, Set<String>> typeMap,
+                                        String worldvar, int worldNum) {
+        List<Expr> flist = se.args();
         if (flist.size() < 2) {
             System.out.println("Error in Modals.handleHOLpredExpr(): too few arguments in: " + se.toKifString());
             return se;
         }
+
         int prevWorld = worldNum;
         int currWorld = worldNum + 1;
 
-        Expr param    = processRecurseExpr(flist.get(0), kb, worldvar, prevWorld);
-        Expr embedded = processRecurseExpr(flist.get(1), kb, worldvar, currWorld);
+        Expr param = processRecurseExpr(flist.get(0), kb, typeMap, worldvar, prevWorld);
+        Expr embedded = asFormulaAtWorld(flist.get(1), kb, typeMap, worldvar, currWorld);
 
-        Expr prevWorldArg = (prevWorld == 0)
-                ? new Expr.Atom("CW")
-                : new Expr.Var("?" + worldvar + prevWorld);
+        Expr prevWorldArg = (prevWorld == 0) ? new Expr.Atom("CW") : new Expr.Var("?" + worldvar + prevWorld);
         Expr currWorldArg = new Expr.Var("?" + worldvar + currWorld);
 
-        // (accreln2 pred agent prevWorld currWorld)
-        Expr accreln = new Expr.SExpr(
-                new Expr.Atom("accreln2"),
-                List.of(se.head(), param, prevWorldArg, currWorldArg));
-
-        // (=> accreln embedded)
+        Expr accreln = new Expr.SExpr(new Expr.Atom("accreln2"), List.of(se.head(), param, prevWorldArg, currWorldArg));
         return new Expr.SExpr(new Expr.Atom("=>"), List.of(accreln, embedded));
     }
-
+    
     /***************************************************************
      * Expr-based equivalent of {@link #handleModalAttribute}.
      * Rewrites {@code (modalAttribute form modality)} into
      * {@code (=> (accreln1 modality prevWorld currWorld) form')}.
      */
-    private static Expr handleModalAttributeExpr(Expr.SExpr se, KB kb,
-                                                   String worldvar, int worldNum) {
-        List<Expr> flist = se.args(); // flist[0]=form, flist[1]=modality
+    private static Expr handleModalAttributeExpr(Expr.SExpr se, KB kb, Map<String, Set<String>> typeMap,
+                                                String worldvar, int worldNum) {
+        List<Expr> flist = se.args();
         if (flist.size() < 2) {
             System.out.println("Error in Modals.handleModalAttributeExpr(): too few arguments in: " + se.toKifString());
             return se;
         }
+
         int prevWorld = worldNum;
         int currWorld = worldNum + 1;
 
         Expr modality = flist.get(1);
-        Expr form     = processRecurseExpr(flist.get(0), kb, worldvar, currWorld);
+        Expr form = asFormulaAtWorld(flist.get(0), kb, typeMap, worldvar, currWorld);
 
-        Expr prevWorldArg = (prevWorld == 0)
-                ? new Expr.Atom("CW")
-                : new Expr.Var("?" + worldvar + prevWorld);
+        Expr prevWorldArg = (prevWorld == 0) ? new Expr.Atom("CW") : new Expr.Var("?" + worldvar + prevWorld);
         Expr currWorldArg = new Expr.Var("?" + worldvar + currWorld);
 
-        // (accreln1 modality prevWorld currWorld)
-        Expr accreln = new Expr.SExpr(
-                new Expr.Atom("accreln1"),
-                List.of(modality, prevWorldArg, currWorldArg));
-
-        // (=> accreln form)
+        Expr accreln = new Expr.SExpr(new Expr.Atom("accreln1"), List.of(modality, prevWorldArg, currWorldArg));
         return new Expr.SExpr(new Expr.Atom("=>"), List.of(accreln, form));
     }
 
     /***************************************************************
-     * Expr-based equivalent of {@link #processRecurse(Formula, KB, String, Integer)}.
-     * Recursively transforms an Expr tree by:
-     * <ul>
-     *   <li>Rewriting modal predicates (regHOLpred, regHOL3pred, modalAttribute)
-     *       into Kripke-style accessibility-relation implications.</li>
-     *   <li>Adding a world argument to all non-rigid, non-reserved predicates.</li>
-     *   <li>Leaving logical operators and quantifier bodies intact (recursing into them).</li>
-     * </ul>
      */
-    public static Expr processRecurseExpr(Expr expr, KB kb,
-                                           String worldvar, int worldNum) {
-        return switch (expr) {
-            case Expr.Atom a       -> a;
-            case Expr.Var v        -> v;
-            case Expr.RowVar rv    -> rv;
-            case Expr.NumLiteral n -> n;
-            case Expr.StrLiteral s -> s;
-            case Expr.SExpr se     -> processRecurseSExprExpr(se, kb, worldvar, worldNum);
-        };
-    }
-
-    /***************************************************************
-     */
-    private static Expr processRecurseSExprExpr(Expr.SExpr se, KB kb,
-                                                  String worldvar, int worldNum) {
+    private static Expr processRecurseSExprExpr(Expr.SExpr se, KB kb, Map<String, Set<String>> typeMap,
+                                            String worldvar, int worldNum) {
         String headName = se.headName();
         if (headName == null) return se; // null-head var list inside quantifier
 
         // Modal predicate rewrites
         if (regHOL3pred.contains(headName))
-            return handleHOL3predExpr(se, kb, worldvar, worldNum);
+            return handleHOL3predExpr(se, kb, typeMap, worldvar, worldNum);
         if (regHOLpred.contains(headName))
-            return handleHOLpredExpr(se, kb, worldvar, worldNum);
+            return handleHOLpredExpr(se, kb, typeMap, worldvar, worldNum);
         if ("modalAttribute".equals(headName))
-            return handleModalAttributeExpr(se, kb, worldvar, worldNum);
+            return handleModalAttributeExpr(se, kb, typeMap, worldvar, worldNum);
 
         boolean isQuantifier = Formula.isQuantifier(headName);
         boolean isLogical    = Formula.isLogicalOperator(headName)
@@ -788,11 +832,17 @@ public class Modals {
         List<Expr> newArgs = new ArrayList<>(args.size());
 
         for (int i = 0; i < args.size(); i++) {
+
+            Expr arg = args.get(i);
+
             if (isQuantifier && i == 0) {
-                // Keep variable list verbatim — do not add world args to bound variables
-                newArgs.add(args.get(i));
-            } else {
-                newArgs.add(processRecurseExpr(args.get(i), kb, worldvar, worldNum));
+                newArgs.add(arg); // variable list
+            }
+            else if (isFormulaContextArg(headName, i)) {
+                newArgs.add(asFormulaAtWorld(arg, kb, typeMap, worldvar, worldNum));
+            }
+            else {
+                newArgs.add(processRecurseExpr(arg, kb, typeMap, worldvar, worldNum));
             }
         }
 
@@ -816,6 +866,24 @@ public class Modals {
         return rebuilt;
     }
 
+    private static boolean isFormulaContextArg(String headName, int argIndex) {
+
+        if (headName == null)
+            return false;
+        return switch (headName) {
+            case "not" -> argIndex == 0;
+            case "and", "or", "xor", "=>", "<=>" -> true;
+            case "forall", "exists" -> argIndex == 1;
+            default -> false;
+        };
+    }
+
+    public static Map.Entry<Expr, Map<String, Set<String>>> processModalsExpr(Expr expr, KB kb) {
+        Map<String, Set<String>> typeMap = new HashMap<>();
+        markModalAttributeFormulaVarsExpr(expr, typeMap);
+        return processModalsExpr(expr, kb, typeMap);
+    }
+
     /***************************************************************
      * Expr-based equivalent of {@link #processModals(Formula, KB)}.
      *
@@ -830,30 +898,27 @@ public class Modals {
      *         ({@code "?W<n>" → {"World"}} for the primary world var)
      */
     public static Map.Entry<Expr, Map<String, Set<String>>> processModalsExpr(
-            Expr expr, KB kb) {
+            Expr expr, KB kb, Map<String, Set<String>> typeMap) {
 
-        // Find a world-variable prefix that doesn't conflict with existing vars
+        if (typeMap == null) typeMap = new HashMap<>();
+        markModalAttributeFormulaVarsExpr(expr, typeMap);
+
         Set<String> existingVars = collectAllVarsExpr(expr);
-        String worldvar  = "W";
-        int    worldNum  = 1;
+        String worldvar = "W";
+        int worldNum = 1;
         while (existingVars.contains("?" + worldvar + worldNum))
             worldvar = worldvar + "W";
 
-        Expr result = processRecurseExpr(expr, kb, worldvar, worldNum);
+        Expr result = processRecurseExpr(expr, kb, typeMap, worldvar, worldNum);
 
-        // Collect all world variables actually introduced during recursive processing.
-        // The fixed-range loop (0..worldNum) misses ?W2, ?W3, etc. because worldNum
-        // is a local int that recursive calls cannot update.  Scanning the result tree
-        // for vars that share the worldvar prefix is the reliable alternative.
         Map<String, Set<String>> worldTypes = new HashMap<>();
         Set<String> wType = new HashSet<>(Collections.singleton("World"));
-        // World variables are exactly "?<worldvar><digits>" — use matches() not startsWith()
-        // to avoid falsely classifying user variables like ?WHOLE or ?WORLD as world-typed.
         final String wPattern = "\\?" + worldvar + "\\d+";
+
         for (String v : collectAllVarsExpr(result)) {
-            if (v.matches(wPattern))
-                worldTypes.put(v, wType);
+            if (v.matches(wPattern)) worldTypes.put(v, wType);
         }
+
         return new SimpleEntry<>(result, worldTypes);
     }
 
@@ -1000,14 +1065,14 @@ public class Modals {
                         "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3)) => " +
                         "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)))).\n";
             case SERIAL:
-                return "thf(" + modalOp + "_ser" + ",axiom,(! [W:w" + quantArgs +
-                        "] : (?[U:w] : (" + accreln + " @ s__" + modalOp + args + " @ W @ U)))).\n";
+                return "thf(" + modalOp + "_ser,axiom,(! [W:w" + quantArgs +
+                        "] : (? [U:w] : (" + accreln + " @ s__" + modalOp + args + " @ W @ U)))).\n";
             case EUCLIDEAN:
-                return "thf(" + modalOp + "_eucl" + ",axiom,(! [W1:w,W2:2,W3:w" + quantArgs +
-                        "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
-                        "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)) => " +
-                        "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3))).\n";
-        }
+                return "thf(" + modalOp + "_eucl,axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
+                    "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
+                    "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)) => " +
+                    "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3)))).\n";
+                    }
         System.out.println("Error in genFrameAxiom() invalid frame: " + frameAx);
         return "";
     }
@@ -1028,10 +1093,10 @@ public class Modals {
                 "thf(cworld_tp,type,(s__CW : w)).\n" +
                 "thf(s__worlds_tp,type,(s__World : w)).\n" +
 
-                "thf(accreln1_tp,type,s__accreln1 : (m > w > w > $o)).\n" +
-                "thf(accreln2_tp,type, s__accreln2: (m > $i > w > w > $o) ).\n" +
-                "thf(accreln3_tp,type, s__accreln3: (m > $i > $i > w > w > $o) ).\n" +
-                "thf(accreln3norm_tp,type, s__accreln3norm: (m > $i > m > w > w > $o) ).\n" +
+                "thf(accreln1_tp,type,(s__accreln1 : (m > w > w > $o))).\n" +
+                "thf(accreln2_tp,type,(s__accreln2 : (m > $i > w > w > $o))).\n" +
+                "thf(accreln3_tp,type,(s__accreln3 : (m > $i > $i > w > w > $o))).\n" +
+                "thf(accreln3norm_tp,type,(s__accreln3norm : (m > $i > m > w > w > $o))).\n" +
 
                 genAllModalSystems();
                 //  + genDistinctModals(); // $distinct doesn't appear to be allowed by Vampire in THF

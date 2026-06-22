@@ -25,6 +25,22 @@ import java.util.concurrent.ExecutionException;
 public class EditorServlet extends HttpServlet {
     boolean debug = true;
     private static final Object TRANSLATE_LOCK = new Object();
+    private static final Set<String> TQ_META_PREDICATES = new HashSet<>(Arrays.asList(
+        "note",
+        "category",
+        "file",
+        "minLang",
+        "regen",
+        "time",
+        "query",
+        "answer",
+        "closedWorldAssumption",
+        "modusPonens",
+        "dropOnePremise",
+        "HOLUseModals",
+        "holUseModals",
+        "HolUseModals"
+    ));
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
@@ -131,10 +147,16 @@ public class EditorServlet extends HttpServlet {
      * Check session + role. Returns username or null if already responded with error.
      */
     private String requireUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+
         HttpSession session = req.getSession(false);
-        String username = session != null ? (String) session.getAttribute("user") : null;
-        String role = session != null ? (String) session.getAttribute("role") : null;
-        if (username == null || role == null) {
+        String username = null;
+        String role = null;
+        if (session != null) {
+            username = (String) session.getAttribute("username");
+            if (username == null) username = (String) session.getAttribute("user");
+            role = (String) session.getAttribute("role");
+        }
+        if (username == null || username.trim().isEmpty() || role == null || role.trim().isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             resp.setContentType("application/json; charset=UTF-8");
             resp.getWriter().write("{\"success\":false,\"message\":\"Not logged in.\"}");
@@ -336,36 +358,39 @@ public class EditorServlet extends HttpServlet {
             }
             return;
         }
-        List<ErrRec> errors;
+        List<ErrRec> errors = Collections.emptyList();
         List<String> lines = Arrays.asList(text.split("\\R", -1));
         boolean[] errorMask = new boolean[lines.size()];
         String errorMessage = null;
-        try {
-            final String textFinal = text;
-            final boolean isTptpFinal = isTptp;
-            final String fileNameFinal = fileName;
+
+        final boolean isTptpFinal = isTptp;
+        final String fileNameFinal = fileName;
+        final boolean isTqFinal = isTqFile(fileNameFinal);
+        final String textFinal = isTqFinal ? stripTqMetaPredicatesForCheck(text) : text;
+
+        if (isTqFinal && textFinal.trim().isEmpty()) {
+            errors = Collections.emptyList();
+        }
+        else {
             try {
                 errors = EditorWorkerQueue.submit(() -> {
                     return isTptpFinal
                             ? TPTPFileChecker.check(textFinal, "(web-editor)")
                             : KifFileChecker.check(textFinal, fileNameFinal);
-                }, 4000); // 4s timeout for auto-checks
-
-            } catch (RejectedExecutionException rex) {
+                }, 4000);
+            }
+            catch (RejectedExecutionException rex) {
                 writeBusy(resp, "Server busy. Please retry.");
                 return;
-
-            } catch (TimeoutException tex) {
+            }
+            catch (TimeoutException tex) {
                 writeTimeout(resp, "Check timed out. Please retry.");
                 return;
-
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 errors = Collections.emptyList();
                 errorMessage = "Error while checking: " + e.getMessage();
             }
-        } catch (Exception e) {
-            errors = Collections.emptyList();
-            errorMessage = "Error while checking: " + e.getMessage();
         }
         if (errors != null) {
             for (ErrRec er : errors) {
@@ -486,5 +511,113 @@ public class EditorServlet extends HttpServlet {
                 ",\"workers\":" + EditorWorkerQueue.workers() +
                 "}";
         resp.getWriter().write(json);
+    }
+
+    private static boolean isTqFile(String fileName) {
+        return fileName != null && fileName.toLowerCase(Locale.ROOT).endsWith(".tq");
+    }
+
+    private static String topLevelPredicate(String form) {
+
+        if (form == null) return "";
+        String s = form.trim();
+        if (!s.startsWith("(")) return "";
+        int i = 1;
+        while (i < s.length() && Character.isWhitespace(s.charAt(i))) i++;
+        int start = i;
+        while (i < s.length()) {
+            char c = s.charAt(i);
+            if (Character.isWhitespace(c) || c == ')' || c == '(') break;
+            i++;
+        }
+        return start < i ? s.substring(start, i) : "";
+    }
+
+    private static int parenDeltaIgnoringCommentsAndStrings(String line) {
+
+        int delta = 0;
+        boolean inString = false;
+        boolean escaped = false;
+
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+
+            if (!inString && c == ';') break;
+
+            if (inString) {
+                if (escaped) {
+                    escaped = false;
+                }
+                else if (c == '\\') {
+                    escaped = true;
+                }
+                else if (c == '"') {
+                    inString = false;
+                }
+                continue;
+            }
+
+            if (c == '"') {
+                inString = true;
+            }
+            else if (c == '(') {
+                delta++;
+            }
+            else if (c == ')') {
+                delta--;
+            }
+        }
+
+        return delta;
+    }
+
+    private static void appendBlankLines(StringBuilder sb, int count) {
+
+        for (int i = 0; i < count; i++)
+            sb.append('\n');
+    }
+
+    /**
+     * Removes .tq meta-predicate forms before normal KIF checking.
+     * Preserves line count so returned ErrRec line numbers still match the editor buffer.
+     */
+    private static String stripTqMetaPredicatesForCheck(String text) {
+
+        String[] lines = text.split("\\R", -1);
+        StringBuilder out = new StringBuilder(text.length());
+        List<String> formLines = new ArrayList<>();
+        int depth = 0;
+
+        for (String line : lines) {
+            String trimmed = line.trim();
+
+            if (depth == 0 && (trimmed.isEmpty() || trimmed.startsWith(";"))) {
+                out.append(line).append('\n');
+                continue;
+            }
+
+            formLines.add(line);
+            depth += parenDeltaIgnoringCommentsAndStrings(line);
+
+            if (depth == 0) {
+                String form = String.join("\n", formLines);
+                String pred = topLevelPredicate(form);
+
+                if (TQ_META_PREDICATES.contains(pred))
+                    appendBlankLines(out, formLines.size());
+                else
+                    for (String kept : formLines)
+                        out.append(kept).append('\n');
+
+                formLines.clear();
+            }
+        }
+
+        if (!formLines.isEmpty()) {
+            for (String leftover : formLines)
+                out.append(leftover).append('\n');
+        }
+
+        return out.toString();
     }
 }

@@ -79,6 +79,7 @@ public class KBmanager implements Serializable {
             "leoExecutable",
             "logDir",
             "logLevel",
+            "maxPredicateArity",
             "multiWordAnnotatorType",
             "nlpTools",
             "overwrite",
@@ -412,23 +413,13 @@ public class KBmanager implements Serializable {
     public boolean infBaseFileOldIgnoringUserAssertions(String lang) {
 
         String kbDir = getPref("kbDir");
-
         for (String kbname : kbs.keySet()) {
-
             File base = new File(kbDir + File.separator + kbname + "." + lang);
-
-            if (!base.exists()) {
-                return true;
-            }
-
+            if (!base.exists()) return true;
             long baseTimeStamp = base.lastModified();
             Date newestSourceDate = newestBaseConfigOrConstituentDateIgnoringUserAssertions();
-
-            if (baseTimeStamp < newestSourceDate.getTime()) {
-                return true;
-            }
+            if (baseTimeStamp < newestSourceDate.getTime()) return true;
         }
-
         return false;
     }
 
@@ -935,7 +926,7 @@ public class KBmanager implements Serializable {
         boolean loaded = false;
         if (initializing || initialized) return;
         initializing = true;
-        KBmanager.getMgr().setPref("kbDir",configFileDir);
+        KBmanager.getMgr().setPref("kbDir", configFileDir);
         try {
             SimpleElement configuration = readConfiguration(configFileDir);
             LoggingUtils.log("Loading English Lexicons...");
@@ -970,7 +961,8 @@ public class KBmanager implements Serializable {
             if ("true".equalsIgnoreCase(System.getenv("TPTP_BG_WAIT"))) {
                 try {
                     Thread.sleep(120000);
-                } catch (InterruptedException e) {
+                } 
+                catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }

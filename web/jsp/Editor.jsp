@@ -1,5 +1,6 @@
 <%@ include file="fragments/universal/Prelude.jspf" %>
 <%@ page import="com.articulate.sigma.*, java.util.List" %>
+<%@ page import="java.io.*, java.nio.charset.StandardCharsets, java.nio.file.*" %>
 <%
     String pageName = "Editor";
     String pageString = "Editor";
@@ -21,13 +22,89 @@
   private static String esc(String s) {
     return (s == null) ? "" : s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;");
   }
+
+  private static String jsonEsc(String s) {
+    if (s == null) return "";
+    StringBuilder sb = new StringBuilder(s.length() + 16);
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      switch (c) {
+        case '\\': sb.append("\\\\"); break;
+        case '"': sb.append("\\\""); break;
+        case '\n': sb.append("\\n"); break;
+        case '\r': sb.append("\\r"); break;
+        case '\t': sb.append("\\t"); break;
+        case '\b': sb.append("\\b"); break;
+        case '\f': sb.append("\\f"); break;
+        default:
+          if (c < 0x20) sb.append(String.format("\\u%04x", (int)c));
+          else sb.append(c);
+      }
+    }
+    return sb.toString();
+  }
+
+  private static boolean isTextLike(Path p) {
+    String n = p.getFileName() == null ? "" : p.getFileName().toString().toLowerCase();
+    return n.endsWith(".kif") || n.endsWith(".tq") || n.endsWith(".tptp") ||
+           n.endsWith(".tff") || n.endsWith(".thf") || n.endsWith(".fof") ||
+           n.endsWith(".cnf") || n.endsWith(".p") || n.endsWith(".txt") ||
+           n.endsWith(".java") || n.endsWith(".jsp") || n.endsWith(".jspf") ||
+           n.endsWith(".js") || n.endsWith(".css") || n.endsWith(".html") ||
+           n.endsWith(".xml") || n.endsWith(".properties") || n.endsWith(".sh") ||
+           n.endsWith(".md") || n.endsWith(".json") || n.endsWith(".conf");
+  }
+
+  private static Path resolveServerPath(String raw) throws IOException {
+    if (raw == null || raw.trim().isEmpty()) throw new IOException("Missing path");
+    Path p = Paths.get(raw.trim()).toAbsolutePath().normalize();
+    if (!Files.exists(p)) throw new FileNotFoundException("File not found: " + p);
+    if (!Files.isRegularFile(p)) throw new IOException("Not a regular file: " + p);
+    if (!Files.isReadable(p)) throw new IOException("File is not readable: " + p);
+    if (!isTextLike(p)) throw new IOException("Refusing to open non-text-like file: " + p);
+    if (Files.size(p) > 5_000_000) throw new IOException("File too large for editor: " + p);
+    return p;
+  }
+%>
+<%
+  String errorMessage = (String) request.getAttribute("errorMessage");
+  String fileName = (String) request.getAttribute("fileName");
+  List<ErrRec> errors = (List<ErrRec>) request.getAttribute("errors");
+  List<String> fileContent = (List<String>) request.getAttribute("fileContent");
+  String codeContent = (String) request.getAttribute("codeContent");
+
+  String initialPath = null;
+  String initialName = null;
+  String initialContent = null;
+  String pathParam = request.getParameter("path");
+  int initialLine = 1;
+
+  try {
+      String lineParam = request.getParameter("line");
+      if (lineParam != null && !lineParam.trim().isEmpty())
+          initialLine = Math.max(1, Integer.parseInt(lineParam.trim()));
+  }
+  catch (NumberFormatException ignored) {
+      initialLine = 1;
+  }
+  
+  if (pathParam != null && !pathParam.trim().isEmpty()) {
+      try {
+          Path serverFile = resolveServerPath(pathParam);
+          initialPath = serverFile.toString();
+          initialName = serverFile.getFileName().toString();
+          initialContent = Files.readString(serverFile, StandardCharsets.UTF_8);
+      }
+      catch (Exception e) {
+          errorMessage = "Unable to open file: " + e.getMessage();
+      }
+  }
 %>
 <div class="card">
-
   <form onsubmit="return false;" enctype="multipart/form-data" style="display:none;" id="uploadForm">
     <input type="file" name="kifFile" id="kifFile" accept=".kif,.tptp,.tff,.p,.fof,.cnf,.thf,.txt" required />
   </form>
-  <script src="/sigma/javascript/editor.js"></script>
+  <script src="/sigma/javascript/editor.js?v=2"></script>
   <script>
     window.initialErrors = [
       <%
@@ -52,16 +129,14 @@
           }
         } %>
       ];
+      window.initialOpenFile = <% if (initialPath != null) { %>{
+        name: "<%= jsonEsc(initialName) %>",
+        path: "<%= jsonEsc(initialPath) %>",
+        contents: "<%= jsonEsc(initialContent) %>",
+        source: "server",
+        line: <%= initialLine %>
+      }<% } else { %>null<% } %>;
   </script>
-
-    <%
-      String errorMessage = (String) request.getAttribute("errorMessage");
-      String fileName = (String) request.getAttribute("fileName");
-      List<ErrRec> errors = (List<ErrRec>) request.getAttribute("errors");
-      List<String> fileContent = (List<String>) request.getAttribute("fileContent");
-      String codeContent = (String) request.getAttribute("codeContent");
-    %>
-
     <div class="layout">
       <!-- Editor Menu -->
       <div>
@@ -83,7 +158,8 @@
                   <a href="#" onclick="newFile('cnf')">CNF (.cnf)</a>
                 </div>
               </div>
-              <a href="#" onclick="openFileModal()">Open File</a>
+              <a href="#" onclick="openServerPathPrompt()">Open Server Path</a>
+              <a href="#" onclick="openFileModal()">Open User File</a>
               <a href="#" onclick="openSaveFileModal()">Save</a>
               <a href="#" onclick="openSaveAsModal()">Save As...</a>
               <a href="#" onclick="downloadFile()">Download</a>

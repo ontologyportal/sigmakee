@@ -60,6 +60,37 @@ public class InferenceTestSuite {
     public Map<String, InferenceTest> getInferenceTests() { return Collections.unmodifiableMap(this.inferenceTests); }
 
     /********************************************************************
+     * Reloads one inference test from disk and replaces the cached test.
+     * @param testPath path of the test to reload.
+     * @return reloaded inference test, or null if the path is unknown.
+     */
+    public InferenceTest reloadTest(String testPath) {
+
+        if (testPath == null) return null;
+        InferenceTest oldTest = this.inferenceTests.get(testPath);
+        if (oldTest == null) return null;
+        InferenceTest freshTest = new InferenceTest(testPath);
+        if (freshTest.category == null || freshTest.category.isBlank()) freshTest.category = "Uncategorized";
+        this.inferenceTests.put(testPath, freshTest);
+        rebuildInferenceTestCategories();
+        return freshTest;
+    }
+
+    /********************************************************************
+     * Rebuilds category groupings from the currently cached tests.
+     */
+    private void rebuildInferenceTestCategories() {
+
+        this.inferenceTestCategories.clear();
+        for (InferenceTest test : this.inferenceTests.values()) {
+            if (test.category == null || test.category.isBlank()) test.category = "Uncategorized";
+            this.inferenceTestCategories
+                    .computeIfAbsent(test.category, k -> new ArrayList<>())
+                    .add(test);
+        }
+    }
+
+    /********************************************************************
      * Clears stored results for all loaded inference tests. 
      */
     public void clearAllTestResults() { for (InferenceTest test : this.inferenceTests.values()) test.result = null; }
@@ -75,7 +106,7 @@ public class InferenceTestSuite {
      */
     public void runTest(String testPath, String proverType, boolean closedWorldAssumption, boolean modusPonens, boolean dropOnePremise, boolean holUseModals) {
         
-        this.inferenceTests.get(testPath).runTest(this.kb, proverType, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals);
+        this.inferenceTests.get(testPath).runTest(this.kb, proverType);
     }
 
     /********************************************************************
@@ -111,7 +142,7 @@ public class InferenceTestSuite {
             InferenceTest test = entry.getValue();
             try {
                 if (debug > 0) LoggingUtils.log("Running test: " + testPath);
-                test.runTest(this.kb, proverType, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals);
+                test.runTest(this.kb, proverType);
                 if (debug > 0) test.printResult();
             }
             catch (Exception e) {
@@ -141,7 +172,7 @@ public class InferenceTestSuite {
         }
         for (InferenceTest test : tests) {
             if (debug > 0) LoggingUtils.log("Running test: " + test.filePath);
-            test.runTest(this.kb, proverType, closedWorldAssumption, modusPonens, dropOnePremise, holUseModals);
+            test.runTest(this.kb, proverType);
             if (debug > 0) test.printResult();
         }
     }

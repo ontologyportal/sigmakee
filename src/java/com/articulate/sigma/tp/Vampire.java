@@ -28,6 +28,7 @@ import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.LoggingUtils;
 import com.articulate.sigma.Formula;
 
+
 import tptp_parser.TPTPFormula;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,11 +61,9 @@ public class Vampire {
     private KB kb;
     /** The path where the vampire executable is found */
     private String executablePath;
-    /** The path where the vampire executable is found */
-    private String holExecutablePath;
     /** Directory of the knowledge base vampire will query against */
     private String inferenceFilePath;
-    /**  */
+    /** .tptp / .tff / .thf */
     private String inferenceFileExtension;
     /** Session id to match the user to their assertions */
     private String sessionId;
@@ -84,8 +83,8 @@ public class Vampire {
     private List<String> commands;
     /** Mode to be run by vampire [AVATART|CASC|CUSTOM] */
     public ModeType mode = null;
-    /**  */
-    public boolean askQuestion = true;
+    /** Adds option -qa plain to the vampire command list, finds the values for variables */
+    public boolean askQuestion = false;
     /**  */
     public boolean modensPonens = false;
     /** Storage variable for the output of Vampire */
@@ -102,19 +101,19 @@ public class Vampire {
         this.kb = null;
         this.sessionId = null;
         this.executablePath = KBmanager.getMgr().getPref("vampire");
-
         this.requestedTptpLanguage = "fof";
         this.inferenceFileExtension = "tptp";
-
         this.mode = ModeType.CASC;
         this.timeout = 30;
         this.maxAnswers = 1;
-        this.askQuestion = true;
+        this.askQuestion = false;
         this.logic = Logic.FOL;
         this.output = new ArrayList<>();
     }
 
     /*****************************************************************
+     * Initialize a new Vampire Object with a knowledge base reference.
+     * @
      */
     public Vampire(KB kb) {
 
@@ -147,7 +146,6 @@ public class Vampire {
      */
     public Vampire(KB kb, String requestedTptpLang, String mode, boolean modensPonens, int timeout, int maxAnswers, String sessionId) {
 
-        if (debug > 0) LoggingUtils.log("");
         this.kb = kb;
         this.sessionId = sessionId;
         this.executablePath = KBmanager.getMgr().getPref("vampire");
@@ -161,10 +159,6 @@ public class Vampire {
         } else {
             this.requestedTptpLanguage = "thf";
             this.inferenceFileExtension = "thf";
-            this.executablePath = this.executablePath.replace(
-            File.separator + "build" + File.separator,
-            File.separator + "build_hol" + File.separator
-        );
         }
         this.modensPonens = modensPonens;
         if (mode.equalsIgnoreCase(ModeType.AVATAR.name())) this.mode = ModeType.AVATAR;
@@ -185,6 +179,11 @@ public class Vampire {
      * Set the sessionId
      */
     public void setSessionId(String sid) { this.sessionId = sid; }
+
+    /***************************************************************
+     * Enable Vampire question-answering mode only for answer-seeking queries. Boolean conjectures should leave this false.
+     */
+    public void setAskQuestion(boolean askQuestion) {this.askQuestion = askQuestion;}
 
     public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.getMgr().getPref("vampire")));}
 
@@ -226,10 +225,22 @@ public class Vampire {
             if (processedExprs != null && !processedExprs.isEmpty()) {
                 for (Expr e : processedExprs) {
                     String kifStr = e.toKifString();
-                    String tptpBody = ExprToTPTP.translateKifString(kifStr, true, this.requestedTptpLanguage);
-//                    if (tptpBody == null)
-//                        tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, this.requestedTptpLanguage);
+                    String tptpBody;
+                    if ("tff".equalsIgnoreCase(this.requestedTptpLanguage)) {
+                        tptpBody = ExprToTFF.translate(e, true, this.kb);
+                    }
+                    else {
+                        tptpBody = ExprToTPTP.translateKifString(kifStr, true, this.requestedTptpLanguage);
+                    }
+                    if (StringUtil.emptyString(tptpBody)) {
+                        tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, this.requestedTptpLanguage);
+                    }
+                    if (StringUtil.emptyString(tptpBody)) {
+                        System.err.println("Vampire.askVampire(): failed to translate " + this.requestedTptpLanguage + " query: " + kifStr);
+                        continue;
+                    }
                     String theTPTPstatement = this.requestedTptpLanguage + "(query_" + axiomIndex++ + ",conjecture,(" + tptpBody + ")).";
+                    System.out.println("Vampire.askVampire(): translated query: " + theTPTPstatement);
                     tptpQuery.add(theTPTPstatement);
                 }
             }
@@ -304,8 +315,9 @@ public class Vampire {
                 "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
                 "-fde","none","-updr","off","-rp","off","-bce","off"
         ));
-        if (this.askQuestion){
-            this.commands.add("-qa plain");
+        if (this.askQuestion) {
+            this.commands.add("-qa");
+            this.commands.add("plain");
         }
         try{
             this.runCustom(kbFile);
@@ -336,6 +348,7 @@ public class Vampire {
         KBmanager mgr = KBmanager.getMgr();
         if (useModals) LoggingUtils.log("==== Using Modals/HOL mode ====");
         else LoggingUtils.log("==== Using plain HOL mode ====");
+        Modals.formulaConstants.clear();
         try {
             String dir;
             if (this.sessionId != null && !this.sessionId.isEmpty()) dir = SessionTPTPManager.getSessionDir(this.sessionId).toString() + File.separator;
@@ -387,9 +400,12 @@ public class Vampire {
             Map<String, Set<String>> typeMap = new HashMap<>();
             Set<Expr> processed;
             if (useModals) {
-                Map.Entry<Expr, Map<String, Set<String>>> modalResult = SessionTPTPManager.withSessionCache(
-                        this.sessionId, this.kb, () -> Modals.processModalsExpr(fa.expr, this.kb));
-                Expr resExpr = modalResult.getKey();
+                Map.Entry<Expr, Map<String, Set<String>>> modalResult =
+                        SessionTPTPManager.withSessionCache(
+                                this.sessionId,
+                                this.kb,
+                                () -> Modals.processModalsExpr(fa.expr, this.kb));
+            Expr resExpr = modalResult.getKey();
                 if (resExpr == null) {
                     System.err.println("Vampire.askVampireHOL(): processModalsExpr returned null for: " + stmt);
                     return;
@@ -426,12 +442,18 @@ public class Vampire {
                 if (SUMOKBtoTPTPKB.hasUnresolvedPredVar(e)) continue;
                 String thfQuery;
                 if (useModals) {
-                    Map.Entry<Expr, Map<String, Set<String>>> fmodalResult = SessionTPTPManager.withSessionCache(
-                            this.sessionId, this.kb, () -> Modals.processModalsExpr(e, this.kb));
+                    Map.Entry<Expr, Map<String, Set<String>>> fmodalResult =
+                        SessionTPTPManager.withSessionCache(
+                                this.sessionId,
+                                this.kb,
+                                () -> Modals.processModalsExpr(e, this.kb, typeMap));
                     Expr fmodal = fmodalResult.getKey();
-                    if (fmodal == null) continue;
+                    if (fmodal == null)
+                        continue;
+                    typeMap.putAll(fmodalResult.getValue());
                     thfQuery = ExprToTHF.translate(fmodal, true, typeMap);
-                } else {
+                }
+                else {
                     thfQuery = ExprToTHF.translateNonModal(e, true, typeMap);
                 }
                 if (thfQuery == null || thfQuery.isEmpty()) continue;
@@ -440,17 +462,28 @@ public class Vampire {
                 conjectureStmts.add(final_query);
                 if (debug>1) System.out.println("Vampire.askVampireHOL(): final query: " + final_query);
             }
-            List<String> userAsserts = getUserAssertions(this.kb, this.sessionId);
+            Set<String> userAsserts = SessionTPTPManager.getUserAssertionsTHFStatements(this.kb, this.sessionId, useModals);
             Set<String> allStmts = new LinkedHashSet<>(userAsserts);
+            allStmts.addAll(conjectureStmts);
+            Set<String> formulaConstDecls = new LinkedHashSet<>();
+            for (String c : Modals.formulaConstants) {
+                String tptp = SUMOformulaToTPTPformula.translateWord(c, StreamTokenizer.TT_WORD, true);
+                formulaConstDecls.add("thf(" + tptp + "_tp,type,(" + tptp + " : (w > $o))).");
+            }
+
+            allStmts = new LinkedHashSet<>(formulaConstDecls);
+            allStmts.addAll(userAsserts);
             allStmts.addAll(conjectureStmts);
             writeStatements(allStmts);
             writeIncludeProblem(kbThfPath, stmtFile, outfile);
             // -------- 6. Actually call Vampire on temp-comb.thf --------
             if (debug>1) System.out.println("------ Vampire.askVampireHOL(): Asking Vampire");
             this.askVampireTHF(outfile);
-        } catch (ATPException e) {
+        } 
+        catch (ATPException e) {
             throw e; // Preserve type + payload for proper error handling in UI
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             System.out.println("Vampire.askVampireHOL(): Exception: " + e.getMessage());
             e.printStackTrace();
             throw new ATPException("Vampire HOL execution failed: " + e.getMessage(), "Vampire");
@@ -676,14 +709,14 @@ public class Vampire {
         this.result.finalize(exitValue, elapsed, elapsed >= timeoutMs);
         if (exitValue != 0) {
             System.err.println("Error in Vampire.run(): Abnormal process termination (exit code " + exitValue + ")");
-            if (!stderrLines.isEmpty()) {
-                System.err.println("Stderr: " + stderrLines);
-            }
+            if (!stderrLines.isEmpty()) System.err.println("Stderr: " + stderrLines);
             if (this.result.isTimedOut() || this.result.getSzsStatus() == SZSStatus.TIMEOUT) {
                 throw new ProverTimeoutException("Vampire", timeoutMs, elapsed, false, stdoutLines, stderrLines, this.result);
-            } else if (exitValue > 128 && exitValue < 160) {
+            } 
+            else if (exitValue > 128 && exitValue < 160) {
                 throw new ProverCrashedException("Vampire", exitValue, stdoutLines, stderrLines, this.result);
-            } else if (this.result != null
+            } 
+            else if (this.result != null
                     && this.result.getStderr() != null
                     && !this.result.getStderr().isEmpty()
                     && this.result.getStderr().get(0) != null
@@ -693,9 +726,7 @@ public class Vampire {
                 int lineNo = -1;
                 if (this.result.getStderr().size() > 1 && this.result.getStderr().get(1) != null) {
                     Matcher m = Pattern.compile("Parsing Error on line\\s+(\\d+)").matcher(this.result.getStderr().get(1));
-                    if (m.find()) {
-                        lineNo = Integer.parseInt(m.group(1));
-                    }
+                    if (m.find()) lineNo = Integer.parseInt(m.group(1));
                 }
                 String msg = "Vampire: exception at proof search level" + (lineNo > 0 ? " (Parsing Error on line " + lineNo + ")" : "");
                 throw new FormulaTranslationException(msg, this.result.getInputLanguage(), lineNo, stdoutLines, stderrLines);
@@ -725,26 +756,16 @@ public class Vampire {
                 if (parts.length > 1) {
                     String remainder = parts[1];
                     int nextSep = remainder.indexOf(File.separator);
-                    if (nextSep > 0) {
-                        this.sessionId = remainder.substring(0, nextSep);
-                    }
+                    if (nextSep > 0) this.sessionId = remainder.substring(0, nextSep);
                 }
             }
         }
-        if (this.sessionId != null && !this.sessionId.isEmpty()) {
-            System.out.println("INFO Vampire.run(): using session dir for temp files, sessionId=" + sessionId);
-        }
+        if (this.sessionId != null && !this.sessionId.isEmpty()) System.out.println("INFO Vampire.run(): using session dir for temp files, sessionId=" + sessionId);
         String dir;
-        if (this.sessionId != null && !this.sessionId.isEmpty()) {
-            dir = SessionTPTPManager.getSessionDir(this.sessionId).toString() + File.separator;
-        }
-        else {
-            dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
-        }
+        if (this.sessionId != null && !this.sessionId.isEmpty()) dir = SessionTPTPManager.getSessionDir(this.sessionId).toString() + File.separator;
+        else dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
         String outfile = dir + "temp-comb." + this.inferenceFileExtension;
         String stmtFile = dir + "temp-stmt." + this.inferenceFileExtension;
-
-        // Resolve base file: prefer session-specific TPTP if it exists, otherwise use the provided kbFile (usually shared)
         File baseFile = kbFile;
         if (this.sessionId != null && !this.sessionId.isEmpty()) {
             Path sessionPath = SessionTPTPManager.getSessionTPTPPath(this.sessionId, this.kb.name, this.inferenceFileExtension);
@@ -753,22 +774,18 @@ public class Vampire {
                 baseFile = sessionPath.toFile();
             }
         }
-
         File fout = new File(outfile);
-        if (fout.exists())
-            fout.delete();
+        if (fout.exists()) fout.delete();
         File fstmt = new File(stmtFile);
-        if (fstmt.exists())
-            fstmt.delete();
+        if (fstmt.exists()) fstmt.delete();
         List<String> userAsserts = getUserAssertions(this.kb, this.sessionId);
-        if (userAsserts != null && stmts != null)
-            stmts.addAll(userAsserts);
+        if (userAsserts != null && stmts != null) stmts.addAll(userAsserts);
         else {
             System.err.println("Error in Vampire.run(): null query or user assertions set");
             return;
         }
         writeStatements(stmts);
-        concatFiles(baseFile.toString(), stmtFile, outfile);
+        writeIncludeProblem(baseFile.toString(), stmtFile, outfile);
         File comb = new File(outfile);
         this.run(comb);
     }
@@ -942,40 +959,27 @@ public class Vampire {
     }
 
     /*****************************************************************
-     * Write a TPTP/THF problem file that includes the base KB file
-     * rather than physically concatenating the base KB into temp-comb.thf.
-     *
+     * Write a TPTP/THF problem file that includes the base KB file rather than concatenating the entire KB into temp-comb.thf.
      * @param baseFile base THF axiom file, e.g. SUMO_plain.thf or SUMO_modals.thf
      * @param stmtFile temp-stmt.thf containing user assertions and conjectures
      * @param outfile temp-comb.thf wrapper file given to Vampire
      */
     public void writeIncludeProblem(String baseFile, String stmtFile, String outfile) throws IOException {
 
-        if (debug > 0)
-            System.out.printf("\nVampire.writeIncludeProblem(%s, %s, %s)", baseFile, stmtFile, outfile);
-
+        if (debug > 0) System.out.printf("\nVampire.writeIncludeProblem(%s, %s, %s)", baseFile, stmtFile, outfile);
         Path basePath = Paths.get(baseFile).toAbsolutePath().normalize();
         Path stmtPath = Paths.get(stmtFile).toAbsolutePath().normalize();
         Path outPath = Paths.get(outfile).toAbsolutePath().normalize();
-
-        if (!Files.exists(basePath))
-            System.err.println("ERROR in writeIncludeProblem(): " + basePath + " does not exist");
-
-        if (!Files.exists(stmtPath))
-            System.err.println("ERROR in writeIncludeProblem(): " + stmtPath + " does not exist");
-
+        if (!Files.exists(basePath)) System.err.println("ERROR in writeIncludeProblem(): " + basePath + " does not exist");
+        if (!Files.exists(stmtPath)) System.err.println("ERROR in writeIncludeProblem(): " + stmtPath + " does not exist");
         try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(outPath));
             BufferedReader br = Files.newBufferedReader(stmtPath)) {
-
             pw.println("% Base SUMO axioms");
             pw.println("include('" + escapeTPTPPath(basePath.toString()) + "').");
             pw.println();
-
             pw.println("% User assertions and conjectures");
             String line;
-            while ((line = br.readLine()) != null) {
-                pw.println(line);
-            }
+            while ((line = br.readLine()) != null) pw.println(line);
         }
     }
 
@@ -990,92 +994,26 @@ public class Vampire {
     /***************************************************************
      * Get user assertions with optional session isolation.
      * @param kb The knowledge base
-     * @param sessionId Optional HTTP session ID for session-specific UA files.
-     *                  If null or empty, uses shared UA files.
+     * @param sessionId HTTP session ID for session-specific UA files, if null, uses shared UA files.
      * @return List of user assertion TPTP formulas
      */
     public List<String> getUserAssertions(KB kb, String sessionId) {
 
-        if (debug > 0) System.out.printf("\nVampire.getUserAssertions(%s, %s)", kb.name, sessionId);
         return kb.withUserAssertionLock(() -> {
             String userAssertionTPTP = kb.name + KB._userAssertionsTPTP;
-            if ("tff".equals(this.inferenceFileExtension))
-                userAssertionTPTP = kb.name + KB._userAssertionsTFF;
-            else if ("thf".equals(this.inferenceFileExtension))
-                userAssertionTPTP = kb.name + KB._userAssertionsTHF;
+            if ("tff".equals(this.inferenceFileExtension)) userAssertionTPTP = kb.name + KB._userAssertionsTFF;
+            else if ("thf".equals(this.inferenceFileExtension)) userAssertionTPTP = kb.name + KB._userAssertionsTHF;
             File dir;
             if (sessionId != null && !sessionId.isEmpty()) {
                 java.nio.file.Path sessionDir = com.articulate.sigma.trans.SessionTPTPManager.getSessionDir(sessionId);
                 dir = sessionDir.toFile();
-            } else {
-                dir = new File(KBmanager.getMgr().getPref("kbDir"));
-            }
+            } 
+            else dir = new File(KBmanager.getMgr().getPref("kbDir"));
             String fname = dir + File.separator + userAssertionTPTP;
             File ufile = new File(fname);
-            if (ufile.exists())
-                return FileUtil.readLines(fname, false);
-            else
-                return new ArrayList<>();
+            if (ufile.exists()) return FileUtil.readLines(fname, false);
+            else return new ArrayList<>();
         });
-    }
-
-    /***************************************************************
-     * Add an assertion for inference.
-     * @param userAssertionTPTP asserted formula in the TPTP/TFF syntax
-     * @param kb Knowledge base
-     * @param parsedFormulas a lit of parsed formulas in KIF syntax
-     * @param tptp convert formula to TPTP if tptp = true
-     * @return true if all assertions are added for inference
-     *
-     * TODO: This function might not be necessary if we find a way to
-     * directly add assertion into opened inference engine (e_ltb_runner)
-     */
-    public boolean assertFormula(String userAssertionTPTP, KB kb, List<Formula> parsedFormulas, boolean tptp) {
-
-        boolean allAdded = false;
-//        Set<FormulaAST> processedFormulas = new HashSet();
-        Set<Expr> processedFormulas = new HashSet();
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        Set<String> tptpFormulas = new HashSet<>();
-        String tptpStr;
-        int axiomIndex = 0;
-        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
-            for (Formula parsedF : parsedFormulas) {
-                processedFormulas.clear();
-                processedFormulas.addAll(fp.preProcessExpr(parsedF,false, kb));
-                if (processedFormulas.isEmpty())
-                    allAdded = false;
-                else {   // 2. Translate to TPTP/TFF.
-                    tptpFormulas.clear();
-                    if (tptp) {
-                        for (Expr ex : processedFormulas) {
-                            Formula p = new Formula();
-                            p.setFormula(ex.toKifString());
-                            p.expr = ex;
-                            if (!p.isHigherOrder(kb)) {
-                                tptpStr = ExprToTPTP.translate(ex, false, this.requestedTptpLanguage);
-                                tptpFormulas.add(tptpStr);
-                            }
-                        }
-                    }
-                    // 3. Write to new tptp file
-                    for (String theTPTPFormula : tptpFormulas) {
-                        pw.print(SUMOformulaToTPTPformula.getLang() + "(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
-                        pw.println(",axiom,(" + theTPTPFormula + ")).");
-                        tptpStr = SUMOformulaToTPTPformula.getLang() + "(kb_" + kb.name + "_UserAssertion" +
-                                "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
-                    }
-                    pw.flush();
-                }
-            }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-            if (this.sessionId != null && !this.sessionId.isEmpty()) {
-                if (debug>1) System.out.println("INFO Vampire.run(): using session dir for temp files, sessionId=" + sessionId);
-            }
-        }
-        return allAdded;
     }
 
     /*****************************************************************
@@ -1084,8 +1022,7 @@ public class Vampire {
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
-        for (String s : output)
-            sb.append(s).append("\n");
+        for (String s : output) sb.append(s).append("\n");
         return sb.toString();
     }
 
@@ -1118,8 +1055,7 @@ public class Vampire {
         KB kb = KBmanager.getMgr().getKB(kbName);
         String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
         String lang = "tff";
-        if (SUMOKBtoTPTPKB.getLang().equalsIgnoreCase("fof"))
-            lang = "tptp";
+        if (SUMOKBtoTPTPKB.getLang().equalsIgnoreCase("fof")) lang = "tptp";
         Vampire vampire = new Vampire(kb, lang, "CASC", false, 30, 1);
         File kbFile = new File(vampire.inferenceFilePath);
         if (!kbFile.exists()) {
