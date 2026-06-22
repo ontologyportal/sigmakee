@@ -1,5 +1,6 @@
 package ClientHttpRequest;
 //=============================================================================
+import java.net.URI;
 import java.net.URLConnection;
 import java.net.URL;
 import java.io.IOException;
@@ -106,7 +107,7 @@ public class ClientHttpRequest {
    * @throws IOException
    */
   public ClientHttpRequest(String urlString) throws IOException {
-    this(new URL(urlString));
+    this(URI.create(urlString).toURL());
   }
 
 

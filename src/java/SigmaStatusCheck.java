@@ -23,7 +23,7 @@ public class SigmaStatusCheck {
     private static boolean containsSUMO(String targetURL) {
 
         try {
-            URL target = new URL(targetURL);
+            URL target = URI.create(targetURL).toURL();
             BufferedReader in = new BufferedReader(new InputStreamReader(target.openStream()));
 
             StringBuilder HTMLbuffer = new StringBuilder();

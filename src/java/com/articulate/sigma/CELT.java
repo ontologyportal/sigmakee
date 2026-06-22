@@ -58,7 +58,7 @@ public class CELT {
         if (!(new File(CELT_PATH)).exists())
             throw new IOException("Error in CELT(): File " + CELT_PATH + " does not exist.");
 
-        Process _CELT = Runtime.getRuntime().exec(PL_EXECUTABLE + " " + CELT_PATH + File.separator + "Startup.pl");
+        Process _CELT = Runtime.getRuntime().exec(new String[]{PL_EXECUTABLE, CELT_PATH + File.separator + "Startup.pl"});
         InputStream stderr = _CELT.getErrorStream();
         InputStreamReader isrerror = new InputStreamReader(stderr);
         _error = new BufferedReader(isrerror);

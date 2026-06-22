@@ -32,6 +32,7 @@ import com.google.common.collect.Sets;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
@@ -576,7 +577,7 @@ public class KButilities implements ServletContextListener {
             // note : you may also need
             //        HttpURLConnection.setInstanceFollowRedirects(false)
             HttpURLConnection con =
-                (HttpURLConnection) new URL(URLName).openConnection();
+                (HttpURLConnection) URI.create(URLName).toURL().openConnection();
             con.setRequestMethod("HEAD");
             return(con.getResponseCode() == HttpURLConnection.HTTP_OK);
         } catch (IOException e) {

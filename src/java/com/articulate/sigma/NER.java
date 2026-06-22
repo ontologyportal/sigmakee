@@ -33,7 +33,7 @@ public class NER {
                 "-loadClassifier " + stanfordCore + "/classifiers/english.muc.7class.distsim.crf.ser.gz " +
                 "-textFile " + infile;
         System.out.println("INFO in NER.extractEntities(): executing: " + execString);
-        _nlp = Runtime.getRuntime().exec(execString);
+        _nlp = Runtime.getRuntime().exec(execString.split("\\s+"));
         _reader = new BufferedReader(new InputStreamReader(_nlp.getInputStream()));
         _error = new BufferedReader(new InputStreamReader(_nlp.getErrorStream()));
         //System.out.println("INFO in NER.extractEntities(): initializing process");

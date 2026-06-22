@@ -2,6 +2,7 @@ package com.articulate.sigma.nlg;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -237,7 +238,7 @@ public class OllamaClient {
     public boolean isHealthy() {
         HttpURLConnection conn = null;
         try {
-            URL url = new URL(baseUrl + "/api/version"); // lightweight endpoint
+            URL url = URI.create(baseUrl + "/api/version").toURL(); // lightweight endpoint
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(connectTimeoutMs);

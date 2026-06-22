@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -83,7 +82,7 @@ public class DocGen {
     protected static String INDEX_FILE_NAME = "index.html";
     protected int localCounter = 0;
     protected static final String DEFAULT_KEY = "docgen_default";
-    protected static Map DOC_GEN_INSTANCES = new Hashtable();
+    protected static Map DOC_GEN_INSTANCES = new HashMap();
 
     public static DocGen getInstance() {
 

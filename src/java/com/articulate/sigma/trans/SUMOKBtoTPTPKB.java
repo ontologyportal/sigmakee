@@ -749,7 +749,6 @@ public class SUMOKBtoTPTPKB {
 
     /****************************************************************
      * Conventional/sequential version
-     * @deprecated
      */
 //    @Deprecated(forRemoval = true)
 //    private String _writeFile(String fileName, Formula conjecture,
@@ -1340,7 +1339,6 @@ public class SUMOKBtoTPTPKB {
     }
 
     /****************************************************************
-     * @deprecated
      */
 //    @Deprecated
 //    public boolean filterAxiom(Formula form, String tptp, PrintWriter pw) {

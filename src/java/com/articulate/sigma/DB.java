@@ -31,6 +31,7 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.ParseException;
@@ -1384,7 +1385,7 @@ public class DB {
         }
         URL url;
         try {
-            url = new URL(urlStart + encoded + urlEnd);
+            url = URI.create(urlStart + encoded + urlEnd).toURL();
             try (InputStream is = url.openStream()) {  // throws an IOException
                 SimpleDOMParser sdp = new SimpleDOMParser();
                 SimpleElement se = sdp.parse(new LineNumberReader(new InputStreamReader(is)));

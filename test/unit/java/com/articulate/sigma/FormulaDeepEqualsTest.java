@@ -175,6 +175,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
 
     /***************************************************************
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testUnifyWith() {
 
@@ -250,6 +251,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
     /***************************************************************
      * Formula.unifyWith is deprecated
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testUnifyWithMiscPredicates() {
 
@@ -271,6 +273,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
 
     /***************************************************************
      */
+    @SuppressWarnings("deprecation")
     @Test
     public void testLogicallyEqualsPerformance() {
 

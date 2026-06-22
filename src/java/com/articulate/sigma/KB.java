@@ -1509,7 +1509,6 @@ public class KB implements Serializable {
      * containing the old (existing) formulas, else returns an empty
      * ArrayList.
      *
-     * @deprecated replaced with {@link #merge(KIF kif, String pathname)}
      */
 //    public List<FormulaAST> merge(KIF kif, String pathname) {
 ////        return mergeFormulaSource(kif.terms, kif.formulas, kif.formulaMap, pathname);
@@ -2739,7 +2738,6 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * @deprecated replaced with {@link #readConstituentAST}
      */
 //    public KIF readConstituent(String filename) {
 //

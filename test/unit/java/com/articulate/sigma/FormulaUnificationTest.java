@@ -54,6 +54,7 @@ public class FormulaUnificationTest extends UnitTestBase {
         return result;
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void test() {
         Formula f1 = new Formula();
