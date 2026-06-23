@@ -355,7 +355,7 @@ August 9, Acapulco, Mexico.
             disable = true;
         if (disable)
             return;
-        if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists())
+        if (!KBmanager.configuration.isLoadFresh() && serializedExists())
             loadSerialized();
         if (omw != null) {
             LoggingUtils.log("Loaded Serialized OMW Files in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds!");

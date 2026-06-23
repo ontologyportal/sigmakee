@@ -384,5 +384,4 @@ public class EditGUI {
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         System.out.println(genInstPage(kb,"UnitedStates",""));
     }
-
 }

@@ -20,15 +20,6 @@ if (StringUtil.emptyString(flang)) flang = "SUO-KIF";
 nonRelTerm = request.getParameter("nonrelation");
 relTerm = StringUtil.emptyString(relTerm) ? request.getParameter("relation") : "";
 
-// ???
-if (!StringUtil.emptyString(filename) && false) {
-    int l = 0;
-    if (!StringUtil.emptyString(line)) {
-        try {l = Integer.parseInt(line);}
-        catch (NumberFormatException nfe) {}
-    }
-    HTMLformatter.launchEditor(filename,l);
-}
 // Base href link 
 HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?kb=" + kbName + "&flang=" + flang + "&lang=" + lang;
 

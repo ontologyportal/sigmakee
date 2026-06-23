@@ -730,11 +730,7 @@ public class SessionTPTPManager {
             String sessionId,
             List<Formula> parsedFormulas,
             Path outputPath,
-            String lang,
-            boolean tptpEnabled) {
-
-        if (!tptpEnabled)
-            return false;
+            String lang) {
 
         if (kb == null || parsedFormulas == null || parsedFormulas.isEmpty() || outputPath == null)
             return false;

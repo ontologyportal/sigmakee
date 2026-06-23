@@ -163,15 +163,11 @@ public class KIF {
             }
             // Duplicate detection
             if (formulaMap.containsKey(kifStr)) {
-                if (!"no".equals(KBmanager.getMgr().getPref("reportDup"))) {
-                    String warning = "Duplicate axiom at line: " + f.startLine
-                            + " of " + (filename != null ? filename : "<string>")
-                            + ": " + kifStr;
-                    warningSet.add(warning);
-                    System.err.println(warning);
-                }
+                String warning = "Duplicate axiom at line: " + f.startLine + " of " + (filename != null ? filename : "<string>") + ": " + kifStr;
+                warningSet.add(warning);
+                System.err.println(warning);
                 dupCount++;
-                continue; // skip duplicate
+                continue;
             }
             // SuokifVisitor.visitFile() always sets f.sourceFile from the ANTLR token
             // source name.  When parsing from a string (e.g. storeCacheAsFormulas),

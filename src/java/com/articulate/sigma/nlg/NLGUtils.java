@@ -332,7 +332,7 @@ public class NLGUtils implements Serializable {
         }
         if(debug>0) System.out.println("NLGUtils.readKeywordMap():");
         nlg = null;
-        if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists())
+        if (!KBmanager.configuration.isLoadFresh() && serializedExists())
             loadSerialized();
         if (nlg != null) {
             return;

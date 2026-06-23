@@ -676,10 +676,9 @@ public class FormulaPreprocessor {
         // LinkedHashSet preserves the sorted order established by afterRowVar's TreeSet.
         Set<Expr> results = new LinkedHashSet<>();
         KBmanager mgr = KBmanager.getMgr();
-        boolean typePrefix = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
         for (Expr e : afterRowVar) {
             Expr renamed = renameVariableArityInExpr(e, kb);
-            if (typePrefix && !isQuery) {
+            if (KBmanager.configuration.isTypePrefix() && !isQuery) {
                 Map<String, Set<String>> varmap = findTypeRestrictionsExpr(renamed, kb);
                 results.add(addTypeRestrictionsExpr(renamed, varmap, kb));
             } 

@@ -33,21 +33,25 @@ public class Configuration {
         "inferenceTestDir",
         "jeditExec",
         "kbDir",
-        "loadSerialized",
+        "loadFresh",
         "loadLexicons",
         "leoExec",
+        "maxPredicateArity",
         "port",
         "termFormats",
         "tptpExec",
+        "typePrefix",
         "userBrowserLimit",
         "vampireExec",
         "vampireHolExec",
         "verbnetDir",
         "ollamaLocalHost",
+        "showCachedFormulas",
         "smtpEmailAddress",
         "smtpEmailUser",
         "smtpEmailPassword",
         "smtpEmailServer",
+        "systemsDir",
         "isAws"
     );
 
@@ -56,7 +60,8 @@ public class Configuration {
         "graphDir",
         "inferenceTestDir",
         "kbDir",
-        "verbnetDir"
+        "verbnetDir",
+        "systemsDir"
     );
 
     public static final List<String> EXECUTABLE_KEYS = Arrays.asList(
@@ -74,14 +79,17 @@ public class Configuration {
         "cacheDisjoint",
         "cwa",
         "https",
-        "loadSerialized",
+        "loadFresh",
         "loadLexicons",
+        "showCachedFormulas",
         "termFormats",
+        "typePrefix",
         "isAws"
     );
 
     public static final List<String> INTEGER_KEYS = Arrays.asList(
         "adminBrowserLimit",
+        "maxPredicateArity",
         "port",
         "userBrowserLimit"
     );
@@ -133,17 +141,21 @@ public class Configuration {
 
     public String getKbDir() { return getStringPreference("kbDir", ""); }
 
-    public boolean isLoadSerialized() { return getBooleanPreference("loadSerialized", true); }
+    public boolean isLoadFresh() { return getBooleanPreference("loadFresh", true); }
 
     public boolean isLoadLexicons() { return getBooleanPreference("loadLexicons", true); }
 
     public String getLeoExec() { return getStringPreference("leoExec", ""); }
+
+    public int getMaxPredicateArity() { return getIntegerPreference("maxPredicateArity", 7); }
 
     public int getPort() { return getIntegerPreference("port", 8080); }
 
     public boolean isTermFormats() { return getBooleanPreference("termFormats", true); }
 
     public String getTptpExec() { return getStringPreference("tptpExec", ""); }
+
+    public boolean isTypePrefix() { return getBooleanPreference("typePrefix", true); }
 
     public int getUserBrowserLimit() { return getIntegerPreference("userBrowserLimit", 25); }
 
@@ -154,6 +166,8 @@ public class Configuration {
     public String getVerbnetDir() { return getStringPreference("verbnetDir", ""); }
 
     public String getOllamaLocalHost() { return getStringPreference("ollamaLocalHost", "http://127.0.0.1:11434"); }
+
+    public boolean isShowCachedFormulas() { return getBooleanPreference("showCachedFormulas", true); }
 
     public String getSmtpEmailAddress() { return getStringPreference("smtpEmailAddress", ""); }
 
@@ -198,7 +212,7 @@ public class Configuration {
         defaults.put("inferenceTestDir", sigmaHome + sep + "tests");
         defaults.put("jeditExec", "/usr/share/jedit/jedit");
         defaults.put("kbDir", sigmaHome + sep + "KBs");
-        defaults.put("loadSerialized", "true");
+        defaults.put("loadFresh", "true");
         defaults.put("loadLexicons", "true");
         defaults.put("leoExec", userHome + sep + "leo");
         defaults.put("port", "8080");
@@ -317,7 +331,7 @@ public class Configuration {
         this.preferences.put("inferenceTestDir", sigmaHome + sep + "tests");
         this.preferences.put("jeditExec", "/usr/share/jedit/jedit");
         this.preferences.put("kbDir", sigmaHome + sep + "KBs");
-        this.preferences.put("loadSerialized", "true");
+        this.preferences.put("loadFresh", "true");
         this.preferences.put("loadLexicons", "true");
         this.preferences.put("leoExec", userHome + sep + "leo");
         this.preferences.put("port", "8080");

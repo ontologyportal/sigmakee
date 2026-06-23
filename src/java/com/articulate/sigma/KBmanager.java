@@ -22,6 +22,7 @@ import com.articulate.sigma.VerbNet.VerbNet;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.TPTPGenerationManager;
+import com.articulate.sigma.parsing.Configuration;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
@@ -47,6 +48,7 @@ import java.util.stream.Stream;
  */
 public class KBmanager implements Serializable {
 
+    public static Configuration configuration = new Configuration(KButilities.SIGMA_HOME + "KBs/config.xml");
     /** Master key cache for the config */
     public static final List<String> CONFIG_KEYS =
         Arrays.asList(
@@ -936,7 +938,7 @@ public class KBmanager implements Serializable {
             LoggingUtils.log("Loading English Lexicons...");
             initializeLexicons(configFileDir);
             if (configuration == null) throw new Exception("ERROR  [KBmanager.initializeOnce()]  Error in config.xml");
-            if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists() && !isSerializedOld(configuration)) {
+            if (!KBmanager.configuration.isLoadFresh() && serializedExists() && !isSerializedOld(configuration)) {
                 LoggingUtils.log("Loading from serialized cache...");
                 loaded = loadSerialized();
                 if (loaded) {

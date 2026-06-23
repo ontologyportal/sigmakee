@@ -1828,7 +1828,7 @@ public class WordNet implements Serializable {
                 if (("".equals(WordNet.baseDir)) || (WordNet.baseDir == null))
                     WordNet.baseDir = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings";
                 baseDirFile = new File(WordNet.baseDir);
-                if (KBmanager.getMgr().getPref("loadFresh").equals("true") || !serializedExists()) {
+                if (KBmanager.configuration.isLoadFresh() || !serializedExists()) {
                     loadFresh(); // <- will serialize
                 }
                 else {

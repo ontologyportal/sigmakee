@@ -103,8 +103,6 @@ public class KB implements Serializable {
     public String language = "EnglishLanguage";
     /** The location of preprocessed KIF files, suitable for loading into EProver.     */
     public String kbDir = null;
-    /** The instance of the CELT process. */
-    public transient CELT celt = null;
     /** a cache built through lazy evaluation of the taxonomic depth of each term */
     public Map<String,Integer> termDepthCache = new ConcurrentHashMap<>();
     /** A SortedSet of Strings, which are all the terms in the KB.
@@ -235,18 +233,7 @@ public class KB implements Serializable {
 
         name = n;
         kbDir = dir;
-        try {
-            KBmanager mgr = KBmanager.getMgr();
-            if (mgr != null) {
-                String loadCelt = mgr.getPref("loadCELT");
-                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes")) {
-                    celt = new CELT();
-                }
-            }
-        } catch (IOException ioe) {
-            System.err.println("Error in KB(): " + ioe.getMessage());
-            celt = null;
-        }
+        KBmanager mgr = KBmanager.getMgr();
     }
 
     /***************************************************************
@@ -300,8 +287,6 @@ public class KB implements Serializable {
             this.errors = Sets.newTreeSet(kbIn.errors);
         this.modifiedContents = kbIn.modifiedContents;
         this.kbCache = new KBcache(kbIn.kbCache, this);
-        if (kbIn.celt != null)
-            this.celt = new CELT();
     }
 
     /***************************************************************
@@ -1756,8 +1741,7 @@ public class KB implements Serializable {
                                             sessionId,
                                             parsedFormulas,
                                             tptpfile.toPath(),
-                                            tptpLang,
-                                            !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                                            tptpLang);
                             if (wroteInferenceAssertions) result += " and inference";
                             else result += " but not for local inference";
                         }
@@ -3448,10 +3432,8 @@ public class KB implements Serializable {
         long millis = System.currentTimeMillis();
         Set<String> newTreeSet = new TreeSet<>();
         KBmanager mgr = KBmanager.getMgr();
-        boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
         kbCache.kb = this;
         kbCache.buildCaches();
-        if (!tptpParseP) return newTreeSet;
         Iterator<String> it = forms.iterator();
         FormulaPreprocessor fp = new FormulaPreprocessor();
         String form;
@@ -3479,16 +3461,14 @@ public class KB implements Serializable {
             if (debug>1) System.out.println("INFO in KB.preProcess(): f : " + f);
             processed = fp.preProcessExpr(f, false, this); // not queries
             tptp = new HashSet<>();
-            if (tptpParseP) {
-                for (Expr ex : processed) {
-                    Formula pform = new Formula(ex.toKifString());
-                    String tptpStr = ExprToTPTP.translateKifString(pform.getFormula(), false,
-                            com.articulate.sigma.trans.SUMOKBtoTPTPKB.getLang());
-                    if (tptpStr == null)
-                        tptpStr = SUMOformulaToTPTPformula.tptpParseSUOKIFString(pform.getFormula(), false);
-                    tptp.add(tptpStr); // not a query
-                    errors.addAll(pform.getErrors());
-                }
+            for (Expr ex : processed) {
+                Formula pform = new Formula(ex.toKifString());
+                String tptpStr = ExprToTPTP.translateKifString(pform.getFormula(), false,
+                        com.articulate.sigma.trans.SUMOKBtoTPTPKB.getLang());
+                if (tptpStr == null)
+                    tptpStr = SUMOformulaToTPTPformula.tptpParseSUOKIFString(pform.getFormula(), false);
+                tptp.add(tptpStr); // not a query
+                errors.addAll(pform.getErrors());
             }
             for (String p : tptp) {
                 if (StringUtil.isNonEmptyString(p)) {
