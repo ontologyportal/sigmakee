@@ -31,7 +31,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
         SUMOformulaToTPTPformula.setLang("tff");
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
         try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
             skbtfakb.writeSorts(pw);

@@ -1239,7 +1239,7 @@ public class HTMLformatter {
             KBmanager.prefOverride.put("loadLexicons", "false");
             System.out.println("KB.main(): Note! Not loading lexicons.");
             KBmanager.getMgr().initializeOnce();
-            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            String kbName = KBmanager.getMgr().getDefaultKbName();
             KB kb = KBmanager.getMgr().getKB(kbName);
             if (args != null)
                 System.out.println("KB.main(): args[0]: " + args[0]);

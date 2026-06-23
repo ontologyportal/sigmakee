@@ -944,7 +944,7 @@ public class Diagnostics {
         try {
             KBmanager mgr = KBmanager.getMgr();
             if (!KBmanager.initialized && !KBmanager.initializing) mgr.initializeOnce();
-            String kbName = mgr.getPref("sumokbname");
+            String kbName = mgr.getDefaultKbName();
             String kbDir = mgr.getPref("kbDir");
             if (StringUtil.emptyString(kbDir)) throw new RuntimeException("Empty kbDir preference");
             Path kbDirPath = Paths.get(kbDir).toAbsolutePath().normalize();
@@ -2056,7 +2056,7 @@ public class Diagnostics {
         else {
             KBmanager.getMgr().initializeOnce();
             //resultLimit = 0; // don't limit number of results on command line
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             System.out.println("Diagnostics: Completed init");
             if (argMap.containsKey("t")) termDefsByFile(kb);
             else if (argMap.containsKey("A")) {

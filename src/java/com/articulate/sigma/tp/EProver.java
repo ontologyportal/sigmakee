@@ -640,7 +640,7 @@ public class EProver {
         else {
             System.out.println("INFO in EProver.main()");
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             if (argMap.containsKey("ask") && argMap.get("ask").size() == 4) {
                 String suoKifFormula = argMap.get("ask").get(0);
                 String requestedTptpLang = argMap.get("ask").get(1);

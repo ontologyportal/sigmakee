@@ -77,7 +77,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
       KBmanager.getMgr().setPref("sumokbname",sumokbname);
   }
   else {
-      sumokbname = KBmanager.getMgr().getPref("sumokbname");
+      sumokbname = KBmanager.getMgr().getDefaultKbName();
       if (sumokbname == null)
           sumokbname = "";
   }

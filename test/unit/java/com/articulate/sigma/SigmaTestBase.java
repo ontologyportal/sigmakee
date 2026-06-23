@@ -43,7 +43,7 @@ public class SigmaTestBase {
             }
             KBmanager.initialized = true;
         }
-        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         checkConfiguration();
     }
 

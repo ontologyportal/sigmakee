@@ -14,7 +14,7 @@ public class TestSQUAD {
     public static void main(String[] args) {
 
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         System.out.println("KBmutilities.main(): completed init");
         List<String> lines = FileUtil.readLines(args[0]);
         int syntaxErrorCount = 0;

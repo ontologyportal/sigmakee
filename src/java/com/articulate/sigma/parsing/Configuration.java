@@ -15,6 +15,8 @@ public class Configuration {
     private final String configFilePath;
     private HashMap<String, String> preferences;
     private HashMap<String, List<String>> kbConstituentList;
+    private List<String> warnings = new ArrayList<>();
+    private List<String> errors = new ArrayList<>();
 
     public static final List<String> CONFIG_KEYS = Arrays.asList(
         "adminBrowserLimit",
@@ -25,7 +27,7 @@ public class Configuration {
         "dbUser",
         "eproverExec",
         "graphDir",
-        "graphVizExec",
+        "graphVizDir",
         "hostname",
         "https",
         "inferenceTestDir",
@@ -59,7 +61,7 @@ public class Configuration {
 
     public static final List<String> EXECUTABLE_KEYS = Arrays.asList(
         "eproverExec",
-        "graphVizExec",
+        "graphVizDir",
         "jeditExec",
         "leoExec",
         "tptpExec",
@@ -103,15 +105,116 @@ public class Configuration {
         setAllFromXml();
     }
 
+    public int getAdminBrowserLimit() { return getIntegerPreference("adminBrowserLimit", 200); }
+
+    public String getBaseDir() { return getStringPreference("baseDir", ""); }
+
+    public boolean isCache() { return getBooleanPreference("cache", true); }
+
+    public boolean isCacheDisjoint() { return getBooleanPreference("cacheDisjoint", true); }
+
+    public boolean isCwa() { return getBooleanPreference("cwa", false); }
+
+    public String getDbUser() { return getStringPreference("dbUser", "SUMO"); }
+
+    public String getEproverExec() { return getStringPreference("eproverExec", ""); }
+
+    public String getGraphDir() { return getStringPreference("graphDir", ""); }
+
+    public String getGraphVizDir() { return getStringPreference("graphVizDir", "/usr/bin"); }
+
+    public String getHostname() { return getStringPreference("hostname", "localhost"); }
+
+    public boolean isHttps() { return getBooleanPreference("https", false); }
+
+    public String getInferenceTestDir() { return getStringPreference("inferenceTestDir", ""); }
+
+    public String getJeditExec() { return getStringPreference("jeditExec", "/usr/share/jedit/jedit"); }
+
+    public String getKbDir() { return getStringPreference("kbDir", ""); }
+
+    public boolean isLoadSerialized() { return getBooleanPreference("loadSerialized", true); }
+
+    public boolean isLoadLexicons() { return getBooleanPreference("loadLexicons", true); }
+
+    public String getLeoExec() { return getStringPreference("leoExec", ""); }
+
+    public int getPort() { return getIntegerPreference("port", 8080); }
+
+    public boolean isTermFormats() { return getBooleanPreference("termFormats", true); }
+
+    public String getTptpExec() { return getStringPreference("tptpExec", ""); }
+
+    public int getUserBrowserLimit() { return getIntegerPreference("userBrowserLimit", 25); }
+
+    public String getVampireExec() { return getStringPreference("vampireExec", ""); }
+
+    public String getVampireHolExec() { return getStringPreference("vampireHolExec", ""); }
+
+    public String getVerbnetDir() { return getStringPreference("verbnetDir", ""); }
+
+    public String getOllamaLocalHost() { return getStringPreference("ollamaLocalHost", "http://127.0.0.1:11434"); }
+
+    public String getSmtpEmailAddress() { return getStringPreference("smtpEmailAddress", ""); }
+
+    public String getSmtpEmailUser() { return getStringPreference("smtpEmailUser", ""); }
+
+    public String getSmtpEmailPassword() { return getStringPreference("smtpEmailPassword", ""); }
+
+    public String getSmtpEmailServer() { return getStringPreference("smtpEmailServer", ""); }
+
+    public boolean isAws() { return getBooleanPreference("isAws", false); }
+
     /*****************************************************************
      * Sets all preferences and KB constituents from the XML
      */
     private void setAllFromXml() {
 
         Document doc = readXmlFile(configFilePath);
+        HashMap<String, String> defaults = getDefaultPreferences();
         this.preferences = getPreferencesFromXml(doc);
+        validateAllPreferencesFromXml(defaults);
         this.kbConstituentList = getKbConstituentListFromXml(doc);
-        validateAllPreferencesFromXml();
+    }
+
+    private HashMap<String, String> getDefaultPreferences() {
+
+        String sep = File.separator;
+        String userHome = System.getProperty("user.home");
+        String sigmaHome = System.getenv("SIGMA_HOME");
+        String tomcatHome = System.getenv("CATALINA_HOME");
+        HashMap<String, String> defaults = new HashMap<>();
+        defaults.put("adminBrowserLimit", "200");
+        defaults.put("baseDir", sigmaHome);
+        defaults.put("cache", "true");
+        defaults.put("cacheDisjoint", "true");
+        defaults.put("cwa", "false");
+        defaults.put("dbUser", "SUMO");
+        defaults.put("eproverExec", userHome + sep + "Programs" + sep + "E" + sep + "bin" + sep + "e_ltb_runner");
+        defaults.put("graphDir", tomcatHome + sep + "webapps" + sep + "sigma" + sep + "graph");
+        defaults.put("graphVizDir", "/usr/bin");
+        defaults.put("hostname", "localhost");
+        defaults.put("https", "false");
+        defaults.put("inferenceTestDir", sigmaHome + sep + "tests");
+        defaults.put("jeditExec", "/usr/share/jedit/jedit");
+        defaults.put("kbDir", sigmaHome + sep + "KBs");
+        defaults.put("loadSerialized", "true");
+        defaults.put("loadLexicons", "true");
+        defaults.put("leoExec", userHome + sep + "leo");
+        defaults.put("port", "8080");
+        defaults.put("termFormats", "true");
+        defaults.put("tptpExec", userHome + sep + "workspace" + sep + "TPTP4X" + sep + "tptp4X");
+        defaults.put("userBrowserLimit", "25");
+        defaults.put("vampireExec", userHome + sep + "Programs" + sep + "vampire" + sep + "build" + sep + "vampire");
+        defaults.put("vampireHolExec", userHome + sep + "Programs" + sep + "vampire" + sep + "build_hol" + sep + "vampire");
+        defaults.put("verbnetDir", "");
+        defaults.put("ollamaLocalHost", "http://127.0.0.1:11434");
+        defaults.put("smtpEmailAddress", "");
+        defaults.put("smtpEmailUser", "");
+        defaults.put("smtpEmailPassword", "");
+        defaults.put("smtpEmailServer", "");
+        defaults.put("isAws", "false");
+        return defaults;
     }
 
     /*****************************************************************
@@ -162,7 +265,7 @@ public class Configuration {
      */
     private HashMap<String, List<String>> getKbConstituentListFromXml(Document doc) {
 
-        HashMap<String, List<String>> kbMap = new HashMap<>();
+        HashMap<String, List<String>> kbMap = new LinkedHashMap<>();
         NodeList kbNodes = doc.getElementsByTagName("kb");
         for (int i = 0; i < kbNodes.getLength(); i++) {
             Element kbElement = (Element) kbNodes.item(i);
@@ -172,7 +275,18 @@ public class Configuration {
             for (int j = 0; j < constituentNodes.getLength(); j++) {
                 Element constituent = (Element) constituentNodes.item(j);
                 String filename = constituent.getAttribute("filename");
-                if (filename != null && !filename.isEmpty()) constituents.add(filename);
+                if (filename != null && !filename.isEmpty()) {
+                    File file = new File(filename);
+                    if (!file.isAbsolute()) {
+                        String kbDir = preferences.get("kbDir");
+                        if (!StringUtil.emptyString(kbDir)) file = new File(kbDir, filename);
+                    }
+                    if (file.exists() && file.isFile()) constituents.add(filename);
+                    else  {
+                        errors.add("Missing KB constituent " + filename + " in KB " + kbName);
+                        LoggingUtils.log("ERROR", "Skipping missing KB constituent: " + filename + " for KB: " + kbName);
+                    }
+                }
             }
             if (kbName != null && !kbName.isEmpty()) kbMap.put(kbName, constituents);
         }
@@ -188,7 +302,6 @@ public class Configuration {
         String userHome = System.getProperty("user.home");
         String sigmaHome = System.getenv("SIGMA_HOME");
         String tomcatHome = System.getenv("CATALINA_HOME");
-
         this.preferences = new HashMap<>();
         this.preferences.put("adminBrowserLimit", "200");
         this.preferences.put("baseDir", sigmaHome);
@@ -198,7 +311,7 @@ public class Configuration {
         this.preferences.put("dbUser", "SUMO");
         this.preferences.put("eproverExec", userHome + sep + "Programs" + sep + "E" + sep + "bin" + sep + "e_ltb_runner");
         this.preferences.put("graphDir", tomcatHome + sep + "webapps" + sep + "sigma" + sep + "graph");
-        this.preferences.put("graphVizExec", "/usr/bin");
+        this.preferences.put("graphVizDir", "/usr/bin");
         this.preferences.put("hostname", "localhost");
         this.preferences.put("https", "false");
         this.preferences.put("inferenceTestDir", sigmaHome + sep + "tests");
@@ -222,12 +335,62 @@ public class Configuration {
         this.preferences.put("isAws", "false");
     }
 
-    public void validateAllPreferencesFromXml() {
+    public String getStringPreference(String key, String defaultValue) {
+
+        String value = this.preferences.get(key);
+        if (StringUtil.emptyString(value)) return defaultValue;
+        return value;
+    }
+
+    public int getIntegerPreference(String key, int defaultValue) {
+
+        String value = this.preferences.get(key);
+        if (!StringUtil.isInteger(value)) return defaultValue;
+        return Integer.parseInt(value);
+    }
+
+    public boolean getBooleanPreference(String key, boolean defaultValue) {
+
+        String value = this.preferences.get(key);
+        if (StringUtil.emptyString(value)) return defaultValue;
+        value = value.trim().toLowerCase(Locale.ROOT);
+        if ("true".equals(value) || "yes".equals(value)) return true;
+        if ("false".equals(value) || "no".equals(value)) return false;
+        errors.add("Invalid boolean pref (" + key + ", " + value + ")");
+        return defaultValue;
+    }
+
+    public void validateAllPreferencesFromXml(HashMap<String, String> defaults) {
+
+        validateKnownPreferences();
+        validateMissingPreferences(defaults);
+        validateDirectoryPreferences(defaults);
+        validateExecutablePreferences(defaults);
+        validateIntegerPreferences(defaults);
+        validateBooleanPreferences(defaults);
+        validateStringPreferences(defaults);
+    }
+
+    /***************************************************************** 
+     * Adds missing known preferences using default values. 
+     * @param defaults default preferences. 
+     */ 
+    private void validateMissingPreferences(HashMap<String, String> defaults) { 
+        
+        for (String key : CONFIG_KEYS) { 
+            if (!preferences.containsKey(key)) { 
+                String defaultValue = defaults.get(key); 
+                LoggingUtils.log("WARN", "Missing config preference: " + key + ". Setting default value: " + defaultValue); 
+                preferences.put(key, defaultValue); 
+            } 
+        } 
+    }
+
+    private void validateKnownPreferences() {
 
         for (String key : preferences.keySet()) {
-            if (!CONFIG_KEYS.contains(key)) {
-                System.out.println("WARNING: Unknown config preference: " + key);
-            }
+            if (!CONFIG_KEYS.contains(key))
+                warnings.add("Unknown preference: " + key);
         }
     }
 
@@ -249,31 +412,6 @@ public class Configuration {
 
     public HashMap<String, List<String>> getAllKbConstituentLists() {
         return this.kbConstituentList;
-    }
-
-    /*****************************************************************
-     * Warns about unknown preferences found in the XML.
-     * @param defaults default preferences.
-     */
-    private void validateKnownPreferences(HashMap<String, String> defaults) {
-        for (String key : preferences.keySet()) {
-            if (!CONFIG_KEYS.contains(key)) LoggingUtils.log("WARN", "Unknown config preference: " + key);
-        }
-    }
-
-    /*****************************************************************
-     * Adds missing known preferences using default values.
-     * @param defaults default preferences.
-     */
-    private void validateMissingPreferences(HashMap<String, String> defaults) {
-
-        for (String key : CONFIG_KEYS) {
-            if (!preferences.containsKey(key)) {
-                String defaultValue = defaults.get(key);
-                LoggingUtils.log("WARN", "Missing config preference: " + key + ". Setting default value: " + defaultValue);
-                preferences.put(key, defaultValue);
-            }
-        }
     }
 
     /*****************************************************************
@@ -363,12 +501,39 @@ public class Configuration {
         preferences.put(key, defaultValue);
     }
 
+    private void printPreferences() {
+
+        System.out.println("Preferences");
+        for (Map.Entry<String, String> entry : this.preferences.entrySet()) System.out.println("        " + entry.getKey() + ": " + entry.getValue());
+    }
+
+    private void printKBs() {
+
+        for (Map.Entry<String, List<String>> entry : this.kbConstituentList.entrySet()) {
+            System.out.println("KB: " + entry.getKey());
+            for (String constituent : entry.getValue()) System.out.println("   " + constituent);
+        }
+    }
+
+    public void printConfig() {
+        
+        System.out.println("===================================================\nPrinting values in " + configFilePath);
+        printPreferences();
+        printKBs();
+        System.out.println("Config Errors:");
+        for (String error : this.errors) System.out.println("    " + error);
+        System.out.println("Config Warnings:");
+        for (String warning : this.warnings) System.out.println("    " + warning);
+        System.out.println("===================================================");
+    }
+
     /******************************************************************
      */
     public static void showHelp() {
 
         System.out.println("Configuration.main() Options:");
         System.out.println("  -h - show this help screen");
+        System.out.println("  -p - print config data");
     }
 
     /******************************************************************
@@ -378,9 +543,9 @@ public class Configuration {
 
         Map<String, List<String>> argMap = CLIMapParser.parse(args);
         if (argMap.isEmpty() || argMap.containsKey("h")) showHelp();
-        
-        else if (argMap.containsKey("a")) {
-            
+        else if (argMap.containsKey("p")) {
+            Configuration config = new Configuration("/home/shaun/.sigmakee/KBs/config.xml");
+            config.printConfig();
         }
         
     }

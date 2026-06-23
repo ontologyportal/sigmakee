@@ -534,7 +534,7 @@ public class PredVarInst {
     public static void arityTest() {
 
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         if (debug) System.out.println("INFO in PredVarInst.test(): completed loading KBs");
         String formStr = "(=> " +
         "(and " +
@@ -561,7 +561,7 @@ public class PredVarInst {
     public static void test() {
 
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         if (debug) System.out.println("INFO in PredVarInst.test(): completed loading KBs");
         if (kb.kbCache.transInstOf("exhaustiveAttribute","VariableArityRelation")) {
             if (debug) System.out.println("INFO in PredVarInst.test() variable arity: ");
@@ -608,7 +608,7 @@ public class PredVarInst {
         test();
         /*
          KBmanager.getMgr().initializeOnce();
-         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
          String formStr = "(<=> (instance ?REL TransitiveRelation) " +
          "(forall (?INST1 ?INST2 ?INST3) " +
          "(=> (and (?REL ?INST1 ?INST2) " +

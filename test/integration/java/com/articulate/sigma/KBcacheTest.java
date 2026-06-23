@@ -19,7 +19,7 @@ public class KBcacheTest extends IntegrationTestBase {
         List<String> reqFiles =
                 Arrays.asList("Merge.kif", "Mid-level-ontology.kif");
         for (String s : reqFiles) {
-            boolean hasFile = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).containsFile(s);
+            boolean hasFile = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName()).containsFile(s);
             if (!hasFile) {
                 System.err.println("Warning in KBcacheTest.requiredKB(): required file " + s + " missing. Skipping tests.");
             }

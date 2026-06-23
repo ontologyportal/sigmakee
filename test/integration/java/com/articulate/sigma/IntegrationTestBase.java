@@ -65,7 +65,7 @@ public class IntegrationTestBase extends SigmaTestBase {
             TPTPGenerationManager.waitForTFF(600);
         }
 
-        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         kbBackup = new KB(kb);
         checkConfiguration();
         long endTime = System.currentTimeMillis();
@@ -82,11 +82,11 @@ public class IntegrationTestBase extends SigmaTestBase {
     public static void resetAllForInference() throws IOException {
 
         kb = new KB(kbBackup);
-        KBmanager.getMgr().kbs.put(KBmanager.getMgr().getPref("sumokbname"), kb);
+        KBmanager.getMgr().kbs.put(KBmanager.getMgr().getDefaultKbName(), kb);
         kb.deleteUserAssertions();
 
         // Remove the assertions in the files.
-        File userAssertionsFile = new File(KB_PATH, KBmanager.getMgr().getPref("sumokbname") + KB._userAssertionsString);
+        File userAssertionsFile = new File(KB_PATH, KBmanager.getMgr().getDefaultKbName() + KB._userAssertionsString);
         if (userAssertionsFile.exists()) {
             userAssertionsFile.delete();
             userAssertionsFile.createNewFile();

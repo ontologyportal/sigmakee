@@ -419,7 +419,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         SUMOKBtoTPTPKB.setLang("tff");
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
         try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
             skbtfakb.writeSorts(pw);

@@ -1477,7 +1477,7 @@ public class THFnew {
             return;
         }
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         System.out.println("THFnew.main(): KB loaded");
         if (!kb.errors.isEmpty()) System.err.println("THFnew.main(): KB loaded with non-fatal errors: " + kb.errors);
         System.out.println("contains one : " + argMap.containsKey("one"));

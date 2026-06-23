@@ -301,7 +301,7 @@ public final class UserManager {
     public static void main(String args[]) {
 
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         UserManager userManager = new UserManager();
         if (args != null && args.length > 0) {
             if (args[0].equals("-h")) showHelp();

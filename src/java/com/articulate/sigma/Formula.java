@@ -2061,7 +2061,7 @@ public class Formula implements Comparable, Serializable {
 
         Formula f1 = ClausifierExpr.clausify(new Formula(this.getFormula()));
         Formula f2 = ClausifierExpr.clausify(new Formula(f.getFormula()));
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         Map<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap = new HashMap<>();
         List<Set<VariableMapping>> result = mapFormulaVariables(new Formula(f1.getFormula()), new Formula(f2.getFormula()), kb, memoMap);
         return result != null;
@@ -2077,7 +2077,7 @@ public class Formula implements Comparable, Serializable {
             return stringsEqual;
         Formula tmp1 = ClausifierExpr.clausify(new Formula(this.getFormula()));
         Formula tmp2 = ClausifierExpr.clausify(new Formula(f.getFormula()));
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         String normalized1 = Formula.normalizeParameterOrder(tmp1.getFormula(), kb, true);
         String normalized2 = Formula.normalizeParameterOrder(tmp2.getFormula(), kb, true);
         Formula f1 = new Formula(normalized1);
@@ -2911,7 +2911,7 @@ public class Formula implements Comparable, Serializable {
             showHelp();
         else {
             KBmanager.getMgr().initializeOnce();
-            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            String kbName = KBmanager.getMgr().getDefaultKbName();
             KB kb = KBmanager.getMgr().getKB(kbName);
             if (argMap.containsKey("type") && argMap.get("type").size() == 1) {
                 Formula f = new Formula(argMap.get("type").get(0));

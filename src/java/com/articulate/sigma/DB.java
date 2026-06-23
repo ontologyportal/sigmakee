@@ -568,7 +568,7 @@ public class DB {
         //System.out.println(rows.size());
         System.out.println("<rdf:RDF");
         System.out.println("  xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         System.out.println("  xmlns:op=\"http://ontologyportal.org/" + kbName + ".owl.txt\">");
         String domain;
 //        String subject;
@@ -1217,7 +1217,7 @@ public class DB {
      */
     public static List<String> getFoodWordSenses(List<String> al) {
 
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         String foodSynset1 = "107555863"; // food, solid_food
         String foodSynset2 = "100004475"; // being, organism
         //System.out.println("INFO in DB.getFoodWordSenses()");

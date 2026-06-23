@@ -167,7 +167,7 @@ public class Vampire {
         if (mode.equalsIgnoreCase(ModeType.VAMPIRE.name())) this.mode = ModeType.VAMPIRE;
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
-        this.inferenceFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + "." + this.inferenceFileExtension;
+        this.inferenceFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getDefaultKbName() + "." + this.inferenceFileExtension;
         if (!(new File(this.inferenceFilePath).exists()) || KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(this.inferenceFileExtension)) {
             synchronized (kb.baseGenLock) {
                 TPTPGenerationManager.generateProperFile(kb, this.requestedTptpLanguage);
@@ -1051,7 +1051,7 @@ public class Vampire {
             return;
         }
         KBmanager.getMgr().initializeOnce();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         KB kb = KBmanager.getMgr().getKB(kbName);
         String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
         String lang = "tff";

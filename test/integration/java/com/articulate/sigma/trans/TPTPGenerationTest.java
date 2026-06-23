@@ -48,7 +48,7 @@ public class TPTPGenerationTest {
         // generation directly via generateFOFToPath/generateTFFToPath.
         TPTPGenerationManager.setSkipBackgroundGeneration(true);
         KBmanager.getMgr().initializeOnce();
-        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         long elapsed = System.currentTimeMillis() - startTime;
         System.out.println("===== KB initialization time: " + (elapsed / 1000.0) + "s =====");
         System.out.println("===== Formula count: " + kb.formulaMap.size() + " =====");

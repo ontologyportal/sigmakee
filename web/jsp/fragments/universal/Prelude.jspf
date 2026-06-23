@@ -84,7 +84,7 @@ if (StringUtil.isNonEmptyString(simple) && simple.equalsIgnoreCase("yes")) out.p
 String kbName = request.getParameter("kb");
 if (StringUtil.emptyString(kbName)) {
     kbName = "SUMO";
-    if (!mgr.kbs.keySet().contains("SUMO")) kbName = mgr.getPref("sumokbname");
+    if (!mgr.kbs.keySet().contains("SUMO")) kbName = mgr.getDefaultKbName();
 }
 boolean awsMode = "yes".equalsIgnoreCase(mgr.getPref("aws"));
 request.setAttribute("awsMode", awsMode);

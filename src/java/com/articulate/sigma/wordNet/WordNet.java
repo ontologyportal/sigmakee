@@ -3507,7 +3507,7 @@ public class WordNet implements Serializable {
 
         System.out.println("INFO in WordNet.main()");
         KBmanager.getMgr().initializeOnce();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         if (args != null && args.length > 1 && args[0].equals("-w")) {
             String result = wn.page(StringUtil.removeEnclosingQuotes(args[1]),0,kbName,"","");
             System.out.println(StringUtil.removeHTML(result));

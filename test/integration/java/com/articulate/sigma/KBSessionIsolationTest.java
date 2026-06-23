@@ -24,7 +24,7 @@ public class KBSessionIsolationTest extends IntegrationTestBase {
     public static void setUpClass() throws Exception {
         // Use the standard integration test setup
         IntegrationTestBase.setup();
-        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
     }
 
     @Test

@@ -619,7 +619,7 @@ public class Graph {
             if (argMap.containsKey("graph")) {
                 List<String> gArgs = argMap.get("graph");
                 KBmanager.getMgr().initializeOnce();
-                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
                 Graph g = new Graph();
                 String term = gArgs.get(0);
                 String relation = gArgs.get(1);

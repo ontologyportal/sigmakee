@@ -15,8 +15,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net.
 /*************************************************************************************************/
 package com.articulate.sigma;
 
-import com.articulate.sigma.wordNet.WordNet;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -29,6 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.articulate.sigma.wordNet.WordNet;
 
 /** A class that generates a GUI for elements of the ontology. */
 public class EditGUI {
@@ -381,7 +381,7 @@ public class EditGUI {
         catch (Exception e) {
             System.err.println(e.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         System.out.println(genInstPage(kb,"UnitedStates",""));
     }
 

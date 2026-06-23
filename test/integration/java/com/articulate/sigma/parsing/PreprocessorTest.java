@@ -33,7 +33,7 @@ public class PreprocessorTest extends IntegrationTestBase {
         long start = System.currentTimeMillis();
         Path path = Paths.get(System.getenv("SIGMA_HOME") + File.separator + "KBs" + File.separator + "Merge.kif");
         sv = SuokifVisitor.parseFile(path.toFile());
-        pre = new Preprocessor(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")));
+        pre = new Preprocessor(KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName()));
 
         sv.hasPredVar.removeAll(sv.multiplePredVar); // remove explosive rules with multiple predicate variables
         sv.rules.removeAll(sv.multiplePredVar);
@@ -65,7 +65,7 @@ public class PreprocessorTest extends IntegrationTestBase {
                 "  (greaterThan ?N ?VAL))";
         sv = SuokifVisitor.parseString(input);
         System.out.println("PreprocessorTest.test2(): # rules: " + sv.rules.size());
-        pre = new Preprocessor(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")));
+        pre = new Preprocessor(KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName()));
         System.out.println("PreprocessorTest.test2(): # before preprocess: " + sv.rules.size());
         Collection<Formula> rules = pre.preprocess(sv.hasPredVar,sv.hasRowVar,sv.rules);
         System.out.println("PreprocessorTest.test2(): # after preprocess: " + rules.size());

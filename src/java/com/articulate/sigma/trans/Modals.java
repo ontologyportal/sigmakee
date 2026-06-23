@@ -1,17 +1,21 @@
 package com.articulate.sigma.trans;
 
-import com.articulate.sigma.*;
-import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.Formula;
-import com.articulate.sigma.parsing.CLIMapParser;
-
-
-import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
+
+import com.articulate.sigma.Formula;
+import com.articulate.sigma.KB;
+import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.parsing.CLIMapParser;
+import com.articulate.sigma.parsing.Expr;
 
 public class Modals {
     
@@ -1568,7 +1572,7 @@ public class Modals {
             if (argMap.containsKey("r")) {
                 SUMOformulaToTPTPformula.setHideNumbers(false);
                 KBmanager.getMgr().initializeOnce();
-                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
                 System.out.println("Modals.main(): completed init");
                 System.out.println("Modals.main(): KB loaded");
                 THFnew.waitForBackgroundGeneration();
@@ -1581,7 +1585,7 @@ public class Modals {
                 //deonticTests(kb);
                 //System.out.println(genAllModalSystems());
                 KBmanager.getMgr().initializeOnce();
-                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
                 System.out.println("Modals,main(): init complete");
                 doTQM10Tests(kb);
                 //worldVarTest1(kb);
@@ -1590,7 +1594,7 @@ public class Modals {
             else if (argMap.containsKey("form")) {
                 SUMOformulaToTPTPformula.setHideNumbers(false);
                 KBmanager.getMgr().initializeOnce();
-                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
                 System.out.println(processModalsExpr(new Formula(argMap.get("form").get(0)).expr,kb));
             }
         }

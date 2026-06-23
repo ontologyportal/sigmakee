@@ -1418,7 +1418,7 @@ public class SUMOKBtoTPTPKB {
         System.out.println("SUMOKBtoTPTPKB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
         KBmanager.getMgr().initializeOnce();
         SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         skbtptpkb.kb = KBmanager.getMgr().getKB(kbName);
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.getLang();
         String fileWritten = null;

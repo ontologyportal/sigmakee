@@ -201,7 +201,7 @@ public class VerbNet {
 
         KBmanager.getMgr().initializeOnce();
         WordNet.initOnce();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         kb = KBmanager.getMgr().getKB(kbName);
         System.out.println("VerbNet.main()");
         initOnce();

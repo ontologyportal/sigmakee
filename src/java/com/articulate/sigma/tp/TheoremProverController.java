@@ -241,7 +241,7 @@ public class TheoremProverController {
             return;
         }
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         if (argMap.containsKey("a") || argMap.containsKey("available")) {
             System.out.println("Available Provers: " + TheoremProverController.availableProvers());
             return;

@@ -229,7 +229,7 @@ public class InferenceTestSuite {
             return;
         }
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         InferenceTestSuite inferenceTestSuite = new InferenceTestSuite(kb);
         if(argMap.containsKey("r")) {
             LoggingUtils.log("Running all " + inferenceTestSuite.inferenceTests.size() + " inference tests!");

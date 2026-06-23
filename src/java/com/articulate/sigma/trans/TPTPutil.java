@@ -405,7 +405,7 @@ public class TPTPutil {
     public static List<String> dropOnePremiseFormulasFOF(List<String> proofLines) {
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         KBmanager.getMgr().initializeOnce();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         KB kb = KBmanager.getMgr().getKB(kbName);
         List<String> cleaned_proofLines = clearProofFile(proofLines);
         tpp.parseProofOutput(cleaned_proofLines, "", kb, new StringBuilder());  // builds tpp.proof (List<TPTPFormula>)
@@ -528,7 +528,7 @@ public class TPTPutil {
 
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         KBmanager.getMgr().initializeOnce();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         KB kb = KBmanager.getMgr().getKB(kbName);
 
         // Clear file before processing
@@ -619,7 +619,7 @@ public class TPTPutil {
             // need lexicons to paraphrase proofs!
             //KBmanager.prefOverride.put("loadLexicons","false");
             KBmanager.getMgr().initializeOnce();
-            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            String kbName = KBmanager.getMgr().getDefaultKbName();
             KB kb = KBmanager.getMgr().getKB(kbName);
             if (args != null && args.length > 1 && args[0].contains("f")) {
                 try {

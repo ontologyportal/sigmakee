@@ -2896,7 +2896,7 @@ public class KBcache implements Serializable {
             catch (Exception e) {
                 System.err.println(e.getMessage());
             }
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             System.out.println("**** Finished loading KB ***");
 
             KBcache nkbc = kb.kbCache;

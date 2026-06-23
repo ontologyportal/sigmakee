@@ -3739,7 +3739,7 @@ public class KB implements Serializable {
         KB kb;
         try {
             KBmanager.getMgr().initializeOnce();
-            kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             System.out.println("Testing  kb.termFormatMapAll('EnglishLanguage')");
             Map<String, List<String>> termFormats = kb.getTermFormatMapAll("EnglishLanguage");
             List<String> motherTermFormats = termFormats.get("mother");
@@ -3832,7 +3832,7 @@ public class KB implements Serializable {
                 // Refresh ExecutorService to use translation-optimized threading
                 KButilities.refreshExecutorService();
                 KBmanager.getMgr().initializeOnce();
-                String kbName = KBmanager.getMgr().getPref("sumokbname");
+                String kbName = KBmanager.getMgr().getDefaultKbName();
                 KB kb = KBmanager.getMgr().getKB(kbName);
                 if (args != null)
                     System.out.println("KB.main(): command line arguments: " + argMap);

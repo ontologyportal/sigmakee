@@ -1,8 +1,5 @@
 package com.articulate.sigma.trans;
 
-import com.articulate.sigma.*;
-import com.articulate.sigma.Formula;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,7 +8,16 @@ import java.io.Writer;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import com.articulate.sigma.Formula;
+import com.articulate.sigma.KB;
+import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.KButilities;
 
 /*
 copyright 2018- Infosys
@@ -216,7 +222,7 @@ public class KIF2DB {
 
         KIF2DB kif2db = new KIF2DB();
         KBmanager.getMgr().initializeOnce();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         kb = KBmanager.getMgr().getKB(kbName);
         System.out.println("KIF2DB()");
         try {

@@ -472,7 +472,7 @@ Articulate Software
         System.out.println("KIF2SQL translator class");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         System.out.println("  -s - translate and write SQL version of kb to " + kbName + ".sql");
     }
 
@@ -488,7 +488,7 @@ Articulate Software
             System.out.println("INFO in KIF2SQL.main()");
             KBmanager.getMgr().initializeOnce();
             String kbDir = KBmanager.getMgr().getPref("kbDir");
-            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            String kbName = KBmanager.getMgr().getDefaultKbName();
             KB kb = KBmanager.getMgr().getKB(kbName);
             String path = kbDir + File.separator + kbName + ".sql";
             System.out.println("INFO in KIF2SQL.write(): writing " + path);
@@ -500,7 +500,7 @@ Articulate Software
                 ot.pw = new PrintWriter(fw);
                 try {
                     System.out.println("KIF2SQL.main(): starting translation");
-                    ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                    ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
                     //ot.writeWordNet(pw);
                     ot.writeKB();
                 }

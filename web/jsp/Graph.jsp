@@ -149,7 +149,7 @@ function setWidth(id) {
                   }
               }
               if (graphAvailable) {
-                  String imageExt = KBmanager.getMgr().getPref("imageFormat");
+                  String imageExt = "png";
                   out.println("<img src='graph/" + fname + ".dot." + imageExt + "'/>");
               }
               else {

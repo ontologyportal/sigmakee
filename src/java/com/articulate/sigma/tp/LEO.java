@@ -92,7 +92,7 @@ public class LEO {
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
         this.sessionId = sessionId;
-        this.inferenceFileName = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + "." + this.requestedTptpLanguage;
+        this.inferenceFileName = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getDefaultKbName() + "." + this.requestedTptpLanguage;
     }
 
     public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.getMgr().getPref("leoExecutable")));}
@@ -642,7 +642,7 @@ public class LEO {
     public static void main (String[] args) throws Exception {
 
         KBmanager.getMgr().initializeOnce();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         KB kb = KBmanager.getMgr().getKB(kbName);
         String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
         String lang = "thf";

@@ -41,7 +41,7 @@ public class IncrementalPipelineIntegrationTest extends IntegrationTestBase {
     @BeforeClass
     public static void setUpClass() throws Exception {
         IntegrationTestBase.setup();
-        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         assertNotNull("SUMO KB must be loaded for integration tests", kb);
         assertNotNull("Shared kbCache must be built", kb.kbCache);
         // axiomKey is populated after FOF generation; tests that exercise
@@ -67,7 +67,7 @@ public class IncrementalPipelineIntegrationTest extends IntegrationTestBase {
     // ------------------------------------------------------------------
 
     private static String kbName() {
-        return KBmanager.getMgr().getPref("sumokbname");
+        return KBmanager.getMgr().getDefaultKbName();
     }
 
     private static String kbDir() {

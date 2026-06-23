@@ -59,7 +59,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
         limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
     }
 
-    String ontology = KBmanager.getMgr().getPref("sumokbname");
+    String ontology = KBmanager.getMgr().getDefaultKbName();
     String formatToken = kb.name;
     String defaultNS = lang;
     DocGen gen = DocGen.getInstance();

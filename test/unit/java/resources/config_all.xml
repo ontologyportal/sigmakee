@@ -7,10 +7,8 @@
   <preference name="editDir" value="/home/theuser/workspace/sumo" />
   <preference name="eprover" value="/home/theuser/E/bin/e_ltb_runner" />
   <preference name="graphVizDir" value="/usr/bin" />
-  <preference name="holdsPrefix" value="no" />
   <preference name="hostname" value="localhost" />
   <preference name="https" value="false" />
-  <preference name="imageFormat" value="png"/>
   <preference name="inferenceTestDir" value="/home/theuser/.sigmakee/KBs/tests" />
   <preference name="jedit" value="/usr/share/jedit/jedit" />
   <preference name="kbDir" value="/home/theuser/.sigmakee/KBs" />

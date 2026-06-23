@@ -65,10 +65,8 @@ public class KBmanager implements Serializable {
             "graphDir",
             "graphVizDir",
             "graphWidth",
-            "holdsPrefix",
             "hostname",
             "https",
-            "imageFormat",
             "inferenceTestDir",
             "jedit",
             "kbDir",
@@ -170,6 +168,13 @@ public class KBmanager implements Serializable {
         catch (Exception e) {
             return fallback;
         }
+    }
+
+    public String getDefaultKbName() {
+
+        if (kbs != null && kbs.containsKey("SUMO")) return "SUMO";
+        if (kbs != null && !kbs.isEmpty()) return kbs.keySet().iterator().next();
+        return "";
     }
 
     private static String loadBuildVersion() {
@@ -544,7 +549,6 @@ public class KBmanager implements Serializable {
             preferences.put("loadCELT","no");
             preferences.put("showcached","yes");
             preferences.put("typePrefix","yes");
-            preferences.put("holdsPrefix","no");
             preferences.put("cache","yes");
             preferences.put("TPTP","yes");
             preferences.put("TPTPDisplay","no");
@@ -618,7 +622,7 @@ public class KBmanager implements Serializable {
             for (SimpleElement element : configuration.getChildElements()) {
                 if (element.getTagName().equals("kb")) {
                     kbName = element.getAttribute("name");
-                    if (kbName.equals(getMgr().getPref("sumokbname"))) SUMOKBexists = true;
+                    if (kbName.equals(getMgr().getDefaultKbName())) SUMOKBexists = true;
                     KBmanager.getMgr().addKB(kbName);
                     constituentsToAdd = new ArrayList<>();
                     useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
@@ -828,7 +832,7 @@ public class KBmanager implements Serializable {
             }
             preferences.putAll(prefOverride);
         }
-        KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).warnings.add(Diagnostics.printMissingConstituentDependencies(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")), ""));
+        KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName()).warnings.add(Diagnostics.printMissingConstituentDependencies(KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName()), ""));
     }
 
     /*****************************************************************
@@ -1349,7 +1353,7 @@ public class KBmanager implements Serializable {
             catch (Exception e) {
                 LoggingUtils.log("ERROR", e.getMessage());
             }
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             Formula f = new Formula();
             f.read("(=> (and (wears ?A ?C) (part ?P ?C)) (wears ?A ?P))");
 

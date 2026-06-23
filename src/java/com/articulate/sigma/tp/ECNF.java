@@ -167,7 +167,7 @@ public class ECNF {
         try {
             System.out.println("INFO in ECNF.main()");
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             System.out.println("------------- INFO in ECNF.main() completed initialization--------");
             ECNF eprover = new ECNF();
             eprover.terminate();

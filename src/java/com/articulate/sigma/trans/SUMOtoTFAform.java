@@ -3421,7 +3421,7 @@ public class SUMOtoTFAform {
         if (initialized)
             return;
         KBmanager.getMgr().initializeOnce();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         kb = KBmanager.getMgr().getKB(kbName);
         fp = new FormulaPreprocessor();
         FormulaPreprocessor.addOnlyNonNumericTypes = true;
@@ -3675,7 +3675,7 @@ public class SUMOtoTFAform {
                 System.out.println(kb.isRelation(bare));
                 /**
                  if (debug) System.out.println("SUMOtoTFAform.main(): contains ListFn__1Fn: " + kb.terms.contains("ListFn__1Fn"));
-                 String kbName = KBmanager.getMgr().getPref("sumokbname");
+                 String kbName = KBmanager.getMgr().getDefaultKbName();
                  String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
                  PrintWriter pw = null;
                 try {

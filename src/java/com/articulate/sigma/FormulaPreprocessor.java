@@ -710,7 +710,7 @@ public class FormulaPreprocessor {
 
         System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         System.out.println();
         String strf = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
@@ -758,7 +758,7 @@ public class FormulaPreprocessor {
 
         System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         String formStr = "(<=> (instance ?REL TransitiveRelation) " +
                 "(forall (?INST1 ?INST2 ?INST3) " +
                 "(=> (and (?REL ?INST1 ?INST2) " +
@@ -781,7 +781,7 @@ public class FormulaPreprocessor {
 
         System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         System.out.println();
         String strf = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
@@ -817,7 +817,7 @@ public class FormulaPreprocessor {
 
         System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         System.out.println();
         System.out.println();
@@ -844,7 +844,7 @@ public class FormulaPreprocessor {
 
         System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         System.out.println();
         System.out.println();
@@ -862,7 +862,7 @@ public class FormulaPreprocessor {
 
         System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         System.out.println();
         System.out.println();
@@ -894,7 +894,7 @@ public class FormulaPreprocessor {
 
         System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         System.out.println();
         System.out.println();
@@ -922,7 +922,7 @@ public class FormulaPreprocessor {
 
         System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         System.out.println();
         System.out.println();
@@ -940,7 +940,7 @@ public class FormulaPreprocessor {
 
         System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         if (!kb.terms.contains("avgWorkHours")) {
             System.out.println("FormulaPreprocessor.test6(): Demographics.kif not loaded");
@@ -964,7 +964,7 @@ public class FormulaPreprocessor {
 
         System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         System.out.println();
         System.out.println();
@@ -1015,7 +1015,7 @@ public class FormulaPreprocessor {
                 System.out.println("------------------------------------");
                 System.out.println("Compute types for formula");
                 KBmanager.getMgr().initializeOnce();
-                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
                 System.out.println("Init complete");
                 Formula f = new Formula(StringUtil.removeEnclosingQuotes(argMap.get("types").get(0)));
                 FormulaPreprocessor fp = new FormulaPreprocessor();
