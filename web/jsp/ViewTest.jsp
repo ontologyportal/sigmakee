@@ -13,7 +13,7 @@
     boolean okExt = lower.endsWith(".tq") || lower.endsWith(".tptp") || lower.endsWith(".tff") || lower.endsWith(".thf");
     if (!okExt) { response.setStatus(400); out.print("Unsupported extension"); return; }
 
-    String base = KBmanager.getMgr().getPref("inferenceTestDir");
+    String base = KBmanager.configuration.getInferenceTestDir();
     if (base == null) { response.setStatus(500); out.print("inferenceTestDir not configured"); return; }
 
     Path baseDir = Paths.get(base).toAbsolutePath().normalize();

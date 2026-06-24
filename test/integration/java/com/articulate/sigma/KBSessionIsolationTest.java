@@ -111,7 +111,7 @@ public class KBSessionIsolationTest extends IntegrationTestBase {
     public void testBaseFileNotModifiedDuringSessionGeneration() throws Exception {
         // This test verifies that base files are not modified when session files are generated
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         File baseFile = new File(kbDir, kb.name + ".tptp");
 
         // Record the base file's last modified time (if it exists)

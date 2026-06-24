@@ -24,7 +24,7 @@
  String params = "flang=" + flang + "&lang=" + lang + "&kb=" + kbName;
  StringBuilder show = new StringBuilder();
 
- String kbDir = mgr.getPref("kbDir");
+ String kbDir = KBmanager.configuration.getKbDir();
  File kbDirFile = new File(kbDir);
  Part requestPart = null;
  String filePath = null;

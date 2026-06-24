@@ -71,7 +71,7 @@ public class IncrementalPipelineIntegrationTest extends IntegrationTestBase {
     }
 
     private static String kbDir() {
-        return KBmanager.getMgr().getPref("kbDir");
+        return KBmanager.configuration.getKbDir();
     }
 
     // ------------------------------------------------------------------

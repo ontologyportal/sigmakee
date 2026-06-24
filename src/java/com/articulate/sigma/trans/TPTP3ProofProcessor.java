@@ -1126,7 +1126,7 @@ public class TPTP3ProofProcessor {
 
         int exitCode;
         String retVal = "";
-        String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
+        String graphVizDir = KBmanager.configuration.getGraphVizDir();
         String imageExt = "png";
         File file = new File(filename + "." + imageExt);
         List<String> cmd = new ArrayList<>();

@@ -48,7 +48,7 @@ public class VerbNet {
     public static void initOnce() {
 
         long start = System.nanoTime();
-        if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
+        if (KBmanager.configuration.isLoadLexicons())
             disable = true;
         if (disable) return;
         List<String> keys = new ArrayList<>(Arrays.asList("Actor","involvedInEvent",
@@ -79,7 +79,7 @@ public class VerbNet {
     public static boolean readVerbFiles() {
         
         long start = System.nanoTime();
-        String dirStr = KBmanager.getMgr().getPref("verbnet");
+        String dirStr = KBmanager.configuration.getVerbnetDir();
         File dir = new File(dirStr);
         if (!dir.exists()) {
             LoggingUtils.log("ERROR", "no such dir: " + dirStr);

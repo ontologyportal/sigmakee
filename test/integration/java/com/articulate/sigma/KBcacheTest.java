@@ -208,9 +208,7 @@ public class KBcacheTest extends IntegrationTestBase {
     @Test
     public void testDisjoint() {
 
-        String kbCacheDisjoint = KBmanager.getMgr().getPref("cacheDisjoint").toLowerCase();
-
-        if (!kbCacheDisjoint.equals("true")) {
+        if (KBmanager.configuration.isCacheDisjoint()) {
             System.out.println("KBcacheTest.testDisjoint(): skipping test because KBcacheDisjoint is false");
             return;
         }

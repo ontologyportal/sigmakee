@@ -100,7 +100,7 @@ public class Vampire {
 
         this.kb = null;
         this.sessionId = null;
-        this.executablePath = KBmanager.getMgr().getPref("vampire");
+        this.executablePath = KBmanager.configuration.getVampireExec();
         this.requestedTptpLanguage = "fof";
         this.inferenceFileExtension = "tptp";
         this.mode = ModeType.CASC;
@@ -148,7 +148,7 @@ public class Vampire {
 
         this.kb = kb;
         this.sessionId = sessionId;
-        this.executablePath = KBmanager.getMgr().getPref("vampire");
+        this.executablePath = KBmanager.configuration.getVampireExec();
         if ("fof".equalsIgnoreCase(requestedTptpLang) || "tptp".equalsIgnoreCase(requestedTptpLang)) {
             this.requestedTptpLanguage = "fof";
             this.inferenceFileExtension = "tptp";
@@ -167,7 +167,7 @@ public class Vampire {
         if (mode.equalsIgnoreCase(ModeType.VAMPIRE.name())) this.mode = ModeType.VAMPIRE;
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
-        this.inferenceFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getDefaultKbName() + "." + this.inferenceFileExtension;
+        this.inferenceFilePath = KBmanager.configuration.getKbDir() + File.separator + KBmanager.getMgr().getDefaultKbName() + "." + this.inferenceFileExtension;
         if (!(new File(this.inferenceFilePath).exists()) || KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(this.inferenceFileExtension)) {
             synchronized (kb.baseGenLock) {
                 TPTPGenerationManager.generateProperFile(kb, this.requestedTptpLanguage);
@@ -185,7 +185,7 @@ public class Vampire {
      */
     public void setAskQuestion(boolean askQuestion) {this.askQuestion = askQuestion;}
 
-    public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.getMgr().getPref("vampire")));}
+    public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.configuration.getVampireExec()));}
 
     /***************************************************************
      */
@@ -352,13 +352,13 @@ public class Vampire {
         try {
             String dir;
             if (this.sessionId != null && !this.sessionId.isEmpty()) dir = SessionTPTPManager.getSessionDir(this.sessionId).toString() + File.separator;
-            else dir = mgr.getPref("kbDir") + File.separator;
+            else dir = KBmanager.configuration.getKbDir() + File.separator;
             // -------- 1. Ensure base <kb>.thf exists (modal vs plain) --------
             String kbThfFile = "";
             if (useModals) kbThfFile = this.kb.name + "_modals.thf";
             else kbThfFile = this.kb.name + "_plain.thf";
             // Base THF axiom file is always in the shared kbDir (no session-specific THF versions exist)
-            String kbThfPath = mgr.getPref("kbDir") + File.separator + kbThfFile;
+            String kbThfPath = KBmanager.configuration.getKbDir() + File.separator + kbThfFile;
             File thfAxioms = new File(kbThfPath);
             if (!thfAxioms.exists()) {
                 System.out.println("Vampire.askVampireHOL(): no such file: " + kbThfPath + ". Waiting for background generation or creating it.");
@@ -500,7 +500,7 @@ public class Vampire {
     public void askVampireTHF(String test_path) {
 
         if (debug > 0) System.out.printf("\nVampire.askVampireTHF(%s)", test_path);
-        String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
+        String testDir = KBmanager.configuration.getInferenceTestDir();
         String includesPath = testDir + File.separator + "includes";
         File test = new File(test_path);
         // List<String> includes = TPTPutil.extractIncludesFromTPTP(test);
@@ -763,7 +763,7 @@ public class Vampire {
         if (this.sessionId != null && !this.sessionId.isEmpty()) System.out.println("INFO Vampire.run(): using session dir for temp files, sessionId=" + sessionId);
         String dir;
         if (this.sessionId != null && !this.sessionId.isEmpty()) dir = SessionTPTPManager.getSessionDir(this.sessionId).toString() + File.separator;
-        else dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+        else dir = KBmanager.configuration.getKbDir() + File.separator;
         String outfile = dir + "temp-comb." + this.inferenceFileExtension;
         String stmtFile = dir + "temp-stmt." + this.inferenceFileExtension;
         File baseFile = kbFile;
@@ -912,7 +912,7 @@ public class Vampire {
             dir = sessionDir.toString();
         }
         else {
-            dir = KBmanager.getMgr().getPref("kbDir");
+            dir = KBmanager.configuration.getKbDir();
         }
         String fname = "temp-stmt." + this.inferenceFileExtension;
         try (FileWriter fw = new FileWriter(dir + File.separator + fname);
@@ -1008,7 +1008,7 @@ public class Vampire {
                 java.nio.file.Path sessionDir = com.articulate.sigma.trans.SessionTPTPManager.getSessionDir(sessionId);
                 dir = sessionDir.toFile();
             } 
-            else dir = new File(KBmanager.getMgr().getPref("kbDir"));
+            else dir = new File(KBmanager.configuration.getKbDir());
             String fname = dir + File.separator + userAssertionTPTP;
             File ufile = new File(fname);
             if (ufile.exists()) return FileUtil.readLines(fname, false);
@@ -1053,7 +1053,7 @@ public class Vampire {
         KBmanager.getMgr().initializeOnce();
         String kbName = KBmanager.getMgr().getDefaultKbName();
         KB kb = KBmanager.getMgr().getKB(kbName);
-        String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+        String dir = KBmanager.configuration.getKbDir() + File.separator;
         String lang = "tff";
         if (SUMOKBtoTPTPKB.getLang().equalsIgnoreCase("fof")) lang = "tptp";
         Vampire vampire = new Vampire(kb, lang, "CASC", false, 30, 1);

@@ -42,7 +42,7 @@ public class EditGUI {
 
         if (initOnce) return;
         String fname = "allowedTerms.txt"; // TODO: where might we find this file? (tdn)
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
 
         File fin  = new File(kbDir + File.separator + fname);
         try (Reader fr = new FileReader(fin);

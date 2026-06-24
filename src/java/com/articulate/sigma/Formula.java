@@ -287,22 +287,7 @@ public class Formula implements Comparable, Serializable {
      */
     public static int getMaxPredicateArity() {
 
-        return getIntegerPreference("maxPredicateArity", 7);
-    }
-
-    /******************************************************************
-     */
-    private static int getIntegerPreference(String name, int defaultValue) {
-
-        String value = KBmanager.getMgr().getPref(name);
-        if (value == null || value.isBlank()) return defaultValue;
-        try {
-            return Integer.parseInt(value.trim());
-        }
-        catch (NumberFormatException e) {
-            System.err.println("Invalid integer preference '" + name + "': '" + value + "'. Using default " + defaultValue);
-            return defaultValue;
-        }
+        return KBmanager.configuration.getMaxPredicateArity();
     }
 
     /******************************************************************

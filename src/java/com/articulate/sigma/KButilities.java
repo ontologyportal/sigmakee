@@ -921,7 +921,7 @@ public class KButilities implements ServletContextListener {
      */
     private static void semnetAsJSON2(Set<String> triples, KB kb,String language) {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         String nodeFileStr = kbDir + File.separator + "nodes.json";
         String edgeFileStr = kbDir + File.separator + "edges.json";
         if (StringUtil.emptyString(language))
@@ -980,7 +980,7 @@ public class KButilities implements ServletContextListener {
      */
     private static void semnetAsTriples(Set<String> triples, KB kb,String language) {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         String fileStr = kbDir + File.separator + "triples.txt";
         if (StringUtil.emptyString(language))
             language = "EnglishLanguage";
@@ -1024,7 +1024,7 @@ public class KButilities implements ServletContextListener {
      */
     private static void semnetAsSQLGraph(Set<String> triples, KB kb,String language) {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         String nodeFileStr = kbDir + File.separator + "nodes.sql";
         String edgeFileStr = kbDir + File.separator + "edges.sql";
         if (StringUtil.emptyString(language))

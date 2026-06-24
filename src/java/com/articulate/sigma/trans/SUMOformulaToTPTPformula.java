@@ -603,7 +603,7 @@ public class SUMOformulaToTPTPformula {
 //        try {
 //            KBmanager mgr = KBmanager.getMgr();
 //            if (kb == null)
-//                kb = new KB("",mgr.getPref("kbDir"));
+//                kb = new KB("",KBmanager.configuration.getKbDir());
 //            if (!_f.isBalancedList()) {
 //                String errStr = "Unbalanced parentheses or quotes in: " + _f.getFormula();
 //                _f.errors.add(errStr);

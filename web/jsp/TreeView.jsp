@@ -52,8 +52,8 @@
  if (StringUtil.isNonEmptyString(down))
      TaxoModel.collapseParentNodes(down);
 
- String https = KBmanager.getMgr().getPref("https");
- if (https == null || !https.equals("true"))
+ String https = "";
+ if (!KBmanager.configuration.isHttps())
      https = "http";
  else
      https = "https";

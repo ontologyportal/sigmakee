@@ -7,8 +7,14 @@ import com.articulate.sigma.utils.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.util.*;
+
 
 public class Configuration {
 
@@ -23,8 +29,6 @@ public class Configuration {
         "baseDir",
         "cache",
         "cacheDisjoint",
-        "cwa",
-        "dbUser",
         "eproverExec",
         "graphDir",
         "graphVizDir",
@@ -33,7 +37,6 @@ public class Configuration {
         "inferenceTestDir",
         "jeditExec",
         "kbDir",
-        "loadFresh",
         "loadLexicons",
         "leoExec",
         "maxPredicateArity",
@@ -43,9 +46,8 @@ public class Configuration {
         "typePrefix",
         "userBrowserLimit",
         "vampireExec",
-        "vampireHolExec",
         "verbnetDir",
-        "ollamaLocalHost",
+        "ollamaHost",
         "showCachedFormulas",
         "smtpEmailAddress",
         "smtpEmailUser",
@@ -70,14 +72,12 @@ public class Configuration {
         "jeditExec",
         "leoExec",
         "tptpExec",
-        "vampireExec",
-        "vampireHolExec"
+        "vampireExec"
     );
 
     public static final List<String> BOOLEAN_KEYS = Arrays.asList(
         "cache",
         "cacheDisjoint",
-        "cwa",
         "https",
         "loadFresh",
         "loadLexicons",
@@ -90,14 +90,13 @@ public class Configuration {
     public static final List<String> INTEGER_KEYS = Arrays.asList(
         "adminBrowserLimit",
         "maxPredicateArity",
-        "port",
         "userBrowserLimit"
     );
 
     public static final List<String> STRING_KEYS = Arrays.asList(
-        "dbUser",
         "hostname",
-        "ollamaLocalHost",
+        "ollamaHost",
+        "port",
         "smtpEmailAddress",
         "smtpEmailUser",
         "smtpEmailPassword",
@@ -113,6 +112,59 @@ public class Configuration {
         setAllFromXml();
     }
 
+    /*****************************************************************
+     * Updates a configuration preference in memory.
+     * @param key preference key
+     * @param value preference value
+     */
+    public void setPreference(String key, String value) {
+
+        if (!CONFIG_KEYS.contains(key)) {
+            warnings.add("Unknown preference: " + key);
+            return;
+        }
+        preferences.put(key, value);
+    }
+
+    /*****************************************************************
+     * Writes current preferences and KB constituents back to config.xml.
+     */
+    public void writeXml() {
+
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.newDocument();
+            Element root = doc.createElement("configuration");
+            doc.appendChild(root);
+            for (String key : CONFIG_KEYS) {
+                String value = preferences.get(key);
+                if (value == null) value = "";
+                Element pref = doc.createElement("preference");
+                pref.setAttribute("name", key);
+                pref.setAttribute("value", value);
+                root.appendChild(pref);
+            }
+            for (Map.Entry<String, List<String>> entry : kbConstituentList.entrySet()) {
+                Element kb = doc.createElement("kb");
+                kb.setAttribute("name", entry.getKey());
+                for (String filename : entry.getValue()) {
+                    Element constituent = doc.createElement("constituent");
+                    constituent.setAttribute("filename", filename);
+                    kb.appendChild(constituent);
+                }
+                root.appendChild(kb);
+            }
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+            transformer.transform(new DOMSource(doc), new StreamResult(new File(configFilePath)));
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Could not write config XML file: " + configFilePath, e);
+        }
+    }
+
     public int getAdminBrowserLimit() { return getIntegerPreference("adminBrowserLimit", 200); }
 
     public String getBaseDir() { return getStringPreference("baseDir", ""); }
@@ -120,10 +172,6 @@ public class Configuration {
     public boolean isCache() { return getBooleanPreference("cache", true); }
 
     public boolean isCacheDisjoint() { return getBooleanPreference("cacheDisjoint", true); }
-
-    public boolean isCwa() { return getBooleanPreference("cwa", false); }
-
-    public String getDbUser() { return getStringPreference("dbUser", "SUMO"); }
 
     public String getEproverExec() { return getStringPreference("eproverExec", ""); }
 
@@ -133,9 +181,9 @@ public class Configuration {
 
     public String getHostname() { return getStringPreference("hostname", "localhost"); }
 
-    public boolean isHttps() { return getBooleanPreference("https", false); }
+    public String getInferenceTestDir() { return getStringPreference("inferenceTestDir", getKbDir() + File.separator + "tests"); }
 
-    public String getInferenceTestDir() { return getStringPreference("inferenceTestDir", ""); }
+    public boolean isHttps() { return getBooleanPreference("https", false); }
 
     public String getJeditExec() { return getStringPreference("jeditExec", "/usr/share/jedit/jedit"); }
 
@@ -149,7 +197,7 @@ public class Configuration {
 
     public int getMaxPredicateArity() { return getIntegerPreference("maxPredicateArity", 7); }
 
-    public int getPort() { return getIntegerPreference("port", 8080); }
+    public String getPort() { return getStringPreference("port", "8080"); }
 
     public boolean isTermFormats() { return getBooleanPreference("termFormats", true); }
 
@@ -161,11 +209,9 @@ public class Configuration {
 
     public String getVampireExec() { return getStringPreference("vampireExec", ""); }
 
-    public String getVampireHolExec() { return getStringPreference("vampireHolExec", ""); }
-
     public String getVerbnetDir() { return getStringPreference("verbnetDir", ""); }
 
-    public String getOllamaLocalHost() { return getStringPreference("ollamaLocalHost", "http://127.0.0.1:11434"); }
+    public String getOllamaHost() { return getStringPreference("ollamaHost", "http://127.0.0.1:11434"); }
 
     public boolean isShowCachedFormulas() { return getBooleanPreference("showCachedFormulas", true); }
 
@@ -176,6 +222,8 @@ public class Configuration {
     public String getSmtpEmailPassword() { return getStringPreference("smtpEmailPassword", ""); }
 
     public String getSmtpEmailServer() { return getStringPreference("smtpEmailServer", ""); }
+
+    public String getSystemsDir() { return getStringPreference("systemsDir", ""); }
 
     public boolean isAws() { return getBooleanPreference("isAws", false); }
 
@@ -202,14 +250,12 @@ public class Configuration {
         defaults.put("baseDir", sigmaHome);
         defaults.put("cache", "true");
         defaults.put("cacheDisjoint", "true");
-        defaults.put("cwa", "false");
-        defaults.put("dbUser", "SUMO");
         defaults.put("eproverExec", userHome + sep + "Programs" + sep + "E" + sep + "bin" + sep + "e_ltb_runner");
         defaults.put("graphDir", tomcatHome + sep + "webapps" + sep + "sigma" + sep + "graph");
         defaults.put("graphVizDir", "/usr/bin");
         defaults.put("hostname", "localhost");
         defaults.put("https", "false");
-        defaults.put("inferenceTestDir", sigmaHome + sep + "tests");
+        defaults.put("inferenceTestDir", sigmaHome + sep + "KBs" + sep + "tests");
         defaults.put("jeditExec", "/usr/share/jedit/jedit");
         defaults.put("kbDir", sigmaHome + sep + "KBs");
         defaults.put("loadFresh", "true");
@@ -220,9 +266,8 @@ public class Configuration {
         defaults.put("tptpExec", userHome + sep + "workspace" + sep + "TPTP4X" + sep + "tptp4X");
         defaults.put("userBrowserLimit", "25");
         defaults.put("vampireExec", userHome + sep + "Programs" + sep + "vampire" + sep + "build" + sep + "vampire");
-        defaults.put("vampireHolExec", userHome + sep + "Programs" + sep + "vampire" + sep + "build_hol" + sep + "vampire");
         defaults.put("verbnetDir", "");
-        defaults.put("ollamaLocalHost", "http://127.0.0.1:11434");
+        defaults.put("ollamaHost", "http://127.0.0.1:11434");
         defaults.put("smtpEmailAddress", "");
         defaults.put("smtpEmailUser", "");
         defaults.put("smtpEmailPassword", "");
@@ -321,14 +366,12 @@ public class Configuration {
         this.preferences.put("baseDir", sigmaHome);
         this.preferences.put("cache", "true");
         this.preferences.put("cacheDisjoint", "true");
-        this.preferences.put("cwa", "false");
-        this.preferences.put("dbUser", "SUMO");
         this.preferences.put("eproverExec", userHome + sep + "Programs" + sep + "E" + sep + "bin" + sep + "e_ltb_runner");
         this.preferences.put("graphDir", tomcatHome + sep + "webapps" + sep + "sigma" + sep + "graph");
         this.preferences.put("graphVizDir", "/usr/bin");
         this.preferences.put("hostname", "localhost");
         this.preferences.put("https", "false");
-        this.preferences.put("inferenceTestDir", sigmaHome + sep + "tests");
+        this.preferences.put("inferenceTestDir", sigmaHome + sep + "KBs" + sep + "tests");
         this.preferences.put("jeditExec", "/usr/share/jedit/jedit");
         this.preferences.put("kbDir", sigmaHome + sep + "KBs");
         this.preferences.put("loadFresh", "true");
@@ -339,9 +382,8 @@ public class Configuration {
         this.preferences.put("tptpExec", userHome + sep + "workspace" + sep + "TPTP4X" + sep + "tptp4X");
         this.preferences.put("userBrowserLimit", "25");
         this.preferences.put("vampireExec", userHome + sep + "Programs" + sep + "vampire" + sep + "build" + sep + "vampire");
-        this.preferences.put("vampireHolExec", userHome + sep + "Programs" + sep + "vampire" + sep + "build_hol" + sep + "vampire");
         this.preferences.put("verbnetDir", "");
-        this.preferences.put("ollamaLocalHost", "http://127.0.0.1:11434");
+        this.preferences.put("ollamaHost", "http://127.0.0.1:11434");
         this.preferences.put("smtpEmailAddress", "");
         this.preferences.put("smtpEmailUser", "");
         this.preferences.put("smtpEmailPassword", "");

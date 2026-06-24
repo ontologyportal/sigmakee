@@ -430,7 +430,7 @@ public class SUMOKBtoTPTPKB {
     public String getInfFilename() {
 
         String sanitizedKBName = getSanitizedKBname();
-        return KBmanager.getMgr().getPref("kbDir") + File.separator +
+        return KBmanager.configuration.getKbDir() + File.separator +
                 sanitizedKBName + "." + langToExtension(getLang());
     }
 
@@ -1067,7 +1067,7 @@ public class SUMOKBtoTPTPKB {
             res.prologueLines.add("% not higher order");
         }
         // Cache check
-        if (!KBmanager.getMgr().prefEquals("cache", "yes") && f.isCached()) {
+        if (!KBmanager.configuration.isCache() && f.isCached()) {
             res.skippedCached = true;
             return res;
         }
@@ -1420,7 +1420,7 @@ public class SUMOKBtoTPTPKB {
         SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
         String kbName = KBmanager.getMgr().getDefaultKbName();
         skbtptpkb.kb = KBmanager.getMgr().getKB(kbName);
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.getLang();
+        String filename = KBmanager.configuration.getKbDir() + File.separator + kbName + "." + SUMOKBtoTPTPKB.getLang();
         String fileWritten = null;
         try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(filename)))) {
             fileWritten = skbtptpkb.writeFile(filename, null, false, pw);

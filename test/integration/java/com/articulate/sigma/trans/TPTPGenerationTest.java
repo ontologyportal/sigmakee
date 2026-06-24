@@ -127,7 +127,7 @@ public class TPTPGenerationTest {
         THFnew.transModalTHF(kb);
         long elapsed = System.currentTimeMillis() - startTime;
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         Path filePath = Paths.get(kbDir, kb.name + "_modals.thf");
         printFileReport("THF Modal", filePath, elapsed);
 
@@ -147,7 +147,7 @@ public class TPTPGenerationTest {
         THFnew.transPlainTHF(kb);
         long elapsed = System.currentTimeMillis() - startTime;
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         Path filePath = Paths.get(kbDir, kb.name + "_plain.thf");
         printFileReport("THF Plain", filePath, elapsed);
 
@@ -169,7 +169,7 @@ public class TPTPGenerationTest {
 
         Path fofPath = tempFolder.newFile("SUMO_baseline.tptp").toPath();
         Path tffPath = tempFolder.newFile("SUMO_baseline.tff").toPath();
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         Path thfModalPath = Paths.get(kbDir, kb.name + "_modals.thf");
         Path thfPlainPath = Paths.get(kbDir, kb.name + "_plain.thf");
 

@@ -300,7 +300,7 @@ public class ExprToTPTP {
         if ("tff".equals(lang)) return value; // TFF passes numbers through
         // FOF: optionally hide numbers behind n__ prefix
         // Match SUMOformulaToTPTPformula behaviour: hideNumbers is true by default
-        boolean hideNumbers = true; // TODO: read from KBmanager.getMgr().getPref("hideNumbers")
+        boolean hideNumbers = true; // TODO: read from KBmanager.configuration.isHideNumbers()
         if (hideNumbers) {
             String safe = value.replace('.', '_').replace('-', '_');
             return "n__" + safe;

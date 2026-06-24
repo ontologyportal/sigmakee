@@ -45,7 +45,7 @@ public class SUMOtoTFAformExprIntegrationTest extends IntegrationTestBase {
         SUMOtoTFAform.setNumericFunctionInfo();
         // Write sort declarations so process() has them available
         String kbName = KBmanager.getMgr().getDefaultKbName();
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
+        String filename = KBmanager.configuration.getKbDir() + File.separator + kbName + ".tff";
         try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
             skbtfakb.writeSorts(pw);
         } catch (IOException e) {

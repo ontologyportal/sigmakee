@@ -222,11 +222,11 @@ public class GenPropFormulas {
                     mgr.setPref("eprover", el.getAttribute("value"));
             }
         }
-        if (mgr.getPref("vampire").isEmpty())
+        if (KBmanager.configuration.getVampireExec().isEmpty())
             KBmanager.getMgr().setPref("vampire","/home/apease/workspace/vampire/vampire");
         // Vampire.mode = Vampire.ModeType.CASC;
         System.out.println("GenPropFormulas.run(): before vampire");
-        if (mgr.getPref("eprover").isEmpty())
+        if (KBmanager.configuration.getEproverExec().isEmpty())
             KBmanager.getMgr().setPref("eprover","/home/apease/workspace/eprover/PROVER/eprover");
 
         boolean sat = false;

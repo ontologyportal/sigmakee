@@ -52,7 +52,7 @@ public class TPTPGenerationManager {
 
     private static final Object GEN_LOCK = new Object();
 
-    private static String baseKbDir = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO";
+    private static String baseKbDir = KBmanager.configuration.getKbDir() + File.separator + "SUMO";
 
     /*********************************************************************************
      * When true, {@link #startBackgroundGeneration()} returns immediately without
@@ -96,7 +96,7 @@ public class TPTPGenerationManager {
         // Use 4 threads: FOF, TFF, THF Modal, THF Plain all in parallel
         // executor = Executors.newFixedThreadPool(4);
         executor = Executors.newSingleThreadExecutor();
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         for (KB kb : KBmanager.getMgr().kbs.values()) {
             executor.submit(() -> {
                 generateFOF(kb);
@@ -184,7 +184,7 @@ public class TPTPGenerationManager {
 
         try {
             long start = System.currentTimeMillis();
-            String kbDir = KBmanager.getMgr().getPref("kbDir");
+            String kbDir = KBmanager.configuration.getKbDir();
             String infFilename = kbDir + File.separator + kb.name + ".tptp";
             synchronized (GEN_LOCK) {
                 SUMOKBtoTPTPKB.setLang("fof");
@@ -221,7 +221,7 @@ public class TPTPGenerationManager {
     public static void generateFOF(KB kb) {
 
         if (!fofGenerating.compareAndSet(false, true)) return;
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         String infFilename = kbDir + File.separator + kb.name + ".tptp";
         Path target = java.nio.file.Paths.get(infFilename);
         Path tmp    = java.nio.file.Paths.get(infFilename + ".tmp");
@@ -273,7 +273,7 @@ public class TPTPGenerationManager {
     private static void generateTFF(KB kb) {
 
         if (!tffGenerating.compareAndSet(false, true))  return;
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         String infFilename = kbDir + File.separator + kb.name + ".tff";
         Path target = Paths.get(infFilename);
         Path tmp    = Paths.get(infFilename + ".tmp");
@@ -339,7 +339,7 @@ public class TPTPGenerationManager {
 
         if (!thfModalGenerating.compareAndSet(false, true)) return;
         try {
-            String kbDir = KBmanager.getMgr().getPref("kbDir");
+            String kbDir = KBmanager.configuration.getKbDir();
             String thfFilename = kbDir + File.separator + kb.name + "_modals.thf";
             if (!isInferenceFileOld(thfFilename)) {
                 LoggingUtils.log("SUMO_modal.thf exists and is current: ");

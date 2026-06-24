@@ -28,7 +28,7 @@ public class SessionTPTPManagerTest {
         // Store original kbDir if KBmanager is initialized
         try {
             if (com.articulate.sigma.KBmanager.getMgr() != null) {
-                originalKbDir = com.articulate.sigma.KBmanager.getMgr().getPref("kbDir");
+                originalKbDir = com.articulate.sigma.KBmanager.configuration.getKbDir();
             }
         } catch (Exception e) {
             // KBmanager not initialized, that's fine for unit tests

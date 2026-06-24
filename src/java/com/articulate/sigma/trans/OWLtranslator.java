@@ -878,7 +878,7 @@ public class OWLtranslator {
     private void readYAGOSUMOMappings() {
 
         System.out.println("INFO in OWLtranslator.readYAGOSUMOMappings()");
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         File f = new File(kbDir + File.separator + "yago-sumo-mappings.txt");
         if (!f.canRead()) {
             System.out.println( "INFO in readYAGOSUMOMappings(): "

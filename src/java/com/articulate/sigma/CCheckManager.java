@@ -160,8 +160,8 @@ public class CCheckManager extends ThreadPoolExecutor {
 		if (!ccheckQueue.containsKey(kb.name)) {
 			try {
 				String filename = "CCHECK_" + kb.name;
-				if (KBmanager.getMgr().getPref("baseDir") != null)
-					filename = KBmanager.getMgr().getPref("baseDir") + File.separator + filename;
+				if (KBmanager.configuration.getBaseDir() != null)
+					filename = KBmanager.configuration.getBaseDir() + File.separator + filename;
 
 				// lines up the Runnable CCheck for execution
 				if (chosenEngine.equals("SoTPTP"))

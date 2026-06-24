@@ -32,7 +32,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         skbtfakb.initOnce();
         SUMOformulaToTPTPformula.setLang("tff");
         String kbName = KBmanager.getMgr().getDefaultKbName();
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
+        String filename = KBmanager.configuration.getKbDir() + File.separator + kbName + ".tff";
         try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
             skbtfakb.writeSorts(pw);
         }
@@ -772,7 +772,7 @@ public class SUMOtoTFATest extends UnitTestBase {
 
         System.out.println("\n========= test testAvgWork ==========\n");
 
-        kb.addConstituent(KBmanager.getMgr().getPref("kbDir") + "/Demographics.kif");
+        kb.addConstituent(KBmanager.configuration.getKbDir() + "/Demographics.kif");
         if (!kb.terms.contains("avgWorkHours")) {
             System.err.println("testAvgWork(): Demographics.kif not loaded");
             return;

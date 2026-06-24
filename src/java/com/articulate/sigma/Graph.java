@@ -254,8 +254,7 @@ public class Graph {
         if (debug) System.out.println("Graph.createGraphBody(" + kb.name + ", " + check + ", " + term + ", " + relation + ", " + 
                                       above + ", " + below + ", " + level + ", " + show + ", " + instances + ", " + language + ")");
         Set<String> result = new LinkedHashSet<>();
-        int graphMax = Integer.parseInt(KBmanager.getMgr().getPref("adminBrowserLimit"));
-        if (!check.contains(term) && graphsize < graphMax) {
+        if (!check.contains(term) && graphsize < KBmanager.configuration.getAdminBrowserLimit()) {
             if (above > 0) {
                 List<Formula> stmtAbove;
                 if (!DB.emptyString(relation) && relation.equals("all"))
@@ -278,18 +277,14 @@ public class Graph {
             for (int i = 0; i < level; i++)
                 prefix = prefix.append(indent);
 
-            String hostname = KBmanager.getMgr().getPref("hostname");
+            String hostname = KBmanager.configuration.getHostname();
             if (hostname == null)
                 hostname = "localhost";
-            String port = KBmanager.getMgr().getPref("port");
+            String port = KBmanager.configuration.getPort();
             if (port == null)
                 port = "8080";
-            String https = KBmanager.getMgr().getPref("https");
-            if (https == null || !https.equals("true"))
-                https = "http";
-            else
-                https = "https";
-            String kbHref = https + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&flang=" + flang + "&kb=" + kb.name;
+            String protocol = KBmanager.configuration.isHttps() ? "https" : "http";
+            String kbHref = protocol + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&flang=" + flang + "&kb=" + kb.name;
             if (show) {
                 graphsize++;
                 if (graphsize < 100)

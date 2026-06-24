@@ -21,9 +21,6 @@ public class NER {
         BufferedWriter _writer;
         BufferedReader _error;
         String stanfordCore = System.getProperty("user.home") + "/Programs/stanford-ner-2014-10-26";
-        String newcore = KBmanager.getMgr().getPref("stanford-ner");
-        if (!StringUtil.emptyString(newcore))
-        	stanfordCore = newcore;
         String execString = System.getProperty("java.home") + "/java -Xmx700m " +
                 "-cp " + stanfordCore + "/stanford-ner.jar " +
                 "edu.stanford.nlp.ie.crf.CRFClassifier " +

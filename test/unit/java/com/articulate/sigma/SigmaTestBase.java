@@ -34,7 +34,7 @@ public class SigmaTestBase {
 
             KBmanager.getMgr().setDefaultAttributes();
             KBmanager.getMgr().setConfiguration(configuration);
-            if (!KBmanager.getMgr().prefEquals("loadLexicons", "false")) {
+            if (!KBmanager.configuration.isLoadLexicons()) {
                 WordNet.initOnce();
                 NLGUtils.init(KB_PATH);
             }

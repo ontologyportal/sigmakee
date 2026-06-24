@@ -124,19 +124,12 @@ public class HTMLformatter {
      */
     public static String createHrefStart() {
 
-        String hostname = KBmanager.getMgr().getPref("hostname");
-        if (hostname == null)
-            hostname = "localhost";
-        String port = KBmanager.getMgr().getPref("port");
-        if (port == null)
-            port = "8080";
-        String https = KBmanager.getMgr().getPref("https");
-        //System.out.println("Info in HTMLformatter.createHrefStart(): https is " + https);
-        if (https == null || !https.equals("true"))
-            https = "http";
-        else
-            https = "https";
-        return https + "://" + hostname + ":" + port;
+        String hostname = KBmanager.configuration.getHostname();
+        if (hostname == null) hostname = "localhost";
+        String port = KBmanager.configuration.getPort();
+        if (port == null) port = "8080";
+        String protocol = KBmanager.configuration.isHttps() ? "https" : "http";
+        return protocol + "://" + hostname + ":" + port;
     }
 
     /**************************************************************

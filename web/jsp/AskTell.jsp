@@ -8,8 +8,7 @@
         response.sendRedirect("login.jsp");
         return;
     }
-
-    String systemsDir = KBmanager.getMgr().getPref("systemsDir");
+    String systemsDir = KBmanager.configuration.getSystemsDir();
 %>
 <html>
 <head>
@@ -198,13 +197,6 @@
             if (msg != null) { status.append("<font color='red'>Error: ").append(msg).append("</font><br>"); syntaxError = true; }
         }
     }
-    if (english) {
-        englishStatement = stmt;
-        if (!KBmanager.getMgr().getPref("loadCELT").equalsIgnoreCase("yes") || kb.celt == null) {
-            stmt = null;
-            status.append("<font color='red'>CELT not loaded.  Only KIF syntax is allowed.</font><br>");
-        } else stmt = kb.celt.submit(stmt);
-    }
     if (stmt == null || stmt.length() < 2 || stmt.trim().charAt(0) != '(') {
         syntaxError = true;
         status.append("<font color='red'>Syntax Error or parsing failure in: ").append(englishStatement).append("</font><br>");
@@ -264,7 +256,7 @@
             <div class="helpText">Enter a KIF query..</div>
         </div>
         <%
-            String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
+            String testDir = KBmanager.configuration.getInferenceTestDir();
             File[] allFiles = (testDir == null) ? new File[0] : new File(testDir).listFiles((d,n) -> n.endsWith(".tq") || n.endsWith(".tptp") || n.endsWith(".tff") || n.endsWith(".thf"));
             if (allFiles == null) allFiles = new File[0];
             File[] testFiles = allFiles;
@@ -507,7 +499,7 @@
                 // Clear All
                 SessionTPTPManager.cleanupSession(session.getId());
                 String testName = (String) session.getAttribute("selectedTest");
-                String testPath = KBmanager.getMgr().getPref("inferenceTestDir") + File.separator + testName;
+                String testPath = KBmanager.configuration.getInferenceTestDir() + File.separator + testName;
                 String ext = testName == null ? "" : testName.toLowerCase();
                 int maxAns = Math.max(1, maxAnswers);
                 int tmo    = Math.max(1, timeout);

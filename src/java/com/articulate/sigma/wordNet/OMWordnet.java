@@ -281,7 +281,7 @@ August 9, Acapulco, Mexico.
 
         File serfile = new File(WordNet.baseDir + File.separator + "omw.ser");
         Date saveDate = new Date(serfile.lastModified());
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         String filename;
         Date fileDate;
         File file;
@@ -303,7 +303,7 @@ August 9, Acapulco, Mexico.
      */
     public static void loadSerialized() {
 
-        if (KBmanager.getMgr().getPref("loadLexicons").equals("false")) return;
+        if (KBmanager.configuration.isLoadLexicons()) return;
         omw = null;
         try {
             if (serializedOld()) return;
@@ -351,7 +351,7 @@ August 9, Acapulco, Mexico.
     public static void readOMWfiles() {
         
         long start = System.nanoTime();
-        if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
+        if (KBmanager.configuration.isLoadLexicons())
             disable = true;
         if (disable)
             return;
@@ -362,7 +362,7 @@ August 9, Acapulco, Mexico.
             return;
         }
         omw = new OMWordnet();
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         String filename;
         for (int i = 0; i < lcodes.size(); i++) {
             filename = kbDir + File.separator + "OMW" + File.separator + lcodes.get(i)  + File.separator + "wn-data-" + lcodes.get(i) + ".tab";
@@ -376,7 +376,7 @@ August 9, Acapulco, Mexico.
      */
     public static void generateOMWOWLformat(KB kb) {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         File f = new File(kbDir + File.separator + "OMW" + File.separator + "OMW.owl");
         try (FileWriter fw = new FileWriter(f);
             PrintWriter pw = new PrintWriter(fw)) {

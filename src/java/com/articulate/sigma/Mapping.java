@@ -52,7 +52,7 @@ public class Mapping {
     public static String writeEquivalences(Set<String> cbset, String kbname1, String kbname2) throws IOException {
 
         System.out.println("INFO in Mapping.writeEquivalences(): size: " + cbset.size());
-        String dir = KBmanager.getMgr().getPref("baseDir");
+        String dir = KBmanager.configuration.getBaseDir();
         String filename = dir + File.separator + kbname1 + "-" + kbname2 + "-links";
 
         if (mappings.keySet().size() < 1)
@@ -156,7 +156,7 @@ public class Mapping {
                 }
             }
         }
-        String dir = KBmanager.getMgr().getPref("baseDir");
+        String dir = KBmanager.configuration.getBaseDir();
         String filename = dir + File.separator + kbname2 + "-merged-" + kbname1;
         try {
             File f = new File(filename + ".kif");

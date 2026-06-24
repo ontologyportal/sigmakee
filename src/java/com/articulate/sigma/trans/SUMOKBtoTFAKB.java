@@ -76,9 +76,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             else
                 lChildren = new HashSet<>();
             qNotL.add("RealNumber");
-            String tLang = KBmanager.getMgr().getPref("TPTPlang");
-            if (!StringUtil.emptyString(tLang))
-                SUMOKBtoTFAKB.lang = tLang;
+            SUMOKBtoTFAKB.lang = "tff";
             SUMOtoTFAform.initOnce();
         }
         initialized = true;
@@ -734,7 +732,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             // haven't been set
             SUMOKBtoTPTPKB.setLang("tff");
             String kbName = KBmanager.getMgr().getDefaultKbName();
-            String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.getLang();
+            String filename = KBmanager.configuration.getKbDir() + File.separator + kbName + "." + SUMOKBtoTPTPKB.getLang();
             System.out.println("SUMOKBtoTFAKB.main(): " + skbtfakb.kb.kbCache.getSignature("ListOrderFn"));
             String fileWritten = null;
             try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(filename)))) {

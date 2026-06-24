@@ -781,9 +781,9 @@ public class WordNetUtilities {
                                         String pattern, String posNum) throws IOException {
 
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
-        try (Writer fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new.txt");
+        try (Writer fw = new FileWriter(KBmanager.configuration.getKbDir() + File.separator + fileName + "-new.txt");
              PrintWriter pw = new PrintWriter(fw);
-             Reader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + ".txt");
+             Reader r = new FileReader(KBmanager.configuration.getKbDir() + File.separator + fileName + ".txt");
              LineNumberReader lr = new LineNumberReader(r)) {
             String line, oldTerm, bareOldTerm, mapType, synset, newTerm;
             Pattern p;
@@ -828,7 +828,7 @@ public class WordNetUtilities {
 
         Map<String,String> hm = new HashMap<>();
 
-        String dir = KBmanager.getMgr().getPref("kbDir");
+        String dir = KBmanager.configuration.getKbDir();
         FileReader r = new FileReader(dir + File.separator + "newMappings20.dat");
         LineNumberReader lr = new LineNumberReader(r);
         String line, synset, SUMOterm;
@@ -903,9 +903,9 @@ public class WordNetUtilities {
      */
     public static void processMissingLinks(String fileName, String pattern, String posNum) throws IOException {
 
-        try (Writer fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new.txt");
+        try (Writer fw = new FileWriter(KBmanager.configuration.getKbDir() + File.separator + fileName + "-new.txt");
             PrintWriter pw = new PrintWriter(fw);
-            Reader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + ".txt");
+            Reader r = new FileReader(KBmanager.configuration.getKbDir() + File.separator + fileName + ".txt");
             LineNumberReader lr = new LineNumberReader(r)) {
             String line, synset, newTerm;
             Pattern p;
@@ -979,9 +979,9 @@ public class WordNetUtilities {
      */
     public static void updateWNversionProcess(String fileName, String pattern, String posNum) throws IOException {
 
-        try (Writer fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new");
+        try (Writer fw = new FileWriter(KBmanager.configuration.getKbDir() + File.separator + fileName + "-new");
             PrintWriter pw = new PrintWriter(fw);
-            Reader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName);
+            Reader r = new FileReader(KBmanager.configuration.getKbDir() + File.separator + fileName);
             LineNumberReader lr = new LineNumberReader(r)) {
             String line, newsynset, oldsynset, term;
             Pattern p;

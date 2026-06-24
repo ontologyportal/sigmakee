@@ -945,7 +945,7 @@ public class Diagnostics {
             KBmanager mgr = KBmanager.getMgr();
             if (!KBmanager.initialized && !KBmanager.initializing) mgr.initializeOnce();
             String kbName = mgr.getDefaultKbName();
-            String kbDir = mgr.getPref("kbDir");
+            String kbDir = KBmanager.configuration.getKbDir();
             if (StringUtil.emptyString(kbDir)) throw new RuntimeException("Empty kbDir preference");
             Path kbDirPath = Paths.get(kbDir).toAbsolutePath().normalize();
             if (!Files.isDirectory(kbDirPath)) throw new RuntimeException("kbDir is not a directory: " + kbDirPath);
@@ -1255,10 +1255,8 @@ public class Diagnostics {
 
         int exitCode;
         String retVal = "";
-        String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
-        String imageExt = KBmanager.getMgr().getPref("imageFormat");
-        if (imageExt == null || imageExt.isBlank())
-            imageExt = "png"; // default
+        String graphVizDir = KBmanager.configuration.getGraphVizDir();
+        String imageExt = "png";
         File file = new File(filename + "." + imageExt);
 
         List<String> cmd = new ArrayList<>();
@@ -1326,7 +1324,7 @@ public class Diagnostics {
      */
     public static KB makeEmptyKB(String kbName) {
 
-        String kbDir = (String)KBmanager.getMgr().getPref("kbDir");
+        String kbDir = (String)KBmanager.configuration.getKbDir();
         if (KBmanager.getMgr().existsKB(kbName)) {
             KBmanager.getMgr().removeKB(kbName);
         }
@@ -1357,11 +1355,11 @@ public class Diagnostics {
 
         String language = kb.language;
         String kbName = kb.name;
-        String hostname = KBmanager.getMgr().getPref("hostname");
+        String hostname = KBmanager.configuration.getHostname();
         String result = null;
         if (hostname == null || hostname.length() == 0)
             hostname = "localhost";
-        String port = KBmanager.getMgr().getPref("port");
+        String port = KBmanager.configuration.getPort();
         if (port == null || port.length() == 0)
             port = "8080";
         String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;

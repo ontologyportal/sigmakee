@@ -55,7 +55,7 @@ public class SessionCleanupListener implements HttpSessionListener {
      */
     private void cleanupProofFiles(String sessionId) {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         if (kbDir == null) {
             return;
         }

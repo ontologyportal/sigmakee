@@ -585,7 +585,7 @@ public class LanguageFormatter {
         String model = "llama3.2";
 //        String model = "qwen2.5:14b-instruct";
 
-        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+        String ollamaHost = KBmanager.configuration.getOllamaHost();
         if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
 
         if (ollamaClient == null) ollamaClient = new OllamaClient(ollamaHost);
@@ -770,7 +770,7 @@ public class LanguageFormatter {
 
 
     public static boolean checkOllamaHealth(){
-        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+        String ollamaHost = KBmanager.configuration.getOllamaHost();
         if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
         OllamaClient oc = new OllamaClient(ollamaHost, 1000, 1500); // short timeouts
         return oc.isHealthy();
@@ -849,7 +849,7 @@ public class LanguageFormatter {
 
  
         String model = "llama3.2";
-        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+        String ollamaHost = KBmanager.configuration.getOllamaHost();
         if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
         
         OllamaClient ollama = new OllamaClient(ollamaHost, 10_000, 60_000); // longer timeouts for proof summarization

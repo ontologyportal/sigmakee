@@ -1515,7 +1515,7 @@ public class DB {
             System.err.println("Error in readStopConceptArray(): file previously read.");
             return;
         }
-        List<List<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
+        List<List<String>> f = DB.readSpreadsheet(KBmanager.configuration.getKbDir() +
         		File.separator + "WordNetMappings" + File.separator + "stopConcept.csv",null,false);
 
         List<String> al;
@@ -1536,7 +1536,7 @@ public class DB {
             System.out.println("Error in DB.readSentimentArray(): file previously read.");
             return;
         }
-        List<List<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
+        List<List<String>> f = DB.readSpreadsheet(KBmanager.configuration.getKbDir() +
         		File.separator + "WordNetMappings" + File.separator + "sentiment.csv",null,false);
 
         List<String> al;
@@ -1689,7 +1689,7 @@ public class DB {
      */
     public static void readAmenities() {
 
-        List<List<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
+        List<List<String>> f = DB.readSpreadsheet(KBmanager.configuration.getKbDir() +
                 File.separator + "Feeds-SUMO_Mapping.csv",null,false);
         List<String> al;
         for (int i = 1; i < f.size(); i++) {

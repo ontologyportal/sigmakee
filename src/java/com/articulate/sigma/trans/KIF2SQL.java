@@ -487,7 +487,7 @@ Articulate Software
         else {
             System.out.println("INFO in KIF2SQL.main()");
             KBmanager.getMgr().initializeOnce();
-            String kbDir = KBmanager.getMgr().getPref("kbDir");
+            String kbDir = KBmanager.configuration.getKbDir();
             String kbName = KBmanager.getMgr().getDefaultKbName();
             KB kb = KBmanager.getMgr().getKB(kbName);
             String path = kbDir + File.separator + kbName + ".sql";

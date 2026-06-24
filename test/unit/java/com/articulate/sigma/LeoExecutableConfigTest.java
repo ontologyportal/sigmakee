@@ -35,7 +35,7 @@ public class LeoExecutableConfigTest extends UnitTestBase {
 
         KBmanager.getMgr().initializeOnce();
 
-        String leoSetting = KBmanager.getMgr().getPref("leoExecutable");
+        String leoSetting = KBmanager.configuration.getLeoExec();
         assertNotNull("leoExecutable pref must not be null", leoSetting);
         assertFalse("leoExecutable pref must not be empty", leoSetting.trim().isEmpty());
 

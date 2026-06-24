@@ -3676,7 +3676,7 @@ public class SUMOtoTFAform {
                 /**
                  if (debug) System.out.println("SUMOtoTFAform.main(): contains ListFn__1Fn: " + kb.terms.contains("ListFn__1Fn"));
                  String kbName = KBmanager.getMgr().getDefaultKbName();
-                 String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
+                 String filename = KBmanager.configuration.getKbDir() + File.separator + kbName + ".tff";
                  PrintWriter pw = null;
                 try {
                     pw = new PrintWriter(new FileWriter(filename));

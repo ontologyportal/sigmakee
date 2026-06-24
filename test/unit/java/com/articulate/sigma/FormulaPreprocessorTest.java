@@ -420,7 +420,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
         String kbName = KBmanager.getMgr().getDefaultKbName();
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
+        String filename = KBmanager.configuration.getKbDir() + File.separator + kbName + ".tff";
         try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
             skbtfakb.writeSorts(pw);
             //skbtfakb.writeFile(filename, null, false, "", false, pw);

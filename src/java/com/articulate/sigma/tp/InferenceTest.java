@@ -177,7 +177,7 @@ public class InferenceTest {
      */
     private void deleteSharedUserAssertionFiles(KB kb) {
 
-        final File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        final File dir = new File(KBmanager.configuration.getKbDir());
         final String kbName = kb.name;
         deleteIfExists(new File(dir, kbName + KB._userAssertionsString)); // *_UserAssertions.kif
         deleteIfExists(new File(dir, kbName + KB._userAssertionsTPTP));   // *_UserAssertions.tptp

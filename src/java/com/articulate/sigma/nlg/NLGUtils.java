@@ -54,7 +54,7 @@ public class NLGUtils implements Serializable {
     public static void init(String kbDir) {
         
         long start = System.nanoTime();
-        if (KBmanager.getMgr().getPref("loadLexicons").equals("false")) return;
+        if (KBmanager.configuration.isLoadLexicons()) return;
         nlg = new NLGUtils();
         NLGUtils.readKeywordMap(kbDir);
     }
@@ -63,7 +63,7 @@ public class NLGUtils implements Serializable {
      */
     public static void encoder(Object object) {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         Path path = Paths.get(kbDir, "NLGUtils.ser");
         try (Output output = new Output(Files.newOutputStream(path))) {
             KButilities.kryoLocal.get().writeObject(output, object);
@@ -79,7 +79,7 @@ public class NLGUtils implements Serializable {
     public static <T> T decoder() {
 
         NLGUtils ob = null;
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         Path path = Paths.get(kbDir, "NLGUtils.ser");
         try (Input input = new Input(Files.newInputStream(path))) {
             ob = KButilities.kryoLocal.get().readObject(input,NLGUtils.class);
@@ -96,7 +96,7 @@ public class NLGUtils implements Serializable {
      */
     public static boolean serializedExists() {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         File serfile = new File(kbDir + File.separator + "NLGUtils.ser");
         return serfile.exists();
     }
@@ -106,7 +106,7 @@ public class NLGUtils implements Serializable {
      */
     public static boolean serializedOld() {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         String phrasesFilename = kbDir + File.separator + PHRASES_FILENAME;
         File phrasesFile = new File(phrasesFilename);
         if (!phrasesFile.exists()) {
@@ -150,7 +150,7 @@ public class NLGUtils implements Serializable {
 
         try {
             // Reading the object from a file
-            String kbDir = KBmanager.getMgr().getPref("kbDir");
+            String kbDir = KBmanager.configuration.getKbDir();
             try (OutputStream file = new FileOutputStream(kbDir + File.separator + "NLGUtils.ser");
                 ObjectOutputStream out = new ObjectOutputStream(file)) {
                 if(debug>0) System.out.println("NLGUtils.serialize(): nlg size " + getKeywordMap().keySet().size());
