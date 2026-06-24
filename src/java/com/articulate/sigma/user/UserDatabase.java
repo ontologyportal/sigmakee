@@ -19,7 +19,7 @@ import java.sql.*;
 public class UserDatabase {
 
     int debug = 0;
-    private static final String JDBC_CREATE_DB = "jdbc:h2:file:" + System.getProperty("user.home") + "/var/passwd;AUTO_SERVER=TRUE";
+    private static final String JDBC_CREATE_DB = "jdbc:h2:file:" + System.getProperty("user.home") + "/.sigmakee/database" + "/passwd;AUTO_SERVER=TRUE";
     private static final String JDBC_ACCESS_DB = JDBC_CREATE_DB;
     private static final String H2_DRIVER = "org.h2.Driver";
     private static final String INITIAL_ADMIN_USER = "sumo";
@@ -29,8 +29,9 @@ public class UserDatabase {
      * Creates a UserDatabase object and opens a database connection.
      */
     public UserDatabase() {
-        if (debug>0) System.out.printf("\nUserDatabase()");
+
         try {
+            new java.io.File(System.getProperty("user.home") + "/.sigmakee/database" + "/passwd").mkdirs();
             Class.forName(H2_DRIVER);
             this.connection = DriverManager.getConnection(JDBC_ACCESS_DB, INITIAL_ADMIN_USER, "");
             if (debug>0) System.out.println("init(): Opened PASSWD DB via: " + JDBC_ACCESS_DB);
