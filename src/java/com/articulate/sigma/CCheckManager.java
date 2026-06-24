@@ -8,6 +8,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -43,15 +44,13 @@ public class CCheckManager extends ThreadPoolExecutor {
 		ONGOING, DONE, QUEUED, NOCCHECK, ERROR
 	}
 
-	private Map<String, Map<String, Object>> checkedKBs = null;
-	private Map<String, String> ccheckQueue= null;
+	private final Map<String, Map<String, Object>> checkedKBs = new ConcurrentHashMap<>();
+	private final Map<String, String> ccheckQueue = new ConcurrentHashMap<>();
 	private static final Logger logger = Logger.getLogger(CCheckManager.class.getName());
 
 	public CCheckManager() {
+		
 		super(3, 3, 50000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(10));
-
-		ccheckQueue = new HashMap<>();
-		checkedKBs = new HashMap<>();
 	}
 
 	/** ***************************************************************
@@ -149,49 +148,46 @@ public class CCheckManager extends ThreadPoolExecutor {
 		else return CCheckStatus.NOCCHECK;
 	}
 
-    /** ***************************************************************
+	/** ***************************************************************
 	 * Main code that performs the consistency check on the KB.
 	 * @param kb - KB to be checked
-	 * @return the status of the check (whether it has been accepted or rejected)
+	 * @return the status of the check whether it has been accepted or rejected
 	 */
 	public CCheckStatus performConsistencyCheck(KB kb, String chosenEngine, String systemChosen,
 			String location, String language, int timeout) {
 
-		if (!ccheckQueue.containsKey(kb.name)) {
-			try {
-				String filename = "CCHECK_" + kb.name;
-				if (KBmanager.configuration.getBaseDir() != null)
-					filename = KBmanager.configuration.getBaseDir() + File.separator + filename;
-
-				// lines up the Runnable CCheck for execution
-				if (chosenEngine.equals("SoTPTP"))
-					super.execute(new CCheck(kb, filename, chosenEngine,
-							systemChosen, "hyperlinkedKIF", location, language,
-							timeout));
-				else
-					super.execute(new CCheck(kb, filename, chosenEngine, timeout));
-
-				ccheckQueue.put(kb.name, filename);
-
-				// remove this KB from checkedKBs because a new consistency check is being run for it.
-				if (checkedKBs.containsKey(kb.name))
-					checkedKBs.remove(kb.name);
-
-				logger.log(Level.INFO, "KB {0} has been added to the queue for consistency check.", kb.name);
-				return CCheckStatus.QUEUED;
-			}
-			catch (RejectedExecutionException e) {
-				logger.warning(e.getMessage());
-				return CCheckStatus.ERROR;
-			}
-			catch (Exception e) {
-				logger.warning(e.getMessage());
-				return CCheckStatus.ERROR;
-			}
-		}
-		else {
-			logger.log(Level.INFO, "KB {0}has been rejected for consistency check as it is already undergoing the check.", kb.name);
+		String filename = "CCHECK_" + kb.name;
+		if (KBmanager.configuration.getBaseDir() != null)
+			filename = KBmanager.configuration.getBaseDir() + File.separator + filename;
+		if (ccheckQueue.putIfAbsent(kb.name, filename) != null) {
+			logger.log(Level.INFO,
+					"KB {0} has been rejected for consistency check as it is already undergoing the check.",
+					kb.name);
 			return CCheckStatus.ONGOING;
+		}
+		try {
+			CCheck ccheck;
+			if ("SoTPTP".equals(chosenEngine)) {
+				ccheck = new CCheck(kb, filename, chosenEngine,
+						systemChosen, "hyperlinkedKIF", location, language, timeout);
+			}
+			else {
+				ccheck = new CCheck(kb, filename, chosenEngine, timeout);
+			}
+			checkedKBs.remove(kb.name);
+			super.execute(ccheck);
+			logger.log(Level.INFO, "KB {0} has been added to the queue for consistency check.", kb.name);
+			return CCheckStatus.QUEUED;
+		}
+		catch (RejectedExecutionException e) {
+			ccheckQueue.remove(kb.name, filename);
+			logger.warning(e.getMessage());
+			return CCheckStatus.ERROR;
+		}
+		catch (Exception e) {
+			ccheckQueue.remove(kb.name, filename);
+			logger.warning(e.getMessage());
+			return CCheckStatus.ERROR;
 		}
 	}
 
@@ -201,14 +197,21 @@ public class CCheckManager extends ThreadPoolExecutor {
 	 * @param r
 	 * @param t
 	 */
-	protected void afterExecute(CCheck r, Throwable t) {
+	@Override
+	protected void afterExecute(Runnable r, Throwable t) {
 
-                Map<String, Object> value = new HashMap<>();
-		value.put("timestamp", new Timestamp((new Date()).getTime()));
-		value.put("filename", ccheckQueue.get(r.getKBName()));
-		checkedKBs.put(r.getKBName(), value);
-		ccheckQueue.remove(r.getKBName());
-
-		super.afterExecute(r, t);
+		try {
+			if (r instanceof CCheck) {
+				CCheck ccheck = (CCheck) r;
+				Map<String, Object> value = new HashMap<>();
+				value.put("timestamp", new Timestamp((new Date()).getTime()));
+				value.put("filename", ccheckQueue.get(ccheck.getKBName()));
+				checkedKBs.put(ccheck.getKBName(), value);
+				ccheckQueue.remove(ccheck.getKBName());
+			}
+		}
+		finally {
+			super.afterExecute(r, t);
+		}
 	}
 }

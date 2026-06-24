@@ -662,9 +662,7 @@ public class UserDatabase {
 
         Path oldPath = Path.of(OLD_DB_DIR, fileName);
         Path newPath = Path.of(NEW_DB_DIR, fileName);
-
         if (!Files.exists(oldPath)) return;
-
         try {
             Files.move(oldPath, newPath, StandardCopyOption.ATOMIC_MOVE);
             System.out.println("UserDatabase.moveDatabaseFile(): moved " + oldPath + " to " + newPath);
