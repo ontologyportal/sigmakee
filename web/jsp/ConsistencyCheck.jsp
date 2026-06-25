@@ -62,7 +62,7 @@ if (StringUtil.emptyString(TPTPlang)) {
 
 String inferenceEngine = request.getParameter("inferenceEngine");
 if (StringUtil.emptyString(inferenceEngine))
-    inferenceEngine = "EPROVER";
+    inferenceEngine = "VAMPIRE";
 
 String chosenEngine = inferenceEngine;
 if ("Vampire".equalsIgnoreCase(chosenEngine))
@@ -114,6 +114,9 @@ if (!StringUtil.emptyString(maxAnswersStr)) {
         maxAnswers = 1;
     }
 }
+
+String checkModeStr = request.getParameter("checkMode");
+ConsistencyCheckManager.ConsistencyCheckMode checkMode = ConsistencyCheckManager.ConsistencyCheckMode.fromString(checkModeStr);
 
 List<String> availableProvers = TheoremProverController.availableProvers();
 
@@ -184,17 +187,20 @@ else if (status == ConsistencyCheckManager.ConsistencyCheckStatus.NOCCHECK && !s
     showConsistencyCheckForm = true;
 }
 else if (status == ConsistencyCheckManager.ConsistencyCheckStatus.NOCCHECK && submitCheck) {
-
     show.append("Chosen inference engine: ").append(chosenEngine).append("<br>");
     show.append("Chosen translation language: ").append(atpLanguage).append("<br>");
+    show.append("Consistency check mode: ").append(checkMode).append("<br>");
     show.append("Entered timeout: ").append(timeout).append(" seconds.<br>");
     show.append("Maximum answers: ").append(maxAnswers).append("<br>");
-
     if (StringUtil.emptyString(chosenEngine)) {
         show.append("Cannot start consistency check because no inference engine was chosen.");
     }
     else if ("EPROVER".equalsIgnoreCase(chosenEngine) && "THF".equalsIgnoreCase(atpLanguage)) {
         show.append("EProver does not support THF/HOL. Choose FOF/TFF or use Vampire/LEO.");
+    }
+    else if (checkMode == ConsistencyCheckManager.ConsistencyCheckMode.GLOBAL && !"VAMPIRE".equalsIgnoreCase(chosenEngine)) {
+        show.append("Global consistency check currently supports Vampire only. ")
+                .append("Choose Vampire or use Incremental mode.");
     }
     else {
         ConsistencyCheckManager.ConsistencyCheckStatus queueStatus =
@@ -209,8 +215,8 @@ else if (status == ConsistencyCheckManager.ConsistencyCheckStatus.NOCCHECK && su
                         dropOnePremise,
                         holUseModals,
                         timeout,
-                        maxAnswers);
-
+                        maxAnswers,
+                        checkMode);
         if (queueStatus == ConsistencyCheckManager.ConsistencyCheckStatus.QUEUED) {
             show.append(kb.name).append(" has been added to the queue for consistency checks.<br>");
             show.append("<p>[&nbsp; <a href='ConsistencyCheck.jsp?kb=")
@@ -260,6 +266,18 @@ else {
 <% if (showConsistencyCheckForm) { %>
     <%@ include file="fragments/tp/TranslationSelector.jspf" %>
     <%@ include file="fragments/tp/ProverSelector.jspf" %>
+    <br>
+    <b>Consistency-check mode</b><br>
+    <label>
+        <input type="radio" name="checkMode" value="GLOBAL" checked>
+        Global check: run the whole KB once as axioms only, no conjecture.
+    </label>
+    <br>
+    <label>
+        <input type="radio" name="checkMode" value="INCREMENTAL">
+        Incremental check: test each formula for redundancy and contradiction before adding it.
+    </label>
+    <br><br>
     <input type="hidden" name="override" value="true">
     <input type="hidden" name="kb" value="<%= kbName %>">
     <input type="hidden" name="lang" value="<%= lang %>">

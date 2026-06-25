@@ -27,6 +27,24 @@ public class ConsistencyCheckManager extends ThreadPoolExecutor {
         ONGOING, DONE, QUEUED, NOCCHECK, ERROR
     }
 
+    /****************************************************************
+     * Mode for a KB consistency check.
+     */
+    public enum ConsistencyCheckMode {
+        GLOBAL, INCREMENTAL;
+
+        /****************************************************************
+         * Parses a consistency-check mode.
+         * @param value submitted mode value
+         * @return parsed mode, defaulting to GLOBAL
+         */
+        public static ConsistencyCheckMode fromString(String value) {
+            
+            if ("INCREMENTAL".equalsIgnoreCase(value)) return INCREMENTAL;
+            return GLOBAL;
+        }
+    }
+
     private final Map<String, Map<String, Object>> checkedKBs = new ConcurrentHashMap<>();
     private final Map<String, String> consistencyCheckQueue = new ConcurrentHashMap<>();
     private static final Logger logger = Logger.getLogger(ConsistencyCheckManager.class.getName());
@@ -48,7 +66,6 @@ public class ConsistencyCheckManager extends ThreadPoolExecutor {
 
         if (!checkedKBs.containsKey(kbName))
             return null;
-
         Map<String, Object> value = checkedKBs.get(kbName);
         if (value == null)
             return null;
@@ -64,42 +81,29 @@ public class ConsistencyCheckManager extends ThreadPoolExecutor {
     public String ccheckResults(String kbName) {
 
         logger.entering("ConsistencyCheckManager", "ccheckResults", "kbName = " + kbName);
-
         String filename = null;
         boolean ongoing = consistencyCheckQueue.containsKey(kbName);
-
-        if (ongoing)
-            filename = consistencyCheckQueue.get(kbName);
+        if (ongoing) filename = consistencyCheckQueue.get(kbName);
         else if (checkedKBs.containsKey(kbName)) {
             Map<String, Object> value = checkedKBs.get(kbName);
-            if (value != null)
-                filename = (String) value.get("filename");
+            if (value != null) filename = (String) value.get("filename");
         }
-
         if (filename == null) {
             logger.exiting("ConsistencyCheckManager", "ccheckResults", null);
             return null;
         }
-
         StringBuilder result = new StringBuilder();
-
         try (Reader fr = new FileReader(filename);
              BufferedReader br = new BufferedReader(fr)) {
-
             String line;
-            while ((line = br.readLine()) != null)
-                result.append(line).append("\n");
-
-            if (ongoing && result.length() > 0 && !result.toString().contains("</ConsistencyCheck>"))
-                result.append("  </entries>\n</ConsistencyCheck>\n");
-
+            while ((line = br.readLine()) != null) result.append(line).append("\n");
+            if (ongoing && result.length() > 0 && !result.toString().contains("</ConsistencyCheck>")) result.append("  </entries>\n</ConsistencyCheck>\n");
             logger.exiting("ConsistencyCheckManager", "ccheckResults", result.toString());
             return result.toString();
         }
         catch (Exception ex) {
             logger.warning(ex.getMessage());
         }
-
         logger.exiting("ConsistencyCheckManager", "ccheckResults", null);
         return null;
     }
@@ -111,12 +115,8 @@ public class ConsistencyCheckManager extends ThreadPoolExecutor {
      */
     public ConsistencyCheckStatus ccheckStatus(String kbName) {
 
-        if (consistencyCheckQueue.containsKey(kbName))
-            return ConsistencyCheckStatus.ONGOING;
-
-        if (checkedKBs.containsKey(kbName))
-            return ConsistencyCheckStatus.DONE;
-
+        if (consistencyCheckQueue.containsKey(kbName)) return ConsistencyCheckStatus.ONGOING;
+        if (checkedKBs.containsKey(kbName)) return ConsistencyCheckStatus.DONE;
         return ConsistencyCheckStatus.NOCCHECK;
     }
 
@@ -145,37 +145,34 @@ public class ConsistencyCheckManager extends ThreadPoolExecutor {
                                                           boolean dropOnePremise,
                                                           boolean holUseModals,
                                                           int timeout,
-                                                          int maxAnswers) {
+                                                          int maxAnswers,
+                                                          ConsistencyCheckMode checkMode) {
 
-        String filename = "CCHECK_" + kb.name;
-        if (KBmanager.configuration.getBaseDir() != null)
-            filename = KBmanager.configuration.getBaseDir() + File.separator + filename;
-
+        if (checkMode == null) checkMode = ConsistencyCheckMode.GLOBAL;
+        String filename = "CCHECK_" + checkMode + "_" + kb.name;
+        if (KBmanager.configuration.getBaseDir() != null) filename = KBmanager.configuration.getBaseDir() + File.separator + filename;
         if (consistencyCheckQueue.putIfAbsent(kb.name, filename) != null) {
-            logger.log(Level.INFO,
-                    "KB {0} has been rejected for consistency check because it is already being checked.",
-                    kb.name);
+            logger.log(Level.INFO, "KB {0} has been rejected for consistency check because it is already being checked.", kb.name);
             return ConsistencyCheckStatus.ONGOING;
         }
-
+        if (checkMode == null) checkMode = ConsistencyCheckMode.GLOBAL;
         try {
             ConsistencyCheck consistencyCheck = new ConsistencyCheck(
-                    kb,
-                    filename,
-                    userSessionId,
-                    proverType,
-                    language,
-                    vampireMode,
-                    closedWorldAssumption,
-                    modusPonens,
-                    dropOnePremise,
-                    holUseModals,
-                    timeout,
-                    maxAnswers);
-
+                kb,
+                filename,
+                userSessionId,
+                proverType,
+                language,
+                vampireMode,
+                closedWorldAssumption,
+                modusPonens,
+                dropOnePremise,
+                holUseModals,
+                timeout,
+                maxAnswers,
+                checkMode);
             checkedKBs.remove(kb.name);
             super.execute(consistencyCheck);
-
             logger.log(Level.INFO, "KB {0} has been added to the consistency-check queue.", kb.name);
             return ConsistencyCheckStatus.QUEUED;
         }
