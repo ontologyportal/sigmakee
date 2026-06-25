@@ -154,7 +154,16 @@ public class TheoremProverController {
      * @return ATPResult object containing the outcome of the EProver Query
      */
     private ATPResult askEProver(ATPQuery query) {
-        EProver eprover = new EProver(query.getKb(), query.getLanguage().name(), query.getTimeout(), query.getMaxAnswers(), query.getUserSessionId());
+
+        String lang = "TFF".equals(query.getLanguage().name()) ? "tff" : "fof";
+        if ("THF".equals(query.getLanguage().name()))
+            return ATPResult.notRun("EProver", "EProver does not support THF/HOL.");
+        EProver eprover = new EProver(
+                query.getKb(),
+                lang,
+                query.getTimeout(),
+                query.getMaxAnswers(),
+                query.getUserSessionId());
         eprover.askEProver(query.getQuery());
         return eprover.getResult();
     }

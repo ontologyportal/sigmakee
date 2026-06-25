@@ -17,7 +17,6 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 
 package com.articulate.sigma;
 
-import com.articulate.sigma.CCheckManager.CCheckStatus;
 import com.articulate.sigma.VerbNet.VerbNet;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
@@ -55,7 +54,6 @@ public class KBmanager implements Serializable {
     protected static final String CONFIG_FILE = "config.xml";
     protected static final String KB_MANAGER_SER = "kbmanager.ser";
 
-    private static final CCheckManager ccheckManager = new CCheckManager();
     private static KBmanager manager = new KBmanager();
 
     // preferences set before initialization that override values in config.xml
@@ -486,24 +484,6 @@ public class KBmanager implements Serializable {
         catch (IOException ex) {
             LoggingUtils.log("ERROR", Arrays.toString(ex.getStackTrace()));
         }
-    }
-
-    /*****************************************************************
-     */
-    public static CCheckStatus initiateCCheck(KB kb, String chosenEngine, String systemChosen, String location,
-            String language, int timeout) {
-
-        return ccheckManager.performConsistencyCheck(kb, chosenEngine, systemChosen, location, language, timeout);
-    }
-
-    public static String ccheckResults(String kbName) {
-
-        return ccheckManager.ccheckResults(kbName);
-    }
-
-    public static CCheckStatus ccheckStatus(String kbName) {
-
-        return ccheckManager.ccheckStatus(kbName);
     }
 
     /*****************************************************************

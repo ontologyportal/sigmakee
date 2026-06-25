@@ -32,56 +32,51 @@ Map theMap = null;
 HttpSession hsObj = request.getSession();
 hsObj.setMaxInactiveInterval(-1);
 kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + lang + "&kb=" + kbName + "&flang=" + flang;
-//InterfaceTPTP.init();
-//List<String> systemListBuiltIn = InterfaceTPTP.systemListBuiltIn;
-//List<String> systemListLocal = InterfaceTPTP.systemListLocal;
-//List<String> systemListRemote = InterfaceTPTP.systemListRemote;
-//String defaultSystemBuiltIn = InterfaceTPTP.defaultSystemBuiltIn;
-//String defaultSystemLocal = InterfaceTPTP.defaultSystemLocal;
-//String defaultSystemRemote = InterfaceTPTP.defaultSystemRemote;
-
 %>
-<%-- 
-<script type="text/javascript">//<![CDATA[
-  var tstp_dump;
-  var chosenLocation = "Local";
-  function openSoTSTP (dump) {
-    var tstp_url = 'http://www.cs.miami.edu/~tptp/cgi-bin/SystemOnTSTP';
-    var tstp_browser = window.open(tstp_url, '_blank');
-    tstp_dump = dump;
-  }
-
-  function getTSTPDump () {
-    return tstp_dump;
-  }
-
-  function toggleList (location) {
-  		chosenLocation = location;
-
-        var obj;
-
-        obj = window.document.getElementById("systemListLocal");
-        obj.style.display='none';
-        obj = window.document.getElementById("systemListBuiltIn");
-        obj.style.display='none';
-        obj = window.document.getElementById("systemListRemote");
-		obj.style.display='none';
-        obj = window.document.getElementById("systemList" + location);
-        obj.style.display='inline';
-  }
-
-  function submit (location) { }
-</script> --%>
-
 <html>
 <HEAD><TITLE> Knowledge base Browser</TITLE></HEAD>
 <BODY BGCOLOR="#FFFFFF">
 <FORM action="CCheck.jsp">
-    <%
-        String pageName = "CCheck";
-        String pageString = "Knowledge Based Consistency Check";
-    %>
-    <%@include file="fragments/universal/CommonHeader.jspf" %>
+<%
+    String pageName = "CCheck";
+    String pageString = "Knowledge Based Consistency Check";
+%>
+<%@include file="fragments/universal/CommonHeader.jspf" %>
+<%
+String translationMode = request.getParameter("translationMode");
+if (StringUtil.emptyString(translationMode))
+    translationMode = "FOL";
+String TPTPlang = request.getParameter("TPTPlang");
+if (StringUtil.emptyString(TPTPlang)) {
+    if ("HOL".equalsIgnoreCase(translationMode)) TPTPlang = "thf";
+    else TPTPlang = "fof";
+}
+
+String cwa = request.getParameter("CWA");
+boolean closedWorldAssumption = "yes".equalsIgnoreCase(cwa);
+
+String inferenceEngine = request.getParameter("inferenceEngine");
+if (StringUtil.emptyString(inferenceEngine)) inferenceEngine = "EPROVER";
+
+String vampireMode = request.getParameter("vampireMode");
+if (StringUtil.emptyString(vampireMode)) vampireMode = "CASC";
+
+boolean modusPonens = "yes".equalsIgnoreCase(request.getParameter("ModusPonens"));
+Boolean dropOnePremise = "true".equalsIgnoreCase(request.getParameter("dropOnePremise"));
+boolean holUseModals = "yes".equalsIgnoreCase(request.getParameter("HolUseModals"));
+
+String timeoutStr = request.getParameter("timeout");
+int timeout = 30;
+if (!StringUtil.emptyString(timeoutStr))
+    timeout = Integer.parseInt(timeoutStr);
+
+String maxAnswersStr = request.getParameter("maxAnswers");
+int maxAnswers = 1;
+if (!StringUtil.emptyString(maxAnswersStr))
+    maxAnswers = Integer.parseInt(maxAnswersStr);
+
+List<String> availableProvers = TheoremProverController.availableProvers();
+%>
 
 <%
 show = new StringBuilder();
@@ -92,59 +87,111 @@ if (!StringUtil.emptyString(action))
 if (override != null && override.equalsIgnoreCase("true"))
     overrideValue = true;
 
-if (KBmanager.ccheckStatus(kb.name) == CCheckStatus.ONGOING) {
-    show.append(HTMLformatter.formatConsistencyCheck(kb.name + " is currently undergoing checks.  Partial results are available.", KBmanager.ccheckResults(kb.name), lang, pageNum));
+CCheckManager ccheckManager = (CCheckManager) application.getAttribute("ccheckManager");
+if (ccheckManager == null) {
+    synchronized (application) {
+        ccheckManager = (CCheckManager) application.getAttribute("ccheckManager");
+        if (ccheckManager == null) {
+            ccheckManager = new CCheckManager();
+            application.setAttribute("ccheckManager", ccheckManager);
+        }
+    }
+}
+
+if (ccheckManager.ccheckStatus(kb.name) == CCheckStatus.ONGOING) {
+    show.append(HTMLformatter.formatConsistencyCheck(kb.name + " is currently undergoing checks.  Partial results are available.", ccheckManager.ccheckResults(kb.name), lang, pageNum));
     show.append("<p>[&nbsp; <a href='CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&page=" + pageNum + "&override=false'>Refresh</a>&nbsp; ] </p>");
 }
-else if (KBmanager.ccheckStatus(kb.name) == CCheckStatus.DONE)
-    show.append(HTMLformatter.formatConsistencyCheck(kb.name + "  has been checked. Results can be found below. [<a href=CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&override=true&page=0>Restart Check</a>]", KBmanager.ccheckResults(kb.name), lang, pageNum));
-else if (KBmanager.ccheckStatus(kb.name) == CCheckStatus.QUEUED) {
+else if (ccheckManager.ccheckStatus(kb.name) == CCheckStatus.DONE)
+    show.append(HTMLformatter.formatConsistencyCheck(kb.name + "  has been checked. Results can be found below. [<a href=CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&override=true&page=0>Restart Check</a>]", ccheckManager.ccheckResults(kb.name), lang, pageNum));
+else if (ccheckManager.ccheckStatus(kb.name) == CCheckStatus.QUEUED) {
     show.append(kb.name + " has been added to the queue for consistency checks.");
     show.append("<p>[&nbsp; <a href='CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&page=" + pageNum + "&override=false'>Refresh</a>&nbsp; ] </p>");
 }
-else if (!overrideValue && KBmanager.ccheckStatus(kb.name) == CCheckStatus.NOCCHECK) {
-    show.append("Please set timeout value and choose an inference engine.<br>");
-    show.append("Query time limit: <input TYPE='TEXT' NAME='timeout' VALUE='30'><BR>");
-    show.append("Choose an inference engine:<BR>");
-    show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='EProver' checked>EProver<br>");
-    show.append("<INPUT TYPE=RADIO NAME='inferenceEngine' VALUE='LeoLocal'>LEO-II local (experimental)<BR>");
-    show.append("<br><input type='submit' name='action' value='Submit Consistency Check' />");
+else if (!overrideValue && ccheckManager.ccheckStatus(kb.name) == CCheckStatus.NOCCHECK) {
+    show.append("Please choose translation and prover settings.<br>");
+    show.append("__SHOW_CCHECK_FORM__");
 }
-else if (overrideValue && KBmanager.ccheckStatus(kb.name) == CCheckStatus.NOCCHECK) {
-    String chosenEngine = request.getParameter("inferenceEngine");
+else if (overrideValue && ccheckManager.ccheckStatus(kb.name) == CCheckStatus.NOCCHECK) {
+    String chosenEngine = inferenceEngine;
+    if ("Vampire".equalsIgnoreCase(chosenEngine)) chosenEngine = "VAMPIRE";
+    else if ("EProver".equalsIgnoreCase(chosenEngine) || "E".equalsIgnoreCase(chosenEngine)) chosenEngine = "EPROVER";
+    else if ("LeoLocal".equalsIgnoreCase(chosenEngine) || "LEO-III".equalsIgnoreCase(chosenEngine)) chosenEngine = "LEO";
     String systemChosen = "";
-    String timeoutStr = request.getParameter("timeout");
     boolean ccheck = false;
     String location = "";
-    int timeout = 30;
-
-    if (timeoutStr != null && !timeoutStr.equals(""))
-        timeout = Integer.parseInt(timeoutStr);
-
-    if (chosenEngine == null || chosenEngine.equals(""))
-        show.append("Cannot start consistency check as no inference engine was chosen.");
-    else
-        ccheck = true;
-
+    if (StringUtil.emptyString(chosenEngine)) show.append("Cannot start consistency check as no inference engine was chosen.");
+    else ccheck = true;
     if (ccheck) {
+        String atpLanguage;
+        if ("HOL".equalsIgnoreCase(translationMode)) atpLanguage = "THF";
+        else if ("tff".equalsIgnoreCase(TPTPlang)) atpLanguage = "TFF";
+        else atpLanguage = "FOF";
+        if ("LEO".equalsIgnoreCase(chosenEngine)) atpLanguage = "THF";
+
         show.append("Chosen inference engine: " + chosenEngine + "<br>");
+        show.append("Chosen translation language: " + atpLanguage + "<br>");
         show.append("Entered timeout: " + timeout + " seconds.<br>");
-        if (KBmanager.initiateCCheck(kb, chosenEngine, systemChosen, location, lang, timeout) == CCheckStatus.QUEUED) {
+        show.append("Maximum answers: " + maxAnswers + "<br>");
+
+        if ("EPROVER".equalsIgnoreCase(chosenEngine) && "THF".equalsIgnoreCase(atpLanguage)) {
+            show.append("EProver does not support THF/HOL. Choose FOF/TFF or use Vampire/LEO.");
+        }
+        else if (ccheckManager.performConsistencyCheck(
+                kb,
+                hsObj.getId(),
+                chosenEngine,
+                atpLanguage,
+                vampireMode,
+                closedWorldAssumption,
+                modusPonens,
+                Boolean.TRUE.equals(dropOnePremise),
+                holUseModals,
+                timeout,
+                maxAnswers) == CCheckStatus.QUEUED) {
             show.append(kb.name + " has been added to the queue for consistency checks. <br>");
             show.append("<p>[&nbsp; <a href='CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&page=" + pageNum + "&override=false'>Refresh</a>&nbsp; ] </p>");
         }
-        else
-            show.append("Error trying to start consistency check for " + kb.name + ". Please try again.");
+        else show.append("Error trying to start consistency check for " + kb.name + ". Please try again.");
     }
 }
-else
-    show.append("Error trying to start consistency check for " + kb.name + ". Please try agian.");
+else show.append("Error trying to start consistency check for " + kb.name + ". Please try agian.");
 
 show.append("</form>");
 %>
 
-<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
-  <%=show.toString() %><BR>
+<table ALIGN='LEFT' WIDTH='50%'>
+    <tr>
+        <TD BGCOLOR='#A8BACF'>
+            <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0>
+        </TD>
+    </tr>
+</table>
+<BR><BR>
+
+<%
+String showString = show.toString();
+boolean showCCheckForm = showString.contains("__SHOW_CCHECK_FORM__");
+showString = showString.replace("__SHOW_CCHECK_FORM__", "");
+%>
+
+<%=showString%>
+
+<% if (showCCheckForm) { %>
+    <%@ include file="fragments/universal/TranslationSelector.jspf" %>
+    <%@ include file="fragments/universal/ProverSelector.jspf" %>
+
+    <input type="hidden" name="override" value="true">
+    <input type="hidden" name="kb" value="<%=kbName%>">
+    <input type="hidden" name="lang" value="<%=lang%>">
+    <input type="hidden" name="flang" value="<%=flang%>">
+    <input type="hidden" name="page" value="0">
+
+    <br>
+    <input type="submit" name="action" value="Submit Consistency Check">
+<% } %>
+
+<BR>
 <%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>
