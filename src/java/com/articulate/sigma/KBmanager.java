@@ -56,8 +56,6 @@ public class KBmanager implements Serializable {
 
     private static KBmanager manager = new KBmanager();
 
-    // preferences set before initialization that override values in config.xml
-    public static Map<String,String> prefOverride = new HashMap<>();
     public static boolean initialized = false;
     public static boolean initializing = false;
     public static boolean debug = false;
@@ -66,7 +64,6 @@ public class KBmanager implements Serializable {
     public Prover prover = Prover.VAMPIRE;
     public Map<String,KB> kbs = new HashMap<>();
 
-    private final Map<String,String> preferences = new HashMap<>();
     private String error = "";
 
     /** Build version loaded from version.properties packaged in the WAR/JAR. */
@@ -142,18 +139,18 @@ public class KBmanager implements Serializable {
 
     /*****************************************************************
      * Check whether KB constituents/config/source code are newer than serialized version.
-     * @param configuration SimpleElement representing config.xml
-     * @return true if serialized cache is missing or older than constituents/config/source
+     * @return true if serialized cache is missing or older than constituents/config/source.
      */
-    public static boolean isSerializedOld(SimpleElement configuration) {
+    public static boolean isSerializedOld() {
 
-        String kbDir = KButilities.SIGMA_HOME + File.separator + "KBs";
-        File serfile = new File(kbDir + File.separator + "kbmanager.ser");
+        File serfile = new File(KBmanager.configuration.getKbDir(), KB_MANAGER_SER);
         if (!serfile.exists() || serfile.length() == 0) return true;
         Date kbserDate = new Date(serfile.lastModified());
-        Date newestKbSourceDate = newestConfigOrConstituentDate(configuration);
+        Date newestKbSourceDate = newestConfigOrConstituentDate();
         Date newestCodeDate = newestSigmakeeCodeDate();
-        Date newestSourceDate = newestKbSourceDate.after(newestCodeDate) ? newestKbSourceDate : newestCodeDate;
+        Date newestSourceDate = newestKbSourceDate.after(newestCodeDate)
+                ? newestKbSourceDate
+                : newestCodeDate;
         return kbserDate.compareTo(newestSourceDate) < 0;
     }
 
@@ -238,81 +235,88 @@ public class KBmanager implements Serializable {
 
     /*****************************************************************
      * Return the newest modified date among config.xml and constituent files.
-     * @param constituentFiles KB constituent file paths
-     * @return newest modified date among config.xml and constituents
+     * @return newest modified date among config.xml and constituents.
      */
     public static Date newestConfigOrConstituentDate() {
 
-        String base = KButilities.SIGMA_HOME;
-        return newestConfigOrConstituentDate(base + File.separator + "KBs");
+        return newestConfigOrConstituentDate(false);
     }
 
     /*****************************************************************
      * Return the newest modified date among config.xml and constituent files.
-     * @param constituentFiles KB constituent file paths
-     * @return newest modified date among config.xml and constituents
+     * @param ignoreUserAssertions whether to skip dynamic user/session assertion files.
+     * @return newest modified date among config.xml and constituents.
      */
-    private static Date newestConfigOrConstituentDate(String configFilePath) {
+    private static Date newestConfigOrConstituentDate(boolean ignoreUserAssertions) {
 
-        SimpleElement configuration = KBmanager.getMgr().readConfiguration(configFilePath);
-        return newestConfigOrConstituentDate(configuration);
-    }
-
-
-    /*****************************************************************
-     * Return the newest modified date among config.xml and constituent files.
-     * @param constituentFiles KB constituent file paths
-     * @return newest modified date among config.xml and constituents
-     */
-    private static Date newestConfigOrConstituentDate(SimpleElement configuration) {
-
-        List<String> allConstituents = new ArrayList<>();
-        for (List<String> kbFiles : kbFilenamesFromXML(configuration)) allConstituents.addAll(kbFiles);
-        String kbDir = KButilities.SIGMA_HOME + File.separator + "KBs";
-        File configFile = new File(kbDir + File.separator + "config.xml");
-        long newest = configFile.lastModified();
-        for (String constituent : allConstituents) {
-            File constituentFile = new File(constituent);
-            newest = Math.max(newest, constituentFile.lastModified());
-        }
-        return new Date(newest);
-    }
-
-    public static Date newestBaseConfigOrConstituentDateIgnoringUserAssertions() {
-
-        String kbDir = KButilities.SIGMA_HOME + File.separator + "KBs";
-        SimpleElement configuration = KBmanager.getMgr().readConfiguration(kbDir);
-
-        List<String> allConstituents = new ArrayList<>();
-
-        for (List<String> kbFiles : kbFilenamesFromXML(configuration)) {
-            allConstituents.addAll(kbFiles);
-        }
-
-        File configFile = new File(kbDir + File.separator + "config.xml");
+        File configFile = new File(KBmanager.configuration.getConfigFilePath());
         long newest = configFile.lastModified();
         String newestPath = configFile.getAbsolutePath();
-
-        for (String constituent : allConstituents) {
-
-            if (isUserAssertionOrTempInferenceFile(constituent)) {
+        for (String constituent : configuredConstituentPaths()) {
+            if (ignoreUserAssertions && isUserAssertionOrTempInferenceFile(constituent)) {
                 System.out.println("Skipping dynamic inference file: " + constituent);
                 continue;
             }
-
             File constituentFile = new File(constituent);
             long modified = constituentFile.lastModified();
-
             if (modified > newest) {
                 newest = modified;
                 newestPath = constituentFile.getAbsolutePath();
             }
         }
-
-        System.out.println("Newest base source for TPTP freshness: " + newestPath);
-        System.out.println("Newest base source modified: " + new Date(newest));
-
+        if (ignoreUserAssertions) {
+            System.out.println("Newest base source for TPTP freshness: " + newestPath);
+            System.out.println("Newest base source modified: " + new Date(newest));
+        }
         return new Date(newest);
+    }
+
+    /*****************************************************************
+     * Returns all configured KB constituent paths resolved against kbDir.
+     * @return resolved constituent paths.
+     */
+    private static List<String> configuredConstituentPaths() {
+
+        List<String> result = new ArrayList<>();
+        Map<String, List<String>> allConstituents =
+                KBmanager.configuration.getAllKbConstituentLists();
+        if (allConstituents == null)
+            return result;
+        for (List<String> kbFiles : allConstituents.values()) {
+            for (String filename : kbFiles) {
+                result.add(resolveKbConstituentPath(filename));
+            }
+        }
+        return result;
+    }
+
+    /*****************************************************************
+     * Resolves a KB constituent path against kbDir if relative.
+     * @param filename configured constituent filename.
+     * @return resolved constituent path.
+     */
+    private static String resolveKbConstituentPath(String filename) {
+
+        File file = new File(filename);
+        if (!file.isAbsolute())
+            file = new File(KBmanager.configuration.getKbDir(), filename);
+        return file.getPath();
+    }
+
+    /*****************************************************************
+     * Return the newest modified date among config.xml and constituent files.
+     * @param configDirPath directory containing config.xml.
+     * @return newest modified date among config.xml and constituents.
+     */
+    private static Date newestConfigOrConstituentDate(String configDirPath) {
+
+        KBmanager.getMgr().readConfiguration(configDirPath);
+        return newestConfigOrConstituentDate();
+    }
+
+    public static Date newestBaseConfigOrConstituentDateIgnoringUserAssertions() {
+
+        return newestConfigOrConstituentDate(true);
     }
 
     private static boolean isUserAssertionOrTempInferenceFile(String path) {
@@ -365,7 +369,6 @@ public class KBmanager implements Serializable {
             ex.printStackTrace();
             return false;
         }
-        manager.preferences.putAll(prefOverride);
         return true;
     }
 
@@ -423,156 +426,29 @@ public class KBmanager implements Serializable {
     }
 
     /*****************************************************************
-     * Set default attribute values if not in the configuration file.
+     * Loads all KBs from the typed Configuration object.
      */
-    public void setDefaultAttributes() {
+    private void loadKBsFromConfiguration() {
 
-        try {
-            String sep = File.separator;
-            String base = KButilities.SIGMA_HOME;
-            String tptpHome = System.getenv("TPTP_HOME");
-            String systemsHome = System.getenv("SYSTEMS_HOME");
-            if (StringUtil.emptyString(base)) base = System.getProperty("user.dir");
-            if (StringUtil.emptyString(tptpHome)) tptpHome = System.getProperty("user.dir");
-            if (StringUtil.emptyString(systemsHome)) systemsHome = System.getProperty("user.dir");
-            String tomcatRoot = System.getenv("CATALINA_HOME");
-            if (StringUtil.emptyString(tomcatRoot)) tomcatRoot = System.getProperty("user.dir");
-            File tomcatRootDir = new File(tomcatRoot);
-            File baseDir = new File(base);
-            File tptpHomeDir = new File(tptpHome);
-            File systemsDir = new File(systemsHome);
-            File kbDir = new File(baseDir, "KBs");
-            File inferenceTestDir = new File(kbDir, "tests");
-            File logDir = new File(baseDir, "logs");
-            logDir.mkdirs();
-            File testOutputDir = new File(tomcatRootDir, ("webapps" + sep + "sigma" + sep + "tests"));
-            preferences.put("baseDir",baseDir.getCanonicalPath());
-			preferences.put("tptpHomeDir",tptpHomeDir.getCanonicalPath());
-			preferences.put("systemsDir",systemsDir.getCanonicalPath());
-			preferences.put("kbDir",kbDir.getCanonicalPath());
-			preferences.put("inferenceTestDir",inferenceTestDir.getCanonicalPath());
-            preferences.put("testOutputDir",testOutputDir.getCanonicalPath());
-            File graphVizDir = new File("/usr/bin");
-            preferences.put("graphVizDir", graphVizDir.getCanonicalPath());
-            File graphDir = new File(tomcatRootDir, "webapps" + sep + "sigma" + sep + "graph");
-            if (!graphDir.exists()) graphDir.mkdirs();
-            preferences.put("graphDir", graphDir.getCanonicalPath());
-            String _OS = System.getProperty("os.name");
-            String ieExec = "e_ltb_runner";
-            if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")) ieExec = "e_ltb_runner.exe";
-            File ieDirFile = new File(baseDir, "inference");
-            File ieExecFile = (ieDirFile.isDirectory() ? new File(ieDirFile, ieExec) : new File(ieExec));
-            String leoExec = "leo";
-            File leoExecFile = (ieDirFile.isDirectory() ? new File(ieDirFile, leoExec) : new File(leoExec));
-            preferences.put("inferenceEngine",ieExecFile.getCanonicalPath());
-            preferences.put("leoExecutable",leoExecFile.getCanonicalPath());
-            preferences.put("loadCELT","no");
-            preferences.put("showcached","yes");
-            preferences.put("typePrefix","yes");
-            preferences.put("cache","yes");
-            preferences.put("TPTP","yes");
-            preferences.put("TPTPDisplay","no");
-            preferences.put("userBrowserLimit","25");
-            preferences.put("adminBrowserLimit","200");
-            preferences.put("port","8080");
-            preferences.put("hostname","localhost");
-            preferences.put("https","false");
-            preferences.put("sumokbname","SUMO");
-            preferences.put("logDir", logDir.getCanonicalPath());
-            preferences.put("logLevel", "warning");
+        Map<String, List<String>> allKbConstituents =
+                KBmanager.configuration.getAllKbConstituentLists();
+        if (allKbConstituents == null || allKbConstituents.isEmpty()) {
+            LoggingUtils.log("ERROR", "No KBs found in configuration.");
+            return;
         }
-        catch (IOException ex) {
-            LoggingUtils.log("ERROR", Arrays.toString(ex.getStackTrace()));
-        }
-    }
-
-    /*****************************************************************
-     * Loads preferences from config.xml
-     * @param configuration the config.xml file
-     */
-    private void preferencesFromXML(SimpleElement configuration) {
-
-        if (!configuration.getTagName().equals("configuration")) LoggingUtils.log("ERROR", "Bad tag: " + configuration.getTagName());
-        else {
-            SimpleElement element;
-            String name, value;
-            for (int i = 0; i < configuration.getChildElements().size(); i++) {
-                element = configuration.getChildElements().get(i);
-                if (element.getTagName().equals("preference")) {
-                    name = element.getAttribute("name");
-                    value = element.getAttribute("value");
-                    preferences.put(name,value);
-                }
-                else if (!element.getTagName().equals("kb")) LoggingUtils.log("ERROR", "Bad tag: " + element.getTagName());
+        for (Map.Entry<String, List<String>> entry : allKbConstituents.entrySet()) {
+            String kbName = entry.getKey();
+            if (StringUtil.emptyString(kbName)) {
+                LoggingUtils.log("ERROR", "Skipping KB with empty name.");
+                continue;
             }
-        }
-    }
-
-    /*****************************************************************
-     * Load KBs from config.xml preferences
-     * @param configuration the config.xml file
-     */
-    private static void kbsFromXML(SimpleElement configuration) {
-
-        long milis = System.currentTimeMillis();
-        boolean SUMOKBexists = false;
-        if (!configuration.getTagName().equals("configuration")) LoggingUtils.log("ERROR", "Bad tag: " + configuration.getTagName());
-        else {
-            String kbName, filename;
-            List<String> constituentsToAdd;
-            boolean useCacheFile;
-            for (SimpleElement element : configuration.getChildElements()) {
-                if (element.getTagName().equals("kb")) {
-                    kbName = element.getAttribute("name");
-                    if (kbName.equals(getMgr().getDefaultKbName())) SUMOKBexists = true;
-                    KBmanager.getMgr().addKB(kbName);
-                    constituentsToAdd = new ArrayList<>();
-                    useCacheFile = KBmanager.configuration.isCache();
-                    for (SimpleElement kbConst : element.getChildElements()) {
-                        if (!kbConst.getTagName().equals("constituent")) LoggingUtils.log("ERROR", "Bad tag: " + kbConst.getTagName());
-                        filename = kbConst.getAttribute("filename");
-                        if (!filename.startsWith((File.separator))) filename = KBmanager.configuration.getKbDir() + File.separator + filename;
-                        if (!StringUtil.emptyString(filename)) {
-                            if (KButilities.isCacheFile(filename) && useCacheFile) constituentsToAdd.add(filename);
-                            else constituentsToAdd.add(filename);
-                        }
-                    }
-                    KBmanager.getMgr().loadKB(kbName, constituentsToAdd);
-                }
+            List<String> constituentsToAdd = new ArrayList<>();
+            for (String filename : entry.getValue()) {
+                if (!StringUtil.emptyString(filename))
+                    constituentsToAdd.add(resolveKbConstituentPath(filename));
             }
+            loadKB(kbName, constituentsToAdd);
         }
-    }
-
-    /*****************************************************************
-     * Note that filenames that are not full paths are prefixed with the
-     * value of preference kbDir
-     */
-    private static List<List<String>> kbFilenamesFromXML(SimpleElement configuration) {
-
-        List<List<String>> result = new ArrayList<>();
-        if (!configuration.getTagName().startsWith("configuration")) LoggingUtils.log("ERROR", "Bad tag: " + configuration.getTagName() + ". expected <configuration>");
-        else {
-            List<String> kb;
-            String filename;
-            boolean useCacheFile;
-            for (SimpleElement element : configuration.getChildElements()) {;
-                if (element.getTagName().equals("kb")) {
-                    kb = new ArrayList<>();
-                    result.add(kb);
-                    useCacheFile = KBmanager.configuration.isCache();
-                    for (SimpleElement kbConst : element.getChildElements()) {
-                        if (!kbConst.getTagName().equals("constituent")) LoggingUtils.log("ERROR", "Bad tag: " + kbConst.getTagName() + ". expected <constituent>");
-                        filename = kbConst.getAttribute("filename");
-                        if (!filename.startsWith((File.separator))) filename = KBmanager.configuration.getKbDir() + File.separator + filename;
-                        if (!StringUtil.emptyString(filename)) {
-                            if (KButilities.isCacheFile(filename) && useCacheFile) kb.add(filename);
-                            else kb.add(filename);
-                        }
-                    }
-                }
-            }
-        }
-        return result;
     }
 
     /*****************************************************************
@@ -684,60 +560,6 @@ public class KBmanager implements Serializable {
      }
 
     /*****************************************************************
-     * @deprecated
-     */
-    @Deprecated
-    private void fromXML(SimpleElement configuration) {
-
-        if (!configuration.getTagName().equals("configuration"))
-        	LoggingUtils.log("ERROR", "Bad tag: " + configuration.getTagName());
-        else {
-            SimpleElement element, kbConst;
-            String name, value, kbName, filename;
-            List<String> constituentsToAdd;
-            boolean useCacheFile;
-            for (int i = 0; i < configuration.getChildElements().size(); i++) {
-                element = (SimpleElement) configuration.getChildElements().get(i);
-                if (element.getTagName().equals("preference")) {
-                    name = (String) element.getAttribute("name");
-                    if (!Configuration.CONFIG_KEYS.contains(name)) {
-                        LoggingUtils.log("ERROR", "Bad key: " + name);
-                        // continue; // set it anyway
-                    }
-                    value = (String) element.getAttribute("value");
-                    preferences.put(name,value);
-                }
-                else {
-                    if (element.getTagName().equals("kb")) {
-                        kbName = (String) element.getAttribute("name");
-                        addKB(kbName);
-                        constituentsToAdd = new ArrayList<>();
-                        useCacheFile = KBmanager.configuration.isCache();
-                        for (int j = 0; j < element.getChildElements().size(); j++) {
-                            kbConst = (SimpleElement) element.getChildElements().get(j);
-                            if (!kbConst.getTagName().equals("constituent"))
-                            	LoggingUtils.log("ERROR", "Bad tag: " + kbConst.getTagName());
-                            filename = (String) kbConst.getAttribute("filename");
-                            if (!StringUtil.emptyString(filename)) {
-                                if (KButilities.isCacheFile(filename)) {
-                                    if (useCacheFile)
-                                        constituentsToAdd.add(filename);
-                                }
-                                else
-                                    constituentsToAdd.add(filename);
-                            }
-                        }
-                        loadKB(kbName, constituentsToAdd);
-                    }
-                    else LoggingUtils.log("ERROR", "Bad tag: " + element.getTagName());
-                }
-            }
-            preferences.putAll(prefOverride);
-        }
-        KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName()).warnings.add(Diagnostics.printMissingConstituentDependencies(KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName()), ""));
-    }
-
-    /*****************************************************************
      * Copies an XML configuration file to the File out location.
      * @param in the file to copy
      * @param out the location to copy the in param to
@@ -758,48 +580,27 @@ public class KBmanager implements Serializable {
     }
 
     /*****************************************************************
-     * Reads an XML configuration file from the directory
-     * configDirPath, and tries to find a configuration file elsewhere
-     * if configDirPath is null.  The method initializeOnce() sets the
-     * preferences based on the contents of the configuration file.
-     * This routine has the side effect of setting the variable called
-     * "configuration".  It also creates the KBs directory and an
-     * empty configuration file if none exists.
+     * Loads the typed configuration from config.xml, creating a default file if needed.
+     * @param configDirPath directory containing config.xml.
      */
-    public SimpleElement readConfiguration(String configDirPath) {
+    private void readConfiguration(String configDirPath) {
 
-        SimpleElement configuration = null;
         try {
             String kbDirStr = configDirPath;
             if (StringUtil.emptyString(kbDirStr)) {
-                kbDirStr = KBmanager.configuration.getKbDir();
-                if (StringUtil.emptyString(kbDirStr)) kbDirStr = System.getProperty("user.dir");
+                kbDirStr = KButilities.SIGMA_HOME + File.separator + "KBs";
             }
             File kbDir = new File(kbDirStr);
-            if (!kbDir.exists()) {
+            if (!kbDir.exists())
                 kbDir.mkdirs();
-                preferences.put("kbDir", kbDir.getCanonicalPath());
-            }
-            String config_file = CONFIG_FILE;
-            File configFile = new File(kbDir, config_file);
-            File global_config = new File(kbDir, CONFIG_FILE);
-            if (!configFile.exists()) {
-                if (global_config.exists()) {
-                    copyFile(global_config, configFile);
-                    configFile = global_config;
-                }
-                else writeConfiguration();
-            }
-            try (Reader br = new BufferedReader(new FileReader(configFile))) {
-                SimpleDOMParser sdp = new SimpleDOMParser();
-                configuration = sdp.parse(br);
-            }
+            File configFile = new File(kbDir, CONFIG_FILE);
+            KBmanager.configuration = new Configuration(configFile.getCanonicalPath());
         }
         catch (IOException ex) {
-            LoggingUtils.log("ERROR", configDirPath + "):\n" + "  Exception parsing configuration file \n" + ex.getMessage());
+            LoggingUtils.log("ERROR", configDirPath + "):\n" +
+                    "  Exception reading configuration file \n" + ex.getMessage());
             ex.printStackTrace();
         }
-        return configuration;
     }
 
     /*****************************************************************
@@ -818,56 +619,67 @@ public class KBmanager implements Serializable {
     }
 
     /*****************************************************************
-     * Reads in the KBs and other parameters defined in the XML
-     * configuration file, or uses the default parameters.  If
-     * configFileDir is not null and a configuration file can be read
-     * from the directory, reinitialization is forced.
-     * @param configFileDir the directory of config.xml, typically ~/.sigmakee/KBs
+     * Reads in the KBs and other parameters defined in config.xml.
+     * @param configFileDir the directory of config.xml, typically ~/.sigmakee/KBs.
      */
     public void initializeOnce(String configFileDir) {
 
         long start = System.nanoTime();
         LoggingUtils.printSigmaWelcome();
         LoggingUtils.log("Initializing KBmanager!");
+
         boolean loaded = false;
         if (initializing || initialized) return;
+
         initializing = true;
-        KBmanager.getMgr().setPref("kbDir", configFileDir);
+
         try {
-            SimpleElement configuration = readConfiguration(configFileDir);
-            LoggingUtils.log("Loading English Lexicons...");
-            initializeLexicons(configFileDir);
-            if (configuration == null) throw new Exception("ERROR  [KBmanager.initializeOnce()]  Error in config.xml");
-            if (!KBmanager.configuration.isLoadFresh() && serializedExists() && !isSerializedOld(configuration)) {
-                LoggingUtils.log("Loading from serialized cache...");
+            readConfiguration(configFileDir);
+
+            LoggingUtils.log("Loading English Lexicons.");
+            initializeLexicons(KBmanager.configuration.getKbDir());
+
+            if (!KBmanager.configuration.isLoadFresh() &&
+                    serializedExists() &&
+                    !isSerializedOld()) {
+
+                LoggingUtils.log("Loading from serialized cache.");
                 loaded = loadSerialized();
+
                 if (loaded) {
-                    LoggingUtils.log("Building SUMO Term Taxonomy...");
+                    LoggingUtils.log("Building SUMO Term Taxonomy.");
                     for (KB kb : manager.kbs.values()) {
                         final KB kbFinal = kb;
                         KButilities.EXECUTOR_SERVICE.submit(() -> {
-                            try { kbFinal.kbCache.buildSymbolTaxonomy(); }
-                            catch (Exception e) {LoggingUtils.log("ERROR", "buildSymbolTaxonomy failed: " + e.getMessage());}
+                            try {
+                                kbFinal.kbCache.buildSymbolTaxonomy();
+                            }
+                            catch (Exception e) {
+                                LoggingUtils.log("ERROR",
+                                        "buildSymbolTaxonomy failed: " + e.getMessage());
+                            }
                         });
                     }
                 }
             }
+
             if (!loaded) {
-                LoggingUtils.log("Regenerating Fresh Cache...");
+                LoggingUtils.log("Regenerating Fresh Cache.");
                 manager = this;
-                KBmanager.getMgr().setPref("kbDir", configFileDir);
-                if (StringUtil.isNonEmptyString(configFileDir)) setConfiguration(configuration);
-                else setDefaultAttributes();
+                loadKBsFromConfiguration();
                 serialize();
             }
+
             initializing = false;
             initialized = true;
-            LoggingUtils.log("Starting TPTP Background Generation...");
+
+            LoggingUtils.log("Starting TPTP Background Generation.");
             TPTPGenerationManager.startBackgroundGeneration();
+
             if ("true".equalsIgnoreCase(System.getenv("TPTP_BG_WAIT"))) {
                 try {
                     Thread.sleep(120000);
-                } 
+                }
                 catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -879,7 +691,9 @@ public class KBmanager implements Serializable {
             ex.printStackTrace();
             return;
         }
+
         cleanupOrphanedSessionDirectories();
+
         double elapsedSeconds = (System.nanoTime() - start) / 1_000_000_000.0;
         LoggingUtils.log("Initialization completed in " + elapsedSeconds + " seconds!");
     }
@@ -937,36 +751,6 @@ public class KBmanager implements Serializable {
     }
 
     /*****************************************************************
-     * Sets instance fields by reading the xml found in the configuration file.
-     * @param configuration
-     */
-    public void setConfiguration(SimpleElement configuration) {
-
-        preferencesFromXML(configuration);
-        kbsFromXML(configuration);
-        String kbDir = KBmanager.configuration.getKbDir();
-        String sep = File.separator;
-        NLGUtils.init(kbDir);
-        String cwa = preferences.get("cwa");
-        SUMOKBtoTPTPKB.CWA = !StringUtil.emptyString(cwa) && cwa.equals("true");
-        if (kbs != null && !kbs.isEmpty() && !WordNet.initNeeded) {
-            File f3, f4;
-            for (String kbName : kbs.keySet()) {
-                f3 = new File(kbDir + sep + kbName + KB._userAssertionsString);
-                f3.delete();
-                f4 = new File(kbDir + sep + kbName + KB._userAssertionsTPTP);
-                f4.delete();
-                if (KBmanager.configuration.isTermFormats()) {
-                    WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
-                    WordNet.serialize();
-                }
-                else if (debug) LoggingUtils.log("term format to synsets is not activated");
-            }
-        }
-        else LoggingUtils.log("ERROR", "No kbs!");
-    }
-
-    /*****************************************************************
      * Double the backslash in a filename so that it can be saved to a text file and read back.
      * @param fname filename to escape
      * @return escaped filename
@@ -995,8 +779,8 @@ public class KBmanager implements Serializable {
 
     public void addKB(String name, boolean isVisible) {
 
-        KB kb = new KB(name, preferences.get("kbDir"), isVisible);
-        kbs.put(name.intern(),kb);
+        KB kb = new KB(name, KBmanager.configuration.getKbDir(), isVisible);
+        kbs.put(name.intern(), kb);
     }
 
     /*****************************************************************
@@ -1013,49 +797,51 @@ public class KBmanager implements Serializable {
     }
 
     /*****************************************************************
-     * Write the current configuration of the system.  Call
-     * writeConfiguration() on each KB object to write its manifest.
+     * Write the current configuration of the system.
      */
     public void writeConfiguration() throws IOException {
 
-        String dir = KBmanager.configuration.getKbDir();
-        File fDir = new File(dir);
-        String username = preferences.get("userName");
-        String userrole = preferences.get("userRole");
-        String config_file = (((username != null)
-                            && userrole != null
-                            && userrole.equalsIgnoreCase("administrator")
-                            && !username.equalsIgnoreCase("admin"))
-                            ? username + "_"
-                            : "") + CONFIG_FILE;
-        File file = new File(fDir, config_file);
-        String canonicalPath = file.getCanonicalPath();
-        SimpleElement configXML = new SimpleElement("configuration");
-        String key, value;
-        SimpleElement preference;
-        for (Map.Entry<String, String> element : preferences.entrySet()) {
-            key = element.getKey();
-            value = element.getValue();
-            if (!Arrays.asList("userName", "userRole").contains(key)) {
-                preference = new SimpleElement("preference");
-                preference.setAttribute("name", key);
-                preference.setAttribute("value", value);
-                configXML.addChildElement(preference);
+        try {
+            KBmanager.configuration.clearKbConstituentLists();
+            for (KB kb : kbs.values()) {
+                SimpleElement kbXML = kb.writeConfiguration();
+                String kbName = kbXML.getAttribute("name");
+                List<String> constituents = new ArrayList<>();
+                for (SimpleElement child : kbXML.getChildElements()) {
+                    if ("constituent".equals(child.getTagName())) {
+                        String filename = child.getAttribute("filename");
+                        if (!StringUtil.emptyString(filename))
+                            constituents.add(filename);
+                    }
+                }
+                KBmanager.configuration.setKbConstituentList(kbName, constituents);
             }
+            KBmanager.configuration.writeXml();
         }
-        SimpleElement kbXML;
-        for (KB kb : kbs.values()) {
-            kbXML = kb.writeConfiguration();
-            configXML.addChildElement(kbXML);
+        catch (RuntimeException e) {
+            LoggingUtils.log("ERROR", "Error writing configuration: " + e.getMessage());
+            throw new IOException("Error writing configuration", e);
         }
-        try (FileWriter fw = new FileWriter(file);
-            PrintWriter pw = new PrintWriter(fw)) {
-            pw.println(configXML.toFileString());
-        }
-        catch (IOException e) {
-            LoggingUtils.log("ERROR", "Error writing file " + canonicalPath + ".\n " + e.getMessage());
-            throw new IOException("Error writing file " + canonicalPath + ".\n " + e.getMessage());
-        }
+    }
+
+    /*****************************************************************
+     * Gets the active configuration for this KB manager.
+     * @return active configuration object.
+     */
+    public Configuration getConfiguration() {
+
+        return configuration;
+    }
+
+    /*****************************************************************
+     * Sets the active configuration for this KB manager.
+     * @param configuration active configuration object.
+     */
+    public void setConfiguration(Configuration configuration) {
+
+        if (configuration == null)
+            throw new IllegalArgumentException("configuration cannot be null");
+        this.configuration = configuration;
     }
 
     /*****************************************************************
@@ -1119,31 +905,6 @@ public class KBmanager implements Serializable {
             result.addAll(kb.availableLanguages());
         }
         return result;
-    }
-
-    /*****************************************************************
-     * Print all preferences to stdout
-     */
-    public void printPrefs() {
-
-        if (preferences == null || preferences.isEmpty()) LoggingUtils.log("WARN", "preference list is empty");
-        String value;
-        for (String key : preferences.keySet()) {
-            value = preferences.get(key);
-            LoggingUtils.log(key + " : " + value);
-        }
-    }
-
-    /*****************************************************************
-     * Set the preference to the given value.
-     */
-    public void setPref(String key, String value) {
-
-        if (!Configuration.CONFIG_KEYS.contains(key)) {
-            LoggingUtils.log("ERROR", "not in CONFIG_KEYS: " + key);
-            return;
-        }
-        preferences.put(key,value);
     }
 
     /*****************************************************************

@@ -24,7 +24,7 @@ public class KBcacheSymbolTest {
     private static KB buildKB(String... kifStatements) {
         KB kb = new KB("TestSymKB");
         kb.kbCache = new KBcache(kb);
-        KBmanager.getMgr().setPref("cacheDisjoint", "false");
+        KBmanager.getMgr().getConfiguration().setPreference("cacheDisjoint", "false");
         KIF kif = new KIF();
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);

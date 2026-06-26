@@ -1,8 +1,5 @@
 package com.articulate.sigma.tp;
 
-import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.KButilities;
-import com.articulate.sigma.SimpleElement;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.StringUtil;
@@ -212,32 +209,13 @@ public class GenPropFormulas {
             System.err.println("GenPropFormulas.run(): Error writing file " + fname + "\n" + e.getMessage());
             e.printStackTrace();
         }
-        KBmanager mgr = KBmanager.getMgr();
-        SimpleElement config = mgr.readConfiguration(KButilities.SIGMA_HOME + File.separator + "KBs");
-        for (SimpleElement el : config.getChildElements()) {
-            if (el.getTagName().equals("preference")) {
-                if (el.getAttribute("name").contains("vampire"))
-                    mgr.setPref("vampire", el.getAttribute("value"));
-                if (el.getAttribute("name").contains("eprover"))
-                    mgr.setPref("eprover", el.getAttribute("value"));
-            }
-        }
-        if (KBmanager.configuration.getVampireExec().isEmpty())
-            KBmanager.getMgr().setPref("vampire","/home/apease/workspace/vampire/vampire");
-        // Vampire.mode = Vampire.ModeType.CASC;
-        System.out.println("GenPropFormulas.run(): before vampire");
-        if (KBmanager.configuration.getEproverExec().isEmpty())
-            KBmanager.getMgr().setPref("eprover","/home/apease/workspace/eprover/PROVER/eprover");
-
         boolean sat = false;
         vamp.maxAnswers = 5;
         vamp.run(f);
         boolean proof = false;
         for (String s : vamp.output) {
-            if (s.contains("Refutation found"))
-                proof = true;
-            if (s.contains("Saturation"))
-                sat = true;
+            if (s.contains("Refutation found")) proof = true;
+            if (s.contains("Saturation")) sat = true;
         }
         if (proof) {
             System.out.println("run(): Proof found: statement " + stmts + " is a contradiction");

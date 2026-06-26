@@ -351,7 +351,7 @@ build.date=${git.commit.date}
 </echo>
     </target>
 
-    <target name="dist" depends="compile.test,generate-version" description="Create the *.war file and place in $CATALINA_HOME/webapps/sigma, create sigmakee.jar.">
+    <target name="dist" depends="compile.test,generate-version,api_doc" description="Create the *.war file and place in $CATALINA_HOME/webapps/sigma, create sigmakee.jar.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${user.name}"/>
             <attribute name="Specification-Title"
@@ -378,6 +378,7 @@ build.date=${git.commit.date}
              manifest="${manifest.mf}">
             <metainf file="LICENSE"/>
             <metainf file="${web.dir}/context.xml"/>
+            <zipfileset dir="${dist.javadoc.dir}" prefix="javadoc"/>
             <zipfileset dir="${web.dir}/jsp"/>
             <zipfileset file="${web.dir}/simple.css"/>
             <zipfileset dir="${web.dir}/pixmaps" prefix="pixmaps"/>
@@ -945,17 +946,33 @@ export PATH=$CATALINA_HOME/bin:$PATH
 export SIGMA_CP=$SIGMA_SRC/build/${web.app.name}.jar:$SIGMA_SRC/lib/*
 </echo>
     </target>
-
-    <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${dist.javadoc.dir}.">
-        <javadoc sourcepath="${src.dir}" destdir="${dist.javadoc.dir}" author="true" version="true" use="true"
-                 windowtitle="Sigma API Specification" splitindex="true" packagenames="com.articulate.sigma.*">
-            <classpath refid="compile.classpath"/>
-            <doctitle>Sigma API Specification</doctitle>
-            <header><![CDATA[<b>Sigma API Specification</b>]]></header>
+    <target name="api_doc" depends="compile" description="Build the JavaDocs and place in ${dist.javadoc.dir}.">
+        <delete dir="${dist.javadoc.dir}" failonerror="false"/>
+        <mkdir dir="${dist.javadoc.dir}"/>
+        <javadoc
+            sourcepath="${src.dir}"
+            destdir="${dist.javadoc.dir}"
+            author="true"
+            version="true"
+            use="true"
+            private="true"
+            splitindex="true"
+            windowtitle="SigmaKEE API Documentation"
+            packagenames="com.articulate.*"
+            encoding="UTF-8"
+            charset="UTF-8"
+            docencoding="UTF-8">
+            <classpath>
+                <path refid="compile.classpath"/>
+                <pathelement location="${build.classes}"/>
+                <pathelement location="${tptp.home}/build/classes"/>
+                <pathelement location="${tptp.home}/tptp.jar"/>
+            </classpath>
+            <doctitle>SigmaKEE API Documentation</doctitle>
+            <header><![CDATA[<b>SigmaKEE API Documentation</b>]]></header>
             <group title="Sigma" packages="com.articulate.sigma.*"/>
-            <group title="Sigma TPTPWorld" packages="TPTPWorld.*"/>
-            <group title="Sigma TPTP Parser" packages="tptp_parser.*"/>
+            <group title="Delphi" packages="com.articulate.delphi.*"/>
+            <arg value="-Xdoclint:none"/>
         </javadoc>
     </target>
-
 </project>

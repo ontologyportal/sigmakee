@@ -1438,7 +1438,7 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
 //     @Test
 //     public void testReportDisjointErrors() {
 
-//         KBmanager.getMgr().setPref("cacheDisjoint","true"); // ensure disjoint maps are built
+//         KBmanager.getMgr().getConfiguration().setPreference("cacheDisjoint","true"); // ensure disjoint maps are built
 
 //         System.out.printf("%n%s%n", "===================== PredVarInstTest.testReportDisjointErrors =====================");
 //         List<Formula> errors = new ArrayList<>(), errorsAll = new ArrayList<>();;

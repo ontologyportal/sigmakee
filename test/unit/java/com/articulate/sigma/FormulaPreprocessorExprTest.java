@@ -34,7 +34,7 @@ public class FormulaPreprocessorExprTest {
     private static KB buildKBWithSignatures(String... sigEntries) {
         KB kb = new KB("TestExprKB");
         kb.kbCache = new KBcache(kb);
-        KBmanager.getMgr().setPref("cacheDisjoint", "false");
+        KBmanager.getMgr().getConfiguration().setPreference("cacheDisjoint", "false");
         // Parse sigEntries: "predName arg0 arg1 ..."
         for (String entry : sigEntries) {
             String[] parts = entry.split(" ");
@@ -245,7 +245,7 @@ public class FormulaPreprocessorExprTest {
     @Test
     public void testPreProcessExpr_typePrefix_yes() {
         KB kb = buildKBWithSignatures("foo  Animal");
-        KBmanager.getMgr().setPref("typePrefix", "yes");
+        KBmanager.getMgr().getConfiguration().setPreference("typePrefix", "yes");
         Expr expr = parseExpr("(foo ?X)");
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -265,7 +265,7 @@ public class FormulaPreprocessorExprTest {
     @Test
     public void testPreProcessExpr_typePrefix_no() {
         KB kb = buildKBWithSignatures("foo  Animal");
-        KBmanager.getMgr().setPref("typePrefix", "no");
+        KBmanager.getMgr().getConfiguration().setPreference("typePrefix", "no");
         Expr expr = parseExpr("(foo ?X)");
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
@@ -285,7 +285,7 @@ public class FormulaPreprocessorExprTest {
     @Test
     public void testPreProcessExpr_isQuery_skipsTypePrefix() {
         KB kb = buildKBWithSignatures("foo  Animal");
-        KBmanager.getMgr().setPref("typePrefix", "yes");
+        KBmanager.getMgr().getConfiguration().setPreference("typePrefix", "yes");
         Expr expr = parseExpr("(foo ?X)");
         FormulaPreprocessor fp = new FormulaPreprocessor();
 

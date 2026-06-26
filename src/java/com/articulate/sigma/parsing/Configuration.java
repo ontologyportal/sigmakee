@@ -29,6 +29,7 @@ public class Configuration {
         "baseDir",
         "cache",
         "cacheDisjoint",
+        "cwa",
         "eproverExec",
         "graphDir",
         "graphVizDir",
@@ -37,6 +38,7 @@ public class Configuration {
         "inferenceTestDir",
         "jeditExec",
         "kbDir",
+        "loadFresh",
         "loadLexicons",
         "leoExec",
         "maxPredicateArity",
@@ -78,6 +80,7 @@ public class Configuration {
     public static final List<String> BOOLEAN_KEYS = Arrays.asList(
         "cache",
         "cacheDisjoint",
+        "cwa",
         "https",
         "loadFresh",
         "loadLexicons",
@@ -105,11 +108,23 @@ public class Configuration {
 
     /*****************************************************************
      * Returns a new configuration object populated with config.xml data.
+     * @param configPath path to config.xml.
      */
     public Configuration(String configPath) {
 
         this.configFilePath = configPath;
-        setAllFromXml();
+        File configFile = new File(configPath);
+        if (!configFile.exists()) {
+            File parent = configFile.getParentFile();
+            if (parent != null && !parent.exists())
+                parent.mkdirs();
+            setAllPreferencesAsDefault();
+            this.kbConstituentList = new LinkedHashMap<>();
+            writeXml();
+        }
+        else {
+            setAllFromXml();
+        }
     }
 
     /*****************************************************************
@@ -172,6 +187,8 @@ public class Configuration {
     public boolean isCache() { return getBooleanPreference("cache", true); }
 
     public boolean isCacheDisjoint() { return getBooleanPreference("cacheDisjoint", true); }
+
+    public boolean isCwa() { return getBooleanPreference("cwa", false); }
 
     public String getEproverExec() { return getStringPreference("eproverExec", ""); }
 
@@ -245,11 +262,16 @@ public class Configuration {
         String userHome = System.getProperty("user.home");
         String sigmaHome = System.getenv("SIGMA_HOME");
         String tomcatHome = System.getenv("CATALINA_HOME");
+        String systemsHome = System.getenv("SYSTEMS_HOME");
+        if (StringUtil.emptyString(sigmaHome)) sigmaHome = userHome + sep + ".sigmakee";
+        if (StringUtil.emptyString(tomcatHome)) tomcatHome = System.getProperty("user.dir");
+        if (StringUtil.emptyString(systemsHome)) systemsHome = System.getProperty("user.dir");
         HashMap<String, String> defaults = new HashMap<>();
         defaults.put("adminBrowserLimit", "200");
         defaults.put("baseDir", sigmaHome);
         defaults.put("cache", "true");
         defaults.put("cacheDisjoint", "true");
+        defaults.put("cwa", "false");
         defaults.put("eproverExec", userHome + sep + "Programs" + sep + "E" + sep + "bin" + sep + "e_ltb_runner");
         defaults.put("graphDir", tomcatHome + sep + "webapps" + sep + "sigma" + sep + "graph");
         defaults.put("graphVizDir", "/usr/bin");
@@ -261,9 +283,13 @@ public class Configuration {
         defaults.put("loadFresh", "true");
         defaults.put("loadLexicons", "true");
         defaults.put("leoExec", userHome + sep + "leo");
+        defaults.put("maxPredicateArity", "7");
         defaults.put("port", "8080");
+        defaults.put("showCachedFormulas", "true");
+        defaults.put("systemsDir", systemsHome);
         defaults.put("termFormats", "true");
         defaults.put("tptpExec", userHome + sep + "workspace" + sep + "TPTP4X" + sep + "tptp4X");
+        defaults.put("typePrefix", "true");
         defaults.put("userBrowserLimit", "25");
         defaults.put("vampireExec", userHome + sep + "Programs" + sep + "vampire" + sep + "build" + sep + "vampire");
         defaults.put("verbnetDir", "");
@@ -357,38 +383,7 @@ public class Configuration {
      */
     public void setAllPreferencesAsDefault() {
 
-        String sep = File.separator;
-        String userHome = System.getProperty("user.home");
-        String sigmaHome = System.getenv("SIGMA_HOME");
-        String tomcatHome = System.getenv("CATALINA_HOME");
-        this.preferences = new HashMap<>();
-        this.preferences.put("adminBrowserLimit", "200");
-        this.preferences.put("baseDir", sigmaHome);
-        this.preferences.put("cache", "true");
-        this.preferences.put("cacheDisjoint", "true");
-        this.preferences.put("eproverExec", userHome + sep + "Programs" + sep + "E" + sep + "bin" + sep + "e_ltb_runner");
-        this.preferences.put("graphDir", tomcatHome + sep + "webapps" + sep + "sigma" + sep + "graph");
-        this.preferences.put("graphVizDir", "/usr/bin");
-        this.preferences.put("hostname", "localhost");
-        this.preferences.put("https", "false");
-        this.preferences.put("inferenceTestDir", sigmaHome + sep + "KBs" + sep + "tests");
-        this.preferences.put("jeditExec", "/usr/share/jedit/jedit");
-        this.preferences.put("kbDir", sigmaHome + sep + "KBs");
-        this.preferences.put("loadFresh", "true");
-        this.preferences.put("loadLexicons", "true");
-        this.preferences.put("leoExec", userHome + sep + "leo");
-        this.preferences.put("port", "8080");
-        this.preferences.put("termFormats", "true");
-        this.preferences.put("tptpExec", userHome + sep + "workspace" + sep + "TPTP4X" + sep + "tptp4X");
-        this.preferences.put("userBrowserLimit", "25");
-        this.preferences.put("vampireExec", userHome + sep + "Programs" + sep + "vampire" + sep + "build" + sep + "vampire");
-        this.preferences.put("verbnetDir", "");
-        this.preferences.put("ollamaHost", "http://127.0.0.1:11434");
-        this.preferences.put("smtpEmailAddress", "");
-        this.preferences.put("smtpEmailUser", "");
-        this.preferences.put("smtpEmailPassword", "");
-        this.preferences.put("smtpEmailServer", "");
-        this.preferences.put("isAws", "false");
+        this.preferences = getDefaultPreferences();
     }
 
     public String getStringPreference(String key, String defaultValue) {
@@ -468,6 +463,26 @@ public class Configuration {
 
     public HashMap<String, List<String>> getAllKbConstituentLists() {
         return this.kbConstituentList;
+    }
+
+    /*****************************************************************
+     * Clears all configured KB constituent lists.
+     */
+    public void clearKbConstituentLists() {
+
+        this.kbConstituentList.clear();
+    }
+
+    /*****************************************************************
+     * Sets the constituent list for one KB.
+     * @param kbName KB name.
+     * @param constituents constituent file list.
+     */
+    public void setKbConstituentList(String kbName, List<String> constituents) {
+
+        if (StringUtil.emptyString(kbName)) return;
+        if (constituents == null) constituents = new ArrayList<>();
+        this.kbConstituentList.put(kbName, new ArrayList<>(constituents));
     }
 
     /*****************************************************************

@@ -33,7 +33,7 @@ public class AffectedFormulasTest {
     private static KB buildKB(String... kifStatements) {
         KB kb = new KB("TestAffectedKB");
         kb.kbCache = new KBcache(kb);
-        KBmanager.getMgr().setPref("cacheDisjoint", "true");
+        KBmanager.getMgr().getConfiguration().setPreference("cacheDisjoint", "true");
         KIF kif = new KIF();
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);

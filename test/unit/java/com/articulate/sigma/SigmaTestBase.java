@@ -1,6 +1,7 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.nlg.NLGUtils;
+import com.articulate.sigma.parsing.Configuration;
 import com.articulate.sigma.wordNet.WordNet;
 
 import com.google.common.collect.Lists;
@@ -17,32 +18,21 @@ public class SigmaTestBase {
 
     /****************************************************************
      * Performs the KB load.
-     * @param reader
+     * @param reader ignored legacy parameter
      */
     protected static void doSetUp(Reader reader) {
 
-        SimpleElement configuration = null;
         if (!KBmanager.initialized) {
-            try {
-                SimpleDOMParser sdp = new SimpleDOMParser();
-                //sdp.setSkipProlog(false);
-                configuration = sdp.parse(reader);
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
+            KBmanager mgr = KBmanager.getMgr();
 
-            KBmanager.getMgr().setDefaultAttributes();
-            KBmanager.getMgr().setConfiguration(configuration);
-            if (!KBmanager.configuration.isLoadLexicons()) {
-                WordNet.initOnce();
-                NLGUtils.init(KB_PATH);
-            }
-            else {
-                WordNet.disable = true;
-            }
-            KBmanager.initialized = true;
+            /*
+             * The manager owns the Configuration now. initializeOnce(KB_PATH)
+             * reads KB_PATH/config.xml, installs the Configuration object,
+             * loads lexicons according to that Configuration, and loads KBs.
+             */
+            mgr.initializeOnce(KB_PATH);
         }
+
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         checkConfiguration();
     }
@@ -68,7 +58,7 @@ public class SigmaTestBase {
             "QoSontology.kif", "Sports.kif", "TransnationalIssues.kif", "Transportation.kif",
             "TransportDetail.kif","VirusProteinAndCellPart.kif","WMD.kif");
 
-        if (KBmanager.getMgr().getKBnames().containsAll(kbnames)) {
+        if (!KBmanager.getMgr().getKBnames().containsAll(kbnames)) {
             problemList.add("KB missing one or more files. Expected: " + kbnames +
                     " actual:" + KBmanager.getMgr().getKBnames());
         }
@@ -85,36 +75,20 @@ public class SigmaTestBase {
 
     /****************************************************************
      * Gets a BufferedReader for the xml file that is this test's configuration.
-     * @param path
-     * @param theClass
-     * @return
+     * @param path XML path.
+     * @param theClass test class.
+     * @return reader for XML file.
      */
     protected static Reader getXmlReader(String path, Class<?> theClass)  {
 
         Reader xmlReader = null;
         try {
-            //URI uri = theClass.getClassLoader().getResource(path).toURI();
-            //URI uri = theClass.getResource(path).toURI();
-            //File configFile = new File(uri);
-           // String contents = StringUtil.getContents(configFile);
-            //contents = contents.replaceAll("\\$SIGMA_HOME", SIGMA_HOME);
-            //xmlReader = new BufferedReader(new StringReader(path));
             xmlReader = new BufferedReader(new FileReader(path));
-            //xmlReader = new BufferedReader(new InputStreamReader(theClass.getResourceAsStream(path)));
         }
         catch (FileNotFoundException ex)  {
-            //try {
-                //URI uri = theClass.getClassLoader().getResource(".").toURI();
-                //URI uri = theClass.getResource(".").toURI();
-                //String msg = "Could not find " + path + " in " + uri.toString();
-                ex.printStackTrace();
-                System.err.println(ex.getMessage());
-                System.err.println("SigmaTestBase.getXmlReader(): Could not find: " + path);
-                //throw new IllegalStateException(msg);
-            //}
-            //catch (URISyntaxException e) {
-            //    e.printStackTrace();
-            //}
+            ex.printStackTrace();
+            System.err.println(ex.getMessage());
+            System.err.println("SigmaTestBase.getXmlReader(): Could not find: " + path);
         }
         return xmlReader;
     }

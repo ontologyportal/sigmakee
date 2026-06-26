@@ -87,8 +87,11 @@ public class TPTP2SUMOTest {
     @Test
     public void testCollapse3() {
 
-        KBmanager.prefOverride.put("loadLexicons","false");
-        KBmanager.getMgr().initializeOnce();
+        KBmanager mgr = KBmanager.getMgr();
+        if (!KBmanager.initialized) {
+            mgr.getConfiguration().setPreference("loadLexicons", "false");
+            mgr.initializeOnce();
+        }
         System.out.println("TPTP2SUMOTest.testPartition3()");
         Formula f = new Formula("(forall (?X155 ?X156 ?X157 ?X158)\n" +
                 "  (=>\n" +
