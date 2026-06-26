@@ -50,13 +50,22 @@ public class NLGUtils implements Serializable {
     }
 
     /** *************************************************************
+     * Initializes NLG keyword mappings when lexicons are enabled.
+     * @param kbDir KB directory containing Translations/language.txt.
      */
     public static void init(String kbDir) {
         
         long start = System.nanoTime();
-        if (KBmanager.configuration.isLoadLexicons()) return;
+        if (!KBmanager.configuration.isLoadLexicons()) {
+            nlg = null;
+            return;
+        }
         nlg = new NLGUtils();
         NLGUtils.readKeywordMap(kbDir);
+        if (getKeywordMap() == null || getKeywordMap().isEmpty()) {
+            throw new IllegalStateException("NLGUtils keywordMap was not initialized from " + kbDir + File.separator + PHRASES_FILENAME);
+        }
+        if (debug > 0) LoggingUtils.log("Loaded NLG keyword mappings in " + ((System.nanoTime() - start) / 1_000_000_000.0) + " seconds.");
     }
 
     /** ***************************************************************

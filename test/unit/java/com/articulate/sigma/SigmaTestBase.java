@@ -42,13 +42,20 @@ public class SigmaTestBase {
     protected static void checkConfiguration() {
 
         List<String> problemList = Lists.newArrayList();
+        if (kb == null) {
+            problemList.add("KBmanager returned no default KB.");
+        }
         if (NLGUtils.getKeywordMap() == null || NLGUtils.getKeywordMap().isEmpty()) {
             problemList.add("LanguageFormatter.keywordMap is empty.");
+        }
+        if (WordNet.wn == null || WordNet.wn.synsetsToWords.isEmpty()) {
+            problemList.add("WordNet mappings are empty.");
         }
         if (WordNet.wn.synsetsToWords.isEmpty()) {
             problemList.add("WordNet mappings are empty.");
         }
-        List kbnames = Arrays.asList("english_format.kif","domainEnglishFormat.kif",
+        List<String> expectedConstituents = Arrays.asList(
+            "english_format.kif", "domainEnglishFormat.kif",
             "Merge.kif", "Mid-level-ontology.kif", "ArabicCulture.kif", "Cars.kif",
             "Catalog.kif", "Communications.kif", "CountriesAndRegions.kif", "Dining.kif",
             "Economy.kif", "engineering.kif", "FinancialOntology.kif", "Food.kif",
@@ -56,11 +63,19 @@ public class SigmaTestBase {
             "Media.kif", "MilitaryDevices.kif", "Military.kif", "MilitaryPersons.kif",
             "MilitaryProcesses.kif", "Music.kif", "naics.kif", "People.kif",
             "QoSontology.kif", "Sports.kif", "TransnationalIssues.kif", "Transportation.kif",
-            "TransportDetail.kif","VirusProteinAndCellPart.kif","WMD.kif");
+            "TransportDetail.kif", "VirusProteinAndCellPart.kif", "WMD.kif"
+        );
 
-        if (!KBmanager.getMgr().getKBnames().containsAll(kbnames)) {
-            problemList.add("KB missing one or more files. Expected: " + kbnames +
-                    " actual:" + KBmanager.getMgr().getKBnames());
+        Set<String> actualConstituents = new TreeSet<>();
+        if (kb != null && kb.constituents != null) {
+            for (String constituent : kb.constituents) {
+                actualConstituents.add(new File(constituent).getName());
+            }
+        }
+
+        if (!actualConstituents.containsAll(expectedConstituents)) {
+            problemList.add("KB missing one or more files. Expected: " + expectedConstituents +
+                    " actual:" + actualConstituents);
         }
         if (!problemList.isEmpty()) {
             StringBuilder sBuild = new StringBuilder();

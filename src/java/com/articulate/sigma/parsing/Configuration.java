@@ -15,15 +15,20 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.util.*;
 
-
 public class Configuration {
 
+    /** Absolute path to the configuration XML file. */
     private final String configFilePath;
+    /** Active configuration preferences keyed by preference name. */
     private HashMap<String, String> preferences;
+    /** KB constituent files keyed by KB name. */
     private HashMap<String, List<String>> kbConstituentList;
+    /** Configuration validation warnings collected while loading config.xml. */
     private List<String> warnings = new ArrayList<>();
+    /** Configuration validation errors collected while loading config.xml. */
     private List<String> errors = new ArrayList<>();
 
+    /** All recognized preference keys that may be read from or written to config.xml. */
     public static final List<String> CONFIG_KEYS = Arrays.asList(
         "adminBrowserLimit",
         "baseDir",
@@ -59,6 +64,7 @@ public class Configuration {
         "isAws"
     );
 
+    /** Preference keys whose values must point to existing directories. */
     public static final List<String> DIR_KEYS = Arrays.asList(
         "baseDir",
         "graphDir",
@@ -68,6 +74,7 @@ public class Configuration {
         "systemsDir"
     );
 
+    /** Preference keys whose values must point to executable files. */
     public static final List<String> EXECUTABLE_KEYS = Arrays.asList(
         "eproverExec",
         "graphVizDir",
@@ -77,6 +84,7 @@ public class Configuration {
         "vampireExec"
     );
 
+    /** Preference keys whose values must parse as booleans. */
     public static final List<String> BOOLEAN_KEYS = Arrays.asList(
         "cache",
         "cacheDisjoint",
@@ -90,12 +98,14 @@ public class Configuration {
         "isAws"
     );
 
+    /** Preference keys whose values must parse as integers. */
     public static final List<String> INTEGER_KEYS = Arrays.asList(
         "adminBrowserLimit",
         "maxPredicateArity",
         "userBrowserLimit"
     );
 
+    /** Preference keys whose values are validated as non-empty strings. */
     public static final List<String> STRING_KEYS = Arrays.asList(
         "hostname",
         "ollamaHost",
@@ -180,70 +190,6 @@ public class Configuration {
         }
     }
 
-    public int getAdminBrowserLimit() { return getIntegerPreference("adminBrowserLimit", 200); }
-
-    public String getBaseDir() { return getStringPreference("baseDir", ""); }
-
-    public boolean isCache() { return getBooleanPreference("cache", true); }
-
-    public boolean isCacheDisjoint() { return getBooleanPreference("cacheDisjoint", true); }
-
-    public boolean isCwa() { return getBooleanPreference("cwa", false); }
-
-    public String getEproverExec() { return getStringPreference("eproverExec", ""); }
-
-    public String getGraphDir() { return getStringPreference("graphDir", ""); }
-
-    public String getGraphVizDir() { return getStringPreference("graphVizDir", "/usr/bin"); }
-
-    public String getHostname() { return getStringPreference("hostname", "localhost"); }
-
-    public String getInferenceTestDir() { return getStringPreference("inferenceTestDir", getKbDir() + File.separator + "tests"); }
-
-    public boolean isHttps() { return getBooleanPreference("https", false); }
-
-    public String getJeditExec() { return getStringPreference("jeditExec", "/usr/share/jedit/jedit"); }
-
-    public String getKbDir() { return getStringPreference("kbDir", ""); }
-
-    public boolean isLoadFresh() { return getBooleanPreference("loadFresh", false); }
-
-    public boolean isLoadLexicons() { return getBooleanPreference("loadLexicons", true); }
-
-    public String getLeoExec() { return getStringPreference("leoExec", ""); }
-
-    public int getMaxPredicateArity() { return getIntegerPreference("maxPredicateArity", 7); }
-
-    public String getPort() { return getStringPreference("port", "8080"); }
-
-    public boolean isTermFormats() { return getBooleanPreference("termFormats", true); }
-
-    public String getTptpExec() { return getStringPreference("tptpExec", ""); }
-
-    public boolean isTypePrefix() { return getBooleanPreference("typePrefix", true); }
-
-    public int getUserBrowserLimit() { return getIntegerPreference("userBrowserLimit", 25); }
-
-    public String getVampireExec() { return getStringPreference("vampireExec", ""); }
-
-    public String getVerbnetDir() { return getStringPreference("verbnetDir", ""); }
-
-    public String getOllamaHost() { return getStringPreference("ollamaHost", "http://127.0.0.1:11434"); }
-
-    public boolean isShowCachedFormulas() { return getBooleanPreference("showCachedFormulas", true); }
-
-    public String getSmtpEmailAddress() { return getStringPreference("smtpEmailAddress", ""); }
-
-    public String getSmtpEmailUser() { return getStringPreference("smtpEmailUser", ""); }
-
-    public String getSmtpEmailPassword() { return getStringPreference("smtpEmailPassword", ""); }
-
-    public String getSmtpEmailServer() { return getStringPreference("smtpEmailServer", ""); }
-
-    public String getSystemsDir() { return getStringPreference("systemsDir", ""); }
-
-    public boolean isAws() { return getBooleanPreference("isAws", false); }
-
     /*****************************************************************
      * Sets all preferences and KB constituents from the XML
      */
@@ -256,6 +202,10 @@ public class Configuration {
         this.kbConstituentList = getKbConstituentListFromXml(doc);
     }
 
+    /*****************************************************************
+     * Builds the default preference map from environment and user paths.
+     * @return map of default preference values keyed by preference name.
+     */
     private HashMap<String, String> getDefaultPreferences() {
 
         String sep = File.separator;
@@ -386,6 +336,12 @@ public class Configuration {
         this.preferences = getDefaultPreferences();
     }
 
+    /*****************************************************************
+     * Gets a string preference or returns the default value if missing.
+     * @param key preference key.
+     * @param defaultValue value returned when the preference is missing.
+     * @return string preference value or default value.
+     */
     public String getStringPreference(String key, String defaultValue) {
 
         String value = this.preferences.get(key);
@@ -393,6 +349,12 @@ public class Configuration {
         return value;
     }
 
+    /*****************************************************************
+     * Gets an integer preference or returns the default value if invalid.
+     * @param key preference key.
+     * @param defaultValue value returned when the preference is not an integer.
+     * @return integer preference value or default value.
+     */
     public int getIntegerPreference(String key, int defaultValue) {
 
         String value = this.preferences.get(key);
@@ -400,6 +362,12 @@ public class Configuration {
         return Integer.parseInt(value);
     }
 
+    /*****************************************************************
+     * Gets a boolean preference or returns the default value if invalid.
+     * @param key preference key.
+     * @param defaultValue value returned when the preference is missing or invalid.
+     * @return boolean preference value or default value.
+     */
     public boolean getBooleanPreference(String key, boolean defaultValue) {
 
         String value = this.preferences.get(key);
@@ -411,6 +379,10 @@ public class Configuration {
         return defaultValue;
     }
 
+    /*****************************************************************
+     * Runs all preference validation checks against XML-loaded values.
+     * @param defaults default preferences used to replace invalid values.
+     */
     public void validateAllPreferencesFromXml(HashMap<String, String> defaults) {
 
         validateKnownPreferences();
@@ -437,33 +409,25 @@ public class Configuration {
         } 
     }
 
+    /*****************************************************************
+     * Records warnings for preferences that are not recognized configuration keys.
+     */
     private void validateKnownPreferences() {
 
         for (String key : preferences.keySet()) {
-            if (!CONFIG_KEYS.contains(key))
-                warnings.add("Unknown preference: " + key);
+            if (!CONFIG_KEYS.contains(key)) warnings.add("Unknown preference: " + key);
         }
     }
 
-    public String getConfigFilePath() {
-        return this.configFilePath;
-    }
+    public String getConfigFilePath() { return this.configFilePath; }
 
-    public HashMap<String, String> getPreferences() {
-        return this.preferences;
-    }
+    public HashMap<String, String> getPreferences() { return this.preferences; }
 
-    public String getPreference(String key) {
-        return this.preferences.get(key);
-    }
+    public String getPreference(String key) { return this.preferences.get(key); }
 
-    public List<String> getKbConstituentList(String kb) {
-        return this.kbConstituentList.get(kb);
-    }
+    public List<String> getKbConstituentList(String kb) { return this.kbConstituentList.get(kb); }
 
-    public HashMap<String, List<String>> getAllKbConstituentLists() {
-        return this.kbConstituentList;
-    }
+    public HashMap<String, List<String>> getAllKbConstituentLists() { return this.kbConstituentList; }
 
     /*****************************************************************
      * Clears all configured KB constituent lists.
@@ -572,12 +536,18 @@ public class Configuration {
         preferences.put(key, defaultValue);
     }
 
+    /*****************************************************************
+     * Prints all loaded configuration preferences to standard output.
+     */
     private void printPreferences() {
 
         System.out.println("Preferences");
         for (Map.Entry<String, String> entry : this.preferences.entrySet()) System.out.println("        " + entry.getKey() + ": " + entry.getValue());
     }
 
+    /*****************************************************************
+     * Prints all configured KB names and their constituent files to standard output.
+     */
     private void printKBs() {
 
         for (Map.Entry<String, List<String>> entry : this.kbConstituentList.entrySet()) {
@@ -586,6 +556,9 @@ public class Configuration {
         }
     }
 
+    /*****************************************************************
+     * Prints preferences, KB constituents, errors, and warnings to standard output.
+     */
     public void printConfig() {
         
         System.out.println("===================================================\nPrinting values in " + configFilePath);
@@ -597,6 +570,70 @@ public class Configuration {
         for (String warning : this.warnings) System.out.println("    " + warning);
         System.out.println("===================================================");
     }
+
+    public int getAdminBrowserLimit() { return getIntegerPreference("adminBrowserLimit", 200); }
+
+    public String getBaseDir() { return getStringPreference("baseDir", ""); }
+
+    public boolean isCache() { return getBooleanPreference("cache", true); }
+
+    public boolean isCacheDisjoint() { return getBooleanPreference("cacheDisjoint", true); }
+
+    public boolean isCwa() { return getBooleanPreference("cwa", false); }
+
+    public String getEproverExec() { return getStringPreference("eproverExec", ""); }
+
+    public String getGraphDir() { return getStringPreference("graphDir", ""); }
+
+    public String getGraphVizDir() { return getStringPreference("graphVizDir", "/usr/bin"); }
+
+    public String getHostname() { return getStringPreference("hostname", "localhost"); }
+
+    public String getInferenceTestDir() { return getStringPreference("inferenceTestDir", getKbDir() + File.separator + "tests"); }
+
+    public boolean isHttps() { return getBooleanPreference("https", false); }
+
+    public String getJeditExec() { return getStringPreference("jeditExec", "/usr/share/jedit/jedit"); }
+
+    public String getKbDir() { return getStringPreference("kbDir", ""); }
+
+    public boolean isLoadFresh() { return getBooleanPreference("loadFresh", false); }
+
+    public boolean isLoadLexicons() { return getBooleanPreference("loadLexicons", true); }
+
+    public String getLeoExec() { return getStringPreference("leoExec", ""); }
+
+    public int getMaxPredicateArity() { return getIntegerPreference("maxPredicateArity", 7); }
+
+    public String getPort() { return getStringPreference("port", "8080"); }
+
+    public boolean isTermFormats() { return getBooleanPreference("termFormats", true); }
+
+    public String getTptpExec() { return getStringPreference("tptpExec", ""); }
+
+    public boolean isTypePrefix() { return getBooleanPreference("typePrefix", true); }
+
+    public int getUserBrowserLimit() { return getIntegerPreference("userBrowserLimit", 25); }
+
+    public String getVampireExec() { return getStringPreference("vampireExec", ""); }
+
+    public String getVerbnetDir() { return getStringPreference("verbnetDir", ""); }
+
+    public String getOllamaHost() { return getStringPreference("ollamaHost", "http://127.0.0.1:11434"); }
+
+    public boolean isShowCachedFormulas() { return getBooleanPreference("showCachedFormulas", true); }
+
+    public String getSmtpEmailAddress() { return getStringPreference("smtpEmailAddress", ""); }
+
+    public String getSmtpEmailUser() { return getStringPreference("smtpEmailUser", ""); }
+
+    public String getSmtpEmailPassword() { return getStringPreference("smtpEmailPassword", ""); }
+
+    public String getSmtpEmailServer() { return getStringPreference("smtpEmailServer", ""); }
+
+    public String getSystemsDir() { return getStringPreference("systemsDir", ""); }
+
+    public boolean isAws() { return getBooleanPreference("isAws", false); }
 
     /******************************************************************
      */
