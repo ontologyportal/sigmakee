@@ -433,8 +433,7 @@ public class KBmanager implements Serializable {
         Map<String, List<String>> allKbConstituents =
                 KBmanager.configuration.getAllKbConstituentLists();
         if (allKbConstituents == null || allKbConstituents.isEmpty()) {
-            LoggingUtils.log("ERROR", "No KBs found in configuration.");
-            return;
+            throw new IllegalStateException("No KBs found in configuration: " + KBmanager.configuration.getConfigFilePath());
         }
         for (Map.Entry<String, List<String>> entry : allKbConstituents.entrySet()) {
             String kbName = entry.getKey();
@@ -447,7 +446,8 @@ public class KBmanager implements Serializable {
                 if (!StringUtil.emptyString(filename))
                     constituentsToAdd.add(resolveKbConstituentPath(filename));
             }
-            loadKB(kbName, constituentsToAdd);
+            boolean loaded = loadKB(kbName, constituentsToAdd);
+            if (!loaded) throw new IllegalStateException("Failed to load KB: " + kbName);
         }
     }
 
@@ -580,25 +580,24 @@ public class KBmanager implements Serializable {
     }
 
     /*****************************************************************
-     * Loads the typed configuration from config.xml, creating a default file if needed.
-     * @param configDirPath directory containing config.xml.
+     * Loads the typed configuration from config.xml, creating parent dirs if needed.
+     * @param configPathOrDir directory containing config.xml, or a config XML file path.
      */
-    private void readConfiguration(String configDirPath) {
+    private void readConfiguration(String configPathOrDir) {
 
         try {
-            String kbDirStr = configDirPath;
-            if (StringUtil.emptyString(kbDirStr)) {
-                kbDirStr = KButilities.SIGMA_HOME + File.separator + "KBs";
-            }
-            File kbDir = new File(kbDirStr);
-            if (!kbDir.exists())
-                kbDir.mkdirs();
-            File configFile = new File(kbDir, CONFIG_FILE);
+            File configPath;
+            if (StringUtil.emptyString(configPathOrDir)) configPath = new File(KButilities.SIGMA_HOME + File.separator + "KBs");
+            else configPath = new File(configPathOrDir);
+            File configFile;
+            if (configPath.isFile() || configPath.getName().toLowerCase(Locale.ROOT).endsWith(".xml")) configFile = configPath;
+            else configFile = new File(configPath, CONFIG_FILE);
+            File parent = configFile.getParentFile();
+            if (parent != null && !parent.exists()) parent.mkdirs();
             KBmanager.configuration = new Configuration(configFile.getCanonicalPath());
         }
         catch (IOException ex) {
-            LoggingUtils.log("ERROR", configDirPath + "):\n" +
-                    "  Exception reading configuration file \n" + ex.getMessage());
+            LoggingUtils.log("ERROR", configPathOrDir + "):\n" + "  Exception reading configuration file \n" + ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -673,6 +672,12 @@ public class KBmanager implements Serializable {
             initializing = false;
             initialized = true;
 
+            if (manager.kbs == null || manager.kbs.isEmpty()) {
+                throw new IllegalStateException("KBmanager initialized with no KBs from " + KBmanager.configuration.getConfigFilePath());
+            }
+            if (KBmanager.configuration.isLoadLexicons() && WordNet.wn == null) {
+                throw new IllegalStateException("loadLexicons is true but WordNet.wn was not initialized.");
+            }
             LoggingUtils.log("Starting TPTP Background Generation.");
             TPTPGenerationManager.startBackgroundGeneration();
 
@@ -729,24 +734,35 @@ public class KBmanager implements Serializable {
     }
 
     /*****************************************************************
-     * Initialize Wordnet, NLGUtils, OMWordnet, Verbnet
-     * @param configFileDir
+     * Initialize WordNet, NLGUtils, OMWordnet, VerbNet.
+     * @param configFileDir configuration directory
      */
     public void initializeLexicons(String configFileDir) {
 
-        if (KBmanager.configuration.isLoadLexicons()) {
-            WordNet.initOnce();
-            NLGUtils.init(configFileDir);
-            OMWordnet.readOMWfiles();
-            if (!VerbNet.disable) {
-                VerbNet.initOnce();
-                VerbNet.processVerbs();
-            }
-        }
-        else {
+        if (!KBmanager.configuration.isLoadLexicons()) {
             WordNet.disable = true;
             VerbNet.disable = true;
             OMWordnet.disable = true;
+            return;
+        }
+        WordNet.disable = false;
+        OMWordnet.disable = false;
+        WordNet.initOnce();
+        if (WordNet.wn == null) {
+            throw new IllegalStateException(
+                    "WordNet.initOnce() returned without initializing WordNet.wn. " +
+                    "Check WordNet.disable, kbDir, and WordNet data files under " +
+                    KBmanager.configuration.getKbDir());
+        }
+        NLGUtils.init(configFileDir);
+        OMWordnet.readOMWfiles();
+        if (!StringUtil.emptyString(KBmanager.configuration.getVerbnetDir())) {
+            VerbNet.disable = false;
+            VerbNet.initOnce();
+            VerbNet.processVerbs();
+        }
+        else {
+            VerbNet.disable = true;
         }
     }
 
@@ -839,11 +855,9 @@ public class KBmanager implements Serializable {
      */
     public void setConfiguration(Configuration configuration) {
 
-        if (configuration == null)
-            throw new IllegalArgumentException("configuration cannot be null");
-        this.configuration = configuration;
+        if (configuration == null) throw new IllegalArgumentException("configuration cannot be null");
+        KBmanager.configuration = configuration;
     }
-
     /*****************************************************************
      * Get the KB that has the given name.
      */

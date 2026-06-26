@@ -1820,16 +1820,18 @@ public class WordNet implements Serializable {
     public static void initOnce() {
 
         long start = System.nanoTime();
-        if (KBmanager.configuration.isLoadLexicons())
+        if (!KBmanager.configuration.isLoadLexicons()) {
             disable = true;
-        if (disable) return;
+            return;
+        }
+        disable = false;
         try {
             if (initNeeded) {
                 if (("".equals(WordNet.baseDir)) || (WordNet.baseDir == null))
                     WordNet.baseDir = KBmanager.configuration.getKbDir() + File.separator + "WordNetMappings";
                 baseDirFile = new File(WordNet.baseDir);
                 if (KBmanager.configuration.isLoadFresh() || !serializedExists()) {
-                    loadFresh(); // <- will serialize
+                    loadFresh();
                 }
                 else {
                     loadSerialized();

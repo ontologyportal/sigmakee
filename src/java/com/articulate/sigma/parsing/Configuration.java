@@ -206,7 +206,7 @@ public class Configuration {
 
     public String getKbDir() { return getStringPreference("kbDir", ""); }
 
-    public boolean isLoadFresh() { return getBooleanPreference("loadFresh", true); }
+    public boolean isLoadFresh() { return getBooleanPreference("loadFresh", false); }
 
     public boolean isLoadLexicons() { return getBooleanPreference("loadLexicons", true); }
 
@@ -280,7 +280,7 @@ public class Configuration {
         defaults.put("inferenceTestDir", sigmaHome + sep + "KBs" + sep + "tests");
         defaults.put("jeditExec", "/usr/share/jedit/jedit");
         defaults.put("kbDir", sigmaHome + sep + "KBs");
-        defaults.put("loadFresh", "true");
+        defaults.put("loadFresh", "false");
         defaults.put("loadLexicons", "true");
         defaults.put("leoExec", userHome + sep + "leo");
         defaults.put("maxPredicateArity", "7");
