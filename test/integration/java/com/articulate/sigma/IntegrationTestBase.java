@@ -16,6 +16,7 @@ import org.junit.BeforeClass;
 
 public class IntegrationTestBase extends SigmaTestBase {
 
+    private static boolean integrationConfigurationInitialized = false;
     static Long totalKbMgrInitTime = Long.MAX_VALUE;
     protected static KB kbBackup;
 
@@ -110,6 +111,12 @@ public class IntegrationTestBase extends SigmaTestBase {
     @BeforeClass
     public static void setup() throws IOException {
 
+        if (integrationConfigurationInitialized && KBmanager.initialized) {
+            kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
+            if (kbBackup == null && kb != null) kbBackup = new KB(kb);
+            checkConfiguration();
+            return;
+        }
         System.out.println("IntegrationTestBase.startUp(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
         long startTime = System.currentTimeMillis();
         Configuration config = buildIntegrationConfiguration();
@@ -122,6 +129,7 @@ public class IntegrationTestBase extends SigmaTestBase {
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         kbBackup = new KB(kb);
         checkConfiguration();
+        integrationConfigurationInitialized = true;
         long endTime = System.currentTimeMillis();
         if (IntegrationTestBase.totalKbMgrInitTime == Long.MAX_VALUE) IntegrationTestBase.totalKbMgrInitTime = endTime - startTime;
     }

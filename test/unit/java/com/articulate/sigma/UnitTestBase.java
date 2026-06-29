@@ -2,6 +2,7 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.parsing.Configuration;
+import com.articulate.sigma.trans.TPTPGenerationManager;
 
 import java.io.*;
 import java.util.Arrays;
@@ -17,6 +18,7 @@ import static org.junit.Assert.fail;
  */
 public class UnitTestBase extends SigmaTestBase {
 
+    private static boolean unitConfigurationInitialized = false;
     public static final int NUM_KIF_FILES = 3;
     private static final String SIGMA_SRC = System.getenv("SIGMA_SRC");
 
@@ -64,6 +66,11 @@ public class UnitTestBase extends SigmaTestBase {
     @BeforeClass
     public static void setup()  {
 
+        if (unitConfigurationInitialized && KBmanager.initialized) {
+            kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
+            checkConfiguration();
+            return;
+        }
         System.out.println("UnitTestSuite.startUp(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
         System.out.println("UnitTestBase.setup(): building unit test configuration in code.");
         System.out.println("***** UnitTestBase.setup(): warning! Note that only KB files in the test configuration will be loaded! ***** ");
@@ -73,12 +80,13 @@ public class UnitTestBase extends SigmaTestBase {
         KBmanager.initializing = false;
         KBmanager.getMgr().kbs.clear();
         KBmanager.getMgr().initializeOnce(config);
+        while (!TPTPGenerationManager.isFOFReady()) TPTPGenerationManager.waitForFOF(600);
+        while (!TPTPGenerationManager.isTFFReady()) TPTPGenerationManager.waitForTFF(600);
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         checkConfiguration();
+        unitConfigurationInitialized = true;
         long endTime = System.currentTimeMillis();
-        if (UnitTestBase.totalKbMgrInitTime == Long.MAX_VALUE) {
-            UnitTestBase.totalKbMgrInitTime = endTime - startTime;
-        }
+        if (UnitTestBase.totalKbMgrInitTime == Long.MAX_VALUE) UnitTestBase.totalKbMgrInitTime = endTime - startTime;
     }
 
     /***************************************************************
