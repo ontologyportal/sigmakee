@@ -119,7 +119,7 @@ cd E
 ./configure
 make
 make install (this step is optional, it will copy E files to /usr/local making it available for the whole system)
-cd ..
+cd .
 
 mkdir ~/.sigmakee/KBs/
 cp -R ~/workspace/sumo/* ~/.sigmakee/KBs/
@@ -128,7 +128,7 @@ cp WordNet-3.0/dict/* ~/.sigmakee/KBs/WordNetMappings/
 May have to precede the last command with "sudo"
 
 cp ~/workspace/sigmakee/config.xml ~/.sigmakee/KBs
-(SOS) edit the config.xml changing all `wrong paths` to the value of `$HOME` and adapting all variables)
+If config.xml already exists under ~/.sigmakee/KBs, verify that its paths match your local installation.
 
 For Homebrew installations of GraphViz, change the path in config.xml for
 graphVizDir to: /usr/local/bin
@@ -185,14 +185,10 @@ nbproject/private/private.properties file with these keys:
 
     private.resources.dir=nbproject/private/resources
     main.config=${private.resources.dir}/config.xml
-    integration.config=${private.resources.dir}/config_topAndMid.xml
-    unit.config=${private.resources.dir}/config_topOnly.xml
 
-    # The above properties allow you to keep and restore the various forms of
-    # config.xml that get overwritten when running Unit Tests. Copy these files
-    # to the respective "resources" directory complete with your personal system
-    # paths replacing the "/home/theuser/" pseudos. config.xml is found in the
-    # base directory and the other two are found in test/*/resources directories
+    # Unit and integration tests build their Configuration objects in memory.
+    # They no longer require config_topOnly.xml, config_topAndMid.xml, or config_all.xml
+    # under the test resources directories.
 
     # JavaMail properties
     user=${your.email.user.name}

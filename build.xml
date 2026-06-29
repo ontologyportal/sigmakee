@@ -235,44 +235,13 @@
 
     <!--
     ============
-    TEST CONFIGS
+    TEST SETUP
     ============
     -->
 
-    <!-- Replace placeholders in test config XMLs with portable paths for the current machine -->
     <target name="prepare.test.configs" depends="init"
-            description="Update test config XML files with the current user name and home directory.">
-        <echo message="Updating test config XML files for user ${user.name} (home: ${user.home})"/>
-
-        <!-- 1) Make home path portable (macOS: /Users/..., Linux: /home/...) -->
-        <replace token="/home/theuser" value="${user.home}">
-            <fileset dir="${basedir}">
-                <!-- Integration test configs -->
-                <include name="test/integration/java/resources/config_all.xml"/>
-                <include name="test/integration/java/resources/config_topAndMid.xml"/>
-                <include name="test/integration/java/resources/config_topOnly.xml"/>
-
-                <!-- Unit test configs -->
-                <include name="test/unit/java/resources/config_all.xml"/>
-                <include name="test/unit/java/resources/config_topAndMid.xml"/>
-                <include name="test/unit/java/resources/config_topOnly.xml"/>
-            </fileset>
-        </replace>
-
-        <!-- 2) Replace remaining username placeholder -->
-        <replace token="theuser" value="${user.name}">
-            <fileset dir="${basedir}">
-                <!-- Integration test configs -->
-                <include name="test/integration/java/resources/config_all.xml"/>
-                <include name="test/integration/java/resources/config_topAndMid.xml"/>
-                <include name="test/integration/java/resources/config_topOnly.xml"/>
-
-                <!-- Unit test configs -->
-                <include name="test/unit/java/resources/config_all.xml"/>
-                <include name="test/unit/java/resources/config_topAndMid.xml"/>
-                <include name="test/unit/java/resources/config_topOnly.xml"/>
-            </fileset>
-        </replace>
+            description="Prepare test environment.">
+        <echo message="Preparing test environment for user ${user.name} (home: ${user.home})"/>
     </target>
 
     <!--
@@ -611,23 +580,12 @@ build.date=${git.commit.date}
     </target>
     <target name="sigma.config">
         <available file="${sigma.home}/KBs/config.xml" property="sigma.config.exists"/>
-
-        <antcall target="sigma.config.copy.template"/>
-
         <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser/workspace/sumo" value="${kbs.home}"/>
         <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser" value="${user.home}"/>
-
-        <!-- External ATP executables -->
         <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/leo" value="${leo.exec.path}"/>
         <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${programs.dir}${file.separator}E${file.separator}PROVER${file.separator}e_ltb_runner"/>
-
         <replace file="${sigma.home}/KBs/config.xml" token="/usr/local/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests" value="${programs.dir}${file.separator}tomcat${file.separator}apache-tomcat-${tomcat.version}${file.separator}webapps${file.separator}sigma${file.separator}tests"/>
         <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/Programs/vampire/build/vampire" value="${programs.dir}${file.separator}vampire${file.separator}build${file.separator}vampire"/>
-    </target>
-    <target name="sigma.config.copy.template" unless="sigma.config.exists">
-        <copy tofile="${sigma.home}/KBs/config.xml"
-            file="${sigma.src}/test/unit/java/resources/config_topAndMid.xml"
-            overwrite="false"/>
     </target>
     <!--
     =======================

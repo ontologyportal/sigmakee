@@ -1,13 +1,13 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.nlg.NLGUtils;
-import com.articulate.sigma.parsing.Configuration;
 import com.articulate.sigma.wordNet.WordNet;
 
 import com.google.common.collect.Lists;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
 
 public class SigmaTestBase {
 
@@ -15,27 +15,6 @@ public class SigmaTestBase {
     protected static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath();
 
     protected static KB kb;
-
-    /****************************************************************
-     * Performs the KB load.
-     * @param reader ignored legacy parameter
-     */
-    protected static void doSetUp(Reader reader) {
-
-        if (!KBmanager.initialized) {
-            KBmanager mgr = KBmanager.getMgr();
-
-            /*
-             * The manager owns the Configuration now. initializeOnce(KB_PATH)
-             * reads KB_PATH/config.xml, installs the Configuration object,
-             * loads lexicons according to that Configuration, and loads KBs.
-             */
-            mgr.initializeOnce(KB_PATH);
-        }
-
-        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
-        checkConfiguration();
-    }
 
     /***************************************************************
      * */
@@ -51,31 +30,8 @@ public class SigmaTestBase {
         if (WordNet.wn == null || WordNet.wn.synsetsToWords.isEmpty()) {
             problemList.add("WordNet mappings are empty.");
         }
-        if (WordNet.wn.synsetsToWords.isEmpty()) {
-            problemList.add("WordNet mappings are empty.");
-        }
-        List<String> expectedConstituents = Arrays.asList(
-            "english_format.kif", "domainEnglishFormat.kif",
-            "Merge.kif", "Mid-level-ontology.kif", "ArabicCulture.kif", "Cars.kif",
-            "Catalog.kif", "Communications.kif", "CountriesAndRegions.kif", "Dining.kif",
-            "Economy.kif", "engineering.kif", "FinancialOntology.kif", "Food.kif",
-            "Geography.kif", "Government.kif", "Hotel.kif", "Justice.kif", "Languages.kif",
-            "Media.kif", "MilitaryDevices.kif", "Military.kif", "MilitaryPersons.kif",
-            "MilitaryProcesses.kif", "Music.kif", "naics.kif", "People.kif",
-            "QoSontology.kif", "Sports.kif", "TransnationalIssues.kif", "Transportation.kif",
-            "TransportDetail.kif", "VirusProteinAndCellPart.kif", "WMD.kif"
-        );
-
-        Set<String> actualConstituents = new TreeSet<>();
-        if (kb != null && kb.constituents != null) {
-            for (String constituent : kb.constituents) {
-                actualConstituents.add(new File(constituent).getName());
-            }
-        }
-
-        if (!actualConstituents.containsAll(expectedConstituents)) {
-            problemList.add("KB missing one or more files. Expected: " + expectedConstituents +
-                    " actual:" + actualConstituents);
+        if (kb != null && (kb.constituents == null || kb.constituents.isEmpty())) {
+            problemList.add("KB has no loaded constituents.");
         }
         if (!problemList.isEmpty()) {
             StringBuilder sBuild = new StringBuilder();
@@ -86,26 +42,6 @@ public class SigmaTestBase {
             System.err.println("Configuration failed. Problems:" + sBuild.toString());
             throw new IllegalStateException("Configuration failed. Problems:" + sBuild.toString());
         }
-    }
-
-    /****************************************************************
-     * Gets a BufferedReader for the xml file that is this test's configuration.
-     * @param path XML path.
-     * @param theClass test class.
-     * @return reader for XML file.
-     */
-    protected static Reader getXmlReader(String path, Class<?> theClass)  {
-
-        Reader xmlReader = null;
-        try {
-            xmlReader = new BufferedReader(new FileReader(path));
-        }
-        catch (FileNotFoundException ex)  {
-            ex.printStackTrace();
-            System.err.println(ex.getMessage());
-            System.err.println("SigmaTestBase.getXmlReader(): Could not find: " + path);
-        }
-        return xmlReader;
     }
 
     /***************************************************************

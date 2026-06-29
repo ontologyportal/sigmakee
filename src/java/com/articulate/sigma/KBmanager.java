@@ -623,28 +623,41 @@ public class KBmanager implements Serializable {
      */
     public void initializeOnce(String configFileDir) {
 
+        readConfiguration(configFileDir);
+        initializeOnce(true);
+    }
+
+    /*****************************************************************
+     * Reads in KBs and parameters from an already-built Configuration object.
+     * @param config active in-memory configuration.
+     */
+    public void initializeOnce(Configuration config) {
+
+        if (config == null) throw new IllegalArgumentException("configuration cannot be null");
+        KBmanager.configuration = config;
+        initializeOnce(false);
+    }
+
+    /*****************************************************************
+     * Initializes KBmanager using the current KBmanager.configuration.
+     * @param writeSerializedCache whether to write kbmanager.ser after fresh loading.
+     */
+    private void initializeOnce(boolean writeSerializedCache) {
+
         long start = System.nanoTime();
         LoggingUtils.printSigmaWelcome();
         LoggingUtils.log("Initializing KBmanager!");
-
         boolean loaded = false;
         if (initializing || initialized) return;
-
         initializing = true;
-
         try {
-            readConfiguration(configFileDir);
-
             LoggingUtils.log("Loading English Lexicons.");
             initializeLexicons(KBmanager.configuration.getKbDir());
-
             if (!KBmanager.configuration.isLoadFresh() &&
                     serializedExists() &&
                     !isSerializedOld()) {
-
                 LoggingUtils.log("Loading from serialized cache.");
                 loaded = loadSerialized();
-
                 if (loaded) {
                     LoggingUtils.log("Building SUMO Term Taxonomy.");
                     for (KB kb : manager.kbs.values()) {
@@ -661,17 +674,14 @@ public class KBmanager implements Serializable {
                     }
                 }
             }
-
             if (!loaded) {
                 LoggingUtils.log("Regenerating Fresh Cache.");
                 manager = this;
                 loadKBsFromConfiguration();
-                serialize();
+                if (writeSerializedCache) serialize();
             }
-
             initializing = false;
             initialized = true;
-
             if (manager.kbs == null || manager.kbs.isEmpty()) {
                 throw new IllegalStateException("KBmanager initialized with no KBs from " + KBmanager.configuration.getConfigFilePath());
             }
@@ -680,7 +690,6 @@ public class KBmanager implements Serializable {
             }
             LoggingUtils.log("Starting TPTP Background Generation.");
             TPTPGenerationManager.startBackgroundGeneration();
-
             if ("true".equalsIgnoreCase(System.getenv("TPTP_BG_WAIT"))) {
                 try {
                     Thread.sleep(120000);
@@ -696,9 +705,7 @@ public class KBmanager implements Serializable {
             ex.printStackTrace();
             return;
         }
-
         cleanupOrphanedSessionDirectories();
-
         double elapsedSeconds = (System.nanoTime() - start) / 1_000_000_000.0;
         LoggingUtils.log("Initialization completed in " + elapsedSeconds + " seconds!");
     }
@@ -986,6 +993,7 @@ public class KBmanager implements Serializable {
         System.out.println("KBmanager class");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
+        System.out.println("  -d - get default KB name");
         System.out.println("  -p - demo Python interface");
         System.out.println("  with no arguments show this help screen and execute a test");
     }
@@ -1005,15 +1013,21 @@ public class KBmanager implements Serializable {
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             Formula f = new Formula();
             f.read("(=> (and (wears ?A ?C) (part ?P ?C)) (wears ?A ?P))");
-
+            return;
         }
-        else {
-            if (args.length > 0 && args[0].equals("-p")) {
-                pythonServer();
-            }
-            if (args.length > 0 && args[0].equals("-h")) {
-                printHelp();
-            }
+        if (args.length > 0 && args[0].equals("-p")) {
+            pythonServer();
+            return;
+        }
+        if (args.length > 0 && args[0].equals("-h")) {
+            printHelp();
+            return;
+        }
+        if (args.length > 0 && args[0].equals("-d")) {
+            System.out.println("Before init, default KB name: [" + KBmanager.getMgr().getDefaultKbName() + "]");
+            KBmanager.getMgr().initializeOnce();
+            System.out.println("After init, KB names: " + KBmanager.getMgr().getKBnames());
+            System.out.println("After init, default KB name: [" + KBmanager.getMgr().getDefaultKbName() + "]");
         }
     }
 }

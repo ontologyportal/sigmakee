@@ -1,4 +1,5 @@
 package com.articulate.sigma.parsing;
+import com.articulate.sigma.KButilities;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -74,6 +75,14 @@ public class Configuration {
         "systemsDir"
     );
 
+    /** Preference keys whose missing directories may be created automatically. */
+    public static final List<String> CREATE_DIR_KEYS = Arrays.asList(
+        "baseDir",
+        "graphDir",
+        "inferenceTestDir",
+        "kbDir"
+    );
+
     /** Preference keys whose values must point to executable files. */
     public static final List<String> EXECUTABLE_KEYS = Arrays.asList(
         "eproverExec",
@@ -115,6 +124,16 @@ public class Configuration {
         "smtpEmailPassword",
         "smtpEmailServer"
     );
+
+    /*****************************************************************
+     * Returns a new in-memory configuration object with default preferences.
+     */
+    public Configuration() {
+
+        this.configFilePath = "";
+        setAllPreferencesAsDefault();
+        this.kbConstituentList = new LinkedHashMap<>();
+    }
 
     /*****************************************************************
      * Returns a new configuration object populated with config.xml data.
@@ -222,9 +241,9 @@ public class Configuration {
         defaults.put("cache", "true");
         defaults.put("cacheDisjoint", "true");
         defaults.put("cwa", "false");
-        defaults.put("eproverExec", userHome + sep + "Programs" + sep + "E" + sep + "bin" + sep + "e_ltb_runner");
+        defaults.put("eproverExec", userHome + sep + "Programs" + sep + "E" + sep + "eprover");
         defaults.put("graphDir", tomcatHome + sep + "webapps" + sep + "sigma" + sep + "graph");
-        defaults.put("graphVizDir", "/usr/bin");
+        defaults.put("graphVizDir", "/usr/bin/dot");
         defaults.put("hostname", "localhost");
         defaults.put("https", "false");
         defaults.put("inferenceTestDir", sigmaHome + sep + "KBs" + sep + "tests");
@@ -232,7 +251,7 @@ public class Configuration {
         defaults.put("kbDir", sigmaHome + sep + "KBs");
         defaults.put("loadFresh", "false");
         defaults.put("loadLexicons", "true");
-        defaults.put("leoExec", userHome + sep + "leo");
+        defaults.put("leoExec", userHome + sep + "Programs" + sep + "Leo-III" + sep + "leo3");
         defaults.put("maxPredicateArity", "7");
         defaults.put("port", "8080");
         defaults.put("showCachedFormulas", "true");
@@ -462,7 +481,13 @@ public class Configuration {
                 continue;
             }
             File dir = new File(value);
-            if (!dir.exists() || !dir.isDirectory()) setDefaultForInvalidKey(key, value, defaults, "Directory does not exist");
+            if (dir.exists() && dir.isDirectory()) continue;
+            if (CREATE_DIR_KEYS.contains(key)) {
+                if (dir.mkdirs() || dir.isDirectory()) continue;
+                setDefaultForInvalidKey(key, value, defaults, "Could not create directory");
+                continue;
+            }
+            setDefaultForInvalidKey(key, value, defaults, "Directory does not exist");
         }
     }
 
@@ -652,7 +677,7 @@ public class Configuration {
         Map<String, List<String>> argMap = CLIMapParser.parse(args);
         if (argMap.isEmpty() || argMap.containsKey("h")) showHelp();
         else if (argMap.containsKey("p")) {
-            Configuration config = new Configuration("/home/shaun/.sigmakee/KBs/config.xml");
+            Configuration config = new Configuration(KButilities.SIGMA_HOME + File.separator + "KBs" + File.separator + "config.xml");
             config.printConfig();
         }
         
