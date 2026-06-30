@@ -1,3 +1,6 @@
+<%@ page import="com.articulate.sigma.ConsistencyCheckManager" %>
+<%@ page import="com.articulate.sigma.ConsistencyCheckManager.ConsistencyCheckStatus" %>
+<%@ page import="com.articulate.sigma.ConsistencyCheckManager.ConsistencyCheckMode" %>
 <%@ include file="fragments/universal/Prelude.jspf" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
@@ -87,32 +90,35 @@ if (!StringUtil.emptyString(action))
 if (override != null && override.equalsIgnoreCase("true"))
     overrideValue = true;
 
-CCheckManager ccheckManager = (CCheckManager) application.getAttribute("ccheckManager");
+ConsistencyCheckManager ccheckManager =
+        (ConsistencyCheckManager) application.getAttribute("ccheckManager");
+
 if (ccheckManager == null) {
     synchronized (application) {
-        ccheckManager = (CCheckManager) application.getAttribute("ccheckManager");
+        ccheckManager =
+                (ConsistencyCheckManager) application.getAttribute("ccheckManager");
         if (ccheckManager == null) {
-            ccheckManager = new CCheckManager();
+            ccheckManager = new ConsistencyCheckManager();
             application.setAttribute("ccheckManager", ccheckManager);
         }
     }
 }
 
-if (ccheckManager.ccheckStatus(kb.name) == CCheckStatus.ONGOING) {
+if (ccheckManager.ccheckStatus(kb.name) == ConsistencyCheckStatus.ONGOING) {
     show.append(HTMLformatter.formatConsistencyCheck(kb.name + " is currently undergoing checks.  Partial results are available.", ccheckManager.ccheckResults(kb.name), lang, pageNum));
     show.append("<p>[&nbsp; <a href='CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&page=" + pageNum + "&override=false'>Refresh</a>&nbsp; ] </p>");
 }
-else if (ccheckManager.ccheckStatus(kb.name) == CCheckStatus.DONE)
+else if (ccheckManager.ccheckStatus(kb.name) == ConsistencyCheckStatus.DONE)
     show.append(HTMLformatter.formatConsistencyCheck(kb.name + "  has been checked. Results can be found below. [<a href=CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&override=true&page=0>Restart Check</a>]", ccheckManager.ccheckResults(kb.name), lang, pageNum));
-else if (ccheckManager.ccheckStatus(kb.name) == CCheckStatus.QUEUED) {
+else if (ccheckManager.ccheckStatus(kb.name) == ConsistencyCheckStatus.QUEUED) {
     show.append(kb.name + " has been added to the queue for consistency checks.");
     show.append("<p>[&nbsp; <a href='CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&page=" + pageNum + "&override=false'>Refresh</a>&nbsp; ] </p>");
 }
-else if (!overrideValue && ccheckManager.ccheckStatus(kb.name) == CCheckStatus.NOCCHECK) {
+else if (!overrideValue && ccheckManager.ccheckStatus(kb.name) == ConsistencyCheckStatus.NOCCHECK) {
     show.append("Please choose translation and prover settings.<br>");
     show.append("__SHOW_CCHECK_FORM__");
 }
-else if (overrideValue && ccheckManager.ccheckStatus(kb.name) == CCheckStatus.NOCCHECK) {
+else if (overrideValue && ccheckManager.ccheckStatus(kb.name) == ConsistencyCheckStatus.NOCCHECK) {
     String chosenEngine = inferenceEngine;
     if ("Vampire".equalsIgnoreCase(chosenEngine)) chosenEngine = "VAMPIRE";
     else if ("EProver".equalsIgnoreCase(chosenEngine) || "E".equalsIgnoreCase(chosenEngine)) chosenEngine = "EPROVER";
@@ -133,7 +139,8 @@ else if (overrideValue && ccheckManager.ccheckStatus(kb.name) == CCheckStatus.NO
         show.append("Chosen translation language: " + atpLanguage + "<br>");
         show.append("Entered timeout: " + timeout + " seconds.<br>");
         show.append("Maximum answers: " + maxAnswers + "<br>");
-
+        String checkModeParam = request.getParameter("checkMode");
+        ConsistencyCheckMode checkMode = ConsistencyCheckMode.fromString(checkModeParam);
         if ("EPROVER".equalsIgnoreCase(chosenEngine) && "THF".equalsIgnoreCase(atpLanguage)) {
             show.append("EProver does not support THF/HOL. Choose FOF/TFF or use Vampire/LEO.");
         }
@@ -148,12 +155,14 @@ else if (overrideValue && ccheckManager.ccheckStatus(kb.name) == CCheckStatus.NO
                 Boolean.TRUE.equals(dropOnePremise),
                 holUseModals,
                 timeout,
-                maxAnswers) == CCheckStatus.QUEUED) {
+                maxAnswers,
+                checkMode) == ConsistencyCheckStatus.QUEUED) {
             show.append(kb.name + " has been added to the queue for consistency checks. <br>");
             show.append("<p>[&nbsp; <a href='CCheck.jsp?kb=" + kb.name + "&lang=" + lang + "&page=" + pageNum + "&override=false'>Refresh</a>&nbsp; ] </p>");
         }
         else show.append("Error trying to start consistency check for " + kb.name + ". Please try again.");
     }
+
 }
 else show.append("Error trying to start consistency check for " + kb.name + ". Please try agian.");
 
@@ -178,8 +187,8 @@ showString = showString.replace("__SHOW_CCHECK_FORM__", "");
 <%=showString%>
 
 <% if (showCCheckForm) { %>
-    <%@ include file="fragments/universal/TranslationSelector.jspf" %>
-    <%@ include file="fragments/universal/ProverSelector.jspf" %>
+    <%@ include file="fragments/tp/TranslationSelector.jspf" %>
+    <%@ include file="fragments/tp/ProverSelector.jspf" %>
 
     <input type="hidden" name="override" value="true">
     <input type="hidden" name="kb" value="<%=kbName%>">

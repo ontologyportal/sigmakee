@@ -38,7 +38,7 @@ public class UnitTestBase extends SigmaTestBase {
         config.setPreference("loadFresh", "true");
         config.setPreference("loadLexicons", "true");
         config.setPreference("cache", "true");
-        config.setPreference("cacheDisjoint", "false");
+        config.setPreference("cacheDisjoint", "true");
         config.setPreference("cwa", "false");
         config.setPreference("maxPredicateArity", "6");
         config.setPreference("graphVizExec", "/usr/bin/dot");
