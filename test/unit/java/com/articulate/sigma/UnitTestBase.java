@@ -41,7 +41,7 @@ public class UnitTestBase extends SigmaTestBase {
         config.setPreference("cacheDisjoint", "false");
         config.setPreference("cwa", "false");
         config.setPreference("maxPredicateArity", "6");
-        config.setPreference("graphVizDir", "/usr/bin/dot");
+        config.setPreference("graphVizExec", "/usr/bin/dot");
         String eproverExec = new File("/usr/local/bin/e_ltb_runner").canExecute()
                 ? "/usr/local/bin/e_ltb_runner"
                 : userHome + File.separator + "Programs" + File.separator + "E" + File.separator + "PROVER" + File.separator + "e_ltb_runner";

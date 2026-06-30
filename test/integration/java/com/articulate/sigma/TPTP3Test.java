@@ -96,8 +96,6 @@ public class TPTP3Test extends IntegrationTestBase {
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
 
         try {
-            KBmanager.getMgr().initializeOnce();
-
             if (!TPTPGenerationManager.isFOFReady()) {
                 TPTPGenerationManager.waitForFOF(600);
             }
@@ -141,7 +139,6 @@ public class TPTP3Test extends IntegrationTestBase {
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         System.out.println("-------------------testVampireCASC------------------------------");
         try {
-            KBmanager.getMgr().initializeOnce();
             String query = "(subclass ?X Entity)";
             Vampire vampire = new Vampire(kb, "tptp", "CASC", false, 30, 1);
             vampire.askQuestion = false;
@@ -183,7 +180,6 @@ public class TPTP3Test extends IntegrationTestBase {
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         System.out.println("-------------------testVampireCASCBindings------------------------------");
         try {
-            KBmanager.getMgr().initializeOnce();
             String query = "(subclass ?X Entity)";
             Vampire vampire = new Vampire(kb, "tptp", "CASC", false, 30, 1);
             vampire.askQuestion = false;
@@ -214,7 +210,6 @@ public class TPTP3Test extends IntegrationTestBase {
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         System.out.println("-------------------testVampireCASCBindings2------------------------------");
         try {
-            KBmanager.getMgr().initializeOnce();
             String query = "(subclass ?X ?Y)";
             Vampire vampire = new Vampire(kb, "tptp", "CASC", false, 30, 1);
             vampire.askQuestion = false;

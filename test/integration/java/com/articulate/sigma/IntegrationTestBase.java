@@ -54,7 +54,7 @@ public class IntegrationTestBase extends SigmaTestBase {
         config.setPreference("cacheDisjoint", "false");
         config.setPreference("cwa", "false");
         config.setPreference("maxPredicateArity", "6");
-        config.setPreference("graphVizDir", "/usr/bin/dot");
+        config.setPreference("graphVizExec", "/usr/bin/dot");
         String userHome = System.getProperty("user.home");
         String eproverExec = new File("/usr/local/bin/e_ltb_runner").canExecute()
                 ? "/usr/local/bin/e_ltb_runner"

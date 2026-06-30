@@ -623,6 +623,7 @@ public class KBmanager implements Serializable {
      */
     public void initializeOnce(String configFileDir) {
 
+        if (initializing || initialized) return;
         readConfiguration(configFileDir);
         initializeOnce(true);
     }
@@ -634,6 +635,7 @@ public class KBmanager implements Serializable {
     public void initializeOnce(Configuration config) {
 
         if (config == null) throw new IllegalArgumentException("configuration cannot be null");
+        if (initializing || initialized) return;
         KBmanager.configuration = config;
         initializeOnce(false);
     }

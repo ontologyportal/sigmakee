@@ -1255,12 +1255,12 @@ public class Diagnostics {
 
         int exitCode;
         String retVal = "";
-        String graphVizDir = KBmanager.configuration.getGraphVizDir();
+        String graphVizExec = KBmanager.configuration.getGraphVizExec();
         String imageExt = "png";
         File file = new File(filename + "." + imageExt);
 
         List<String> cmd = new ArrayList<>();
-        cmd.add(graphVizDir + File.separator + "dot");
+        cmd.add(graphVizExec);
         cmd.add("-T" + imageExt);
         cmd.add("-O");
         cmd.add(filename);

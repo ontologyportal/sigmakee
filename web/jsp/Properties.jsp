@@ -125,8 +125,8 @@ KB directory</label><P>
 <INPUT type="text" SIZE=80 name="graphDir" value="<%=sigmaConfig.getGraphDir() %>">
 Directory in which dot graphs will be saved</label><P>
 
-<label for="graphVizDir">
-<INPUT type="text" SIZE=80 name="graphVizDir" value="<%=sigmaConfig.getGraphVizDir() %>">
+<label for="graphVizExec">
+<INPUT type="text" SIZE=80 name="graphVizExec" value="<%=sigmaConfig.getGraphVizExec() %>">
 GraphViz executable directory</label><P>
 
 <label for="systemsDir">

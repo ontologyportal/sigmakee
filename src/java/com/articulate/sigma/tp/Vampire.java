@@ -674,7 +674,7 @@ public class Vampire {
             System.err.println(msg);
             this.result.setSzsStatus(SZSStatus.OS_ERROR);
             this.result.setPrimaryError(msg);
-            throw new ExecutableNotFoundException("Vampire", this.executablePath, "vampire");
+            throw new ExecutableNotFoundException("Vampire", this.executablePath, "vampireExec");
         }
         createCommandList(kbFile);
         this.result.setCommandLine(this.commands);
@@ -805,7 +805,7 @@ public class Vampire {
         long timeoutMs = timeout * 1000L;
         output = new ArrayList<>();
         // Determine which executable to use
-        String configKey = "vampire";
+        String configKey = "vampireExec";
         result = new ATPResult.Builder()
                 .engineName("Vampire")
                 .engineMode(this.logic == Logic.HOL ? "HOL" : (this.mode != null ? this.mode.name() : "CUSTOM"))

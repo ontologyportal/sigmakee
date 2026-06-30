@@ -38,7 +38,7 @@ public class Configuration {
         "cwa",
         "eproverExec",
         "graphDir",
-        "graphVizDir",
+        "graphVizExec",
         "hostname",
         "https",
         "inferenceTestDir",
@@ -86,7 +86,7 @@ public class Configuration {
     /** Preference keys whose values must point to executable files. */
     public static final List<String> EXECUTABLE_KEYS = Arrays.asList(
         "eproverExec",
-        "graphVizDir",
+        "graphVizExec",
         "jeditExec",
         "leoExec",
         "tptpExec",
@@ -243,7 +243,7 @@ public class Configuration {
         defaults.put("cwa", "false");
         defaults.put("eproverExec", userHome + sep + "Programs" + sep + "E" + sep + "eprover");
         defaults.put("graphDir", tomcatHome + sep + "webapps" + sep + "sigma" + sep + "graph");
-        defaults.put("graphVizDir", "/usr/bin/dot");
+        defaults.put("graphVizExec", "/usr/bin/dot");
         defaults.put("hostname", "localhost");
         defaults.put("https", "false");
         defaults.put("inferenceTestDir", sigmaHome + sep + "KBs" + sep + "tests");
@@ -610,7 +610,7 @@ public class Configuration {
 
     public String getGraphDir() { return getStringPreference("graphDir", ""); }
 
-    public String getGraphVizDir() { return getStringPreference("graphVizDir", "/usr/bin"); }
+    public String getGraphVizExec() { return getStringPreference("graphVizExec", "/usr/bin/dot"); }
 
     public String getHostname() { return getStringPreference("hostname", "localhost"); }
 

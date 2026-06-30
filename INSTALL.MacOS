@@ -131,7 +131,7 @@ cp ~/workspace/sigmakee/config.xml ~/.sigmakee/KBs
 If config.xml already exists under ~/.sigmakee/KBs, verify that its paths match your local installation.
 
 For Homebrew installations of GraphViz, change the path in config.xml for
-graphVizDir to: /usr/local/bin
+graphVizExec to: /usr/local/bin/dot
 
 cd ~/workspace/sigmakee
 source ~/.zshrc or ~/.bash_profile
