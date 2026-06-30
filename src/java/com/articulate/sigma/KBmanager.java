@@ -826,27 +826,27 @@ public class KBmanager implements Serializable {
      */
     public void writeConfiguration() throws IOException {
 
+        if (!KBmanager.configuration.canWriteXml()) {
+            LoggingUtils.log("INFO",
+                    "Skipping configuration XML write for non-file-backed configuration: " +
+                    KBmanager.configuration.getConfigFilePath());
+            return;
+        }
         try {
-            KBmanager.configuration.clearKbConstituentLists();
-            for (KB kb : kbs.values()) {
-                SimpleElement kbXML = kb.writeConfiguration();
-                String kbName = kbXML.getAttribute("name");
-                List<String> constituents = new ArrayList<>();
-                for (SimpleElement child : kbXML.getChildElements()) {
-                    if ("constituent".equals(child.getTagName())) {
-                        String filename = child.getAttribute("filename");
-                        if (!StringUtil.emptyString(filename))
-                            constituents.add(filename);
-                    }
-                }
-                KBmanager.configuration.setKbConstituentList(kbName, constituents);
-            }
             KBmanager.configuration.writeXml();
         }
-        catch (RuntimeException e) {
-            LoggingUtils.log("ERROR", "Error writing configuration: " + e.getMessage());
-            throw new IOException("Error writing configuration", e);
+        catch (RuntimeException ex) {
+            throw new IOException("Error writing configuration", ex);
         }
+    }
+
+    /*****************************************************************
+     */
+    public boolean canWriteXml() {
+
+        if (StringUtil.emptyString(configFilePath)) return false;
+        File configFile = new File(configFilePath);
+        return configFile.exists() && configFile.isFile();
     }
 
     /*****************************************************************

@@ -143,16 +143,11 @@ public class Configuration {
 
         this.configFilePath = configPath;
         File configFile = new File(configPath);
-        if (!configFile.exists()) {
-            File parent = configFile.getParentFile();
-            if (parent != null && !parent.exists())
-                parent.mkdirs();
+        if (configFile.exists() && configFile.isFile()) setAllFromXml();
+        else {
             setAllPreferencesAsDefault();
             this.kbConstituentList = new LinkedHashMap<>();
-            writeXml();
-        }
-        else {
-            setAllFromXml();
+            errors.add("Config XML file does not exist or is not a file: " + configPath);
         }
     }
 
@@ -175,12 +170,14 @@ public class Configuration {
      */
     public void writeXml() {
 
+        File configFile = getExistingConfigXmlFileForWrite();
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document doc = builder.newDocument();
             Element root = doc.createElement("configuration");
             doc.appendChild(root);
+
             for (String key : CONFIG_KEYS) {
                 String value = preferences.get(key);
                 if (value == null) value = "";
@@ -189,24 +186,54 @@ public class Configuration {
                 pref.setAttribute("value", value);
                 root.appendChild(pref);
             }
+
             for (Map.Entry<String, List<String>> entry : kbConstituentList.entrySet()) {
                 Element kb = doc.createElement("kb");
                 kb.setAttribute("name", entry.getKey());
+
                 for (String filename : entry.getValue()) {
                     Element constituent = doc.createElement("constituent");
                     constituent.setAttribute("filename", filename);
                     kb.appendChild(constituent);
                 }
+
                 root.appendChild(kb);
             }
+
             Transformer transformer = TransformerFactory.newInstance().newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-            transformer.transform(new DOMSource(doc), new StreamResult(new File(configFilePath)));
+            transformer.transform(new DOMSource(doc), new StreamResult(configFile));
         }
         catch (Exception e) {
             throw new RuntimeException("Could not write config XML file: " + configFilePath, e);
         }
+    }
+
+    /*****************************************************************
+     */
+    public boolean canWriteXml() {
+
+        if (StringUtil.emptyString(configFilePath)) return false;
+        File configFile = new File(configFilePath);
+        return configFile.exists() && configFile.isFile();
+    }
+    
+    /*****************************************************************
+     */
+    private File getExistingConfigXmlFileForWrite() {
+
+        if (StringUtil.emptyString(configFilePath)) {
+            throw new IllegalStateException("Cannot write XML for an in-memory Configuration.");
+        }
+        File configFile = new File(configFilePath);
+        if (!configFile.exists()) {
+            throw new IllegalStateException("Cannot write XML because config file does not exist: " + configFilePath);
+        }
+        if (!configFile.isFile()) {
+            throw new IllegalStateException("Cannot write XML because config path is not a file: " + configFilePath);
+        }
+        return configFile;
     }
 
     /*****************************************************************
@@ -559,6 +586,15 @@ public class Configuration {
                 ". Reason: " + reason +
                 ". Setting default value: " + defaultValue);
         preferences.put(key, defaultValue);
+    }
+
+    /*****************************************************************
+     */
+    public boolean isFileBacked() {
+
+        if (StringUtil.emptyString(configFilePath)) return false;
+        File file = new File(configFilePath);
+        return file.exists() && file.isFile();
     }
 
     /*****************************************************************
