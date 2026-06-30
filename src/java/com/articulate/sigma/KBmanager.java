@@ -841,15 +841,6 @@ public class KBmanager implements Serializable {
     }
 
     /*****************************************************************
-     */
-    public boolean canWriteXml() {
-
-        if (StringUtil.emptyString(configFilePath)) return false;
-        File configFile = new File(configFilePath);
-        return configFile.exists() && configFile.isFile();
-    }
-
-    /*****************************************************************
      * Gets the active configuration for this KB manager.
      * @return active configuration object.
      */
