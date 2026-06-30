@@ -19,7 +19,7 @@ import static org.junit.Assert.fail;
 public class UnitTestBase extends SigmaTestBase {
 
     private static boolean unitConfigurationInitialized = false;
-    public static final int NUM_KIF_FILES = 3;
+    public static final int NUM_KIF_FILES = 4;
     private static final String SIGMA_SRC = System.getenv("SIGMA_SRC");
 
     public static final String CONFIG_FILE_DIR = SIGMA_SRC + File.separator + "test/unit/java/resources";
@@ -40,7 +40,7 @@ public class UnitTestBase extends SigmaTestBase {
         config.setPreference("cache", "true");
         config.setPreference("cacheDisjoint", "true");
         config.setPreference("cwa", "false");
-        config.setPreference("maxPredicateArity", "6");
+        config.setPreference("maxPredicateArity", "7");
         config.setPreference("graphVizExec", "/usr/bin/dot");
         String eproverExec = new File("/usr/local/bin/e_ltb_runner").canExecute()
                 ? "/usr/local/bin/e_ltb_runner"
@@ -53,6 +53,7 @@ public class UnitTestBase extends SigmaTestBase {
         config.setPreference("tptpExec", userHome + File.separator + "workspace" + File.separator + "TPTP4X" + File.separator + "tptp4X");
         config.setPreference("systemsDir", userHome);
         List<String> constituents = Arrays.asList(
+            "domainEnglishFormat.kif",
             "english_format.kif",
             "Merge.kif",
             "Mid-level-ontology.kif"

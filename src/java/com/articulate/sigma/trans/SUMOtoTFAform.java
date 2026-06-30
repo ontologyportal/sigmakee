@@ -3418,17 +3418,22 @@ public class SUMOtoTFAform {
      */
     public static void initOnce() {
 
-        if (initialized)
-            return;
+        if (initialized) return;
         KBmanager.getMgr().initializeOnce();
         String kbName = KBmanager.getMgr().getDefaultKbName();
         kb = KBmanager.getMgr().getKB(kbName);
         fp = new FormulaPreprocessor();
-        FormulaPreprocessor.addOnlyNonNumericTypes = true;
-        buildNumericConstraints();
-        initNumericConstantTypes();
-        numericConstantCount = getNumericConstantTypes().keySet().size();
-        initialized = true;
+        boolean oldAddOnlyNonNumericTypes = FormulaPreprocessor.addOnlyNonNumericTypes;
+        try {
+            FormulaPreprocessor.addOnlyNonNumericTypes = true;
+            buildNumericConstraints();
+            initNumericConstantTypes();
+            numericConstantCount = getNumericConstantTypes().keySet().size();
+            initialized = true;
+        }
+        finally {
+            FormulaPreprocessor.addOnlyNonNumericTypes = oldAddOnlyNonNumericTypes;
+        }
     }
 
     /***************************************************************

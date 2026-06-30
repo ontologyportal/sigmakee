@@ -343,13 +343,40 @@ public class KBmanager implements Serializable {
 
         String kbDir = configuration.getKbDir();
         for (String kbname : kbs.keySet()) {
+            KB kb = getKB(kbname);
+            if (kb == null) return true;
             File base = new File(kbDir + File.separator + kbname + "." + lang);
             if (!base.exists()) return true;
-            long baseTimeStamp = base.lastModified();
-            Date newestSourceDate = newestBaseConfigOrConstituentDateIgnoringUserAssertions();
-            if (baseTimeStamp < newestSourceDate.getTime()) return true;
+            long newest = newestBaseConstituentDateIgnoringUserAssertions(kb);
+            if (base.lastModified() < newest) return true;
         }
         return false;
+    }
+
+    private static long newestBaseConstituentDateIgnoringUserAssertions(KB kb) {
+
+        long newest = 0L;
+        String newestPath = "";
+        String configPath = KBmanager.configuration.getConfigFilePath();
+        if (!StringUtil.emptyString(configPath)) {
+            File configFile = new File(configPath);
+            if (configFile.exists()) {
+                newest = configFile.lastModified();
+                newestPath = configFile.getAbsolutePath();
+            }
+        }
+        if (kb != null && kb.constituents != null) {
+            for (String constituent : kb.constituents) {
+                if (isUserAssertionOrTempInferenceFile(constituent)) continue;
+                File constituentFile = new File(constituent);
+                long modified = constituentFile.lastModified();
+                if (modified > newest) {
+                    newest = modified;
+                    newestPath = constituentFile.getAbsolutePath();
+                }
+            }
+        }
+        return newest;
     }
 
     /*****************************************************************

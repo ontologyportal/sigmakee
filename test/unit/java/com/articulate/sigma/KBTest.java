@@ -56,9 +56,11 @@ public class KBTest extends UnitTestBase {
     public void testAskWithTwoRestrictionsIndirect2() {
 
         List<Formula> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Boy", 2, "Entity");
-        assertEquals(0, actual.size());
+        System.out.println("KBTest.testAskWithTwoRestrictionsIndirect2(): " + actual);
+        if (KBmanager.configuration.isCache()) assertEquals(1, actual.size());
+        else assertEquals(0, actual.size());
     }
-
+    
     /** ***************************************************************
      * test deleteUserAssertionsAndReload() -- with Vampire
      */

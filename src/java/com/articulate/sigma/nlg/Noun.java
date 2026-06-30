@@ -24,7 +24,6 @@ public class Noun {
         else    {
             article = "an";
         }
-
         return article;
     }
 
