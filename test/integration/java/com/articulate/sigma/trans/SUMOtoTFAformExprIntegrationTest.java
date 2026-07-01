@@ -55,7 +55,7 @@ public class SUMOtoTFAformExprIntegrationTest extends IntegrationTestBase {
 
     @AfterClass
     public static void postClass() {
-        KBmanager.initialized = false;
+        // KBmanager.initialized = false;
         SUMOKBtoTFAKB.initialized = false;
         SUMOtoTFAform.initialized = false;
     }
