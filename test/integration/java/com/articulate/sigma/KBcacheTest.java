@@ -336,17 +336,17 @@ public class KBcacheTest extends IntegrationTestBase {
 
         System.out.println("\n============= testPredicates ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
-        Set<String> rels = cache.getChildInstances("Relation");
-        boolean isInstanceOf;
+        Set<String> rels = cache.getChildInstances("Predicate");
         for (String rel : rels) {
             if (!rel.endsWith("Fn")) {
-                isInstanceOf = cache.isInstanceOf(rel, "Predicate");
+                boolean isInstanceOf = cache.isInstanceOf(rel, "Predicate");
                 if (!isInstanceOf) {
                     System.err.println("fail - " + rel + " not instance of Predicate");
                     System.err.println("parents of " + rel + ": " + cache.instanceOf.get(rel));
                 }
-                else
+                else {
                     System.out.println("success for predicate: " + rel);
+                }
                 assertTrue(rel + " is not an instance of Predicate", isInstanceOf);
             }
         }
