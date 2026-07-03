@@ -294,7 +294,7 @@ public class FormulaUtil {
                 "    (ans0 sK2)) spl6_1)";
         System.out.println(removeAnswerClause(new Formula(s)));
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         System.out.println("KButilities.main(): completed init");
         List<Formula> flist = kb.ask("ant",0,"Process");
         sortBySourceFile(flist);

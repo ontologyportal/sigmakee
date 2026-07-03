@@ -1820,16 +1820,18 @@ public class WordNet implements Serializable {
     public static void initOnce() {
 
         long start = System.nanoTime();
-        if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
+        if (!KBmanager.configuration.isLoadLexicons()) {
             disable = true;
-        if (disable) return;
+            return;
+        }
+        disable = false;
         try {
             if (initNeeded) {
                 if (("".equals(WordNet.baseDir)) || (WordNet.baseDir == null))
-                    WordNet.baseDir = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings";
+                    WordNet.baseDir = KBmanager.configuration.getKbDir() + File.separator + "WordNetMappings";
                 baseDirFile = new File(WordNet.baseDir);
-                if (KBmanager.getMgr().getPref("loadFresh").equals("true") || !serializedExists()) {
-                    loadFresh(); // <- will serialize
+                if (KBmanager.configuration.isLoadFresh() || !serializedExists()) {
+                    loadFresh();
                 }
                 else {
                     loadSerialized();
@@ -3507,7 +3509,7 @@ public class WordNet implements Serializable {
 
         System.out.println("INFO in WordNet.main()");
         KBmanager.getMgr().initializeOnce();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         if (args != null && args.length > 1 && args[0].equals("-w")) {
             String result = wn.page(StringUtil.removeEnclosingQuotes(args[1]),0,kbName,"","");
             System.out.println(StringUtil.removeHTML(result));

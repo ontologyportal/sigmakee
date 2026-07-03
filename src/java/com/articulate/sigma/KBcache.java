@@ -2080,7 +2080,7 @@ public class KBcache implements Serializable {
 
         long millis = System.currentTimeMillis();
         try {
-            File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+            File dir = new File(KBmanager.configuration.getKbDir());
             File f = new File(dir, (kb.name + _cacheFileSuffix));
             System.out.println("INFO in KBcache.writeCacheFile(): " + f.getName());
             if (f.exists())
@@ -2169,7 +2169,7 @@ public class KBcache implements Serializable {
             System.err.println("Error in KBcache.storeCacheAsFormulas(): " + ioe.getMessage());
             return;
         }
-        if (KBmanager.getMgr().getPref("cache").equals("yes"))
+        if (KBmanager.configuration.isCache())
             kb.addConstituentInfoAST(kif);
     }
 
@@ -2386,7 +2386,7 @@ public class KBcache implements Serializable {
             buildTransInstOf();
             correctValences(); // correct VariableArityRelation valences
             System.out.printf("KBcache.buildCaches(): buildTransInstOf:            %d m/s%n", (System.currentTimeMillis() - millis));
-            if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
+            if (KBmanager.configuration.isCacheDisjoint()) {
                 millis = System.currentTimeMillis();
                 buildExplicitDisjointMap(); // find relations under partition definition
                 System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
@@ -2450,7 +2450,7 @@ public class KBcache implements Serializable {
         correctValences();
         buildFunctionsSet();
         LoggingUtils.printProgressBar("INFO", "transInstOf+valences+functions:", 7, 10);
-        if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
+        if (KBmanager.configuration.isCacheDisjoint()) {
             buildExplicitDisjointMap();
             buildDisjointRelationsMap();
             buildDisjointMap();
@@ -2528,7 +2528,7 @@ public class KBcache implements Serializable {
 
         LoggingUtils.printProgressBar("INFO", "buildFunctionsSet:", 7, 10);
         // --- Wave 5: optional disjoint maps ---
-        if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
+        if (KBmanager.configuration.isCacheDisjoint()) {
             long wd = System.currentTimeMillis();
             buildExplicitDisjointMap();
             wd = System.currentTimeMillis();
@@ -2589,7 +2589,7 @@ public class KBcache implements Serializable {
         buildTransInstOf();
         correctValences(); // correct VariableArityRelation valences
         System.out.printf("KBcache.buildCaches(): buildTransInstOf:            %d m/s%n", (System.currentTimeMillis() - millis));
-        if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
+        if (KBmanager.configuration.isCacheDisjoint()) {
             millis = System.currentTimeMillis();
             buildExplicitDisjointMap(); // find relations under partition definition
             System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
@@ -2896,7 +2896,7 @@ public class KBcache implements Serializable {
             catch (Exception e) {
                 System.err.println(e.getMessage());
             }
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             System.out.println("**** Finished loading KB ***");
 
             KBcache nkbc = kb.kbCache;

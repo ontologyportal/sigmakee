@@ -19,7 +19,6 @@ public class WSDwKBtest extends IntegrationTestBase {
     @Before
     public void setUpInterpreter() throws IOException {
 
-        KBmanager.getMgr().initializeOnce();
         WSD.debug = true;
         System.out.println("INFO in WSDwKBtest.setUpInterpreter(): done initializing");
     }

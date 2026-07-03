@@ -150,7 +150,7 @@ public class WSD {
      */
     public static String findWordSenseInContextWithDomain(String word, List<String> words, String sumo) {
 
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         KB kb = KBmanager.getMgr().getKB(kbName);
         if (kb == null)
             sumo = null;
@@ -463,7 +463,7 @@ public class WSD {
     public static String getBestDefaultSenseWithDomain(String word, String sumo) {
 
         if (debug) System.out.println("INFO in WSD.getBestDefaultSense(1): " + word);
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         KB kb = KBmanager.getMgr().getKB(kbName);
         if (StringUtil.isDigitString(word))
             return null;

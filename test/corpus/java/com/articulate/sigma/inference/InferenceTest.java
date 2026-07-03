@@ -34,8 +34,7 @@ public class InferenceTest {
     @BeforeClass
     public static void setKB() {
 
-        KBmanager.getMgr().initializeOnce();
-        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         List<String> reqFiles = Arrays.asList("Merge.kif", "Mid-level-ontology.kif");
         for (String s : reqFiles) {

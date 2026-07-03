@@ -52,7 +52,7 @@ public class TPTPPatchTest {
     @BeforeClass
     public static void setUpClass() throws IOException {
         tempDir = Files.createTempDirectory("sigma-patch-test");
-        KBmanager.getMgr().setPref("kbDir", tempDir.toString());
+        KBmanager.getMgr().getConfiguration().setPreference("kbDir", tempDir.toString());
     }
 
     @AfterClass
@@ -86,7 +86,7 @@ public class TPTPPatchTest {
     private static KB buildKB(String... kifStatements) {
         KB kb = new KB("TestPatchKB");
         kb.kbCache = new KBcache(kb);
-        KBmanager.getMgr().setPref("cacheDisjoint", "true");
+        KBmanager.getMgr().getConfiguration().setPreference("cacheDisjoint", "true");
         KIF kif = new KIF();
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);

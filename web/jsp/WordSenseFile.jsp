@@ -24,7 +24,7 @@
  String params = "flang=" + flang + "&lang=" + lang + "&kb=" + kbName;
  StringBuilder show = new StringBuilder();
 
- String kbDir = mgr.getPref("kbDir");
+ String kbDir = KBmanager.configuration.getKbDir();
  File kbDirFile = new File(kbDir);
  Part requestPart = null;
  String filePath = null;
@@ -72,7 +72,6 @@ catch (Exception e) {
 	e.printStackTrace();
 	response.sendRedirect("KBs.jsp");
 }
-
 %>
 
 <html>
@@ -80,34 +79,27 @@ catch (Exception e) {
   <title>Sigma Word Sense/Sentiment Analysis Tool</title>
 </head>
 <BODY BGCOLOR=#FFFFFF>
-
     <%
         String pageName = "WordSenseFile";
         String pageString = "SUMO Word Sense/Sentiment Analysis Tool";
     %>
     <%@include file="fragments/universal/CommonHeader.jspf" %>
-
 <h3>SUMO Word Sense/Sentiment Analysis Tool</h3>
 <P>This tool provides context sensitive sense and sentiment analysis of whole sentences. Enter either a sentence or a full pathname for a .txt file.
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
-
 <form name="sentenceLoader" id="sentenceLoader" action="WordSense.jsp" method="GET">
   <font face="Arial,helvetica"><b>Sentence:&nbsp;</b></font>
   <input type="text" name="sentence" VALUE="<%= escHtml(request.getParameter("sentence")) %>">
-
   <input type="submit" value="Submit">
 </form>
-
 <form name="fileUploader" id="fileUploader" action="WordSenseFile.jsp" method="POST" enctype="multipart/form-data">
   <font face="Arial,helvetica"><b>File:&nbsp;</b></font>
   <input type="file" name="textFile">
   <br>
   <input type="submit" value="Submit">
 </form>
-
 <br>
  <%=show.toString() %><BR>
-
 <%@ include file="fragments/universal/Postlude.jspf" %>
 </body>
 </html>

@@ -291,7 +291,6 @@ cat > "$CFG_FILE" << EOF42
   <preference value="${SIGMA_KBS_DIR%\/}/tests" name="inferenceTestDir" />
   <preference value="${WEBAPPS_SIGMA_DIR%\/}/tests" name="testOutputDir" />
   <preference value="yes" name="typePrefix" />
-  <preference value="no" name="holdsPrefix" />
   <preference value="yes" name="cache" />
   <preference value="yes" name="TPTP" />
   <preference value="" name="prolog" />

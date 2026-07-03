@@ -52,8 +52,8 @@ public class ExprToTFFArithmeticIntegrationTest extends IntegrationTestBase {
         SUMOformulaToTPTPformula.setLang("tff");
         SUMOtoTFAform.setNumericFunctionInfo();
         // Write sort declarations so process() / translateArithmetic() have them available
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
+        String kbName = KBmanager.getMgr().getDefaultKbName();
+        String filename = KBmanager.configuration.getKbDir() + File.separator + kbName + ".tff";
         try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
             skbtfakb.writeSorts(pw);
         } catch (IOException e) {
@@ -63,7 +63,6 @@ public class ExprToTFFArithmeticIntegrationTest extends IntegrationTestBase {
 
     @AfterClass
     public static void postClass() {
-        KBmanager.initialized = false;
         SUMOKBtoTFAKB.initialized = false;
         SUMOtoTFAform.initialized = false;
     }

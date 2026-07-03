@@ -38,7 +38,7 @@ public class KBcacheUnitTest {
     public static void setup() {
 
         kb.kbCache = new KBcache(kb);
-        KBmanager.getMgr().setPref("cacheDisjoint","true");
+        KBmanager.getMgr().getConfiguration().setPreference("cacheDisjoint", "true");
         KIF kif = new KIF();
         kif.parseStatement("(subAttribute Attorney Lawyer)");
         kif.parseStatement("(instance Attorney Profession)");

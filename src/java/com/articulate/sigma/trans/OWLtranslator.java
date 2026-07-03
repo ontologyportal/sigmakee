@@ -753,7 +753,7 @@ public class OWLtranslator {
     private void writeInstances(PrintWriter pw, String term, List instances) {
 
         pw.println("<owl:Thing rdf:about=\"#" + term + "\">");
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         pw.println("  <rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/" + kbName + ".owl\"/>");
         for (int i = 0; i < instances.size(); i++) {
             Formula form = (Formula) instances.get(i);
@@ -812,7 +812,7 @@ public class OWLtranslator {
             pw.println("<owl:Class rdf:about=\"#" + term + "\">");
         else
             pw.println("<owl:Class rdf:about=\"#" + term + "\">");
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         pw.println("  <rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/" + kbName + ".owl\"/>");
         for (int i = 0; i < classes.size(); i++) {
             Formula form = (Formula) classes.get(i);
@@ -878,7 +878,7 @@ public class OWLtranslator {
     private void readYAGOSUMOMappings() {
 
         System.out.println("INFO in OWLtranslator.readYAGOSUMOMappings()");
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         File f = new File(kbDir + File.separator + "yago-sumo-mappings.txt");
         if (!f.canRead()) {
             System.out.println( "INFO in readYAGOSUMOMappings(): "
@@ -919,7 +919,7 @@ public class OWLtranslator {
     	pw.println("   <!ENTITY owl \"http://www.w3.org/2002/07/owl#\">");
     	pw.println("]>");
         pw.println("<rdf:RDF");
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         pw.println("xmlns=\"http://www.ontologyportal.org/SUMO.owl#\"");
         pw.println("xml:base=\"http://www.ontologyportal.org/SUMO.owl\"");
         pw.println("xmlns:wnd=\"http://www.ontologyportal.org/WNDefs.owl#\"");
@@ -976,7 +976,7 @@ public class OWLtranslator {
 
          System.out.println("INFO in OWLtranslator.write(): writing " + path);
          //readYAGOSUMOMappings();
-         String kbName = KBmanager.getMgr().getPref("sumokbname");
+         String kbName = KBmanager.getMgr().getDefaultKbName();
          if (StringUtil.emptyString(path))
              path = kbName + ".owl";
          try (FileWriter fw = new FileWriter(path);
@@ -1483,7 +1483,7 @@ public class OWLtranslator {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t <fname> - read OWL file and write translation to fname.kif");
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         System.out.println("  -s - translate and write OWL version of kb to " + kbName + ".owl");
         System.out.println("  -y - translate and write OWL version of kb including YAGO mappings to stdout");
     }
@@ -1500,7 +1500,7 @@ public class OWLtranslator {
         else {
             System.out.println("INFO in OWL.main()");
             KBmanager.getMgr().initializeOnce();
-            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            String kbName = KBmanager.getMgr().getDefaultKbName();
             KB kb = KBmanager.getMgr().getKB(kbName);
             System.out.println("OWL.main(): completed initialization");
             if (argMap.get("t").size() > 0 && argMap.containsKey("t")) {
@@ -1516,7 +1516,7 @@ public class OWLtranslator {
                 OWLtranslator ot = new OWLtranslator();
                 try {
                     System.out.println("OWL.main(): starting translation");
-                    ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                    ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
                     ot.createAxiomMap();
                     ot.writeDefsAsFiles();
                     ot.writeKB();
@@ -1530,7 +1530,7 @@ public class OWLtranslator {
             else if (argMap.containsKey("y")) {
                 OWLtranslator ot = new OWLtranslator();
                 try {
-                    ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                    ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
                     ot.createAxiomMap();
                     ot.writeDefsAsFiles();
                     ot.readYAGOSUMOMappings();

@@ -17,16 +17,13 @@
 if (!role.equalsIgnoreCase("admin"))
     response.sendRedirect("KBs.jsp");
 else {
-    String kbDir = mgr.getPref("kbDir");
+    String kbDir = KBmanager.configuration.getKbDir();
     File kbDirFile = new File(kbDir);
     MultipartParser mpp = null;
     int postSize = Integer.MAX_VALUE;
     Part requestPart = null;
     String fileName = "";
     String baseName = "";
-    String overwrite = mgr.getPref("overwrite");
-    boolean overwriteP = (StringUtil.isNonEmptyString(overwrite)
-                          && overwrite.equalsIgnoreCase("yes"));
     String extension = "";
     File existingFile = null;
     File outfile = null;
@@ -74,20 +71,6 @@ else {
         }
 
         String errStr = "";
-        if (overwriteP && !existingFile.getCanonicalPath().equalsIgnoreCase(outfile.getCanonicalPath())) {
-            boolean overwriteSucceeded = false;
-            try {
-                if (existingFile.delete() && outfile.renameTo(existingFile)) {
-                    outfile = existingFile;
-                    overwriteSucceeded = outfile.canRead();
-                }
-            }
-            catch (Exception owex) {
-                owex.printStackTrace();
-            }
-            if (!overwriteSucceeded)
-                errStr = "Error: Could not overwrite existing consituent file";
-        }
         if (StringUtil.emptyString(errStr)) {
             if (StringUtil.emptyString(kbName))
                 errStr = "Error in AddConstituent.jsp: No knowledge base name specified";
@@ -121,7 +104,7 @@ else {
                 //}
                 //kb.addNewConstituent(outfile.getCanonicalPath());
                 kb.addConstituent(outfile.getCanonicalPath());
-                if (mgr.getPref("cache").equalsIgnoreCase("yes")) {
+                if (KBmanager.configuration.isCache()) {
                     kb.kbCache.buildCaches();
 //                    kb.kbCache.writeCacheFile();
                 }

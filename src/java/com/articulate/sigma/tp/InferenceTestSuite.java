@@ -36,7 +36,7 @@ public class InferenceTestSuite {
     /** Debug logging level. */
     public int debug = 0;
     /** Directory containing inference test files. */
-    private final String inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
+    private final String inferenceTestDir = KBmanager.configuration.getInferenceTestDir();
     /** Loaded inference tests keyed by test path. */
     private final Map<String, InferenceTest> inferenceTests = new LinkedHashMap<>();
     /** Loaded inference tests grouped by category. */
@@ -229,7 +229,7 @@ public class InferenceTestSuite {
             return;
         }
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         InferenceTestSuite inferenceTestSuite = new InferenceTestSuite(kb);
         if(argMap.containsKey("r")) {
             LoggingUtils.log("Running all " + inferenceTestSuite.inferenceTests.size() + " inference tests!");

@@ -22,9 +22,9 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
      response.sendRedirect("init.jsp");
      return;
  }
- String kbName = request.getParameter("kb");
+ String kbName = KBmanager.getMgr().getDefaultKbName();
  if (kbName == null || StringUtil.emptyString(kbName))
-     KBmanager.getMgr().getPref("sumokbname");
+    KBmanager.getMgr().getDefaultKbName();
  KB kb = null;
  if (!StringUtil.emptyString(kbName)) {
      kb = KBmanager.getMgr().getKB(kbName);

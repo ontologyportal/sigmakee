@@ -568,7 +568,7 @@ public class DB {
         //System.out.println(rows.size());
         System.out.println("<rdf:RDF");
         System.out.println("  xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         System.out.println("  xmlns:op=\"http://ontologyportal.org/" + kbName + ".owl.txt\">");
         String domain;
 //        String subject;
@@ -1217,7 +1217,7 @@ public class DB {
      */
     public static List<String> getFoodWordSenses(List<String> al) {
 
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         String foodSynset1 = "107555863"; // food, solid_food
         String foodSynset2 = "100004475"; // being, organism
         //System.out.println("INFO in DB.getFoodWordSenses()");
@@ -1515,7 +1515,7 @@ public class DB {
             System.err.println("Error in readStopConceptArray(): file previously read.");
             return;
         }
-        List<List<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
+        List<List<String>> f = DB.readSpreadsheet(KBmanager.configuration.getKbDir() +
         		File.separator + "WordNetMappings" + File.separator + "stopConcept.csv",null,false);
 
         List<String> al;
@@ -1536,7 +1536,7 @@ public class DB {
             System.out.println("Error in DB.readSentimentArray(): file previously read.");
             return;
         }
-        List<List<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
+        List<List<String>> f = DB.readSpreadsheet(KBmanager.configuration.getKbDir() +
         		File.separator + "WordNetMappings" + File.separator + "sentiment.csv",null,false);
 
         List<String> al;
@@ -1689,7 +1689,7 @@ public class DB {
      */
     public static void readAmenities() {
 
-        List<List<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
+        List<List<String>> f = DB.readSpreadsheet(KBmanager.configuration.getKbDir() +
                 File.separator + "Feeds-SUMO_Mapping.csv",null,false);
         List<String> al;
         for (int i = 1; i < f.size(); i++) {

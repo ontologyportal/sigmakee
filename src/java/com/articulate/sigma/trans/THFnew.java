@@ -33,7 +33,7 @@ public class THFnew {
      */
     public static void transPlainTHF(KB kb) {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         String sep = File.separator;
         String filename = kbDir + sep + kb.name + "_plain.thf";
         try (Writer fstream = new FileWriter(filename);
@@ -102,7 +102,7 @@ public class THFnew {
     public static void transModalTHF(KB kb) {
 
         long start = System.nanoTime();
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kb.name + "_modals.thf";
+        String filename = KBmanager.configuration.getKbDir() + File.separator + kb.name + "_modals.thf";
         try (Writer fstream = new FileWriter(filename);
             PrintWriter out = new PrintWriter(new BufferedWriter(fstream))) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -1477,7 +1477,7 @@ public class THFnew {
             return;
         }
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         System.out.println("THFnew.main(): KB loaded");
         if (!kb.errors.isEmpty()) System.err.println("THFnew.main(): KB loaded with non-fatal errors: " + kb.errors);
         System.out.println("contains one : " + argMap.containsKey("one"));

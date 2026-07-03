@@ -45,21 +45,19 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
     	}
     	else {
     	    String tfmValue = null;
-    	    if (tfm != null)
-                tfmValue = (String) tfm.get(term);
+    	    if (tfm != null) tfmValue = (String) tfm.get(term);
     	}
         show.append(HTMLformatter.showPictures(kb,term));
         show.append("</td>");
         show.append("</tr></table>\n");
     }
-    else
-        show.append ("</b></FONT></td></tr></table>\n");
-    int limit = Integer.decode(KBmanager.getMgr().getPref("userBrowserLimit")).intValue();
+    else show.append ("</b></FONT></td></tr></table>\n");
+    int limit = KBmanager.configuration.getUserBrowserLimit();
     if (role != null && role.equalsIgnoreCase("admin")) {
-        limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
+        limit = KBmanager.configuration.getAdminBrowserLimit();
     }
 
-    String ontology = KBmanager.getMgr().getPref("sumokbname");
+    String ontology = KBmanager.getMgr().getDefaultKbName();
     String formatToken = kb.name;
     String defaultNS = lang;
     DocGen gen = DocGen.getInstance();

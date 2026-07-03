@@ -33,7 +33,6 @@ public class SUMOtoTFAKBTest extends IntegrationTestBase {
 
     @AfterClass
     public static void postClass() {
-        KBmanager.initialized = false;
         SUMOKBtoTFAKB.initialized = false;
         SUMOtoTFAform.initialized = false;
     }

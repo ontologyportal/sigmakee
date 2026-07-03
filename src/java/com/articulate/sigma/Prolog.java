@@ -136,8 +136,8 @@ public class Prolog {
        String pfcp = null;
        try {
           KBmanager.getMgr().initializeOnce();
-          KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-          plFile = new File(KBmanager.getMgr().getPref("kbDir") + File.separator + kb.name + ".pl");
+          KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
+          plFile = new File(KBmanager.configuration.getKbDir() + File.separator + kb.name + ".pl");
           pfcp = plFile.getCanonicalPath();
           Prolog.kb = kb;
           Prolog.writePrologFile(pfcp);

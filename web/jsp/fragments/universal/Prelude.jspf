@@ -1,6 +1,7 @@
+<%@ page import="java.util.*" %>
 <%@ page
    language="java"
-   import="com.articulate.sigma.*,com.articulate.sigma.tp.*,com.articulate.sigma.trans.*,com.articulate.sigma.user.UserSessionManager,com.articulate.sigma.security.*,com.articulate.sigma.utils.*,com.articulate.sigma.wordNet.*,com.articulate.sigma.VerbNet.*,com.articulate.sigma.CCheckManager.*,java.text.ParseException,java.net.URLConnection, javax.servlet.http.HttpServletRequest, java.net.URL,com.oreilly.servlet.multipart.MultipartParser,com.oreilly.servlet.multipart.Part,com.oreilly.servlet.multipart.ParamPart,com.oreilly.servlet.multipart.FilePart,java.util.*,java.io.*, tptp_parser.*, TPTPWorld.*"
+   import="com.articulate.sigma.*,com.articulate.sigma.tp.*,com.articulate.sigma.trans.*,com.articulate.sigma.user.UserSessionManager,com.articulate.sigma.security.*,com.articulate.sigma.utils.*,com.articulate.sigma.wordNet.*,com.articulate.sigma.VerbNet.*,com.articulate.sigma.CCheckManager.*,com.articulate.sigma.parsing.Configuration,java.text.ParseException,java.net.URLConnection, javax.servlet.http.HttpServletRequest, java.net.URL,com.oreilly.servlet.multipart.MultipartParser,com.oreilly.servlet.multipart.Part,com.oreilly.servlet.multipart.ParamPart,com.oreilly.servlet.multipart.FilePart,java.util.*,java.io.*, tptp_parser.*, TPTPWorld.*"
    pageEncoding="UTF-8"
    session="false"
    contentType="text/html;charset=UTF-8"
@@ -84,11 +85,10 @@ if (StringUtil.isNonEmptyString(simple) && simple.equalsIgnoreCase("yes")) out.p
 String kbName = request.getParameter("kb");
 if (StringUtil.emptyString(kbName)) {
     kbName = "SUMO";
-    if (!mgr.kbs.keySet().contains("SUMO")) kbName = mgr.getPref("sumokbname");
+    if (!mgr.kbs.keySet().contains("SUMO")) kbName = mgr.getDefaultKbName();
 }
-boolean awsMode = "yes".equalsIgnoreCase(mgr.getPref("aws"));
-request.setAttribute("awsMode", awsMode);
-if (awsMode && "Editor.jsp".equalsIgnoreCase(pageURLString)) {
+request.setAttribute("awsMode", KBmanager.configuration.isAws());
+if (KBmanager.configuration.isAws() && "Editor.jsp".equalsIgnoreCase(pageURLString)) {
     mgr.setError("Editor is disabled on this node.");
     response.sendRedirect("KBs.jsp");
     return;
@@ -104,9 +104,9 @@ if (StringUtil.emptyString(flang)) flang = "SUO-KIF";
 String lang = userSessionManager.getHumanLanguage().getSigmaName();
 lang = HTMLformatter.processNaturalLanguage(lang, kb);
 if (StringUtil.emptyString(lang)) lang = "EnglishLanguage";
-String hostname = mgr.getPref("hostname");
+String hostname = KBmanager.configuration.getHostname();
 if (hostname == null) hostname = "localhost";
-String port = mgr.getPref("port");
+String port = KBmanager.configuration.getPort();
 if (port == null) port = "8080";
 String term = ValidationUtils.sanitizeSumoTerm(request.getParameter("term"));
 %>

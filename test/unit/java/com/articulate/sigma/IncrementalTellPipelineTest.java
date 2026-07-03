@@ -53,7 +53,7 @@ public class IncrementalTellPipelineTest {
     @BeforeClass
     public static void setUpClass() throws IOException {
         tempDir = Files.createTempDirectory("sigma-m35-test");
-        KBmanager.getMgr().setPref("kbDir", tempDir.toString());
+        KBmanager.getMgr().getConfiguration().setPreference("kbDir", tempDir.toString());
     }
 
     @AfterClass
@@ -86,7 +86,7 @@ public class IncrementalTellPipelineTest {
     private static KB buildKB(String... kifStatements) {
         KB kb = new KB("TestM35KB");
         kb.kbCache = new KBcache(kb);
-        KBmanager.getMgr().setPref("cacheDisjoint", "true");
+        KBmanager.getMgr().getConfiguration().setPreference("cacheDisjoint", "true");
         KIF kif = new KIF();
         for (String stmt : kifStatements)
             kif.parseStatement(stmt);

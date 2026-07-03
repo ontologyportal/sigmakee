@@ -358,7 +358,7 @@ public class SimpleDOMParser {
         String fname = "";
 
         //String _projectFileName = "projects-energy.xml";
-        //fname = KBmanager.getMgr().getPref("baseDir") + File.separator + _projectFileName;
+        //fname = KBmanager.configuration.getBaseDir() + File.separator + _projectFileName;
         fname = System.getProperty("user.home") + "/corpora/timebank_1_2/data/extra/wsj_0991.tml";
         System.out.println(fname);
         File f = new File(fname);

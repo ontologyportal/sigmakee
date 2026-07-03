@@ -44,9 +44,8 @@ public class SumoProcessCollectorTest extends UnitTestBase {
     public void testNaturalLanguageDrivingDestination() {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "Mark");
         process.addRole("destination", "HospitalBuilding");
-
         String actual = process.toNaturalLanguage();
-        String expected = "Mark drives to HospitalBuilding";
+        String expected = "Mark drives to a hospital building";
         assertEquals(expected, actual);
     }
 
@@ -55,9 +54,8 @@ public class SumoProcessCollectorTest extends UnitTestBase {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Driving", "Mark");
         process.addRole("destination", "HospitalBuilding");
         process.setPolarity(VerbProperties.Polarity.NEGATIVE);
-
         String actual = process.toNaturalLanguage();
-        String expected = "Mark doesn't drive to HospitalBuilding";
+        String expected = "Mark doesn't drive to a hospital building";
         assertEquals(expected, actual);
     }
 
@@ -96,9 +94,8 @@ public class SumoProcessCollectorTest extends UnitTestBase {
         SumoProcessCollector process = new SumoProcessCollector(knowledgeBase, "agent", "Seeing", "Mark");
         process.addRole("patient", "HospitalBuilding");
         process.setPolarity(VerbProperties.Polarity.NEGATIVE);
-
         String actual = process.toNaturalLanguage();
-        String expected = "Mark doesn't see HospitalBuilding";
+        String expected = "Mark doesn't see a hospital building";
         assertEquals(expected, actual);
     }
 
@@ -108,10 +105,8 @@ public class SumoProcessCollectorTest extends UnitTestBase {
         process.addRole("agent", "Julie");
         process.addRole("patient", "HospitalBuilding");
         process.setPolarity(VerbProperties.Polarity.NEGATIVE);
-
         String actual = process.toNaturalLanguage();
-        String expected = "Julie and Mark don't see HospitalBuilding";
+        String expected = "Julie and Mark don't see a hospital building";
         assertEquals(expected, actual);
     }
-
 }

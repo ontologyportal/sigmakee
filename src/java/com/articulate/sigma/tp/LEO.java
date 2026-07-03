@@ -84,7 +84,7 @@ public class LEO {
     public LEO (KB kb, String requestedTptpLanguage, int timeout, int maxAnswers, String sessionId) {
 
         if (debug>0) System.out.printf("LEO(%s, %d, %d, %s)", kb.name, timeout, maxAnswers, sessionId);
-        this.executablePath = KBmanager.getMgr().getPref("leoExecutable");
+        this.executablePath = KBmanager.configuration.getLeoExec();
         this.kb = kb;
         this.requestedTptpLanguage = "tff";
         if ("fof".equals(requestedTptpLanguage)) this.requestedTptpLanguage = "tptp";
@@ -92,10 +92,10 @@ public class LEO {
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
         this.sessionId = sessionId;
-        this.inferenceFileName = KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + "." + this.requestedTptpLanguage;
+        this.inferenceFileName = KBmanager.configuration.getKbDir() + File.separator + KBmanager.getMgr().getDefaultKbName() + "." + this.requestedTptpLanguage;
     }
 
-    public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.getMgr().getPref("leoExecutable")));}
+    public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.configuration.getLeoExec()));}
 
     /***************************************************************
      * Submits a query to the inference engine.
@@ -112,7 +112,7 @@ public class LEO {
             Set<Expr> processedQuery = fp.preProcessExpr(query.expr, true, this.kb);
             if (!processedQuery.isEmpty() && this != null) {
                 this.axiomIndex = 0;
-                String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+                String dir = KBmanager.configuration.getKbDir() + File.separator;
                 File s = new File(this.inferenceFileName);
                 if (!s.exists()) kb = KBmanager.getMgr().getKB(this.kb.name);
                 Set<String> tptpquery = new HashSet<>();
@@ -167,7 +167,7 @@ public class LEO {
             Set<Expr> processedQuery = fp.preProcessExpr(query, true, this.kb);
             if (!processedQuery.isEmpty() && this != null) {
                 this.axiomIndex = 0;
-                String kbDir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+                String kbDir = KBmanager.configuration.getKbDir() + File.separator;
                 File s;
                 if (useSession) {
                     Path sessionPath = com.articulate.sigma.trans.SessionTPTPManager.getSessionTPTPPath(this.sessionId, this.kb.name, this.requestedTptpLanguage);
@@ -321,7 +321,7 @@ public class LEO {
                 .inputSource(kbFile != null ? kbFile.getName() : "unknown")
                 .timeoutMs(timeoutMs)
                 .build();
-        String leoex = KBmanager.getMgr().getPref("leoExecutable");
+        String leoex = KBmanager.configuration.getLeoExec();
         if (StringUtil.emptyString(leoex)) {
             String msg = "Error in Leo.run(): no executable string in preferences";
             System.out.println(msg);
@@ -406,7 +406,7 @@ public class LEO {
             dir = sessionDir.toFile();
         }
         else {
-            dir = new File(KBmanager.getMgr().getPref("kbDir"));
+            dir = new File(KBmanager.configuration.getKbDir());
         }
         File stmtFile = new File(dir, "temp-stmt." + this.requestedTptpLanguage);
         System.out.println("TEMP: " + stmtFile.getAbsolutePath());
@@ -464,7 +464,7 @@ public class LEO {
         return kb.withUserAssertionLock(() -> {
             File dir;
             if (this.sessionId != null && !this.sessionId.isEmpty()) dir = SessionTPTPManager.getSessionDir(this.sessionId).toFile();
-            else dir = new File(KBmanager.getMgr().getPref("kbDir"));
+            else dir = new File(KBmanager.configuration.getKbDir());
             String fname = dir + File.separator + this.kb.name + KB._userAssertionsTHF;
             File ufile = new File(fname);
             if (ufile.exists()) return FileUtil.readLines(fname, false);
@@ -507,7 +507,7 @@ public class LEO {
         if (useSession) System.out.println("INFO Leo.run(): using session dir for temp files, sessionId=" + sessionId);
         String dir;
         if (useSession) dir = SessionTPTPManager.getSessionDir(sessionId).toString() + File.separator;
-        else dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+        else dir = KBmanager.configuration.getKbDir() + File.separator;
         String outfile = dir + "temp-comb." + this.requestedTptpLanguage;
         String stmtFile = dir + "temp-stmt." + this.requestedTptpLanguage;
         File fout = new File(outfile);
@@ -536,8 +536,8 @@ public class LEO {
 
         String result = "";
         try {
-            String LeoExecutable = KBmanager.getMgr().getPref("leoExecutable");
-            String LeoInput = KBmanager.getMgr().getPref("inferenceTestDir") + "prob.p";
+            String LeoExecutable = KBmanager.configuration.getLeoExec();
+            String LeoInput = KBmanager.configuration.getInferenceTestDir() + "prob.p";
             String LeoProblem;
             String responseLine;
             String LeoOutput = "";
@@ -642,9 +642,9 @@ public class LEO {
     public static void main (String[] args) throws Exception {
 
         KBmanager.getMgr().initializeOnce();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         KB kb = KBmanager.getMgr().getKB(kbName);
-        String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+        String dir = KBmanager.configuration.getKbDir() + File.separator;
         String lang = "thf";
         String outfile = dir + "temp-comb." + lang;
         String stmtFile = dir + "temp-stmt." + lang;

@@ -276,7 +276,7 @@ public class ProofProcessor {
         }
         try (FileReader r = new FileReader(f); // System.out.println( "INFO in WordNet.readNouns(): Reading file " + nounFile.getCanonicalPath() );
                  LineNumberReader lr = new LineNumberReader(r)) {
-            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            String kbName = KBmanager.getMgr().getDefaultKbName();
             Pattern p;
             Matcher m;
             Integer i;
@@ -321,7 +321,7 @@ public class ProofProcessor {
 
     	  try {
     		  KBmanager.getMgr().initializeOnce();
-    		  KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+    		  KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
     		  String stmt = "(subclass ?X Entity)";
 			  EProver eprover = new EProver(kb, "tptp", 30, 3);
 			  eprover.askEProver(stmt);
@@ -331,7 +331,7 @@ public class ProofProcessor {
                   qlist.append(Formula.VX);
                   tpp.parseProofOutput(result,kb);
     		  result = HTMLformatter.formatTPTP3ProofResult(tpp,stmt,"<hr>\n",
-					  KBmanager.getMgr().getPref("sumokbname"),"EnglishLanguage");
+					  KBmanager.getMgr().getDefaultKbName(),"EnglishLanguage");
     		  System.out.println(result);
     	  }
     	  catch (Exception ex) {
@@ -345,14 +345,14 @@ public class ProofProcessor {
 
 		try {
 			KBmanager.getMgr().initializeOnce();
-			KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+			KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 			List<String> lines = TPTP3ProofProcessor.joinLines((ArrayList<String>) FileUtil.readLines(filename,false));
 			String query = "";
 			StringBuilder answerVars = new StringBuilder("");
 			TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 			tpp.parseProofOutput(lines, query, kb,answerVars);
 			String result = HTMLformatter.formatTPTP3ProofResult(tpp,"","<hr>\n",
-					KBmanager.getMgr().getPref("sumokbname"),"EnglishLanguage");
+					KBmanager.getMgr().getDefaultKbName(),"EnglishLanguage");
 			System.out.println(result);
 		}
 		catch (Exception ex) {

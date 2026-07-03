@@ -37,13 +37,13 @@ public class EmailService {
     public EmailService() {
 
         KBmanager kbManager = KBmanager.getMgr();
-        this.smtpEmailAddress = kbManager.getPref("smtpEmailAddress");
-        this.smtpEmailUser = kbManager.getPref("smtpEmailUser");
-        this.smtpEmailPassword = kbManager.getPref("smtpEmailPassword");
-        this.smtpEmailServer = kbManager.getPref("smtpEmailServer");
-        this.webHostname = kbManager.getPref("hostname");
-        this.webPort = kbManager.getPref("port");
-        this.webProtocol = "true".equalsIgnoreCase(kbManager.getPref("https")) ? "https" : "http";
+        this.smtpEmailAddress = KBmanager.configuration.getSmtpEmailAddress();
+        this.smtpEmailUser = KBmanager.configuration.getSmtpEmailUser();
+        this.smtpEmailPassword = KBmanager.configuration.getSmtpEmailPassword();
+        this.smtpEmailServer = KBmanager.configuration.getSmtpEmailServer();
+        this.webHostname = KBmanager.configuration.getHostname();
+        this.webPort = KBmanager.configuration.getPort();
+        this.webProtocol = KBmanager.configuration.isHttps() ? "https" : "http";
         this.baseSigmaUrl = this.webProtocol + "://" + this.webHostname + ":" + webPort + "/sigma/";
     }
 
@@ -57,8 +57,6 @@ public class EmailService {
 
         UserDatabase userDatabase = new UserDatabase();
         try {
-            // Commented out to avoid spamming all admins.
-            // List<String> adminEmails = userDatabase.getAdminEmails();
             List<String> adminEmails = new ArrayList<>();
             adminEmails.add("shaunrose831@gmail.com");
             return sendHtmlEmail(adminEmails, subject, htmlBody);
@@ -388,7 +386,7 @@ public class EmailService {
     public static void main(String args[]) {
 
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         EmailService emailService = new EmailService();
         if (args != null && args.length > 0) {
             if (args[0].equals("-h")) showHelp();

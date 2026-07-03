@@ -151,7 +151,7 @@ public class CWAUNA {
             showHelp();
         else {
             KBmanager.getMgr().initializeOnce();
-            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            String kbName = KBmanager.getMgr().getDefaultKbName();
             KB kb = KBmanager.getMgr().getKB(kbName);
             if (args != null && args.length > 0 && args[0].contains("a"))
                 System.out.println(StringUtil.arrayListToCRLFString(run(kb)));

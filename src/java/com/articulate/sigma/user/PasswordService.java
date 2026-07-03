@@ -1,11 +1,11 @@
 package com.articulate.sigma.user;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Base64;
-
+import java.util.Locale;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.security.MessageDigest;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
@@ -18,6 +18,7 @@ public class PasswordService {
     private static final int PBKDF2_ITERATIONS = 310000;
     private static final int SALT_BYTES = 16;
     private static final int HASH_BITS = 256;
+    
     /********************************************************************
      * Generates a URL-safe random password reset token.
      * @return a URL-safe reset token

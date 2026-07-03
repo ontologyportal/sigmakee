@@ -20,7 +20,7 @@ public class PythonAPI {
     KB kb = null;
 
     public PythonAPI() {
-        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
     }
 
     public String getAllSub(String term, String rel) {

@@ -146,9 +146,6 @@ public class SUMOformulaToTPTPformula {
         // to other relations.
         String mentionSuffix = Formula.TERM_MENTION_SUFFIX;
         KBmanager mgr = KBmanager.getMgr();
-        boolean holdsPrefixInUse = ((mgr != null) && mgr.getPref("holdsPrefix").equalsIgnoreCase("yes"));
-        if (holdsPrefixInUse && !kifRelations.contains(st))
-            mentionSuffix = "";
 
         //----Places single quotes around strings, and replace \n by space
         //if (type == 34)
@@ -528,7 +525,7 @@ public class SUMOformulaToTPTPformula {
     private static String _tptpParseSUOKIFString(String s, boolean q, String requestedLang) {
 
         if (debug) System.out.println("tptpParseSUOKIFString.process(): string,query,lang: " + s + ", " + q + ", " + requestedLang);
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         // Use the passed requestedLang parameter instead of static field
         // This prevents race conditions with background TPTP generation
         if ("tff".equals(requestedLang))
@@ -606,7 +603,7 @@ public class SUMOformulaToTPTPformula {
 //        try {
 //            KBmanager mgr = KBmanager.getMgr();
 //            if (kb == null)
-//                kb = new KB("",mgr.getPref("kbDir"));
+//                kb = new KB("",KBmanager.configuration.getKbDir());
 //            if (!_f.isBalancedList()) {
 //                String errStr = "Unbalanced parentheses or quotes in: " + _f.getFormula();
 //                _f.errors.add(errStr);
@@ -659,7 +656,7 @@ public class SUMOformulaToTPTPformula {
     public static void testTptpParse() {
 
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         String teststr = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
                 "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
@@ -672,7 +669,7 @@ public class SUMOformulaToTPTPformula {
     public static void testTptpParse2() {
 
         KBmanager.getMgr().initializeOnce();
-        KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         String teststr = "\n" +
                 "(<=>\n" +
@@ -689,7 +686,7 @@ public class SUMOformulaToTPTPformula {
     public static void testTptpParse3() {
 
         KBmanager.getMgr().initializeOnce();
-        KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         String teststr = "(instance equal BinaryPredicate)";
         System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(teststr, false));

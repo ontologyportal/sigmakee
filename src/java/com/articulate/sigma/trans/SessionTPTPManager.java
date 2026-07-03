@@ -217,7 +217,7 @@ public class SessionTPTPManager {
      */
     public static Path getSessionTPTPPath(String sessionId, String kbName, String lang) {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         return Paths.get(kbDir, "sessions", sessionId, kbName + "." + lang);
     }
 
@@ -272,7 +272,7 @@ public class SessionTPTPManager {
      */
     public static Path getSessionDir(String sessionId) {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         return Paths.get(kbDir, "sessions", sessionId);
     }
 
@@ -374,7 +374,7 @@ public class SessionTPTPManager {
         if (!hasAffected && !hasNewForms) return mergeBaseWithSessionUA(sessionId, kb, ext);
         Object lock = sessionLocks.computeIfAbsent(sessionId, k -> new Object());
         synchronized (lock) {
-            String kbDir = KBmanager.getMgr().getPref("kbDir");
+            String kbDir = KBmanager.configuration.getKbDir();
             Path sharedBase  = Paths.get(kbDir, kb.name + "." + ext);
             Path sessionDir  = getSessionDir(sessionId);
             Path sessionFile = getSessionTPTPPath(sessionId, kb.name, ext);
@@ -730,11 +730,7 @@ public class SessionTPTPManager {
             String sessionId,
             List<Formula> parsedFormulas,
             Path outputPath,
-            String lang,
-            boolean tptpEnabled) {
-
-        if (!tptpEnabled)
-            return false;
+            String lang) {
 
         if (kb == null || parsedFormulas == null || parsedFormulas.isEmpty() || outputPath == null)
             return false;
@@ -1133,7 +1129,7 @@ public class SessionTPTPManager {
                 Files.createDirectories(sessionDir);
                 Files.deleteIfExists(tmpFile);
                 long startTime = System.currentTimeMillis();
-                String kbDir = KBmanager.getMgr().getPref("kbDir");
+                String kbDir = KBmanager.configuration.getKbDir();
                 Path sharedBase = Paths.get(kbDir, kb.name + "." + lang);
                 Path sessionUA = getSessionUATPTPPath(sessionId, kb.name);
                 if ("tff".equals(lang)) sessionUA = getSessionUATFFPath(sessionId, kb.name);

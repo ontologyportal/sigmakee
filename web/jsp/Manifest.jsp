@@ -24,7 +24,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
     reload - a request to reload the constituents of the KB.
     refetch - a request to 'git pull' to update the constituents of the KB.
 */
-    String kbDir = KBmanager.getMgr().getPref("kbDir");
+    String kbDir = KBmanager.configuration.getKbDir();
     File kbDirFile = new File(kbDir);
     String saveAs = request.getParameter("saveAs");
     String constituent = request.getParameter("constituent");
@@ -127,7 +127,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
     else if (constituent != null) {
         kb.addConstituent(constituent);
         KBmanager.getMgr().writeConfiguration();
-	    if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
+	    if (KBmanager.configuration.isCache()) {
 	        kb.kbCache = new KBcache(kb);
 	        kb.kbCache.buildCaches();
 	        kb.kbCache.writeCacheFile();

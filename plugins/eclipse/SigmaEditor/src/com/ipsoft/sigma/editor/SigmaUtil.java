@@ -89,7 +89,7 @@ public class SigmaUtil {
         catch (Exception e) {
             SigmaLogger.log(e.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         return kb;
 	}
 

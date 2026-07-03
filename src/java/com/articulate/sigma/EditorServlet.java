@@ -45,8 +45,7 @@ public class EditorServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
 
-        boolean awsMode = "yes".equalsIgnoreCase(KBmanager.getMgr().getPref("aws"));
-        if (awsMode) {
+        if (KBmanager.configuration.isAws()) {
             resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
             resp.setContentType("application/json; charset=UTF-8");
             resp.getWriter().write("{\"success\":false,\"message\":\"Editor is disabled on this node.\"}");

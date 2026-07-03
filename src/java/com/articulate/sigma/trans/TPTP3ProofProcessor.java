@@ -1119,7 +1119,6 @@ public class TPTP3ProofProcessor {
     /** *************************************************************
      * Creates a specified formatted image from a generated *.dot file
      * from GraphViz.
-     *
      * @param filename the generated *.dot filename to create an image from
      * @return the path to the generated image file
      */
@@ -1127,20 +1126,15 @@ public class TPTP3ProofProcessor {
 
         int exitCode;
         String retVal = "";
-        String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
-        String imageExt = KBmanager.getMgr().getPref("imageFormat");
-        if (imageExt == null || imageExt.isBlank())
-            imageExt = "png"; // default
+        String graphVizExec = KBmanager.configuration.getGraphVizExec();
+        String imageExt = "png";
         File file = new File(filename + "." + imageExt);
-
         List<String> cmd = new ArrayList<>();
-        cmd.add(graphVizDir + File.separator + "dot");
+        cmd.add(graphVizExec);
         cmd.add("-T" + imageExt);
         cmd.add("-O");
         cmd.add(filename);
         try {
-            // Build a proof image from an input file
-            // From: https://graphviz.org/doc/info/command.html#-O
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.directory(file.getParentFile());
             File log = new File(file.getParentFile(),"log");
@@ -1594,9 +1588,9 @@ public class TPTP3ProofProcessor {
         } else {
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             // need lexicons to paraphrase proofs!
-            //KBmanager.prefOverride.put("loadLexicons","false");
+            //KBmanager.getMgr().getConfiguration().setPreference("loadLexicons","false");
             KBmanager.getMgr().initializeOnce();
-            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            String kbName = KBmanager.getMgr().getDefaultKbName();
             KB kb = KBmanager.getMgr().getKB(kbName);
             if (args != null && args.length > 1 && args[0].contains("f")) {
                 try {
@@ -1634,7 +1628,7 @@ public class TPTP3ProofProcessor {
                     }
                     String skolems = tpp.findTypesForSkolemTerms(kb);
                     System.out.println("skolems: " + skolems);
-                    LanguageFormatter.setKB(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")));
+                    LanguageFormatter.setKB(KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName()));
                     List<String> lines = FileUtil.readLines(args[1], false);
                     String query = "";
                     StringBuilder answerVars = new StringBuilder("");

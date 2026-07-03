@@ -50,7 +50,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
         if (!initialized) {
             KBmanager.getMgr().initializeOnce();
-            kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             qChildren = kb.kbCache.getChildClasses("Quantity");
             iChildren = kb.kbCache.getChildClasses("Integer");
             rChildren = kb.kbCache.getChildClasses("RationalNumber");
@@ -76,9 +76,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             else
                 lChildren = new HashSet<>();
             qNotL.add("RealNumber");
-            String tLang = KBmanager.getMgr().getPref("TPTPlang");
-            if (!StringUtil.emptyString(tLang))
-                SUMOKBtoTFAKB.lang = tLang;
+            SUMOKBtoTFAKB.lang = "tff";
             SUMOtoTFAform.initOnce();
         }
         initialized = true;
@@ -733,8 +731,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             // tries to write a TPTP file and then sees that tff is set and tries to write tff, but then sorts etc
             // haven't been set
             SUMOKBtoTPTPKB.setLang("tff");
-            String kbName = KBmanager.getMgr().getPref("sumokbname");
-            String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.getLang();
+            String kbName = KBmanager.getMgr().getDefaultKbName();
+            String filename = KBmanager.configuration.getKbDir() + File.separator + kbName + "." + SUMOKBtoTPTPKB.getLang();
             System.out.println("SUMOKBtoTFAKB.main(): " + skbtfakb.kb.kbCache.getSignature("ListOrderFn"));
             String fileWritten = null;
             try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(filename)))) {

@@ -103,8 +103,6 @@ public class KB implements Serializable {
     public String language = "EnglishLanguage";
     /** The location of preprocessed KIF files, suitable for loading into EProver.     */
     public String kbDir = null;
-    /** The instance of the CELT process. */
-    public transient CELT celt = null;
     /** a cache built through lazy evaluation of the taxonomic depth of each term */
     public Map<String,Integer> termDepthCache = new ConcurrentHashMap<>();
     /** A SortedSet of Strings, which are all the terms in the KB.
@@ -235,18 +233,7 @@ public class KB implements Serializable {
 
         name = n;
         kbDir = dir;
-        try {
-            KBmanager mgr = KBmanager.getMgr();
-            if (mgr != null) {
-                String loadCelt = mgr.getPref("loadCELT");
-                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes")) {
-                    celt = new CELT();
-                }
-            }
-        } catch (IOException ioe) {
-            System.err.println("Error in KB(): " + ioe.getMessage());
-            celt = null;
-        }
+        KBmanager mgr = KBmanager.getMgr();
     }
 
     /***************************************************************
@@ -300,8 +287,6 @@ public class KB implements Serializable {
             this.errors = Sets.newTreeSet(kbIn.errors);
         this.modifiedContents = kbIn.modifiedContents;
         this.kbCache = new KBcache(kbIn.kbCache, this);
-        if (kbIn.celt != null)
-            this.celt = new CELT();
     }
 
     /***************************************************************
@@ -347,7 +332,7 @@ public class KB implements Serializable {
      */
     public KB(String n) {
 
-        this(n, KBmanager.getMgr().getPref("kbDir"));
+        this(n, KBmanager.configuration.getKbDir());
     }
 
     /**************************************************************
@@ -1631,7 +1616,7 @@ public class KB implements Serializable {
      */
     public void writeTerms() throws IOException {
 
-       String fname = KBmanager.getMgr().getPref("kbDir") + File.separator + "terms.txt";
+       String fname = KBmanager.configuration.getKbDir() + File.separator + "terms.txt";
 
        File file = new File(fname);
        try (Writer fr = new FileWriter(file, true)) {
@@ -1756,8 +1741,7 @@ public class KB implements Serializable {
                                             sessionId,
                                             parsedFormulas,
                                             tptpfile.toPath(),
-                                            tptpLang,
-                                            !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                                            tptpLang);
                             if (wroteInferenceAssertions) result += " and inference";
                             else result += " but not for local inference";
                         }
@@ -2539,7 +2523,7 @@ public class KB implements Serializable {
      */
     public void deleteUserAssertionsForInference() {
 
-        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        File dir = new File(KBmanager.configuration.getKbDir());
         deleteFileIfExists(new File(dir, this.name + KB._userAssertionsTPTP));
         deleteFileIfExists(new File(dir, this.name + KB._userAssertionsTFF));
         deleteFileIfExists(new File(dir, this.name + KB._userAssertionsTHF));
@@ -2550,7 +2534,7 @@ public class KB implements Serializable {
      */
     private void deleteStaleProverTempFiles() {
 
-        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        File dir = new File(KBmanager.configuration.getKbDir());
         deleteFileIfExists(new File(dir, "temp-stmt.tptp"));
         deleteFileIfExists(new File(dir, "temp-stmt.tff"));
         deleteFileIfExists(new File(dir, "temp-stmt.thf"));
@@ -2566,7 +2550,7 @@ public class KB implements Serializable {
      */
     private void deleteGeneratedBaseInferenceFiles() {
 
-        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        File dir = new File(KBmanager.configuration.getKbDir());
         LoggingUtils.log("Deleting " + this.name + ".tptp" + " and " + this.name + ".tff");
         deleteFileIfExists(new File(dir, this.name + ".tptp"));
         deleteFileIfExists(new File(dir, this.name + ".tff"));
@@ -2588,7 +2572,7 @@ public class KB implements Serializable {
     public void deleteUserAssertions() throws IOException {
 
         synchronized (uaLock) {
-            File kbDirectory = new File(KBmanager.getMgr().getPref("kbDir"));
+            File kbDirectory = new File(KBmanager.configuration.getKbDir());
             Iterator<String> it = constituents.iterator();
             while (it.hasNext()) {
                 String nme = it.next();
@@ -2606,7 +2590,7 @@ public class KB implements Serializable {
 
     private void debugCheckUserAssertionCleanup(String marker) {
 
-        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        File dir = new File(KBmanager.configuration.getKbDir());
         List<String> files = Arrays.asList(
                 this.name + _userAssertionsString,
                 this.name + _userAssertionsTPTP,
@@ -2632,7 +2616,7 @@ public class KB implements Serializable {
 
         synchronized (uaLock) {
             try {
-                File kbDirectory = new File(KBmanager.getMgr().getPref("kbDir"));
+                File kbDirectory = new File(KBmanager.configuration.getKbDir());
                 List<String> removedUserAssertionFiles = new ArrayList<>();
                 Iterator<String> it = constituents.iterator();
                 while (it.hasNext()) {
@@ -2861,7 +2845,7 @@ public class KB implements Serializable {
             if (newConstituentIterator.hasNext()) System.out.println("INFO in KB.reload()");
             while (newConstituentIterator.hasNext()) addConstituent(newConstituentIterator.next());
             // build kb cache when "cache" = "yes"
-            //if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
+            //if (KBmanager.configuration.isCache()) {
             kbCache = new KBcache(this);
             kbCache.buildCaches();
             checkArity(); // Re-perform arity checks on everything
@@ -3380,7 +3364,7 @@ public class KB implements Serializable {
 
         String filename = null;
         try {
-            String inferenceEngine = KBmanager.getMgr().getPref("eprover");
+            String inferenceEngine = KBmanager.configuration.getEproverExec();
             if (StringUtil.isNonEmptyString(inferenceEngine)) {
                 File executable = new File(inferenceEngine);
                 if (executable.exists()) {
@@ -3448,10 +3432,8 @@ public class KB implements Serializable {
         long millis = System.currentTimeMillis();
         Set<String> newTreeSet = new TreeSet<>();
         KBmanager mgr = KBmanager.getMgr();
-        boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
         kbCache.kb = this;
         kbCache.buildCaches();
-        if (!tptpParseP) return newTreeSet;
         Iterator<String> it = forms.iterator();
         FormulaPreprocessor fp = new FormulaPreprocessor();
         String form;
@@ -3479,16 +3461,14 @@ public class KB implements Serializable {
             if (debug>1) System.out.println("INFO in KB.preProcess(): f : " + f);
             processed = fp.preProcessExpr(f, false, this); // not queries
             tptp = new HashSet<>();
-            if (tptpParseP) {
-                for (Expr ex : processed) {
-                    Formula pform = new Formula(ex.toKifString());
-                    String tptpStr = ExprToTPTP.translateKifString(pform.getFormula(), false,
-                            com.articulate.sigma.trans.SUMOKBtoTPTPKB.getLang());
-                    if (tptpStr == null)
-                        tptpStr = SUMOformulaToTPTPformula.tptpParseSUOKIFString(pform.getFormula(), false);
-                    tptp.add(tptpStr); // not a query
-                    errors.addAll(pform.getErrors());
-                }
+            for (Expr ex : processed) {
+                Formula pform = new Formula(ex.toKifString());
+                String tptpStr = ExprToTPTP.translateKifString(pform.getFormula(), false,
+                        com.articulate.sigma.trans.SUMOKBtoTPTPKB.getLang());
+                if (tptpStr == null)
+                    tptpStr = SUMOformulaToTPTPformula.tptpParseSUOKIFString(pform.getFormula(), false);
+                tptp.add(tptpStr); // not a query
+                errors.addAll(pform.getErrors());
             }
             for (String p : tptp) {
                 if (StringUtil.isNonEmptyString(p)) {
@@ -3681,7 +3661,7 @@ public class KB implements Serializable {
         tpp.printProof(3);
         System.out.println();
         KBmanager.getMgr().removeKB(kb.name);
-        String prefix = KBmanager.getMgr().getPref("kbDir") + File.separator;
+        String prefix = KBmanager.configuration.getKbDir() + File.separator;
         String filename = prefix + "SUMO_contra.kif";
         System.out.println("KB.contradictionHelp(): prefix: " + prefix);
         Map<String, Formula> sourceAxioms = collectSourceAxioms(kb,tpp);
@@ -3739,7 +3719,7 @@ public class KB implements Serializable {
         KB kb;
         try {
             KBmanager.getMgr().initializeOnce();
-            kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             System.out.println("Testing  kb.termFormatMapAll('EnglishLanguage')");
             Map<String, List<String>> termFormats = kb.getTermFormatMapAll("EnglishLanguage");
             List<String> motherTermFormats = termFormats.get("mother");
@@ -3755,7 +3735,7 @@ public class KB implements Serializable {
             System.out.println("KB.test(): " + kb.getAllSub("ColorAttribute","subAttribute"));
             String contents = "(subclass ?X Entity)";
             System.out.println("KB.test(): query Vampire with: " + contents);
-            String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+            String dir = KBmanager.configuration.getKbDir() + File.separator;
             String type = "tptp";
             String outfile = dir + "temp-comb." + type;
             System.out.println("KB.test(): query Vampire on file: " + outfile);
@@ -3832,7 +3812,7 @@ public class KB implements Serializable {
                 // Refresh ExecutorService to use translation-optimized threading
                 KButilities.refreshExecutorService();
                 KBmanager.getMgr().initializeOnce();
-                String kbName = KBmanager.getMgr().getPref("sumokbname");
+                String kbName = KBmanager.getMgr().getDefaultKbName();
                 KB kb = KBmanager.getMgr().getKB(kbName);
                 if (args != null)
                     System.out.println("KB.main(): command line arguments: " + argMap);

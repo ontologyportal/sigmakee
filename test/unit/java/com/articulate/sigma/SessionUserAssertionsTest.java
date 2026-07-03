@@ -60,13 +60,13 @@ public class SessionUserAssertionsTest extends UnitTestBase {
 
     private static File sharedUserAssertionFile() {
 
-        return new File(KBmanager.getMgr().getPref("kbDir"),
+        return new File(KBmanager.configuration.getKbDir(),
                 SigmaTestBase.kb.name + KB._userAssertionsString);
     }
 
     private static void deleteSharedUserAssertionFiles() throws IOException {
 
-        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        File dir = new File(KBmanager.configuration.getKbDir());
         for (String suffix : USER_ASSERTION_SUFFIXES)
             Files.deleteIfExists(new File(dir, SigmaTestBase.kb.name + suffix).toPath());
     }

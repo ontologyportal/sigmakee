@@ -276,7 +276,7 @@ public class TPTPFileChecker {
     private static ProcessOutput runTptp4x(File inputFile, String... args) throws IOException, InterruptedException {
         
         String[] cmd = new String[args.length + 2];
-        cmd[0] = "tptp4X";
+        cmd[0] = KBmanager.configuration.getTptpExec();
         System.arraycopy(args, 0, cmd, 1, args.length);
         cmd[cmd.length - 1] = inputFile.getAbsolutePath(); 
         ProcessBuilder pb = new ProcessBuilder(cmd);

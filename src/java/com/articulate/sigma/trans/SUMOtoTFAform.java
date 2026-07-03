@@ -3418,17 +3418,22 @@ public class SUMOtoTFAform {
      */
     public static void initOnce() {
 
-        if (initialized)
-            return;
+        if (initialized) return;
         KBmanager.getMgr().initializeOnce();
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         kb = KBmanager.getMgr().getKB(kbName);
         fp = new FormulaPreprocessor();
-        FormulaPreprocessor.addOnlyNonNumericTypes = true;
-        buildNumericConstraints();
-        initNumericConstantTypes();
-        numericConstantCount = getNumericConstantTypes().keySet().size();
-        initialized = true;
+        boolean oldAddOnlyNonNumericTypes = FormulaPreprocessor.addOnlyNonNumericTypes;
+        try {
+            FormulaPreprocessor.addOnlyNonNumericTypes = true;
+            buildNumericConstraints();
+            initNumericConstantTypes();
+            numericConstantCount = getNumericConstantTypes().keySet().size();
+            initialized = true;
+        }
+        finally {
+            FormulaPreprocessor.addOnlyNonNumericTypes = oldAddOnlyNonNumericTypes;
+        }
     }
 
     /***************************************************************
@@ -3675,8 +3680,8 @@ public class SUMOtoTFAform {
                 System.out.println(kb.isRelation(bare));
                 /**
                  if (debug) System.out.println("SUMOtoTFAform.main(): contains ListFn__1Fn: " + kb.terms.contains("ListFn__1Fn"));
-                 String kbName = KBmanager.getMgr().getPref("sumokbname");
-                 String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
+                 String kbName = KBmanager.getMgr().getDefaultKbName();
+                 String filename = KBmanager.configuration.getKbDir() + File.separator + kbName + ".tff";
                  PrintWriter pw = null;
                 try {
                     pw = new PrintWriter(new FileWriter(filename));

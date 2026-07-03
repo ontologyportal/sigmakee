@@ -32,7 +32,7 @@
 //        long start = System.currentTimeMillis();
 //        Path path = Paths.get(System.getenv("SIGMA_HOME") + File.separator + "KBs" + File.separator + "Merge.kif");
 //        sv = SuokifVisitor.parseFile(path.toFile());
-//        pre = new Preprocessor(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")));
+//        pre = new Preprocessor(KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName()));
 //
 //        Preprocessor.removeMultiplePredVar(sv); // remove explosive rules with multiple predicate variables
 //
@@ -73,7 +73,7 @@
 //                "            (equal ?NUMBER ?NUMBER1)\n" +
 //                "            (equal ?NUMBER ?NUMBER2))))";
 //        sv = SuokifVisitor.parseString(s);
-//        pre = new Preprocessor(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")));
+//        pre = new Preprocessor(KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName()));
 //        sv.hasPredVar.removeAll(sv.multiplePredVar); // remove explosive rules with multiple predicate variables
 //        sv.rules.removeAll(sv.multiplePredVar);
 //        sv.hasRowVar.removeAll(sv.multiplePredVar);

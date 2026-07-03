@@ -585,7 +585,7 @@ public class LanguageFormatter {
         String model = "llama3.2";
 //        String model = "qwen2.5:14b-instruct";
 
-        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+        String ollamaHost = KBmanager.configuration.getOllamaHost();
         if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
 
         if (ollamaClient == null) ollamaClient = new OllamaClient(ollamaHost);
@@ -747,7 +747,7 @@ public class LanguageFormatter {
     private String buildDocumentationFromMaps(Set<String> symbols) {
         StringBuilder sb = new StringBuilder();
 
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         for (String sym : symbols) {
 
@@ -770,7 +770,7 @@ public class LanguageFormatter {
 
 
     public static boolean checkOllamaHealth(){
-        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+        String ollamaHost = KBmanager.configuration.getOllamaHost();
         if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
         OllamaClient oc = new OllamaClient(ollamaHost, 1000, 1500); // short timeouts
         return oc.isHealthy();
@@ -849,7 +849,7 @@ public class LanguageFormatter {
 
  
         String model = "llama3.2";
-        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+        String ollamaHost = KBmanager.configuration.getOllamaHost();
         if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
         
         OllamaClient ollama = new OllamaClient(ollamaHost, 10_000, 60_000); // longer timeouts for proof summarization
@@ -1856,7 +1856,7 @@ public class LanguageFormatter {
         catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         // INFO in LanguageFormatter.paraphraseLogicalOperator(): bad result for
         String stmt =  "(and (instance ?GUIE1 GUIElement) (hasGUEState ?GUIE1 GUE_ActiveState)" +
@@ -1877,7 +1877,7 @@ public class LanguageFormatter {
         catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         String stmt = "(exists (?D ?H)\n" +
                 "   (and\n" +
@@ -1945,7 +1945,7 @@ public class LanguageFormatter {
         catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         debug = true;
         // INFO in LanguageFormatter.paraphraseLogicalOperator(): bad result for
         String stmt =  "(exists (?FINANCIALTRANSACTION1 ?AGENT2 ) (broker ?FINANCIALTRANSACTION1 ?AGENT2 ))";
@@ -1972,7 +1972,7 @@ public class LanguageFormatter {
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         debug = true;
         // INFO in LanguageFormatter.paraphraseLogicalOperator(): bad result for
         String stmt = "(or (not (subclass Human Object)) (not (instance Human Class)) spl6_2)";
@@ -2024,7 +2024,7 @@ public class LanguageFormatter {
         else if (args.length > 1 && args[0].equals("-g")) {
             KBmanager.getMgr().initializeOnce();
             Formula f = new Formula(args[1]);
-            kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             System.out.println("translation for\n" + f);
             String actual = toEnglish(StringUtil.removeEnclosingQuotes(args[1]));
             System.out.println(StringUtil.filterHtml(actual));

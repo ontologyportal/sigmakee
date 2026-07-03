@@ -780,10 +780,10 @@ public class WordNetUtilities {
     private static void processMergers (Map<String,String> hm, String fileName,
                                         String pattern, String posNum) throws IOException {
 
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        try (Writer fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new.txt");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
+        try (Writer fw = new FileWriter(KBmanager.configuration.getKbDir() + File.separator + fileName + "-new.txt");
              PrintWriter pw = new PrintWriter(fw);
-             Reader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + ".txt");
+             Reader r = new FileReader(KBmanager.configuration.getKbDir() + File.separator + fileName + ".txt");
              LineNumberReader lr = new LineNumberReader(r)) {
             String line, oldTerm, bareOldTerm, mapType, synset, newTerm;
             Pattern p;
@@ -828,7 +828,7 @@ public class WordNetUtilities {
 
         Map<String,String> hm = new HashMap<>();
 
-        String dir = KBmanager.getMgr().getPref("kbDir");
+        String dir = KBmanager.configuration.getKbDir();
         FileReader r = new FileReader(dir + File.separator + "newMappings20.dat");
         LineNumberReader lr = new LineNumberReader(r);
         String line, synset, SUMOterm;
@@ -903,9 +903,9 @@ public class WordNetUtilities {
      */
     public static void processMissingLinks(String fileName, String pattern, String posNum) throws IOException {
 
-        try (Writer fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new.txt");
+        try (Writer fw = new FileWriter(KBmanager.configuration.getKbDir() + File.separator + fileName + "-new.txt");
             PrintWriter pw = new PrintWriter(fw);
-            Reader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + ".txt");
+            Reader r = new FileReader(KBmanager.configuration.getKbDir() + File.separator + fileName + ".txt");
             LineNumberReader lr = new LineNumberReader(r)) {
             String line, synset, newTerm;
             Pattern p;
@@ -979,9 +979,9 @@ public class WordNetUtilities {
      */
     public static void updateWNversionProcess(String fileName, String pattern, String posNum) throws IOException {
 
-        try (Writer fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new");
+        try (Writer fw = new FileWriter(KBmanager.configuration.getKbDir() + File.separator + fileName + "-new");
             PrintWriter pw = new PrintWriter(fw);
-            Reader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName);
+            Reader r = new FileReader(KBmanager.configuration.getKbDir() + File.separator + fileName);
             LineNumberReader lr = new LineNumberReader(r)) {
             String line, newsynset, oldsynset, term;
             Pattern p;
@@ -2488,7 +2488,7 @@ public class WordNetUtilities {
      */
     public static Map<String,Set<String>> sensoryWords() {
 
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         KBcache cache = kb.kbCache;
         if (debug) System.out.println();
         if (debug) System.out.println("INFO in WordNetUtilities.sensorySynsets(): ");
@@ -2714,7 +2714,7 @@ public class WordNetUtilities {
                 "Touching", "TextureAttribute", "PerceptualAttribute", "TemperatureAttribute",
                 "ShapeAttribute", "PsychologicalProcess","PsychologicalAttribute", "EmotionalState"};
 
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
 
         if (testWordDebug) System.out.println("WordNetUtilities.testWord(): word: " + word);
         Set<String> synsets = wordsToSynsets(word);
@@ -2853,7 +2853,7 @@ public class WordNetUtilities {
             showHelp();
         else {
             KBmanager.getMgr().initializeOnce();
-            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            String kbName = KBmanager.getMgr().getDefaultKbName();
             if (args.length > 1 && args[0].equals("-w")) {
                 String result = WordNet.wn.page(StringUtil.removeEnclosingQuotes(args[1]), 0, kbName, "", "");
                 System.out.println(StringUtil.removeHTML(result));

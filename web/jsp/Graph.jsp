@@ -125,13 +125,6 @@ function setWidth(id) {
               out.println("</table></p>\n");
           }
           else { // it is a graph
-              int width = 500;
-              String widthStr = KBmanager.getMgr().getPref("graphWidth");
-              if (!StringUtil.emptyString(widthStr))
-                  width = Integer.parseInt(widthStr);
-              String scrWidth = request.getParameter("scrWidth");
-              if (!StringUtil.emptyString(scrWidth))
-                  width = Integer.parseInt(scrWidth);
               String edges = "";
               String fname = null;
               boolean graphAvailable = false;
@@ -149,7 +142,7 @@ function setWidth(id) {
                   }
               }
               if (graphAvailable) {
-                  String imageExt = KBmanager.getMgr().getPref("imageFormat");
+                  String imageExt = "png";
                   out.println("<img src='graph/" + fname + ".dot." + imageExt + "'/>");
               }
               else {

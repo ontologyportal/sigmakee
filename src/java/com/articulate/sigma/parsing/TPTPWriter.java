@@ -576,7 +576,7 @@
 //        long end = (System.currentTimeMillis()-start)/1000;
 //        System.out.println("INFO in TPTPWriter.translate(): # time to parse: " + end);
 //        start = System.currentTimeMillis();
-//        Preprocessor pre = new Preprocessor(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")));
+//        Preprocessor pre = new Preprocessor(KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName()));
 //        if (args[0].contains("r"))
 //            Preprocessor.removeMultiplePredVar(sv); // remove explosive rules with multiple predicate variables
 //        Collection<FormulaAST> rules = pre.preprocess(sv.hasPredVar, sv.hasRowVar, sv.rules); // 2. Pre-processing

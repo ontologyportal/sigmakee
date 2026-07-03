@@ -921,7 +921,7 @@ public class KButilities implements ServletContextListener {
      */
     private static void semnetAsJSON2(Set<String> triples, KB kb,String language) {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         String nodeFileStr = kbDir + File.separator + "nodes.json";
         String edgeFileStr = kbDir + File.separator + "edges.json";
         if (StringUtil.emptyString(language))
@@ -980,7 +980,7 @@ public class KButilities implements ServletContextListener {
      */
     private static void semnetAsTriples(Set<String> triples, KB kb,String language) {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         String fileStr = kbDir + File.separator + "triples.txt";
         if (StringUtil.emptyString(language))
             language = "EnglishLanguage";
@@ -1024,7 +1024,7 @@ public class KButilities implements ServletContextListener {
      */
     private static void semnetAsSQLGraph(Set<String> triples, KB kb,String language) {
 
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String kbDir = KBmanager.configuration.getKbDir();
         String nodeFileStr = kbDir + File.separator + "nodes.sql";
         String edgeFileStr = kbDir + File.separator + "edges.sql";
         if (StringUtil.emptyString(language))
@@ -1197,7 +1197,7 @@ public class KButilities implements ServletContextListener {
             int counter = 0;
             System.out.println("INFO in KB.generateTPTPTestAssertions()");
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             System.out.println("INFO in KB.generateTPTPTestAssertions(): printing predicates");
             String argType1, argType2;
             for (String term : kb.terms) {
@@ -1236,7 +1236,7 @@ public class KButilities implements ServletContextListener {
         try {
             System.out.println("INFO in KB.generateRelationList()");
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             System.out.println("INFO in KB.generateRelationList(): printing predicates");
             for (String term : kb.terms) {
                 if (Character.isLowerCase(term.charAt(0)))
@@ -1702,7 +1702,7 @@ public class KButilities implements ServletContextListener {
             showHelp();
         else {
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             System.out.println("KButilities.main(): completed init");
             KButilities kbu = new KButilities();
             if (args != null && args.length > 1 && args[0].equals("-c")) {

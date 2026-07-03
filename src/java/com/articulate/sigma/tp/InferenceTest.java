@@ -177,7 +177,7 @@ public class InferenceTest {
      */
     private void deleteSharedUserAssertionFiles(KB kb) {
 
-        final File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        final File dir = new File(KBmanager.configuration.getKbDir());
         final String kbName = kb.name;
         deleteIfExists(new File(dir, kbName + KB._userAssertionsString)); // *_UserAssertions.kif
         deleteIfExists(new File(dir, kbName + KB._userAssertionsTPTP));   // *_UserAssertions.tptp
@@ -294,7 +294,7 @@ public class InferenceTest {
         if (this.timeout < 0) errors.add("Invalid timeout!: " + this.timeout);
         if (StringUtil.emptyString(this.expectedAnswers)) errors.add("No expected answers provided!");
         if (StringUtil.emptyString(this.query)) errors.add("INVALID QUERY!: " + this.query);
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         for (String constituent : this.requiredConstituents) {
             String requiredName = constituent.trim();
             if (requiredName.length() >= 2 && requiredName.startsWith("\"") && requiredName.endsWith("\"")) {
@@ -456,7 +456,7 @@ public class InferenceTest {
         }
         if(argMap.containsKey("r") && argMap.get("r").size() == 1) {
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             InferenceTest test = new InferenceTest(argMap.get("r").get(0));
             test.runTest(kb, "VAMPIRE");
             test.printResult();

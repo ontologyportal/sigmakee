@@ -124,19 +124,12 @@ public class HTMLformatter {
      */
     public static String createHrefStart() {
 
-        String hostname = KBmanager.getMgr().getPref("hostname");
-        if (hostname == null)
-            hostname = "localhost";
-        String port = KBmanager.getMgr().getPref("port");
-        if (port == null)
-            port = "8080";
-        String https = KBmanager.getMgr().getPref("https");
-        //System.out.println("Info in HTMLformatter.createHrefStart(): https is " + https);
-        if (https == null || !https.equals("true"))
-            https = "http";
-        else
-            https = "https";
-        return https + "://" + hostname + ":" + port;
+        String hostname = KBmanager.configuration.getHostname();
+        if (hostname == null) hostname = "localhost";
+        String port = KBmanager.configuration.getPort();
+        if (port == null) port = "8080";
+        String protocol = KBmanager.configuration.isHttps() ? "https" : "http";
+        return protocol + "://" + hostname + ":" + port;
     }
 
     /**************************************************************
@@ -703,8 +696,7 @@ public class HTMLformatter {
                 continue;
             }
             //System.out.println("INFO in HTMLformatter.formatFormulaList(): structured formula: " + f);
-            if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
-                    !KButilities.isCacheFile(f.sourceFile)) {
+            if (KBmanager.configuration.isShowCachedFormulas() || !KButilities.isCacheFile(f.sourceFile)) {
                 arg0 = f.getStringArgument(0);
                 show.append("<tr><td width=\"50%\" valign=\"top\">");
                 if (flang.equals("TPTP") || flang.equals("traditionalLogic"))
@@ -748,40 +740,6 @@ public class HTMLformatter {
     }
 
     /**************************************************************
-     * Launch the jEdit editor with the cursor at the specified line
-     * number.  Edit the file in the specified editDir, which should
-     * be different from Sigma's KBs directory.  Recommended practice
-     * is to edit .kif files in your local Git repository and then
-     * copy them to the .sigmakee/KBs directory
-     */
-    public static void launchEditor(String file, int line) {
-
-        String editDir = KBmanager.getMgr().getPref("editDir");
-        if (StringUtil.emptyString(editDir)) {
-            String git = System.getenv("ONTOLOGYPORTAL_GIT");
-            if (!StringUtil.emptyString(git))
-                editDir = git + File.separator + "sumo";
-        }
-        String jeditcmd = KBmanager.getMgr().getPref("jedit");
-        if (StringUtil.emptyString(jeditcmd))
-                jeditcmd = "/user/share/jedit/jedit"; // default
-        List<String> commands = new ArrayList<>(Arrays.asList(
-                jeditcmd, editDir + File.separator + file, " +line:" + line,
-                "-norestore", "-reuseview"));
-        System.out.println("EProver(): command: " + commands);
-        try {
-            System.out.println("launchEditor(): commands: " + commands);
-            ProcessBuilder _builder = new ProcessBuilder(commands);
-            _builder.redirectErrorStream(false);
-            Process _jedit = _builder.start();
-        }
-        catch (IOException ioe) {
-            System.err.println("launchEditor(): " + ioe.getMessage());
-            ioe.printStackTrace();
-        }
-    }
-
-    /**************************************************************
      * Create the HTML for a section of the Sigma term browser page.
      */
     public static String browserSectionFormatLimit(String term, String header, KB kb,
@@ -794,7 +752,7 @@ public class HTMLformatter {
         StringBuilder show = new StringBuilder();
         String limitString = "";
         int localLimit = start + limit;
-        if (forms != null && !KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes"))
+        if (forms != null && !KBmanager.configuration.isShowCachedFormulas())
             forms = TaxoModel.removeCached(forms);
         if (forms != null && !forms.isEmpty()) {
             //Collections.sort(forms);
@@ -1236,10 +1194,10 @@ public class HTMLformatter {
         if (args != null && args.length > 0 && args[0].equals("-h"))
             showHelp();
         else {
-            KBmanager.prefOverride.put("loadLexicons", "false");
+            KBmanager.configuration.setPreference("loadLexicons", "false");
             System.out.println("KB.main(): Note! Not loading lexicons.");
             KBmanager.getMgr().initializeOnce();
-            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            String kbName = KBmanager.getMgr().getDefaultKbName();
             KB kb = KBmanager.getMgr().getKB(kbName);
             if (args != null)
                 System.out.println("KB.main(): args[0]: " + args[0]);

@@ -20,15 +20,6 @@ if (StringUtil.emptyString(flang)) flang = "SUO-KIF";
 nonRelTerm = request.getParameter("nonrelation");
 relTerm = StringUtil.emptyString(relTerm) ? request.getParameter("relation") : "";
 
-// ???
-if (!StringUtil.emptyString(filename) && false) {
-    int l = 0;
-    if (!StringUtil.emptyString(line)) {
-        try {l = Integer.parseInt(line);}
-        catch (NumberFormatException nfe) {}
-    }
-    HTMLformatter.launchEditor(filename,l);
-}
 // Base href link 
 HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?kb=" + kbName + "&flang=" + flang + "&lang=" + lang;
 
@@ -100,8 +91,8 @@ else if ((kb != null) && (term != null) && kb.containsTerm(term)) {  // Build th
         show.append("</tr></table>\n");
     }
     show.append ("</b></font></td></tr></table>\n");
-    int limit = Integer.decode(KBmanager.getMgr().getPref("userBrowserLimit")).intValue();
-    if (role != null && !role.equalsIgnoreCase("guest")) limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
+    int limit = KBmanager.configuration.getUserBrowserLimit();
+    if (role != null && !role.equalsIgnoreCase("guest")) limit = KBmanager.configuration.getAdminBrowserLimit();
     for (int arg = 1; arg < 6; arg++) show.append(HTMLformatter.browserSectionFormatLimit(term, "appearance as argument number " + arg, kb, lang,flang,0,limit,arg,"arg"));
     show.append(HTMLformatter.browserSectionFormatLimit(term, "antecedent", kb, lang,flang,0,limit,0,"ant"));
     show.append(HTMLformatter.browserSectionFormatLimit(term, "consequent", kb, lang,flang,0,limit,0,"cons"));

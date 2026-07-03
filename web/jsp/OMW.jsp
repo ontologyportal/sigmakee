@@ -31,24 +31,54 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 <%
   String params = "flang=" + flang + "&lang=" + lang + "&kb=" + kbName;
-  if (synset != null && synset != "")
-      out.println(OMWordnet.displaySynset(kbName,synset,params));           
+  if (!StringUtil.emptyString(synset))
+      out.println(OMWordnet.displaySynset(kbName,synset,params));         
 %>
 <BR>
 <%
 String SUMOterm = "";
-switch(synset.charAt(synset.length()-1)) {
-case 'n': SUMOterm = WordNet.wn.nounSUMOHash.get(OMWordnet.fromOMWsynset(synset)); break;
-case 'v': SUMOterm = WordNet.wn.verbSUMOHash.get(OMWordnet.fromOMWsynset(synset)); break;
-case 'a': SUMOterm = WordNet.wn.adjectiveSUMOHash.get(OMWordnet.fromOMWsynset(synset)); break;
-case 'r': SUMOterm = WordNet.wn.adverbSUMOHash.get(OMWordnet.fromOMWsynset(synset)); break;
-}
-String baseSUMOterm = WordNetUtilities.getBareSUMOTerm(SUMOterm);
+String baseSUMOterm = "";
+if (!StringUtil.emptyString(synset)) {
+    switch (synset.charAt(synset.length() - 1)) {
+      case 'n':
+          SUMOterm = WordNet.wn.nounSUMOHash.get(OMWordnet.fromOMWsynset(synset));
+          break;
+      case 'v':
+          SUMOterm = WordNet.wn.verbSUMOHash.get(OMWordnet.fromOMWsynset(synset));
+          break;
+      case 'a':
+          SUMOterm = WordNet.wn.adjectiveSUMOHash.get(OMWordnet.fromOMWsynset(synset));
+          break;
+      case 'r':
+          SUMOterm = WordNet.wn.adverbSUMOHash.get(OMWordnet.fromOMWsynset(synset));
+          break;
+    }
+    if (!StringUtil.emptyString(SUMOterm)) {
+        baseSUMOterm = WordNetUtilities.getBareSUMOTerm(SUMOterm);
 %>
 
-SUMO mapping: <a href="Browse.jsp?<%= params%>&term=<%= baseSUMOterm %>"><%= baseSUMOterm %></a><P>
+SUMO mapping: <a href="Browse.jsp?<%= params %>&term=<%= baseSUMOterm %>"><%= baseSUMOterm %></a><P>
 
-<a href="http://www.casta-net.jp/~kuribayashi/cgi-bin/wn-multi.cgi?term=<%=synset %>">Browse</a> Open Multilingual Wordnet site<P>
+<a href="http://www.casta-net.jp/~kuribayashi/cgi-bin/wn-multi.cgi?term=<%= synset %>">Browse</a> Open Multilingual Wordnet site<P>
+
+<%
+    }
+    else {
+%>
+
+No SUMO mapping found for synset: <%= synset %><P>
+
+<%
+    }
+}
+else {
+%>
+
+No synset parameter was provided.<P>
+
+<%
+}
+%>
 
 <small>
 Source language data (linked through OMW) from:

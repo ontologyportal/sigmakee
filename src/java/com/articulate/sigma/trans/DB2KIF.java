@@ -295,7 +295,7 @@ public class DB2KIF {
      */
     public static void initValues(DB2KIF dbkif) {
 
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbName = KBmanager.getMgr().getDefaultKbName();
         kb = KBmanager.getMgr().getKB(kbName);
         String t;
         Set<String> insts;

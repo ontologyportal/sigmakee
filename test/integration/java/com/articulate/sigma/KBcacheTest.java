@@ -19,7 +19,7 @@ public class KBcacheTest extends IntegrationTestBase {
         List<String> reqFiles =
                 Arrays.asList("Merge.kif", "Mid-level-ontology.kif");
         for (String s : reqFiles) {
-            boolean hasFile = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).containsFile(s);
+            boolean hasFile = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName()).containsFile(s);
             if (!hasFile) {
                 System.err.println("Warning in KBcacheTest.requiredKB(): required file " + s + " missing. Skipping tests.");
             }
@@ -208,9 +208,7 @@ public class KBcacheTest extends IntegrationTestBase {
     @Test
     public void testDisjoint() {
 
-        String kbCacheDisjoint = KBmanager.getMgr().getPref("cacheDisjoint").toLowerCase();
-
-        if (!kbCacheDisjoint.equals("true")) {
+        if (KBmanager.configuration.isCacheDisjoint()) {
             System.out.println("KBcacheTest.testDisjoint(): skipping test because KBcacheDisjoint is false");
             return;
         }
@@ -338,17 +336,17 @@ public class KBcacheTest extends IntegrationTestBase {
 
         System.out.println("\n============= testPredicates ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
-        Set<String> rels = cache.getChildInstances("Relation");
-        boolean isInstanceOf;
+        Set<String> rels = cache.getChildInstances("Predicate");
         for (String rel : rels) {
             if (!rel.endsWith("Fn")) {
-                isInstanceOf = cache.isInstanceOf(rel, "Predicate");
+                boolean isInstanceOf = cache.isInstanceOf(rel, "Predicate");
                 if (!isInstanceOf) {
                     System.err.println("fail - " + rel + " not instance of Predicate");
                     System.err.println("parents of " + rel + ": " + cache.instanceOf.get(rel));
                 }
-                else
+                else {
                     System.out.println("success for predicate: " + rel);
+                }
                 assertTrue(rel + " is not an instance of Predicate", isInstanceOf);
             }
         }

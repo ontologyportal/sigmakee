@@ -11,6 +11,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 import javax.servlet.ServletContextEvent;
 import java.sql.*;
@@ -19,7 +24,11 @@ import java.sql.*;
 public class UserDatabase {
 
     int debug = 0;
-    private static final String JDBC_CREATE_DB = "jdbc:h2:file:" + System.getProperty("user.home") + "/var/passwd;AUTO_SERVER=TRUE";
+    private static final String USER_HOME = System.getProperty("user.home");
+    private static final String OLD_DB_DIR = USER_HOME + "/var";
+    private static final String NEW_DB_DIR = USER_HOME + "/.sigmakee/database";
+    private static final String DB_NAME = "passwd";
+    private static final String JDBC_CREATE_DB = "jdbc:h2:file:" + NEW_DB_DIR + "/" + DB_NAME + ";AUTO_SERVER=TRUE";
     private static final String JDBC_ACCESS_DB = JDBC_CREATE_DB;
     private static final String H2_DRIVER = "org.h2.Driver";
     private static final String INITIAL_ADMIN_USER = "sumo";
@@ -29,11 +38,11 @@ public class UserDatabase {
      * Creates a UserDatabase object and opens a database connection.
      */
     public UserDatabase() {
-        if (debug>0) System.out.printf("\nUserDatabase()");
+
         try {
+            migrateDatabaseFilesIfNeeded();
             Class.forName(H2_DRIVER);
             this.connection = DriverManager.getConnection(JDBC_ACCESS_DB, INITIAL_ADMIN_USER, "");
-            if (debug>0) System.out.println("init(): Opened PASSWD DB via: " + JDBC_ACCESS_DB);
         }
         catch (ClassNotFoundException | SQLException e) {
             System.err.println("Error in UserDatabase(): " + e.getMessage());
@@ -625,6 +634,49 @@ public class UserDatabase {
 
         if (email == null) return null;
         return email.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
+    /********************************************************************
+     * Moves existing H2 user database files from the old location to the new location before H2 opens them.
+     */
+    private static void migrateDatabaseFilesIfNeeded() {
+
+        File newDir = new File(NEW_DB_DIR);
+        if (!newDir.exists() && !newDir.mkdirs()) System.err.println("Error in UserDatabase.migrateDatabaseFilesIfNeeded(): could not create " + NEW_DB_DIR);
+        Path oldMvDb = Path.of(OLD_DB_DIR, DB_NAME + ".mv.db");
+        Path newMvDb = Path.of(NEW_DB_DIR, DB_NAME + ".mv.db");
+        if (!Files.exists(oldMvDb)) return;
+        if (Files.exists(newMvDb)) {
+            System.out.println("UserDatabase.migrateDatabaseFilesIfNeeded(): new database already exists at " + newMvDb);
+            return;
+        }
+        moveDatabaseFile(DB_NAME + ".mv.db");
+        moveDatabaseFile(DB_NAME + ".trace.db");
+    }
+
+    /********************************************************************
+     * Moves one H2 database-related file from the old database directory to the new one if present.
+     * @param fileName the H2 database file name
+     */
+    private static void moveDatabaseFile(String fileName) {
+
+        Path oldPath = Path.of(OLD_DB_DIR, fileName);
+        Path newPath = Path.of(NEW_DB_DIR, fileName);
+        if (!Files.exists(oldPath)) return;
+        try {
+            Files.move(oldPath, newPath, StandardCopyOption.ATOMIC_MOVE);
+            System.out.println("UserDatabase.moveDatabaseFile(): moved " + oldPath + " to " + newPath);
+        }
+        catch (IOException ioe) {
+            try {
+                Files.move(oldPath, newPath);
+                System.out.println("UserDatabase.moveDatabaseFile(): moved " + oldPath + " to " + newPath);
+            }
+            catch (IOException ioe2) {
+                System.err.println("Error in UserDatabase.moveDatabaseFile(): could not move " + oldPath + " to " + newPath);
+                ioe2.printStackTrace();
+            }
+        }
     }
 
     /********************************************************************

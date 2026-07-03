@@ -105,15 +105,15 @@ public class EProver {
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
         this.sessionId = sessionId;
-        this.executablePath = KBmanager.getMgr().getPref("eprover");
+        this.executablePath = KBmanager.configuration.getEproverExec();
 
         String dir;
         if (this.sessionId != null && !this.sessionId.isEmpty()) {
             dir = SessionTPTPManager.getSessionDir(this.sessionId).toString() + File.separator;
         } else {
-            dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+            dir = KBmanager.configuration.getKbDir() + File.separator;
         }
-        this.kbFilePath = KBmanager.getMgr().getPref("kbDir") + File.separator + kb.name + ("tff".equals(requestedTptpLanguage) ? ".tff" : ".tptp");
+        this.kbFilePath = KBmanager.configuration.getKbDir() + File.separator + kb.name + ("tff".equals(requestedTptpLanguage) ? ".tff" : ".tptp");
         this.tempProblemFilePath = dir + "temp-eprover-problem.p";
 
         this.commands = new ArrayList<>();
@@ -151,7 +151,7 @@ public class EProver {
         }
     }
     
-    public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.getMgr().getPref("eprover")));}
+    public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.configuration.getEproverExec()));}
 
     /***************************************************************
      * Submits a query to this EProver. Returns a list of answers from inference
@@ -302,7 +302,7 @@ public class EProver {
     public static void addBatchConfig(String inputFilename, int timeout) {
 
         if (debug>0) System.out.printf("\nEProver.addBatchConfig(%s, %d)", inputFilename, timeout);
-        String kbdir = KBmanager.getMgr().getPref("kbDir");
+        String kbdir = KBmanager.configuration.getKbDir();
         File initFile = new File(kbdir, "EBatchConfig.txt");
         Set<String> ebatchfiles = new HashSet<>();
         if (inputFilename != null && !inputFilename.isEmpty()) ebatchfiles.add(inputFilename);
@@ -373,7 +373,7 @@ public class EProver {
                 kbDirPath = SessionTPTPManager.getSessionDir(this.sessionId);
                 Files.createDirectories(kbDirPath);
             } else {
-                kbDirPath = Paths.get(KBmanager.getMgr().getPref("kbDir"));
+                kbDirPath = Paths.get(KBmanager.configuration.getKbDir());
             }
 
             tempProblemFile = Files.createTempFile(
@@ -518,7 +518,7 @@ public class EProver {
                 .inputSource(kbFile != null ? kbFile.getName() : "unknown")
                 .timeoutMs(timeoutMs)
                 .build();
-        String eprover = KBmanager.getMgr().getPref("eprover");
+        String eprover = KBmanager.configuration.getEproverExec();
         if (StringUtil.emptyString(eprover)) {
             String msg = "Error in Eprover.runCustom(): no executable string in preferences";
             System.err.println(msg);
@@ -640,7 +640,7 @@ public class EProver {
         else {
             System.out.println("INFO in EProver.main()");
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             if (argMap.containsKey("ask") && argMap.get("ask").size() == 4) {
                 String suoKifFormula = argMap.get("ask").get(0);
                 String requestedTptpLang = argMap.get("ask").get(1);

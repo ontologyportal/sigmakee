@@ -19,8 +19,8 @@
   out.println("    <title>Sigma Knowledge Engineering Environment - Main</title>");
   out.println("  </head>");
   out.println("  <body bgcolor=\"#FFFFFF\">");
-  String baseDir = mgr.getPref("baseDir");
-  String kbDir = mgr.getPref("kbDir");
+  String baseDir = KBmanager.configuration.getBaseDir();
+  String kbDir = KBmanager.configuration.getKbDir();
   boolean isAdministrator = role.equalsIgnoreCase("admin");
   String pageName = "KBs";
   String pageString = "Knowledge Bases";
@@ -76,10 +76,8 @@
           out.println("<TD><A href=\"TestStmnt.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Test Stmt</A></TD>");
           if (isAdministrator) {
               out.println("<TD><A href=\"Diagnostics.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Diagnostics</A></TD>");
-              out.println("<TD><A href=\"CCheck.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang +  "&page=0\">Consistency Check</A></TD>");
+              out.println("<TD><A href=\"ConsistencyCheck.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang +  "&page=0\">Consistency Check</A></TD>");
               out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Inference Tests</A></TD>");
-              if (kb.celt != null)
-                  out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang +  "\">CELT Tests</A></TD>");
               out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">WordNet Check</A></TD>");
               out.println("<TD><A href=\"AskTell.jsp?kb=" + kbName2 + "&lang=" + lang + "&flang=" + flang + "\">Ask/Tell</A>&nbsp;</TD>");
               out.println("<TD><A href=\"KBs.jsp?remove=true&kb=" + kbName2 + "\">Remove</A></TD></TR>");
