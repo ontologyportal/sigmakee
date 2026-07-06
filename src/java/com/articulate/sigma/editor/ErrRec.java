@@ -1,4 +1,4 @@
-package com.articulate.sigma;
+package com.articulate.sigma.editor;
 
 /**
  * Represents a single diagnostic error or warning produced by KIF checking.

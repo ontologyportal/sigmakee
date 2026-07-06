@@ -1,4 +1,5 @@
-package com.articulate.sigma;
+package com.articulate.sigma.editor;
+import com.articulate.sigma.*;
 
 import java.io.File;
 import java.io.FileWriter;

@@ -1,10 +1,12 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.editor.*;
+import com.articulate.sigma.trans.SUMOtoTFAform;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import java.util.*;
 import static org.junit.Assert.*;
-import com.articulate.sigma.trans.SUMOtoTFAform;
 
 public class KifFileCheckerTest extends UnitTestBase {
 

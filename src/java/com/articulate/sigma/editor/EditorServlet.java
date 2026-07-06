@@ -1,6 +1,7 @@
-package com.articulate.sigma;
+package com.articulate.sigma.editor;
 
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.*;
 
 import javax.servlet.*;
 import javax.servlet.http.*;
@@ -24,6 +25,7 @@ import java.util.concurrent.ExecutionException;
 )
 public class EditorServlet extends HttpServlet {
     boolean debug = true;
+    private static final Object KIF_CHECK_LOCK = new Object();
     private static final Object TRANSLATE_LOCK = new Object();
     private static final Set<String> TQ_META_PREDICATES = new HashSet<>(Arrays.asList(
         "note",
@@ -373,9 +375,10 @@ public class EditorServlet extends HttpServlet {
         else {
             try {
                 errors = EditorWorkerQueue.submit(() -> {
-                    return isTptpFinal
-                            ? TPTPFileChecker.check(textFinal, "(web-editor)")
-                            : KifFileChecker.check(textFinal, fileNameFinal);
+                    if (isTptpFinal) return TPTPFileChecker.check(textFinal, "(web-editor)");
+                    synchronized (KIF_CHECK_LOCK) {
+                        return KifFileChecker.check(textFinal, fileNameFinal);
+                    }
                 }, 4000);
             }
             catch (RejectedExecutionException rex) {

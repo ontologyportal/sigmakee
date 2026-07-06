@@ -2,8 +2,7 @@ package com.articulate.sigma;
 
 import org.junit.Test;
 
-import com.articulate.sigma.ErrRec;
-import com.articulate.sigma.TPTPFileChecker;
+import com.articulate.sigma.editor.*;
 import com.articulate.sigma.UnitTestBase;
 
 import java.util.*;

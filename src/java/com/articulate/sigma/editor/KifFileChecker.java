@@ -13,13 +13,16 @@ August 9, Acapulco, Mexico. see also
 http://sigmakee.sourceforge.net
 */
 
-package com.articulate.sigma;
+package com.articulate.sigma.editor;
+
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.SuokifApp;
 import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.FileUtil;
+import com.articulate.sigma.*;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -41,7 +44,7 @@ public class KifFileChecker {
 
     public static boolean debug = false;
 
-    /** ***************************************************************
+    /******************************************************************
      * Print CLI usage information.
      */
     public static void showHelp() {
@@ -55,7 +58,7 @@ public class KifFileChecker {
         System.out.println("  -C <kifString>  Check the given KIF string and print diagnostics (filename = \"fileName\")");
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Command-line entry point.
      * Usage examples:
      *   java com.articulate.sigma.KifFileChecker -h
@@ -168,7 +171,7 @@ public class KifFileChecker {
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Check KIF content without a filename.
      * @param contents the KIF text to check
      * @return list of error and warning diagnostics
@@ -177,7 +180,7 @@ public class KifFileChecker {
         return check(contents, "(buffer)");
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Runs syntax and semantic checks on KIF content, returning diagnostics.
      * @param contents raw KIF text to check
      * @return list of error/warning strings in "line:col: SEVERITY: message" format
@@ -239,7 +242,7 @@ public class KifFileChecker {
         return msgs;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Check whether the given file is loaded in the KB as a constituent.
      * Compares by basename since constituents may be stored as just
      * filenames or as full paths depending on config.
@@ -261,12 +264,12 @@ public class KifFileChecker {
         return false;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Pretty-print KIF contents using the KIF parser and Formula.toString().
      * Preserves top-level forms and tries to keep comments and blank lines
      * in roughly the same places.
      */
-    /** ***************************************************************
+    /******************************************************************
      * Pretty-print KIF contents using the KIF parser and Formula.toString().
      *
      * Key behavior:
@@ -365,7 +368,7 @@ public class KifFileChecker {
         return result.trim().isEmpty() ? contents : result;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Scan KIF text to find top-level formula spans.
      * Each span is [startIndex, endIndex) in the original string.
      *
@@ -423,7 +426,7 @@ public class KifFileChecker {
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Strip KIF-style line comments (starting with ';' and running to
      * end-of-line), but *ignore* ';' inside double-quoted strings.
      *
@@ -473,7 +476,7 @@ public class KifFileChecker {
     }
 
 
-    /** ***************************************************************
+    /******************************************************************
      * Check for quantified variables that do not appear in the statement body.
      * @param fileName          logical filename
      * @param f                 formula to check
@@ -545,7 +548,7 @@ public class KifFileChecker {
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Check for existential quantifiers in antecedents (illegal).
      * @param fileName         logical filename
      * @param f                formula to check
@@ -566,7 +569,7 @@ public class KifFileChecker {
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Check for variables that appear only once in a formula.
      * @param fileName         logical filename
      * @param f                formula to check
@@ -590,7 +593,7 @@ public class KifFileChecker {
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Check for unquantified variables appearing in the consequent of implications.
      * @param fileName         logical filename
      * @param f                formula to check
@@ -614,7 +617,7 @@ public class KifFileChecker {
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Run FormulaPreprocessor and record errors/warnings.
      * Computes accurate absolute line/column using findLineInFormula()
      * by locating the offending token inside the formula text.
@@ -733,7 +736,7 @@ public class KifFileChecker {
 //        SUMOtoTFAform.errors.clear();
 //    }
 
-    /** ***************************************************************
+    /******************************************************************
      * Check if the formula is structurally valid in the KB.
      * Computes absolute line/column by matching the offending token
      * inside the formula text using findLineInFormula().
@@ -801,7 +804,7 @@ public static void CheckIsValidFormula(String fileName,
 }
 
 
-    /** ***************************************************************
+    /******************************************************************
      * Check that all terms are below Entity in the KB hierarchy.
      * @param fileName         logical filename
      * @param f                formula
@@ -823,12 +826,12 @@ public static void CheckIsValidFormula(String fileName,
                 int absCol = rel[1] >= 0 ? rel[1] : 0;
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
-                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + t.length(), "Term <" + t + "> not below Entity: " + offendingLine));
+                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + t.length(), "Term '" + t + "' not below 'Entity' in line: " + offendingLine));
             }
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Sort diagnostic messages by line, column, type, and text.
      * @param msgs list of error records to sort
      */
@@ -845,7 +848,7 @@ public static void CheckIsValidFormula(String fileName,
         });
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Check for syntax errors during parsing.
      * @param contents KIF text
      * @param fileName logical filename
@@ -863,7 +866,7 @@ public static void CheckIsValidFormula(String fileName,
         }
     }
  
-    /** ***************************************************************
+    /******************************************************************
      * Convert raw KIF string into a KIF object, collecting parse errors.
      * @param contents KIF text
      * @param fileName logical filename
@@ -886,7 +889,7 @@ public static void CheckIsValidFormula(String fileName,
         return localKif;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Extract a formula's exact text between line numbers.
      *
      * @param bufferLines full text split into lines
@@ -904,7 +907,7 @@ public static void CheckIsValidFormula(String fileName,
         return sb.toString();
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Find the relative line and column offset of a substring (e.g., error term)
      * within a multi-line formula string.
      * @param formulaText the full text of the formula
@@ -936,7 +939,7 @@ public static void CheckIsValidFormula(String fileName,
         return Character.isLetterOrDigit(c) || c == '.' || c == '_';
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Recursively collect local individuals and subclasses from formulas.
      *
      * @param f                 formula to traverse
@@ -963,7 +966,7 @@ public static void CheckIsValidFormula(String fileName,
                 harvestLocalFacts(f.getArgument(i), localIndividuals, localSubclasses);
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Check if a token represents a constant rather than a variable or literal.
      * @param tok token string
      * @return true if constant, false otherwise
@@ -973,7 +976,7 @@ public static void CheckIsValidFormula(String fileName,
         return !(Formula.isVariable(tok) || StringUtil.isNumeric(tok) || StringUtil.isQuotedString(tok));
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Find where a formula string appears in the buffer.
      * @param formulaStr  formula text
      * @param bufferLines full text split into lines
@@ -1006,7 +1009,7 @@ public static void CheckIsValidFormula(String fileName,
         return -1;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Parses KIF content into a KIF object and collects warnings/errors as ErrRec.
      * @param kif target KIF object
      * @param contents KIF text content
@@ -1040,7 +1043,7 @@ public static void CheckIsValidFormula(String fileName,
 //        return retVal;
 //    }
 
-    /** ***************************************************************
+    /******************************************************************
      * sigmaAntlr generates line offsets
      * @param line error line text
      * @return the line offset of where the error/warning begins
