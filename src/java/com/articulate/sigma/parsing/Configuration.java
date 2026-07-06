@@ -61,6 +61,7 @@ public class Configuration {
         "smtpEmailUser",
         "smtpEmailPassword",
         "smtpEmailServer",
+        "sumoDir",
         "systemsDir",
         "isAws"
     );
@@ -72,6 +73,7 @@ public class Configuration {
         "inferenceTestDir",
         "kbDir",
         "verbnetDir",
+        "sumoDir",
         "systemsDir"
     );
 
@@ -177,7 +179,6 @@ public class Configuration {
             Document doc = builder.newDocument();
             Element root = doc.createElement("configuration");
             doc.appendChild(root);
-
             for (String key : CONFIG_KEYS) {
                 String value = preferences.get(key);
                 if (value == null) value = "";
@@ -186,20 +187,16 @@ public class Configuration {
                 pref.setAttribute("value", value);
                 root.appendChild(pref);
             }
-
             for (Map.Entry<String, List<String>> entry : kbConstituentList.entrySet()) {
                 Element kb = doc.createElement("kb");
                 kb.setAttribute("name", entry.getKey());
-
                 for (String filename : entry.getValue()) {
                     Element constituent = doc.createElement("constituent");
                     constituent.setAttribute("filename", filename);
                     kb.appendChild(constituent);
                 }
-
                 root.appendChild(kb);
             }
-
             Transformer transformer = TransformerFactory.newInstance().newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
@@ -259,6 +256,10 @@ public class Configuration {
         String sigmaHome = System.getenv("SIGMA_HOME");
         String tomcatHome = System.getenv("CATALINA_HOME");
         String systemsHome = System.getenv("SYSTEMS_HOME");
+        String ontologyPortalGit = System.getenv("ONTOLOGYPORTAL_GIT");
+        String sumoDir = System.getenv("SUMO_HOME");
+        if (StringUtil.emptyString(sumoDir) && !StringUtil.emptyString(ontologyPortalGit)) sumoDir = ontologyPortalGit + sep + "sumo";
+        if (StringUtil.emptyString(sumoDir)) sumoDir = sigmaHome + sep + "KBs";
         if (StringUtil.emptyString(sigmaHome)) sigmaHome = userHome + sep + ".sigmakee";
         if (StringUtil.emptyString(tomcatHome)) tomcatHome = System.getProperty("user.dir");
         if (StringUtil.emptyString(systemsHome)) systemsHome = System.getProperty("user.dir");
@@ -294,6 +295,7 @@ public class Configuration {
         defaults.put("smtpEmailUser", "");
         defaults.put("smtpEmailPassword", "");
         defaults.put("smtpEmailServer", "");
+        defaults.put("sumoDir", sumoDir);
         defaults.put("isAws", "false");
         return defaults;
     }
@@ -359,8 +361,8 @@ public class Configuration {
                 if (filename != null && !filename.isEmpty()) {
                     File file = new File(filename);
                     if (!file.isAbsolute()) {
-                        String kbDir = preferences.get("kbDir");
-                        if (!StringUtil.emptyString(kbDir)) file = new File(kbDir, filename);
+                        String sumoDir = getSumoDir();
+                        if (!StringUtil.emptyString(sumoDir)) file = new File(sumoDir, filename);
                     }
                     if (file.exists() && file.isFile()) constituents.add(filename);
                     else  {
@@ -444,15 +446,17 @@ public class Configuration {
      * Adds missing known preferences using default values. 
      * @param defaults default preferences. 
      */ 
-    private void validateMissingPreferences(HashMap<String, String> defaults) { 
-        
-        for (String key : CONFIG_KEYS) { 
-            if (!preferences.containsKey(key)) { 
-                String defaultValue = defaults.get(key); 
-                LoggingUtils.log("WARN", "Missing config preference: " + key + ". Setting default value: " + defaultValue); 
-                preferences.put(key, defaultValue); 
-            } 
-        } 
+    private void validateMissingPreferences(HashMap<String, String> defaults) {
+
+        for (String key : CONFIG_KEYS) {
+            if (!preferences.containsKey(key)) {
+                String defaultValue = defaults.get(key);
+                String message = "Missing config preference: " + key + ". Setting default value: " + defaultValue;
+                warnings.add(message);
+                LoggingUtils.log("WARN", message);
+                preferences.put(key, defaultValue);
+            }
+        }
     }
 
     /*****************************************************************
@@ -581,10 +585,12 @@ public class Configuration {
     private void setDefaultForInvalidKey(String key, String invalidValue, HashMap<String, String> defaults, String reason) {
 
         String defaultValue = defaults.get(key);
-        LoggingUtils.log("WARN", "Invalid config preference: " + key +
+        String message = "Invalid config preference: " + key +
                 " value: " + invalidValue +
                 ". Reason: " + reason +
-                ". Setting default value: " + defaultValue);
+                ". Setting default value: " + defaultValue;
+        warnings.add(message);
+        LoggingUtils.log("WARN", message);
         preferences.put(key, defaultValue);
     }
 
@@ -658,6 +664,8 @@ public class Configuration {
 
     public String getKbDir() { return getStringPreference("kbDir", ""); }
 
+    public String getSumoDir() { return getStringPreference("sumoDir", getKbDir()); }
+
     public boolean isLoadFresh() { return getBooleanPreference("loadFresh", false); }
 
     public boolean isLoadLexicons() { return getBooleanPreference("loadLexicons", true); }
@@ -703,6 +711,7 @@ public class Configuration {
         System.out.println("Configuration.main() Options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -p - print config data");
+        System.out.println("  -l - load config from path");
     }
 
     /******************************************************************
@@ -716,6 +725,23 @@ public class Configuration {
             Configuration config = new Configuration(KButilities.SIGMA_HOME + File.separator + "KBs" + File.separator + "config.xml");
             config.printConfig();
         }
-        
+        else if (argMap.containsKey("l")) {
+            List<String> values = argMap.get("l");
+            if (values == null || values.isEmpty()) {
+                System.err.println("Missing config path after -l");
+                showHelp();
+                System.exit(1);
+            }
+            String configPath = values.get(0);
+            Configuration config = new Configuration(configPath);
+            config.printConfig();
+            if (!config.errors.isEmpty() || !config.warnings.isEmpty()) {
+                System.err.println("Configuration validation failed: " + configPath);
+                System.exit(1);
+            }
+            System.out.println("Configuration validation passed: " + configPath);
+            return;
+        }
+    showHelp();
     }
 }

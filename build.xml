@@ -583,7 +583,7 @@ build.date=${git.commit.date}
         <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser/workspace/sumo" value="${kbs.home}"/>
         <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser" value="${user.home}"/>
         <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/leo" value="${leo.exec.path}"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${programs.dir}${file.separator}E${file.separator}PROVER${file.separator}e_ltb_runner"/>
+        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/E/bin/eprover" value="${programs.dir}${file.separator}E${file.separator}PROVER${file.separator}eprover"/>
         <replace file="${sigma.home}/KBs/config.xml" token="/usr/local/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests" value="${programs.dir}${file.separator}tomcat${file.separator}apache-tomcat-${tomcat.version}${file.separator}webapps${file.separator}sigma${file.separator}tests"/>
         <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/Programs/vampire/build/vampire" value="${programs.dir}${file.separator}vampire${file.separator}build${file.separator}vampire"/>
     </target>

@@ -107,7 +107,7 @@ files=(
   "$SIGMA_HOME/KBs/Mid-level-ontology.kif"
   "$SIGMA_HOME/KBs/config.xml"
   "$HOME/Programs/E/configure"
-  "$HOME/Programs/E/PROVER/e_ltb_runner"
+  "$HOME/Programs/E/eprover"
   "$HOME/Programs/vampire/build/vampire"
   "$HOME/Programs/vampire/z3/build/z3"
 )
@@ -123,12 +123,12 @@ target_string="/home/theuser"
 config_file="$SIGMA_HOME/KBs/config.xml"
 
 if grep -qF "$target_string" "$config_file"; then
-  echo "String \"$target_string\" found in $config_file. Exiting."
-  exit 0
+  echo "String \"$target_string\" found in $config_file. Config path replacement failed."
+  exit 1
 fi
 
 strings=(
-  "$HOME/Programs/E/PROVER/e_ltb_runner"
+  "$HOME/Programs/E/eprover"
   "$HOME/Programs/vampire/build/vampire"
 )
 
