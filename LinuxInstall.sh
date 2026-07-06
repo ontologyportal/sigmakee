@@ -34,9 +34,10 @@ welcome() {
 install_prerequisites() {
     print_header "Downloading prerequisites"
     sudo apt-get update
+    sudo apt-get install -y curl software-properties-common
+    sudo add-apt-repository -y universe
+    sudo apt-get update
     sudo apt-get install -y \
-        curl \
-        software-properties-common \
         unzip \
         git \
         ant \
@@ -45,10 +46,33 @@ install_prerequisites() {
         gcc \
         graphviz \
         build-essential \
-        default-jdk
-    sudo add-apt-repository -y universe
-    sudo apt-get update
+        openjdk-21-jdk \
+        openjdk-21-jre-headless
     echo "Pre-requisites have been installed."
+}
+
+install_or_repair_java() {
+    print_header "Installing and verifying Java"
+    sudo apt-get install -y openjdk-21-jdk openjdk-21-jre-headless
+    local java_bin
+    local javac_bin
+    java_bin="$(find /usr/lib/jvm -path '*/java-21-openjdk*/bin/java' -type f -print -quit || true)"
+    javac_bin="$(find /usr/lib/jvm -path '*/java-21-openjdk*/bin/javac' -type f -print -quit || true)"
+    if [ -z "$java_bin" ] || [ ! -x "$java_bin" ]; then
+        echo "Could not find an executable Java 21 binary under /usr/lib/jvm."
+        exit 1
+    fi
+    if [ -z "$javac_bin" ] || [ ! -x "$javac_bin" ]; then
+        echo "Could not find an executable javac 21 binary under /usr/lib/jvm."
+        exit 1
+    fi
+    sudo update-alternatives --install /usr/bin/java java "$java_bin" 2100
+    sudo update-alternatives --install /usr/bin/javac javac "$javac_bin" 2100
+    sudo update-alternatives --set java "$java_bin"
+    sudo update-alternatives --set javac "$javac_bin"
+    java -version
+    javac -version
+    echo "Java installation verified."
 }
 
 ###############################################################################
@@ -263,6 +287,7 @@ print_success_message() {
 main() {
     welcome
     install_prerequisites
+    install_or_repair_java
     configure_environment
     create_install_directories
     clone_or_update_repositories
