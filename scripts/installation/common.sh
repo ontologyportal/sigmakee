@@ -375,7 +375,6 @@ run_common_install() {
     ensure_sigmakee_checkout
     write_profile_block
     install_tomcat_if_missing
-    clone_or_update_repositories
     run_prerequisite_verification
     install_sigmakee
     compile_sigmakee

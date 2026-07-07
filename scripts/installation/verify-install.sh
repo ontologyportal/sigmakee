@@ -89,8 +89,6 @@ dir_list=(
   "$HOME/Programs/WordNet-3.0"
   "$HOME/Programs/E"
   "$HOME/Programs/vampire"
-  "$HOME/Programs/vampire/z3"
-  "$HOME/Programs/vampire/z3/build"
   "$SIGMA_HOME/KBs"
   "$SIGMA_HOME/KBs/WordNetMappings"
 )
@@ -107,9 +105,8 @@ files=(
   "$SIGMA_HOME/KBs/Mid-level-ontology.kif"
   "$SIGMA_HOME/KBs/config.xml"
   "$HOME/Programs/E/configure"
-  "$HOME/Programs/E/eprover"
+  "$HOME/Programs/E/PROVER/eprover"
   "$HOME/Programs/vampire/build/vampire"
-  "$HOME/Programs/vampire/z3/build/z3"
 )
 
 check_files "${files[@]}"
@@ -128,7 +125,7 @@ if grep -qF "$target_string" "$config_file"; then
 fi
 
 strings=(
-  "$HOME/Programs/E/eprover"
+  "$HOME/Programs/E/PROVER/eprover"
   "$HOME/Programs/vampire/build/vampire"
 )
 
@@ -148,18 +145,15 @@ echo "$config_file properly configured."
 ########################################################
 print_header "Verifying vampire build"
 
-# Check if vampire exists and is in PATH
-if ! command -v vampire > /dev/null 2>&1; then
-  echo "vampire is NOT installed or not in PATH."
+if [ ! -x "$HOME/Programs/vampire/build/vampire" ]; then
+  echo "Vampire executable not found or not executable: $HOME/Programs/vampire/build/vampire"
   exit 1
 fi
 
-# Run vampire --version and check exit status
-vampire --version > /dev/null 2>&1
-if [[ $? -eq 0 ]]; then
-  echo "vampire is installed, on PATH, and runs correctly."
+if "$HOME/Programs/vampire/build/vampire" --version > /dev/null 2>&1; then
+  echo "Vampire runs correctly."
 else
-  echo "vampire is in PATH, but failed to run correctly."
+  echo "Vampire exists, but failed to run correctly."
   exit 1
 fi
 

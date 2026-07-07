@@ -71,7 +71,7 @@ bootstrap_from_github() {
     local base_url
     base_url="https://raw.githubusercontent.com/ontologyportal/sigmakee/refs/heads/$SIGMAKEE_BRANCH/scripts/installation"
 
-    for script in common.sh ubuntu.sh rhel.sh macos.sh; do
+    for script in common.sh ubuntu.sh rhel.sh macos.sh verify-prerequisites.sh verify-install.sh; do
         curl -fsSL "$base_url/$script" -o "$tmpdir/$script"
         chmod +x "$tmpdir/$script"
     done

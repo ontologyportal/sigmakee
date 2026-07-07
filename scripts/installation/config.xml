@@ -4,7 +4,7 @@
   <preference name="cache" value="yes" />
   <preference name="cacheDisjoint" value="true"/>
   <preference name="cwa" value="false"/>
-  <preference name="eproverExec" value="/home/theuser/E/bin/eprover" />
+  <preference name="eproverExec" value="/home/theuser/Programs/E/PROVER/eprover" />
   <preference name="graphDir" value="/home/theuser/.sigmakee/graph" />
   <preference name="graphVizExec" value="/usr/bin/dot" />
   <preference name="hostname" value="localhost" />

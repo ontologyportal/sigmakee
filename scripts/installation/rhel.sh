@@ -1,93 +1,157 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+#################################
+# NOTE! This is experimental and has only been tested on one RedHat server
+#################################
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=common.sh
-source "$SCRIPT_DIR/common.sh"
+echo "Installing Sigma"
+echo "Downloading prerequisites"
+# Update and install unzip
+sudo yum update
+sudo yum install -y unzip
 
-package_manager() {
-    if command -v dnf >/dev/null 2>&1; then
-        echo dnf
-    elif command -v yum >/dev/null 2>&1; then
-        echo yum
+# Install git
+sudo yum install -y git
+
+# Install ant - must be manual on Redhat since yum ant requires JDK 1.8
+
+# Install make
+sudo yum install -y make
+
+# Install cmake
+sudo yum install -y cmake
+
+# Install gcc
+sudo yum install -y gcc
+
+# Install graphviz
+sudo yum install -y graphviz
+
+sudo yum install -y httpd
+
+# Install build-essential (required for compiling Vampire)
+sudo yum groupinstall "Development Tools"
+
+# Install OpenJDK 21
+sudo yum install java-21-openjdk-devel
+
+# uncomment to have a web server for installation on a server
+# sudo yum install -y httpd
+# sudo systemctl enable httpd  # For CentOS/RHEL
+# echo '<h1>default page</h1>' > /home/www/html/index.html
+
+# Add universe repository and update
+# sudo add-apt-repository -y universe # not for RedHat
+sudo yum update
+
+echo "Pre-requisites have been installed."
+
+# Check if .bashrc exists, and create it if not
+if [ ! -f "$HOME/.bashrc" ]; then
+    echo ".bashrc does not exist. Creating it now..."
+    touch "$HOME/.bashrc"
+else
+    echo ".bashrc already exists."
+fi
+
+# Function to check and add a line to .bashrc
+add_to_bashrc() {
+    local LINE="$1"
+    if ! grep -Fxq "$LINE" "$HOME/.bashrc"; then
+        echo "Adding: $LINE to .bashrc..."
+        echo "$LINE" >> "$HOME/.bashrc"
     else
-        fail "Neither dnf nor yum was found."
+        echo "$LINE already exists in .bashrc."
     fi
 }
 
-install_rhel_prerequisites() {
-    print_header "Installing RHEL-family prerequisites"
 
-    local pm
-    pm="$(package_manager)"
+# Add the necessary lines to .bashrc
+add_to_bashrc "alias dir='ls --color=auto --format=vertical -la'"
+add_to_bashrc "export HISTSIZE=10000 HISTFILESIZE=100000"
+add_to_bashrc "export SIGMA_HOME=\"\$HOME/.sigmakee\""
+add_to_bashrc "export ONTOLOGYPORTAL_GIT=\"\$HOME/workspace\""
+add_to_bashrc "export SIGMA_SRC=\"\$ONTOLOGYPORTAL_GIT/sigmakee\""
+add_to_bashrc "export CATALINA_OPTS=\"\$CATALINA_OPTS -Xmx10g -Xss1m\""
+add_to_bashrc "export CATALINA_HOME=\"\$HOME/Programs/apache-tomcat-9.0.107\""
+add_to_bashrc "export SIGMA_CP=\"\$SIGMA_SRC/build/sigmakee.jar:\$SIGMA_SRC/lib/*\""
 
-    sudo "$pm" -y update
-    sudo "$pm" -y install \
-        ca-certificates \
-        curl \
-        tar \
-        gzip \
-        unzip \
-        git \
-        make \
-        cmake \
-        gcc \
-        gcc-c++ \
-        graphviz \
-        java-21-openjdk \
-        java-21-openjdk-devel || fail "Failed to install required RHEL packages."
+# Source the .bashrc file to apply changes
+echo "Sourcing .bashrc to apply changes..."
+source "$HOME/.bashrc"
 
-    sudo "$pm" -y groupinstall "Development Tools" || \
-        sudo "$pm" -y group install "Development Tools" || \
-        warn "Could not install Development Tools group. Continuing because gcc/gcc-c++ were installed directly."
+# Create the Programs directory and navigate into it
+if [ ! -d "$HOME/Programs" ]; then
+    echo "Creating Programs directory in $HOME..."
+    mkdir "$HOME/Programs"
+else
+    echo "Programs directory already exists in $HOME."
+fi
+cd "$HOME/Programs"
 
-    sudo "$pm" -y install ant || true
-    if ! command -v ant >/dev/null 2>&1; then
-        install_ant_manually
+#install ant
+
+wget https://dlcdn.apache.org//ant/binaries/apache-ant-1.10.15-bin.zip
+unzip apache-ant-1.10.15-bin.zip
+
+add_to_bashrc "export JAVA_HOME=\"/usr/lib/jvm/java-21-openjdk-21.0.6.0.7-1.el8.x86_64\""
+add_to_bashrc "export ANT_HOME=\"/home/apease/Programs/apache-ant-1.10.15\""
+add_to_bashrc "export PATH=\"\$CATALINA_HOME/bin:\$ANT_HOME/bin:\$PATH\""
+
+# Create the workspace directory and navigate into it
+if [ ! -d "$HOME/workspace" ]; then
+    echo "Creating workspace directory in $HOME..."
+    mkdir "$HOME/workspace"
+else
+    echo "Workspace directory already exists in $HOME."
+fi
+cd "$HOME/workspace"
+
+# Clone or update repositories
+REPOS=(
+    "https://github.com/ontologyportal/sigmakee"
+    "https://github.com/ontologyportal/sumo"
+    "https://github.com/ontologyportal/TPTP-ANTLR"
+    "https://github.com/ontologyportal/sigmaAntlr"
+    "https://github.com/ontologyportal/SigmaUtils"
+)
+
+for REPO in "${REPOS[@]}"; do
+    DIR_NAME=$(basename "$REPO" .git)
+    if [ ! -d "$HOME/workspace/$DIR_NAME" ]; then
+        echo "Cloning $REPO..."
+        git clone "$REPO"
+    else
+        echo "$DIR_NAME repository already exists. Pulling the latest changes..."
+        cd "$HOME/workspace/$DIR_NAME"
+        git pull
+        cd "$HOME/workspace"
     fi
-}
+done
 
-install_ant_manually() {
-    print_header "Installing Apache Ant manually"
+# Navigate to the sigmakee directory and run ant commands
+cd "$HOME/workspace/sigmakee"
+echo "Running ant install..."
+output=$(ant install 2>&1 | tee /dev/tty)
+if echo "$output" | grep -q "BUILD FAILED"; then
+    echo "BUILD FAILED detected. Exiting the script."
+    exit 1
+else
+    echo "Install completed successfully."
+fi
 
-    local ant_version="1.10.15"
-    local ant_dir="$PROGRAMS_DIR/apache-ant-$ant_version"
-    local ant_zip="$PROGRAMS_DIR/apache-ant-$ant_version-bin.zip"
-    local ant_url="https://archive.apache.org/dist/ant/binaries/apache-ant-$ant_version-bin.zip"
+echo "Running ant to compile..."
+output=$(ant 2>&1 | tee /dev/tty)
+if echo "$output" | grep -q "BUILD FAILED"; then
+    echo "BUILD FAILED detected. Exiting the script."
+    exit 1
+else
+    echo "Ant sigmakee compile completed successfully."
+fi
 
-    mkdir -p "$PROGRAMS_DIR"
-
-    if [ ! -x "$ant_dir/bin/ant" ]; then
-        curl -fsSL "$ant_url" -o "$ant_zip"
-        unzip -q -o "$ant_zip" -d "$PROGRAMS_DIR"
-    fi
-
-    export ANT_HOME="$ant_dir"
-    export PATH="$ANT_HOME/bin:$PATH"
-
-    if ! command -v ant >/dev/null 2>&1; then
-        fail "Ant manual install failed."
-    fi
-}
-
-configure_rhel_java() {
-    print_header "Configuring Java 21"
-
-    local javac_path
-    javac_path="$(readlink -f "$(command -v javac)")"
-
-    export JAVA_HOME
-    JAVA_HOME="$(cd "$(dirname "$javac_path")/.." && pwd)"
-    export PATH="$JAVA_HOME/bin:$PATH"
-
-    java -version
-    javac -version
-}
-
-main() {
-    install_rhel_prerequisites
-    configure_rhel_java
-    run_common_install "$@"
-}
-
-main "$@"
+echo "SIGMA has been installed! To start the server:"
+echo "startup.sh"
+echo "Then point your browser to: http://localhost:8080/sigma/login.html"
+echo "username: admin     password: admin"
+echo "The first time logging in can take several minutes while the system is indexing. For low memory machines, restrict Knowledge Bases loaded in \$HOME/.sigmakee/KBs/config.xml"
+echo "To shutdown the server:"
+echo "shutdown.sh"

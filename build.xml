@@ -166,6 +166,62 @@
 
     <!-- Vampire ATP -->
     <property name="vampire.version" value="v5.0.1"/>
+    <property name="vampire.release.base"
+            value="https://github.com/vprover/vampire/releases/download/${vampire.version}"/>
+
+    <!-- Keep these paths identical to the source-build layout. -->
+    <property name="vampire.install.dir"
+            value="${programs.dir}${file.separator}vampire"/>
+    <property name="vampire.build.dir"
+            value="${vampire.install.dir}${file.separator}build"/>
+    <property name="vampire.exec"
+            value="${vampire.build.dir}${file.separator}vampire"/>
+
+    <!-- Temporary location only for unpacking the release zip. -->
+    <property name="vampire.binary.unpack.dir"
+            value="${sigma.install.downloads}${file.separator}vampire-release"/>
+
+    <condition property="vampire.asset" value="vampire-Linux-X64.zip">
+        <and>
+            <os family="unix"/>
+            <not><os family="mac"/></not>
+            <or>
+                <os arch="amd64"/>
+                <os arch="x86_64"/>
+            </or>
+        </and>
+    </condition>
+
+    <condition property="vampire.asset" value="vampire-Linux-ARM64.zip">
+        <and>
+            <os family="unix"/>
+            <not><os family="mac"/></not>
+            <or>
+                <os arch="aarch64"/>
+                <os arch="arm64"/>
+            </or>
+        </and>
+    </condition>
+
+    <condition property="vampire.asset" value="vampire-macOS-X64.zip">
+        <and>
+            <os family="mac"/>
+            <or>
+                <os arch="amd64"/>
+                <os arch="x86_64"/>
+            </or>
+        </and>
+    </condition>
+
+    <condition property="vampire.asset" value="vampire-macOS-ARM64.zip">
+        <and>
+            <os family="mac"/>
+            <or>
+                <os arch="aarch64"/>
+                <os arch="arm64"/>
+            </or>
+        </and>
+    </condition>
 
     <!-- LEO-III (Higher-Order ATP) -->
     <property name="leo.version" value="1.7.18"/>
@@ -490,11 +546,8 @@ build.date=${git.commit.date}
         <!-- Build E theorem prover -->
         <antcall target="build.E"/>
 
-        <!-- Clone and build Vampire theorem prover w/ Z3 -->
-        <antcall target="clone.vampire"/>
-        <antcall target="clone.z3"/>
-        <antcall target="build.z3"/>
-        <antcall target="build.vampire"/>
+        <!-- Install Vampire: try prebuilt binary first, then source build fallback -->
+        <antcall target="install.vampire"/>
 
         <!-- perms -->
         <chmod dir="${git.home}" perm="ugo+rw" includes="**/*"/>
@@ -583,7 +636,7 @@ build.date=${git.commit.date}
     </target>
     <target name="sigma.config">
         <available file="${sigma.home}/KBs/config.xml" property="sigma.config.exists"/>
-        <fail message="Missing ${sigma.home}/KBs/config.xml. setup.sigma.home must copy ${basedir}/config.xml before sigma.config runs."
+        <fail message="Missing ${sigma.home}/KBs/config.xml. setup.sigma.home must copy ${basedir}/scripts/installation/config.xml before sigma.config runs."
             unless="sigma.config.exists"/>
         <replace file="${sigma.home}/KBs/config.xml"
                 token="/home/theuser/workspace/sumo"
@@ -704,6 +757,90 @@ build.date=${git.commit.date}
             <arg value="make"/>
         </exec>
     </target>
+
+    <target name="download.vampire.binary" if="vampire.asset"
+        description="Download prebuilt Vampire binary zip for this OS/architecture">
+        <mkdir dir="${sigma.install.downloads}"/>
+        <echo message="Attempting prebuilt Vampire install: ${vampire.asset}"/>
+        <get src="${vampire.release.base}/${vampire.asset}"
+            dest="${sigma.install.downloads}${file.separator}${vampire.asset}"
+            usetimestamp="true"
+            ignoreerrors="true"/>
+        <available file="${sigma.install.downloads}${file.separator}${vampire.asset}"
+                property="vampire.binary.zip.present"/>
+    </target>
+
+    <target name="install.vampire.binary" depends="download.vampire.binary"
+            if="vampire.binary.zip.present"
+            description="Install prebuilt Vampire binary into the normal source-build path">
+        <echo message="Installing prebuilt Vampire into ${vampire.exec}"/>
+
+        <delete dir="${vampire.binary.unpack.dir}" failonerror="false"/>
+        <mkdir dir="${vampire.binary.unpack.dir}"/>
+        <mkdir dir="${vampire.build.dir}"/>
+
+        <unzip src="${sigma.install.downloads}${file.separator}${vampire.asset}"
+            dest="${vampire.binary.unpack.dir}"/>
+
+        <copy tofile="${vampire.exec}"
+            overwrite="true"
+            flatten="true"
+            failonerror="false">
+            <fileset dir="${vampire.binary.unpack.dir}">
+                <include name="**/vampire"/>
+            </fileset>
+        </copy>
+
+        <available file="${vampire.exec}" property="vampire.binary.exec.present"/>
+    </target>
+
+    <target name="test.vampire.binary" depends="install.vampire.binary"
+            if="vampire.binary.exec.present">
+        <chmod file="${vampire.exec}" perm="ugo+rx"/>
+
+        <exec executable="${vampire.exec}"
+            resultproperty="vampire.binary.version.result"
+            failonerror="false"
+            failifexecutionfails="false">
+            <arg value="--version"/>
+        </exec>
+
+        <condition property="vampire.binary.ok">
+            <equals arg1="${vampire.binary.version.result}" arg2="0"/>
+        </condition>
+
+        <echo message="Prebuilt Vampire installed successfully? ${vampire.binary.ok}"/>
+        <delete dir="${vampire.binary.unpack.dir}" failonerror="false"/>
+    </target>
+
+    <target name="install.vampire.source" depends="test.vampire.binary"
+            unless="vampire.binary.ok"
+            description="Fallback: clone and build Vampire from source">
+        <echo message="Prebuilt Vampire unavailable or failed. Falling back to source build."/>
+
+        <delete dir="${vampire.install.dir}" failonerror="false"/>
+
+        <antcall target="clone.vampire"/>
+        <antcall target="clone.z3"/>
+        <antcall target="build.z3"/>
+        <antcall target="build.vampire"/>
+    </target>
+
+    <target name="install.vampire"
+            depends="test.vampire.binary,install.vampire.source"
+            description="Install Vampire binary first, then source-build fallback">
+        <available file="${vampire.exec}" property="vampire.exec.exists"/>
+
+        <fail message="Vampire installation failed. Expected executable: ${vampire.exec}"
+            unless="vampire.exec.exists"/>
+
+        <chmod file="${vampire.exec}" perm="ugo+rx"/>
+
+        <exec executable="${vampire.exec}" failonerror="true">
+            <arg value="--version"/>
+        </exec>
+    </target>
+
     <target name="clone.vampire">
         <mkdir dir="${programs.dir}/vampire"/>
         <git command="clone" dir="${programs.dir}/vampire">
