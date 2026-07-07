@@ -5,13 +5,9 @@ body {font-family: system-ui, sans-serif;}
 .layout > div:first-child {flex: 0 0 auto;}
 .layout > div:last-child {flex: 0 0 auto;}
 .scroller { height: 20vh; overflow: auto; border: 0px solid #ddd; background: #fff;}
-.msg {
-  padding: 0;
-  white-space: normal;
-}
+.msg {padding: 0; white-space: normal;}
 
-.problems-title {
-  font-weight: 700;
+.problems-title {font-weight: 700;
   margin: 0;
   padding: 0 6px;
   line-height: 1.2;
@@ -29,6 +25,7 @@ body {font-family: system-ui, sans-serif;}
   padding: 4px 6px;
   white-space: pre-line;
 }
+
 .divider {  border: none; border-top: 1px solid #ccc;}
 
 /* Tabs */
@@ -81,8 +78,7 @@ body {font-family: system-ui, sans-serif;}
 .success { color: #077d3f; border:1px solid #ccc;}
 .editor-header {display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
 .file-name-display { font-family: monospace; font-size: 12px; color: #666;}
-.problems-title {font-weight: 700;}
-.problems-divider {border: 0; border-top: 1px solid #ccc;}
+
 
 /* Modal Overlay */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; justify-content: center; align-items: center; z-index: 3000;}
