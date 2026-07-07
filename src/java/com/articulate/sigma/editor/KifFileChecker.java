@@ -726,6 +726,7 @@ public class KifFileChecker {
     public static KIF StringToKif(String contents, String fileName, List<ErrRec> errorList) {
 
         KIF localKif = new KIF();
+        if (contents == null || stripKifComments(contents).trim().isEmpty()) return localKif;
         try (Reader r = new StringReader(contents)) {
             localKif.parse(r);
             for (String er : localKif.errorSet) {
@@ -733,7 +734,7 @@ public class KifFileChecker {
                 int col  = getOffset(er);
                 errorList.add(new ErrRec(ErrRec.ERROR, fileName, line, Math.max(col, 1), Math.max(col, 1) + 1, er));
             }
-        } 
+        }
         catch (Exception e) {
             errorList.add(new ErrRec(ErrRec.ERROR, fileName, 0, 0, 1, e.getMessage()));
         }

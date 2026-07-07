@@ -5,7 +5,30 @@ body {font-family: system-ui, sans-serif;}
 .layout > div:first-child {flex: 0 0 auto;}
 .layout > div:last-child {flex: 0 0 auto;}
 .scroller { height: 20vh; overflow: auto; border: 0px solid #ddd; background: #fff;}
-.msg {padding: 12px; white-space: pre-line;}
+.msg {
+  padding: 0;
+  white-space: normal;
+}
+
+.problems-title {
+  font-weight: 700;
+  margin: 0;
+  padding: 0 6px;
+  line-height: 1.2;
+}
+
+.problems-divider {
+  border: 0;
+  border-top: 1px solid #ccc;
+  margin: 0;
+  padding: 0;
+  height: 0;
+}
+
+.problems-body {
+  padding: 4px 6px;
+  white-space: pre-line;
+}
 .divider {  border: none; border-top: 1px solid #ccc;}
 
 /* Tabs */
@@ -56,24 +79,13 @@ body {font-family: system-ui, sans-serif;}
 /* Error messages */
 .errors-box { color: #b00020; border:1px solid #ccc;}
 .success { color: #077d3f; border:1px solid #ccc;}
-.editor-header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;  /* instead of space-between */
-  gap: 8px;                     /* optional: space between controls */
-}
-.file-name-display { font-family: monospace; font-size: 12px; color: #666; margin-top: 2px;}
+.editor-header {display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
+.file-name-display { font-family: monospace; font-size: 12px; color: #666;}
+.problems-title {font-weight: 700;}
+.problems-divider {border: 0; border-top: 1px solid #ccc;}
 
 /* Modal Overlay */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.55);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
-}
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; justify-content: center; align-items: center; z-index: 3000;}
 
 /* Modal Window */
 .modal-window {
