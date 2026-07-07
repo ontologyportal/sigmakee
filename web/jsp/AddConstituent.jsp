@@ -17,8 +17,8 @@
 if (!role.equalsIgnoreCase("admin"))
     response.sendRedirect("KBs.jsp");
 else {
-    String kbDir = KBmanager.configuration.getKbDir();
-    File kbDirFile = new File(kbDir);
+    String sumoDir = KBmanager.configuration.getKbDir();
+    File sumoDirFile = new File(sumoDir);
     MultipartParser mpp = null;
     int postSize = Integer.MAX_VALUE;
     Part requestPart = null;
@@ -55,7 +55,7 @@ else {
                 extension = ((lidx != -1)
                             ? fileName.substring(lidx,fileName.length())
                             : ".kif");
-                existingFile = new File(kbDirFile, (baseName + extension));
+                existingFile = new File(sumoDirFile, (baseName + extension));
 
                 System.out.println("INFO in AddConstituent.jsp: filename: " + fileName);
                 outfile = StringUtil.renameFileIfExists(existingFile);

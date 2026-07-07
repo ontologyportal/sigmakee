@@ -291,15 +291,14 @@ public class KBmanager implements Serializable {
     }
 
     /*****************************************************************
-     * Resolves a KB constituent path against kbDir if relative.
+     * Resolves a KB constituent path against sumoDir if relative.
      * @param filename configured constituent filename.
      * @return resolved constituent path.
      */
     private static String resolveKbConstituentPath(String filename) {
 
         File file = new File(filename);
-        if (!file.isAbsolute())
-            file = new File(KBmanager.configuration.getKbDir(), filename);
+        if (!file.isAbsolute()) file = new File(KBmanager.configuration.getKbDir(), filename);
         return file.getPath();
     }
 
@@ -534,7 +533,8 @@ public class KBmanager implements Serializable {
             i++;
             try {
                 kb.addConstituent(filename);
-            } catch (Exception e1) {
+            } 
+            catch (Exception e1) {
                 LoggingUtils.log("ERROR", e1.getMessage());
                 e1.printStackTrace();
                 return false;
@@ -571,7 +571,6 @@ public class KBmanager implements Serializable {
             future = KButilities.EXECUTOR_SERVICE.submit(r);
             futures.add(future);
         }
-
         for (Future<Boolean> f : futures)
             try {
                 retVal = f.get(); // waits for task completion
@@ -598,8 +597,7 @@ public class KBmanager implements Serializable {
         ){
             byte[] buf = new byte[1024];
             int i;
-            while ((i = fis.read(buf)) != -1)
-                fos.write(buf, 0, i);
+            while ((i = fis.read(buf)) != -1) fos.write(buf, 0, i);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -696,8 +694,7 @@ public class KBmanager implements Serializable {
                                 kbFinal.kbCache.buildSymbolTaxonomy();
                             }
                             catch (Exception e) {
-                                LoggingUtils.log("ERROR",
-                                        "buildSymbolTaxonomy failed: " + e.getMessage());
+                                LoggingUtils.log("ERROR", "buildSymbolTaxonomy failed: " + e.getMessage());
                             }
                         });
                     }
@@ -729,6 +726,19 @@ public class KBmanager implements Serializable {
         cleanupOrphanedSessionDirectories();
         double elapsedSeconds = (System.nanoTime() - start) / 1_000_000_000.0;
         LoggingUtils.log("Initialization completed in " + elapsedSeconds + " seconds!");
+    }
+
+    /*****************************************************************
+     */
+    public synchronized void reinitializeFromConfiguration() {
+
+        initialized = false;
+        initializing = false;
+        if (kbs != null) kbs.clear();
+        File ser = new File(configuration.getKbDir(), KB_MANAGER_SER);
+        if (ser.exists() && !ser.delete())
+            LoggingUtils.log("WARN", "Could not delete serialized KBmanager: " + ser);
+        initializeOnce(configuration);
     }
 
     /*****************************************************************
@@ -778,9 +788,9 @@ public class KBmanager implements Serializable {
         WordNet.initOnce();
         if (WordNet.wn == null) {
             throw new IllegalStateException(
-                    "WordNet.initOnce() returned without initializing WordNet.wn. " +
-                    "Check WordNet.disable, kbDir, and WordNet data files under " +
-                    KBmanager.configuration.getKbDir());
+                "WordNet.initOnce() returned without initializing WordNet.wn. " +
+                "Check WordNet.disable, sumoDir, and WordNet data files under " +
+                KBmanager.configuration.getKbDir());
         }
         NLGUtils.init(configFileDir);
         OMWordnet.readOMWfiles();
@@ -821,6 +831,8 @@ public class KBmanager implements Serializable {
         addKB(name, true);
     }
 
+    /*****************************************************************
+     */
     public void addKB(String name, boolean isVisible) {
 
         KB kb = new KB(name, KBmanager.configuration.getKbDir(), isVisible);
@@ -846,9 +858,7 @@ public class KBmanager implements Serializable {
     public void writeConfiguration() throws IOException {
 
         if (!KBmanager.configuration.canWriteXml()) {
-            LoggingUtils.log("INFO",
-                    "Skipping configuration XML write for non-file-backed configuration: " +
-                    KBmanager.configuration.getConfigFilePath());
+            LoggingUtils.log("INFO", "Skipping configuration XML write for non-file-backed configuration: " + KBmanager.configuration.getConfigFilePath());
             return;
         }
         try {
@@ -948,9 +958,7 @@ public class KBmanager implements Serializable {
 
         String kbDir = KBmanager.configuration.getKbDir();
         Path sessionsDir = Paths.get(kbDir, "sessions");
-        if (!Files.exists(sessionsDir)) {
-            return;
-        }
+        if (!Files.exists(sessionsDir)) return;
         long cutoffTime = System.currentTimeMillis() - (60 * 60 * 1000);
         try {
             java.util.concurrent.atomic.AtomicInteger removed = new java.util.concurrent.atomic.AtomicInteger(0);
@@ -964,13 +972,15 @@ public class KBmanager implements Serializable {
                         com.articulate.sigma.trans.SessionTPTPManager.cleanupSession(sessionId);
                         removed.incrementAndGet();
                     }
-                } catch (IOException e) {
+                } 
+                catch (IOException e) {
                     LoggingUtils.log("ERROR", "Checking session directory: " + e.getMessage());
                 }
             });
             if (removed.get() > 0) LoggingUtils.log("INFO", "Removed " + removed.get() + " orphaned session directories!");
             else LoggingUtils.log("No orphaned session directories found");
-        } catch (IOException e) {
+        } 
+        catch (IOException e) {
             LoggingUtils.log("Error during orphaned session cleanup: " + e.getMessage());
         }
     }

@@ -150,7 +150,7 @@ public class ConsistencyCheckManager extends ThreadPoolExecutor {
 
         if (checkMode == null) checkMode = ConsistencyCheckMode.GLOBAL;
         String filename = "CCHECK_" + checkMode + "_" + kb.name;
-        if (KBmanager.configuration.getBaseDir() != null) filename = KBmanager.configuration.getBaseDir() + File.separator + filename;
+        if (KBmanager.configuration.getKbDir() != null) filename = KBmanager.configuration.getKbDir() + File.separator + filename;
         if (consistencyCheckQueue.putIfAbsent(kb.name, filename) != null) {
             logger.log(Level.INFO, "KB {0} has been rejected for consistency check because it is already being checked.", kb.name);
             return ConsistencyCheckStatus.ONGOING;
