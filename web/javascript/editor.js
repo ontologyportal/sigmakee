@@ -358,7 +358,7 @@ function renderErrorBox(errors = [], message = null) {
   if (!errors.length) {
     box.classList.remove("errors-box");
     box.classList.add("success");
-    body.textContent = "✅ No errors found.";
+    body.textContent = "No errors found.";
     return;
   }
   box.classList.remove("success");

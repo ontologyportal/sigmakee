@@ -251,8 +251,8 @@ run_prerequisite_verification() {
     local verifier=""
     if [ -f "$SCRIPT_DIR/verify-prerequisites.sh" ]; then
         verifier="$SCRIPT_DIR/verify-prerequisites.sh"
-    elif [ -f "$SIGMA_SRC/VerifyInstallationPrerequisites.sh" ]; then
-        verifier="$SIGMA_SRC/VerifyInstallationPrerequisites.sh"
+    elif [ -f "$SIGMA_SRC/verify-prerequisites.sh" ]; then
+        verifier="$SIGMA_SRC/verify-prerequisites.sh.sh"
     fi
 
     if [ -z "$verifier" ]; then

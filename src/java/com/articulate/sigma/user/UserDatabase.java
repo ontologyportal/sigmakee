@@ -43,11 +43,40 @@ public class UserDatabase {
             migrateDatabaseFilesIfNeeded();
             Class.forName(H2_DRIVER);
             this.connection = DriverManager.getConnection(JDBC_ACCESS_DB, INITIAL_ADMIN_USER, "");
+            initializeSchema();
         }
         catch (ClassNotFoundException | SQLException e) {
             System.err.println("Error in UserDatabase(): " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    /********************************************************************
+     * Creates a UserDatabase object and opens a database connection.
+     */
+    private void initializeSchema() {
+        createUsersTable();
+        createPasswordResetTokenTable();
+        createDefaultAdminIfMissing();
+    }
+
+    /********************************************************************
+     */
+    private void createDefaultAdminIfMissing() {
+
+        if (userExists("admin")) return;
+        User admin = new User(
+                "admin",
+                "admin",
+                "admin@example.com",
+                "admin",
+                "Admin",
+                "User",
+                "SigmaKEE",
+                "default bootstrap account"
+        );
+        if (toDB(admin)) System.out.println("UserDatabase: created default admin user admin/admin");
+        else System.err.println("UserDatabase: failed to create default admin user");
     }
 
     /********************************************************************
