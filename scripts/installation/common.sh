@@ -196,6 +196,32 @@ clone_or_update_repositories() {
     done
 }
 
+clone_or_update_sigmakee_repo() {
+    print_header "Cloning or updating SigmaKEE"
+
+    local target_dir="$ONTOLOGYPORTAL_GIT/sigmakee"
+
+    if [ ! -e "$target_dir" ]; then
+        echo "Cloning SigmaKEE branch '$SIGMAKEE_BRANCH'..."
+        git clone --branch "$SIGMAKEE_BRANCH" "$SIGMAKEE_REPO" "$target_dir"
+    elif [ -d "$target_dir/.git" ]; then
+        echo "SigmaKEE repository already exists at $target_dir"
+
+        if [ "$UPDATE_DEPENDENCIES" -eq 1 ]; then
+            git -C "$target_dir" fetch origin "$SIGMAKEE_BRANCH"
+            git -C "$target_dir" checkout "$SIGMAKEE_BRANCH"
+            git -C "$target_dir" pull --ff-only origin "$SIGMAKEE_BRANCH"
+        else
+            echo "Skipping SigmaKEE update because --no-pull was provided."
+        fi
+    else
+        echo "ERROR: $target_dir exists but is not a Git repository." >&2
+        exit 1
+    fi
+
+    export SIGMA_SRC="$target_dir"
+}
+
 install_tomcat_if_missing() {
     print_header "Checking Tomcat"
 
@@ -344,8 +370,9 @@ EOF2
 run_common_install() {
     parse_common_args "$@"
     welcome
-    ensure_sigmakee_checkout
     ensure_install_directories
+    clone_or_update_sigmakee_repo
+    ensure_sigmakee_checkout
     write_profile_block
     install_tomcat_if_missing
     clone_or_update_repositories
