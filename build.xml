@@ -564,7 +564,7 @@ build.date=${git.commit.date}
         <copy todir="${sigma.home}/KBs/WordNetMappings">
             <fileset dir="${programs.dir}/WordNet-3.0/dict"/>
         </copy>
-        <copy file="${basedir}/config.xml"
+        <copy file="${basedir}/scripts/installation/config.xml"
             tofile="${sigma.home}/KBs/config.xml"
             overwrite="true"/>
         <antcall target="sigma.config"/>
