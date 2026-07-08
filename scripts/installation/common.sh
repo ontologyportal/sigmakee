@@ -5,12 +5,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SIGMA_SRC_DEFAULT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-: "${SIGMA_SRC:=$SIGMA_SRC_DEFAULT}"
-: "${ONTOLOGYPORTAL_GIT:=$(cd "$SIGMA_SRC/.." && pwd)}"
 : "${PROGRAMS_DIR:=$HOME/Programs}"
+: "${ONTOLOGYPORTAL_GIT:=$HOME/workspace}"
 : "${SIGMA_HOME:=$HOME/.sigmakee}"
+: "${SIGMA_SRC:=$ONTOLOGYPORTAL_GIT/sigmakee}"
 : "${TOMCAT_VERSION:=9.0.107}"
 : "${CATALINA_HOME:=$PROGRAMS_DIR/apache-tomcat-$TOMCAT_VERSION}"
 : "${CATALINA_OPTS:=-Xmx10g -Xss1m}"
