@@ -630,7 +630,6 @@ build.date=${git.commit.date}
                 <exclude name=".github/**"/>
                 <exclude name="SimpleFacts/**"/>
                 <exclude name="mappings/**"/>
-                <exclude name="tests/**"/>
             </fileset>
         </copy>
     </target>
