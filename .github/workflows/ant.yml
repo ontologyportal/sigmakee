@@ -99,7 +99,7 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           find $SIGMA_HOME/KBs -name '**/*.ser' -delete
-          cp $SIGMA_SRC/config.xml $SIGMA_HOME/KBs
+          cp $SIGMA_SRC/scripts/installation/config.xml $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/workspace/sumo|$SIGMA_HOME/KBs|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_HOME/KBs/config.xml
@@ -238,8 +238,8 @@ jobs:
           SIGMA_CP: ${{ github.workspace }}/sigmakee/build/sigmakee.jar:${{ github.workspace }}/sigmakee/lib/*
         working-directory: ./sigmakee
         run: |
-          chmod +x scripts/build-related-repos.sh
-          bash scripts/build-related-repos.sh
+          chmod +x scripts/testing/build-related-repos.sh
+          bash scripts/testing/build-related-repos.sh
 
   build-sumo-ci-and-sigmakee:
     runs-on: ubuntu-latest
