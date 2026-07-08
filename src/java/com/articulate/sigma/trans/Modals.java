@@ -161,12 +161,19 @@ public class Modals {
                     "trichotomizingOn",
                     "totalOrderingOn",
                     "disjointDecomposition", // New Entry (Angelos)
-                    // CF: TODO: Include all temporals other than the SEVEN: 
-                    // weddingAnniversary, typicallyContainsTemporalPart, typicalTemporalPart
-                    // time, cooccur, anniversary, WhenFn 
                     "AfternoonFn",
                     "MorningFn",
                     "EveningFn", 
+                    // CF: Include all temporals other than the SEVEN: 
+                    // weddingAnniversary, typicallyContainsTemporalPart, typicalTemporalPart
+                    // time, cooccur, anniversary, WhenFn 
+                    "weddingAnniversary",
+                    "typicallyContainsTemporalPart",
+                    "typicalTemporalPart",
+                    "time",
+                    "coocur",
+                    "anniversary",
+                    "WhenFn",
                     // Arithmetic Op
                     "AbsoluteValueFn", 
                     "AdditionFn",
