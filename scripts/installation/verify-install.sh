@@ -222,10 +222,10 @@ else
 fi
 
 while true; do
-  output=$(curl -s --fail --max-time 5 "http://localhost:8080/sigma/KBs.jsp" || true)
+  output=$(curl -s --fail --max-time 5 "http://localhost:8080/sigma/login.jsp" || true)
   if echo "$output" | grep -qF "<title>Sigma Login</title>"; then
     echo "Sigmakee is successfully running."
-    echo "Go to http://localhost:8080/sigma/KBs.jsp"
+    echo "Go to http://localhost:8080/sigma/login.jsp"
     break
   fi
   echo "Waiting for server to load Sigmakee ..."
