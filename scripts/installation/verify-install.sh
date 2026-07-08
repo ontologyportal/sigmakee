@@ -225,6 +225,7 @@ while true; do
   output=$(curl -s --fail --max-time 5 "http://localhost:8080/sigma/KBs.jsp" || true)
   if echo "$output" | grep -qF "<title>Sigma Login</title>"; then
     echo "Sigmakee is successfully running."
+    echo "Go to http://localhost:8080/sigma/KBs.jsp"
     break
   fi
   echo "Waiting for server to load Sigmakee ..."
@@ -233,7 +234,7 @@ while true; do
   if (( elapsed >= timeout )); then
     echo "Timeout waiting for Sigma login page after Tomcat startup."
     echo "Try checking:"
-    echo "  curl -i http://localhost:8080/sigma/login.html"
+    echo "  curl -i http://localhost:8080/sigma/KBs.jsp"
     echo "  tail -n 100 $CATALINA_HOME/logs/catalina.out"
     exit 1
   fi
