@@ -45,8 +45,14 @@ print_header() {
 }
 
 welcome() {
-    log "Welcome to the SigmaKEE installer"
-    log "Home: http://ontologyportal.github.io/sigmakee/"
+	log "Welcome to the installation of:"
+	log '  _________.___  ________    _____      _____'
+	log ' /   _____/|   |/  _____/   /     \    /  _  \'
+	log ' \_____  \ |   /   \  ___  /  \ /  \  /  /_\  \'
+	log ' /        \|   \    \_\  \/    V    \/    |    \'
+	log '/_______  /|___|\______  /\____|__  /\____|__  /'
+	log '        \/             \/         \/         \/'
+	log "Home: http://ontologyportal.github.io/sigmakee/"
 }
 
 usage_common() {
@@ -253,7 +259,7 @@ run_prerequisite_verification() {
     if [ ! -f "$verifier" ]; then
         fail "Prerequisite verifier not found: $verifier"
     fi
-    
+
     local output_file
     output_file="$(mktemp)"
     bash "$verifier" 2>&1 | tee "$output_file"

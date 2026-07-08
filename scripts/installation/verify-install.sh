@@ -47,6 +47,7 @@ print_header() {
   echo "=================================================================="
 }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 ########################################################
 # Check if the output contains "MISSING PREREQUISITES"
@@ -57,7 +58,7 @@ if [ -z "${SIGMA_SRC-}" ]; then
   exit 1
 fi
 print_header "Checking that prerequisites were installed correctly"
-output=$(source $SIGMA_SRC/verify-prerequisites.sh | tee /dev/tty)
+output=$(bash "$SCRIPT_DIR/verify-prerequisites.sh" | tee /dev/tty)
 if echo "$output" | grep -q "MISSING PREREQUISITES"; then
   echo "Error: Missing prerequisites detected. Exiting script."
   exit 1
