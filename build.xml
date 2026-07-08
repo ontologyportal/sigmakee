@@ -214,6 +214,9 @@
     <property name="vampire.binary.unpack.dir"
             value="${sigma.install.downloads}${file.separator}vampire-release"/>
 
+    <property name="tptp4x.home" value="${git.home}/TPTP4X"/>
+    <property name="tptp4x.exec" value="${tptp4x.home}${file.separator}tptp4X"/>
+
     <condition property="vampire.asset" value="vampire-Linux-X64.zip">
         <and>
             <os family="unix"/>
@@ -582,6 +585,9 @@ build.date=${git.commit.date}
         <!-- Install Vampire: try prebuilt binary first, then source build fallback -->
         <antcall target="install.vampire"/>
 
+        <antcall target="clone.tptp4x"/>
+        <antcall target="build.tptp4x"/>
+
         <!-- perms -->
         <chmod dir="${git.home}" perm="ugo+rw" includes="**/*"/>
         <chmod dir="${programs.dir}" perm="ugo+rw" includes="**/*"/>
@@ -632,6 +638,27 @@ build.date=${git.commit.date}
             </args>
         </git>
     </target>
+
+    <target name="clone.tptp4x">
+        <mkdir dir="${tptp4x.home}"/>
+        <git command="clone" dir="${tptp4x.home}">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+                <arg value="https://github.com/TPTPWorld/TPTP4X.git"/>
+                <arg value="${tptp4x.home}"/>
+            </args>
+        </git>
+    </target>
+
+    <target name="build.tptp4x">
+        <exec executable="make" dir="${tptp4x.home}"/>
+        <available file="${tptp4x.exec}" property="tptp4x.exec.exists"/>
+        <fail message="TPTP4X build failed. Expected executable: ${tptp4x.exec}"
+            unless="tptp4x.exec.exists"/>
+        <chmod file="${tptp4x.exec}" perm="ugo+rx"/>
+    </target>
+
     <!-- If on macOS, can also install tomcat w/ Homebrew -->
     <target name="install.tomcat">
         <get src="https://archive.apache.org/dist/tomcat/tomcat-9/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}" tryGzipEncoding="true"/>
@@ -692,6 +719,9 @@ build.date=${git.commit.date}
         <replace file="${sigma.home}/KBs/config.xml"
                 token="${user.home}/Programs/vampire/build/vampire"
                 value="${programs.dir}${file.separator}vampire${file.separator}build${file.separator}vampire"/>
+        <replace file="${sigma.home}/KBs/config.xml"
+            token="/home/theuser/workspace/TPTP4X/tptp4X"
+            value="${tptp4x.exec}"/>
     </target>
     
     <!--

@@ -195,6 +195,7 @@ clone_or_update_repositories() {
         "https://github.com/ontologyportal/TPTP-ANTLR"
         "https://github.com/ontologyportal/sigmaAntlr"
         "https://github.com/ontologyportal/SigmaUtils"
+        "https://github.com/TPTPWorld/TPTP4X"
     )
 
     for repo in "${repos[@]}"; do

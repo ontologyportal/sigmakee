@@ -92,6 +92,7 @@ dir_list=(
   "$HOME/Programs/vampire"
   "$SIGMA_HOME/KBs"
   "$SIGMA_HOME/KBs/WordNetMappings"
+  "$ONTOLOGYPORTAL_GIT/TPTP4X"
 )
 
 check_dirs_nonempty "${dir_list[@]}"
@@ -108,6 +109,7 @@ files=(
   "$HOME/Programs/E/configure"
   "$HOME/Programs/E/PROVER/eprover"
   "$HOME/Programs/vampire/build/vampire"
+  "$ONTOLOGYPORTAL_GIT/TPTP4X/tptp4X"
 )
 
 check_files "${files[@]}"
@@ -155,6 +157,13 @@ if "$HOME/Programs/vampire/build/vampire" --version > /dev/null 2>&1; then
   echo "Vampire runs correctly."
 else
   echo "Vampire exists, but failed to run correctly."
+  exit 1
+fi
+
+if "$ONTOLOGYPORTAL_GIT/TPTP4X/tptp4X" -h >/dev/null 2>&1; then
+  echo "TPTP4X runs correctly."
+else
+  echo "TPTP4X exists, but failed to run correctly."
   exit 1
 fi
 
@@ -224,7 +233,7 @@ interval=3  # seconds between attempts
 elapsed=0
 
 echo "Sigmakee is launched by a Tomcat server. Checking if Tomcat is functional."
-if startup.sh | grep -qF "Tomcat started."; then
+if "$CATALINA_HOME/bin/startup.sh" | grep -qF "Tomcat started."; then
   echo "Tomcat successfully running."
 else
   echo "There is a problem running 'startup.sh' found in $CATALINA_HOME/bin, used to start the Tomcat server."
@@ -232,29 +241,19 @@ else
 fi
 
 while true; do
-  # Sometimes it takes some time to unpack the .war file, keep trying for a minute.
-  output=$(curl -s --fail "http://localhost:8080/sigma/login.html") || {
-    echo "Waiting for server to load Sigmakee ..."
-    sleep $interval
-    elapsed=$((elapsed + interval))
-    continue
-  }
+  output=$(curl -s --fail --max-time 5 "http://localhost:8080/sigma/KBs.jsp" || true)
   if echo "$output" | grep -qF "<title>Sigma Login</title>"; then
     echo "Sigmakee is successfully running."
     break
   fi
-
-  sleep $interval
+  echo "Waiting for server to load Sigmakee ..."
+  sleep "$interval"
   elapsed=$((elapsed + interval))
-
   if (( elapsed >= timeout )); then
     echo "Timeout waiting for Sigma login page after Tomcat startup."
-    echo "Last curl output was:"
-    echo "$output"
-    if [ ! -d "$CATALINA_HOME/webapps/sigma" ]; then
-      echo "[MISSING DIRECTORY:] $CATALINA_HOME/webapps/sigma"
-      echo "Try running 'bash $ONTOLOGYPORTAL_GIT/sigmakee/VerifyInstallation.sh' in a couple minutes, sometimes it takes a while for the Tomcat server to build the sigmakee website from the sigma.war file."
-    fi
+    echo "Try checking:"
+    echo "  curl -i http://localhost:8080/sigma/login.html"
+    echo "  tail -n 100 $CATALINA_HOME/logs/catalina.out"
     exit 1
   fi
 done
