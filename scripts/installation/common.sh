@@ -153,6 +153,7 @@ export SIGMA_SRC="$SIGMA_SRC"
 export PROGRAMS_DIR="$PROGRAMS_DIR"
 export CATALINA_HOME="$CATALINA_HOME"
 export CATALINA_OPTS="$CATALINA_OPTS"
+export PATH="$HOME/.local/bin:$VAMPIRE_HOME:$E_HOME:$CATALINA_HOME/bin:$PATH"
 export VAMPIRE_HOME="$VAMPIRE_HOME"
 export E_HOME="$E_HOME"
 export SIGMA_CP="$SIGMA_CP"
@@ -167,6 +168,24 @@ export HISTSIZE=10000 HISTFILESIZE=100000
 EOF2
 
     log "Environment block written to $profile"
+}
+
+install_tomcat_wrappers() {
+    print_header "Installing Tomcat command wrappers"
+
+    mkdir -p "$HOME/.local/bin"
+
+    cat > "$HOME/.local/bin/startup.sh" <<EOF
+#!/usr/bin/env bash
+exec "$CATALINA_HOME/bin/startup.sh" "\$@"
+EOF
+
+    cat > "$HOME/.local/bin/shutdown.sh" <<EOF
+#!/usr/bin/env bash
+exec "$CATALINA_HOME/bin/shutdown.sh" "\$@"
+EOF
+
+    chmod +x "$HOME/.local/bin/startup.sh" "$HOME/.local/bin/shutdown.sh"
 }
 
 ensure_install_directories() {
@@ -421,6 +440,7 @@ run_common_install() {
     clone_or_update_repositories
     write_profile_block
     install_tomcat_if_missing
+    install_tomcat_wrappers
     install_sigmakee
     compile_sigmakee
     install_sumojedit
