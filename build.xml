@@ -584,7 +584,7 @@ build.date=${git.commit.date}
 
         <!-- Install Vampire: try prebuilt binary first, then source build fallback -->
         <antcall target="install.vampire"/>
-
+        <antcall target="clone.jjparser"/>
         <antcall target="clone.tptp4x"/>
         <antcall target="build.tptp4x"/>
 
@@ -639,6 +639,18 @@ build.date=${git.commit.date}
         </git>
     </target>
 
+    <target name="clone.jjparser">
+        <mkdir dir="${git.home}/JJParser"/>
+        <git command="clone" dir="${git.home}/JJParser">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+                <arg value="https://github.com/TPTPWorld/JJParser.git"/>
+                <arg value="${git.home}/JJParser"/>
+            </args>
+        </git>
+    </target>
+
     <target name="clone.tptp4x">
         <mkdir dir="${tptp4x.home}"/>
         <git command="clone" dir="${tptp4x.home}">
@@ -672,6 +684,7 @@ build.date=${git.commit.date}
         <untar src="${programs.dir}/WordNet-3.0.tar.gz" dest="${programs.dir}" compression="gzip"/>
         <delete file="${programs.dir}/WordNet-3.0.tar.gz"/>
     </target>
+
     <target name="setup.sigma.home" description="Copy WordNetMappings, sumo kbs and config.xml to ~/.sigmakee/KBs -> ($SIGMA_HOME)/KBs">
         <antcall target="refresh.kbs"/>
         <copy todir="${sigma.home}/KBs/WordNetMappings">

@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 
-
 set -euo pipefail
 
-#
-# Helper functions
-#
 check_dirs_nonempty() {
   local dirs=("$@")
   for d in "${dirs[@]}"; do
@@ -24,7 +20,6 @@ check_dirs_nonempty() {
 
 check_files() {
   local files=("$@")
-
   for f in "${files[@]}"; do
     if [ -f "$f" ]; then
       echo "Found file: $f"
@@ -33,7 +28,6 @@ check_files() {
       return 1
     fi
   done
-
   echo "Most relevant files found."
   return 0
 }
@@ -65,14 +59,10 @@ if echo "$output" | grep -q "MISSING PREREQUISITES"; then
 fi
 echo "All prerequisites met. Proceeding with checks."
 
-
-######################################################################
 ######################################################################
 ##    Note: This next section roughly follows the build.xml script. ##
 ##    If it fails, look for the <target name="install" section.     ##
 ######################################################################
-######################################################################
-
 
 ########################################################
 # Check if folders exist and are not empty
@@ -92,11 +82,11 @@ dir_list=(
   "$HOME/Programs/vampire"
   "$SIGMA_HOME/KBs"
   "$SIGMA_HOME/KBs/WordNetMappings"
+  "$ONTOLOGYPORTAL_GIT/JJParser"
   "$ONTOLOGYPORTAL_GIT/TPTP4X"
 )
 
 check_dirs_nonempty "${dir_list[@]}"
-
 
 ########################################################
 # Check if certain files exist, that various copying
@@ -113,7 +103,6 @@ files=(
 )
 
 check_files "${files[@]}"
-
 
 ######################################################################
 # Check if config.xml has been appropriately configured.
@@ -139,9 +128,7 @@ for s in "${strings[@]}"; do
   fi
 done
 
-
 echo "$config_file properly configured."
-
 
 ########################################################
 # Vampire checks
@@ -189,7 +176,6 @@ dir_list=(
 )
 check_dirs_nonempty "${dir_list[@]}"
 
-
 ########################################################
 # Check if certain files exist, that various copying
 # commands executed successfully.
@@ -204,7 +190,6 @@ files=(
 
 check_files "${files[@]}"
 
-
 ############################################################
 # Run a basic test of the knowledge base.
 # java -Xmx20g -cp "$SIGMA_CP" com.articulate.sigma.KB -t
@@ -218,10 +203,6 @@ else
   echo "Did not successfully run knowledge tests: java -Xmx20g -cp \"$SIGMA_CP\" com.articulate.sigma.KB -t"
   exit 1
 fi
-
-
-
-
 
 ########################################################
 # Check if tomcat actually works and starts.
@@ -262,8 +243,6 @@ done
 shutdown.sh > /dev/null 2>&1
 
 ###################################################################
-#
 # Success, probably!!!!
-#
 ###################################################################
 echo -e "\n\nFinished build verification. Checks indicate a successful installation!"
