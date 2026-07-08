@@ -15,7 +15,7 @@ install_ubuntu_prerequisites() {
         sudo apt-get update
     fi
 
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
         ca-certificates \
         curl \
         unzip \
@@ -28,7 +28,8 @@ install_ubuntu_prerequisites() {
         graphviz \
         build-essential \
         openjdk-21-jdk \
-        openjdk-21-jre-headless
+        openjdk-21-jre-headless \
+        jedit
 }
 
 configure_ubuntu_java() {

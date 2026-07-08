@@ -11,7 +11,7 @@
   <preference name="https" value="false" />
   <preference name="isAws" value="false"/>
   <preference name="inferenceTestDir" value="/home/theuser/.sigmakee/KBs/tests" />
-  <preference name="jeditExec" value="/usr/share/jedit/jedit" />
+  <preference name="jeditExec" value="/usr/bin/jedit" />
   <preference name="kbDir" value="/home/theuser/.sigmakee/KBs" />
   <preference name="loadFresh" value="false" />
   <preference name="loadLexicons" value="true"/>

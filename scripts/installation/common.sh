@@ -16,10 +16,29 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${VAMPIRE_HOME:=$PROGRAMS_DIR/vampire/build}"
 : "${E_HOME:=$PROGRAMS_DIR/E/PROVER}"
 : "${SIGMA_CP:=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*}"
+: "${SUMOJEDIT_SRC:=$ONTOLOGYPORTAL_GIT/SUMOjEdit}"
+
+case "$(uname -s)" in
+    Darwin)
+        : "${JEDIT_HOME:=$HOME/Library/jEdit}"
+        : "${JEDIT_JAR:=/Applications/jEdit.app/Contents/Java/jedit.jar}"
+        ;;
+    *)
+        : "${JEDIT_HOME:=$HOME/.jedit}"
+        : "${JEDIT_JAR:=/usr/share/jedit/jedit.jar}"
+        ;;
+esac
+
+export SUMOJEDIT_SRC JEDIT_HOME JEDIT_JAR
+
 
 export SIGMA_SRC ONTOLOGYPORTAL_GIT PROGRAMS_DIR SIGMA_HOME TOMCAT_VERSION
 export CATALINA_HOME CATALINA_OPTS VAMPIRE_HOME E_HOME SIGMA_CP
 export PATH="$VAMPIRE_HOME:$E_HOME:$CATALINA_HOME/bin:$PATH"
+export SUMOJEDIT_SRC="$SUMOJEDIT_SRC"
+export JEDIT_HOME="$JEDIT_HOME"
+export JEDIT_JAR="$JEDIT_JAR"
+alias jedit='java -Xmx10g -Xss1m -jar "$JEDIT_JAR"'
 
 RUN_VERIFY=1
 UPDATE_DEPENDENCIES=1
@@ -138,6 +157,10 @@ export VAMPIRE_HOME="$VAMPIRE_HOME"
 export E_HOME="$E_HOME"
 export SIGMA_CP="$SIGMA_CP"
 export PATH="\$VAMPIRE_HOME:\$E_HOME:\$CATALINA_HOME/bin:\$PATH"
+export SUMOJEDIT_SRC="$SUMOJEDIT_SRC"
+export JEDIT_HOME="$JEDIT_HOME"
+export JEDIT_JAR="$JEDIT_JAR"
+alias jedit='java -Xmx10g -Xss1m -jar "$JEDIT_JAR"'
 alias dir='ls --color=auto --format=vertical -la'
 export HISTSIZE=10000 HISTFILESIZE=100000
 # <<< SigmaKEE installer <<<
@@ -194,6 +217,7 @@ clone_or_update_repositories() {
         "https://github.com/ontologyportal/sigmaAntlr"
         "https://github.com/ontologyportal/SigmaUtils"
         "https://github.com/TPTPWorld/TPTP4X"
+        "https://github.com/ontologyportal/SUMOjEdit"
     )
     for repo in "${repos[@]}"; do
         clone_or_update_repo "$repo"
@@ -242,6 +266,29 @@ install_tomcat_if_missing() {
     curl -fsSL "$url" -o "$archive"
     tar -xzf "$archive" -C "$PROGRAMS_DIR"
     chmod +x "$CATALINA_HOME/bin/"*.sh
+}
+
+install_sumojedit() {
+    print_header "Installing SUMOjEdit"
+    mkdir -p "$JEDIT_HOME/jars" "$JEDIT_HOME/modes"
+    [ -f "$JEDIT_JAR" ] || fail "jEdit jar not found: $JEDIT_JAR"
+    [ -f "$SUMOJEDIT_SRC/build.xml" ] || fail "SUMOjEdit checkout not found: $SUMOJEDIT_SRC"
+    cd "$SUMOJEDIT_SRC"
+    env \
+      SIGMA_HOME="$SIGMA_HOME" \
+      SIGMA_SRC="$SIGMA_SRC" \
+      SIGMA_CP="$SIGMA_CP" \
+      JEDIT_HOME="$JEDIT_HOME" \
+      JEDIT_JAR="$JEDIT_JAR" \
+      ant
+    if [ -f "$SUMOJEDIT_SRC/SUMOjEdit.jar" ]; then
+        cp "$SUMOJEDIT_SRC/SUMOjEdit.jar" "$JEDIT_HOME/jars/"
+    elif [ -f "$SUMOJEDIT_SRC/dist/SUMOjEdit.jar" ]; then
+        cp "$SUMOJEDIT_SRC/dist/SUMOjEdit.jar" "$JEDIT_HOME/jars/"
+    else
+        fail "SUMOjEdit.jar was not created by ant."
+    fi
+    cp -f "$SUMOJEDIT_SRC/kif.xml" "$SUMOJEDIT_SRC/TPTP.xml" "$JEDIT_HOME/modes/" 2>/dev/null || true
 }
 
 run_prerequisite_verification() {
@@ -371,11 +418,13 @@ run_common_install() {
     ensure_install_directories
     clone_or_update_sigmakee_repo
     ensure_sigmakee_checkout
+    clone_or_update_repositories
     write_profile_block
     install_tomcat_if_missing
-    run_prerequisite_verification
     install_sigmakee
     compile_sigmakee
+    install_sumojedit
+    run_prerequisite_verification
     run_install_verification
     print_success_message
 }
