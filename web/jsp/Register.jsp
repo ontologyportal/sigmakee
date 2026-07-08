@@ -49,113 +49,178 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
     <head>
-        <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
-        <title>Register</title>
-    </head>
-    <body>
-        <%
-        /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
-            Infosys (c) 2017-present.
+    <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
+    <title>Register</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+            padding: 40px;
+        }
 
-            This software is released under the GNU Public License
-            <http://www.gnu.org/copyleft/gpl.html>.
+        .register-card {
+            max-width: 520px;
+            margin: 0 auto;
+            background: white;
+            padding: 28px 32px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+        }
 
-            Please cite the following article in any publication with references:
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+        }
 
-            Pease A., and Benzm?ller C. (2013). Sigma: An Integrated Development Environment
-            for Logical Theories. AI Communications 26, pp79-97.  See also
-            http://github.com/ontologyportal
-        */
-        %>
+        .form-row {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 9px 10px;
+            border: 1px solid #bbb;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .help {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .message {
+            padding: 10px 12px;
+            border-radius: 4px;
+            margin-bottom: 18px;
+        }
+
+        .error {
+            background: #fdecea;
+            color: #8a1f11;
+            border: 1px solid #f5c2c0;
+        }
+
+        .success {
+            background: #eaf7ea;
+            color: #1f6b2a;
+            border: 1px solid #b9dfb9;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #2f6feb;
+            color: white;
+            border: 0;
+            border-radius: 4px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #255fc9;
+        }
+
+        .toplink {
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <table width="95%" cellspacing="0" cellpadding="0">
+        <tr>
+            <td valign="top">
+                <table cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td align="left" valign="top">
+                            <img src="pixmaps/sigmaSymbol.gif" alt="pixmaps/sigmaSymbol.gif">
+                        </td>
+                        <td>&nbsp;&nbsp;</td>
+                        <td align="left" valign="top">
+                            <img src="pixmaps/logoText.gif" alt="pixmaps/logoText.gif"><br>
+                            <b>Sigma Account Registration </b>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <hr>
+    <br>
+    <div class="register-card">
+        <h1>Create an Account</h1>
+        <p>All fields are required. New accounts require admin approval.</p>
+
         <% if (error != null) { %>
-            <div style="color:red;">
+            <div class="message error">
                 <%= ValidationUtils.sanitizeString(error) %>
             </div>
         <% } %>
+
         <% if (success != null) { %>
             <div class="toplink">
                 <a href="KBs.jsp">&larr; Home</a>
             </div>
-            <div style="color:green;">
+            <div class="message success">
                 <%= ValidationUtils.sanitizeString(success) %>
             </div>
-        <% } 
-            else {
-        %>
-        <form method="post" action="Register.jsp">
-            <p>
-            <table align="left" border="0">
-                <tr>
-                    <td colspan="2">
-                        All fields are required<p>
-                    </td>
-                </tr>
-                <tr>
-                    <td valign="top" align="right">
-                        <b>first/given name:</b>
-                    </td>
-                    <td valign="top">
-                        <b><input name="firstName" type="text" maxlength="20" size="10"></b>
-                    </td>
-                </tr>
-                <tr>
-                    <td valign="top" align="right">
-                        <b>last/surname:</b>
-                    </td>
-                    <td valign="top">
-                        <b><input name="lastName" type="text" maxlength="20" size="10"></b>
-                    </td>
-                </tr>
-                <tr>
-                    <td valign="top" align="right">
-                        <b>User name:</b>
-                    </td>
-                    <td valign="top">
-                        <b><input name="userName" type="text" maxlength="20" size="10"></b>
-                    </td>
-                </tr>
+        <% } else { %>
 
-                <tr>
-                    <td valign="top" align="right">
-                        <b>Password:</b>
-                    </td>
-                    <td valign="top">
-                        <b><input name="password" type="password" maxlength="20" size="6"></b>
-                    </td>
-                </tr>
-                <tr>
-                    <td valign="top" align="right">
-                        <b>Organization:</b>
-                    </td>
-                    <td valign="top">
-                        <b><input name="organization" type="text" maxlength="20" size="10"></b>
-                    </td>
-                </tr>
-                <tr>
-                    <td valign="top" align="right">
-                        <b>Email:</b>
-                    </td>
-                    <td valign="top">
-                        <b><input name="email" type="text" maxlength="40" size="40"></b>
-                    </td>
-                </tr>
-                <tr>
-                    <td valign="top" align="right">
-                        <b>Say briefly why you're not a robot:</b>
-                    </td>
-                    <td valign="top">
-                        <b><input name="notRobot" type="text" maxlength="80" size="80"></b>
-                    </td>
-                </tr>
-                <tr>
-                    <td valign="center">
-                        <b><input value="Register" type="submit"></b>
-                    </td>
-                </tr>
-            </table>
+        <form method="post" action="Register.jsp">
+
+            <div class="form-row">
+                <label for="userName">Username</label>
+                <input id="userName" name="userName" type="text" maxlength="20"
+                       pattern="[A-Za-z0-9_.-]+" required>
+                <div class="help">Letters, numbers, periods, hyphens, and underscores only.</div>
+            </div>
+
+            <div class="form-row">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" maxlength="20" required>
+            </div>
+
+            <div class="form-row">
+                <label for="firstName">First / given name</label>
+                <input id="firstName" name="firstName" type="text" maxlength="20" required>
+            </div>
+
+            <div class="form-row">
+                <label for="lastName">Last / surname</label>
+                <input id="lastName" name="lastName" type="text" maxlength="20" required>
+            </div>
+
+            <div class="form-row">
+                <label for="organization">Organization</label>
+                <input id="organization" name="organization" type="text" maxlength="20" required>
+            </div>
+
+            <div class="form-row">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" maxlength="40" required>
+            </div>
+
+            <div class="form-row">
+                <label for="notRobot">Briefly explain why you are not a robot</label>
+                <input id="notRobot" name="notRobot" type="text" maxlength="80" required>
+            </div>
+
+            <button type="submit">Register</button>
         </form>
-        <% 
-            } 
-        %>
-    </body>
+
+        <% } %>
+    </div>
+    <%@include file="fragments/universal/Postlude.jspf" %>
+</body>
 </html>
