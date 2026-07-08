@@ -25,7 +25,7 @@
             StringUtil.emptyString(notRobot)) {
             error = "Please fill out all required fields.";
         }
-        else if (!username.matches("[A-Za-z0-9_-]+")) error = "Username can only contain letters, numbers, hyphens, and underscores.";
+        else if (!username.matches("[A-Za-z0-9_.-]+")) error = "Username can only contain letters, numbers, periods, hyphens, and underscores.";
         else {
             UserManager userManager = (UserManager) application.getAttribute("userManager");
             boolean created = userManager.registerGuest(
@@ -41,9 +41,7 @@
                 response.sendRedirect("Register.jsp?registered=true");
                 return;
             }
-            else {
-                error = "That username or email may already be registered.";
-            }
+            else error = "That username or email may already be registered.";
         }
     }
 %>

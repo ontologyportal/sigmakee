@@ -248,18 +248,12 @@ run_prerequisite_verification() {
 
     print_header "Verifying prerequisites"
 
-    local verifier=""
-    if [ -f "$SCRIPT_DIR/verify-prerequisites.sh" ]; then
-        verifier="$SCRIPT_DIR/verify-prerequisites.sh"
-    elif [ -f "$SIGMA_SRC/verify-prerequisites.sh" ]; then
-        verifier="$SIGMA_SRC/verify-prerequisites.sh.sh"
-    fi
+    local verifier="$SCRIPT_DIR/verify-prerequisites.sh"
 
-    if [ -z "$verifier" ]; then
-        warn "No prerequisite verifier found. Skipping."
-        return
+    if [ ! -f "$verifier" ]; then
+        fail "Prerequisite verifier not found: $verifier"
     fi
-
+    
     local output_file
     output_file="$(mktemp)"
     bash "$verifier" 2>&1 | tee "$output_file"
