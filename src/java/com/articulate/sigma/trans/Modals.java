@@ -139,6 +139,13 @@ public class Modals {
             "Illegal",
             "Promise"
     ));
+    
+    //CF: Single Deontic attributes added here
+    public static final Set<String> deonticAttributes = new HashSet<>(Arrays.asList(
+            "Permission",
+            "Obligation",
+            "Prohibition"
+    ));
 
     // Relations that are treated as *rigid* in the Kripke semantics:
     // they do NOT get a world argument in their THF type. These are
@@ -989,6 +996,7 @@ public class Modals {
 
         StringBuilder result = new StringBuilder();
         HashSet<String> allModals = new HashSet<>();
+        allModals.addAll(deonticAttributes);     // CF: O, F, and P have been added
         allModals.addAll(regHOLpred);
         allModals.addAll(regHOL3pred);
         result.append(genModalTypes(allModals));
@@ -1001,8 +1009,10 @@ public class Modals {
                 result.append(genModalSystem(s, ModalSystem.D4));
             } else if (deontic_P.contains(s)) {
                 result.append(genModalSystem(s, ModalSystem.K));
-            } else if (deontic_other.contains(s)) {     // CF: TODO for confers/deprivesNorm
+            // CF: TODO: confers/deprivesNorm will act like modalAttribute
+            } else if (deontic_other.contains(s)) {
                 result.append(genModalSystem(s, ModalSystem.D));
+            // All other modal systems:
             } else {
                 result.append(genModalSystem(s, ModalSystem.T));
             }
@@ -1062,9 +1072,17 @@ public class Modals {
 
         //System.out.println("Modals.genFrameAxiom(): modalOp: " + modalOp);
         //System.out.println("Modals.genFrameAxiom(): frameAx: " + frameAx);
+        
+        //CF: Check whether this is Obligation, Prohibition, Permission
+        boolean isAttr = false;
+        String name = "";
+        
         String quantArgs = "";
         String args = "";
         String accreln = "s__accreln1";
+        if (deonticAttributes.contains(modalOp)) {
+            isAttr = true;
+        }
         if (regHOLpred.contains(modalOp)) {
             quantArgs = ", P1:$i";
             args = " @ P1";
@@ -1082,24 +1100,32 @@ public class Modals {
                 accreln = "s__accreln3";
             }
         }
+        
+        // CF: If Attribute, convert first char to lowercase
+        if (isAttr) {
+            name = modalOp.toLowerCase();
+        } else {
+            name = modalOp;
+        }
+        
         switch (frameAx) {
             case REFLEXIVE:
-                return "thf(" + modalOp + "_refl" + ",axiom,(! [W:w" + quantArgs +
+                return "thf(" + name + "_refl" + ",axiom,(! [W:w" + quantArgs +
                         "] : (" + accreln + " @ s__" + modalOp + args + " @ W @ W))).\n";
             case SYMMETRIC:
-                return "thf(" + modalOp + "_symm" + ",axiom,(! [W1:w, W2:w" + quantArgs +
+                return "thf(" + name + "_symm" + ",axiom,(! [W1:w, W2:w" + quantArgs +
                         "] : ((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) => " +
                         "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W1)))).\n";
             case TRANSITIVE:
-                return "thf(" + modalOp + "_trans" + ",axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
+                return "thf(" + name + "_trans" + ",axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
                         "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
                         "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3)) => " +
                         "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)))).\n";
             case SERIAL:
-                return "thf(" + modalOp + "_ser,axiom,(! [W:w" + quantArgs +
+                return "thf(" + name + "_ser,axiom,(! [W:w" + quantArgs +
                         "] : (? [U:w] : (" + accreln + " @ s__" + modalOp + args + " @ W @ U)))).\n";
             case EUCLIDEAN:
-                return "thf(" + modalOp + "_eucl,axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
+                return "thf(" + name + "_eucl,axiom,(! [W1:w, W2:w, W3:w" + quantArgs +
                     "] : (((" + accreln + " @ s__" + modalOp + args + " @ W1 @ W2) & " +
                     "(" + accreln + " @ s__" + modalOp + args + " @ W1 @ W3)) => " +
                     "(" + accreln + " @ s__" + modalOp + args + " @ W2 @ W3)))).\n";
@@ -1116,10 +1142,6 @@ public class Modals {
         return 
                 // CF: add these lines into getTHFHeader() result string
                 "thf(modals_tp,type,(m : $tType)).\n" +
-                //"thf(obligation_tp,type,(s__Obligation : m)).\n" +
-                //"thf(permission_tp,type,(s__Permission : m)).\n" +
-                //"thf(prohibition_tp,type,(s__Prohibition : m)).\n" +
-                
                 "thf(worlds_tp,type,(w : $tType)).\n" +
                 "thf(cworld_tp,type,(s__CW : w)).\n" +
                 "thf(s__worlds_tp,type,(s__World : w)).\n" +
