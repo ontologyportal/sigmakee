@@ -284,6 +284,16 @@ public class Modals {
             "confersNorm", "confersObligation", "confersRight", "deprivesNorm", "Obligation",
             "Permission", "Prohibition", "holdsObligation", "holdsRight", "permits","prohibits",
             "Legal", "Law", "Illegal", "Promise"));
+    // CF: Added for Deontics' granularity from CHAD tests: O/F vs. P
+    public static final Set<String> deontic_O_F = new HashSet<>(Arrays.asList(
+            "Obligation", "Prohibition", 
+            "confersObligation", "holdsObligation", "prohibits"));
+    public static final Set<String> deontic_P = new HashSet<>(Arrays.asList(
+            "Permission", 
+            "confersRight", "holdsRight", "permits"));
+    public static final Set<String> deontic_other = new HashSet<>(Arrays.asList(
+            "confersNorm", "deprivesNorm",  // CF: Should these be like modalAttribute?
+            "Legal", "Law", "Illegal", "Promise"));
     public static final Set<String> epistemic = new HashSet<>(Arrays.asList(
             "believes", "knows", "desires", "says", "describes", "expects"));
     public static final Set<String> otherModal = new HashSet<>(Arrays.asList(
@@ -984,10 +994,18 @@ public class Modals {
         result.append(genModalTypes(allModals));
         //System.out.println("Modals.genAllModalSystems(): allModals size: " + allModals.size());
         for (String s : allModals) {
-            if (deontics.contains(s))
+            //CF: Deontics are split between O/F vs. P according the CHAD example findings
+            /*if (deontics.contains(s))
+                result.append(genModalSystem(s, ModalSystem.D));*/
+            if (deontic_O_F.contains(s)) {
+                result.append(genModalSystem(s, ModalSystem.D4));
+            } else if (deontic_P.contains(s)) {
+                result.append(genModalSystem(s, ModalSystem.K));
+            } else if (deontic_other.contains(s)) {     // CF: TODO for confers/deprivesNorm
                 result.append(genModalSystem(s, ModalSystem.D));
-            else
+            } else {
                 result.append(genModalSystem(s, ModalSystem.T));
+            }
         }
         return result.toString();
     }
@@ -1021,7 +1039,9 @@ public class Modals {
                     genFrameAxiom(modalOp,FrameAx.EUCLIDEAN);
             case D4: return genFrameAxiom(modalOp,FrameAx.TRANSITIVE) +
                     genFrameAxiom(modalOp,FrameAx.SERIAL);
-            case D45: return genFrameAxiom(modalOp,FrameAx.TRANSITIVE) +
+            // CF: Euclidean was missing, it has been added here - 08 Jul
+            case D45: return genFrameAxiom(modalOp, FrameAx.EUCLIDEAN) + 
+                    genFrameAxiom(modalOp,FrameAx.TRANSITIVE) +
                     genFrameAxiom(modalOp,FrameAx.SERIAL);
         }
         return result;
