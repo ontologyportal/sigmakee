@@ -38,7 +38,6 @@ sed_in_place() {
 resolve_path() {
     local p="$1"
     p="${p/#\~/$HOME}"
-
     if command -v realpath >/dev/null 2>&1; then
         realpath "$p" 2>/dev/null || echo "$p"
     elif command -v python3 >/dev/null 2>&1; then

@@ -1,0 +1,41 @@
+<configuration>
+  <preference name="adminBrowserLimit" value="200" />
+  <preference name="baseDir" value="/home/theuser/.sigmakee" />
+  <preference name="cache" value="yes" />
+  <preference name="cacheDisjoint" value="true"/>
+  <preference name="cwa" value="false"/>
+  <preference name="eproverExec" value="/home/theuser/Programs/E/PROVER/eprover" />
+  <preference name="graphDir" value="/home/theuser/.sigmakee/graph" />
+  <preference name="graphVizExec" value="/usr/bin/dot" />
+  <preference name="hostname" value="localhost" />
+  <preference name="https" value="false" />
+  <preference name="isAws" value="false"/>
+  <preference name="inferenceTestDir" value="/home/theuser/.sigmakee/KBs/tests" />
+  <preference name="jeditExec" value="/usr/share/jedit/jedit" />
+  <preference name="kbDir" value="/home/theuser/.sigmakee/KBs" />
+  <preference name="loadFresh" value="false" />
+  <preference name="loadLexicons" value="true"/>
+  <preference name="leoExec" value="/home/theuser/Programs/Leo-III/bin/leo3" />
+  <preference name="maxPredicateArity" value="7"/>
+  <preference name="port" value="8080" />
+  <preference name="showCachedFormulas" value="no" />
+  <preference name="smtpEmailAddress" value=""/>
+  <preference name="smtpEmailUser" value=""/>
+  <preference name="smtpEmailPassword" value=""/>
+  <preference name="smtpEmailServer" value=""/>
+  <preference name="sumoDir" value="/home/theuser/workspace/sumo" />
+  <preference name="systemsDir" value="/home/theuser" />
+  <preference name="termFormats" value="no" />
+  <preference name="tptpExec" value="/home/theuser/workspace/TPTP4X/tptp4X"/>
+  <preference name="typePrefix" value="yes" />
+  <preference name="userBrowserLimit" value="25" />
+  <preference name="vampireExec" value="/home/theuser/Programs/vampire/build/vampire" />
+  <preference name="verbnetDir" value=""/>
+  <preference name="ollamaHost" value="http://127.0.0.1:11434"/>
+  <kb name="SUMO" >
+    <constituent filename="english_format.kif" />
+    <constituent filename="domainEnglishFormat.kif" />
+    <constituent filename="Merge.kif" />
+    <constituent filename="Mid-level-ontology.kif" />
+  </kb>
+</configuration>

@@ -96,8 +96,7 @@
     <property name="reports.dir" value="${build.home}/test/results"/>
     <property name="unit.test.suite" value="com.articulate.sigma.UnitTestSuite"/>
     <property name="integration.test.suite" value="com.articulate.sigma.IntegrationTestSuite"/>
-   <property name="report.html" value="file:${basedir}/${reports.dir}/html/index.html"/>
-
+    <property name="report.html" value="file:${basedir}/${reports.dir}/html/index.html"/>
     <property environment="env"/>
 
     <!-- External ATP tests:
@@ -107,6 +106,7 @@
     <condition property="external.atp.tests.enabled" value="${env.RUN_EXTERNAL_ATP_TESTS}">
         <isset property="env.RUN_EXTERNAL_ATP_TESTS"/>
     </condition>
+
     <condition property="external.atp.tests.enabled" value="true" else="false">
         <not>
             <isset property="env.GITHUB_ACTIONS"/>
@@ -164,8 +164,100 @@
         <os family="unix"/>
     </condition>
 
+    <!-- Platform-specific config.xml executable paths -->
+    <condition property="graphviz.exec" value="/opt/homebrew/bin/dot">
+        <and>
+            <os family="mac"/>
+            <os arch="aarch64"/>
+        </and>
+    </condition>
+
+    <condition property="graphviz.exec" value="/usr/local/bin/dot">
+        <and>
+            <os family="mac"/>
+            <not>
+                <os arch="aarch64"/>
+            </not>
+        </and>
+    </condition>
+
+    <condition property="graphviz.exec" value="/usr/bin/dot">
+        <not>
+            <os family="mac"/>
+        </not>
+    </condition>
+
+    <condition property="jedit.exec" value="/Applications/jEdit.app/Contents/MacOS/jedit">
+        <os family="mac"/>
+    </condition>
+
+    <condition property="jedit.exec" value="/usr/share/jedit/jedit">
+        <not>
+            <os family="mac"/>
+        </not>
+    </condition>
+
     <!-- Vampire ATP -->
     <property name="vampire.version" value="v5.0.1"/>
+    <property name="vampire.release.base"
+            value="https://github.com/vprover/vampire/releases/download/${vampire.version}"/>
+
+    <!-- Keep these paths identical to the source-build layout. -->
+    <property name="vampire.install.dir"
+            value="${programs.dir}${file.separator}vampire"/>
+    <property name="vampire.build.dir"
+            value="${vampire.install.dir}${file.separator}build"/>
+    <property name="vampire.exec"
+            value="${vampire.build.dir}${file.separator}vampire"/>
+
+    <!-- Temporary location only for unpacking the release zip. -->
+    <property name="vampire.binary.unpack.dir"
+            value="${sigma.install.downloads}${file.separator}vampire-release"/>
+
+    <property name="tptp4x.home" value="${git.home}/TPTP4X"/>
+    <property name="tptp4x.exec" value="${tptp4x.home}${file.separator}tptp4X"/>
+
+    <condition property="vampire.asset" value="vampire-Linux-X64.zip">
+        <and>
+            <os family="unix"/>
+            <not><os family="mac"/></not>
+            <or>
+                <os arch="amd64"/>
+                <os arch="x86_64"/>
+            </or>
+        </and>
+    </condition>
+
+    <condition property="vampire.asset" value="vampire-Linux-ARM64.zip">
+        <and>
+            <os family="unix"/>
+            <not><os family="mac"/></not>
+            <or>
+                <os arch="aarch64"/>
+                <os arch="arm64"/>
+            </or>
+        </and>
+    </condition>
+
+    <condition property="vampire.asset" value="vampire-macOS-X64.zip">
+        <and>
+            <os family="mac"/>
+            <or>
+                <os arch="amd64"/>
+                <os arch="x86_64"/>
+            </or>
+        </and>
+    </condition>
+
+    <condition property="vampire.asset" value="vampire-macOS-ARM64.zip">
+        <and>
+            <os family="mac"/>
+            <or>
+                <os arch="aarch64"/>
+                <os arch="arm64"/>
+            </or>
+        </and>
+    </condition>
 
     <!-- LEO-III (Higher-Order ATP) -->
     <property name="leo.version" value="1.7.18"/>
@@ -490,11 +582,11 @@ build.date=${git.commit.date}
         <!-- Build E theorem prover -->
         <antcall target="build.E"/>
 
-        <!-- Clone and build Vampire theorem prover w/ Z3 -->
-        <antcall target="clone.vampire"/>
-        <antcall target="clone.z3"/>
-        <antcall target="build.z3"/>
-        <antcall target="build.vampire"/>
+        <!-- Install Vampire: try prebuilt binary first, then source build fallback -->
+        <antcall target="install.vampire"/>
+        <antcall target="clone.jjparser"/>
+        <antcall target="clone.tptp4x"/>
+        <antcall target="build.tptp4x"/>
 
         <!-- perms -->
         <chmod dir="${git.home}" perm="ugo+rw" includes="**/*"/>
@@ -546,6 +638,39 @@ build.date=${git.commit.date}
             </args>
         </git>
     </target>
+
+    <target name="clone.jjparser">
+        <mkdir dir="${git.home}/JJParser"/>
+        <git command="clone" dir="${git.home}/JJParser">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+                <arg value="https://github.com/TPTPWorld/JJParser.git"/>
+                <arg value="${git.home}/JJParser"/>
+            </args>
+        </git>
+    </target>
+
+    <target name="clone.tptp4x">
+        <mkdir dir="${tptp4x.home}"/>
+        <git command="clone" dir="${tptp4x.home}">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+                <arg value="https://github.com/TPTPWorld/TPTP4X.git"/>
+                <arg value="${tptp4x.home}"/>
+            </args>
+        </git>
+    </target>
+
+    <target name="build.tptp4x">
+        <exec executable="make" dir="${tptp4x.home}"/>
+        <available file="${tptp4x.exec}" property="tptp4x.exec.exists"/>
+        <fail message="TPTP4X build failed. Expected executable: ${tptp4x.exec}"
+            unless="tptp4x.exec.exists"/>
+        <chmod file="${tptp4x.exec}" perm="ugo+rx"/>
+    </target>
+
     <!-- If on macOS, can also install tomcat w/ Homebrew -->
     <target name="install.tomcat">
         <get src="https://archive.apache.org/dist/tomcat/tomcat-9/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}" tryGzipEncoding="true"/>
@@ -559,11 +684,15 @@ build.date=${git.commit.date}
         <untar src="${programs.dir}/WordNet-3.0.tar.gz" dest="${programs.dir}" compression="gzip"/>
         <delete file="${programs.dir}/WordNet-3.0.tar.gz"/>
     </target>
+
     <target name="setup.sigma.home" description="Copy WordNetMappings, sumo kbs and config.xml to ~/.sigmakee/KBs -> ($SIGMA_HOME)/KBs">
         <antcall target="refresh.kbs"/>
         <copy todir="${sigma.home}/KBs/WordNetMappings">
             <fileset dir="${programs.dir}/WordNet-3.0/dict"/>
         </copy>
+        <copy file="${basedir}/scripts/installation/config.xml"
+            tofile="${sigma.home}/KBs/config.xml"
+            overwrite="true"/>
         <antcall target="sigma.config"/>
     </target>
 
@@ -574,19 +703,40 @@ build.date=${git.commit.date}
                 <exclude name=".github/**"/>
                 <exclude name="SimpleFacts/**"/>
                 <exclude name="mappings/**"/>
-                <exclude name="tests/**"/>
             </fileset>
         </copy>
     </target>
+
     <target name="sigma.config">
         <available file="${sigma.home}/KBs/config.xml" property="sigma.config.exists"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser/workspace/sumo" value="${kbs.home}"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser" value="${user.home}"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/leo" value="${leo.exec.path}"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${programs.dir}${file.separator}E${file.separator}PROVER${file.separator}e_ltb_runner"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="/usr/local/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests" value="${programs.dir}${file.separator}tomcat${file.separator}apache-tomcat-${tomcat.version}${file.separator}webapps${file.separator}sigma${file.separator}tests"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/Programs/vampire/build/vampire" value="${programs.dir}${file.separator}vampire${file.separator}build${file.separator}vampire"/>
+        <fail message="Missing ${sigma.home}/KBs/config.xml. setup.sigma.home must copy ${basedir}/scripts/installation/config.xml before sigma.config runs."
+            unless="sigma.config.exists"/>
+        <replace file="${sigma.home}/KBs/config.xml"
+                token="/home/theuser/workspace/sumo"
+                value="${kbs.home}"/>
+        <replace file="${sigma.home}/KBs/config.xml"
+                token="/home/theuser"
+                value="${user.home}"/>
+        <replace file="${sigma.home}/KBs/config.xml"
+                token="/usr/bin/dot"
+                value="${graphviz.exec}"/>
+        <replace file="${sigma.home}/KBs/config.xml"
+                token="/usr/share/jedit/jedit"
+                value="${jedit.exec}"/>
+        <replace file="${sigma.home}/KBs/config.xml"
+                token="${user.home}/Programs/E/PROVER/e_ltb_runner"
+                value="${programs.dir}${file.separator}E${file.separator}PROVER${file.separator}eprover"/>
+        <replace file="${sigma.home}/KBs/config.xml"
+                token="${user.home}/E/bin/e_ltb_runner"
+                value="${programs.dir}${file.separator}E${file.separator}PROVER${file.separator}eprover"/>
+        <replace file="${sigma.home}/KBs/config.xml"
+                token="${user.home}/Programs/vampire/build/vampire"
+                value="${programs.dir}${file.separator}vampire${file.separator}build${file.separator}vampire"/>
+        <replace file="${sigma.home}/KBs/config.xml"
+            token="/home/theuser/workspace/TPTP4X/tptp4X"
+            value="${tptp4x.exec}"/>
     </target>
+    
     <!--
     =======================
     LEO-III install (leo3)
@@ -594,59 +744,50 @@ build.date=${git.commit.date}
     -->
     <target name="download.Leo.zip">
         <mkdir dir="${sigma.install.downloads}"/>
-
         <!-- Try Zenodo first (do NOT fail the build if Zenodo is down) -->
         <get src="${leo.zip.url}"
             dest="${leo.zip.file}"
             usetimestamp="true"
             ignoreerrors="true"/>
-
         <!-- Did Zenodo succeed? -->
         <available file="${leo.zip.file}" property="leo.zip.present"/>
-
         <!-- If Zenodo failed, try GitHub fallback (also non-fatal) -->
         <get src="${leo.zip.url.fallback}"
             dest="${leo.zip.file}"
             usetimestamp="true"
             ignoreerrors="true"
             verbose="true"/>
-
         <!-- Final check -->
         <available file="${leo.zip.file}" property="leo.zip.present.final"/>
-
         <!-- If still missing, we skip Leo installation (but do NOT fail install) -->
         <condition property="leo.skip.install">
             <not>
                 <isset property="leo.zip.present.final"/>
             </not>
         </condition>
-
         <echo message="Leo-III ZIP present? ${leo.zip.present.final}"/>
         <echo message="Leo-III install will be skipped? ${leo.skip.install}"/>
     </target>
+
     <target name="install.Leo" depends="install.Leo.common,install.Leo.unix-perms"
             unless="leo.skip.install"
             description="Installs Leo-III (leo3.jar + launcher) into ${leo.install.dir}"/>
 
     <target name="install.Leo.common" depends="download.Leo.zip" unless="leo.skip.install">
         <mkdir dir="${leo.bin.dir}"/>
-
         <!-- Unzip into Leo-III install dir -->
         <unzip src="${leo.zip.file}" dest="${leo.install.dir}"/>
-
         <!-- Copy leo3.jar from wherever it lands inside the zip into bin/leo3.jar -->
         <copy tofile="${leo.jar.file}" overwrite="true" flatten="true">
             <fileset dir="${leo.install.dir}">
                 <include name="**/leo3.jar"/>
             </fileset>
         </copy>
-
         <!-- Create leo3 launcher for Unix-like systems -->
         <echo file="${leo.exec.unix}" append="false"><![CDATA[#!/usr/bin/env sh
     DIR="$(cd "$(dirname "$0")" && pwd)"
     exec java -jar "$DIR/leo3.jar" "$@"
     ]]></echo>
-
         <!-- Create leo3 launcher for Windows -->
         <echo file="${leo.exec.win}" append="false"><![CDATA[@echo off
     set DIR=%~dp0
@@ -658,11 +799,13 @@ build.date=${git.commit.date}
         <mkdir dir="${leo.bin.dir}"/>
         <chmod file="${leo.exec.unix}" perm="ugo+rx"/>
     </target>
+
     <target name="retrieve.E">
         <get src="http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.6/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
         <untar src="${programs.dir}/E.tgz" dest="${programs.dir}" compression="gzip"/>
         <delete file="${programs.dir}/E.tgz"/>
     </target>
+
     <target name="clone.E">
         <mkdir dir="${programs.dir}/E"/>
         <git command="clone" dir="${programs.dir}/E">
@@ -674,6 +817,7 @@ build.date=${git.commit.date}
             </args>
         </git>
     </target>
+
     <target name="build.E">
        <chmod perm="ugo+rx">
             <fileset dir="${programs.dir}/E">
@@ -690,6 +834,78 @@ build.date=${git.commit.date}
             <arg value="make"/>
         </exec>
     </target>
+
+    <target name="download.vampire.binary" if="vampire.asset"
+        description="Download prebuilt Vampire binary zip for this OS/architecture">
+        <mkdir dir="${sigma.install.downloads}"/>
+        <echo message="Attempting prebuilt Vampire install: ${vampire.asset}"/>
+        <get src="${vampire.release.base}/${vampire.asset}"
+            dest="${sigma.install.downloads}${file.separator}${vampire.asset}"
+            usetimestamp="true"
+            ignoreerrors="true"/>
+        <available file="${sigma.install.downloads}${file.separator}${vampire.asset}"
+                property="vampire.binary.zip.present"/>
+    </target>
+
+    <target name="install.vampire.binary" depends="download.vampire.binary"
+            if="vampire.binary.zip.present"
+            description="Install prebuilt Vampire binary into the normal source-build path">
+        <echo message="Installing prebuilt Vampire into ${vampire.exec}"/>
+        <delete dir="${vampire.binary.unpack.dir}" failonerror="false"/>
+        <mkdir dir="${vampire.binary.unpack.dir}"/>
+        <mkdir dir="${vampire.build.dir}"/>
+        <unzip src="${sigma.install.downloads}${file.separator}${vampire.asset}"
+            dest="${vampire.binary.unpack.dir}"/>
+        <copy tofile="${vampire.exec}"
+            overwrite="true"
+            flatten="true"
+            failonerror="false">
+            <fileset dir="${vampire.binary.unpack.dir}">
+                <include name="**/vampire"/>
+            </fileset>
+        </copy>
+        <available file="${vampire.exec}" property="vampire.binary.exec.present"/>
+    </target>
+
+    <target name="test.vampire.binary" depends="install.vampire.binary"
+            if="vampire.binary.exec.present">
+        <chmod file="${vampire.exec}" perm="ugo+rx"/>
+        <exec executable="${vampire.exec}"
+            resultproperty="vampire.binary.version.result"
+            failonerror="false"
+            failifexecutionfails="false">
+            <arg value="--version"/>
+        </exec>
+        <condition property="vampire.binary.ok">
+            <equals arg1="${vampire.binary.version.result}" arg2="0"/>
+        </condition>
+        <echo message="Prebuilt Vampire installed successfully? ${vampire.binary.ok}"/>
+        <delete dir="${vampire.binary.unpack.dir}" failonerror="false"/>
+    </target>
+
+    <target name="install.vampire.source" depends="test.vampire.binary"
+            unless="vampire.binary.ok"
+            description="Fallback: clone and build Vampire from source">
+        <echo message="Prebuilt Vampire unavailable or failed. Falling back to source build."/>
+        <delete dir="${vampire.install.dir}" failonerror="false"/>
+        <antcall target="clone.vampire"/>
+        <antcall target="clone.z3"/>
+        <antcall target="build.z3"/>
+        <antcall target="build.vampire"/>
+    </target>
+
+    <target name="install.vampire"
+            depends="test.vampire.binary,install.vampire.source"
+            description="Install Vampire binary first, then source-build fallback">
+        <available file="${vampire.exec}" property="vampire.exec.exists"/>
+        <fail message="Vampire installation failed. Expected executable: ${vampire.exec}"
+            unless="vampire.exec.exists"/>
+        <chmod file="${vampire.exec}" perm="ugo+rx"/>
+        <exec executable="${vampire.exec}" failonerror="true">
+            <arg value="--version"/>
+        </exec>
+    </target>
+
     <target name="clone.vampire">
         <mkdir dir="${programs.dir}/vampire"/>
         <git command="clone" dir="${programs.dir}/vampire">
@@ -705,6 +921,7 @@ build.date=${git.commit.date}
             </args>
         </git>
     </target>
+
     <target name="clone.z3">
         <git command="submodule" dir="${programs.dir}/vampire">
             <args>
@@ -726,14 +943,11 @@ build.date=${git.commit.date}
     </target>
 
     <target name="build.vampire">
-
         <echo message="=== Building Vampire ==="/>
-
         <exec executable="git" dir="${programs.dir}/vampire">
             <arg value="checkout"/>
             <arg value="${vampire.version}"/>
         </exec>
-
         <!-- Normal Vampire build -->
         <mkdir dir="${programs.dir}/vampire/build"/>
         <exec executable="cmake" dir="${programs.dir}/vampire/build">
@@ -743,7 +957,6 @@ build.date=${git.commit.date}
             <arg value="-c"/>
             <arg value="make"/>
         </exec>
-
     </target>
 
     <!-- If Vampire fails to build on Hamming, here is an alternate source of the binary, but may not work due to sys arch type differences -->

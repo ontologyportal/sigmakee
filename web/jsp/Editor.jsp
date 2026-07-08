@@ -1,5 +1,5 @@
 <%@ include file="fragments/universal/Prelude.jspf" %>
-<%@ page import="com.articulate.sigma.*, java.util.List" %>
+<%@ page import="com.articulate.sigma.*, com.articulate.sigma.editor.*, java.util.List" %>
 <%@ page import="java.io.*, java.nio.charset.StandardCharsets, java.nio.file.*" %>
 <%
     String pageName = "Editor";
@@ -201,8 +201,7 @@
       </div>
 
       <!-- Error box -->
-      <div>
-        <div class="scroller msg <%= (errors == null || errors.isEmpty()) ? "success" : "errors-box" %>">
+      <div class="scroller msg <%= (errors == null || errors.isEmpty()) ? "success" : "errors-box" %>"><div class="problems-title">Problems:</div><hr class="problems-divider"><div class="problems-body">
     <%
         if (errorMessage != null) {
     %>
@@ -239,9 +238,10 @@
           }
         }
     %>
-    </div>
-  </div>
-</div>
+    </div> <!-- problems-body -->
+  </div>   <!-- scroller msg -->
+</div>     <!-- layout -->
+</div>     <!-- card -->
 
 <!-- Open File Modal -->
 <div id="openFileModal" class="modal-overlay" style="display:none;">

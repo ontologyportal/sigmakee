@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 
-
 set -euo pipefail
 
-#
-# Helper functions
-#
 check_dirs_nonempty() {
   local dirs=("$@")
   for d in "${dirs[@]}"; do
@@ -24,7 +20,6 @@ check_dirs_nonempty() {
 
 check_files() {
   local files=("$@")
-
   for f in "${files[@]}"; do
     if [ -f "$f" ]; then
       echo "Found file: $f"
@@ -33,7 +28,6 @@ check_files() {
       return 1
     fi
   done
-
   echo "Most relevant files found."
   return 0
 }
@@ -47,6 +41,7 @@ print_header() {
   echo "=================================================================="
 }
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 ########################################################
 # Check if the output contains "MISSING PREREQUISITES"
@@ -57,21 +52,17 @@ if [ -z "${SIGMA_SRC-}" ]; then
   exit 1
 fi
 print_header "Checking that prerequisites were installed correctly"
-output=$(source $SIGMA_SRC/VerifyInstallationPrerequisites.sh | tee /dev/tty)
+output=$(bash "$SCRIPT_DIR/verify-prerequisites.sh" | tee /dev/tty)
 if echo "$output" | grep -q "MISSING PREREQUISITES"; then
   echo "Error: Missing prerequisites detected. Exiting script."
   exit 1
 fi
 echo "All prerequisites met. Proceeding with checks."
 
-
-######################################################################
 ######################################################################
 ##    Note: This next section roughly follows the build.xml script. ##
 ##    If it fails, look for the <target name="install" section.     ##
 ######################################################################
-######################################################################
-
 
 ########################################################
 # Check if folders exist and are not empty
@@ -89,14 +80,13 @@ dir_list=(
   "$HOME/Programs/WordNet-3.0"
   "$HOME/Programs/E"
   "$HOME/Programs/vampire"
-  "$HOME/Programs/vampire/z3"
-  "$HOME/Programs/vampire/z3/build"
   "$SIGMA_HOME/KBs"
   "$SIGMA_HOME/KBs/WordNetMappings"
+  "$ONTOLOGYPORTAL_GIT/JJParser"
+  "$ONTOLOGYPORTAL_GIT/TPTP4X"
 )
 
 check_dirs_nonempty "${dir_list[@]}"
-
 
 ########################################################
 # Check if certain files exist, that various copying
@@ -107,13 +97,12 @@ files=(
   "$SIGMA_HOME/KBs/Mid-level-ontology.kif"
   "$SIGMA_HOME/KBs/config.xml"
   "$HOME/Programs/E/configure"
-  "$HOME/Programs/E/PROVER/e_ltb_runner"
+  "$HOME/Programs/E/PROVER/eprover"
   "$HOME/Programs/vampire/build/vampire"
-  "$HOME/Programs/vampire/z3/build/z3"
+  "$ONTOLOGYPORTAL_GIT/TPTP4X/tptp4X"
 )
 
 check_files "${files[@]}"
-
 
 ######################################################################
 # Check if config.xml has been appropriately configured.
@@ -123,12 +112,12 @@ target_string="/home/theuser"
 config_file="$SIGMA_HOME/KBs/config.xml"
 
 if grep -qF "$target_string" "$config_file"; then
-  echo "String \"$target_string\" found in $config_file. Exiting."
-  exit 0
+  echo "String \"$target_string\" found in $config_file. Config path replacement failed."
+  exit 1
 fi
 
 strings=(
-  "$HOME/Programs/E/PROVER/e_ltb_runner"
+  "$HOME/Programs/E/PROVER/eprover"
   "$HOME/Programs/vampire/build/vampire"
 )
 
@@ -139,27 +128,29 @@ for s in "${strings[@]}"; do
   fi
 done
 
-
 echo "$config_file properly configured."
-
 
 ########################################################
 # Vampire checks
 ########################################################
 print_header "Verifying vampire build"
 
-# Check if vampire exists and is in PATH
-if ! command -v vampire > /dev/null 2>&1; then
-  echo "vampire is NOT installed or not in PATH."
+if [ ! -x "$HOME/Programs/vampire/build/vampire" ]; then
+  echo "Vampire executable not found or not executable: $HOME/Programs/vampire/build/vampire"
   exit 1
 fi
 
-# Run vampire --version and check exit status
-vampire --version > /dev/null 2>&1
-if [[ $? -eq 0 ]]; then
-  echo "vampire is installed, on PATH, and runs correctly."
+if "$HOME/Programs/vampire/build/vampire" --version > /dev/null 2>&1; then
+  echo "Vampire runs correctly."
 else
-  echo "vampire is in PATH, but failed to run correctly."
+  echo "Vampire exists, but failed to run correctly."
+  exit 1
+fi
+
+if "$ONTOLOGYPORTAL_GIT/TPTP4X/tptp4X" -h >/dev/null 2>&1; then
+  echo "TPTP4X runs correctly."
+else
+  echo "TPTP4X exists, but failed to run correctly."
   exit 1
 fi
 
@@ -185,7 +176,6 @@ dir_list=(
 )
 check_dirs_nonempty "${dir_list[@]}"
 
-
 ########################################################
 # Check if certain files exist, that various copying
 # commands executed successfully.
@@ -199,7 +189,6 @@ files=(
 )
 
 check_files "${files[@]}"
-
 
 ############################################################
 # Run a basic test of the knowledge base.
@@ -215,10 +204,6 @@ else
   exit 1
 fi
 
-
-
-
-
 ########################################################
 # Check if tomcat actually works and starts.
 ########################################################
@@ -229,7 +214,7 @@ interval=3  # seconds between attempts
 elapsed=0
 
 echo "Sigmakee is launched by a Tomcat server. Checking if Tomcat is functional."
-if startup.sh | grep -qF "Tomcat started."; then
+if "$CATALINA_HOME/bin/startup.sh" | grep -qF "Tomcat started."; then
   echo "Tomcat successfully running."
 else
   echo "There is a problem running 'startup.sh' found in $CATALINA_HOME/bin, used to start the Tomcat server."
@@ -237,39 +222,25 @@ else
 fi
 
 while true; do
-  # Sometimes it takes some time to unpack the .war file, keep trying for a minute.
-  output=$(curl -s --fail "http://localhost:8080/sigma/login.html") || {
-    echo "Waiting for server to load Sigmakee ..."
-    sleep $interval
-    elapsed=$((elapsed + interval))
-    continue
-  }
+  output=$(curl -s --fail --max-time 5 "http://localhost:8080/sigma/login.jsp" || true)
   if echo "$output" | grep -qF "<title>Sigma Login</title>"; then
     echo "Sigmakee is successfully running."
+    echo "Go to http://localhost:8080/sigma/login.jsp"
     break
   fi
-
-  sleep $interval
+  echo "Waiting for server to load Sigmakee ..."
+  sleep "$interval"
   elapsed=$((elapsed + interval))
-
   if (( elapsed >= timeout )); then
     echo "Timeout waiting for Sigma login page after Tomcat startup."
-    echo "Last curl output was:"
-    echo "$output"
-    if [ ! -d "$CATALINA_HOME/webapps/sigma" ]; then
-      echo "[MISSING DIRECTORY:] $CATALINA_HOME/webapps/sigma"
-      echo "Try running 'bash $ONTOLOGYPORTAL_GIT/sigmakee/VerifyInstallation.sh' in a couple minutes, sometimes it takes a while for the Tomcat server to build the sigmakee website from the sigma.war file."
-    fi
+    echo "Try checking:"
+    echo "  curl -i http://localhost:8080/sigma/KBs.jsp"
+    echo "  tail -n 100 $CATALINA_HOME/logs/catalina.out"
     exit 1
   fi
 done
 
-# Shutdown Tomcat server
-shutdown.sh > /dev/null 2>&1
-
 ###################################################################
-#
 # Success, probably!!!!
-#
 ###################################################################
 echo -e "\n\nFinished build verification. Checks indicate a successful installation!"

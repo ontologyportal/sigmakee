@@ -354,7 +354,6 @@ public class EProver {
      */
     public void submitQuery(String formula) {
 
-        if (debug > 0) System.out.printf("\nEProver.submitQuery(%s)", formula);
         long startTime = System.currentTimeMillis();
         long timeoutMs = this.timeout * 1000L;
         result = new ATPResult.Builder()
@@ -372,38 +371,28 @@ public class EProver {
             if (this.sessionId != null && !this.sessionId.isEmpty()) {
                 kbDirPath = SessionTPTPManager.getSessionDir(this.sessionId);
                 Files.createDirectories(kbDirPath);
-            } else {
+            } 
+            else {
                 kbDirPath = Paths.get(KBmanager.configuration.getKbDir());
             }
-
             tempProblemFile = Files.createTempFile(
-                    kbDirPath,
-                    "temp-eprover-problem",
-                    ".p"
+                kbDirPath,
+                "temp-eprover-problem",
+                ".p"
             );
-
-            // Resolve actual kbFilePath: prefer session-specific TPTP if it exists
             String actualKbFilePath = this.kbFilePath;
             if (this.sessionId != null && !this.sessionId.isEmpty()) {
                 String lang = "tff".equals(this.requestedTptpLanguage) ? "tff" : "tptp";
                 Path sessionPath = SessionTPTPManager.getSessionTPTPPath(this.sessionId, this.kb.name, lang);
-                if (Files.exists(sessionPath)) {
-                    if (debug > 0) System.out.println("EProver.submitQuery(): Using session-specific base file: " + sessionPath);
-                    actualKbFilePath = sessionPath.toString();
-                }
+                if (Files.exists(sessionPath))  actualKbFilePath = sessionPath.toString();
             }
-
             String query = ExprToTPTP.translateKifString(formula, true, "fof");
             if (query == null) {
                 query = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula, true);
                 this.qlist = SUMOformulaToTPTPformula.getQlist();
             }
-            else {
-                this.qlist = ExprToTPTP.getQlist(formula);
-            }
-            String problem =
-                    "include('" + actualKbFilePath + "').\n" +
-                    "fof(conj1,conjecture, " + query + ").\n";
+            else this.qlist = ExprToTPTP.getQlist(formula);
+            String problem = "include('" + actualKbFilePath + "').\n" + "fof(conj1,conjecture, " + query + ").\n";
             Files.writeString(tempProblemFile, problem);
             List<String> runCommands = new ArrayList<>(this.commands);
             runCommands.add(tempProblemFile.toString());
@@ -415,9 +404,7 @@ public class EProver {
             Thread stderrReader = new Thread(() -> {
                 try (BufferedReader r = new BufferedReader(new InputStreamReader(proc.getErrorStream()))) {
                     String line;
-                    while ((line = r.readLine()) != null) {
-                        stderrLines.add(line);
-                    }
+                    while ((line = r.readLine()) != null) stderrLines.add(line);
                 }
                 catch (IOException ignored) {
                 }
@@ -453,22 +440,6 @@ public class EProver {
             }
         }
     }
-
-    // /***************************************************************
-    //  * Not used anywhere?
-    //  * @param executable eprover executable file
-    //  * @param timeout seconds before eprover times out
-    //  * @param kbFile the knowledge base file for inference
-    //  * @return the command list
-    //  */
-    // private static String[] createCommandList(File executable, int timeout, File kbFile) {
-
-    //     String[] cmds = new String[3];
-    //     cmds[0] = executable.toString();
-    //     cmds[1] = Integer.toString(timeout);
-    //     cmds[2] = kbFile.toString();
-    //     return cmds;
-    // }
 
     /***************************************************************
      * Create a custom commmand list for EProver.

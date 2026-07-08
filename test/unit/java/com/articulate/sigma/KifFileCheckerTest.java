@@ -1,10 +1,12 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.editor.*;
+import com.articulate.sigma.trans.SUMOtoTFAform;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import java.util.*;
 import static org.junit.Assert.*;
-import com.articulate.sigma.trans.SUMOtoTFAform;
 
 public class KifFileCheckerTest extends UnitTestBase {
 
@@ -247,7 +249,7 @@ public class KifFileCheckerTest extends UnitTestBase {
         Set<String> localIndividuals = new HashSet<>();
         Set<String> localSubclasses = new HashSet<>();
         List<ErrRec> errorList = new ArrayList<>();
-        ErrRec expected = new ErrRec(ErrRec.ERROR, "fileName", 0, 16, 50,"Term <Supercalifragilisticexpialidocious> not below Entity: (instance Shaun Supercalifragilisticexpialidocious)");
+        ErrRec expected = new ErrRec(ErrRec.ERROR, "fileName", 0, 16, 50,"Term 'Supercalifragilisticexpialidocious' not below 'Entity' in line: (instance Shaun Supercalifragilisticexpialidocious)");
         kfc.CheckTermsBelowEntity("fileName", kifFormula, 0, kifString, kb, localIndividuals, localSubclasses, errorList);
         ErrRec actual = errorList.get(0);
         if (debug) {

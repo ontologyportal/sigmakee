@@ -26,6 +26,8 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
 */
     String kbDir = KBmanager.configuration.getKbDir();
     File kbDirFile = new File(kbDir);
+    String sumoDir = KBmanager.configuration.getKbDir();
+    File sumoDirFile = new File(sumoDir);
     String saveAs = request.getParameter("saveAs");
     String constituent = request.getParameter("constituent");
     String saveFile = request.getParameter("saveFile");
@@ -33,12 +35,16 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
     String reload = request.getParameter("reload");
     String refetch = request.getParameter("refetch");
     String result = "";
+    String reinitializeManifest = request.getParameter("reinitializeManifest");
+String[] selectedKifFiles = request.getParameterValues("kifFile");
 
     if (role == null || !role.equalsIgnoreCase("admin")) {
     	saveAs = null;
     	saveFile = null;
     	constituent = null;
     	delete = null;
+        reinitializeManifest = null;
+        selectedKifFiles = null;
     }
 
     if ((kb == null) || StringUtil.emptyString(kbName))
@@ -114,7 +120,47 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
                       : "Could not write a KIF file");
         }
     }
-    if (delete != null) {
+if (reinitializeManifest != null && role != null && role.equalsIgnoreCase("admin")) {
+
+    List<String> selected = new ArrayList<>();
+    String kbDirCanonical = kbDirFile.getCanonicalPath();
+
+    if (selectedKifFiles != null) {
+        for (String fileName : selectedKifFiles) {
+            if (StringUtil.emptyString(fileName)) continue;
+            if (!fileName.toLowerCase().endsWith(".kif")) continue;
+            if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) continue;
+
+            File f = new File(kbDirFile, fileName);
+            String fCanonical = f.getCanonicalPath();
+
+            if (f.exists() && f.isFile() && fCanonical.startsWith(kbDirCanonical + File.separator))
+                selected.add(fileName);
+        }
+    }
+
+    if (selected.isEmpty()) {
+        result = "No KIF files selected. Config was not changed.";
+    }
+    else {
+        Collections.sort(selected);
+
+        KBmanager.configuration.setKbConstituentList(kbName, selected);
+        KBmanager.getMgr().writeConfiguration();
+
+        new File(kbDirFile, kbName + ".tptp").delete();
+        new File(kbDirFile, kbName + ".tff").delete();
+        new File(kbDirFile, kbName + ".thf").delete();
+        new File(kbDirFile, kbName + "_plain.thf").delete();
+        new File(kbDirFile, kbName + "_modal.thf").delete();
+
+        KBmanager.getMgr().reinitializeFromConfiguration();
+        kb = KBmanager.getMgr().getKB(kbName);
+
+        result = "Updated config.xml, reinitialized " + kbName + ", and started TPTP regeneration.";
+    }
+}
+else if (delete != null) {
         int i = kb.constituents.indexOf(constituent.intern());
         if (i == -1)
             System.out.println("Error in Manifest.jsp: No such constituent: " + constituent.intern());
@@ -136,15 +182,15 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
     else if (reload != null)
         kb.reload();
     else if (refetch != null) {
-        /* collect all the dirs the constituents appear in */
         Map<String, Integer> dirs = new HashMap<String, Integer>();
         for (int i = 0 ; i < kb.constituents.size() ; i++) {
             String cname = (String) kb.constituents.get(i);
             File file = new File(cname);
+            if (!file.isAbsolute())
+                file = new File(sumoDirFile, cname);
             String dir = file.getParent();
-            if (!dirs.containsKey(dir)) {
-                dirs.put(dir,0);
-            }
+            if (!StringUtil.emptyString(dir) && !dirs.containsKey(dir))
+                dirs.put(dir, 0);
         }
         for (String dir : dirs.keySet()) {
             ProcessBuilder pb = new ProcessBuilder("git", "pull");
@@ -173,104 +219,74 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
     %>
     <%@include file="fragments/universal/CommonHeader.jspf" %>
 <b>Files which are the <I>constituents</I> of the <B><%=kbName %></b> knowledge base </b>
-<%
-  if (kb.constituents == null || kb.constituents.size() <= 0) {
-      %>
-        <H3>No source files have been added to this knowledge base.</H3>
-        <P>
-        <%
-  }
-  else {
-%>
-      <P>
-      <TABLE border="0" cellspacing="2" cellpadding="2">
-        <Td>File Name</Td>
-        <Td>Operations</Td>
-<%
-        for (int i = 0; i < kb.constituents.size(); i++) {
-            String aConstituent = (String) kb.constituents.get(i);
-%>
-          <TR VALIGN="center" <%= (i % 2)==0? "bgcolor=#eeeeee":""%> >
-          <TD><%=aConstituent%>&nbsp;</TD>
-          <TD>
-
-          <% if (role != null && role.equalsIgnoreCase("admin")) { %>
-                <A href="Manifest.jsp?delete=true&constituent=<%=aConstituent%>&kb=<%=kbName%>">Remove</A>
-          <%     } %>
-          </TD>
-          </TR>
-<%
-        }  // for
-      %>
-      </TABLE>
-      <BR>
-<%
-  }   // if
-%>
-<P>
 
 <%
-if (role != null && role.equalsIgnoreCase("admin")) {
-//	if (Files.isDirectory(Paths.get(new File(kbDirFile, ".git")))) {
+    Set<String> active = new HashSet<>();
+
+    List<String> configuredFiles = KBmanager.configuration.getKbConstituentList(kbName);
+    if (configuredFiles != null) {
+        for (String c : configuredFiles)
+            active.add(new File(c).getName());
+    }
+
+    File[] kifFiles = kbDirFile.listFiles((dir, name) ->
+            name.toLowerCase().endsWith(".kif")
+    );
+
+    if (kifFiles != null)
+        Arrays.sort(kifFiles, Comparator.comparing(File::getName));
 %>
-		<hr><b>Refetch constituents (git pull)</b>
-		<form name="refetch" id="refetch" action="Manifest.jsp" method="GET">
-			<input type="hidden" name="kb" value=<%=kbName%>>
-			<input type="submit" name="refetch" value="Refetch">
-		</form>
+
+<hr>
+<b>Configure KB constituents from <%=kbDirFile.getAbsolutePath()%></b>
+
+<form name="manifestEditor" id="manifestEditor" action="Manifest.jsp" method="POST">
+    <input type="hidden" name="kb" value="<%=kbName%>">
+
+    <table border="0" cellspacing="2" cellpadding="2">
+        <tr>
+            <td><b>Use</b></td>
+            <td><b>KIF File</b></td>
+        </tr>
+
 <%
-//	}
-}
+    if (kifFiles == null || kifFiles.length == 0) {
 %>
-<P>
-<hr><b>Reload constituents</b>
-<form name="reload" id="reload" action="Manifest.jsp" method="GET">
-	<input type="hidden" name="kb" value=<%=kbName%>>
-	<input type="submit" name="reload" value="Reload">
-</form>
-<P>
+        <tr>
+            <td colspan="2">No .kif files found in <%=kbDirFile.getAbsolutePath()%></td>
+        </tr>
+<%
+    }
+    else {
+        for (File kifFile : kifFiles) {
+            String fileName = kifFile.getName();
+            boolean checked = active.contains(fileName);
+%>
+        <tr>
+            <td>
+                <input type="checkbox"
+                       name="kifFile"
+                       value="<%=fileName%>"
+                       <%= checked ? "checked" : "" %>
+                       <%= (role != null && role.equalsIgnoreCase("admin")) ? "" : "disabled" %>>
+            </td>
+            <td><%=fileName%></td>
+        </tr>
+<%
+        }
+    }
+%>
+    </table>
 
 <% if (role != null && role.equalsIgnoreCase("admin")) { %>
-    <hr><b>Add a new constituent</b>
-    <form name="kbUploader" id="kbUploader" action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
-      <input type="hidden" name="kb" value=<%=kbName%>><br>
-      <table>
-        <tr>
-          <td>
-            <b>KB Constituent:</b>&nbsp;
-          </td>
-          <td>
-            <input type="file" name="constituent">
-          </td>
-        </tr>
-      </table>
-      <input type="submit" name="submit" value="Load">
-    </form>
+    <br>
+    <input type="submit" name="reinitializeManifest" value="Reinitialize KB with checked files">
+<% } else { %>
+    <p><i>Log in as admin to change selected constituents.</i></p>
+<% } %>
+</form>
 
-    <hr>
-    <p><b>Save KB to other formats</b></p>
-
-<% if (StringUtil.isNonEmptyString(result)) {
-       out.println("<p>");
-       out.println(result);
-       out.println("</p>");
-       result = "";
-   } %>
-
-    <FORM name=save ID=save action="Manifest.jsp" method="GET">
-        <INPUT type="hidden" name="kb" value=<%=kbName%>><br>
-        <B>Filename:</B>&nbsp;<INPUT type="text" name="saveFile" value=<%=kbName%>><BR>
-        <INPUT type="submit" NAME="submit" VALUE="Save">
-        <select name="saveAs">
-            <option value="KIF">KIF
-            <option value="TPTP">TPTP
-            <option value="OWL">OWL
-            <option value="prolog">Prolog
-            <option value="tptpFOL">TPTP FOL
-        </select>
-    </FORM>
-
-<% }
+<%
   HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?";
   String er = KBmanager.getMgr().getError();
   if (!kb.errors.isEmpty()) {

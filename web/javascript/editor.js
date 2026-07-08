@@ -2,9 +2,7 @@
 // 1. GLOBAL VARIABLES & UTILITIES
 // ======================================================
 const debug = true;
-
 const fileInput = document.getElementById('kifFile');
-
 let codeEditors = [];
 let activeTab = 0;
 let errors = window.initialErrors || [];
@@ -12,12 +10,10 @@ let errorMarks = [];
 let errorMask = window.initialErrorMask || [];
 let codeEditor;
 let suppressChangeEvent = false;
-
 let checkTimer = null;
-const CHECK_DEBOUNCE_MS = 1000;   // 2 seconds after typing stops
+const CHECK_DEBOUNCE_MS = 2000;
 let lastCheckedText = "";
 let checkSequence = 0; 
-
 const $ = (s) => document.querySelector(s);
 const getContent = () => codeEditor.getValue();
 
@@ -286,10 +282,8 @@ document.addEventListener("DOMContentLoaded", async function() {
 document.addEventListener("click", function (e) {
   const entry = e.target.closest(".error-entry");
   if (!entry) return;
-
   const line  = Number(entry.dataset.line || 1);
   const start = Number(entry.dataset.start || 0);
-
   jumpToError(line, start);
 });
 
@@ -317,8 +311,6 @@ function initializeCodeMirror() {
     indentUnit: 2,
     tabSize: 2,
     lineWrapping: true,
-
-    // These two do nothing without addons, but harmless to leave:
     autoCloseBrackets: true,
     matchBrackets: true,
   });
@@ -330,25 +322,15 @@ function initializeCodeMirror() {
 
 
 function onEditorChange() {
-  // 🔒 Ignore changes that come from setEditorContent / setMode
   if (suppressChangeEvent) return;
-
   const entry = codeEditors[activeTab];
   if (!entry) return;
-
   const text = getContent();
-
-  // Keep the in-memory buffer in sync with what's visible
   entry[1] = text;
-
-  // Dirty = differs from last saved snapshot
   const isDirty = (entry.lastSaved !== text);
   entry.dirty = isDirty;
-
   if (isDirty) markTabUnsaved(activeTab);
-  else         markTabSaved(activeTab);
-
-  // --- existing check logic (unchanged) ---
+  else markTabSaved(activeTab);
   if (checkTimer) clearTimeout(checkTimer);
   checkTimer = setTimeout(() => {
     if (!text.trim()) {
@@ -366,22 +348,23 @@ function renderErrorBox(errors = [], message = null) {
   const box = document.querySelector(".scroller.msg");
   if (!box) return;
   box.innerHTML = "";
+  const body = addProblemsHeader(box);
   if (message) {
     box.classList.remove("success");
     box.classList.add("errors-box");
-    box.textContent = message;
+    body.textContent = message;
     return;
   }
   if (!errors.length) {
     box.classList.remove("errors-box");
     box.classList.add("success");
-    box.textContent = "✅ No errors found.";
+    body.textContent = "No errors found.";
     return;
   }
   box.classList.remove("success");
   box.classList.add("errors-box");
   errors.forEach((e, idx) => {
-    if (idx > 0) box.appendChild(document.createElement("br"));
+    if (idx > 0) body.appendChild(document.createElement("br"));
     const div = document.createElement("div");
     div.className = "error-entry";
     div.dataset.line  = String(e.line ?? 1);
@@ -392,8 +375,22 @@ function renderErrorBox(errors = [], message = null) {
     const colHuman  = Number(e.start ?? 0) + 1;
     div.textContent =
       `${sev} ${e.file ? e.file : "(buffer)"}:${lineHuman}:${colHuman}\n${e.msg || ""}`;
-    box.appendChild(div);
+    body.appendChild(div);
   });
+}
+
+function addProblemsHeader(box) {
+  const title = document.createElement("div");
+  title.className = "problems-title";
+  title.textContent = "Problems:";
+  const hr = document.createElement("hr");
+  hr.className = "problems-divider";
+  const body = document.createElement("div");
+  body.className = "problems-body";
+  box.appendChild(title);
+  box.appendChild(hr);
+  box.appendChild(body);
+  return body;
 }
 
 function highlightErrors(errors = [], mask = []) {

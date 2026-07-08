@@ -41,13 +41,14 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
   Configuration sigmaConfig = KBmanager.configuration;
 
   Set<String> reloadKeys = new HashSet<>(Arrays.asList(
-      "cache",
-      "cacheDisjoint",
-      "kbDir",
-      "maxPredicateArity",
-      "termFormats",
-      "typePrefix"
-  ));
+        "cache",
+        "cacheDisjoint",
+        "kbDir",
+        "sumoDir",
+        "maxPredicateArity",
+        "termFormats",
+        "typePrefix"
+    ));
 
   if ("POST".equalsIgnoreCase(request.getMethod())) {
       for (String key : Configuration.CONFIG_KEYS) {
@@ -119,7 +120,11 @@ Base Sigma directory</label><P>
 
 <label for="kbDir">
 <INPUT type="text" SIZE=80 name="kbDir" value="<%=sigmaConfig.getKbDir() %>">
-KB directory</label><P>
+Generated KB/runtime directory</label><P>
+
+<label for="sumoDir">
+<INPUT type="text" SIZE=80 name="sumoDir" value="<%=sigmaConfig.getSumoDir() %>">
+SUMO source directory</label><P>
 
 <label for="graphDir">
 <INPUT type="text" SIZE=80 name="graphDir" value="<%=sigmaConfig.getGraphDir() %>">
