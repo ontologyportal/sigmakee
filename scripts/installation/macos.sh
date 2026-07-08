@@ -20,36 +20,26 @@ ensure_xcode_tools() {
 
 install_macos_prerequisites() {
     print_header "Installing macOS prerequisites"
-
     require_homebrew
     ensure_xcode_tools
-
     brew update
-    brew install git ant cmake graphviz openjdk@21 || true
-
-    # Optional. If Homebrew has an eprover formula, this makes the prover
-    # available early; otherwise ant/install can still build/download tools.
+    brew install git ant cmake graphviz openjdk@21 || true.
     brew install eprover || warn "Homebrew eprover install failed or formula is unavailable. Continuing."
 }
 
 configure_macos_java() {
     print_header "Configuring Java 21"
-
     local openjdk_prefix=""
     openjdk_prefix="$(brew --prefix openjdk@21 2>/dev/null || true)"
-
     if [ -n "$openjdk_prefix" ] && [ -d "$openjdk_prefix/libexec/openjdk.jdk" ]; then
         sudo mkdir -p /Library/Java/JavaVirtualMachines
         sudo ln -sfn "$openjdk_prefix/libexec/openjdk.jdk" \
             /Library/Java/JavaVirtualMachines/openjdk-21.jdk
     fi
-
     export JAVA_HOME
     JAVA_HOME="$(/usr/libexec/java_home -v 21 2>/dev/null || /usr/libexec/java_home 2>/dev/null || true)"
     [ -n "$JAVA_HOME" ] || fail "Could not find a JDK on macOS."
-
     export PATH="$JAVA_HOME/bin:$PATH"
-
     java -version
     javac -version
 }
