@@ -189,7 +189,6 @@ clone_or_update_repo() {
 
 clone_or_update_repositories() {
     print_header "Cloning or updating dependency repositories"
-
     local repos=(
         "https://github.com/ontologyportal/sumo"
         "https://github.com/ontologyportal/TPTP-ANTLR"
@@ -197,7 +196,6 @@ clone_or_update_repositories() {
         "https://github.com/ontologyportal/SigmaUtils"
         "https://github.com/TPTPWorld/TPTP4X"
     )
-
     for repo in "${repos[@]}"; do
         clone_or_update_repo "$repo"
     done
@@ -357,7 +355,7 @@ To start Tomcat:
   startup.sh
 
 Then open:
-  http://localhost:8080/sigma/login.html
+  http://localhost:8080/sigma/login.jsp
 
 Default credentials:
   username: admin

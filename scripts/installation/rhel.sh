@@ -150,7 +150,7 @@ fi
 
 echo "SIGMA has been installed! To start the server:"
 echo "startup.sh"
-echo "Then point your browser to: http://localhost:8080/sigma/login.html"
+echo "Then point your browser to: http://localhost:8080/sigma/login.jsp"
 echo "username: admin     password: admin"
 echo "The first time logging in can take several minutes while the system is indexing. For low memory machines, restrict Knowledge Bases loaded in \$HOME/.sigmakee/KBs/config.xml"
 echo "To shutdown the server:"
