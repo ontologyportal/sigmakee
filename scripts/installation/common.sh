@@ -38,6 +38,48 @@ export JEDIT_HOME="$JEDIT_HOME"
 export JEDIT_JAR="$JEDIT_JAR"
 alias jedit='java -Xmx10g -Xss1m -jar "$JEDIT_JAR"'
 
+INSTALL_ERRORS=()
+
+record_error() {
+    INSTALL_ERRORS+=("$1")
+    warn "$1"
+}
+
+run_required() {
+    local name="$1"
+    shift
+    print_header "$name"
+    "$@" || fail "$name failed."
+}
+
+run_optional() {
+    local name="$1"
+    shift
+    print_header "$name"
+    set +e
+    "$@"
+    local status=$?
+    set -e
+    if [ "$status" -ne 0 ]; then
+        record_error "$name failed; continuing."
+        return 0
+    fi
+}
+
+safe_reinstall_dir() {
+    local dir="$1"
+    if [ -e "$dir" ]; then
+        rm -rf "$dir"
+    fi
+    mkdir -p "$dir"
+}
+
+safe_reinstall_file_path() {
+    local path="$1"
+    rm -rf "$path"
+    mkdir -p "$(dirname "$path")"
+}
+
 log() {
     printf '%s\n' "$*"
 }
@@ -100,6 +142,16 @@ shell_profile_file() {
             printf '%s\n' "$HOME/.bashrc"
             ;;
     esac
+}
+
+run_as_root() {
+    if [ "$(id -u)" -eq 0 ]; then
+        "$@"
+    elif command -v sudo >/dev/null 2>&1; then
+        sudo "$@"
+    else
+        fail "This command requires root privileges: $*"
+    fi
 }
 
 write_profile_block() {
@@ -366,19 +418,23 @@ EOF2
 
 run_common_install() {
     welcome
-    ensure_install_directories
-    clone_or_update_sigmakee_repo
-    ensure_sigmakee_checkout
-    clone_or_update_repositories
-    write_profile_block
-    install_tomcat_if_missing
-    install_tomcat_wrappers
+    run_required "Creating install directories" ensure_install_directories
+    run_required "Cloning or updating SigmaKEE" clone_or_update_sigmakee_repo
+    run_required "Checking SigmaKEE checkout" ensure_sigmakee_checkout
+    run_required "Cloning or updating repositories" clone_or_update_repositories
+    run_required "Writing shell profile" write_profile_block
+    run_required "Installing Tomcat" install_tomcat_if_missing
+    run_required "Installing Tomcat wrappers" install_tomcat_wrappers
     [ -d "$ONTOLOGYPORTAL_GIT/sumo" ] || fail "SUMO repo missing: $ONTOLOGYPORTAL_GIT/sumo"
     [ -f "$ONTOLOGYPORTAL_GIT/sumo/Merge.kif" ] || fail "SUMO files missing under: $ONTOLOGYPORTAL_GIT/sumo"
-    install_sigmakee
-    compile_sigmakee
-    install_sumojedit
-    run_prerequisite_verification
-    run_install_verification
+    run_required "Installing SigmaKEE" install_sigmakee
+    run_required "Compiling SigmaKEE" compile_sigmakee
+    run_optional "Installing SUMOjEdit" install_sumojedit
+    run_optional "Running prerequisite verification" run_prerequisite_verification
+    run_optional "Running install verification" run_install_verification
+    if [ "${#INSTALL_ERRORS[@]}" -gt 0 ]; then
+        warn "Installation completed with non-fatal errors:"
+        printf '  - %s\n' "${INSTALL_ERRORS[@]}"
+    fi
     print_success_message
 }

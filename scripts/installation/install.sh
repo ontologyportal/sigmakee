@@ -13,8 +13,6 @@ Usage: bash scripts/installation/install.sh [options]
 
 Options:
   --branch <name>     Branch to install from. Default: $SIGMAKEE_BRANCH
-  --skip-verify       Do not run verification scripts.
-  --no-pull           Do not pull updates for dependency repositories.
   -h, --help          Show this help.
 
 Examples:

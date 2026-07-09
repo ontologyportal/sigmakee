@@ -13,10 +13,14 @@ RUN apt-get update && apt-get install -y \
     jedit \
  && rm -rf /var/lib/apt/lists/*
 
+WORKDIR /root/workspace
+
+RUN git clone --branch development https://github.com/ontologyportal/sigmakee.git
+
 WORKDIR /root/workspace/sigmakee
-COPY . .
 
 RUN bash scripts/installation/install.sh
 
 EXPOSE 8080
+
 CMD ["bash", "-lc", "source ~/.bashrc && startup.sh && tail -f $CATALINA_HOME/logs/catalina.out"]

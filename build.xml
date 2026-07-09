@@ -856,6 +856,9 @@ build.date=${git.commit.date}
         <mkdir dir="${vampire.build.dir}"/>
         <unzip src="${sigma.install.downloads}${file.separator}${vampire.asset}"
             dest="${vampire.binary.unpack.dir}"/>
+        <delete file="${vampire.exec}" failonerror="false"/>
+        <delete dir="${vampire.exec}" failonerror="false"/>
+        <mkdir dir="${vampire.build.dir}"/>
         <copy tofile="${vampire.exec}"
             overwrite="true"
             flatten="true"
