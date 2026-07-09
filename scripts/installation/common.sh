@@ -440,6 +440,8 @@ run_common_install() {
     write_profile_block
     install_tomcat_if_missing
     install_tomcat_wrappers
+    [ -d "$ONTOLOGYPORTAL_GIT/sumo" ] || fail "SUMO repo missing: $ONTOLOGYPORTAL_GIT/sumo"
+    [ -f "$ONTOLOGYPORTAL_GIT/sumo/Merge.kif" ] || fail "SUMO files missing under: $ONTOLOGYPORTAL_GIT/sumo"
     install_sigmakee
     compile_sigmakee
     install_sumojedit

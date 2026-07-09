@@ -86,7 +86,7 @@ fi
 
 case "$(uname -s)" in
     Darwin)
-        exec bash "$SCRIPT_DIR/ubuntu.sh" ${passthrough_args[@]+"${passthrough_args[@]}"}
+        exec bash "$SCRIPT_DIR/macos.sh" "${passthrough_args[@]}"
         ;;
     Linux)
         if [ ! -r /etc/os-release ]; then

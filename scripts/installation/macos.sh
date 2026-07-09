@@ -23,7 +23,15 @@ install_macos_prerequisites() {
     require_homebrew
     ensure_xcode_tools
     brew update
-    brew install git ant cmake graphviz openjdk@21 curl || true
+    brew install \
+    git \
+    ant \
+    cmake \
+    graphviz \
+    curl \
+    make \
+    openjdk@21 \
+    pkg-config
     brew install eprover || warn "Homebrew eprover install failed or formula is unavailable. Continuing."
     brew install --cask --no-quarantine jedit || true
 }
