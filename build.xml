@@ -934,7 +934,8 @@ build.date=${git.commit.date}
         <mkdir dir="${programs.dir}/vampire/z3/build"/>
         <exec executable="cmake" dir="${programs.dir}/vampire/z3/build">
             <arg value=".."/>
-            <arg value="-DZ3_SINGLE_THREADED=1 -DCMAKE_BUILD_TYPE=Release"/>
+            <arg value="-DZ3_SINGLE_THREADED=1"/>
+            <arg value="-DCMAKE_BUILD_TYPE=Release"/>
         </exec>
         <exec executable="sh" dir="${programs.dir}/vampire/z3/build">
             <arg value="-c"/>

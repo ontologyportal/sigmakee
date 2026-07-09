@@ -27,8 +27,6 @@ Curl bootstrap:
 EOF
 }
 
-passthrough_args=()
-
 while (($#)); do
     case "$1" in
         --branch)
@@ -44,7 +42,9 @@ while (($#)); do
             exit 0
             ;;
         *)
-            passthrough_args+=("$1")
+            echo "ERROR: Unknown option: $1" >&2
+            usage
+            exit 1
             ;;
     esac
     shift
@@ -64,18 +64,14 @@ fi
 bootstrap_from_github() {
     local tmpdir
     tmpdir="$(mktemp -d)"
-
     echo "Bootstrapping SigmaKEE installer from branch: $SIGMAKEE_BRANCH"
     echo "Installer temp directory: $tmpdir"
-
     local base_url
     base_url="https://raw.githubusercontent.com/ontologyportal/sigmakee/refs/heads/$SIGMAKEE_BRANCH/scripts/installation"
-
     for script in common.sh ubuntu.sh rhel.sh macos.sh verify-prerequisites.sh verify-install.sh; do
         curl -fsSL "$base_url/$script" -o "$tmpdir/$script"
         chmod +x "$tmpdir/$script"
     done
-
     SCRIPT_DIR="$tmpdir"
 }
 
@@ -86,25 +82,23 @@ fi
 
 case "$(uname -s)" in
     Darwin)
-        exec bash "$SCRIPT_DIR/macos.sh" "${passthrough_args[@]}"
+        exec bash "$SCRIPT_DIR/macos.sh"
         ;;
     Linux)
         if [ ! -r /etc/os-release ]; then
             echo "ERROR: Cannot detect Linux distribution because /etc/os-release is missing." >&2
             exit 1
         fi
-
         # shellcheck disable=SC1091
         source /etc/os-release
         os_id="${ID:-}"
         os_like="${ID_LIKE:-}"
-
         case " $os_id $os_like " in
             *" ubuntu "*|*" debian "*)
-                exec bash "$SCRIPT_DIR/ubuntu.sh" "${passthrough_args[@]}"
+                exec bash "$SCRIPT_DIR/ubuntu.sh"
                 ;;
             *" rhel "*|*" fedora "*|*" centos "*|*" rocky "*|*" alma "*)
-                exec bash "$SCRIPT_DIR/rhel.sh" "${passthrough_args[@]}"
+                exec bash "$SCRIPT_DIR/rhel.sh"
                 ;;
             *)
                 echo "ERROR: Unsupported Linux distribution: ${PRETTY_NAME:-unknown}" >&2
