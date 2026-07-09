@@ -28,6 +28,8 @@ sudo yum install -y graphviz
 
 sudo yum install -y httpd
 
+sudo yum install -y libcurl-devel
+
 # Install build-essential (required for compiling Vampire)
 sudo yum groupinstall "Development Tools"
 

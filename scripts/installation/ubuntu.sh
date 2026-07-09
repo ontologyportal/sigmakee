@@ -18,6 +18,7 @@ install_ubuntu_prerequisites() {
         sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
         ca-certificates \
         curl \
+        libcurl4-openssl-dev \
         unzip \
         git \
         ant \
