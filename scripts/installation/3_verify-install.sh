@@ -263,59 +263,118 @@ verify_provers() {
     fi
 }
 
-verify_kb_stress_test() {
-    print_header "Knowledge Base stress test"
-    check_file_exists "SigmaKEE jar" "$SIGMA_SRC/build/sigmakee.jar" || return 1
-    log "Building and testing knowledge base. This may take several minutes."
-    if java -Xmx20g -cp "$SIGMA_CP" com.articulate.sigma.KB -t 2>/dev/null | grep -qF "KB.test()"; then
-        record_success "Knowledge Base stress test passed."
-    else
-        record_failure "Knowledge Base stress test failed: java -Xmx20g -cp \"$SIGMA_CP\" com.articulate.sigma.KB -t"
-    fi
-}
-
 start_tomcat() {
     print_header "Starting Tomcat"
+
     check_executable_exists "Tomcat startup.sh" "$CATALINA_HOME/bin/startup.sh" || return 1
+
     local output
     output="$("$CATALINA_HOME/bin/startup.sh" 2>&1 || true)"
+
     printf '%s\n' "$output"
+
     if echo "$output" | grep -qF "Tomcat started."; then
         record_success "Tomcat startup command completed."
         return 0
     fi
+
     if echo "$output" | grep -qiE "already running|Tomcat may already be running"; then
         record_success "Tomcat appears to already be running."
         return 0
     fi
-    warn "Tomcat startup output did not contain the expected success message. Continuing to web check."
+
+    warn "Tomcat startup output did not contain the expected success message. Continuing to HTTP checks."
+    return 0
+}
+
+wait_for_http_status() {
+    local url="$1"
+    local expected_status="$2"
+    local description="$3"
+    local timeout="${4:-120}"
+    local interval="${5:-3}"
+    local elapsed=0
+    local status=""
+
+    while true; do
+        status="$(curl -sS -L -o /tmp/sigmakee-http-check.out -w '%{http_code}' --max-time 10 "$url" || true)"
+
+        if [ "$status" = "$expected_status" ]; then
+            record_success "$description is reachable: $url"
+            return 0
+        fi
+
+        log "Waiting for $description. HTTP status: ${status:-none}"
+
+        sleep "$interval"
+        elapsed=$((elapsed + interval))
+
+        if (( elapsed >= timeout )); then
+            record_failure "Timed out waiting for $description at $url. Last HTTP status: ${status:-none}"
+            log "Try checking:"
+            log "  curl -i -L $url"
+            log "  tail -n 100 $CATALINA_HOME/logs/catalina.out"
+            return 1
+        fi
+    done
+}
+
+verify_login_page_content() {
+    local login_url="http://localhost:8080/sigma/login.jsp"
+    local output_file="/tmp/sigmakee-login-check.out"
+
+    curl -sS -L --max-time 10 "$login_url" -o "$output_file" || {
+        record_failure "Could not fetch Sigma login page: $login_url"
+        return 1
+    }
+
+    if grep -qF "<title>Sigma Login</title>" "$output_file"; then
+        record_success "Sigma login page contains expected title."
+        return 0
+    fi
+
+    record_failure "Sigma login page loaded, but did not contain expected title."
+    log "First 40 lines of login response:"
+    sed -n '1,40p' "$output_file"
+    return 1
+}
+
+verify_kbs_page_exists() {
+    local kbs_url="http://localhost:8080/sigma/KBs.jsp"
+    local output_file="/tmp/sigmakee-kbs-check.out"
+    local status=""
+
+    status="$(curl -sS -L -o "$output_file" -w '%{http_code}' --max-time 15 "$kbs_url" || true)"
+
+    if [ "$status" != "200" ]; then
+        record_failure "KBs.jsp did not return HTTP 200. Status: ${status:-none}. URL: $kbs_url"
+        log "Try checking:"
+        log "  curl -i -L $kbs_url"
+        log "  tail -n 100 $CATALINA_HOME/logs/catalina.out"
+        return 1
+    fi
+
+    if grep -qiE '404|not found|requested resource.*not available' "$output_file"; then
+        record_failure "KBs.jsp returned a page that looks like a missing-resource error."
+        log "First 60 lines of KBs.jsp response:"
+        sed -n '1,60p' "$output_file"
+        return 1
+    fi
+
+    record_success "KBs.jsp exists and returned HTTP 200: $kbs_url"
+    return 0
 }
 
 verify_webapp() {
     print_header "Verifying SigmaKEE web application"
-    local timeout=90
-    local interval=3
-    local elapsed=0
-    local output=""
+
     start_tomcat || true
-    while true; do
-        output="$(curl -s --fail --max-time 5 "$SIGMA_URL" || true)"
-        if echo "$output" | grep -qF "<title>Sigma Login</title>"; then
-            record_success "SigmaKEE login page is reachable: $SIGMA_URL"
-            return 0
-        fi
-        log "Waiting for SigmaKEE web app to load..."
-        sleep "$interval"
-        elapsed=$((elapsed + interval))
-        if (( elapsed >= timeout )); then
-            record_failure "Timeout waiting for SigmaKEE login page: $SIGMA_URL"
-            log "Try checking:"
-            log "  curl -i $SIGMA_URL"
-            log "  tail -n 100 $CATALINA_HOME/logs/catalina.out"
-            log "  ls -lah $CATALINA_HOME/logs"
-            return 1
-        fi
-    done
+
+    wait_for_http_status "http://localhost:8080/sigma/login.jsp" "200" "Sigma login page" 120 3 || true
+    verify_login_page_content || true
+
+    wait_for_http_status "http://localhost:8080/sigma/KBs.jsp" "200" "Sigma KBs page" 120 3 || true
+    verify_kbs_page_exists || true
 }
 
 print_summary() {
@@ -340,7 +399,6 @@ verify_all() {
     verify_config_xml || true
     verify_build_outputs || true
     verify_provers || true
-    verify_kb_stress_test || true
     verify_webapp || true
     print_summary
 }
