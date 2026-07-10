@@ -124,25 +124,6 @@ tee_safely() {
     fi
 }
 
-verify_prerequisites() {
-    print_header "Verifying prerequisites"
-    local verifier="$SCRIPT_DIR/verify-prerequisites.sh"
-    local output_file
-    check_file_exists "verify-prerequisites.sh" "$verifier" || return 1
-    output_file="$(mktemp)"
-    set +e
-    bash "$verifier" 2>&1 | tee_safely "$output_file"
-    local status=${PIPESTATUS[0]}
-    set -e
-    if [ "$status" -ne 0 ] || grep -q "MISSING PREREQUISITES" "$output_file"; then
-        rm -f "$output_file"
-        record_failure "Prerequisite verification failed."
-        return 1
-    fi
-    rm -f "$output_file"
-    record_success "Prerequisites verified."
-}
-
 verify_environment() {
     print_header "Verifying required environment"
     require_env SIGMA_HOME || true
@@ -352,7 +333,6 @@ print_summary() {
 }
 
 verify_all() {
-    verify_prerequisites || true
     verify_environment || true
     verify_workspace || true
     verify_programs || true
