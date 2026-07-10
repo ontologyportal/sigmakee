@@ -524,6 +524,27 @@ build_sigma_antlr() {
     run_ant_project "$ONTOLOGYPORTAL_GIT/sigmaAntlr" "all" "Building sigmaAntlr"
 }
 
+copy_sumo_kb_files() {
+    local src="$SUMO_SRC"
+    local dest="$SIGMA_HOME/KBs"
+    local copied_count=0
+    [ -d "$src" ] || fail "SUMO source directory does not exist: $src"
+    mkdir -p "$dest"
+    find "$dest" -maxdepth 1 -type f \( -name '*.kif' -o -name '*.txt' \) -delete
+    while IFS= read -r -d '' file; do
+        cp -f "$file" "$dest/"
+        copied_count=$((copied_count + 1))
+    done < <(
+        find "$src" -maxdepth 1 -type f \( -name '*.kif' -o -name '*.txt' \) -print0
+    )
+    [ "$copied_count" -gt 0 ] || fail "No SUMO .kif/.txt files were copied from $src to $dest"
+    [ -f "$dest/Merge.kif" ] || fail "Merge.kif was not copied to $dest"
+    [ -f "$dest/Mid-level-ontology.kif" ] || fail "Mid-level-ontology.kif was not copied to $dest"
+    [ -f "$dest/english_format.kif" ] || fail "english_format.kif was not copied to $dest"
+    [ -f "$dest/domainEnglishFormat.kif" ] || fail "domainEnglishFormat.kif was not copied to $dest"
+    log "Copied $copied_count SUMO KB files into $dest"
+}
+
 install_sigmakee_runtime_data() {
     run_ant_target "install" "Installing SigmaKEE runtime data"
     copy_sumo_kb_files
