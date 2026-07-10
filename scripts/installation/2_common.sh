@@ -13,6 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${ONTOLOGYPORTAL_GIT:=$HOME/workspace}"
 : "${SIGMA_HOME:=$HOME/.sigmakee}"
 : "${SIGMA_SRC:=$ONTOLOGYPORTAL_GIT/sigmakee}"
+: "${SUMO_SRC:=$ONTOLOGYPORTAL_GIT/sumo}"
 
 : "${TOMCAT_VERSION:=9.0.107}"
 : "${CATALINA_HOME:=$PROGRAMS_DIR/apache-tomcat-$TOMCAT_VERSION}"
@@ -42,7 +43,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 : "${NO_PULL:=false}"
 
 export SIGMAKEE_BRANCH SIGMAKEE_REPO
-export PROGRAMS_DIR ONTOLOGYPORTAL_GIT SIGMA_HOME SIGMA_SRC
+export PROGRAMS_DIR ONTOLOGYPORTAL_GIT SIGMA_HOME SIGMA_SRC SUMO_SRC
 export TOMCAT_VERSION CATALINA_HOME CATALINA_OPTS
 export VAMPIRE_VERSION VAMPIRE_INSTALL_DIR VAMPIRE_HOME VAMPIRE_EXEC
 export E_INSTALL_DIR E_HOME EPROVER_EXEC
@@ -234,7 +235,7 @@ clone_or_update_sigmakee_repo() {
 
 clone_or_update_workspace_repositories() {
     clone_or_update_repo_to_dir "https://github.com/ontologyportal/sumo" \
-        "$ONTOLOGYPORTAL_GIT/sumo"
+        "$SUMO_SRC"
     clone_or_update_repo_to_dir "https://github.com/ontologyportal/SigmaUtils" \
         "$ONTOLOGYPORTAL_GIT/SigmaUtils"
     clone_or_update_repo_to_dir "https://github.com/ontologyportal/sigmaAntlr" \
@@ -247,6 +248,11 @@ clone_or_update_workspace_repositories() {
         "$ONTOLOGYPORTAL_GIT/JJParser"
     clone_or_update_repo_to_dir "https://github.com/TPTPWorld/TPTP4X.git" \
         "$ONTOLOGYPORTAL_GIT/TPTP4X"
+}
+
+ensure_sumo_checkout() {
+    [ -d "$SUMO_SRC" ] || fail "SUMO repo missing: $SUMO_SRC"
+    [ -f "$SUMO_SRC/Merge.kif" ] || fail "SUMO files missing under: $SUMO_SRC"
 }
 
 clone_or_update_optional_workspace_repositories() {
@@ -520,6 +526,7 @@ build_sigma_antlr() {
 
 install_sigmakee_runtime_data() {
     run_ant_target "install" "Installing SigmaKEE runtime data"
+    copy_sumo_kb_files
 }
 
 build_sigmakee() {
@@ -574,19 +581,6 @@ build_all() {
     run_optional "Installing SUMOjEdit" install_sumojedit
 }
 
-run_prerequisite_verification() {
-    local verifier="$SCRIPT_DIR/3_verify-install.sh"
-    local output_file
-    [ -f "$verifier" ] || fail "Install verifier not found: $verifier"
-    output_file="$(mktemp)"
-    bash "$verifier" 2>&1 | tee "$output_file"
-    if grep -q "MISSING PREREQUISITES" "$output_file"; then
-        rm -f "$output_file"
-        fail "Missing prerequisites detected."
-    fi
-    rm -f "$output_file"
-}
-
 run_install_verification() {
     local verifier="$SCRIPT_DIR/3_verify-install.sh"
     [ -f "$verifier" ] || fail "Install verifier not found: $verifier"
@@ -598,7 +592,6 @@ verify_installation() {
         warn "Skipping verification because --skip-verify was requested."
         return
     fi
-    run_required "Running prerequisite verification" run_prerequisite_verification
     run_required "Running install verification" run_install_verification
 }
 
