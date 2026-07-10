@@ -322,19 +322,15 @@ detect_vampire_asset() {
         Linux:x86_64|Linux:amd64)
             printf '%s\n' "vampire-Linux-X64.zip"
             ;;
-
         Linux:aarch64|Linux:arm64)
             printf '%s\n' "vampire-Linux-ARM64.zip"
             ;;
-
         Darwin:x86_64|Darwin:amd64)
             printf '%s\n' "vampire-macOS-X64.zip"
             ;;
-
         Darwin:aarch64|Darwin:arm64)
             printf '%s\n' "vampire-macOS-ARM64.zip"
             ;;
-
         *)
             fail "Unsupported OS/architecture for Vampire binary: $os $arch"
             ;;
@@ -399,7 +395,6 @@ install_eprover() {
 download_leo_jar() {
     local dest="$1"
     local url="https://github.com/leoprover/Leo-III/releases/download/v$LEO_VERSION/leo3-v$LEO_VERSION.jar"
-
     download_file "$url" "$dest"
 }
 
@@ -580,9 +575,9 @@ build_all() {
 }
 
 run_prerequisite_verification() {
-    local verifier="$SCRIPT_DIR/verify-prerequisites.sh"
+    local verifier="$SCRIPT_DIR/3_verify-install.sh"
     local output_file
-    [ -f "$verifier" ] || fail "Prerequisite verifier not found: $verifier"
+    [ -f "$verifier" ] || fail "Install verifier not found: $verifier"
     output_file="$(mktemp)"
     bash "$verifier" 2>&1 | tee "$output_file"
     if grep -q "MISSING PREREQUISITES" "$output_file"; then
