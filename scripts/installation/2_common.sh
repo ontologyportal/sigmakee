@@ -396,35 +396,26 @@ install_eprover() {
     log "Installed E prover: $EPROVER_EXEC"
 }
 
-download_leo_zip() {
+download_leo_jar() {
     local dest="$1"
-    local primary_url="https://zenodo.org/records/15149454/files/leoprover/Leo-III-v$LEO_VERSION.zip?download=1"
-    local fallback_url="https://github.com/leoprover/Leo-III/releases/download/v$LEO_VERSION/Leo-III-v$LEO_VERSION.zip"
-    if curl -fsSL "$primary_url" -o "$dest"; then
-        return 0
-    fi
-    warn "Primary Leo-III download failed. Trying GitHub fallback."
-    curl -fsSL "$fallback_url" -o "$dest"
+    local url="https://github.com/leoprover/Leo-III/releases/download/v$LEO_VERSION/leo3-v$LEO_VERSION.jar"
+
+    download_file "$url" "$dest"
 }
 
 install_leo() {
-    if [ -x "$LEO_EXEC" ]; then
+    if [ -x "$LEO_EXEC" ] && [ -f "$LEO_BIN_DIR/leo3.jar" ]; then
         log "Leo-III already installed: $LEO_EXEC"
         return
     fi
-    local zip_file="$SIGMA_HOME/downloads/Leo-III-v$LEO_VERSION.zip"
-    local unpack_dir="$SIGMA_HOME/downloads/leo-release"
-    local found_jar="$LEO_BIN_DIR/leo3.jar"
+    local jar_file="$SIGMA_HOME/downloads/leo3-v$LEO_VERSION.jar"
     log "Installing Leo-III $LEO_VERSION into $LEO_INSTALL_DIR"
     mkdir -p "$SIGMA_HOME/downloads"
-    rm -rf "$LEO_INSTALL_DIR" "$unpack_dir"
-    mkdir -p "$LEO_BIN_DIR" "$unpack_dir"
-    download_leo_zip "$zip_file"
-    unzip -q -o "$zip_file" -d "$unpack_dir"
-    found_jar="$(find "$unpack_dir" -type f -name leo3.jar -print -quit 2>/dev/null || true)"
-    [ -n "$found_jar" ] || fail "Could not find leo3.jar inside $zip_file"
-    rm -rf "$LEO_BIN_DIR/leo3.jar"
-    cp "$found_jar" "$LEO_BIN_DIR/leo3.jar"
+    rm -rf "$LEO_INSTALL_DIR"
+    mkdir -p "$LEO_BIN_DIR"
+    download_leo_jar "$jar_file"
+    [ -f "$jar_file" ] || fail "Leo-III download failed. Expected jar: $jar_file"
+    cp "$jar_file" "$LEO_BIN_DIR/leo3.jar"
     cat > "$LEO_EXEC" <<'EOF'
 #!/usr/bin/env sh
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -432,7 +423,7 @@ exec java -jar "$DIR/leo3.jar" "$@"
 EOF
     chmod +x "$LEO_EXEC"
     [ -x "$LEO_EXEC" ] || fail "Leo-III launcher was not created: $LEO_EXEC"
-    rm -rf "$unpack_dir"
+    [ -f "$LEO_BIN_DIR/leo3.jar" ] || fail "Leo-III jar was not installed: $LEO_BIN_DIR/leo3.jar"
     log "Installed Leo-III: $LEO_EXEC"
 }
 
