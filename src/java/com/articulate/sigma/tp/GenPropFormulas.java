@@ -36,7 +36,7 @@ public class GenPropFormulas {
     public ECNF ecnf = new ECNF();
     public TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 
-    public static final List<String> vcnfcmds = List.of("--mode","clausify","-updr","off");
+    public static final List<String> vcnfcmds = List.of("--mode", "clausify", "-updr", "off");
     public static final List<String> ecnfcmds = List.of("--cnf","--no-preprocessing");
 
     public Set<String> contraResults = new HashSet<>();
@@ -138,41 +138,83 @@ public class GenPropFormulas {
     /** ***************************************************************
      * convert to a string
      */
-    public static String formatCNF(List<String> l) {
+    // public static String formatCNF(List<String> l) {
+
+    //     StringBuilder sb = new StringBuilder();
+    //     HashSet<String> seen = new HashSet<>();
+    //     for (String s : l) {
+    //         //System.out.println("formatCNF(): input: " + s);
+    //         if (!s.startsWith("%") && s.length() > 4) {
+    //             int firstComma = s.indexOf(",");
+    //             if (firstComma == -1)
+    //                 continue;
+    //             int secondComma = s.indexOf(",",firstComma+1);
+    //             if (secondComma == -1)
+    //                 continue;
+    //             int end = s.length()-2;
+    //             int thirdComma = s.indexOf(",",secondComma+1);
+    //             if (thirdComma > -1)
+    //                 end = thirdComma;
+    //             String firstParam = s.substring(s.indexOf(Formula.LP)+1,firstComma).trim();
+    //             String secondParam = s.substring(firstComma+1,secondComma).trim();
+    //             //System.out.println("formatCNF(): firstParam: " + firstParam);
+    //             //System.out.println("formatCNF(): secondParam: " + secondParam);
+    //             //System.out.println(firstComma + ", " + secondComma + ", " + thirdComma);
+    //             // if (!secondParam.equals("axiom")) Vampire uses "axiom"
+    //             if (!secondParam.equals("plain") && !secondParam.equals("axiom"))
+    //                 continue;
+    //             String clause = s.substring(secondComma+1,end).trim();
+    //             //System.out.println("formatCNF(): result: " + clause);
+    //             if (seen.contains(clause))
+    //                 continue;
+    //             seen.add(clause);
+    //             sb.append(clause).append(", ");
+    //         }
+    //     }
+    //     if (sb.length() > 3)
+    //         sb.delete(sb.length()-2,sb.length());
+    //     return simplifyCNF(sb.toString());
+    // }
+
+    public static String formatCNF(List<String> lines) {
 
         StringBuilder sb = new StringBuilder();
         HashSet<String> seen = new HashSet<>();
-        for (String s : l) {
-            //System.out.println("formatCNF(): input: " + s);
-            if (!s.startsWith("%") && s.length() > 4) {
-                int firstComma = s.indexOf(",");
-                if (firstComma == -1)
-                    continue;
-                int secondComma = s.indexOf(",",firstComma+1);
-                if (secondComma == -1)
-                    continue;
-                int end = s.length()-2;
-                int thirdComma = s.indexOf(",",secondComma+1);
-                if (thirdComma > -1)
-                    end = thirdComma;
-                String firstParam = s.substring(s.indexOf(Formula.LP)+1,firstComma).trim();
-                String secondParam = s.substring(firstComma+1,secondComma).trim();
-                //System.out.println("formatCNF(): firstParam: " + firstParam);
-                //System.out.println("formatCNF(): secondParam: " + secondParam);
-                //System.out.println(firstComma + ", " + secondComma + ", " + thirdComma);
-                // if (!secondParam.equals("axiom")) Vampire uses "axiom"
-                if (!secondParam.equals("plain")) // E uses "plain"
-                    continue;
-                String clause = s.substring(secondComma+1,end).trim();
-                //System.out.println("formatCNF(): result: " + clause);
-                if (seen.contains(clause))
-                    continue;
-                seen.add(clause);
+
+        for (String s : lines) {
+            if (s.startsWith("%") || s.length() <= 4)
+                continue;
+
+            int firstComma = s.indexOf(",");
+            if (firstComma == -1)
+                continue;
+
+            int secondComma = s.indexOf(",", firstComma + 1);
+            if (secondComma == -1)
+                continue;
+
+            int thirdComma = s.indexOf(",", secondComma + 1);
+            int end = thirdComma > -1 ? thirdComma : s.length() - 2;
+
+            String role = s.substring(
+                    firstComma + 1,
+                    secondComma).trim();
+
+            // E commonly emits "plain"; Vampire clausify may emit "axiom".
+            if (!role.equals("plain") && !role.equals("axiom"))
+                continue;
+
+            String clause = s.substring(
+                    secondComma + 1,
+                    end).trim();
+
+            if (seen.add(clause))
                 sb.append(clause).append(", ");
-            }
         }
-        if (sb.length() > 3)
-            sb.delete(sb.length()-2,sb.length());
+
+        if (sb.length() >= 2)
+            sb.delete(sb.length() - 2, sb.length());
+
         return simplifyCNF(sb.toString());
     }
 
@@ -221,18 +263,15 @@ public class GenPropFormulas {
             System.out.println("run(): Proof found: statement " + stmts + " is a contradiction");
             vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
             // cleanup before returning
-            if (f.exists()) f.delete();
             return SZSonto.CONTRA;
         }
         else if (sat) {
             System.out.println("run(): Saturation: statement " + stmts);
             vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
-            if (f.exists()) f.delete();
             return SZSonto.SAT;
         }
         else {
             System.out.println("run(): no proof: statement " + stmts);
-            if (f.exists()) f.delete();
             return SZSonto.OTHER;
         }
     }
@@ -521,27 +560,70 @@ private static void cleanupTempProbFiles() {
             System.out.println(s + "\n" + tableaux.get(s));
     }
 
-    /** ***************************************************************
-     */
-    public void generateCNFandLinks(String form, String filename)  throws Exception {
+    // /** ***************************************************************
+    //  */
+    // public void generateCNFandLinks(String form, String filename)  throws Exception {
+
+    //     File fname = new File(filename);
+    //     //System.out.println("generateCNFandLinks(): filename: " + filename);
+    //     //System.out.println("generateFormulas(): formula: " + form);
+    //     //System.out.println("generateFormulas(): Run Vampire for CNF conversion with: " + cnfcmds);
+    //     //vamp.runCustom(fname,0, cnfcmds);
+    //     ecnf.runCustom(fname,0,ecnfcmds);
+    //     String formStr = form;
+    //     //ecnf.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
+    //     String CNFresult = formatCNF(ecnf.output);
+    //     if (CNFresult.isEmpty())
+    //         CNFresult = form;
+    //     System.out.println("generateCNFandLinks(): CNF for " + form + " is " + CNFresult);
+    //     CNF.put(form,CNFresult);
+    //     String encoded = encodeTT(formStr);
+    //     truthTables.put(formStr,encoded);
+    //     encoded = encodeTab(formStr);
+    //     tableaux.put(formStr,encoded);
+    // }
+
+    // public void generateCNFandLinks(String form, String filename)
+    //     throws Exception {
+
+    //     File fname = new File(filename);
+
+    //     vamp.runCustom(fname, 0, vcnfcmds);
+
+    //     String CNFresult = formatCNF(vamp.output);
+
+    //     if (CNFresult.isEmpty())
+    //         CNFresult = form;
+
+    //     System.out.println(
+    //             "generateCNFandLinks(): CNF for "
+    //                     + form + " is " + CNFresult);
+
+    //     CNF.put(form, CNFresult);
+
+    //     truthTables.put(form, encodeTT(form));
+    //     tableaux.put(form, encodeTab(form));
+    // }
+
+    public void generateCNFandLinks(String form, String filename)
+        throws Exception {
 
         File fname = new File(filename);
-        //System.out.println("generateCNFandLinks(): filename: " + filename);
-        //System.out.println("generateFormulas(): formula: " + form);
-        //System.out.println("generateFormulas(): Run Vampire for CNF conversion with: " + cnfcmds);
-        //vamp.runCustom(fname,0, cnfcmds);
-        ecnf.runCustom(fname,0,ecnfcmds);
-        String formStr = form;
-        //ecnf.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
+
+        ecnf.runCustom(fname, 0, ecnfcmds);
+
         String CNFresult = formatCNF(ecnf.output);
+
         if (CNFresult.isEmpty())
             CNFresult = form;
-        System.out.println("generateCNFandLinks(): CNF for " + form + " is " + CNFresult);
-        CNF.put(form,CNFresult);
-        String encoded = encodeTT(formStr);
-        truthTables.put(formStr,encoded);
-        encoded = encodeTab(formStr);
-        tableaux.put(formStr,encoded);
+
+        System.out.println(
+                "generateCNFandLinks(): CNF for "
+                        + form + " is " + CNFresult);
+
+        CNF.put(form, CNFresult);
+        truthTables.put(form, encodeTT(form));
+        tableaux.put(form, encodeTab(form));
     }
 
     /** ***************************************************************
@@ -590,6 +672,8 @@ private static void cleanupTempProbFiles() {
 
             generateCNFandLinks(form,filename.toString());
             generateCNFandLinks(negForm,negfilename.toString());
+            new File(filename.toString()).delete();
+            new File(negfilename.toString()).delete();
             iter++;
         }
         printResults();
