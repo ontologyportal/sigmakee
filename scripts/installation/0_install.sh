@@ -114,10 +114,10 @@ detect_linux_installer() {
     local distro_string=" $os_id $os_like "
     case "$distro_string" in
         *" ubuntu "*|*" debian "*)
-            printf '%s\n' "$SCRIPT_DIR/ubuntu.sh"
+            printf '%s\n' "$SCRIPT_DIR/1_ubuntu.sh"
             ;;
         *" rhel "*|*" fedora "*|*" centos "*|*" rocky "*|*" alma "*)
-            printf '%s\n' "$SCRIPT_DIR/rhel.sh"
+            printf '%s\n' "$SCRIPT_DIR/1_rhel.sh"
             ;;
         *)
             die "Unsupported Linux distribution: ${PRETTY_NAME:-unknown}. Supported families: Ubuntu/Debian and RHEL/CentOS/Fedora/Rocky/Alma."
@@ -128,7 +128,7 @@ detect_linux_installer() {
 detect_os_installer() {
     case "$(uname -s)" in
         Darwin)
-            printf '%s\n' "$SCRIPT_DIR/macos.sh"
+            printf '%s\n' "$SCRIPT_DIR/1_macos.sh"
             ;;
         Linux)
             detect_linux_installer
