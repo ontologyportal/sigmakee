@@ -15,7 +15,6 @@ INSTALLER_SCRIPTS=(
     1_rhel.sh
     1_macos.sh
     2_common.sh
-    3_verify-prerequisites.sh
     3_verify-install.sh
 )
 
