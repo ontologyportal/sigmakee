@@ -553,46 +553,39 @@ build.date=${git.commit.date}
          will take over from the heading "Linux Installation."  -->
     <target name="install" depends="init" description="Clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
         <!-- ${git.home} should already have been made -->
-        <mkdir dir="${programs.dir}"/>
+        <!-- <mkdir dir="${programs.dir}"/> -->
         <mkdir dir="${sigma.home}"/>
         <mkdir dir="${sigma.home}/KBs"/>
-
-        <!-- Clone the supporting sigma tools -->
-        <antcall target="clone.sigmautils"/>
-        <antcall target="clone.tptpantlr"/>
-        <antcall target="clone.sigmaantlr"/>
-        <antcall target="clone.sumo"/>
-
-        <!-- Install Tomcat -->
-        <antcall target="install.tomcat"/>
-
-        <!-- Retrieve WordNet -->
-        <antcall target="retrieve.wordnet"/>
-
-        <!-- Install LEO-III (Higher-Order ATP) -->
-        <antcall target="install.Leo"/>
-
         <!-- Copy config.xml, sumo and WordNet files to ${sigma.home}/KBs -->
         <antcall target="setup.sigma.home"/>
+        <antcall target="install.tomcat"/>
+        <!-- Clone the supporting sigma tools -->
+        <!-- <antcall target="clone.sigmautils"/> -->
+        <!-- <antcall target="clone.tptpantlr"/> -->
+        <!-- <antcall target="clone.sigmaantlr"/> -->
+        <!-- <antcall target="clone.sumo"/> -->
+        <!-- Install Tomcat -->
+        <!-- Retrieve WordNet -->
+        <!-- <antcall target="retrieve.wordnet"/> -->
+        <!-- Install LEO-III (Higher-Order ATP) -->
+        <!-- <antcall target="install.Leo"/> -->
 
         <!-- Retrieve E prover -->
-        <antcall target="retrieve.E"/>
+        <!-- <antcall target="retrieve.E"/> -->
         <!--<antcall target="clone.E"/>-->
-
         <!-- Build E theorem prover -->
-        <antcall target="build.E"/>
-
+        <!-- <antcall target="build.E"/> -->
         <!-- Install Vampire: try prebuilt binary first, then source build fallback -->
-        <antcall target="install.vampire"/>
-        <antcall target="clone.jjparser"/>
-        <antcall target="clone.tptp4x"/>
-        <antcall target="build.tptp4x"/>
+        <!-- <antcall target="install.vampire"/> -->
+        <!-- <antcall target="clone.jjparser"/> -->
+        <!-- <antcall target="clone.tptp4x"/> -->
+        <!-- <antcall target="build.tptp4x"/> -->
 
         <!-- perms -->
-        <chmod dir="${git.home}" perm="ugo+rw" includes="**/*"/>
-        <chmod dir="${programs.dir}" perm="ugo+rw" includes="**/*"/>
-        <chmod dir="${programs.dir}" perm="ugo+x" includes="**/*.sh"/>
-        <chmod dir="${sigma.home}" perm="ugo+rw" includes="**/*"/>
+        <!-- <chmod dir="${git.home}" perm="ugo+rw" includes="**/*"/> -->
+        <!-- <chmod dir="${programs.dir}" perm="ugo+rw" includes="**/*"/> -->
+        <!-- <chmod dir="${programs.dir}" perm="ugo+x" includes="**/*.sh"/> -->
+        <!-- <chmod dir="${sigma.home}" perm="ugo+rw" includes="**/*"/> -->
     </target>
     <target name="clone.sigmautils">
         <mkdir dir="${git.home}/SigmaUtils"/>
@@ -686,7 +679,6 @@ build.date=${git.commit.date}
     </target>
 
     <target name="setup.sigma.home" description="Copy WordNetMappings, sumo kbs and config.xml to ~/.sigmakee/KBs -> ($SIGMA_HOME)/KBs">
-        <antcall target="refresh.kbs"/>
         <copy todir="${sigma.home}/KBs/WordNetMappings">
             <fileset dir="${programs.dir}/WordNet-3.0/dict"/>
         </copy>
@@ -757,9 +749,7 @@ build.date=${git.commit.date}
             usetimestamp="true"
             ignoreerrors="true"
             verbose="true"/>
-        <!-- Final check -->
         <available file="${leo.zip.file}" property="leo.zip.present.final"/>
-        <!-- If still missing, we skip Leo installation (but do NOT fail install) -->
         <condition property="leo.skip.install">
             <not>
                 <isset property="leo.zip.present.final"/>
