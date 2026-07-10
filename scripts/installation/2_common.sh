@@ -528,21 +528,24 @@ copy_sumo_kb_files() {
     local src="$SUMO_SRC"
     local dest="$SIGMA_HOME/KBs"
     local copied_count=0
+    local item
     [ -d "$src" ] || fail "SUMO source directory does not exist: $src"
     mkdir -p "$dest"
-    find "$dest" -maxdepth 1 -type f \( -name '*.kif' -o -name '*.txt' \) -delete
-    while IFS= read -r -d '' file; do
-        cp -f "$file" "$dest/"
+    log "Copying SUMO runtime files from $src to $dest"
+    while IFS= read -r -d '' item; do
+        cp -a "$item" "$dest/"
         copied_count=$((copied_count + 1))
     done < <(
-        find "$src" -maxdepth 1 -type f \( -name '*.kif' -o -name '*.txt' \) -print0
+        find "$src" -mindepth 1 -maxdepth 1 ! -name '.git' -print0
     )
-    [ "$copied_count" -gt 0 ] || fail "No SUMO .kif/.txt files were copied from $src to $dest"
+    [ "$copied_count" -gt 0 ] || fail "No SUMO files were copied from $src to $dest"
     [ -f "$dest/Merge.kif" ] || fail "Merge.kif was not copied to $dest"
     [ -f "$dest/Mid-level-ontology.kif" ] || fail "Mid-level-ontology.kif was not copied to $dest"
     [ -f "$dest/english_format.kif" ] || fail "english_format.kif was not copied to $dest"
     [ -f "$dest/domainEnglishFormat.kif" ] || fail "domainEnglishFormat.kif was not copied to $dest"
-    log "Copied $copied_count SUMO KB files into $dest"
+    [ -f "$dest/Translations/language.txt" ] || fail "Translations/language.txt was not copied to $dest"
+    [ -f "$dest/WordNetMappings/sentiment.csv" ] || fail "WordNetMappings/sentiment.csv was not copied to $dest"
+    log "Copied $copied_count SUMO top-level entries into $dest"
 }
 
 install_sigmakee_runtime_data() {
