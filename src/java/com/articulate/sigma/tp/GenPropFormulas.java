@@ -107,6 +107,276 @@ public class GenPropFormulas {
         return f1.toString() + operator + f2.toString();
     }
 
+
+    /**
+     * A propositional literal used by the compact CNF converter.
+     */
+    private static final class Literal {
+
+        private final String atom;
+        private final boolean negated;
+
+        private Literal(String atom, boolean negated) {
+            this.atom = atom;
+            this.negated = negated;
+        }
+
+        private Literal negate() {
+            return new Literal(atom, !negated);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (!(obj instanceof Literal))
+                return false;
+            Literal other = (Literal) obj;
+            return negated == other.negated && Objects.equals(atom, other.atom);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(atom, negated);
+        }
+
+        @Override
+        public String toString() {
+            return negated ? NOT + atom : atom;
+        }
+    }
+
+    /**
+     * One disjunctive clause. LinkedHashSet removes duplicate literals while
+     * preserving stable output order.
+     */
+    private static final class Clause {
+
+        private final LinkedHashSet<Literal> literals = new LinkedHashSet<>();
+
+        private Clause() {
+        }
+
+        private Clause(Literal literal) {
+            literals.add(literal);
+        }
+
+        private Clause(Clause other) {
+            literals.addAll(other.literals);
+        }
+
+        private Clause merge(Clause other) {
+            Clause merged = new Clause(this);
+            merged.literals.addAll(other.literals);
+            return merged;
+        }
+
+        private boolean isTautology() {
+            for (Literal literal : literals) {
+                if (literals.contains(literal.negate()))
+                    return true;
+            }
+            return false;
+        }
+
+        private boolean subsumes(Clause other) {
+            return other.literals.containsAll(literals);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (!(obj instanceof Clause))
+                return false;
+            Clause other = (Clause) obj;
+            return literals.equals(other.literals);
+        }
+
+        @Override
+        public int hashCode() {
+            return literals.hashCode();
+        }
+    }
+
+    /**
+     * Convert the existing generated-formula tree directly to CNF clauses.
+     *
+     * The boolean negated flag means "convert the negation of this node".
+     * This avoids constructing an exponentially larger intermediate tree.
+     */
+    private static List<Clause> toCNFClauses(GenPropFormulas formula,
+                                             boolean negated) {
+
+        if (formula == null)
+            throw new IllegalArgumentException("Cannot convert a null formula to CNF");
+
+        if (formula.atom != null)
+            return new ArrayList<>(Collections.singletonList(
+                    new Clause(new Literal(formula.atom, negated))));
+
+        if (PARENS.equals(formula.operator))
+            return toCNFClauses(formula.f1, negated);
+
+        if (NOT.equals(formula.operator))
+            return toCNFClauses(formula.f1, !negated);
+
+        if (AND.equals(formula.operator)) {
+            if (negated)
+                return orCNF(toCNFClauses(formula.f1, true),
+                        toCNFClauses(formula.f2, true));
+            return andCNF(toCNFClauses(formula.f1, false),
+                    toCNFClauses(formula.f2, false));
+        }
+
+        if (OR.equals(formula.operator)) {
+            if (negated)
+                return andCNF(toCNFClauses(formula.f1, true),
+                        toCNFClauses(formula.f2, true));
+            return orCNF(toCNFClauses(formula.f1, false),
+                    toCNFClauses(formula.f2, false));
+        }
+
+        if (IMPLIES.equals(formula.operator)) {
+            // A => B       == ~A | B
+            // ~(A => B)    == A & ~B
+            if (negated)
+                return andCNF(toCNFClauses(formula.f1, false),
+                        toCNFClauses(formula.f2, true));
+            return orCNF(toCNFClauses(formula.f1, true),
+                    toCNFClauses(formula.f2, false));
+        }
+
+        if (IFF.equals(formula.operator)) {
+            if (negated) {
+                // ~(A <=> B) == (A | B) & (~A | ~B)
+                return andCNF(
+                        orCNF(toCNFClauses(formula.f1, false),
+                                toCNFClauses(formula.f2, false)),
+                        orCNF(toCNFClauses(formula.f1, true),
+                                toCNFClauses(formula.f2, true)));
+            }
+
+            // A <=> B == (~A | B) & (~B | A)
+            return andCNF(
+                    orCNF(toCNFClauses(formula.f1, true),
+                            toCNFClauses(formula.f2, false)),
+                    orCNF(toCNFClauses(formula.f2, true),
+                            toCNFClauses(formula.f1, false)));
+        }
+
+        throw new IllegalArgumentException(
+                "Unsupported propositional operator: " + formula.operator);
+    }
+
+    private static List<Clause> andCNF(List<Clause> left,
+                                       List<Clause> right) {
+
+        List<Clause> result = new ArrayList<>(left.size() + right.size());
+        result.addAll(left);
+        result.addAll(right);
+        return result;
+    }
+
+    /**
+     * Distribute OR over two CNFs by taking the Cartesian product of clauses.
+     */
+    private static List<Clause> orCNF(List<Clause> left,
+                                      List<Clause> right) {
+
+        List<Clause> result = new ArrayList<>();
+        for (Clause leftClause : left) {
+            for (Clause rightClause : right)
+                result.add(leftClause.merge(rightClause));
+        }
+        return result;
+    }
+
+    /**
+     * Keep CNF readable without reducing the complete formula to $true/$false.
+     *
+     * - duplicate literals are already removed by Clause
+     * - duplicate clauses are removed
+     * - tautological clauses are removed when non-tautological clauses remain
+     * - if every clause is tautological, retain one representative clause
+     * - clauses subsumed by a smaller clause are removed
+     */
+    private static List<Clause> compactCNF(List<Clause> input) {
+
+        LinkedHashSet<Clause> unique = new LinkedHashSet<>(input);
+        List<Clause> nonTautologies = new ArrayList<>();
+        Clause firstTautology = null;
+
+        for (Clause clause : unique) {
+            if (clause.isTautology()) {
+                if (firstTautology == null)
+                    firstTautology = clause;
+            }
+            else {
+                nonTautologies.add(clause);
+            }
+        }
+
+        if (nonTautologies.isEmpty()) {
+            if (firstTautology == null)
+                return new ArrayList<>();
+            return new ArrayList<>(Collections.singletonList(firstTautology));
+        }
+
+        List<Clause> reduced = new ArrayList<>();
+        for (int i = 0; i < nonTautologies.size(); i++) {
+            Clause candidate = nonTautologies.get(i);
+            boolean redundant = false;
+
+            for (int j = 0; j < nonTautologies.size(); j++) {
+                if (i == j)
+                    continue;
+                Clause other = nonTautologies.get(j);
+                if (other.literals.size() < candidate.literals.size()
+                        && other.subsumes(candidate)) {
+                    redundant = true;
+                    break;
+                }
+            }
+
+            if (!redundant)
+                reduced.add(candidate);
+        }
+        return reduced;
+    }
+
+    public static String toCompactCNFString(GenPropFormulas formula) {
+
+        List<Clause> clauses = compactCNF(toCNFClauses(formula, false));
+        if (clauses.isEmpty())
+            return "";
+
+        List<String> renderedClauses = new ArrayList<>();
+        for (Clause clause : clauses) {
+            List<String> literals = new ArrayList<>();
+            for (Literal literal : clause.literals)
+                literals.add(literal.toString());
+
+            if (literals.size() == 1)
+                renderedClauses.add(literals.get(0));
+            else
+                renderedClauses.add(Formula.LP
+                        + String.join(OR, literals)
+                        + Formula.RP);
+        }
+
+        if (renderedClauses.size() == 1)
+            return renderedClauses.get(0);
+
+        return Formula.LP
+                + String.join(AND, renderedClauses)
+                + Formula.RP;
+    }
+
+    private static GenPropFormulas negateTree(GenPropFormulas formula) {
+        return new GenPropFormulas(null, NOT, formula, null);
+    }
+
     /** ***************************************************************
      * Simplify clauses from a multiset of literals to sets of literals
      */
@@ -605,15 +875,10 @@ private static void cleanupTempProbFiles() {
     //     tableaux.put(form, encodeTab(form));
     // }
 
-    public void generateCNFandLinks(String form, String filename)
-        throws Exception {
+    public void generateCNFandLinks(String form,
+                                    GenPropFormulas formulaTree) {
 
-        File fname = new File(filename);
-
-        ecnf.runCustom(fname, 0, ecnfcmds);
-
-        String CNFresult = formatCNF(ecnf.output);
-
+        String CNFresult = toCompactCNFString(formulaTree);
         if (CNFresult.isEmpty())
             CNFresult = form;
 
@@ -630,27 +895,37 @@ private static void cleanupTempProbFiles() {
      */
     public void generateFormulas(int targetCount, int numvars, int depth) throws Exception {
 
-        GenPropFormulas f = new GenPropFormulas("a",null,null,null);
+        GenPropFormulas generator = new GenPropFormulas("a", null, null, null);
         int iter = 0;
         int count = 0;
 
         while (count < targetCount && iter < 200) {
-            String form = f.generate("", numvars, depth).toString();
-            System.out.println("\n*************************\ngenerateFormulas(): form: " + form);
+            GenPropFormulas formulaTree =
+                    generator.generate("", numvars, depth);
+            String form = formulaTree.toString();
+
+            System.out.println(
+                    "\n*************************\ngenerateFormulas(): form: " + form);
+
             String wrappedForm = "fof(conj,axiom," + form + ").";
             System.out.println("generateFormulas(): wrapped: " + wrappedForm);
+
             Set<String> stmts = new HashSet<>();
             stmts.add(wrappedForm);
             StringBuilder filename = new StringBuilder();
-            SZSonto result = run(stmts,filename);
-            HashSet<String> negstmts = new HashSet<>();
-            String negWrappedForm = "fof(conj,axiom,~(" + form + ")).";
-            String negForm = "~(" + form + Formula.RP;
+            SZSonto result = run(stmts, filename);
+
+            GenPropFormulas negFormulaTree = negateTree(formulaTree);
+            String negForm = negFormulaTree.toString();
+            String negWrappedForm = "fof(conj,axiom," + negForm + ").";
+
             System.out.println("generateFormulas(): neg form: " + negForm);
             System.out.println("generateFormulas(): neg wrapped: " + negWrappedForm);
+
+            Set<String> negstmts = new HashSet<>();
             negstmts.add(negWrappedForm);
             StringBuilder negfilename = new StringBuilder();
-            SZSonto negresult = run(negstmts,negfilename);
+            SZSonto negresult = run(negstmts, negfilename);
 
             if (result == SZSonto.SAT && negresult == SZSonto.CONTRA) {
                 count++;
@@ -670,8 +945,9 @@ private static void cleanupTempProbFiles() {
                 satResults.add(form);
             }
 
-            generateCNFandLinks(form,filename.toString());
-            generateCNFandLinks(negForm,negfilename.toString());
+            generateCNFandLinks(form, formulaTree);
+            generateCNFandLinks(negForm, negFormulaTree);
+
             new File(filename.toString()).delete();
             new File(negfilename.toString()).delete();
             iter++;
