@@ -1210,14 +1210,9 @@ public class KBcache implements Serializable {
     public boolean isExplicitDisjoint(Map<String, Set<String>> explicitDisjointRelations,
                                       String c1, String c2) {
 
-        if (explicitDisjointRelations.containsKey(c1)) {
-            return explicitDisjointRelations.get(c1).contains(c2);
-        }
-        else if (explicitDisjointRelations.containsKey(c2)) {
-            return explicitDisjointRelations.get(c2).contains(c1);
-        }
-        else
-            return false;
+        if (explicitDisjointRelations.containsKey(c1)) return explicitDisjointRelations.get(c1).contains(c2);
+        else if (explicitDisjointRelations.containsKey(c2)) return explicitDisjointRelations.get(c2).contains(c1);
+        else return false;
     }
 
     /** ***************************************************************
