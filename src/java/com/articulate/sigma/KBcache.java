@@ -1185,23 +1185,22 @@ public class KBcache implements Serializable {
         if (!StringUtil.emptyString(c1) && !StringUtil.emptyString(c2) && c1.endsWith("+") && !c2.endsWith("+") && !c2.endsWith("Class")) {
             String err = "KBcache.checkDisjoint(): mixing class and instance: " + c1 + ", " + c2;
             errors.add(err);
-            System.err.println(err);
+            // System.err.println(err);
             return true;
         }
         if (!StringUtil.emptyString(c1) && !StringUtil.emptyString(c2) && c2.endsWith("+") && !c1.endsWith("+") && !c1.endsWith("Class")) {
             String err = "KBcache.checkDisjoint(): mixing class and instance: " + c1 + ", " + c2;
-            System.err.println(err);
+            // System.err.println(err);
             errors.add(err);
             return true;
         }
         if (disjoint.contains(c1 + "\t" + c2) || disjoint.contains(c2 + "\t" + c1)) {
             String err = "KBcache.checkDisjoint(): disjoint classes: " + c1 + ", " + c2;
-            System.err.println(err);
+            // System.err.println(err);
             errors.add(err);
             return true;
         }
-        else
-            return false;
+        else return false;
     }
 
     /** ***************************************************************

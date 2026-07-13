@@ -524,6 +524,17 @@ build_sigma_antlr() {
     run_ant_project "$ONTOLOGYPORTAL_GIT/sigmaAntlr" "all" "Building sigmaAntlr"
 }
 
+detect_runtime_executables() {
+    GRAPHVIZ_EXEC="$(command -v dot 2>/dev/null || true)"
+    JEDIT_EXEC="$(command -v jedit 2>/dev/null || true)"
+    [ -n "$GRAPHVIZ_EXEC" ] ||
+        fail "Graphviz executable 'dot' was not found in PATH."
+    if [ -z "$JEDIT_EXEC" ] && [ "$(uname -s)" = "Darwin" ]; then
+        JEDIT_EXEC="/Applications/jEdit.app/Contents/MacOS/jedit"
+    fi
+    export GRAPHVIZ_EXEC JEDIT_EXEC
+}
+
 copy_sumo_kb_files() {
     local src="$SUMO_SRC"
     local dest="$SIGMA_HOME/KBs"
@@ -549,8 +560,28 @@ copy_sumo_kb_files() {
 }
 
 install_sigmakee_runtime_data() {
-    run_ant_target "install" "Installing SigmaKEE runtime data"
+    local config_source="$SIGMA_SRC/scripts/installation/config.xml"
+    local config_dest="$SIGMA_HOME/KBs/config.xml"
+    detect_runtime_executables
+    mkdir -p "$SIGMA_HOME/KBs"
     copy_sumo_kb_files
+    [ -f "$config_source" ] ||
+        fail "Configuration template not found: $config_source"
+    cp "$config_source" "$config_dest"
+    replace_config_value "$config_dest" "/home/theuser/workspace/sumo" "$SUMO_SRC"
+    replace_config_value "$config_dest" "/home/theuser" "$HOME"
+    replace_config_value "$config_dest" "/usr/bin/dot" "$GRAPHVIZ_EXEC"
+    replace_config_value "$config_dest" "/usr/bin/jedit" "$JEDIT_EXEC"
+    replace_config_value "$config_dest" \
+        "$HOME/Programs/E/PROVER/eprover" "$EPROVER_EXEC"
+    replace_config_value "$config_dest" \
+        "$HOME/Programs/vampire/build/vampire" "$VAMPIRE_EXEC"
+    replace_config_value "$config_dest" \
+        "$HOME/workspace/TPTP4X/tptp4X" "$TPTP4X_EXEC"
+    [ -d "$WORDNET_DIR/dict" ] ||
+        fail "WordNet dictionary directory missing: $WORDNET_DIR/dict"
+    mkdir -p "$SIGMA_HOME/KBs/WordNetMappings"
+    cp -a "$WORDNET_DIR/dict/." "$SIGMA_HOME/KBs/WordNetMappings/"
 }
 
 build_sigmakee() {

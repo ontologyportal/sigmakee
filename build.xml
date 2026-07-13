@@ -1,44 +1,167 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant"
-         name="SigmaKEE" default="all" basedir=".">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="SigmaKEE" default="all" basedir=".">
     <description>
-        This build file is meant to be invoked only from the command line. It's
-        purpose is for building/testing in a CI/CD environment
+        This build file builds, tests, packages, and deploys SigmaKEE from the
+        command line and in CI/CD environments.
     </description>
+    <property environment="env"/>
 
     <!--
-    ===
-    IVY
-    ===
+    ==========================================================================
+    PROJECT METADATA
+    ==========================================================================
     -->
+    <property name="impl.title" value="${ant.project.name}"/>
+    <property name="product.Name" value="Sigma Knowledge Engineering Environment (${impl.title})"/>
+    <property name="product.version.major" value="3"/>
+    <property name="product.version.minor" value="0"/>
+    <property name="product.version.patch" value="0"/>
+    <property name="product.Version" value="${product.version.major}.${product.version.minor}.${product.version.patch}"/>
+    <property name="spec.vendor" value="Adam Pease"/>
+    <property name="nps" value="Naval Postgraduate School (NPS), Monterey, CA"/>
+    <property name="cs.dept" value="Computer Science (CS) DEPT"/>
+    <property name="sumo.url" value="http://www.ontologyportal.org"/>
+    <property name="impl.vendor.id" value="edu.nps.cs"/>
+    <property name="main.class" value="com.articulate.sigma.KB"/>
 
+    <!--
+    ==========================================================================
+    DIRECTORIES AND FILES
+    ==========================================================================
+    -->
+    <property name="app.name" value="sigma"/>
+    <property name="web.app.name" value="${app.name}kee"/>
+    <property name="src.dir" value="src/java"/>
+    <property name="test.corpus.dir" value="test/corpus/java"/>
+    <property name="test.unit.dir" value="test/unit/java"/>
+    <property name="test.integration.dir" value="test/integration/java"/>
+    <property name="build.home" value="build"/>
+    <property name="build.classes" value="${build.home}/classes"/>
+    <property name="build.test.classes" value="${build.home}/test/classes"/>
+    <property name="reports.dir" value="${build.home}/test/results"/>
+    <property name="web.dir" value="web"/>
+    <property name="dist.javadoc.dir" value="doc"/>
+    <property name="manifest.mf" value="MANIFEST.MF"/>
+    <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
+    <property name="dist.home" value="${tomcat.home}/webapps"/>
+    <property name="dist.war" value="${dist.home}/${app.name}.war"/>
+    <property name="deploy.home" value="${dist.home}/${app.name}"/>
+    <property name="sigma.home" value="${env.SIGMA_HOME}"/>
+
+
+    <!--
+    ==========================================================================
+    EXTERNAL DEPENDENCIES
+    ==========================================================================
+    -->
+    <property name="tptp.home" value="../TPTP-ANTLR"/>
+    <property name="sigma.utils.home" value="../SigmaUtils"/>
+    <property name="sigma.antlr.home" value="../sigmaAntlr"/>
     <property name="ivy.install.version" value="2.5.1"/>
     <property name="ivy.home" value="${basedir}/.ivy"/>
     <property name="ivy.jar.dir" value="${ivy.home}/lib"/>
     <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar"/>
 
+
+    <!--
+    ==========================================================================
+    COMPILATION AND TEST SETTINGS
+    ==========================================================================
+    -->
+    <property name="javac.release" value="21"/>
+    <property name="run.jvmargs" value="-Xmx10g -Xss1m"/>
+    <property name="unit.test.suite" value="com.articulate.sigma.UnitTestSuite"/>
+    <property name="integration.test.suite" value="com.articulate.sigma.IntegrationTestSuite"/>
+    <property name="report.html" value="file:${basedir}/${reports.dir}/html/index.html"/>
+
+
+    <!--
+    ==========================================================================
+    CONDITIONS
+    ==========================================================================
+    -->
+    <condition property="external.atp.tests.enabled"
+               value="${env.RUN_EXTERNAL_ATP_TESTS}">
+        <isset property="env.RUN_EXTERNAL_ATP_TESTS"/>
+    </condition>
+
+    <condition property="external.atp.tests.enabled" value="true" else="false">
+        <not>
+            <isset property="env.GITHUB_ACTIONS"/>
+        </not>
+    </condition>
+
+    <condition property="isUnixNotMac">
+        <and>
+            <os family="unix"/>
+            <not>
+                <os family="mac"/>
+            </not>
+        </and>
+    </condition>
+
+    <condition property="isMac">
+        <os family="mac"/>
+    </condition>
+
+    <!--
+    ==========================================================================
+    SOURCE PATHS
+    ==========================================================================
+    -->
+    <path id="core.sourcepath">
+        <pathelement path="${src.dir}/com/articulate/sigma"/>
+        <pathelement path="${src.dir}/com/articulate/delphi"/>
+    </path>
+
+    <path id="test.sourcepath">
+        <pathelement path="${test.corpus.dir}/com/articulate/sigma"/>
+        <pathelement path="${test.unit.dir}/com/articulate/sigma"/>
+        <pathelement path="${test.integration.dir}/com/articulate/sigma"/>
+    </path>
+
+
+    <!--
+    ==========================================================================
+    IVY DEPENDENCY RESOLUTION
+    ==========================================================================
+    -->
+
+    <target name="validate.environment" description="Validate required environment variables.">
+        <fail message="CATALINA_HOME is not set.">
+            <condition>
+                <not>
+                    <isset property="env.CATALINA_HOME"/>
+                </not>
+            </condition>
+        </fail>
+        <fail message="CATALINA_HOME does not identify an existing directory: ${env.CATALINA_HOME}">
+            <condition>
+                <and>
+                    <isset property="env.CATALINA_HOME"/>
+                    <not>
+                        <available file="${env.CATALINA_HOME}"
+                                type="dir"/>
+                    </not>
+                </and>
+            </condition>
+        </fail>
+    </target>
+
     <target name="check.for.ivy.jar">
         <available file="${ivy.jar.file}" property="ivy.present"/>
     </target>
-
+    
     <target name="download-ivy" depends="check.for.ivy.jar" unless="ivy.present">
         <mkdir dir="${ivy.jar.dir}"/>
-        <!-- download Ivy from web site so that it can be used even without any special installation -->
-        <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar"
-             dest="${ivy.jar.file}" usetimestamp="true"/>
+        <get src="https://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.install.version}/ivy-${ivy.install.version}.jar" dest="${ivy.jar.file}" usetimestamp="true"/>
     </target>
-
+    
     <target name="init-ivy" depends="download-ivy">
-        <!-- try to load Ivy here from Ivy home, in case the user has not already dropped
-             it into Ant's lib dir (note that the latter copy will always take precedence).
-             We will not fail as long as local lib dir exists (it may be empty) and
-             Ivy is in at least one of Ant's lib dir or the local lib dir. -->
         <path id="ivy.lib.path">
             <fileset dir="${ivy.jar.dir}" includes="*.jar"/>
         </path>
-        <taskdef resource="org/apache/ivy/ant/antlib.xml"
-                 uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+        <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
         <ivy:retrieve/>
-
         <path id="compile.classpath">
             <fileset dir="${basedir}/lib">
                 <include name="*.jar"/>
@@ -49,7 +172,8 @@
         <path id="compile.test.classpath">
             <path refid="compile.classpath"/>
             <pathelement location="${build.classes}"/>
-            <pathelement path="lib/hamcrest-core-1.3.jar:lib/junit-4.13.2.jar"/>
+            <pathelement location="${basedir}/lib/hamcrest-core-1.3.jar"/>
+            <pathelement location="${basedir}/lib/junit-4.13.2.jar"/>
             <fileset dir="${env.CATALINA_HOME}/lib">
                 <include name="*.jar"/>
             </fileset>
@@ -62,304 +186,61 @@
         </path>
     </target>
 
-    <!--
-    ====
-    INIT
-    ====
-    -->
-
-    <property name="impl.title" value="${ant.project.name}"/>
-    <property name="product.Name" value="Sigma Knowledge Engineering Environment (${impl.title})"/>
-    <property name="product.version.major" value="3"/>
-    <property name="product.version.minor" value="0"/>
-    <property name="product.version.patch" value="0"/>
-    <property name="product.Version" value="${product.version.major}.${product.version.minor}.${product.version.patch}"/>
-    <property name="spec.vendor" value="Adam Pease"/>
-    <property name="nps" value="Naval Postgraduate School (NPS), Monterey, CA"/>
-    <property name="cs.dept" value="Computer Science (CS) DEPT"/>
-    <property name="sumo.url" value="http://www.ontologyportal.org"/>
-    <property name="manifest.mf" value="MANIFEST.MF"/>
-    <property name="main.class" value="com.articulate.sigma.KB"/>
-    <property name="impl.vendor.id" value="edu.nps.cs"/>
-
-    <property name="src.dir" value="src/java"/>
-    <property name="test.corpus.dir" value="test/corpus/java"/>
-    <property name="test.integration.dir" value="test/integration/java"/>
-    <property name="test.unit.dir" value="test/unit/java"/>
-    <property name="app.name" value="sigma"/>
-    <property name="web.app.name" value="${app.name}kee"/>
-    <property name="build.home" value="build"/>
-    <property name="build.classes" value="${build.home}/classes"/>
-    <property name="build.test.classes" value="${build.home}/test/classes"/>
-    <property name="dist.javadoc.dir" value="doc"/>
-    <property name="web.dir" value="web"/>
-    <property name="reports.dir" value="${build.home}/test/results"/>
-    <property name="unit.test.suite" value="com.articulate.sigma.UnitTestSuite"/>
-    <property name="integration.test.suite" value="com.articulate.sigma.IntegrationTestSuite"/>
-    <property name="report.html" value="file:${basedir}/${reports.dir}/html/index.html"/>
-    <property environment="env"/>
-
-    <!-- External ATP tests:
-         - default ON locally
-         - default OFF on GitHub Actions
-         - allow manual override via env RUN_EXTERNAL_ATP_TESTS -->
-    <condition property="external.atp.tests.enabled" value="${env.RUN_EXTERNAL_ATP_TESTS}">
-        <isset property="env.RUN_EXTERNAL_ATP_TESTS"/>
-    </condition>
-
-    <condition property="external.atp.tests.enabled" value="true" else="false">
-        <not>
-            <isset property="env.GITHUB_ACTIONS"/>
-        </not>
-    </condition>
-
-    <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
-    <property name="dist.home" value="${tomcat.home}/webapps"/>
-    <property name="dist.war" value="${dist.home}/${app.name}.war"/>
-    <property name="deploy.home" value="${dist.home}/${app.name}"/>
-    <property name="git.home" value="${env.ONTOLOGYPORTAL_GIT}"/>
-    <property name="sigma.src" value="${git.home}/${web.app.name}"/>
-    <property name="basedir" value="${sigma.src}"/>
-    <property name="sigma.home" value="${env.SIGMA_HOME}"/>
-    <property name="tptp.home" value="../TPTP-ANTLR"/>
-    <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
-    <property name="sigma.utils.home" value="../SigmaUtils"/>
-    <property name="sigma.antlr.home" value="../sigmaAntlr"/>
-    <property name="kbs.home" value="${git.home}/sumo"/>
-
-    <property name="javac.release" value="21"/>
-    <property name="run.jvmargs" value="-Xmx10g -Xss1m"/>
-    <property name="tomcat.version" value="9.0.107"/>
-
-    <!-- Define the sigma installation space -->
-    <property name="install.home" value="${user.home}"/>
-    <!-- The above property can be overriden on the command line with:
-         -Dinstall.home=/data/fsg, or any other path the user deems necessary
-    -->
-    <property name="programs.dir" value="${install.home}${file.separator}Programs"/>
-
-    <condition property="isUnixNotMac">
-        <and>
-            <os family="unix"/>
-            <not>
-                <os family="mac"/>
-            </not>
-        </and>
-    </condition>
 
     <!--
-    =========================
-    External ATP configuration
-    =========================
+    ==========================================================================
+    INITIALIZATION
+    ==========================================================================
     -->
-
-    <!-- OS flags -->
-    <condition property="is.windows">
-        <os family="windows"/>
-    </condition>
-    <condition property="is.mac">
-        <os family="mac"/>
-    </condition>
-    <condition property="is.unix">
-        <os family="unix"/>
-    </condition>
-
-    <!-- Platform-specific config.xml executable paths -->
-    <condition property="graphviz.exec" value="/opt/homebrew/bin/dot">
-        <and>
-            <os family="mac"/>
-            <os arch="aarch64"/>
-        </and>
-    </condition>
-
-    <condition property="graphviz.exec" value="/usr/local/bin/dot">
-        <and>
-            <os family="mac"/>
-            <not>
-                <os arch="aarch64"/>
-            </not>
-        </and>
-    </condition>
-
-    <condition property="graphviz.exec" value="/usr/bin/dot">
-        <not>
-            <os family="mac"/>
-        </not>
-    </condition>
-
-    <condition property="jedit.exec" value="/Applications/jEdit.app/Contents/MacOS/jedit">
-        <os family="mac"/>
-    </condition>
-
-    <condition property="jedit.exec" value="/usr/share/jedit/jedit">
-        <not>
-            <os family="mac"/>
-        </not>
-    </condition>
-
-    <!-- Vampire ATP -->
-    <property name="vampire.version" value="v5.0.1"/>
-    <property name="vampire.release.base"
-            value="https://github.com/vprover/vampire/releases/download/${vampire.version}"/>
-
-    <!-- Keep these paths identical to the source-build layout. -->
-    <property name="vampire.install.dir"
-            value="${programs.dir}${file.separator}vampire"/>
-    <property name="vampire.build.dir"
-            value="${vampire.install.dir}${file.separator}build"/>
-    <property name="vampire.exec"
-            value="${vampire.build.dir}${file.separator}vampire"/>
-
-    <!-- Temporary location only for unpacking the release zip. -->
-    <property name="vampire.binary.unpack.dir"
-            value="${sigma.install.downloads}${file.separator}vampire-release"/>
-
-    <property name="tptp4x.home" value="${git.home}/TPTP4X"/>
-    <property name="tptp4x.exec" value="${tptp4x.home}${file.separator}tptp4X"/>
-
-    <condition property="vampire.asset" value="vampire-Linux-X64.zip">
-        <and>
-            <os family="unix"/>
-            <not><os family="mac"/></not>
-            <or>
-                <os arch="amd64"/>
-                <os arch="x86_64"/>
-            </or>
-        </and>
-    </condition>
-
-    <condition property="vampire.asset" value="vampire-Linux-ARM64.zip">
-        <and>
-            <os family="unix"/>
-            <not><os family="mac"/></not>
-            <or>
-                <os arch="aarch64"/>
-                <os arch="arm64"/>
-            </or>
-        </and>
-    </condition>
-
-    <condition property="vampire.asset" value="vampire-macOS-X64.zip">
-        <and>
-            <os family="mac"/>
-            <or>
-                <os arch="amd64"/>
-                <os arch="x86_64"/>
-            </or>
-        </and>
-    </condition>
-
-    <condition property="vampire.asset" value="vampire-macOS-ARM64.zip">
-        <and>
-            <os family="mac"/>
-            <or>
-                <os arch="aarch64"/>
-                <os arch="arm64"/>
-            </or>
-        </and>
-    </condition>
-
-    <!-- LEO-III (Higher-Order ATP) -->
-    <property name="leo.version" value="1.7.18"/>
-
-    <!-- Leo-III ZIP on Zenodo for v1.7.18 -->
-    <property name="leo.zip.url"
-            value="https://zenodo.org/records/15149454/files/leoprover/Leo-III-v1.7.18.zip?download=1"/>
-
-    <!-- Fallback: GitHub release asset (zip) -->
-    <property name="leo.zip.url.fallback"
-            value="https://github.com/leoprover/Leo-III/releases/download/v${leo.version}/Leo-III-v${leo.version}.zip"/>
-
-    <!-- Where we download the ZIP before extracting -->
-    <property name="leo.zip.file"
-            value="${install.home}${file.separator}downloads${file.separator}Leo-III-v${leo.version}.zip"/>
-    <property name="leo.install.dir" value="${programs.dir}${file.separator}Leo-III"/>
-    <property name="leo.bin.dir" value="${leo.install.dir}${file.separator}bin"/>
-    <property name="leo.jar.file" value="${leo.bin.dir}${file.separator}leo3.jar"/>
-    <property name="leo.exec.unix" value="${leo.bin.dir}${file.separator}leo3"/>
-    <property name="leo.exec.win" value="${leo.bin.dir}${file.separator}leo3.bat"/>
-    <condition property="leo.exec.path" value="${leo.exec.win}" else="${leo.exec.unix}">
-        <os family="windows"/>
-    </condition>
-
-    <path id="core.sourcepath">
-        <pathelement path="${src.dir}/com/articulate/sigma"/>
-        <pathelement path="${src.dir}/com/articulate/delphi"/>
-    </path>
-    <path id="test.sourcepath">
-        <pathelement path="${test.corpus.dir}/com/articulate/sigma"/>
-        <pathelement path="${test.unit.dir}/com/articulate/sigma"/>
-        <pathelement path="${test.integration.dir}/com/articulate/sigma"/>
-    </path>
-
-    <target name="init" depends="init-ivy">
+    <target name="init" depends="validate.environment,init-ivy" description="Initialize and validate the build environment.">
         <condition property="jdk21+">
             <javaversion atleast="21"/>
         </condition>
-        <fail message="Unsupported JDK version: ${ant.java.version}. Please use a Java Development Kit (JDK) version 21 or greater."
-              unless="jdk21+">
+        <fail message="Unsupported JDK version: ${ant.java.version}. Please use a Java Development Kit (JDK) version 21 or greater." unless="jdk21+">
         </fail>
-        <condition property="nojdk">
-            <contains string="${java.home}" substring="jdk"/>
-        </condition>
-        <fail message="Please install a Java Development Kit (JDK) version 21 or greater."
-              unless="nojdk">
-        </fail>
-
         <echo message="Welcome to the ${product.Name} v${product.Version}"/>
         <echo message="Specification Vendor:     ${spec.vendor}"/>
         <echo message=""/>
         <echo message="CATALINA_HOME is set to:  ${tomcat.home}"/>
         <echo message="SIGMA_HOME    is set to:  ${sigma.home}"/>
-        <echo message="SIGMA_SRC     is set to:  ${sigma.src}"/>
-        <echo message="KBs_HOME      is set to:  ${kbs.home}"/>
-        <echo message="Git dir       is set to:  ${git.home}"/>
         <echo message="basedir       is set to:  ${basedir}"/>
         <echo message="classpath:                ${env.SIGMA_CP}"/>
         <echo message="Java Version via Ant:     ${ant.java.version}"/>
         <echo message="Java Version System Prop: ${java.version}"/>
         <echo message="JDK HOME:     is set to:  ${java.home}"/>
-
         <tstamp>
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
         </tstamp>
     </target>
 
-    <!--
-    ============
-    TEST SETUP
-    ============
-    -->
-
-    <target name="prepare.test.configs" depends="init"
-            description="Prepare test environment.">
-        <echo message="Preparing test environment for user ${user.name} (home: ${user.home})"/>
-    </target>
 
     <!--
-    ============
-    BUILD / DIST
-    ============
+    ==========================================================================
+    DEPENDENCY PREPARATION
+    ==========================================================================
     -->
-
-    <target name="build.antlr" depends="init">
-        <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
-        <echo message="TPTP is set to: ${tptp.home}"/>
-        <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all"/>
-        <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar"/>
-        <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
-        <ant antfile="${sigma.antlr.home}/build.xml" inheritAll="false" target="all"/>
-        <copy todir="${basedir}/lib" file="${sigma.antlr.home}/sigmaAntlr.jar"/>
+    <target name="prepare.dependencies" depends="init">
+        <mkdir dir="${basedir}/lib"/>
+        <available file="${tptp.home}/tptp.jar" property="tptp.jar.exists"/>
+        <fail unless="tptp.jar.exists" message="Missing ${tptp.home}/tptp.jar. Build TPTP-ANTLR first."/>
+        <available file="${sigma.utils.home}/sigmaUtils.jar" property="sigma.utils.jar.exists"/>
+        <fail unless="sigma.utils.jar.exists" message="Missing ${sigma.utils.home}/sigmaUtils.jar. Build SigmaUtils first."/>
+        <available file="${sigma.antlr.home}/sigmaAntlr.jar" property="sigma.antlr.jar.exists"/>
+        <fail unless="sigma.antlr.jar.exists" message="Missing ${sigma.antlr.home}/sigmaAntlr.jar. Build sigmaAntlr first."/>
+        <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar" overwrite="true"/>
+        <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar" overwrite="true"/>
+        <copy todir="${basedir}/lib" file="${sigma.antlr.home}/sigmaAntlr.jar" overwrite="true"/>
     </target>
 
-    <target name="compile" depends="build.antlr" description="Compile the project and place in ${build.classes}.">
+
+    <!--
+    ==========================================================================
+    COMPILATION
+    ==========================================================================
+    -->
+    <target name="compile" depends="prepare.dependencies" description="Compile the project and place classes in ${build.classes}.">
         <mkdir dir="${build.classes}"/>
-        <javac destdir="${build.classes}"
-            debug="on"
-            optimize="on"
-            deprecation="off"
-            includeantruntime="false"
-            release="${javac.release}">
+        <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="off" includeantruntime="false" release="${javac.release}">
             <src refid="core.sourcepath"/>
             <classpath>
                 <path refid="compile.classpath"/>
@@ -368,39 +249,102 @@
             </classpath>
         </javac>
     </target>
+
     <target name="compile.test" depends="compile" description="Compile the project's test classes.">
         <mkdir dir="${build.test.classes}"/>
-        <javac destdir="${build.test.classes}"
-               debug="on"
-               optimize="on"
-               deprecation="on"
-               includeantruntime="false"
-               classpathref="compile.test.classpath"
-               release="${javac.release}">
+        <javac destdir="${build.test.classes}" debug="on" optimize="on" deprecation="on" includeantruntime="false" classpathref="compile.test.classpath" release="${javac.release}">
             <src refid="test.sourcepath"/>
         </javac>
         <mkdir dir="${reports.dir}"/>
     </target>
 
-    <target name="generate-version" description="Write version.properties to build/classes">
+
+    <!--
+    ==========================================================================
+    TESTS
+    ==========================================================================
+    -->
+    <target name="test.unit" depends="compile.test">
+        <junit printsummary="yes" showoutput="yes" fork="yes">
+            <jvmarg line="${run.jvmargs}"/>
+            <env key="RUN_EXTERNAL_ATP_TESTS" value="${external.atp.tests.enabled}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="run.test.classpath"/>
+            </classpath>
+            <test name="${unit.test.suite}" haltonfailure="no" todir="${reports.dir}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+    </target>
+    
+    <target name="test.integration" depends="compile.test" description="Run the integration test suite.">
+        <junit printsummary="yes" showoutput="yes" fork="yes">
+            <jvmarg line="${run.jvmargs}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="run.test.classpath"/>
+            </classpath>
+            <test name="${integration.test.suite}" haltonfailure="no" todir="${reports.dir}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+    </target>
+    
+    <target name="junit.report" description="Generate the HTML JUnit report.">
+        <junitreport todir="${reports.dir}">
+            <fileset dir="${reports.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="${reports.dir}/html"/>
+        </junitreport>
+    </target>
+
+    <target name="test" depends="test.unit,test.integration,junit.report" description="Run all tests and generate the JUnit report."/>
+    
+
+    <!--
+    ==========================================================================
+    REPORT VIEWING
+    ==========================================================================
+    -->
+    <target name="report.mac" if="isMac">
+        <exec executable="sh" osfamily="mac">
+            <arg value="-c"/>
+            <arg value="open -u ${report.html}"/>
+        </exec>
+    </target>
+
+    <target name="report.unix" if="isUnixNotMac">
+        <exec executable="sh" osfamily="unix">
+            <arg value="-c"/>
+            <arg value="xdg-open ${report.html}"/>
+        </exec>
+    </target>
+
+    <target name="open.junit.report" depends="report.mac,report.unix" description="Open the generated JUnit report."/>
+
+
+    <!--
+    ==========================================================================
+    VERSION METADATA
+    ==========================================================================
+    -->
+    <target name="generate-version" depends="init" description="Write version.properties to build/classes.">
         <mkdir dir="${build.classes}"/>
-        <!-- If build.commit was not passed on the command line, try to get it from git -->
-        <exec executable="git" outputproperty="git.commit.sha" failifexecutionfails="false" errorproperty="">
+        <exec executable="git" outputproperty="git.commit.sha" failifexecutionfails="false" failonerror="false">
             <arg value="rev-parse"/>
             <arg value="--short"/>
             <arg value="HEAD"/>
         </exec>
-        <!-- Use git SHA if available -->
         <condition property="build.commit" value="${git.commit.sha}">
             <and>
                 <isset property="git.commit.sha"/>
                 <not><equals arg1="${git.commit.sha}" arg2=""/></not>
             </and>
         </condition>
-        <!-- Fallback to "dev" if git was unavailable or build.commit not set by caller -->
         <property name="build.commit" value="dev"/>
-        <!-- Get the date of the current commit (not the build date) -->
-        <exec executable="git" outputproperty="git.commit.date" failifexecutionfails="false" errorproperty="">
+        <exec executable="git" outputproperty="git.commit.date" failifexecutionfails="false" failonerror="false">
             <arg value="log"/>
             <arg value="-1"/>
             <arg value="--format=%cs"/>
@@ -409,34 +353,70 @@
         <echo file="${build.classes}/version.properties" append="false">build.version=${product.Version}-${build.commit}
 build.commit=${build.commit}
 build.date=${git.commit.date}
-</echo>
+        </echo>
     </target>
 
-    <target name="dist" depends="compile.test,generate-version,api_doc" description="Create the *.war file and place in $CATALINA_HOME/webapps/sigma, create sigmakee.jar.">
+    <!--
+    ==========================================================================
+    DOCUMENTATION
+    ==========================================================================
+    -->
+    <target name="api_doc" depends="compile" description="Build the JavaDocs and place in ${dist.javadoc.dir}.">
+        <delete dir="${dist.javadoc.dir}" failonerror="false"/>
+        <mkdir dir="${dist.javadoc.dir}"/>
+        <javadoc sourcepath="${src.dir}" destdir="${dist.javadoc.dir}" author="true" version="true" use="true" private="true" splitindex="true" windowtitle="SigmaKEE API Documentation" packagenames="com.articulate.*" encoding="UTF-8" charset="UTF-8" docencoding="UTF-8">
+            <classpath>
+                <path refid="compile.classpath"/>
+                <pathelement location="${build.classes}"/>
+                <pathelement location="${tptp.home}/build/classes"/>
+                <pathelement location="${tptp.home}/tptp.jar"/>
+            </classpath>
+            <doctitle>SigmaKEE API Documentation</doctitle>
+            <header><![CDATA[<b>SigmaKEE API Documentation</b>]]></header>
+            <group title="Sigma" packages="com.articulate.sigma.*"/>
+            <group title="Delphi" packages="com.articulate.delphi.*"/>
+            <arg value="-Xdoclint:none"/>
+        </javadoc>
+    </target>
+
+
+    <!--
+    ==========================================================================
+    CLEANUP
+    ==========================================================================
+    -->
+    <target name="clean" description="Delete old build, lib, dist and deployed web aritifacts">
+        <delete includeemptydirs="true" failonerror="false">
+            <fileset dir="${build.home}"/>
+            <fileset dir="${deploy.home}"/>
+            <fileset dir="${tomcat.home}/work/Catalina/localhost/${app.name}"/>
+            <fileset dir="${basedir}/lib">
+                <include name="*.jar"/>
+            </fileset>
+        </delete>
+        <delete file="${dist.war}"/>
+    </target>
+
+
+    <!--
+    ==========================================================================
+    TOP-LEVEL WORKFLOWS
+    ==========================================================================
+    -->
+    <target name="dist" depends="compile,generate-version,api_doc" description="Create the SigmaKEE WAR and JAR.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${user.name}"/>
-            <attribute name="Specification-Title"
-                       value="${product.Name}"/>
-            <attribute name="Specification-Version"
-                       value="${product.version.major}.${product.version.minor}"/>
-            <attribute name="Specification-Vendor"
-                       value="${spec.vendor}"/>
-            <attribute name="Implementation-Title"
-                       value="${impl.title}"/>
-            <attribute name="Implementation-Version"
-                       value="${product.Version} built on ${TODAY_US}"/>
-            <attribute name="Implementation-Vendor"
-                       value="${nps}, ${cs.dept}"/>
-            <attribute name="Implementation-URL"
-                       value="${sumo.url}"/>
-            <attribute name="Implementation-Vendor-Id"
-                       value="${impl.vendor.id}"/>
-            <attribute name="Main-Class"
-                       value="${main.class}"/>
+            <attribute name="Specification-Title" value="${product.Name}"/>
+            <attribute name="Specification-Version" value="${product.version.major}.${product.version.minor}"/>
+            <attribute name="Specification-Vendor" value="${spec.vendor}"/>
+            <attribute name="Implementation-Title" value="${impl.title}"/>
+            <attribute name="Implementation-Version" value="${product.Version} built on ${TODAY_US}"/>
+            <attribute name="Implementation-Vendor" value="${nps}, ${cs.dept}"/>
+            <attribute name="Implementation-URL" value="${sumo.url}"/>
+            <attribute name="Implementation-Vendor-Id" value="${impl.vendor.id}"/>
+            <attribute name="Main-Class" value="${main.class}"/>
         </manifest>
-        <war destfile="${dist.war}"
-             webxml="${web.dir}/web.xml"
-             manifest="${manifest.mf}">
+        <war destfile="${dist.war}" webxml="${web.dir}/web.xml" manifest="${manifest.mf}">
             <metainf file="LICENSE"/>
             <metainf file="${web.dir}/context.xml"/>
             <zipfileset dir="${dist.javadoc.dir}" prefix="javadoc"/>
@@ -456,688 +436,9 @@ build.date=${git.commit.date}
              basedir="${build.classes}">
             <metainf file="LICENSE"/>
         </jar>
-    </target>
-
-    <!--
-    ==========
-    UNIT TESTS
-    ==========
-    -->
-
-    <target name="test" depends="test.unit,test.integration"/>
-    <target name="test.unit" depends="prepare.test.configs,compile.test" description="Runs the UnitTestSuite">
-        <junit printsummary="yes"
-               showoutput="yes"
-               fork="yes">
-            <jvmarg line="${run.jvmargs}"/>
-
-            <!-- Make LeoExecutableConfigTest run locally, skip on GitHub Actions -->
-            <env key="RUN_EXTERNAL_ATP_TESTS" value="${external.atp.tests.enabled}"/>
-
-            <formatter type="plain" usefile="false"/>
-            <classpath>
-                <path refid="run.test.classpath"/>
-            </classpath>
-            <test name="${unit.test.suite}" haltonfailure="no" todir="${reports.dir}">
-                <formatter type="xml"/>
-            </test>
-        </junit>
-        <antcall target="junit.report"/>
-    </target>
-    <target name="test.integration" depends="prepare.test.configs,compile.test" description="Runs the IntegrationTestSuite">
-        <junit printsummary="yes"
-               showoutput="yes"
-               fork="yes">
-            <jvmarg line="${run.jvmargs}"/>
-            <formatter type="plain" usefile="false"/>
-            <classpath>
-                <path refid="run.test.classpath"/>
-            </classpath>
-            <test name="${integration.test.suite}" haltonfailure="no" todir="${reports.dir}">
-                <formatter type="xml"/>
-            </test>
-        </junit>
-        <antcall target="junit.report"/>
-    </target>
-    <target name="junit.report" >
-        <junitreport todir="${reports.dir}">
-            <fileset dir="${reports.dir}">
-                <include name="TEST-*.xml"/>
-            </fileset>
-            <report format="frames" todir="${reports.dir}/html"/>
-        </junitreport>
-        <antcall target="open.junit.report"/>
-    </target>
-    <target name="open.junit.report" depends="report.mac,report.unix"/>
-    <target name="report.mac" unless="isUnixNotMac">
-        <exec executable="sh" osfamily="mac">
-            <arg value="-c"/>
-            <arg value="open -u ${report.html}"/>
-        </exec>
-    </target>
-    <target name="report.unix" if="isUnixNotMac">
-        <exec executable="sh" osfamily="unix">
-            <arg value="-c"/>
-            <arg value="xdg-open ${report.html}"/>
-        </exec>
-    </target>
-
-    <!--
-    =====
-    ADMIN
-    =====
-    -->
-
-    <!-- target name="all" depends="dist, api_doc" -->
+    </target>    
+    
     <target name="all" depends="clean,dist">
         <echo>System date/time is: ${TODAY_US}</echo>
-    </target>
-
-    <!-- Works only from the CLI -->
-    <target name="clean" description="Delete old build, lib, dist and deployed web aritifacts">
-        <delete includeemptydirs="true" failonerror="false">
-            <fileset dir="${build.home}"/> <!-- avoid problems with package name changes by deleting everything -->
-            <!-- Delete the old web code -->
-            <fileset dir="${deploy.home}"/>
-            <fileset dir="${tomcat.home}/work/Catalina/localhost/${app.name}"/>
-            <!-- Prune out of date dependencies -->
-            <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
-                <include name="*.jar"/>
-            </fileset>
-        </delete>
-        <delete file="${dist.war}"/>
-    </target>
-
-    <!-- At this point we will assume you have already complied with the
-         README.md under the heading "System preparation on Linux." This task
-         will take over from the heading "Linux Installation."  -->
-    <target name="install" depends="init" description="Clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
-        <!-- ${git.home} should already have been made -->
-        <!-- <mkdir dir="${programs.dir}"/> -->
-        <mkdir dir="${sigma.home}"/>
-        <mkdir dir="${sigma.home}/KBs"/>
-        <!-- Copy config.xml, sumo and WordNet files to ${sigma.home}/KBs -->
-        <antcall target="setup.sigma.home"/>
-        <antcall target="install.tomcat"/>
-        <!-- Clone the supporting sigma tools -->
-        <!-- <antcall target="clone.sigmautils"/> -->
-        <!-- <antcall target="clone.tptpantlr"/> -->
-        <!-- <antcall target="clone.sigmaantlr"/> -->
-        <!-- <antcall target="clone.sumo"/> -->
-        <!-- Install Tomcat -->
-        <!-- Retrieve WordNet -->
-        <!-- <antcall target="retrieve.wordnet"/> -->
-        <!-- Install LEO-III (Higher-Order ATP) -->
-        <!-- <antcall target="install.Leo"/> -->
-
-        <!-- Retrieve E prover -->
-        <!-- <antcall target="retrieve.E"/> -->
-        <!--<antcall target="clone.E"/>-->
-        <!-- Build E theorem prover -->
-        <!-- <antcall target="build.E"/> -->
-        <!-- Install Vampire: try prebuilt binary first, then source build fallback -->
-        <!-- <antcall target="install.vampire"/> -->
-        <!-- <antcall target="clone.jjparser"/> -->
-        <!-- <antcall target="clone.tptp4x"/> -->
-        <!-- <antcall target="build.tptp4x"/> -->
-
-        <!-- perms -->
-        <!-- <chmod dir="${git.home}" perm="ugo+rw" includes="**/*"/> -->
-        <!-- <chmod dir="${programs.dir}" perm="ugo+rw" includes="**/*"/> -->
-        <!-- <chmod dir="${programs.dir}" perm="ugo+x" includes="**/*.sh"/> -->
-        <!-- <chmod dir="${sigma.home}" perm="ugo+rw" includes="**/*"/> -->
-    </target>
-    <target name="clone.sigmautils">
-        <mkdir dir="${git.home}/SigmaUtils"/>
-        <git command="clone" dir="${git.home}/SigmaUtils">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-                <arg value="https://github.com/ontologyportal/SigmaUtils"/>
-                <arg value="${git.home}/SigmaUtils"/>
-            </args>
-        </git>
-    </target>
-    <target name="clone.tptpantlr">
-        <mkdir dir="${git.home}/TPTP-ANTLR"/>
-        <git command="clone" dir="${git.home}/TPTP-ANTLR">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-                <arg value="https://github.com/ontologyportal/TPTP-ANTLR"/>
-                <arg value="${git.home}/TPTP-ANTLR"/>
-            </args>
-        </git>
-    </target>
-    <target name="clone.sigmaantlr">
-        <mkdir dir="${git.home}/sigmaAntlr"/>
-        <git command="clone" dir="${git.home}/sigmaAntlr">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-                <arg value="https://github.com/ontologyportal/sigmaAntlr"/>
-                <arg value="${git.home}/sigmaAntlr"/>
-            </args>
-        </git>
-    </target>
-    <target name="clone.sumo">
-        <mkdir dir="${kbs.home}"/>
-        <git command="clone" dir="${kbs.home}">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-                <arg value="https://github.com/ontologyportal/sumo"/>
-                <arg value="${kbs.home}"/>
-            </args>
-        </git>
-    </target>
-
-    <target name="clone.jjparser">
-        <mkdir dir="${git.home}/JJParser"/>
-        <git command="clone" dir="${git.home}/JJParser">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-                <arg value="https://github.com/TPTPWorld/JJParser.git"/>
-                <arg value="${git.home}/JJParser"/>
-            </args>
-        </git>
-    </target>
-
-    <target name="clone.tptp4x">
-        <mkdir dir="${tptp4x.home}"/>
-        <git command="clone" dir="${tptp4x.home}">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-                <arg value="https://github.com/TPTPWorld/TPTP4X.git"/>
-                <arg value="${tptp4x.home}"/>
-            </args>
-        </git>
-    </target>
-
-    <target name="build.tptp4x">
-        <exec executable="make" dir="${tptp4x.home}"/>
-        <available file="${tptp4x.exec}" property="tptp4x.exec.exists"/>
-        <fail message="TPTP4X build failed. Expected executable: ${tptp4x.exec}"
-            unless="tptp4x.exec.exists"/>
-        <chmod file="${tptp4x.exec}" perm="ugo+rx"/>
-    </target>
-
-    <!-- If on macOS, can also install tomcat w/ Homebrew -->
-    <target name="install.tomcat">
-        <get src="https://archive.apache.org/dist/tomcat/tomcat-9/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}" tryGzipEncoding="true"/>
-        <unzip src="${programs.dir}/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}"/>
-        <chmod dir="${programs.dir}/apache-tomcat-${tomcat.version}/bin" perm="ugo+rx" includes="**/*.sh"/>
-        <chmod dir="${programs.dir}/apache-tomcat-${tomcat.version}/webapps" perm="ugo+rx" includes="**/*.sh"/>
-        <delete file="${programs.dir}/apache-tomcat-${tomcat.version}.zip"/>
-    </target>
-    <target name="retrieve.wordnet">
-        <get src="https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" dest="${programs.dir}" tryGzipEncoding="true"/>
-        <untar src="${programs.dir}/WordNet-3.0.tar.gz" dest="${programs.dir}" compression="gzip"/>
-        <delete file="${programs.dir}/WordNet-3.0.tar.gz"/>
-    </target>
-
-    <target name="setup.sigma.home" description="Copy WordNetMappings, sumo kbs and config.xml to ~/.sigmakee/KBs -> ($SIGMA_HOME)/KBs">
-        <copy todir="${sigma.home}/KBs/WordNetMappings">
-            <fileset dir="${programs.dir}/WordNet-3.0/dict"/>
-        </copy>
-        <copy file="${basedir}/scripts/installation/config.xml"
-            tofile="${sigma.home}/KBs/config.xml"
-            overwrite="true"/>
-        <antcall target="sigma.config"/>
-    </target>
-
-    <!-- When online SUMO KB files get comitted do this frequently -->
-    <target name="refresh.kbs" depends="update.sumo" description="Copy refreshed KBs from SUMO to ~/.sigmakee -> ($SIGMA_HOME)">
-        <copy todir="${sigma.home}/KBs">
-            <fileset dir="${kbs.home}">
-                <exclude name=".github/**"/>
-                <exclude name="SimpleFacts/**"/>
-                <exclude name="mappings/**"/>
-            </fileset>
-        </copy>
-    </target>
-
-    <target name="sigma.config">
-        <available file="${sigma.home}/KBs/config.xml" property="sigma.config.exists"/>
-        <fail message="Missing ${sigma.home}/KBs/config.xml. setup.sigma.home must copy ${basedir}/scripts/installation/config.xml before sigma.config runs."
-            unless="sigma.config.exists"/>
-        <replace file="${sigma.home}/KBs/config.xml"
-                token="/home/theuser/workspace/sumo"
-                value="${kbs.home}"/>
-        <replace file="${sigma.home}/KBs/config.xml"
-                token="/home/theuser"
-                value="${user.home}"/>
-        <replace file="${sigma.home}/KBs/config.xml"
-                token="/usr/bin/dot"
-                value="${graphviz.exec}"/>
-        <replace file="${sigma.home}/KBs/config.xml"
-                token="/usr/share/jedit"
-                value="${jedit.exec}"/>
-        <replace file="${sigma.home}/KBs/config.xml"
-                token="${user.home}/Programs/E/PROVER/e_ltb_runner"
-                value="${programs.dir}${file.separator}E${file.separator}PROVER${file.separator}eprover"/>
-        <replace file="${sigma.home}/KBs/config.xml"
-                token="${user.home}/E/bin/e_ltb_runner"
-                value="${programs.dir}${file.separator}E${file.separator}PROVER${file.separator}eprover"/>
-        <replace file="${sigma.home}/KBs/config.xml"
-                token="${user.home}/Programs/vampire/build/vampire"
-                value="${programs.dir}${file.separator}vampire${file.separator}build${file.separator}vampire"/>
-        <replace file="${sigma.home}/KBs/config.xml"
-            token="/home/theuser/workspace/TPTP4X/tptp4X"
-            value="${tptp4x.exec}"/>
-    </target>
-    
-    <!--
-    =======================
-    LEO-III install (leo3)
-    =======================
-    -->
-    <target name="download.Leo.zip">
-        <mkdir dir="${sigma.install.downloads}"/>
-        <!-- Try Zenodo first (do NOT fail the build if Zenodo is down) -->
-        <get src="${leo.zip.url}"
-            dest="${leo.zip.file}"
-            usetimestamp="true"
-            ignoreerrors="true"/>
-        <!-- Did Zenodo succeed? -->
-        <available file="${leo.zip.file}" property="leo.zip.present"/>
-        <!-- If Zenodo failed, try GitHub fallback (also non-fatal) -->
-        <get src="${leo.zip.url.fallback}"
-            dest="${leo.zip.file}"
-            usetimestamp="true"
-            ignoreerrors="true"
-            verbose="true"/>
-        <available file="${leo.zip.file}" property="leo.zip.present.final"/>
-        <condition property="leo.skip.install">
-            <not>
-                <isset property="leo.zip.present.final"/>
-            </not>
-        </condition>
-        <echo message="Leo-III ZIP present? ${leo.zip.present.final}"/>
-        <echo message="Leo-III install will be skipped? ${leo.skip.install}"/>
-    </target>
-
-    <target name="install.Leo" depends="install.Leo.common,install.Leo.unix-perms"
-            unless="leo.skip.install"
-            description="Installs Leo-III (leo3.jar + launcher) into ${leo.install.dir}"/>
-
-    <target name="install.Leo.common" depends="download.Leo.zip" unless="leo.skip.install">
-        <mkdir dir="${leo.bin.dir}"/>
-        <!-- Unzip into Leo-III install dir -->
-        <unzip src="${leo.zip.file}" dest="${leo.install.dir}"/>
-        <!-- Copy leo3.jar from wherever it lands inside the zip into bin/leo3.jar -->
-        <copy tofile="${leo.jar.file}" overwrite="true" flatten="true">
-            <fileset dir="${leo.install.dir}">
-                <include name="**/leo3.jar"/>
-            </fileset>
-        </copy>
-        <!-- Create leo3 launcher for Unix-like systems -->
-        <echo file="${leo.exec.unix}" append="false"><![CDATA[#!/usr/bin/env sh
-    DIR="$(cd "$(dirname "$0")" && pwd)"
-    exec java -jar "$DIR/leo3.jar" "$@"
-    ]]></echo>
-        <!-- Create leo3 launcher for Windows -->
-        <echo file="${leo.exec.win}" append="false"><![CDATA[@echo off
-    set DIR=%~dp0
-    java -jar "%DIR%leo3.jar" %*
-    ]]></echo>
-    </target>
-
-    <target name="install.Leo.unix-perms" if="is.unix" unless="leo.skip.install">
-        <mkdir dir="${leo.bin.dir}"/>
-        <chmod file="${leo.exec.unix}" perm="ugo+rx"/>
-    </target>
-
-    <target name="retrieve.E">
-        <get src="http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.6/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
-        <untar src="${programs.dir}/E.tgz" dest="${programs.dir}" compression="gzip"/>
-        <delete file="${programs.dir}/E.tgz"/>
-    </target>
-
-    <target name="clone.E">
-        <mkdir dir="${programs.dir}/E"/>
-        <git command="clone" dir="${programs.dir}/E">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-                <arg value="https://github.com/eprover/eprover.git"/>
-                <arg value="${programs.dir}/E"/>
-            </args>
-        </git>
-    </target>
-
-    <target name="build.E">
-       <chmod perm="ugo+rx">
-            <fileset dir="${programs.dir}/E">
-                <include name="**/*.sh"/>
-                <include name="**/configure*"/>
-            </fileset>
-        </chmod>
-        <exec executable="sh" dir="${programs.dir}/E">
-            <arg value="-c"/>
-            <arg value="./configure"/>
-        </exec>
-        <exec executable="sh" dir="${programs.dir}/E">
-            <arg value="-c"/>
-            <arg value="make"/>
-        </exec>
-    </target>
-
-    <target name="download.vampire.binary" if="vampire.asset"
-        description="Download prebuilt Vampire binary zip for this OS/architecture">
-        <mkdir dir="${sigma.install.downloads}"/>
-        <echo message="Attempting prebuilt Vampire install: ${vampire.asset}"/>
-        <get src="${vampire.release.base}/${vampire.asset}"
-            dest="${sigma.install.downloads}${file.separator}${vampire.asset}"
-            usetimestamp="true"
-            ignoreerrors="true"/>
-        <available file="${sigma.install.downloads}${file.separator}${vampire.asset}"
-                property="vampire.binary.zip.present"/>
-    </target>
-
-    <target name="install.vampire.binary" depends="download.vampire.binary"
-            if="vampire.binary.zip.present"
-            description="Install prebuilt Vampire binary into the normal source-build path">
-        <echo message="Installing prebuilt Vampire into ${vampire.exec}"/>
-        <delete dir="${vampire.binary.unpack.dir}" failonerror="false"/>
-        <mkdir dir="${vampire.binary.unpack.dir}"/>
-        <mkdir dir="${vampire.build.dir}"/>
-        <unzip src="${sigma.install.downloads}${file.separator}${vampire.asset}"
-            dest="${vampire.binary.unpack.dir}"/>
-        <delete file="${vampire.exec}" failonerror="false"/>
-        <delete dir="${vampire.exec}" failonerror="false"/>
-        <mkdir dir="${vampire.build.dir}"/>
-        <copy tofile="${vampire.exec}"
-            overwrite="true"
-            flatten="true"
-            failonerror="false">
-            <fileset dir="${vampire.binary.unpack.dir}">
-                <include name="**/vampire"/>
-            </fileset>
-        </copy>
-        <available file="${vampire.exec}" property="vampire.binary.exec.present"/>
-    </target>
-
-    <target name="test.vampire.binary" depends="install.vampire.binary"
-            if="vampire.binary.exec.present">
-        <chmod file="${vampire.exec}" perm="ugo+rx"/>
-        <exec executable="${vampire.exec}"
-            resultproperty="vampire.binary.version.result"
-            failonerror="false"
-            failifexecutionfails="false">
-            <arg value="--version"/>
-        </exec>
-        <condition property="vampire.binary.ok">
-            <equals arg1="${vampire.binary.version.result}" arg2="0"/>
-        </condition>
-        <echo message="Prebuilt Vampire installed successfully? ${vampire.binary.ok}"/>
-        <delete dir="${vampire.binary.unpack.dir}" failonerror="false"/>
-    </target>
-
-    <target name="install.vampire.source" depends="test.vampire.binary"
-            unless="vampire.binary.ok"
-            description="Fallback: clone and build Vampire from source">
-        <echo message="Prebuilt Vampire unavailable or failed. Falling back to source build."/>
-        <delete dir="${vampire.install.dir}" failonerror="false"/>
-        <antcall target="clone.vampire"/>
-        <antcall target="clone.z3"/>
-        <antcall target="build.z3"/>
-        <antcall target="build.vampire"/>
-    </target>
-
-    <target name="install.vampire"
-            depends="test.vampire.binary,install.vampire.source"
-            description="Install Vampire binary first, then source-build fallback">
-        <available file="${vampire.exec}" property="vampire.exec.exists"/>
-        <fail message="Vampire installation failed. Expected executable: ${vampire.exec}"
-            unless="vampire.exec.exists"/>
-        <chmod file="${vampire.exec}" perm="ugo+rx"/>
-        <exec executable="${vampire.exec}" failonerror="true">
-            <arg value="--version"/>
-        </exec>
-    </target>
-
-    <target name="clone.vampire">
-        <mkdir dir="${programs.dir}/vampire"/>
-        <git command="clone" dir="${programs.dir}/vampire">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-                <arg value="--branch"/>
-                <arg value="${vampire.version}"/>
-                <arg value="--depth"/>
-                <arg value="1"/>
-                <arg value="https://github.com/vprover/vampire.git"/>
-                <arg value="${programs.dir}/vampire"/>
-            </args>
-        </git>
-    </target>
-
-    <target name="clone.z3">
-        <git command="submodule" dir="${programs.dir}/vampire">
-            <args>
-                <arg value="update"/>
-                <arg value="--init"/>
-            </args>
-        </git>
-    </target>
-    <target name="build.z3">
-        <mkdir dir="${programs.dir}/vampire/z3/build"/>
-        <exec executable="cmake" dir="${programs.dir}/vampire/z3/build">
-            <arg value=".."/>
-            <arg value="-DZ3_SINGLE_THREADED=1"/>
-            <arg value="-DCMAKE_BUILD_TYPE=Release"/>
-        </exec>
-        <exec executable="sh" dir="${programs.dir}/vampire/z3/build">
-            <arg value="-c"/>
-            <arg value="make"/>
-        </exec>
-    </target>
-
-    <target name="build.vampire">
-        <echo message="=== Building Vampire ==="/>
-        <exec executable="git" dir="${programs.dir}/vampire">
-            <arg value="checkout"/>
-            <arg value="${vampire.version}"/>
-        </exec>
-        <!-- Normal Vampire build -->
-        <mkdir dir="${programs.dir}/vampire/build"/>
-        <exec executable="cmake" dir="${programs.dir}/vampire/build">
-            <arg value=".."/>
-        </exec>
-        <exec executable="sh" dir="${programs.dir}/vampire/build">
-            <arg value="-c"/>
-            <arg value="make"/>
-        </exec>
-    </target>
-
-    <!-- If Vampire fails to build on Hamming, here is an alternate source of the binary, but may not work due to sys arch type differences -->
-    <target name="alternate.vampire">
-        <get src="https://github.com/vprover/vampire/releases/download/v4.9casc2024/vampire" dest="${programs.dir}/vampire/build" tryGzipEncoding="true"/>
-        <chmod dir="${programs.dir}/${programs.dir}/vampire/build" perm="ugo+rx" includes="vampire"/>
-    </target>
-
-    <!--
-    =====
-    UTILS
-    =====
-    -->
-
-    <!-- git macro utils setup from: https://tonyyan.wordpress.com/2017/03/10/integrate-git-into-ant-targets/-->
-    <macrodef name="git">
-        <attribute name="command"/>
-        <attribute name="dir" default="${git.home}"/>
-        <element name="args" optional="true"/>
-        <sequential>
-            <echo message="git @{command}"/>
-            <exec executable="git" dir="@{dir}">
-                <arg value="@{command}"/>
-                <args/>
-            </exec>
-        </sequential>
-    </macrodef>
-
-    <target name="stop.tomcat" description="stop web application in tomcat">
-        <exec executable="sh">
-            <arg value="-c"/>
-            <arg value="'${tomcat.home}/bin/shutdown.sh'"/>
-        </exec>
-    </target>
-
-    <target name="start.tomcat" description="start web application in tomcat">
-        <exec executable="sh">
-            <arg value="-c"/>
-            <arg value="'${tomcat.home}/bin/startup.sh'"/>
-        </exec>
-        <!--<antcall target="monitor.catalina.out"/>-->
-    </target>
-
-    <target name="refresh.sigma"
-            depends="clean,clear.kbs,clear.tomcat.logs,refresh.kbs,update.sigmautils,update.tptpantlr,update.sigmaantlr,update.sigmakee,update.sigmanlp,update.sumojedit,update.sigmarest"
-            description="Refreshes (updates) the entire Simga Enterprise Suite (SES)"/>
-    <target name="clear.kbs" description="Clears out all of the serialized KBs and translations">
-        <delete includeemptydirs="true" failonerror="false">
-            <fileset dir="${sigma.home}/KBs">
-                <include name="*.fof"/>
-                <include name="*.tff"/>
-                <include name="*.tptp"/>
-                <include name="*.ser"/>
-            </fileset>
-            <fileset dir="${sigma.home}/KBs/WordNetMappings">
-                <include name="*.ser"/>
-            </fileset>
-        </delete>
-    </target>
-    <target name="clear.tomcat.logs" description="Clears out all of Tomcat's logs">
-        <delete includeemptydirs="true" failonerror="false">
-            <fileset dir="${tomcat.home}/logs">
-                <include name="*.*"/>
-            </fileset>
-        </delete>
-    </target>
-    <target name="update.sumo">
-        <git command="pull" dir="${kbs.home}">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
-    <target name="update.sigmautils">
-        <git command="pull" dir="${git.home}/SigmaUtils">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
-    <target name="update.tptpantlr">
-        <git command="pull" dir="${git.home}/TPTP-ANTLR">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
-    <available file="${git.home}/sigmaAntlr/build.xml" property="sigmaantlr.present"/>
-    <target name="update.sigmaantlr" if="sigmaantlr.present">
-        <git command="pull" dir="${git.home}/sigmaAntlr">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
-    <target name="update.sigmakee">
-        <git command="pull" dir="${user.dir}">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
-    <available file="${git.home}/sigmanlp/build.xml" property="sigmanlp.present"/>
-    <target name="update.sigmanlp" if="sigmanlp.present">
-        <git command="pull" dir="${git.home}/sigmanlp">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
-    <available file="${git.home}/SUMOjEdit/build.xml" property="sumojedit.present"/>
-    <target name="update.sumojedit" if="sumojedit.present">
-        <git command="pull" dir="${git.home}/SUMOjEdit">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
-    <available file="${git.home}/SigmaRest/build.xml" property="sigmarest.present"/>
-    <target name="update.sigmarest" if="sigmarest.present">
-        <git command="pull" dir="${git.home}/SigmaRest">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
-
-    <target name="append.bashrc" if="isUnixNotMac">
-        <echo file="${user.home}/.bashrc" append="true">
-# For SIGMA
-export SIGMA_HOME=$HOME/.${web.app.name}
-export ONTOLOGYPORTAL_GIT=$HOME/workspace
-export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${web.app.name}
-export CATALINA_OPTS="${run.jvmargs}"
-export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
-export PATH=$CATALINA_HOME/bin:$PATH
-export SIGMA_CP=$SIGMA_SRC/build/${web.app.name}.jar:$SIGMA_SRC/lib/*
-</echo>
-    </target>
-
-    <target name="append.zshrc" unless="isUnixNotMac">
-        <echo file="${user.home}/.zshrc" append="true">
-# For SIGMA
-export SIGMA_HOME=$HOME/.${web.app.name}
-export ONTOLOGYPORTAL_GIT=$HOME/workspace
-export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${web.app.name}
-export CATALINA_OPTS="${run.jvmargs}"
-export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
-export PATH=$CATALINA_HOME/bin:$PATH
-export SIGMA_CP=$SIGMA_SRC/build/${web.app.name}.jar:$SIGMA_SRC/lib/*
-</echo>
-    </target>
-    <target name="api_doc" depends="compile" description="Build the JavaDocs and place in ${dist.javadoc.dir}.">
-        <delete dir="${dist.javadoc.dir}" failonerror="false"/>
-        <mkdir dir="${dist.javadoc.dir}"/>
-        <javadoc
-            sourcepath="${src.dir}"
-            destdir="${dist.javadoc.dir}"
-            author="true"
-            version="true"
-            use="true"
-            private="true"
-            splitindex="true"
-            windowtitle="SigmaKEE API Documentation"
-            packagenames="com.articulate.*"
-            encoding="UTF-8"
-            charset="UTF-8"
-            docencoding="UTF-8">
-            <classpath>
-                <path refid="compile.classpath"/>
-                <pathelement location="${build.classes}"/>
-                <pathelement location="${tptp.home}/build/classes"/>
-                <pathelement location="${tptp.home}/tptp.jar"/>
-            </classpath>
-            <doctitle>SigmaKEE API Documentation</doctitle>
-            <header><![CDATA[<b>SigmaKEE API Documentation</b>]]></header>
-            <group title="Sigma" packages="com.articulate.sigma.*"/>
-            <group title="Delphi" packages="com.articulate.delphi.*"/>
-            <arg value="-Xdoclint:none"/>
-        </javadoc>
     </target>
 </project>
