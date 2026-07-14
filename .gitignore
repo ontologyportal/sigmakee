@@ -7,7 +7,7 @@
 /doc/javadoc/
 
 # Emacs temp files
-*~
+*~ 
 
 # Sigma temp files
 /EBatchConfig.txt
