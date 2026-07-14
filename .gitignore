@@ -29,3 +29,7 @@ tests/
 # IntelliJ
 .idea/
 *.iml
+<<<<<<< HEAD
+=======
+/doc/javadoc/
+>>>>>>> origin/master
