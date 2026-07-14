@@ -1,6 +1,6 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.tp.EProver;
+import com.articulate.sigma.tp.e.EProver;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.

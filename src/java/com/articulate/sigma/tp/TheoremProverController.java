@@ -15,6 +15,7 @@ package com.articulate.sigma.tp;
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.tp.e.*;
 import com.articulate.sigma.utils.LoggingUtils;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.trans.TPTPGenerationManager;

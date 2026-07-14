@@ -1,5 +1,7 @@
 package com.articulate.sigma.tp;
 
+
+import com.articulate.sigma.tp.e.*;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.StringUtil;

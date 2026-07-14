@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.tp.e.*;
 import org.junit.Test;
 
 import java.util.List;

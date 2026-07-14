@@ -116,13 +116,9 @@
 <%  }
 
   if (isAdministrator) {
-      out.println("<a href=\"MiscUtilities.jsp?kb="
-                  + kbName
-                  + "\">More Output Utilities</a>");
       out.println(" | <a href=\"Mapping.jsp\">Ontology Mappings</a>");
       out.println(" | <a href=\"WordSense.jsp?lang=" + lang + "\">Sense/Sentiment Analysis</a>");
       out.println("<p>");
-
       kbNames = KBmanager.getMgr().getKBnames().iterator();
       String kbName3 = null;
       boolean kbErrorsFound = false;
@@ -139,7 +135,6 @@
               out.println(HTMLformatter.formatErrorsWarnings(kb.warnings,kb));
           }
      }
-
      out.println("<p>\n");
      if (KBmanager.getMgr().getError().length() > 0) {
          out.print("<br/><b>");
@@ -153,9 +148,6 @@
 %>
 </ul>
 <p>
-
 <%@ include file="fragments/universal/Postlude.jspf" %>
 </BODY>
 </HTML>
-
-

@@ -21,7 +21,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-/** ***************************************************************
+/*****************************************************************
  * Parses simple XML into a hierarchy of BasicXMLelement (s).  Used
  * instead of SAX because that class is so complex.  The right thing
  * to do is probably to subclass SAX or create some simpler utility
@@ -34,12 +34,11 @@ public class BasicXMLparser {
      /** An ArrayList of BasicXMLelement(s). */
     public List<BasicXMLelement> elements = new ArrayList<>();
 
-    /** ***************************************************************
+    /*****************************************************************
      * Constructor that parses an XML-formatted string, with one tag per
      * line, into an ArrayList of BasicXMLelement (s).
      */
     public BasicXMLparser(String xml) {
-
 
         try (Reader sr = new StringReader(xml);
              LineNumberReader lnr = new LineNumberReader(sr)) {
@@ -58,7 +57,7 @@ public class BasicXMLparser {
         }
     }
 
-    /** ***************************************************************
+    /*****************************************************************
      * Parse an XML formatted string into a hierarchy of BasicXMLelement (s).
      * Assume that each line has only one tag.
      */
@@ -90,8 +89,7 @@ public class BasicXMLparser {
                     throw new ParseException("Error in BasicXMLparser.parse(): Closing tag " + line + " without open tag, at line: ", lnr.getLineNumber());
                 if (endTagString.equalsIgnoreCase(element.tagname))
                     return;
-                else
-                    throw new ParseException("Error in BasicXMLparser.parse(): Close tag " + endTagString + " doesn't match open tag " + element.tagname, lnr.getLineNumber());
+                else throw new ParseException("Error in BasicXMLparser.parse(): Close tag " + endTagString + " doesn't match open tag " + element.tagname, lnr.getLineNumber());
             }
             else {                                    // An opening or combined open/close tag - like <foo/>
                 tagEnd = tagStart + 1;
@@ -164,7 +162,7 @@ public class BasicXMLparser {
         return result.toString();
     }
 
-    /** ***************************************************************
+    /*****************************************************************
      * Test method.
      */
     public static void main(String[] args) {

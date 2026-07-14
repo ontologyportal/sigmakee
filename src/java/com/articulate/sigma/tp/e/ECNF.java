@@ -1,4 +1,3 @@
-package com.articulate.sigma.tp;
 /** This code is copyright Articulate Software (c) 2014.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
@@ -14,6 +13,7 @@ Authors:
 Adam Pease
 */
 
+package com.articulate.sigma.tp.e;
 import com.articulate.sigma.FormulaPreprocessor;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
@@ -39,8 +39,7 @@ public class ECNF {
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
-        for (String s : output)
-            sb.append(s).append("\n");
+        for (String s : output) sb.append(s).append("\n");
         return sb.toString();
     }
 

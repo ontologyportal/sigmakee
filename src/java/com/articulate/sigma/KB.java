@@ -56,13 +56,13 @@ MA  02111-1307 USA
 */
 package com.articulate.sigma;
 
+import com.articulate.sigma.tp.e.*;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.tp.ATPException;
 import com.articulate.sigma.tp.ArityException;
 import com.articulate.sigma.tp.FormulaTranslationException;
 import com.articulate.sigma.tp.Vampire;
-import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.parsing.CLIMapParser;
 import com.articulate.sigma.trans.*;

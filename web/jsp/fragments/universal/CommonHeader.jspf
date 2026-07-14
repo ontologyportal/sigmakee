@@ -13,8 +13,6 @@
 
     This page is designed to be included in others and must have the following variables set:
     pageName, pageString, role, language, kb
-
-    welcomString should be derived from Prelude.jsp
 */
 
 if (StringUtil.emptyString(flang)) flang = "SUO-KIF";
@@ -47,6 +45,7 @@ if (StringUtil.emptyString(lang)) lang = "EnglishLanguage";
                 if(role.equalsIgnoreCase("admin")) {
                     if (!pageName.equals("NLP")) out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>NLP</b></A>&nbsp;|&nbsp");    
                     if (!pageName.equals("Prefs")) out.println("<A href=\"Properties.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Prefs</b></A>&nbsp;|&nbsp");
+                    if (!pageName.equals("Jobs")) out.println("<A href=\"JobScheduler.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Jobs</b></A>&nbsp;|&nbsp;");
                     if (!pageName.equals("manageUsers")) out.println("<A href=\"ManageUsers.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Manage Users</b></A>&nbsp;|&nbsp;");
                     if (!pageName.equals("islandPages")) out.println("<A href=\"ManageUsers.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Manage Users</b></A>&nbsp;|&nbsp;");
                 }

@@ -403,7 +403,7 @@ build.date=${git.commit.date}
     TOP-LEVEL WORKFLOWS
     ==========================================================================
     -->
-    <target name="dist" depends="compile,generate-version,api_doc" description="Create the SigmaKEE WAR and JAR.">
+    <target name="dist" depends="compile,generate-version,api_doc,compile.test" description="Create the SigmaKEE WAR and JAR.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${user.name}"/>
             <attribute name="Specification-Title" value="${product.Name}"/>

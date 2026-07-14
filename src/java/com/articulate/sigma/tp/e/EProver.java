@@ -13,9 +13,10 @@ Authors:
 Adam Pease
 Infosys LTD.
 */
-package com.articulate.sigma.tp;
+package com.articulate.sigma.tp.e;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.tp.*;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.Formula;
@@ -106,16 +107,11 @@ public class EProver {
         this.maxAnswers = maxAnswers;
         this.sessionId = sessionId;
         this.executablePath = KBmanager.configuration.getEproverExec();
-
         String dir;
-        if (this.sessionId != null && !this.sessionId.isEmpty()) {
-            dir = SessionTPTPManager.getSessionDir(this.sessionId).toString() + File.separator;
-        } else {
-            dir = KBmanager.configuration.getKbDir() + File.separator;
-        }
+        if (this.sessionId != null && !this.sessionId.isEmpty()) dir = SessionTPTPManager.getSessionDir(this.sessionId).toString() + File.separator;
+        else dir = KBmanager.configuration.getKbDir() + File.separator;
         this.kbFilePath = KBmanager.configuration.getKbDir() + File.separator + kb.name + ("tff".equals(requestedTptpLanguage) ? ".tff" : ".tptp");
         this.tempProblemFilePath = dir + "temp-eprover-problem.p";
-
         this.commands = new ArrayList<>();
         this.commands.add(this.executablePath);
         this.commands.add("--cpu-limit=" + String.valueOf(timeout));
@@ -127,8 +123,16 @@ public class EProver {
         _writer = null;
     }
 
-    /** Set the sessionId */
+    /***************************************************************
+     * Set the sessionId
+     * @param sid the session id
+     */
     public void setSessionId(String sid) { this.sessionId = sid; }
+
+    /***************************************************************
+     * @return true if eprover exec is a valid file, false otherwise
+     */
+    public static boolean isAvailable() { return Files.isRegularFile(Paths.get(KBmanager.configuration.getEproverExec())); }
 
     /***************************************************************
      * Submits a query to this E inference engine.
@@ -151,7 +155,8 @@ public class EProver {
         }
     }
     
-    public static boolean isAvailable() {return Files.isRegularFile(Paths.get(KBmanager.configuration.getEproverExec()));}
+    // New e_axfilter function goes here
+
 
     /***************************************************************
      * Submits a query to this EProver. Returns a list of answers from inference
@@ -233,7 +238,6 @@ public class EProver {
         System.out.println("EProver.assertFormula(2): process: " + _eprover);
         boolean allAdded = (this != null);
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
-//            Set<Formula> processedFormulas = new HashSet<>();
             Set<Expr> processedFormulas = new HashSet<>();
             FormulaPreprocessor fp;
             Set<String> tptpFormulas;
@@ -242,15 +246,13 @@ public class EProver {
                 processedFormulas.clear();
                 fp = new FormulaPreprocessor();
                 processedFormulas.addAll(fp.preProcessExpr(parsedF,false, this.kb));
-                if (processedFormulas.isEmpty())
-                    allAdded = false;
+                if (processedFormulas.isEmpty()) allAdded = false;
                 else {   // 2. Translate to TPTP.
                     tptpFormulas = new HashSet<>();
                     if (tptp) {
                         for (Expr ex : processedFormulas) {
                             Formula p = new Formula(ex.toKifString());
-                            if (!p.isHigherOrder(this.kb))
-                                tptpFormulas.add(SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(), false));
+                            if (!p.isHigherOrder(this.kb)) tptpFormulas.add(SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(), false));
                         }
                     }
                     if (this != null) { // 3. Write to new tptp file
@@ -372,9 +374,7 @@ public class EProver {
                 kbDirPath = SessionTPTPManager.getSessionDir(this.sessionId);
                 Files.createDirectories(kbDirPath);
             } 
-            else {
-                kbDirPath = Paths.get(KBmanager.configuration.getKbDir());
-            }
+            else kbDirPath = Paths.get(KBmanager.configuration.getKbDir());
             tempProblemFile = Files.createTempFile(
                 kbDirPath,
                 "temp-eprover-problem",
@@ -522,11 +522,8 @@ public class EProver {
         Thread stderrReader = new Thread(() -> {
             try (BufferedReader r = new BufferedReader(new InputStreamReader(_eprover.getErrorStream()))) {
                 String line;
-                while ((line = r.readLine()) != null) {
-                    stderrLines.add(line);
-                }
+                while ((line = r.readLine()) != null) stderrLines.add(line);
             } catch (IOException e) {
-                // Ignore
             }
         });
         stderrReader.start();
@@ -547,12 +544,8 @@ public class EProver {
             System.err.println("Error in Eprover.runCustom(): Abnormal process termination (exit code " + exitValue + ")");
             if (!stderrLines.isEmpty()) System.err.println("Stderr: " + stderrLines);
             System.err.println(output);
-            // Throw appropriate exception
-            if (result.isTimedOut() || result.getSzsStatus() == SZSStatus.TIMEOUT) {
-                throw new ProverTimeoutException("EProver", timeoutMs, elapsed, true, stdoutLines, stderrLines, result);
-            } else if (exitValue > 128 && exitValue < 160) {
-                throw new ProverCrashedException("EProver", exitValue, stdoutLines, stderrLines, result);
-            }
+            if (result.isTimedOut() || result.getSzsStatus() == SZSStatus.TIMEOUT) throw new ProverTimeoutException("EProver", timeoutMs, elapsed, true, stdoutLines, stderrLines, result);
+             else if (exitValue > 128 && exitValue < 160) throw new ProverCrashedException("EProver", exitValue, stdoutLines, stderrLines, result);
         }
         System.out.println("Eprover.runCustom() done executing");
     }
@@ -564,7 +557,6 @@ public class EProver {
      */
     public void terminate() throws IOException {
 
-        if (debug>0) System.out.printf("\nEProver.terminate()");
         if (this._eprover == null) return;
         if (_eprover == null || !_eprover.isAlive()) return;
         try (_reader; _writer) {
