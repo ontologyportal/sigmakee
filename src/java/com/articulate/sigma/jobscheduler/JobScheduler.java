@@ -14,7 +14,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.nio.file.Path;
 
+/******************************************************************
+ */
 public final class JobScheduler {
 
     /**  */
@@ -62,7 +65,8 @@ public final class JobScheduler {
         if (job.getSchedule() == null) throw new IllegalArgumentException("Job must have a schedule");
         if (findJob(job.getId()) != null) throw new IllegalArgumentException("Duplicate job ID: " + job.getId());
         jobs.add(job);
-        if (job.isEnabled()) scheduleNextRun(job);
+        if (job.isEnabled() && job.getExecutionMode() == Job.ExecutionMode.TOMCAT) scheduleNextRun(job);
+        saveJobs();
     }
 
     /******************************************************************
@@ -104,6 +108,22 @@ public final class JobScheduler {
     }
 
     /******************************************************************
+     * Updates a job and reschedules it when Tomcat execution is enabled.
+     */
+    public synchronized void updateJob(String jobId, boolean enabled, Job.ExecutionMode executionMode, Schedule schedule) {
+
+        if (executionMode == null) throw new IllegalArgumentException("Execution mode cannot be null");
+        if (schedule == null) throw new IllegalArgumentException("Schedule cannot be null");
+        Job job = requireJob(jobId);
+        cancelScheduledTask(jobId);
+        job.setEnabled(enabled);
+        job.setExecutionMode(executionMode);
+        job.setSchedule(schedule);
+        if (enabled && executionMode == Job.ExecutionMode.TOMCAT) scheduleNextRun(job);
+        saveJobs();
+    }
+
+    /******************************************************************
      */
     public synchronized void setEnabled(String jobId, boolean enabled) {
         
@@ -118,8 +138,10 @@ public final class JobScheduler {
      */
     public synchronized void removeJob(String jobId) {
 
+        requireJob(jobId);
         cancelScheduledTask(jobId);
         jobs.removeIf(job -> job.getId().equals(jobId));
+        saveJobs();
     }
 
     /******************************************************************
@@ -127,6 +149,13 @@ public final class JobScheduler {
     public synchronized List<Job> getJobs() {
 
         return Collections.unmodifiableList(new ArrayList<>(jobs));
+    }
+
+    /******************************************************************
+     */
+    public Path getScheduleFile() {
+
+        return scheduleXML.getScheduleFile();
     }
 
     /******************************************************************

@@ -1,20 +1,5 @@
 package com.articulate.sigma.jobscheduler;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +14,21 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /********************************************************************
  * Reads and writes the persistent SigmaKEE job schedule.
@@ -269,6 +269,13 @@ private void appendTextElement(Document document, Element parent, String name, S
                 break;
             default:
                 throw new IOException("Unknown job type: " + type);
+        }
+        String executionModeText = requireAttribute(jobElement, "executionMode");
+        try {
+            job.setExecutionMode(Job.ExecutionMode.valueOf(executionModeText));
+        }
+        catch (IllegalArgumentException exception) {
+            throw new IOException("Unknown execution mode: " + executionModeText, exception);
         }
         job.setEnabled(enabled);
         return job;

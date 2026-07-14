@@ -29,6 +29,14 @@ public abstract class Job {
         this.schedule = schedule;
     }
 
+    /******************************************************************
+     */
+    public void setExecutionMode(ExecutionMode executionMode) {
+
+        if (executionMode == null) throw new IllegalArgumentException("Execution mode cannot be null");
+        this.executionMode = executionMode;
+    }
+
     /***************************************************************
      */
     public abstract void run() throws Exception;
