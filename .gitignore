@@ -29,4 +29,4 @@ tests/
 # IntelliJ
 .idea/
 *.iml
-/doc/
+/doc/javadoc/

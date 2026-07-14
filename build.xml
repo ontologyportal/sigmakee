@@ -91,7 +91,7 @@
     <property name="build.home" value="build"/>
     <property name="build.classes" value="${build.home}/classes"/>
     <property name="build.test.classes" value="${build.home}/test/classes"/>
-    <property name="dist.javadoc.dir" value="doc"/>
+    <property name="dist.javadoc.dir" value="doc/javadoc"/>
     <property name="web.dir" value="web"/>
     <property name="reports.dir" value="${build.home}/test/results"/>
     <property name="unit.test.suite" value="com.articulate.sigma.UnitTestSuite"/>
