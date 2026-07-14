@@ -219,19 +219,43 @@
     DEPENDENCY PREPARATION
     ==========================================================================
     -->
-    <target name="prepare.dependencies" depends="init">
+    <target name="check.dependency.artifacts" depends="init">
+        <available file="${tptp.home}/tptp.jar" property="tptp.jar.present"/>
+        <available file="${sigma.utils.home}/sigmaUtils.jar" property="sigma.utils.jar.present"/>
+        <available file="${sigma.antlr.home}/sigmaAntlr.jar" property="sigma.antlr.jar.present"/>
+    </target>
+
+    <target name="build.tptpantlr" depends="check.dependency.artifacts" unless="tptp.jar.present">
+        <echo message="Building TPTP-ANTLR because ${tptp.home}/tptp.jar is missing."/>
+        <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all"/>
+    </target>
+
+    <target name="build.sigmautils" depends="check.dependency.artifacts" unless="sigma.utils.jar.present">
+        <echo message="Building SigmaUtils because ${sigma.utils.home}/sigmaUtils.jar is missing."/>
+        <ant antfile="${sigma.utils.home}/build.xml" inheritAll="false" target="all"/>
+    </target>
+
+    <target name="build.sigmaantlr" depends="check.dependency.artifacts" unless="sigma.antlr.jar.present">
+        <echo message="Building sigmaAntlr because ${sigma.antlr.home}/sigmaAntlr.jar is missing."/>
+        <ant antfile="${sigma.antlr.home}/build.xml" inheritAll="false" target="all"/>
+    </target>
+
+    <target name="build.dependencies" depends="build.tptpantlr,build.sigmautils,build.sigmaantlr" description="Build missing related-project dependencies."/>
+    
+    <target name="build.antlr" depends="build.tptpantlr,build.sigmaantlr" description="Compatibility alias for building parser dependencies."/>
+
+    <target name="prepare.dependencies" depends="build.dependencies" description="Validate and copy related-project dependencies.">
         <mkdir dir="${basedir}/lib"/>
-        <available file="${tptp.home}/tptp.jar" property="tptp.jar.exists"/>
-        <fail unless="tptp.jar.exists" message="Missing ${tptp.home}/tptp.jar. Build TPTP-ANTLR first."/>
-        <available file="${sigma.utils.home}/sigmaUtils.jar" property="sigma.utils.jar.exists"/>
-        <fail unless="sigma.utils.jar.exists" message="Missing ${sigma.utils.home}/sigmaUtils.jar. Build SigmaUtils first."/>
-        <available file="${sigma.antlr.home}/sigmaAntlr.jar" property="sigma.antlr.jar.exists"/>
-        <fail unless="sigma.antlr.jar.exists" message="Missing ${sigma.antlr.home}/sigmaAntlr.jar. Build sigmaAntlr first."/>
+        <available file="${tptp.home}/tptp.jar" property="tptp.jar.ready"/>
+        <available file="${sigma.utils.home}/sigmaUtils.jar" property="sigma.utils.jar.ready"/>
+        <available file="${sigma.antlr.home}/sigmaAntlr.jar" property="sigma.antlr.jar.ready"/>
+        <fail unless="tptp.jar.ready" message="TPTP-ANTLR did not produce ${tptp.home}/tptp.jar."/>
+        <fail unless="sigma.utils.jar.ready" message="SigmaUtils did not produce ${sigma.utils.home}/sigmaUtils.jar."/>
+        <fail unless="sigma.antlr.jar.ready" message="sigmaAntlr did not produce ${sigma.antlr.home}/sigmaAntlr.jar."/>
         <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar" overwrite="true"/>
         <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar" overwrite="true"/>
         <copy todir="${basedir}/lib" file="${sigma.antlr.home}/sigmaAntlr.jar" overwrite="true"/>
     </target>
-
 
     <!--
     ==========================================================================
@@ -265,7 +289,7 @@
     ==========================================================================
     -->
     <target name="test.unit" depends="compile.test">
-        <junit printsummary="yes" showoutput="yes" fork="yes">
+        <junit printsummary="yes" showoutput="yes" fork="yes" failureproperty="unit.tests.failed">
             <jvmarg line="${run.jvmargs}"/>
             <env key="RUN_EXTERNAL_ATP_TESTS" value="${external.atp.tests.enabled}"/>
             <formatter type="plain" usefile="false"/>
@@ -276,10 +300,11 @@
                 <formatter type="xml"/>
             </test>
         </junit>
+        <fail if="unit.tests.failed" message="Unit tests failed. See ${reports.dir}."/>
     </target>
     
     <target name="test.integration" depends="compile.test" description="Run the integration test suite.">
-        <junit printsummary="yes" showoutput="yes" fork="yes">
+        <junit printsummary="yes" showoutput="yes" fork="yes" failureproperty="integration.tests.failed">
             <jvmarg line="${run.jvmargs}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
@@ -289,6 +314,7 @@
                 <formatter type="xml"/>
             </test>
         </junit>
+        <fail if="integration.tests.failed" message="Integration tests failed. See ${reports.dir}."/>
     </target>
     
     <target name="junit.report" description="Generate the HTML JUnit report.">
