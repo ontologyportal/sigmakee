@@ -201,23 +201,12 @@ public class Vampire {
                 processedExprs = SessionTPTPManager.withSessionCache(
                         this.sessionId, this.kb, () -> fp.preProcessExpr(queryFA, true, this.kb));
             }
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             System.err.println("Vampire.askVampire(): FormulaAST path failed, using string fallback: " + e.getMessage());
             processedExprs = null;
         }
-
-//         String fallback path (TFF mode or AST path unavailable/empty)
-//        Set<Formula> processedStmts = null;
-//        if (processedExprs == null || processedExprs.isEmpty()) {
-//            System.err.println("Vampire.askVampire(): FormulaAST path failed or empty, using string fallback, for formula: " + suoKifFormula);
-//            Formula query = new Formula();
-//            query.read(suoKifFormula);
-//            processedStmts = SessionTPTPManager.withSessionCache(
-//                    this.sessionId, this.kb, () -> fp.preProcess(query, true, this.kb));
-//        }
-
         boolean hasProcessed = (processedExprs != null && !processedExprs.isEmpty());
-
         if (hasProcessed) {
             int axiomIndex = 0;
             File inferenceFile = new File(this.inferenceFilePath);
@@ -226,12 +215,8 @@ public class Vampire {
                 for (Expr e : processedExprs) {
                     String kifStr = e.toKifString();
                     String tptpBody;
-                    if ("tff".equalsIgnoreCase(this.requestedTptpLanguage)) {
-                        tptpBody = ExprToTFF.translate(e, true, this.kb);
-                    }
-                    else {
-                        tptpBody = ExprToTPTP.translateKifString(kifStr, true, this.requestedTptpLanguage);
-                    }
+                    if ("tff".equalsIgnoreCase(this.requestedTptpLanguage)) tptpBody = ExprToTFF.translate(e, true, this.kb);
+                    else tptpBody = ExprToTPTP.translateKifString(kifStr, true, this.requestedTptpLanguage);
                     if (StringUtil.emptyString(tptpBody)) {
                         tptpBody = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifStr, true, this.requestedTptpLanguage);
                     }
@@ -244,31 +229,13 @@ public class Vampire {
                     tptpQuery.add(theTPTPstatement);
                 }
             }
-//            else {
-//                if (processedStmts.size() > 1) {
-//                    StringBuilder combined = new StringBuilder();
-//                    combined.append("(or ");
-//                    for (Formula p : processedStmts) combined.append(p.getFormula()).append(Formula.SPACE);
-//                    combined.append(Formula.RP);
-//                    String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + axiomIndex++ +
-//                        ",conjecture,(" +
-//                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true, this.requestedTptpLanguage)
-//                        + ")).";
-//                    tptpQuery.add(theTPTPstatement);
-//                }
-//                else {
-//                    String theTPTPstatement = this.requestedTptpLanguage + "(query" + "_" + axiomIndex++ +
-//                        ",conjecture,(" +
-//                        SUMOformulaToTPTPformula.tptpParseSUOKIFString(processedStmts.iterator().next().getFormula(), true, this.requestedTptpLanguage)
-//                        + ")).";
-//                    tptpQuery.add(theTPTPstatement);
-//                }
-//            }
             try {
                 this.run(inferenceFile, tptpQuery);
-            } catch (ATPException e) {
+            } 
+            catch (ATPException e) {
                 throw e;
-            } catch (Exception e) {
+            } 
+            catch (Exception e) {
                 System.err.printf("\nEXCEPTION IN Vampire.run(%s, %s)\n", inferenceFile.getName(), tptpQuery);
                 throw new ATPException("\nVampire execution failed", e.getMessage());
             }
@@ -277,15 +244,25 @@ public class Vampire {
         if (this.modensPonens) this.modensPonensPostProcess();
     }
 
+    /***************************************************************
+     * Run a problem file 
+     */
+    public ATPResult runProblem(Path problemFile) {
+
+        try {
+            run(problemFile.toFile());
+            return getResult();
+        }
+        catch (Exception exception) {
+            if (getResult() != null) return getResult();
+            return ATPResult.notRun(
+                    "Vampire",
+                    exception.getMessage());
+        }
+    }
+
     /*********************************************************************************
      * Vampire Modus Ponens with session-specific isolation.
-     * STEPS:
-     * 1 - AskVampire to get the first output
-     * 2 - Process the output to keep only the authored axioms
-     * 3 - Send new command to vampire with Modens Ponens options
-     * 4 - If wanted drop the one premise formulas.
-     * 5 - Replace the new proof's infRules with the original ones.
-     * 6 - Return Vampire object for further processing from AskTell.jsp
      * @param suoKifFormula The query in SUO-KIF format
      * @return Vampire result object
      */
@@ -302,18 +279,14 @@ public class Vampire {
      */
     private void modensPonensPostProcess() {
 
-        if (debug > 0) LoggingUtils.log("");
-        // STEP 2
         List<TPTPFormula> proof = TPTPutil.processProofLines(this.output);
         List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
-        // STEP 3
         File kbFile = new File("min-problem.tptp");
-        //vampire --mode vampire --forced_options av=off:nm=0:bce=off:updr=off:fde=none:rp=off --proof tptp -m 16384 -t %d %s
         this.commands = new ArrayList<>(Arrays.asList(
-                "--input_syntax","tptp",
-                "--proof","tptp",
-                "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                "-fde","none","-updr","off","-rp","off","-bce","off"
+            "--input_syntax","tptp",
+            "--proof","tptp",
+            "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
+            "-fde","none","-updr","off","-rp","off","-bce","off"
         ));
         if (this.askQuestion) {
             this.commands.add("-qa");
@@ -329,11 +302,7 @@ public class Vampire {
         catch (Exception e){
             throw new ATPException("Vampire ModensPonens execution failed: " + e.getMessage(), "Vampire");
         }
-        // STEP 4
-        if (this.kb.dropOnePremiseFormulas) {
-            this.output = TPTPutil.dropOnePremiseFormulasFOF(this.output);
-        }
-        // STEP 5
+        if (this.kb.dropOnePremiseFormulas) this.output = TPTPutil.dropOnePremiseFormulasFOF(this.output);
         this.output = TPTPutil.replaceFOFinfRule(this.output, authored_lines);
     }
 
@@ -470,13 +439,11 @@ public class Vampire {
                 String tptp = SUMOformulaToTPTPformula.translateWord(c, StreamTokenizer.TT_WORD, true);
                 formulaConstDecls.add("thf(" + tptp + "_tp,type,(" + tptp + " : (w > $o))).");
             }
-
             allStmts = new LinkedHashSet<>(formulaConstDecls);
             allStmts.addAll(userAsserts);
             allStmts.addAll(conjectureStmts);
             writeStatements(allStmts);
             writeIncludeProblem(kbThfPath, stmtFile, outfile);
-            // -------- 6. Actually call Vampire on temp-comb.thf --------
             if (debug>1) System.out.println("------ Vampire.askVampireHOL(): Asking Vampire");
             this.askVampireTHF(outfile);
         } 
@@ -503,31 +470,18 @@ public class Vampire {
         String testDir = KBmanager.configuration.getInferenceTestDir();
         String includesPath = testDir + File.separator + "includes";
         File test = new File(test_path);
-        // List<String> includes = TPTPutil.extractIncludesFromTPTP(test);
-        // if (!includes.isEmpty()) {
-        //     String error = TPTPutil.validateIncludesInTPTPFiles(includes, includesPath);
-        //     if (error != null) System.err.println(error);
-        // }
         this.commands = new ArrayList<>(Arrays.asList(
             "--proof", "tptp",
             "--output_axiom_names","on"
         ));
-        // This HOL Vampire version (4.8) does not support "-qa plain"
-        // if (!includes.isEmpty()){
-        //     this.commands.add("--include");
-        //     this.commands.add(includesPath);
-        // }
-
-        // if (this.askQuestion){
-        //     this.commands.add("-qa plain");
-        // }
-
         this.logic = Vampire.Logic.HOL;
         try{
             this.runCustom(test);
-        } catch (ATPException e){
+        } 
+        catch (ATPException e){
             throw e;
-        } catch (Exception e){
+        } 
+        catch (Exception e){
             throw new ATPException("Vampire THF execution failed: " + e.getMessage(), "Vampire");
         }
     }
@@ -559,7 +513,6 @@ public class Vampire {
 
     /***************************************************************
      * Get the SZS status from the last run.
-     *
      * @return The SZSStatus, or SZSStatus.NOT_RUN if not run
      */
     public SZSStatus getSzsStatus() {return result != null ? result.getSzsStatus() : SZSStatus.NOT_RUN;}
@@ -571,7 +524,6 @@ public class Vampire {
     public boolean hasError() {return result != null && result.hasErrors();}
 
     /***************************************************************
-     *
      */
     private void createCommandList(File kbFile) {
 
