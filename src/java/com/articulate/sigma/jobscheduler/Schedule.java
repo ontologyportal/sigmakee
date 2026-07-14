@@ -40,7 +40,7 @@ public class Schedule {
         schedule.frequency = Frequency.DAILY;
         schedule.runTime = runTime;
         return schedule;
-    }
+    }   
 
     public static Schedule weeklyAt(
             DayOfWeek dayOfWeek,

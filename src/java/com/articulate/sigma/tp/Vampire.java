@@ -255,9 +255,7 @@ public class Vampire {
         }
         catch (Exception exception) {
             if (getResult() != null) return getResult();
-            return ATPResult.notRun(
-                    "Vampire",
-                    exception.getMessage());
+            return ATPResult.notRun("Vampire", exception.getMessage());
         }
     }
 

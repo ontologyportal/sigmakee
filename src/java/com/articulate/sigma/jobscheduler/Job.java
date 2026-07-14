@@ -1,13 +1,23 @@
 package com.articulate.sigma.jobscheduler;
 
+/***************************************************************
+ */
 public abstract class Job {
-
+    
+    /**  */
     private final String id;
+    /**  */
     private final String title;
+    /**  */
     private final String description;
-
+    /**  */
     private boolean enabled = true;
+    /**  */
     private Schedule schedule;
+    /**  */
+    public enum ExecutionMode {TOMCAT, CRON};
+    /**  */
+    private ExecutionMode executionMode = ExecutionMode.TOMCAT;
 
     /***************************************************************
      */
@@ -19,51 +29,43 @@ public abstract class Job {
         this.schedule = schedule;
     }
 
-    public abstract String getType();
-
     /***************************************************************
      */
     public abstract void run() throws Exception;
 
     /***************************************************************
      */
-    public String getId() {
-        return id;
-    }
+    public String getId() {return id;}
 
     /***************************************************************
      */
-    public String getTitle() {
-        return title;
-    }
+    public abstract String getType();
 
     /***************************************************************
      */
-    public String getDescription() {
-        return description;
-    }
+    public ExecutionMode getExecutionMode() {return executionMode;}
 
     /***************************************************************
      */
-    public boolean isEnabled() {
-        return enabled;
-    }
+    public String getTitle() {return title;}
 
     /***************************************************************
      */
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
+    public String getDescription() {return description;}
 
     /***************************************************************
      */
-    public Schedule getSchedule() {
-        return schedule;
-    }
+    public boolean isEnabled() {return enabled;}
 
     /***************************************************************
      */
-    public void setSchedule(Schedule schedule) {
-        this.schedule = schedule;
-    }
+    public void setEnabled(boolean enabled) {this.enabled = enabled;}
+
+    /***************************************************************
+     */
+    public Schedule getSchedule() {return schedule;}
+
+    /***************************************************************
+     */
+    public void setSchedule(Schedule schedule) {this.schedule = schedule;}
 }

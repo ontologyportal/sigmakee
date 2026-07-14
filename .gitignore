@@ -4,13 +4,13 @@
 /dist
 /target
 /examples/target
+/doc/javadoc/
 
 # Emacs temp files
 *~
 
 # Sigma temp files
 /EBatchConfig.txt
-
 
 .ivy
 lib
@@ -29,4 +29,3 @@ tests/
 # IntelliJ
 .idea/
 *.iml
-/doc/

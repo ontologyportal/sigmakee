@@ -18,35 +18,26 @@ import java.util.stream.Stream;
 public class EAxFilter {
 
     public record EAxFilterOptions(String explicitSeeds, String seedSymbols, String seedSubsample, String seedMethod, Path filterFile, boolean forceTptp3) {
-
-        /**
+        
+        /***************************************************************
          * Default filtering for a problem containing a meaningful conjecture.
          * The conjecture's symbols are used as the initial SinE seeds.
          */
         public static EAxFilterOptions forConjecture() {return new EAxFilterOptions(null, null, null, null, null, true);}
 
-        /**
+        /***************************************************************
          * Artificial predicate seeding for a consistency problem whose
          * conjecture is $false and therefore contains no useful seed symbols.
          */
         public static EAxFilterOptions forContradictions() {return new EAxFilterOptions(null, "p", "m100", "l", null, true);}
 
-        /**
+        /***************************************************************
          * Explicitly seed filtering from one or more TPTP symbols.
          */
         public static EAxFilterOptions forExplicitSeeds(String seeds) {return new EAxFilterOptions(seeds, null, null, "l", null, true);}
     }
 
-    public record EAxFilterResult(
-            Path inputProblem,
-            Path outputDirectory,
-            List<Path> generatedProblems,
-            List<String> command,
-            List<String> stdout,
-            List<String> stderr,
-            int exitCode,
-            long elapsedMs,
-            boolean timedOut) {
+    public record EAxFilterResult(Path inputProblem, Path outputDirectory, List<Path> generatedProblems, List<String> command, List<String> stdout, List<String> stderr, int exitCode, long elapsedMs, boolean timedOut) {
 
         public EAxFilterResult {
 
@@ -208,6 +199,94 @@ public class EAxFilter {
         if (!process.waitFor(5, TimeUnit.SECONDS)) {
             process.destroyForcibly();
             process.waitFor(5, TimeUnit.SECONDS);
+        }
+    }
+
+        /***************************************************************
+     * Test e_axfilter problem generation.
+     * Usage:
+     *      EAxFilter <input-problem> [conjecture|contradictions|explicit] [explicit-seeds] [timeout-seconds]
+     * Examples:
+     *      EAxFilter /tmp/SUMO_consistency.p contradictions
+     *      EAxFilter /tmp/SUMO_query.p conjecture
+     *      EAxFilter /tmp/SUMO_consistency.p explicit s__instance 300
+     */
+    public static void main(String[] args) {
+
+        if (args.length == 0 || args[0].equals("-h") || args[0].equals("--help")) {
+            System.out.println("Usage: EAxFilter <input-problem> [conjecture|contradictions|explicit] [explicit-seeds] [timeout-seconds]");
+            System.out.println("Examples:");
+            System.out.println("  EAxFilter /tmp/SUMO_consistency.p contradictions");
+            System.out.println("  EAxFilter /tmp/SUMO_query.p conjecture");
+            System.out.println("  EAxFilter /tmp/SUMO_consistency.p explicit s__instance 300");
+            return;
+        }
+        try {
+            KBmanager.getMgr().initializeOnce();
+            Path inputProblem = Paths.get(args[0]).toAbsolutePath().normalize();
+            String mode = args.length > 1 ? args[1].toLowerCase() : "conjecture";
+            String explicitSeeds = args.length > 2 ? args[2] : null;
+            int timeoutSeconds = args.length > 3 ? Integer.parseInt(args[3]) : 300;
+            Path outputDirectory = Files.createTempDirectory("eaxfilter-test-");
+            EAxFilterOptions options;
+            switch (mode) {
+                case "conjecture":
+                    options = EAxFilterOptions.forConjecture();
+                    break;
+                case "contradictions":
+                    options = EAxFilterOptions.forContradictions();
+                    break;
+                case "explicit":
+                    if (StringUtil.emptyString(explicitSeeds)) throw new IllegalArgumentException("Explicit mode requires a seed symbol, such as s__instance");
+                    options = EAxFilterOptions.forExplicitSeeds(explicitSeeds);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown mode: " + mode + ". Use conjecture, contradictions, or explicit.");
+            }
+            System.out.println("e_axfilter available: " + EAxFilter.isAvailable());
+            System.out.println("Input: " + inputProblem);
+            System.out.println("Output directory: " + outputDirectory);
+            System.out.println("Mode: " + mode);
+            System.out.println("Timeout: " + timeoutSeconds + " seconds");
+
+            EAxFilter axFilter = new EAxFilter();
+            EAxFilterResult result = axFilter.generate(inputProblem, outputDirectory, options, timeoutSeconds);
+
+            System.out.println("Command: " + String.join(" ", result.command()));
+            System.out.println("Exit code: " + result.exitCode());
+            System.out.println("Timed out: " + result.timedOut());
+            System.out.println("Elapsed: " + result.elapsedMs() + " ms");
+            System.out.println("Generated problems: " + result.generatedProblems().size());
+
+            if (!result.stdout().isEmpty()) {
+                System.out.println("stdout:");
+                result.stdout().forEach(System.out::println);
+            }
+
+            if (!result.stderr().isEmpty()) {
+                System.out.println("stderr:");
+                result.stderr().forEach(System.out::println);
+            }
+
+            if (result.succeeded()) {
+                System.out.println("Generated files:");
+                result.generatedProblems().forEach(path -> {
+                    try {
+                        System.out.println("  " + Files.size(path) + " bytes  " + path);
+                    }
+                    catch (IOException exception) {
+                        System.out.println("  " + path + " (could not read size: " + exception.getMessage() + ")");
+                    }
+                });
+            }
+            else System.err.println("e_axfilter generation did not succeed.");
+        }
+        catch (NumberFormatException exception) {
+            System.err.println("Timeout must be an integer: " + exception.getMessage());
+        }
+        catch (Exception exception) {
+            System.err.println("EAxFilter test failed: " + exception.getMessage());
+            exception.printStackTrace();
         }
     }
 }

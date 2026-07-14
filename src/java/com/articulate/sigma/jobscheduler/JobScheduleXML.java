@@ -48,7 +48,6 @@ public class JobScheduleXML {
 
     /********************************************************************
      * Creates a store using a specified XML file.
-     *
      * @param scheduleFile XML schedule file
      */
     public JobScheduleXML(Path scheduleFile) {
@@ -72,39 +71,21 @@ public class JobScheduleXML {
             Document document = factory.newDocumentBuilder().parse(scheduleFile.toFile());
             Element root = document.getDocumentElement();
             if (root == null || !"job-schedule".equals(root.getTagName())) {
-
-                throw new IOException(
-                        "Expected <job-schedule> root element in "
-                        + scheduleFile);
+                throw new IOException("Expected <job-schedule> root element in " + scheduleFile);
             }
-
             List<Job> jobs = new ArrayList<>();
             NodeList children = root.getChildNodes();
-
-            for (int index = 0;
-                 index < children.getLength();
-                 index++) {
-
+            for (int index = 0; index < children.getLength(); index++) {
                 Node node = children.item(index);
-
-                if (node instanceof Element element
-                        && "job".equals(
-                                element.getTagName())) {
-
-                    jobs.add(parseJob(element));
-                }
+                if (node instanceof Element element && "job".equals(element.getTagName())) jobs.add(parseJob(element));
             }
-
             return jobs;
         }
         catch (IOException exception) {
             throw exception;
         }
         catch (Exception exception) {
-            throw new IOException(
-                    "Could not read job schedule: "
-                    + scheduleFile,
-                    exception);
+            throw new IOException("Could not read job schedule: " + scheduleFile, exception);
         }
     }
 
@@ -184,61 +165,31 @@ public class JobScheduleXML {
     /********************************************************************
      * Creates an XML element for a job.
      */
-    private Element createJobElement(
-            Document document,
-            Job job) throws IOException {
-
-        if (job == null) {
-            throw new IOException(
-                    "Cannot save a null job");
+private Element createJobElement(Document document, Job job) throws IOException {
+        if (job == null) throw new IOException("Cannot save a null job");
+        if (job.getSchedule() == null) throw new IOException("Job " + job.getId() + " does not have a schedule");
+        Element jobElement = document.createElement("job");
+        jobElement.setAttribute("id", job.getId());
+        jobElement.setAttribute("type", job.getType());
+        jobElement.setAttribute("enabled", Boolean.toString(job.isEnabled()));
+        jobElement.setAttribute("executionMode", job.getExecutionMode().name());
+        jobElement.appendChild(createScheduleElement(document, job.getSchedule()));
+        if (job instanceof EAxFilterContradictionJob axJob) {
+                appendTextElement(document, jobElement, "kbName", axJob.getKbName());
+                appendTextElement(document, jobElement, "cnfTimeout", Integer.toString(axJob.getCnfTimeout()));
+                appendTextElement(document, jobElement, "filterTimeout", Integer.toString(axJob.getFilterTimeout()));
+                appendTextElement(document, jobElement, "vampireTimeout", Integer.toString(axJob.getVampireTimeout()));
         }
-
-        if (job.getSchedule() == null) {
-            throw new IOException(
-                    "Job " + job.getId()
-                    + " does not have a schedule");
-        }
-
-        Element jobElement =
-                document.createElement("job");
-
-        jobElement.setAttribute(
-                "id",
-                job.getId());
-
-        jobElement.setAttribute(
-                "type",
-                job.getType());
-
-        jobElement.setAttribute(
-                "enabled",
-                Boolean.toString(job.isEnabled()));
-
-        jobElement.appendChild(
-                createScheduleElement(
-                        document,
-                        job.getSchedule()));
-
-        if (job instanceof ConsistencyCheckJob) {
-            ConsistencyCheckJob consistencyJob =
-                    (ConsistencyCheckJob) job;
-
-            Element kbName =
-                    document.createElement("kbName");
-
-            kbName.setTextContent(
-                    consistencyJob.getKbName());
-
-            jobElement.appendChild(kbName);
-        }
-        else if (!(job instanceof SumoUpdateJob)) {
-            throw new IOException(
-                    "Unsupported job class: "
-                    + job.getClass().getName());
-        }
-
+        else if (job instanceof ConsistencyCheckJob consistencyJob) appendTextElement(document, jobElement, "kbName", consistencyJob.getKbName());
+        else if (!(job instanceof SumoUpdateJob)) throw new IOException("Unsupported job class: " + job.getClass().getName());
         return jobElement;
-    }
+}
+
+private void appendTextElement(Document document, Element parent, String name, String value) {
+        Element element = document.createElement(name);
+        element.setTextContent(value);
+        parent.appendChild(element);
+}
 
     /********************************************************************
      * Creates an XML element for a schedule.
@@ -292,51 +243,33 @@ public class JobScheduleXML {
     /********************************************************************
      * Parses one job element.
      */
-    private Job parseJob(Element jobElement)
-            throws IOException {
+    private Job parseJob(Element jobElement) throws IOException {
 
-        String id =
-                requireAttribute(jobElement, "id");
-
-        String type =
-                requireAttribute(jobElement, "type");
-
-        boolean enabled =
-                parseBooleanAttribute(
-                        jobElement,
-                        "enabled");
-
-        Element scheduleElement =
-                requireChild(
-                        jobElement,
-                        "schedule");
-
-        Schedule schedule =
-                parseSchedule(scheduleElement);
-
+        String id = requireAttribute(jobElement, "id");
+        String type = requireAttribute(jobElement, "type");
+        boolean enabled = parseBooleanAttribute(jobElement, "enabled");
+        Element scheduleElement = requireChild(jobElement, "schedule");
+        Schedule schedule = parseSchedule(scheduleElement);
         Job job;
-
         switch (type) {
+            case "eaxfilter-contradiction":
+                job = new EAxFilterContradictionJob(
+                id,
+                requireChildText(jobElement, "kbName"),
+                schedule,
+                parseRequiredInt(jobElement, "cnfTimeout"),
+                parseRequiredInt(jobElement, "filterTimeout"),
+                parseRequiredInt(jobElement, "vampireTimeout"));
+        break;
             case "consistency-check":
-                job = new ConsistencyCheckJob(
-                        id,
-                        requireChildText(
-                                jobElement,
-                                "kbName"),
-                        schedule);
+                job = new ConsistencyCheckJob(id, requireChildText(jobElement, "kbName"), schedule);
                 break;
-
             case "sumo-update":
-                job = new SumoUpdateJob(
-                        id,
-                        schedule);
+                job = new SumoUpdateJob(id, schedule);
                 break;
-
             default:
-                throw new IOException(
-                        "Unknown job type: " + type);
+                throw new IOException("Unknown job type: " + type);
         }
-
         job.setEnabled(enabled);
         return job;
     }
@@ -344,31 +277,17 @@ public class JobScheduleXML {
     /********************************************************************
      * Parses a schedule element.
      */
-    private Schedule parseSchedule(
-            Element scheduleElement)
-            throws IOException {
+    private Schedule parseSchedule(Element scheduleElement) throws IOException {
 
-        String frequencyText =
-                requireAttribute(
-                        scheduleElement,
-                        "frequency");
-
+        String frequencyText = requireAttribute(scheduleElement, "frequency");
         Schedule.Frequency frequency;
-
         try {
-            frequency =
-                    Schedule.Frequency.valueOf(
-                            frequencyText);
+            frequency = Schedule.Frequency.valueOf(frequencyText);
         }
         catch (IllegalArgumentException exception) {
-            throw new IOException(
-                    "Unknown schedule frequency: "
-                    + frequencyText,
-                    exception);
+            throw new IOException("Unknown schedule frequency: " + frequencyText, exception);
         }
-
         LocalTime runTime;
-
         try {
             runTime = LocalTime.parse(
                     requireAttribute(
@@ -580,6 +499,18 @@ public class JobScheduleXML {
         String text = requireChild(parent, childName).getTextContent();
         if (text == null || text.isBlank()) throw new IOException("<" + childName + "> cannot be empty");
         return text.trim();
+    }
+
+    private int parseRequiredInt(Element parent, String childName) throws IOException {
+        String value = requireChildText(parent, childName);
+        try {
+                int number = Integer.parseInt(value);
+                if (number <= 0) throw new NumberFormatException("value must be positive");
+                return number;
+        }
+        catch (NumberFormatException exception) {
+                throw new IOException("<" + childName + "> must contain a positive integer: " + value, exception);
+        }
     }
 
     /********************************************************************

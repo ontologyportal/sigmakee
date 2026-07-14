@@ -34,7 +34,7 @@ public final class JobScheduler {
         scheduleXML = new JobScheduleXML();
         try {
             jobs.addAll(scheduleXML.load());
-            for (Job job : jobs) if (job.isEnabled()) scheduleNextRun(job);
+            for (Job job : jobs) if (job.isEnabled() && job.getExecutionMode() == Job.ExecutionMode.TOMCAT) scheduleNextRun(job);
         }
         catch (IOException exception) {
             executor.shutdownNow();
@@ -69,7 +69,7 @@ public final class JobScheduler {
      */
     private void scheduleNextRun(Job job) {
 
-        if (!job.isEnabled() || executor.isShutdown()) return;
+        if (!job.isEnabled() || job.getExecutionMode() != Job.ExecutionMode.TOMCAT || executor.isShutdown()) return;
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime nextRun = job.getSchedule().nextRunAfter(now);
         if (nextRun == null) {
@@ -106,14 +106,12 @@ public final class JobScheduler {
     /******************************************************************
      */
     public synchronized void setEnabled(String jobId, boolean enabled) {
-
+        
         Job job = requireJob(jobId);
         job.setEnabled(enabled);
-        if (enabled) {
-            cancelScheduledTask(jobId);
-            scheduleNextRun(job);
-        }
-        else cancelScheduledTask(jobId);
+        cancelScheduledTask(jobId);
+        if (enabled && job.getExecutionMode() == Job.ExecutionMode.TOMCAT) scheduleNextRun(job);
+        saveJobs();
     }
 
     /******************************************************************
