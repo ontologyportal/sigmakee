@@ -167,10 +167,13 @@ public class Vampire {
         if (mode.equalsIgnoreCase(ModeType.VAMPIRE.name())) this.mode = ModeType.VAMPIRE;
         this.timeout = timeout;
         this.maxAnswers = maxAnswers;
-        this.inferenceFilePath = KBmanager.configuration.getKbDir() + File.separator + KBmanager.getMgr().getDefaultKbName() + "." + this.inferenceFileExtension;
-        if (!(new File(this.inferenceFilePath).exists()) || KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(this.inferenceFileExtension)) {
-            synchronized (kb.baseGenLock) {
-                TPTPGenerationManager.generateProperFile(kb, this.requestedTptpLanguage);
+        if (sessionId != null && !sessionId.isBlank()) this.inferenceFilePath = SessionTPTPManager.generateSessionTPTP(sessionId, kb, requestedTptpLanguage).toString();
+        else {
+            this.inferenceFilePath = KBmanager.configuration.getKbDir() + File.separator + kb.name + "." + inferenceFileExtension;
+            if (!new File(inferenceFilePath).exists() || KBmanager.getMgr().infBaseFileOldIgnoringUserAssertions(inferenceFileExtension)) {
+                synchronized (kb.baseGenLock) {
+                    TPTPGenerationManager.generateProperFile(kb, requestedTptpLanguage);
+                }
             }
         }
     }

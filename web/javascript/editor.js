@@ -271,7 +271,7 @@ document.addEventListener("DOMContentLoaded", async function() {
   else {
     const examples = {
       "example.kif": `; Example Kif File\n(=>\n  (instance ?X Man)\n  (attribute ?X Mortal))`,
-      "example.tptp": `% Example TPTP file\n tff(mortal_rule, axiom, (![X]: (man(X) => mortal(X)))).`,
+      "example.tptp": `% Example TPTP file\n fof(example_1, axiom, ( ( ! [V__X] : ((s__instance(V__X,s__Man) => s__attribute(V__X,s__Mortal)) ) ) )).`,
     };
     Object.entries(examples).forEach(([name, content]) => openFileInNewTab(name, content));
     switchTab(0);
