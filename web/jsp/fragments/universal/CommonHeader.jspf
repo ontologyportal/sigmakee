@@ -47,7 +47,6 @@ if (StringUtil.emptyString(lang)) lang = "EnglishLanguage";
                     if (!pageName.equals("Prefs")) out.println("<A href=\"Properties.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Prefs</b></A>&nbsp;|&nbsp");
                     if (!pageName.equals("Jobs")) out.println("<A href=\"JobScheduler.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Jobs</b></A>&nbsp;|&nbsp;");
                     if (!pageName.equals("manageUsers")) out.println("<A href=\"ManageUsers.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Manage Users</b></A>&nbsp;|&nbsp;");
-                    if (!pageName.equals("islandPages")) out.println("<A href=\"ManageUsers.jsp?kb=" + kbName + "&term=" + term + "&flang=" + flang + "&lang=" + lang + "\"><b>Manage Users</b></A>&nbsp;|&nbsp;");
                 }
             }
         %>
