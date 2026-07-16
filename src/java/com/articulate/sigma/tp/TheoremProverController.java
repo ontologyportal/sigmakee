@@ -13,8 +13,10 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 
 package com.articulate.sigma.tp;
 
+import com.articulate.sigma.user.EmailService;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.tp.e.*;
 import com.articulate.sigma.utils.LoggingUtils;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.trans.TPTPGenerationManager;
@@ -23,13 +25,31 @@ import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KIF;
 import com.articulate.sigma.utils.StringUtil;
-import java.util.Set;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class TheoremProverController {
+
+    public record FilteredVampireAttempt(Path problemFile, ATPResult result) {
+        
+        public boolean foundContradiction() {
+            if (result == null) return false;
+            return result.getSzsStatus() == SZSStatus.THEOREM || result.getSzsStatus() == SZSStatus.UNSATISFIABLE;
+        }
+    }
+
+    public record EAxFilterVampireResult(ECNF.CNFResult cnfResult, EAxFilter.EAxFilterResult filterResult, List<FilteredVampireAttempt> attempts, FilteredVampireAttempt successfulAttempt) {
+        public EAxFilterVampireResult { attempts = List.copyOf(attempts); }
+        public boolean foundContradiction() { return successfulAttempt != null; }
+    }
 
     public TheoremProverController () {}
     
@@ -180,8 +200,7 @@ public class TheoremProverController {
     }
 
     /********************************************************************
-     * Return true only when the user is asking for bindings, not merely
-     * asking Vampire to prove a Boolean conjecture.
+     * Return true only when the user is asking for bindings, not merely asking Vampire to prove a Boolean conjecture.
      */
     private static boolean isAnswerSeekingQuery(String stmt) {
 
@@ -196,9 +215,73 @@ public class TheoremProverController {
             }
         }
         catch (Exception e) {
-            // Fall through to conservative string check below.
         }
         return stmt.matches(".*[?@][A-Za-z][A-Za-z0-9_-]*.*");
+    }
+
+    /********************************************************************
+     * Converts a TPTP problem to CNF, normalizes CNF axiom roles, generates filtered problems with e_axfilter, runs each with Vampire, and stops after the first contradiction.
+     * @param kb knowledge base associated with the problem
+     * @param inputProblem complete TPTP input problem
+     * @param options e_axfilter options
+     * @param cnfTimeout E CNF conversion timeout in seconds
+     * @param filterTimeout e_axfilter timeout in seconds
+     * @param vampireTimeout Vampire timeout per generated problem in seconds
+     * @param vampireMode Vampire mode: CASC, AVATAR, VAMPIRE, or CUSTOM
+     */
+    public EAxFilterVampireResult runEAxFilterWithVampire(KB kb, Path inputProblem, EAxFilter.EAxFilterOptions options, int cnfTimeout, int filterTimeout, int vampireTimeout, String vampireMode) throws IOException, InterruptedException {
+        
+        if (!EAxFilter.isAvailable()) throw new IllegalStateException("e_axfilter executable is unavailable");
+        if (!Vampire.isAvailable()) throw new IllegalStateException("Vampire executable is unavailable");
+        if (inputProblem == null || !Files.isRegularFile(inputProblem)) throw new IllegalArgumentException("TPTP input problem does not exist: " + inputProblem);
+        Path runDirectory = Files.createTempDirectory("eaxfilter-vampire-");
+        Path cnfDirectory = runDirectory.resolve("cnf");
+        Path filteredDirectory = runDirectory.resolve("filtered");
+        System.out.println("TheoremProverController.runEAxFilterWithVampire(): converting input to CNF");
+        ECNF.CNFResult cnfResult = new ECNF().convertForAxiomFiltering(inputProblem, cnfDirectory, cnfTimeout);
+        if (!cnfResult.succeeded()) {
+            System.err.println("TheoremProverController.runEAxFilterWithVampire(): CNF conversion failed");
+            System.err.println("Command: " + String.join(" ", cnfResult.command()));
+            System.err.println("Exit code: " + cnfResult.exitCode());
+            System.err.println("Timed out: " + cnfResult.timedOut());
+            System.err.println("E stderr: " + cnfResult.stderrFile());
+            throw new IOException("E CNF conversion failed");
+        }
+        System.out.println("TheoremProverController.runEAxFilterWithVampire(): produced " + cnfResult.clauseCount() + " CNF clauses and normalized " + cnfResult.normalizedRoles() + " plain roles");
+        EAxFilter.EAxFilterResult filterResult = new EAxFilter().generate(cnfResult.normalizedCNF(), filteredDirectory, options, filterTimeout);
+        if (!filterResult.succeeded()) {
+            System.err.println("TheoremProverController.runEAxFilterWithVampire(): e_axfilter failed");
+            System.err.println("Command: " + String.join(" ", filterResult.command()));
+            System.err.println("Exit code: " + filterResult.exitCode());
+            System.err.println("Timed out: " + filterResult.timedOut());
+            if (!filterResult.stderr().isEmpty()) System.err.println(String.join(System.lineSeparator(), filterResult.stderr()));
+            throw new IOException("e_axfilter failed");
+        }
+        System.out.println("TheoremProverController.runEAxFilterWithVampire(): generated " + filterResult.generatedProblems().size() + " filtered problems");
+        List<FilteredVampireAttempt> attempts = new ArrayList<>();
+        FilteredVampireAttempt successfulAttempt = null;
+        int current = 0;
+        for (Path problemFile : filterResult.generatedProblems()) {
+            current++;
+            System.out.println("TheoremProverController.runEAxFilterWithVampire(): running Vampire " + current + "/" + filterResult.generatedProblems().size() + ": " + problemFile.getFileName());
+            Vampire vampire = new Vampire(kb, "fof", vampireMode, false, vampireTimeout, 1);
+            vampire.setAskQuestion(false);
+            ATPResult result = vampire.runProblem(problemFile);
+            FilteredVampireAttempt attempt = new FilteredVampireAttempt(problemFile, result);
+            attempts.add(attempt);
+            if (result == null) {
+                System.err.println("TheoremProverController.runEAxFilterWithVampire(): Vampire returned no result for " + problemFile);
+                continue;
+            }
+            System.out.println("TheoremProverController.runEAxFilterWithVampire(): " + problemFile.getFileName() + " -> " + result.getSzsStatus());
+            if (attempt.foundContradiction()) {
+                successfulAttempt = attempt;
+                System.out.println("TheoremProverController.runEAxFilterWithVampire(): contradiction found in " + problemFile);
+                break;
+            }
+        }
+        if (successfulAttempt == null) System.out.println("TheoremProverController.runEAxFilterWithVampire(): no contradiction found within the limits of " + attempts.size() + " attempted problems");
+        return new EAxFilterVampireResult(cnfResult, filterResult, attempts, successfulAttempt);
     }
 
     /********************************************************************
@@ -211,6 +294,7 @@ public class TheoremProverController {
         System.out.println("  -v \"<SUO-KIF query>\"     Query Vampire");
         System.out.println("  -e \"<SUO-KIF query>\"     Query EProver");
         System.out.println("  -l \"<SUO-KIF query>\"     Query LEO");
+        System.out.println("  --axfilter <file>          Filter a TPTP problem and search for contradictions with Vampire");
         System.out.println("Basic options:");
         System.out.println("  -h, --help               Show this help screen");
         System.out.println("  -a, --available          Print available provers");
@@ -253,6 +337,28 @@ public class TheoremProverController {
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
         if (argMap.containsKey("a") || argMap.containsKey("available")) {
             System.out.println("Available Provers: " + TheoremProverController.availableProvers());
+            return;
+        }        
+        if (argMap.containsKey("axfilter")) {
+            String input = argMap.get("axfilter").get(0);
+            int cnfTimeout = argMap.containsKey("cnfTimeout") ? Integer.parseInt(argMap.get("cnfTimeout").get(0)) : 300;
+            int filterTimeout = argMap.containsKey("filterTimeout") ? Integer.parseInt(argMap.get("filterTimeout").get(0)) : 300;
+            int vampireTimeout = argMap.containsKey("timeout") ? Integer.parseInt(argMap.get("timeout").get(0)) : 30;
+            TheoremProverController controller = new TheoremProverController();
+            try {
+                EAxFilterVampireResult result = controller.runEAxFilterWithVampire(kb, Path.of(input), EAxFilter.EAxFilterOptions.forContradictions(), cnfTimeout, filterTimeout, vampireTimeout, "CASC");
+                System.out.println("Normalized CNF: " + result.cnfResult().normalizedCNF());
+                System.out.println("CNF clauses: " + result.cnfResult().clauseCount());
+                System.out.println("Normalized roles: " + result.cnfResult().normalizedRoles());
+                System.out.println("Generated problems: " + result.filterResult().generatedProblems().size());
+                System.out.println("Attempted problems: " + result.attempts().size());
+                System.out.println("Contradiction found: " + result.foundContradiction());
+                if (result.successfulAttempt() != null) System.out.println("Successful problem: " + result.successfulAttempt().problemFile());
+            }
+            catch (Exception exception) {
+                System.err.println("Filtered Vampire test failed: " + exception.getMessage());
+                exception.printStackTrace();
+            }
             return;
         }
         String proverType = null;

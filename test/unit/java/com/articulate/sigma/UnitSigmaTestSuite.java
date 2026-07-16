@@ -39,6 +39,7 @@ import org.junit.runners.Suite;
     TPTPPatchTest.class,
     IncrementalTellPipelineTest.class
 })
+
 public class UnitSigmaTestSuite extends UnitTestBase {
 
 }

@@ -1,6 +1,3 @@
-package com.articulate.sigma;
-import com.articulate.sigma.parsing.Expr;
-import com.articulate.sigma.trans.*;
 /** This code is copyright Articulate Software (c) 2003.
  This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
  Users of this code also consent, by use of this code, to credit Articulate Software
@@ -12,9 +9,15 @@ import com.articulate.sigma.trans.*;
  in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
  August 9, Acapulco, Mexico.
  */
+
+package com.articulate.sigma;
+
+import com.articulate.sigma.parsing.Expr;
+import com.articulate.sigma.trans.*;
+import com.articulate.sigma.tp.e.*;
+
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
-import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.parsing.CLIMapParser;
 
 import java.io.*;

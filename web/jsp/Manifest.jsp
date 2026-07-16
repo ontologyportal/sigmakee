@@ -24,6 +24,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
     reload - a request to reload the constituents of the KB.
     refetch - a request to 'git pull' to update the constituents of the KB.
 */
+
     String kbDir = KBmanager.configuration.getKbDir();
     File kbDirFile = new File(kbDir);
     String sumoDir = KBmanager.configuration.getKbDir();
@@ -36,20 +37,22 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
     String refetch = request.getParameter("refetch");
     String result = "";
     String reinitializeManifest = request.getParameter("reinitializeManifest");
-String[] selectedKifFiles = request.getParameterValues("kifFile");
+    String[] selectedKifFiles = request.getParameterValues("kifFile");
 
     if (role == null || !role.equalsIgnoreCase("admin")) {
-    	saveAs = null;
-    	saveFile = null;
-    	constituent = null;
-    	delete = null;
+        saveAs = null;
+        saveFile = null;
+        constituent = null;
+        delete = null;
         reinitializeManifest = null;
         selectedKifFiles = null;
+        reload = null;
+        refetch = null;
     }
-
-    if ((kb == null) || StringUtil.emptyString(kbName))
-        response.sendRedirect("KBs.jsp");  // That KB does not exist
-
+    if (kb == null || StringUtil.emptyString(kbName)) {
+        response.sendRedirect("KBs.jsp");
+        return;
+    }
     else if (StringUtil.isNonEmptyString(saveAs)) {
         if (saveAs.equalsIgnoreCase("prolog")) {
             File plFile = new File(kbDirFile, (kb.name + ".pl"));
@@ -68,8 +71,6 @@ String[] selectedKifFiles = request.getParameterValues("kifFile");
                       : "Could not write a Prolog file");
         }
         else if (saveAs.equalsIgnoreCase("TPTP") || saveAs.equalsIgnoreCase("tptpFOL")) {
-            // Force translation of the KB to TPTP, even if the user has not
-            // requested this on the Preferences page.
             boolean onlyPlainFOL = saveAs.equalsIgnoreCase("tptpFOL");
             File tptpf = new File(kbDirFile, (saveFile + ".tptp"));
             String tptpfcp = null;
@@ -77,17 +78,15 @@ String[] selectedKifFiles = request.getParameterValues("kifFile");
             try {
                 tptpfcp = tptpf.getCanonicalPath();
                 com.articulate.sigma.trans.SUMOKBtoTPTPKB skbtptpkb = new com.articulate.sigma.trans.SUMOKBtoTPTPKB();
-        		skbtptpkb.kb = kb;
-        		PrintWriter pw = new PrintWriter(new FileWriter(tptpfcp));
+                        skbtptpkb.kb = kb;
+                        PrintWriter pw = new PrintWriter(new FileWriter(tptpfcp));
                 tptpFile = skbtptpkb.writeFile(tptpfcp, null, false, pw);
             }
             catch (Exception tptpfe) {
                 tptpfe.printStackTrace();
             }
-            if (StringUtil.isNonEmptyString(tptpFile))
-            	result = ("Wrote the TPTP file " + tptpFile);
-            else
-  		result = "Could not write a TPTP file";
+            if (StringUtil.isNonEmptyString(tptpFile)) result = ("Wrote the TPTP file " + tptpFile);
+            else result = "Could not write a TPTP file";
         }
         else if (saveAs.equalsIgnoreCase("OWL")) {
             com.articulate.sigma.trans.OWLtranslator ot = new com.articulate.sigma.trans.OWLtranslator();
@@ -101,9 +100,7 @@ String[] selectedKifFiles = request.getParameterValues("kifFile");
             catch (Exception ofe) {
                 ofe.printStackTrace();
             }
-            result = ((StringUtil.isNonEmptyString(ofcp) && owlFile.canRead())
-                      ? ("Wrote the OWL file " + ofcp)
-                      : "Could not write an OWL file");
+            result = ((StringUtil.isNonEmptyString(ofcp) && owlFile.canRead()) ? ("Wrote the OWL file " + ofcp) : "Could not write an OWL file");
         }
         else if (saveAs.equalsIgnoreCase("KIF")) {
             File kifFile = new File(kbDirFile, (kbName + ".kif"));
@@ -115,82 +112,64 @@ String[] selectedKifFiles = request.getParameterValues("kifFile");
             catch (Exception kfe) {
                 kfe.printStackTrace();
             }
-            result = ((StringUtil.isNonEmptyString(kfcp) && kifFile.canRead())
-                      ? ("Wrote the KIF file " + kfcp)
-                      : "Could not write a KIF file");
+            result = ((StringUtil.isNonEmptyString(kfcp) && kifFile.canRead()) ? ("Wrote the KIF file " + kfcp) : "Could not write a KIF file");
         }
     }
 if (reinitializeManifest != null && role != null && role.equalsIgnoreCase("admin")) {
-
     List<String> selected = new ArrayList<>();
     String kbDirCanonical = kbDirFile.getCanonicalPath();
-
     if (selectedKifFiles != null) {
         for (String fileName : selectedKifFiles) {
             if (StringUtil.emptyString(fileName)) continue;
             if (!fileName.toLowerCase().endsWith(".kif")) continue;
             if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) continue;
-
             File f = new File(kbDirFile, fileName);
             String fCanonical = f.getCanonicalPath();
-
-            if (f.exists() && f.isFile() && fCanonical.startsWith(kbDirCanonical + File.separator))
-                selected.add(fileName);
+            if (f.exists() && f.isFile() && fCanonical.startsWith(kbDirCanonical + File.separator)) selected.add(fileName);
         }
     }
-
-    if (selected.isEmpty()) {
-        result = "No KIF files selected. Config was not changed.";
-    }
+    if (selected.isEmpty()) result = "No KIF files selected. Config was not changed.";
     else {
         Collections.sort(selected);
-
         KBmanager.configuration.setKbConstituentList(kbName, selected);
         KBmanager.getMgr().writeConfiguration();
-
         new File(kbDirFile, kbName + ".tptp").delete();
         new File(kbDirFile, kbName + ".tff").delete();
         new File(kbDirFile, kbName + ".thf").delete();
         new File(kbDirFile, kbName + "_plain.thf").delete();
         new File(kbDirFile, kbName + "_modal.thf").delete();
-
         KBmanager.getMgr().reinitializeFromConfiguration();
         kb = KBmanager.getMgr().getKB(kbName);
-
         result = "Updated config.xml, reinitialized " + kbName + ", and started TPTP regeneration.";
     }
 }
 else if (delete != null) {
         int i = kb.constituents.indexOf(constituent.intern());
-        if (i == -1)
-            System.out.println("Error in Manifest.jsp: No such constituent: " + constituent.intern());
+        if (i == -1) System.out.println("Error in Manifest.jsp: No such constituent: " + constituent.intern());
         else {
             kb.constituents.remove(i);
             KBmanager.getMgr().writeConfiguration();
         }
-	kb.reload();
+        kb.reload();
     }
     else if (constituent != null) {
         kb.addConstituent(constituent);
         KBmanager.getMgr().writeConfiguration();
-	    if (KBmanager.configuration.isCache()) {
-	        kb.kbCache = new KBcache(kb);
-	        kb.kbCache.buildCaches();
-	        kb.kbCache.writeCacheFile();
-	    }
+            if (KBmanager.configuration.isCache()) {
+                kb.kbCache = new KBcache(kb);
+                kb.kbCache.buildCaches();
+                kb.kbCache.writeCacheFile();
+            }
     }
-    else if (reload != null)
-        kb.reload();
+    else if (reload != null) kb.reload();
     else if (refetch != null) {
         Map<String, Integer> dirs = new HashMap<String, Integer>();
         for (int i = 0 ; i < kb.constituents.size() ; i++) {
             String cname = (String) kb.constituents.get(i);
             File file = new File(cname);
-            if (!file.isAbsolute())
-                file = new File(sumoDirFile, cname);
+            if (!file.isAbsolute()) file = new File(sumoDirFile, cname);
             String dir = file.getParent();
-            if (!StringUtil.emptyString(dir) && !dirs.containsKey(dir))
-                dirs.put(dir, 0);
+            if (!StringUtil.emptyString(dir) && !dirs.containsKey(dir)) dirs.put(dir, 0);
         }
         for (String dir : dirs.keySet()) {
             ProcessBuilder pb = new ProcessBuilder("git", "pull");
@@ -202,15 +181,41 @@ else if (delete != null) {
             String stdout = s.hasNext() ? s.next() : "";
             s = new java.util.Scanner(p.getErrorStream()).useDelimiter("\\A");
             String stderr = s.hasNext() ? s.next() : "";
-            System.out.println("INFO git pull (" + dir + ") exitValue: " + exitvalue);
-            System.out.println("INFO git pull (" + dir + ") stdout: " + stdout);
-            System.out.println("INFO git pull (" + dir + ") stderr: " + stderr);
         }
     }
 %>
 <HTML>
 <HEAD>
-<TITLE>Sigma Knowledge Engineering Environment - Constituents of <%=kbName %></TITLE>
+    <TITLE>Sigma Knowledge Engineering Environment - Constituents of <%=kbName %></TITLE>
+    <style>
+        .constituents-table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 12px;
+            background: #fff;
+        }
+        .constituents-table th,
+        .constituents-table td {
+            border: 1px solid #999;
+            padding: 8px 10px;
+            text-align: left;
+        }
+        .constituents-table th {
+            background: #e8e8e8;
+            font-weight: bold;
+        }
+        .constituents-table tbody tr:nth-child(even) {
+            background: #f7f7f7;
+        }
+        .constituents-table tbody tr:hover {
+            background: #eef5ff;
+        }
+        .constituents-table .use-column {
+            width: 55px;
+            text-align: center;
+        }
+    </style>
 </HEAD>
 <BODY BGCOLOR=#FFFFFF>
     <%
@@ -218,37 +223,30 @@ else if (delete != null) {
         String pageString = "Manifest";
     %>
     <%@include file="fragments/universal/CommonHeader.jspf" %>
-<b>Files which are the <I>constituents</I> of the <B><%=kbName %></b> knowledge base </b>
-
 <%
     Set<String> active = new HashSet<>();
-
     List<String> configuredFiles = KBmanager.configuration.getKbConstituentList(kbName);
     if (configuredFiles != null) {
         for (String c : configuredFiles)
             active.add(new File(c).getName());
     }
-
     File[] kifFiles = kbDirFile.listFiles((dir, name) ->
             name.toLowerCase().endsWith(".kif")
     );
-
-    if (kifFiles != null)
-        Arrays.sort(kifFiles, Comparator.comparing(File::getName));
+    if (kifFiles != null) Arrays.sort(kifFiles, Comparator.comparing(File::getName));
 %>
-
 <hr>
 <b>Configure KB constituents from <%=kbDirFile.getAbsolutePath()%></b>
-
 <form name="manifestEditor" id="manifestEditor" action="Manifest.jsp" method="POST">
     <input type="hidden" name="kb" value="<%=kbName%>">
-
-    <table border="0" cellspacing="2" cellpadding="2">
-        <tr>
-            <td><b>Use</b></td>
-            <td><b>KIF File</b></td>
-        </tr>
-
+    <table class="constituents-table">
+        <thead>
+            <tr>
+                <th class="use-column">Use</th>
+                <th scope="col">KIF file</th>
+            </tr>
+        </thead>
+        <tbody>
 <%
     if (kifFiles == null || kifFiles.length == 0) {
 %>
@@ -276,8 +274,8 @@ else if (delete != null) {
         }
     }
 %>
+        </tbody>
     </table>
-
 <% if (role != null && role.equalsIgnoreCase("admin")) { %>
     <br>
     <input type="submit" name="reinitializeManifest" value="Reinitialize KB with checked files">
@@ -285,7 +283,6 @@ else if (delete != null) {
     <p><i>Log in as admin to change selected constituents.</i></p>
 <% } %>
 </form>
-
 <%
   HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?";
   String er = KBmanager.getMgr().getError();
@@ -299,12 +296,8 @@ else if (delete != null) {
       out.println("<br/><b>Warnings in KB " + kb.name + "</b><br>\n");
       out.println(HTMLformatter.formatErrorsWarnings(warns,kb));
   }
-
-  if (StringUtil.isNonEmptyString(er))
-      out.println(er);
-  else
-      if (StringUtil.isNonEmptyString(constituent) && StringUtil.emptyString(delete))
-          out.println("File " + constituent + " loaded successfully.");
+  if (StringUtil.isNonEmptyString(er)) out.println(er);
+  else if (StringUtil.isNonEmptyString(constituent) && StringUtil.emptyString(delete)) out.println("File " + constituent + " loaded successfully.");
 %>
 <P>
   <a href="KBs.jsp">Return to home page</a><p>

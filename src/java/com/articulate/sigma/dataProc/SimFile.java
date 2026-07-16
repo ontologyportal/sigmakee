@@ -1,7 +1,7 @@
 package com.articulate.sigma.dataProc;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.tp.EProver;
+import com.articulate.sigma.tp.e.*;
 import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;

@@ -1,95 +1,22 @@
-FROM alpine:latest
+FROM ubuntu:24.04
 
-# Install required libraries
-RUN apk update
-RUN apk upgrade
-RUN apk add gcompat
-RUN apk add bash
-RUN apk add unzip
-RUN apk add git
-RUN apk add make
-RUN apk add gcc
-RUN apk add musl-dev
-RUN apk add graphviz
-RUN apk add apache-ant
-RUN apk add zlib-dev
-RUN apk add g++
-RUN apk add linux-headers
-RUN apk add openjdk21
+ENV DEBIAN_FRONTEND=noninteractive
+ENV SIGMA_HOME=/root/.sigmakee
+ENV ONTOLOGYPORTAL_GIT=/root/workspace
+ENV SIGMA_SRC=/root/workspace/sigmakee
+ENV PROGRAMS_DIR=/root/Programs
+ENV CATALINA_OPTS="-Xmx10g -Xss1m"
 
-# Setup home directory
-RUN cd /root \
-    && mkdir Programs \
-    && mkdir workspace \
-    && mkdir .sigmakee \
-    && cd .sigmakee \
-    && mkdir KBs
+RUN apt-get update && apt-get install -y \
+    ca-certificates curl unzip git ant make cmake gcc g++ graphviz \
+    build-essential libcurl4-openssl-dev openjdk-21-jdk openjdk-21-jre-headless \
+    jedit \
+ && rm -rf /var/lib/apt/lists/*
 
-# Setup Bash
-RUN cd /root \
-    && touch .bashrc \
-    && echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc \
-    && echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc \
-    && echo "export SIGMA_HOME=/root/.sigmakee" >> .bashrc \
-    && echo "export SIGMA_SRC=/root/workspace/sigmakee" >> .bashrc \
-    && echo "export ONTOLOGYPORTAL_GIT=/root/workspace" >> .bashrc \
-    && echo 'export CATALINA_OPTS="$CATALINA_OPTS -Xmx10g -Xss1m"' >> .bashrc \
-    && echo "export CATALINA_HOME=/root/Programs/apache-tomcat-9.0.107" >> .bashrc \
-    && source .bashrc
+WORKDIR /root/workspace/sigmakee
+COPY . .
 
-# Setup Vampire
-RUN cd /root/workspace \
-    && git clone https://github.com/vprover/vampire \
-    && cd vampire \
-    && git submodule update --init \
-    && cd cadical && ./configure && make \
-    && cd .. \
-    && make -j 4 vampire_rel \
-    && mv vampire_rel_master* vampire
+RUN bash scripts/installation/install.sh
 
-# Setup Apache, E and Wordnet
-RUN cd /root/Programs \
-    && wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.107/bin/apache-tomcat-9.0.107.zip' \
-    && wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' \
-    && wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.6/E.tgz' \
-    && tar -xvzf E.tgz \
-    && unzip apache-tomcat-9.0.107.zip \
-    && rm apache-tomcat-9.0.107.zip
-
-RUN cd /root/Programs/apache-tomcat-9.0.107/bin \
-    && chmod 777 *
-
-RUN cd /root/Programs/apache-tomcat-9.0.107/webapps \
-    && chmod 777 *
-
-# Setup E
-RUN cd /root/Programs/E \
-    && ./configure \
-    && make -j 4 \
-    && make install
-
-# Setup Wordnet
-RUN cd /root/Programs \
-    && gunzip WordNet-3.0.tar.gz \
-    && tar -xvf WordNet-3.0.tar \
-    && mkdir /root/.sigmakee/KBs/WordNetMappings \
-    && cp WordNet-3.0/dict/* /root/.sigmakee/KBs/WordNetMappings/
-
-# Clone ontologyportal git repos
-RUN cd /root/workspace \
-    && git clone https://github.com/ontologyportal/sigmakee \
-    && git clone https://github.com/ontologyportal/sumo \
-    && git clone https://github.com/ontologyportal/TPTP-ANTLR \
-    && git clone https://github.com/ontologyportal/SigmaUtils \
-    && git clone https://github.com/ontologyportal/sigmaAntlr
-
-# Setup sigmakee
-RUN cd /root/workspace/sigmakee \
-    && source /root/.bashrc \
-    && ant
-
-# Add sumo kif knowledge-bases
-RUN cp -R /root/workspace/sumo/* /root/.sigmakee/KBs
-COPY kbs /root/.sigmakee/KBs
-
-CMD cd /root && source .bashrc && /root/Programs/apache-tomcat-9.0.107/bin/startup.sh && tail -f /root/Programs/apache-tomcat-9.0.107/logs/catalina.out
+EXPOSE 8080
+CMD ["bash", "-lc", "source ~/.bashrc && startup.sh && tail -f $CATALINA_HOME/logs/catalina.out"]

@@ -1,6 +1,6 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.tp.EProver;
+import com.articulate.sigma.tp.e.*;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.utils.StringUtil;
@@ -27,8 +27,6 @@ public class TPTP3Test extends IntegrationTestBase {
 
         System.out.println("-----------------------testParseProofFile--------------------------");
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-//        String expected = "6. (exists (?X1)\n" +
-//                          "  (subclass ?X1 Entity)) []"; // GitHub workflow test chooses different kb_SUMO for proof
         File file = new File(System.getenv("SIGMA_SRC") + "/prover_out.txt");
         file.deleteOnExit();
         List<String> lines = FileUtil.readLines(file.getPath(), true);

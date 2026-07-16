@@ -786,6 +786,30 @@ public class SessionTPTPManager {
                             sessionId);
                 }
 
+                System.out.println(
+                    "SessionTPTPManager.writeUserAssertionsForSession(): "
+                            + "requested language = " + lang);
+
+                System.out.println(
+                        "SessionTPTPManager.writeUserAssertionsForSession(): "
+                                + "normalized language = " + normalizedLang);
+
+                System.out.println(
+                        "SessionTPTPManager.writeUserAssertionsForSession(): "
+                                + "session ID = " + sessionId);
+
+                System.out.println(
+                        "SessionTPTPManager.writeUserAssertionsForSession(): "
+                                + "output path = " + outputPath);
+
+                System.out.println(
+                        "SessionTPTPManager.writeUserAssertionsForSession(): "
+                                + "parsed formulas = " + parsedFormulas);
+
+                System.out.println(
+                        "SessionTPTPManager.writeUserAssertionsForSession(): "
+                                + "translations = " + translations);
+
                 if (translations == null || translations.isEmpty())
                     return false;
 

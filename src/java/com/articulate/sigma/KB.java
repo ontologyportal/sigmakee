@@ -56,13 +56,13 @@ MA  02111-1307 USA
 */
 package com.articulate.sigma;
 
+import com.articulate.sigma.tp.e.*;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.parsing.ExprToTPTP;
 import com.articulate.sigma.tp.ATPException;
 import com.articulate.sigma.tp.ArityException;
 import com.articulate.sigma.tp.FormulaTranslationException;
 import com.articulate.sigma.tp.Vampire;
-import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.parsing.CLIMapParser;
 import com.articulate.sigma.trans.*;
@@ -1720,44 +1720,50 @@ public class KB implements Serializable {
                         for (Formula parsedF : parsedFormulas) { // 4. Write the formula to the user assertions file.
                             parsedF.endFilePosition = writeUserAssertion(parsedF.getFormula(), filename);
                             parsedF.sourceFile = filename;
-                            // Tag with session so generation and cleanup can isolate UA formulas per-session.
-                            // Base-KB generation skips all tagged formulas; session generation includes only
-                            // formulas tagged with the matching sessionId. cleanupSession() removes them.
-                            if (sessionId != null && !sessionId.isEmpty())
-                                parsedF.uaSessionId = sessionId;
+                            if (sessionId != null && !sessionId.isEmpty()) parsedF.uaSessionId = sessionId;
                         }
                         result = "The formula has been added for browsing";
-                        // 5. Write the formula to the kb.name_UserAssertions.tptp/tff
-                        if (null == KBmanager.getMgr().prover) {
+                        String tptpLang = SUMOKBtoTPTPKB.getLang();
+
+                        if ("tptp".equalsIgnoreCase(tptpLang))
+                            tptpLang = "fof";
+
+                        System.out.println("KB.tell(): language = " + tptpLang);
+                        System.out.println("KB.tell(): output file = " + tptpfile);
+                        System.out.println("KB.tell(): session ID = " + sessionId);
+                        System.out.println("KB.tell(): parsed formula count = " + parsedFormulas.size());
+
+                        for (Formula parsedFormula : parsedFormulas) {
+                            System.out.println(
+                                    "KB.tell(): formula = " + parsedFormula.getFormula());
+                            System.out.println(
+                                    "KB.tell(): source file = " + parsedFormula.sourceFile);
+                            System.out.println(
+                                    "KB.tell(): formula session ID = " + parsedFormula.uaSessionId);
+                        }
+
+                        boolean wroteInferenceAssertions =
+                                SessionTPTPManager.writeUserAssertionsForSession(
+                                        this,
+                                        sessionId,
+                                        parsedFormulas,
+                                        tptpfile.toPath(),
+                                        tptpLang);
+
+                        System.out.println(
+                                "KB.tell(): wrote inference assertions = "
+                                        + wroteInferenceAssertions);
+
+                        if (wroteInferenceAssertions)
+                            result += " and inference";
+                        else
                             result += " but not for local inference";
-                        }
-                        else {
-                            String tptpLang = SUMOKBtoTPTPKB.getLang();
-                            if ("tptp".equalsIgnoreCase(tptpLang))
-                                tptpLang = "fof";
-                            boolean wroteInferenceAssertions =
-                                    SessionTPTPManager.writeUserAssertionsForSession(
-                                            this,
-                                            sessionId,
-                                            parsedFormulas,
-                                            tptpfile.toPath(),
-                                            tptpLang);
-                            if (wroteInferenceAssertions) result += " and inference";
-                            else result += " but not for local inference";
-                        }
-                        // Incremental TPTP pipeline for schema-level tells in a session.
-                        // Runs after merge() and UA-file write; keeps the session TPTP up to date.
-                        // Two cases from requiresBaseRegenForFormulas():
-                        //   (A) Schema predicates (TPTP_BASE_REGEN_PREDICATES) → incremental update
-                        //   (B) Ground assertions on transitive predicates → no targeted method, full regen
                         if (sessionId != null && !sessionId.isEmpty()) {
-                            String tptpLang = SUMOKBtoTPTPKB.getLang();
                             tptpLang = "fof".equals(tptpLang) ? "tptp" : tptpLang;
                             for (Formula parsedF : parsedFormulas) {
                                 String fPred = parsedF.car();
                                 if (fPred == null) continue;
                                 if (TPTP_BASE_REGEN_PREDICATES.contains(fPred)) {
-                                    // Case (A): targeted incremental update
                                     SessionTPTPManager.applyIncrementalUpdate(this, sessionId, parsedF, tptpLang);
                                 }
                                 else if (parsedF.isGround()

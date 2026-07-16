@@ -139,11 +139,12 @@ jobs:
           find $SIGMA_HOME/KBs -name '**/*.ser' -delete
 
       - name: Upload Test Results
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: |
-            ./sigmakee/build/test/results/*
+          path: ./sigmakee/build/test/results/*
+          if-no-files-found: warn
 
       - name: Upload sigmakee jars
         uses: actions/upload-artifact@v4

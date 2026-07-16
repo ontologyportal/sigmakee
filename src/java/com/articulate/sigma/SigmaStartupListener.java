@@ -21,6 +21,7 @@ import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.trans.TPTPGenerationManager;
 import com.articulate.sigma.user.UserManager;
+import com.articulate.sigma.jobscheduler.JobScheduler;
 import com.articulate.sigma.utils.*;
 
 import javax.servlet.ServletContextEvent;
@@ -34,6 +35,8 @@ public class SigmaStartupListener implements ServletContextListener {
     
     /** Application-wide user manager stored in the servlet context. */
     private UserManager userManager;
+    /** Application-wide job scheduler. */
+    private JobScheduler jobScheduler;
 
     /********************************************************************
      * Initializes SigmaKEE when the web application starts.
@@ -41,6 +44,7 @@ public class SigmaStartupListener implements ServletContextListener {
      */
     @Override
     public void contextInitialized(ServletContextEvent event) {
+
         long start = System.nanoTime();
         System.out.println("================================ SIGMAKEE INITIALIZING ================================");
         LoggingUtils.log("INFO", "SigmaKEE Startup Beginning!");
@@ -49,7 +53,10 @@ public class SigmaStartupListener implements ServletContextListener {
             KB kb = KBmanager.getMgr().getKB("SUMO");
             if (kb == null) LoggingUtils.log("ERROR", "KB was null!");
             userManager = new UserManager();
+            jobScheduler = new JobScheduler();
+            LoggingUtils.log("Job scheduler started");
             event.getServletContext().setAttribute("userManager", userManager);
+            event.getServletContext().setAttribute("jobScheduler", jobScheduler);
         }
         catch (Exception e) {
             LoggingUtils.log("ERROR", "SigmaKEE Startup Failed!");

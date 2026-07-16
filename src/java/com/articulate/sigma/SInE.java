@@ -43,7 +43,7 @@ public class SInE extends InferenceEngine {
 
     static boolean kifFormat = true;
 
-    /** *************************************************************
+    /***************************************************************
      */
     public static SInE getNewInstance(String kbFileName) {
 
@@ -58,7 +58,7 @@ public class SInE extends InferenceEngine {
         return res;
     }
 
-    /** *************************************************************
+    /***************************************************************
      */
     public static class SInEFactory extends EngineFactory {
 
@@ -73,7 +73,7 @@ public class SInE extends InferenceEngine {
         }
     }
 
-    /** *************************************************************
+    /***************************************************************
      */
     public static EngineFactory getFactory() {
             return new SInEFactory();
@@ -111,7 +111,7 @@ public class SInE extends InferenceEngine {
     Map<String, List<String>> requirements;
     EngineFactory underlyingEngineFactory;
 
-    /** *************************************************************
+    /***************************************************************
      */
 //    private SInE(String kbFileName, EngineFactory ef) throws Exception {
 //
@@ -156,13 +156,13 @@ public class SInE extends InferenceEngine {
 //        }
 //    }
 
-    /** *************************************************************
+    /***************************************************************
      */
     private SInE(String kbFileName) throws Exception {
          //this(kbFileName, Vampire.getFactory());
     }
 
-    /** *************************************************************
+    /***************************************************************
      */
     public SInE(Iterable<String> formulaSource) {
 
@@ -176,7 +176,7 @@ public class SInE extends InferenceEngine {
         loadFormulas(formulaSource);
     }
 
-    /** *************************************************************
+    /***************************************************************
      * Loads formulas from given source.
      */
     public List<String> loadNonKif(File kbFile) {
@@ -204,7 +204,7 @@ public class SInE extends InferenceEngine {
         return result;
     }
 
-    /** *************************************************************
+    /***************************************************************
      * Loads formulas from given source.
      *
      * @param formulaSource Iterable object that contains strings representing formulas.
@@ -260,7 +260,7 @@ public class SInE extends InferenceEngine {
         //System.out.println("SInE.loadFormulas(): computed " + requirements.size() + " formulas ");
     }
 
-    /** *************************************************************
+    /***************************************************************
      * Returns all symbols occurring in given formula.
      *
      * @param form Formula to get symbols from.
@@ -285,7 +285,7 @@ public class SInE extends InferenceEngine {
         return res;
     }
 
-    /** *************************************************************
+    /***************************************************************
      */
     public Set<String> getSymbols(Collection<String> forms) {
 
@@ -297,7 +297,7 @@ public class SInE extends InferenceEngine {
         return syms;
     }
 
-    /** *************************************************************
+    /***************************************************************
      * Returns formulas that are directly required by given symbols
      * (in the sense of requirements map).
      *
@@ -318,7 +318,7 @@ public class SInE extends InferenceEngine {
         return reqForms;
     }
 
-    /** *************************************************************
+    /***************************************************************
      * Returns all symbols transitively required by given symbols
      * (in the sense of requirements map).
      *
@@ -338,7 +338,7 @@ public class SInE extends InferenceEngine {
         return reqSyms;
     }
 
-    /** *************************************************************
+    /***************************************************************
      * Returns formulas that are transitively required by given symbols
      * (in the sense of requirements map).
      *
@@ -351,7 +351,7 @@ public class SInE extends InferenceEngine {
         return get1RequiredFormulas(reqSyms);
     }
 
-    /** *************************************************************
+    /***************************************************************
      * Performs axiom selection for given query.
      *
      * @param form Formula, according to which axioms will be selected.
@@ -369,7 +369,7 @@ public class SInE extends InferenceEngine {
         return res;
     }
 
-    /** *************************************************************
+    /***************************************************************
      */
     @Override
     public String submitQuery(String formula, int timeLimit, int bindingsLimit)
@@ -397,7 +397,7 @@ public class SInE extends InferenceEngine {
         return res;
     }
 
-    /** *************************************************************
+    /***************************************************************
      */
     @Override
     public String assertFormula(String formula) {
@@ -409,7 +409,7 @@ public class SInE extends InferenceEngine {
         return null;
     }
 
-    /** *************************************************************
+    /***************************************************************
      *  A simple test to load a KB file and pose a query, which are
      *  the first and second item, respectively, given on the
      *  command line.
@@ -435,7 +435,7 @@ public class SInE extends InferenceEngine {
        // sine.terminate();
     }
 
-    /** *************************************************************
+    /***************************************************************
      *  A simple test to load a KB file and pose a query, which are
      *  the first and second item, respectively, given on the
      *  command line.

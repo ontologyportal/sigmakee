@@ -768,8 +768,6 @@
                             publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                             tpp.processAnswersFromProof(result.getQList(), stmt);
                             printAnswersBlock(tpp, kbName, lang, out);
-                            if (tpp.bindingMap != null) tpp.bindingMap.clear();
-                            if (tpp.bindings != null) tpp.bindings.clear();
                             out.println(HTMLformatter.formatTPTP3ProofResult(tpp, stmt, lineHtml, kbName, lang));
                             if (!StringUtil.emptyString(tpp.status)) {
                                 out.println("Status: " + tpp.status);

@@ -37,6 +37,7 @@ public class Configuration {
         "cacheDisjoint",
         "cwa",
         "eproverExec",
+        "eaxfilterExec",
         "graphDir",
         "graphVizExec",
         "hostname",
@@ -88,6 +89,7 @@ public class Configuration {
     /** Preference keys whose values must point to executable files. */
     public static final List<String> EXECUTABLE_KEYS = Arrays.asList(
         "eproverExec",
+        "eaxfilterExec",
         "graphVizExec",
         "jeditExec",
         "leoExec",
@@ -166,6 +168,46 @@ public class Configuration {
         }
         preferences.put(key, value);
     }
+
+    public String getConfigFilePath() { return this.configFilePath; }
+    public HashMap<String, String> getPreferences() { return this.preferences; }
+    public String getPreference(String key) { return this.preferences.get(key); }
+    public List<String> getKbConstituentList(String kb) { return this.kbConstituentList.get(kb); }
+    public HashMap<String, List<String>> getAllKbConstituentLists() { return this.kbConstituentList; }
+    public int getAdminBrowserLimit() { return getIntegerPreference("adminBrowserLimit", 200); }
+    public String getBaseDir() { return getStringPreference("baseDir", ""); }
+    public boolean isCache() { return getBooleanPreference("cache", true); }
+    public boolean isCacheDisjoint() { return getBooleanPreference("cacheDisjoint", true); }
+    public boolean isCwa() { return getBooleanPreference("cwa", false); }
+    public String getEproverExec() { return getStringPreference("eproverExec", ""); }
+    public String getEaxFilterExec() { return getStringPreference("eaxfilterExec", ""); }
+    public String getGraphDir() { return getStringPreference("graphDir", ""); }
+    public String getGraphVizExec() { return getStringPreference("graphVizExec", "/usr/bin/dot"); }
+    public String getHostname() { return getStringPreference("hostname", "localhost"); }
+    public String getInferenceTestDir() { return getStringPreference("inferenceTestDir", getKbDir() + File.separator + "tests"); }
+    public boolean isHttps() { return getBooleanPreference("https", false); }
+    public String getJeditExec() { return getStringPreference("jeditExec", "/usr/share/jedit/jedit"); }
+    public String getKbDir() { return getStringPreference("kbDir", ""); }
+    public String getSumoDir() { return getStringPreference("sumoDir", getKbDir()); }
+    public boolean isLoadFresh() { return getBooleanPreference("loadFresh", false); }
+    public boolean isLoadLexicons() { return getBooleanPreference("loadLexicons", true); }
+    public String getLeoExec() { return getStringPreference("leoExec", ""); }
+    public int getMaxPredicateArity() { return getIntegerPreference("maxPredicateArity", 7); }
+    public String getPort() { return getStringPreference("port", "8080"); }
+    public boolean isTermFormats() { return getBooleanPreference("termFormats", true); }
+    public String getTptpExec() { return getStringPreference("tptpExec", ""); }
+    public boolean isTypePrefix() { return getBooleanPreference("typePrefix", true); }
+    public int getUserBrowserLimit() { return getIntegerPreference("userBrowserLimit", 25); }
+    public String getVampireExec() { return getStringPreference("vampireExec", ""); }
+    public String getVerbnetDir() { return getStringPreference("verbnetDir", ""); }
+    public String getOllamaHost() { return getStringPreference("ollamaHost", "http://127.0.0.1:11434"); }
+    public boolean isShowCachedFormulas() { return getBooleanPreference("showCachedFormulas", true); }
+    public String getSmtpEmailAddress() { return getStringPreference("smtpEmailAddress", ""); }
+    public String getSmtpEmailUser() { return getStringPreference("smtpEmailUser", ""); }
+    public String getSmtpEmailPassword() { return getStringPreference("smtpEmailPassword", ""); }
+    public String getSmtpEmailServer() { return getStringPreference("smtpEmailServer", ""); }
+    public String getSystemsDir() { return getStringPreference("systemsDir", ""); }
+    public boolean isAws() { return getBooleanPreference("isAws", false); }
 
     /*****************************************************************
      * Writes current preferences and KB constituents back to config.xml.
@@ -270,6 +312,7 @@ public class Configuration {
         defaults.put("cacheDisjoint", "true");
         defaults.put("cwa", "false");
         defaults.put("eproverExec", userHome + sep + "Programs" + sep + "E" + sep + "eprover");
+        defaults.put("eaxfilterExec", userHome + sep + "Programs" + sep + "E" + sep + "e_axfilter");
         defaults.put("graphDir", tomcatHome + sep + "webapps" + sep + "sigma" + sep + "graph");
         defaults.put("graphVizExec", "/usr/bin/dot");
         defaults.put("hostname", "localhost");
@@ -469,16 +512,6 @@ public class Configuration {
         }
     }
 
-    public String getConfigFilePath() { return this.configFilePath; }
-
-    public HashMap<String, String> getPreferences() { return this.preferences; }
-
-    public String getPreference(String key) { return this.preferences.get(key); }
-
-    public List<String> getKbConstituentList(String kb) { return this.kbConstituentList.get(kb); }
-
-    public HashMap<String, List<String>> getAllKbConstituentLists() { return this.kbConstituentList; }
-
     /*****************************************************************
      * Clears all configured KB constituent lists.
      */
@@ -637,72 +670,6 @@ public class Configuration {
         for (String warning : this.warnings) System.out.println("    " + warning);
         System.out.println("===================================================");
     }
-
-    public int getAdminBrowserLimit() { return getIntegerPreference("adminBrowserLimit", 200); }
-
-    public String getBaseDir() { return getStringPreference("baseDir", ""); }
-
-    public boolean isCache() { return getBooleanPreference("cache", true); }
-
-    public boolean isCacheDisjoint() { return getBooleanPreference("cacheDisjoint", true); }
-
-    public boolean isCwa() { return getBooleanPreference("cwa", false); }
-
-    public String getEproverExec() { return getStringPreference("eproverExec", ""); }
-
-    public String getGraphDir() { return getStringPreference("graphDir", ""); }
-
-    public String getGraphVizExec() { return getStringPreference("graphVizExec", "/usr/bin/dot"); }
-
-    public String getHostname() { return getStringPreference("hostname", "localhost"); }
-
-    public String getInferenceTestDir() { return getStringPreference("inferenceTestDir", getKbDir() + File.separator + "tests"); }
-
-    public boolean isHttps() { return getBooleanPreference("https", false); }
-
-    public String getJeditExec() { return getStringPreference("jeditExec", "/usr/share/jedit/jedit"); }
-
-    public String getKbDir() { return getStringPreference("kbDir", ""); }
-
-    public String getSumoDir() { return getStringPreference("sumoDir", getKbDir()); }
-
-    public boolean isLoadFresh() { return getBooleanPreference("loadFresh", false); }
-
-    public boolean isLoadLexicons() { return getBooleanPreference("loadLexicons", true); }
-
-    public String getLeoExec() { return getStringPreference("leoExec", ""); }
-
-    public int getMaxPredicateArity() { return getIntegerPreference("maxPredicateArity", 7); }
-
-    public String getPort() { return getStringPreference("port", "8080"); }
-
-    public boolean isTermFormats() { return getBooleanPreference("termFormats", true); }
-
-    public String getTptpExec() { return getStringPreference("tptpExec", ""); }
-
-    public boolean isTypePrefix() { return getBooleanPreference("typePrefix", true); }
-
-    public int getUserBrowserLimit() { return getIntegerPreference("userBrowserLimit", 25); }
-
-    public String getVampireExec() { return getStringPreference("vampireExec", ""); }
-
-    public String getVerbnetDir() { return getStringPreference("verbnetDir", ""); }
-
-    public String getOllamaHost() { return getStringPreference("ollamaHost", "http://127.0.0.1:11434"); }
-
-    public boolean isShowCachedFormulas() { return getBooleanPreference("showCachedFormulas", true); }
-
-    public String getSmtpEmailAddress() { return getStringPreference("smtpEmailAddress", ""); }
-
-    public String getSmtpEmailUser() { return getStringPreference("smtpEmailUser", ""); }
-
-    public String getSmtpEmailPassword() { return getStringPreference("smtpEmailPassword", ""); }
-
-    public String getSmtpEmailServer() { return getStringPreference("smtpEmailServer", ""); }
-
-    public String getSystemsDir() { return getStringPreference("systemsDir", ""); }
-
-    public boolean isAws() { return getBooleanPreference("isAws", false); }
 
     /******************************************************************
      */
