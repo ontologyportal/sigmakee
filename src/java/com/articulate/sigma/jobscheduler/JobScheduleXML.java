@@ -180,6 +180,13 @@ private Element createJobElement(Document document, Job job) throws IOException 
                 appendTextElement(document, jobElement, "filterTimeout", Integer.toString(axJob.getFilterTimeout()));
                 appendTextElement(document, jobElement, "vampireTimeout", Integer.toString(axJob.getVampireTimeout()));
         }
+        else if (job instanceof SInEContradictionJob sineJob) {
+                appendTextElement(document, jobElement, "kbName", sineJob.getKbName());
+                appendTextElement(document, jobElement, "attempts", Integer.toString(sineJob.getAttempts()));
+                appendTextElement(document, jobElement, "scope", Integer.toString(sineJob.getScope()));
+                appendTextElement(document, jobElement, "vampireTimeout", Integer.toString(sineJob.getVampireTimeout()));
+                appendTextElement(document, jobElement, "maxAxioms", Integer.toString(sineJob.getMaxAxioms()));
+        }
         else if (job instanceof ConsistencyCheckJob consistencyJob) appendTextElement(document, jobElement, "kbName", consistencyJob.getKbName());
         else if (!(job instanceof SumoUpdateJob)) throw new IOException("Unsupported job class: " + job.getClass().getName());
         return jobElement;
@@ -261,6 +268,9 @@ private void appendTextElement(Document document, Element parent, String name, S
                 parseRequiredInt(jobElement, "filterTimeout"),
                 parseRequiredInt(jobElement, "vampireTimeout"));
         break;
+            case "sine-contradiction":
+                job = new SInEContradictionJob(id, requireChildText(jobElement, "kbName"), schedule, parseRequiredInt(jobElement, "attempts"), parseRequiredInt(jobElement, "scope"), parseRequiredInt(jobElement, "vampireTimeout"), parseRequiredInt(jobElement, "maxAxioms"));
+                break;
             case "consistency-check":
                 job = new ConsistencyCheckJob(id, requireChildText(jobElement, "kbName"), schedule);
                 break;

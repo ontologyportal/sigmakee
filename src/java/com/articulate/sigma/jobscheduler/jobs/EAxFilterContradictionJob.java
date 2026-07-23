@@ -3,14 +3,14 @@ package com.articulate.sigma.jobscheduler;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.tp.SZSStatus;
-import com.articulate.sigma.tp.TheoremProverController;
+import com.articulate.sigma.tp.EAxFilterContradictionRunner;
 import com.articulate.sigma.tp.TheoremProverController.EAxFilterVampireResult;
 import com.articulate.sigma.tp.TheoremProverController.FilteredVampireAttempt;
-import com.articulate.sigma.tp.e.EAxFilter;
 import com.articulate.sigma.user.EmailService;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Random;
 
 public class EAxFilterContradictionJob extends Job {
 
@@ -52,7 +52,7 @@ public class EAxFilterContradictionJob extends Job {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(kbName);
             if (kb == null) throw new IllegalStateException("Knowledge base not found: " + kbName);
-            EAxFilterVampireResult result = new TheoremProverController().runEAxFilterWithVampire(kb, inputProblem, EAxFilter.EAxFilterOptions.forContradictions(), cnfTimeout, filterTimeout, vampireTimeout, "CASC");
+            EAxFilterVampireResult result = new EAxFilterContradictionRunner().run(kb, inputProblem, filterTimeout, vampireTimeout, new Random());
             boolean emailed = new EmailService().sendAdminNotification(buildSubject(result), buildReport(result, inputProblem, startedAt));
             if (!emailed) System.err.println("EAxFilterContradictionJob: unable to email report");
         }
@@ -79,14 +79,28 @@ public class EAxFilterContradictionJob extends Job {
             "<li><b>Knowledge base:</b> " + escapeHtml(kbName) + "</li>" +
             "<li><b>Outcome:</b> " + (result.foundContradiction() ? "Contradiction found" : "No contradiction found within configured limits") + "</li>" +
             "<li><b>Input:</b> " + escapeHtml(inputProblem.toString()) + "</li>" +
-            "<li><b>CNF clauses:</b> " + result.cnfResult().clauseCount() + "</li>" +
+            "<li><b>CNF clauses:</b> " + (result.cnfResult() == null ? "Not used" : result.cnfResult().clauseCount()) + "</li>" +
             "<li><b>Filtered problems generated:</b> " + result.filterResult().generatedProblems().size() + "</li>" +
             "<li><b>Vampire attempts:</b> " + result.attempts().size() + "</li>" +
             "<li><b>Satisfiable subsets:</b> " + satisfiable + "</li>" +
             "<li><b>Timeouts:</b> " + timeouts + "</li>" +
             "<li><b>Contradictory subset:</b> " + contradictorySubset + "</li>" +
             "<li><b>Elapsed:</b> " + formatDuration(Duration.between(startedAt, Instant.now())) + "</li>" +
-            "</ul><p>This is a heuristic filtered search. No contradiction found does not establish global consistency.</p></body></html>";
+            "</ul>" + buildAttemptReport(result) + "<p>This is a heuristic filtered search. No contradiction found does not establish global consistency.</p></body></html>";
+    }
+
+    /********************************************************************
+     * Build the per-problem Vampire outcome table.
+     */
+    private String buildAttemptReport(EAxFilterVampireResult result) {
+
+        StringBuilder report = new StringBuilder("<h3>Vampire outcomes</h3><table><tr><th>Problem</th><th>Status</th><th>Raw SZS status</th></tr>");
+        for (FilteredVampireAttempt attempt : result.attempts()) {
+            String status = attempt.result() == null ? "No result" : attempt.result().getSzsStatus().toString();
+            String rawStatus = attempt.result() == null ? "" : attempt.result().getSzsStatusRaw();
+            report.append("<tr><td>").append(escapeHtml(attempt.problemFile().toString())).append("</td><td>").append(escapeHtml(status)).append("</td><td>").append(escapeHtml(rawStatus)).append("</td></tr>");
+        }
+        return report.append("</table>").toString();
     }
 
     /********************************************************************

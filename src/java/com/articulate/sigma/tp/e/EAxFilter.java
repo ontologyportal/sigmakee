@@ -2,7 +2,6 @@ package com.articulate.sigma.tp.e;
 
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.utils.StringUtil;
-
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -12,29 +11,36 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class EAxFilter {
 
+    private static final Pattern FOF_AXIOM = Pattern.compile("(?s)^\\s*fof\\(\\s*([^,]+)\\s*,\\s*axiom\\s*,\\s*\\((.*)\\)\\s*\\)\\.\\s*$");
+    private static final Pattern CONJECTURE = Pattern.compile("(?s)^\\s*(?:fof|cnf)\\(\\s*[^,]+\\s*,\\s*(?:conjecture|negated_conjecture)\\s*,.*$");
+
     public record EAxFilterOptions(String explicitSeeds, String seedSymbols, String seedSubsample, String seedMethod, Path filterFile, boolean forceTptp3) {
-        
-        /***************************************************************
-         * Default filtering for a problem containing a meaningful conjecture.
-         * The conjecture's symbols are used as the initial SinE seeds.
-         */
-        public static EAxFilterOptions forConjecture() {return new EAxFilterOptions(null, null, null, null, null, true);}
 
-        /***************************************************************
-         * Artificial predicate seeding for a consistency problem whose
-         * conjecture is $false and therefore contains no useful seed symbols.
-         */
-        public static EAxFilterOptions forContradictions() {return new EAxFilterOptions(null, "p", "m100", "l", null, true);}
+        /** Returns normal conjecture-driven filtering options. */
+        public static EAxFilterOptions forConjecture() {
 
-        /***************************************************************
-         * Explicitly seed filtering from one or more TPTP symbols.
-         */
-        public static EAxFilterOptions forExplicitSeeds(String seeds) {return new EAxFilterOptions(seeds, null, null, "l", null, true);}
+            return new EAxFilterOptions(null, null, null, null, null, true);
+        }
+
+        /** Returns contradiction filtering options driven by a negated-axiom conjecture. */
+        public static EAxFilterOptions forContradictions() {
+
+            return forConjecture();
+        }
+
+        /** Returns explicit symbol-seeding options. */
+        public static EAxFilterOptions forExplicitSeeds(String seeds) {
+
+            return new EAxFilterOptions(seeds, null, null, "l", null, true);
+        }
     }
 
     public record EAxFilterResult(Path inputProblem, Path outputDirectory, List<Path> generatedProblems, List<String> command, List<String> stdout, List<String> stderr, int exitCode, long elapsedMs, boolean timedOut) {
@@ -53,6 +59,10 @@ public class EAxFilter {
         }
     }
 
+    public record ContradictionProbe(Path problem, String axiomName, String axiom, String conjectureName) {}
+
+    public record ProbeResult(ContradictionProbe probe, EAxFilterResult filterResult) {}
+
     private final Path eaxFilterExecutable;
 
     public EAxFilter() {
@@ -68,18 +78,12 @@ public class EAxFilter {
     }
 
     /**
-     * Runs e_axfilter against a complete TPTP problem.
-     * The input problem is copied into the output directory because
-     * e_axfilter generates its output files alongside the input file.
-     * The output directory must be empty so that stale files from a
-     * previous run cannot be mistaken for newly generated problems.
+     * Runs e_axfilter against a complete TPTP problem containing a conjecture.
      * @param inputProblem complete TPTP problem containing its conjecture
      * @param outputDirectory unique empty directory for this filter run
      * @param options e_axfilter command-line options
      * @param timeoutSeconds maximum wall-clock runtime
      * @return process information and generated TPTP problem files
-     * @throws IOException if files cannot be prepared or the process cannot start
-     * @throws InterruptedException if the calling thread is interrupted
      */
     public EAxFilterResult generate(Path inputProblem, Path outputDirectory, EAxFilterOptions options, int timeoutSeconds) throws IOException, InterruptedException {
 
@@ -94,7 +98,7 @@ public class EAxFilter {
         Path stdoutFile = normalizedOutputDirectory.resolve("e_axfilter.stdout.log");
         Path stderrFile = normalizedOutputDirectory.resolve("e_axfilter.stderr.log");
         ProcessBuilder processBuilder = new ProcessBuilder(command);
-        processBuilder.directory( normalizedOutputDirectory.toFile());
+        processBuilder.directory(normalizedOutputDirectory.toFile());
         processBuilder.redirectOutput(stdoutFile.toFile());
         processBuilder.redirectError(stderrFile.toFile());
         long startTime = System.currentTimeMillis();
@@ -115,13 +119,66 @@ public class EAxFilter {
         List<String> stdout = readLinesIfPresent(stdoutFile);
         List<String> stderr = readLinesIfPresent(stderrFile);
         List<Path> generatedProblems = findGeneratedProblems(normalizedOutputDirectory, localProblem);
+        if (!timedOut && exitCode == 0) for (Path problem : generatedProblems) removeTypeDeclarations(problem);
         return new EAxFilterResult(normalizedInput, normalizedOutputDirectory, generatedProblems, command, stdout, stderr, exitCode, elapsedMs, timedOut);
+    }
+
+    /**
+     * Creates a random negated-axiom conjecture and filters its ontology neighborhood.
+     * @param inputProblem complete conjecture-free FOF ontology problem
+     * @param outputDirectory unique empty directory for this probe
+     * @param timeoutSeconds maximum wall-clock runtime
+     * @param random random source used to select the source axiom
+     * @return probe metadata and e_axfilter result
+     */
+    public ProbeResult generateContradictionProbe(Path inputProblem, Path outputDirectory, int timeoutSeconds, Random random) throws IOException, InterruptedException {
+
+        Objects.requireNonNull(random, "random cannot be null");
+        if (Files.exists(outputDirectory) && !isDirectoryEmpty(outputDirectory)) throw new IllegalArgumentException("e_axfilter output directory must be empty: " + outputDirectory);
+        Path probeDirectory = outputDirectory.resolve("probe");
+        Path filteredDirectory = outputDirectory.resolve("filtered");
+        Files.createDirectories(probeDirectory);
+        ContradictionProbe probe = createContradictionProbe(inputProblem, probeDirectory.resolve("contradiction-probe.p"), random);
+        EAxFilterResult filterResult = generate(probe.problem(), filteredDirectory, EAxFilterOptions.forConjecture(), timeoutSeconds);
+        return new ProbeResult(probe, filterResult);
+    }
+
+    /**
+     * Copies a FOF ontology and appends the negation of one existing axiom as its conjecture.
+     * @param inputProblem complete conjecture-free FOF ontology problem
+     * @param probeProblem destination for the generated probe problem
+     * @param random random source used to select the source axiom
+     * @return generated probe metadata
+     */
+    public ContradictionProbe createContradictionProbe(Path inputProblem, Path probeProblem, Random random) throws IOException {
+
+        Objects.requireNonNull(inputProblem, "inputProblem cannot be null");
+        Objects.requireNonNull(probeProblem, "probeProblem cannot be null");
+        Objects.requireNonNull(random, "random cannot be null");
+        if (!Files.isRegularFile(inputProblem)) throw new IllegalArgumentException("TPTP input problem does not exist: " + inputProblem);
+        String contents = Files.readString(inputProblem);
+        List<String> statements = splitStatements(contents);
+        if (statements.stream().anyMatch(statement -> CONJECTURE.matcher(statement).matches())) throw new IllegalArgumentException("Contradiction probe input must not already contain a conjecture");
+        List<String> axioms = new ArrayList<>();
+        for (String statement : statements) if (FOF_AXIOM.matcher(statement).matches()) axioms.add(statement);
+        if (axioms.isEmpty()) throw new IllegalArgumentException("Contradiction probe input contains no FOF axioms: " + inputProblem);
+        String selected = axioms.get(random.nextInt(axioms.size()));
+        Matcher matcher = FOF_AXIOM.matcher(selected);
+        if (!matcher.matches()) throw new IllegalStateException("Unable to parse selected FOF axiom");
+        String axiomName = matcher.group(1).trim();
+        String axiom = matcher.group(2).trim();
+        String conjectureName = "negated_" + axiomName.replaceAll("[^A-Za-z0-9_]", "_");
+        Path normalizedProbe = probeProblem.toAbsolutePath().normalize();
+        if (normalizedProbe.getParent() != null) Files.createDirectories(normalizedProbe.getParent());
+        String separator = contents.endsWith(System.lineSeparator()) ? "" : System.lineSeparator();
+        Files.writeString(normalizedProbe, contents + separator + "fof(" + conjectureName + ",conjecture,(~(" + axiom + ")))." + System.lineSeparator());
+        return new ContradictionProbe(normalizedProbe, axiomName, axiom, conjectureName);
     }
 
     private void validateArguments(Path inputProblem, Path outputDirectory, EAxFilterOptions options, int timeoutSeconds) {
 
-        Objects.requireNonNull(inputProblem,"inputProblem cannot be null");
-        Objects.requireNonNull(outputDirectory,"outputDirectory cannot be null");
+        Objects.requireNonNull(inputProblem, "inputProblem cannot be null");
+        Objects.requireNonNull(outputDirectory, "outputDirectory cannot be null");
         Objects.requireNonNull(options, "options cannot be null");
         if (eaxFilterExecutable == null || !Files.isRegularFile(eaxFilterExecutable)) throw new IllegalStateException("e_axfilter executable does not exist: " + eaxFilterExecutable);
         if (!Files.isExecutable(eaxFilterExecutable)) throw new IllegalStateException("e_axfilter is not executable: " + eaxFilterExecutable);
@@ -147,37 +204,66 @@ public class EAxFilter {
     }
 
     private List<Path> findGeneratedProblems(Path outputDirectory, Path localProblem) throws IOException {
-        
+
         String inputFileName = localProblem.getFileName().toString();
         String inputBaseName = removeExtension(inputFileName);
         try (Stream<Path> paths = Files.list(outputDirectory)) {
-            return paths
-                .filter(Files::isRegularFile)
-                .filter(path ->
-                        path.getFileName()
-                            .toString()
-                            .endsWith(".p"))
-                .filter(path ->
-                        !path.getFileName()
-                            .toString()
-                            .equals(inputFileName))
-                .filter(path ->
-                        path.getFileName()
-                            .toString()
-                            .startsWith(inputBaseName + "_"))
-                .map(path ->
-                        path.toAbsolutePath()
-                        .normalize())
-                .sorted()
-                .toList();
+            return paths.filter(Files::isRegularFile).filter(path -> path.getFileName().toString().endsWith(".p")).filter(path -> !path.getFileName().toString().equals(inputFileName)).filter(path -> path.getFileName().toString().startsWith(inputBaseName + "_")).map(path -> path.toAbsolutePath().normalize()).sorted().toList();
         }
+    }
+
+    /** Removes TFF type declarations that E emits for an untyped problem. */
+    private static void removeTypeDeclarations(Path problem) throws IOException {
+
+        List<String> lines = Files.readAllLines(problem);
+        lines.removeIf(line -> line.matches("\\s*tff\\([^,]+,\\s*type\\s*,.*"));
+        Files.write(problem, lines);
+    }
+
+    /** Splits a TPTP document into complete top-level statements. */
+    private static List<String> splitStatements(String contents) {
+
+        List<String> statements = new ArrayList<>();
+        StringBuilder statement = new StringBuilder();
+        boolean singleQuoted = false;
+        boolean doubleQuoted = false;
+        boolean escaped = false;
+        boolean comment = false;
+        for (int index = 0; index < contents.length(); index++) {
+            char current = contents.charAt(index);
+            if (comment) {
+                if (current == '\n') comment = false;
+                continue;
+            }
+            if (!singleQuoted && !doubleQuoted && current == '%') {
+                comment = true;
+                continue;
+            }
+            statement.append(current);
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+            if ((singleQuoted || doubleQuoted) && current == '\\') {
+                escaped = true;
+                continue;
+            }
+            if (!doubleQuoted && current == '\'') singleQuoted = !singleQuoted;
+            else if (!singleQuoted && current == '"') doubleQuoted = !doubleQuoted;
+            else if (!singleQuoted && !doubleQuoted && current == '.') {
+                String complete = statement.toString().trim();
+                if (!complete.isEmpty()) statements.add(complete);
+                statement.setLength(0);
+            }
+        }
+        if (!statement.toString().trim().isEmpty()) throw new IllegalArgumentException("Incomplete TPTP statement at end of input");
+        return statements;
     }
 
     private static String removeExtension(String filename) {
 
         int finalDot = filename.lastIndexOf('.');
-        if (finalDot <= 0) return filename;
-        return filename.substring(0, finalDot);
+        return finalDot <= 0 ? filename : filename.substring(0, finalDot);
     }
 
     private static boolean isDirectoryEmpty(Path directory) throws IOException {
@@ -188,105 +274,16 @@ public class EAxFilter {
     }
 
     private static List<String> readLinesIfPresent(Path file) throws IOException {
-        
-        if (!Files.isRegularFile(file)) return List.of();
-        return Files.readAllLines(file);
+
+        return Files.isRegularFile(file) ? Files.readAllLines(file) : List.of();
     }
 
     private static void terminateProcess(Process process) throws InterruptedException {
-        
+
         process.destroy();
         if (!process.waitFor(5, TimeUnit.SECONDS)) {
             process.destroyForcibly();
             process.waitFor(5, TimeUnit.SECONDS);
-        }
-    }
-
-        /***************************************************************
-     * Test e_axfilter problem generation.
-     * Usage:
-     *      EAxFilter <input-problem> [conjecture|contradictions|explicit] [explicit-seeds] [timeout-seconds]
-     * Examples:
-     *      EAxFilter /tmp/SUMO_consistency.p contradictions
-     *      EAxFilter /tmp/SUMO_query.p conjecture
-     *      EAxFilter /tmp/SUMO_consistency.p explicit s__instance 300
-     */
-    public static void main(String[] args) {
-
-        if (args.length == 0 || args[0].equals("-h") || args[0].equals("--help")) {
-            System.out.println("Usage: EAxFilter <input-problem> [conjecture|contradictions|explicit] [explicit-seeds] [timeout-seconds]");
-            System.out.println("Examples:");
-            System.out.println("  EAxFilter /tmp/SUMO_consistency.p contradictions");
-            System.out.println("  EAxFilter /tmp/SUMO_query.p conjecture");
-            System.out.println("  EAxFilter /tmp/SUMO_consistency.p explicit s__instance 300");
-            return;
-        }
-        try {
-            KBmanager.getMgr().initializeOnce();
-            Path inputProblem = Paths.get(args[0]).toAbsolutePath().normalize();
-            String mode = args.length > 1 ? args[1].toLowerCase() : "conjecture";
-            String explicitSeeds = args.length > 2 ? args[2] : null;
-            int timeoutSeconds = args.length > 3 ? Integer.parseInt(args[3]) : 300;
-            Path outputDirectory = Files.createTempDirectory("eaxfilter-test-");
-            EAxFilterOptions options;
-            switch (mode) {
-                case "conjecture":
-                    options = EAxFilterOptions.forConjecture();
-                    break;
-                case "contradictions":
-                    options = EAxFilterOptions.forContradictions();
-                    break;
-                case "explicit":
-                    if (StringUtil.emptyString(explicitSeeds)) throw new IllegalArgumentException("Explicit mode requires a seed symbol, such as s__instance");
-                    options = EAxFilterOptions.forExplicitSeeds(explicitSeeds);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Unknown mode: " + mode + ". Use conjecture, contradictions, or explicit.");
-            }
-            System.out.println("e_axfilter available: " + EAxFilter.isAvailable());
-            System.out.println("Input: " + inputProblem);
-            System.out.println("Output directory: " + outputDirectory);
-            System.out.println("Mode: " + mode);
-            System.out.println("Timeout: " + timeoutSeconds + " seconds");
-
-            EAxFilter axFilter = new EAxFilter();
-            EAxFilterResult result = axFilter.generate(inputProblem, outputDirectory, options, timeoutSeconds);
-
-            System.out.println("Command: " + String.join(" ", result.command()));
-            System.out.println("Exit code: " + result.exitCode());
-            System.out.println("Timed out: " + result.timedOut());
-            System.out.println("Elapsed: " + result.elapsedMs() + " ms");
-            System.out.println("Generated problems: " + result.generatedProblems().size());
-
-            if (!result.stdout().isEmpty()) {
-                System.out.println("stdout:");
-                result.stdout().forEach(System.out::println);
-            }
-
-            if (!result.stderr().isEmpty()) {
-                System.out.println("stderr:");
-                result.stderr().forEach(System.out::println);
-            }
-
-            if (result.succeeded()) {
-                System.out.println("Generated files:");
-                result.generatedProblems().forEach(path -> {
-                    try {
-                        System.out.println("  " + Files.size(path) + " bytes  " + path);
-                    }
-                    catch (IOException exception) {
-                        System.out.println("  " + path + " (could not read size: " + exception.getMessage() + ")");
-                    }
-                });
-            }
-            else System.err.println("e_axfilter generation did not succeed.");
-        }
-        catch (NumberFormatException exception) {
-            System.err.println("Timeout must be an integer: " + exception.getMessage());
-        }
-        catch (Exception exception) {
-            System.err.println("EAxFilter test failed: " + exception.getMessage());
-            exception.printStackTrace();
         }
     }
 }
