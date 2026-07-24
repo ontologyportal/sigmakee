@@ -246,7 +246,7 @@ public class Diagnostics {
             KButilities.clearErrors();
             kb.kbCache.errors.clear();
             SUMOtoTFAform.errors.clear();
-            if(result.size() > 20) break;
+            // if(result.size() > 20) break;
         }
         return result;
     }

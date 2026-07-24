@@ -313,6 +313,14 @@ function initializeCodeMirror() {
     lineWrapping: true,
     autoCloseBrackets: true,
     matchBrackets: true,
+    extraKeys: {
+      "Ctrl-F": "findPersistent",
+      "Cmd-F": "findPersistent",
+      "Ctrl-G": "findNext",
+      "Cmd-G": "findNext",
+      "Shift-Ctrl-G": "findPrev",
+      "Shift-Cmd-G": "findPrev"
+    }
   });
   codeEditor.on("change", onEditorChange);
   codeEditor.on("cursorActivity", () => updateParenContext(codeEditor, { highlightRange: true }));

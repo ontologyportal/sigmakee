@@ -14,7 +14,11 @@
   <title>Editor</title>
   <script src="/sigma/javascript/codemirror/codemirror.min.js"></script>
   <script src="/sigma/javascript/codemirror/placeholder.min.js"></script>
-  <link rel="stylesheet" href="/sigma/javascript/codemirror/codemirror.min.css" />
+  <script src="/sigma/javascript/codemirror/searchcursor.js"></script>
+  <script src="/sigma/javascript/codemirror/dialog.js"></script>
+  <script src="/sigma/javascript/codemirror/search.js"></script>
+  <link rel="stylesheet" href="/sigma/javascript/codemirror/codemirror.min.css">
+  <link rel="stylesheet" href="/sigma/javascript/codemirror/dialog.css">
   <link rel="stylesheet" href="Editor.css?v=1">
 </head>
 <body>
