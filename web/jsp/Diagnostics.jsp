@@ -1,7 +1,12 @@
 <%@ page import="com.articulate.sigma.Formula" %>
 <%@ page import="com.articulate.sigma.Diagnostics" %>
 <%@ page import="com.articulate.sigma.KBmanager" %>
+<%@ page import="com.articulate.sigma.editor.ErrRec" %>
 <%@ include file="fragments/universal/Prelude.jspf" %>
+<%@ page import="com.articulate.sigma.editor.KifFileChecker" %>
+<%@ page import="java.net.URLEncoder" %>
+<%@ page import="java.nio.charset.StandardCharsets" %>
+<%@ page import="java.io.File" %>
 <html>
   <head>
     <title> Knowledge base Diagnostics</title>
@@ -76,7 +81,55 @@
   String termDependencyCachePath = Diagnostics.dependencyCachePath(Diagnostics.TERM_DEPENDENCY_CACHE_FILE).toString();
 %>
 <%
-  // Terms without parents
+Map<String, Set<String>> syntaxErrors =
+        Diagnostics.kifSyntaxErrors(kb);
+int syntaxErrorCount = 0;
+for (Set<String> errors : syntaxErrors.values())
+    syntaxErrorCount += errors.size();
+out.println("<details" + (!syntaxErrors.isEmpty() ? " open" : "") + ">");
+out.println("<summary><b style=\"color:DarkRed;\">"
+        + "Error: KIF syntax errors (" + syntaxErrorCount + ")"
+        + "</b><hr></summary>");
+if (syntaxErrors.isEmpty()) {
+    out.println("No KIF syntax errors found.");
+}
+else {
+    for (Map.Entry<String, Set<String>> entry : syntaxErrors.entrySet()) {
+        String constituentPath = entry.getKey();
+        for (String syntaxError : entry.getValue()) {
+            int errorLine = KifFileChecker.getLineNum(syntaxError);
+            if (errorLine < 1)
+                errorLine = 1;
+            String editorUrl =
+                    request.getContextPath()
+                    + "/Editor.jsp?path="
+                    + URLEncoder.encode(
+                            constituentPath,
+                            StandardCharsets.UTF_8.name())
+                    + "&amp;line="
+                    + errorLine;
+            String label =
+                    new File(constituentPath).getName()
+                    + ":"
+                    + errorLine;
+            String displayedError = syntaxError
+                    .replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;");
+            out.println(
+                    "<a href=\""
+                    + editorUrl
+                    + "\"><b>"
+                    + label
+                    + "</b></a>: "
+                    + displayedError
+                    + "<br>");
+        }
+    }
+}
+out.println("</details></br>");
+
+// Terms without parents
   List<String> termsWithoutParent = Diagnostics.termsNotBelowEntity(kb);
   out.println("<details>");
   out.println("<summary><b style=\"color:DarkRed;\">Error: Terms without a root at Entity</b><hr></summary>");
