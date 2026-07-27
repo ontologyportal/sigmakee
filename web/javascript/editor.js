@@ -319,7 +319,9 @@ function initializeCodeMirror() {
       "Ctrl-G": "findNext",
       "Cmd-G": "findNext",
       "Shift-Ctrl-G": "findPrev",
-      "Shift-Cmd-G": "findPrev"
+      "Shift-Cmd-G": "findPrev",
+      "Ctrl-Enter": queryHighlightedExpression,
+      "Cmd-Enter": queryHighlightedExpression
     }
   });
   codeEditor.on("change", onEditorChange);
@@ -328,6 +330,59 @@ function initializeCodeMirror() {
   codeEditor.on("change", () => updateParenContext(codeEditor, { highlightRange: true }));
 }
 
+async function queryHighlightedExpression() {
+  const stmt = codeEditor.getSelection().trim();
+
+  if (!stmt) {
+    alert("Highlight a SUO-KIF expression first.");
+    codeEditor.focus();
+    return;
+  }
+
+  if (getActiveMode() !== "kif") {
+    alert("Query selection currently supports SUO-KIF files only.");
+    return;
+  }
+
+  renderQueryOutput(
+    "Running Vampire (30 second timeout)...",
+    true
+  );
+
+  try {
+    const urlParameters = new URLSearchParams(window.location.search);
+
+    const requestBody = new URLSearchParams({
+      mode: "query",
+      stmt: stmt,
+      kb: urlParameters.get("kb") || "SUMO"
+    });
+
+    const response = await fetch("EditorServlet", {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "application/x-www-form-urlencoded;charset=UTF-8"
+      },
+      body: requestBody.toString()
+    });
+
+    const result = await response.json();
+
+    const message = result.message ||
+      (result.success
+        ? "Vampire completed without output."
+        : "Unable to run query.");
+
+    renderQueryOutput(message, Boolean(result.success));
+  }
+  catch (error) {
+    renderQueryOutput(
+      "Unable to run query: " + error.message,
+      false
+    );
+  }
+}
 
 function onEditorChange() {
   if (suppressChangeEvent) return;
@@ -350,6 +405,35 @@ function onEditorChange() {
     if (text === lastCheckedText) return;
     runCheck(true);
   }, CHECK_DEBOUNCE_MS);
+}
+
+function renderQueryOutput(message, success) {
+  const box = document.querySelector(".scroller.msg");
+
+  if (!box) {
+    return;
+  }
+
+  box.innerHTML = "";
+
+  const title = document.createElement("div");
+  title.className = "problems-title";
+  title.textContent = success ? "Query Result:" : "Query Error:";
+
+  const divider = document.createElement("hr");
+  divider.className = "problems-divider";
+
+  const body = document.createElement("div");
+  body.className = "problems-body";
+  body.textContent = message;
+  body.style.whiteSpace = "pre-wrap";
+
+  box.classList.toggle("success", success);
+  box.classList.toggle("errors-box", !success);
+
+  box.appendChild(title);
+  box.appendChild(divider);
+  box.appendChild(body);
 }
 
 function renderErrorBox(errors = [], message = null) {

@@ -108,7 +108,7 @@
   <form onsubmit="return false;" enctype="multipart/form-data" style="display:none;" id="uploadForm">
     <input type="file" name="kifFile" id="kifFile" accept=".kif,.tptp,.tff,.p,.fof,.cnf,.thf,.txt" required />
   </form>
-  <script src="/sigma/javascript/editor.js?v=2"></script>
+  <script src="/sigma/javascript/editor.js?v=3"></script>
   <script>
     window.initialErrors = [
       <%
@@ -147,6 +147,9 @@
         <div class="editor-header">
           <!-- File / Format / Help -->
           <div class="dropdown" id="fileDropdown">
+            <span class="dropdown-file-label" onclick="queryHighlightedExpression()">
+              Query selection
+            </span>
             <span class="dropdown-file-label" onclick="toggleFileMenu(event)">File ></span>
             <span class="dropdown-file-label" onclick="formatBuffer()">Format</span>
             <span class="dropdown-file-label" onclick="openHelpModal()">Help</span>

@@ -2,6 +2,12 @@ package com.articulate.sigma.editor;
 
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.*;
+import com.articulate.sigma.tp.ATPQuery;
+import com.articulate.sigma.tp.ATPResult;
+import com.articulate.sigma.tp.ProverCrashedException;
+import com.articulate.sigma.tp.ProverTimeoutException;
+import com.articulate.sigma.tp.TheoremProverController;
+
 
 import javax.servlet.*;
 import javax.servlet.http.*;
@@ -69,6 +75,9 @@ public class EditorServlet extends HttpServlet {
                 break;
             case "translatetotptp":
                 handleTranslateToTPTP(req, resp);
+                break;
+            case "query":
+                handleQuery(req, resp);
                 break;
             case "format":
             case "check":
@@ -293,6 +302,91 @@ public class EditorServlet extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             writeJson(resp, false, "Exception during translation: " + e.getMessage(), null);
+        }
+    }
+
+    /**
+     * Run a highlighted SUO-KIF expression as a query without leaving the editor.
+     * The first version intentionally mirrors AskTell's basic Vampire defaults.
+     */
+    private void handleQuery(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+
+        resp.setContentType("application/json; charset=UTF-8");
+        String statement = Optional.ofNullable(req.getParameter("stmt")).orElse("").trim();
+        String kbName = Optional.ofNullable(req.getParameter("kb")).orElse("SUMO").trim();
+        if (kbName.isEmpty()) kbName = "SUMO";
+
+        if (statement.isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeJson(resp, false, "Highlight a SUO-KIF expression first.", null);
+            return;
+        }
+        if (statement.indexOf('@') >= 0) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeJson(resp, false, "Row variables (@) are not allowed in queries.", null);
+            return;
+        }
+
+        HttpSession session = req.getSession(false);
+        if (session == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            writeJson(resp, false, "Your session has expired. Please log in again.", null);
+            return;
+        }
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB(kbName);
+            if (kb == null) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                writeJson(resp, false, "Knowledge base not found: " + kbName, null);
+                return;
+            }
+
+            ATPQuery atpQuery = new ATPQuery(
+                    kb,
+                    session.getId(),
+                    statement,
+                    null,
+                    "custom",
+                    "Vampire",
+                    "fof",
+                    "CASC",
+                    false,
+                    false,
+                    false,
+                    false,
+                    30,
+                    1
+            );
+            ATPResult result = new TheoremProverController().ask(atpQuery);
+
+            if (result == null) {
+                writeJson(resp, false, "No result returned by Vampire.", null);
+                return;
+            }
+
+            List<String> stdout = result.getStdout();
+            String proof = stdout == null || stdout.isEmpty()
+                    ? "Vampire completed, but returned no proof output."
+                    : String.join(System.lineSeparator(), stdout);
+            writeJson(resp, true, proof, null);
+        }
+        catch (ProverTimeoutException e) {
+            resp.setStatus(HttpServletResponse.SC_GATEWAY_TIMEOUT);
+            writeJson(resp, false, "Vampire timed out after 30 seconds.", null);
+        }
+        catch (ProverCrashedException e) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            String detail = e.getResult() == null || e.getResult().getStdout() == null
+                    ? ""
+                    : System.lineSeparator() + String.join(System.lineSeparator(), e.getResult().getStdout());
+            writeJson(resp, false, "Vampire crashed." + detail, null);
+        }
+        catch (Exception e) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            writeJson(resp, false, "Unable to run query: " +
+                    (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), null);
         }
     }
 
