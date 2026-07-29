@@ -76,6 +76,62 @@
   <input type="hidden" name="flang" value="<%=flang%>">
   <input type="hidden" name="diagAction" value="generateTermDependency">
 </form>
+<details id="sigmaRsAuditPanel" data-kb="<%= URLEncoder.encode(kbName, StandardCharsets.UTF_8.name()) %>">
+  <summary>
+    <b>Logical consistency audit</b>
+    <hr>
+  </summary>
+
+  <p>
+    Run sigma-rs native saturation over the loaded constituents of
+    <b><%= kbName %></b>
+  </p>
+
+  <label>
+    Timeout
+    <input id="sigmaAuditTimeout"
+           type="number"
+           min="1"
+           value="60">
+  </label>
+
+  <label>
+    Contradiction limit
+    <input id="sigmaAuditLimit"
+           type="number"
+           min="1"
+           value="64">
+  </label>
+
+  <label>
+    Thoroughness
+    <input id="sigmaAuditThoroughness"
+           type="number"
+           min="0.01"
+           max="1"
+           step="0.01"
+           value="1.0">
+  </label>
+
+  <label>
+    Scope
+    <input id="sigmaAuditScope"
+           type="number"
+           min="1"
+           step="0.1"
+           value="2.0">
+  </label>
+
+  <button id="sigmaAuditStart" type="button">
+    Run consistency audit
+  </button>
+
+  <span id="sigmaAuditStatus">Not run</span>
+
+  <pre id="sigmaAuditReport"
+       style="white-space:pre-wrap; overflow:auto; max-height:600px;
+              padding:10px; border:1px solid #aaa;"></pre>
+</details>
 <%
   boolean termDependencyCacheExists = Diagnostics.dependencyCacheExists(Diagnostics.TERM_DEPENDENCY_CACHE_FILE);
   String termDependencyCachePath = Diagnostics.dependencyCachePath(Diagnostics.TERM_DEPENDENCY_CACHE_FILE).toString();
@@ -249,5 +305,155 @@ out.println("</details></br>");
                      + " seconds to run all diagnostics");
 %>
 <%@ include file="fragments/universal/Postlude.jspf" %>
+    <script>
+        (() => {
+        const panel = document.getElementById("sigmaRsAuditPanel");
+        const kb = decodeURIComponent(panel.dataset.kb);
+        const button = document.getElementById("sigmaAuditStart");
+        const status = document.getElementById("sigmaAuditStatus");
+        const report = document.getElementById("sigmaAuditReport");
+
+        let timer = null;
+
+        async function refresh() {
+            try {
+                const response = await fetch(
+                "SigmaRsAuditServlet?action=status&kb=" +
+                    encodeURIComponent(kb),
+                {
+                    credentials: "same-origin",
+                    cache: "no-store"
+                }
+                );
+
+                const text = await response.text();
+
+                if (!text) {
+                throw new Error(
+                    "The audit servlet returned an empty response"
+                );
+                }
+
+                let data;
+
+                try {
+                data = JSON.parse(text);
+                }
+                catch (error) {
+                throw new Error(
+                    "Invalid response from audit servlet: " + text
+                );
+                }
+
+                if (!response.ok) {
+                throw new Error(
+                    data.message || "Status request failed"
+                );
+                }
+
+                status.textContent = data.state || "UNKNOWN";
+
+                let output = data.report || "";
+
+                if (data.diagnostics) {
+                if (output) {
+                    output += "\n\n";
+                }
+
+                output += "Diagnostics:\n" + data.diagnostics;
+                }
+
+                if (data.error) {
+                if (output) {
+                    output += "\n\n";
+                }
+
+                output += "Error:\n" + data.error;
+                }
+
+                report.textContent = output;
+
+                if (data.state === "RUNNING") {
+                button.disabled = true;
+                return;
+                }
+
+                button.disabled = false;
+
+                if (timer !== null) {
+                clearInterval(timer);
+                timer = null;
+                }
+            }
+            catch (error) {
+                status.textContent = "Status error";
+                report.textContent = String(error);
+
+                button.disabled = false;
+
+                if (timer !== null) {
+                clearInterval(timer);
+                timer = null;
+                }
+            }
+            }
+
+        button.addEventListener("click", async () => {
+            button.disabled = true;
+            status.textContent = "Starting…";
+            report.textContent = "";
+
+            try {
+                const body = new URLSearchParams({
+                action: "start",
+                kb,
+                timeout:
+                    document.getElementById("sigmaAuditTimeout").value,
+                limit:
+                    document.getElementById("sigmaAuditLimit").value,
+                thoroughness:
+                    document.getElementById("sigmaAuditThoroughness").value,
+                scope:
+                    document.getElementById("sigmaAuditScope").value
+                });
+
+                const response = await fetch("SigmaRsAuditServlet", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type":
+                    "application/x-www-form-urlencoded; charset=UTF-8"
+                },
+                body
+                });
+
+                const text = await response.text();
+                const data = text ? JSON.parse(text) : {};
+
+                if (!response.ok) {
+                throw new Error(
+                    data.message || "Unable to start audit"
+                );
+                }
+
+                status.textContent = "RUNNING";
+
+                if (timer !== null) {
+                clearInterval(timer);
+                }
+
+                timer = setInterval(refresh, 2000);
+                await refresh();
+            }
+            catch (error) {
+                status.textContent = "Start failed";
+                report.textContent = String(error);
+                button.disabled = false;
+            }
+            });
+
+        refresh();
+        })();
+    </script>
   </body>
 </html>
