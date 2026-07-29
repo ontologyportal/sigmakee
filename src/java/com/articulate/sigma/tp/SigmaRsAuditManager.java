@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/** Manages asynchronous sigma-rs consistency audits. */
 public final class SigmaRsAuditManager implements AutoCloseable {
 
     public enum State {
@@ -22,6 +23,10 @@ public final class SigmaRsAuditManager implements AutoCloseable {
         SigmaRsAuditRunner.Result result,
         String error
     ) {
+        /***************************************************************
+         * Returns an idle audit status.
+         * @return idle audit status
+         */
         public static Status idle() {
             return new Status(State.IDLE, null, null, null, null);
         }
@@ -35,14 +40,29 @@ public final class SigmaRsAuditManager implements AutoCloseable {
 
     private final SigmaRsAuditRunner runner;
 
+    /***************************************************************
+     * Creates an audit manager for a sigma-rs executable.
+     * @param executable sigma-rs executable path
+     */
     public SigmaRsAuditManager(Path executable) {
         runner = new SigmaRsAuditRunner(executable);
     }
 
+    /***************************************************************
+     * Returns the current status for a knowledge base.
+     * @param kbName knowledge-base name
+     * @return current audit status
+     */
     public Status status(String kbName) {
         return statuses.getOrDefault(kbName, Status.idle());
     }
 
+    /***************************************************************
+     * Starts an audit unless one is already running.
+     * @param kb knowledge base to audit
+     * @param options audit execution options
+     * @return whether a new audit was started
+     */
     public synchronized boolean start(
         KB kb,
         SigmaRsAuditRunner.Options options
@@ -112,6 +132,9 @@ public final class SigmaRsAuditManager implements AutoCloseable {
         return true;
     }
 
+    /***************************************************************
+     * Closes the audit executor.
+     */
     @Override
     public void close() {
         executor.close();
