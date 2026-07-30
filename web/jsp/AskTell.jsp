@@ -36,7 +36,10 @@
     username = (String) session.getAttribute("username");
     role = (String) session.getAttribute("role");
 
-    runSource = (runSource == null && session.getAttribute("runSource") == null) ? "custom" : (String) session.getAttribute("runSource");
+    if (StringUtil.emptyString(runSource))
+        runSource = (String) session.getAttribute("runSource");
+    if (StringUtil.emptyString(runSource))
+        runSource = "custom";
     session.setAttribute("runSource", runSource);
 
     // Kif Query

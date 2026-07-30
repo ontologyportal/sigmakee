@@ -23,6 +23,7 @@ public enum SZSStatus {
     // === Success statuses ===
     THEOREM("Theorem", Category.SUCCESS, "The conjecture is a theorem of the axioms"),
     UNSATISFIABLE("Unsatisfiable", Category.SUCCESS, "The formula set is unsatisfiable"),
+    CONTRADICTORY_AXIOMS("ContradictoryAxioms", Category.SUCCESS, "The axioms are contradictory"),
     SATISFIABLE("Satisfiable", Category.SUCCESS, "The formula set is satisfiable"),
     COUNTER_SATISFIABLE("CounterSatisfiable", Category.SUCCESS, "The negated conjecture is satisfiable"),
     EQUIVALENT("Equivalent", Category.SUCCESS, "Two formulas are equivalent"),
@@ -129,6 +130,10 @@ public enum SZSStatus {
             case "UNSAT":
             case "UNSATISFIABLE":
                 return UNSATISFIABLE;
+            case "CA":
+            case "CONTRADICTORYAXIOMS":
+            case "CONTRADICTORY_AXIOMS":
+                return CONTRADICTORY_AXIOMS;
             case "SAT":
             case "SATISFIABLE":
                 return SATISFIABLE;

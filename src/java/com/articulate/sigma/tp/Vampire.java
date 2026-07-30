@@ -661,7 +661,7 @@ public class Vampire {
         this.result.setQList(this.qlist);
         this.result.finalize(exitValue, elapsed, elapsed >= timeoutMs);
         if (exitValue != 0) {
-            System.err.println("Error in Vampire.run(): Abnormal process termination (exit code " + exitValue + ")");
+            if (exitValue != 1) System.err.println("Error in Vampire.run(): Abnormal process termination (exit code " + exitValue + ")");
             if (!stderrLines.isEmpty()) System.err.println("Stderr: " + stderrLines);
             if (this.result.isTimedOut() || this.result.getSzsStatus() == SZSStatus.TIMEOUT) {
                 throw new ProverTimeoutException("Vampire", timeoutMs, elapsed, false, stdoutLines, stderrLines, this.result);
@@ -813,7 +813,7 @@ public class Vampire {
         result.setStderr(stderrLines);
         result.finalize(exitValue, elapsed, elapsed >= timeoutMs);
         if (exitValue != 0) {
-            System.err.println("Error in Vampire.runCustom(): Abnormal process termination (exit code " + exitValue + ")");
+            if (exitValue != 1) System.err.println("Error in Vampire.runCustom(): Abnormal process termination (exit code " + exitValue + ")");
             if (!stderrLines.isEmpty()) {
                 System.err.println("Stderr: " + stderrLines);
             }

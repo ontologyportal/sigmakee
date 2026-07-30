@@ -15,6 +15,8 @@ package com.articulate.sigma;
 import com.articulate.sigma.parsing.Expr;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.tp.e.*;
+import com.articulate.sigma.editor.ErrRec;
+import com.articulate.sigma.editor.KifFileChecker;
 
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
@@ -90,6 +92,27 @@ public class Diagnostics {
                 break;
             }
         }
+        return result;
+    }
+
+    /**
+     * Parses every constituent and returns only parser errors.
+     */
+    public static Map<String, Set<String>> kifSyntaxErrors(KB kb) {
+
+        Map<String, Set<String>> result = new LinkedHashMap<>();
+        if (kb == null || kb.constituents == null) return result;
+        for (String constituent : kb.constituents) {
+            try {
+                KIF kif = new KIF();
+                kif.readFile(constituent);
+                if (!kif.errorSet.isEmpty()) result.put(constituent, new TreeSet<>(kif.errorSet));
+            }
+            catch (IOException e) {
+                result.put(constituent, Collections.singleton("Could not read constituent: " + e.getMessage()));
+            }
+        }
+
         return result;
     }
 
@@ -246,7 +269,7 @@ public class Diagnostics {
             KButilities.clearErrors();
             kb.kbCache.errors.clear();
             SUMOtoTFAform.errors.clear();
-            if(result.size() > 20) break;
+            // if(result.size() > 20) break;
         }
         return result;
     }

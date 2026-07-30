@@ -119,6 +119,8 @@ public final class JobScheduler {
         }
     }
 
+    /******************************************************************
+     */
     public void runJobNow(String jobId) throws Exception {
 
         Job job = requireJob(jobId);
@@ -177,6 +179,8 @@ public final class JobScheduler {
         return scheduleXML.getScheduleFile();
     }
 
+    /******************************************************************
+     */
     public Job getJob(String jobId) {
         return requireJob(jobId);
     }
@@ -190,6 +194,8 @@ public final class JobScheduler {
         return job;
     }
 
+    /******************************************************************
+     */
     private static void listJobs(JobScheduler scheduler) {
         System.out.printf("%-9s %-24s %-7s %-24s %s%n", "STATUS", "ID", "MODE", "SCHEDULE", "TYPE");
         for (Job job : scheduler.getJobs()) {
@@ -227,6 +233,8 @@ public final class JobScheduler {
         executor.shutdown();
     }
 
+    /******************************************************************
+     */
     private static String required(Map<String,List<String>> options, String key) {
 
         List<String> values = options.get(key);
@@ -235,6 +243,8 @@ public final class JobScheduler {
         return values.get(0);
     }
 
+    /******************************************************************
+     */
     private static int integer(Map<String,List<String>> options, String key, int fallback) {
 
         List<String> values = options.get(key);
@@ -247,6 +257,8 @@ public final class JobScheduler {
         }
     }
 
+    /******************************************************************
+     */
     private static void addJobFromCommandLine(JobScheduler scheduler, Map<String,List<String>> options) {
     
         String id = required(options, "id");
@@ -264,6 +276,9 @@ public final class JobScheduler {
                         integer(options, "filter-timeout", 300),
                         integer(options, "vampire-timeout", 30));
                 break;
+            case "sine-contradiction":
+                job = new SInEContradictionJob(id, required(options, "kb"), schedule, integer(options, "attempts", 1000), integer(options, "scope", 2), integer(options, "vampire-timeout", 10), integer(options, "max-axioms", 1000));
+                break;
             case "sumo-update":
                 job = new SumoUpdateJob(id, schedule);
                 break;
@@ -280,6 +295,8 @@ public final class JobScheduler {
         if (mode == Job.ExecutionMode.CRON) System.out.println("Run --cron " + id + " to print its crontab entry.");
     }
 
+    /******************************************************************
+     */
     private static void editJobFromCommandLine(JobScheduler scheduler, Map<String,List<String>> options) {
 
         String id = required(options, "edit");
@@ -295,10 +312,14 @@ public final class JobScheduler {
         System.out.println("Updated job: " + id);
     }
 
+    /******************************************************************
+     */
     private static boolean hasScheduleOptions(Map<String,List<String>> options) {
         return options.containsKey("frequency") || options.containsKey("time") || options.containsKey("date") || options.containsKey("day");
     }
 
+    /******************************************************************
+     */
     private static void validateModeAndSchedule(Job.ExecutionMode mode, Schedule schedule) {
 
         if (mode != Job.ExecutionMode.CRON) return;
@@ -307,6 +328,8 @@ public final class JobScheduler {
             throw new IllegalArgumentException("CRON monthly jobs currently require a day between 1 and 28");
     }
 
+    /******************************************************************
+     */
     private static Schedule parseSchedule(Map<String,List<String>> options) {
 
         String frequency = required(options, "frequency").toUpperCase();
@@ -325,7 +348,10 @@ public final class JobScheduler {
         }
     }
 
+    /******************************************************************
+     */
     private static String formatSchedule(Schedule schedule) {
+        
         switch (schedule.getFrequency()) {
             case ONCE:
                 return schedule.getRunDate() + " " + schedule.getRunTime();
@@ -340,7 +366,10 @@ public final class JobScheduler {
         }
     }
 
+    /******************************************************************
+     */
     private static void executeCommand(JobScheduler scheduler, Map<String,List<String>> options) throws Exception {
+    
         if (options.containsKey("list")) listJobs(scheduler);
         else if (options.containsKey("add")) addJobFromCommandLine(scheduler, options);
         else if (options.containsKey("edit")) editJobFromCommandLine(scheduler, options);
@@ -355,7 +384,10 @@ public final class JobScheduler {
         else throw new IllegalArgumentException("Unknown command. Use --help.");
     }
 
+    /******************************************************************
+     */
     private static void interactiveMenu(JobScheduler scheduler) {
+        
         while (true) {
             System.out.println();
             System.out.println("SigmaKEE Job Scheduler");
@@ -368,7 +400,6 @@ public final class JobScheduler {
             System.out.println("7. Delete job");
             System.out.println("8. Synchronize CRON");
             System.out.println("0. Exit");
-
             try {
                 switch (prompt("Selection")) {
                     case "1":
@@ -411,16 +442,17 @@ public final class JobScheduler {
         }
     }
 
+    /******************************************************************
+     */
     private static void addJobInteractively(JobScheduler scheduler) {
+        
         Map<String,List<String>> options = new java.util.HashMap<>();
         put(options, "add", "");
         put(options, "id", requiredPrompt("Job ID"));
-
         System.out.println("Job type:");
         System.out.println("1. Consistency check");
         System.out.println("2. E axiom-filter contradiction search");
         System.out.println("3. SUMO update");
-
         String typeChoice = prompt("Selection");
         switch (typeChoice) {
             case "1":
@@ -440,7 +472,6 @@ public final class JobScheduler {
             default:
                 throw new IllegalArgumentException("Invalid job type");
         }
-
         System.out.println("Execution mode:");
         System.out.println("1. Tomcat");
         System.out.println("2. CRON");
@@ -448,20 +479,20 @@ public final class JobScheduler {
         if ("1".equals(mode)) put(options, "mode", "tomcat");
         else if ("2".equals(mode)) put(options, "mode", "cron");
         else throw new IllegalArgumentException("Invalid execution mode");
-
         addScheduleOptions(options);
-
         if (!confirm("Enable this job?", true)) put(options, "disabled", "");
         addJobFromCommandLine(scheduler, options);
     }
 
+    /******************************************************************
+     */
     private static void addScheduleOptions(Map<String,List<String>> options) {
+
         System.out.println("Frequency:");
         System.out.println("1. Once");
         System.out.println("2. Daily");
         System.out.println("3. Weekly");
         System.out.println("4. Monthly");
-
         String frequency = prompt("Selection");
         switch (frequency) {
             case "1":
@@ -482,39 +513,39 @@ public final class JobScheduler {
             default:
                 throw new IllegalArgumentException("Invalid frequency");
         }
-
         put(options, "time", requiredPrompt("Time (HH:mm, 24-hour format)"));
     }
 
+    /******************************************************************
+     */
     private static void editJobInteractively(JobScheduler scheduler) {
         String id = selectJob(scheduler);
         Job job = scheduler.getJob(id);
         boolean enabled = confirm("Enabled?", job.isEnabled());
-
         System.out.println("Execution mode:");
         System.out.println("1. Tomcat");
         System.out.println("2. CRON");
         String defaultMode = job.getExecutionMode() == Job.ExecutionMode.TOMCAT ? "1" : "2";
         String modeChoice = promptDefault("Selection", defaultMode);
         Job.ExecutionMode mode;
-
         if ("1".equals(modeChoice)) mode = Job.ExecutionMode.TOMCAT;
         else if ("2".equals(modeChoice)) mode = Job.ExecutionMode.CRON;
         else throw new IllegalArgumentException("Invalid execution mode");
-
         Schedule schedule = job.getSchedule();
         if (confirm("Change the schedule?", false)) {
             Map<String,List<String>> options = new java.util.HashMap<>();
             addScheduleOptions(options);
             schedule = parseSchedule(options);
         }
-
         validateModeAndSchedule(mode, schedule);
         scheduler.updateJob(id, enabled, mode, schedule);
         System.out.println("Updated job: " + id);
     }
 
+    /******************************************************************
+     */
     private static String selectJob(JobScheduler scheduler) {
+        
         if (scheduler.getJobs().isEmpty()) throw new IllegalStateException("No jobs are configured");
         listJobs(scheduler);
         String id = requiredPrompt("Job ID");
@@ -522,23 +553,31 @@ public final class JobScheduler {
         return id;
     }
 
+    /******************************************************************
+     */
     private static void deleteJobInteractively(JobScheduler scheduler) {
+        
         String id = selectJob(scheduler);
         if (!confirm("Delete job '" + id + "'?", false)) {
             System.out.println("Deletion cancelled.");
             return;
         }
-
         scheduler.removeJob(id);
         System.out.println("Deleted job: " + id);
     }
 
+    /******************************************************************
+     */
     private static String prompt(String label) {
+        
         System.out.print(label + ": ");
         return INPUT.nextLine().trim();
     }
 
+    /******************************************************************
+     */
     private static String requiredPrompt(String label) {
+        
         while (true) {
             String value = prompt(label);
             if (!value.isBlank()) return value;
@@ -546,22 +585,30 @@ public final class JobScheduler {
         }
     }
 
+    /******************************************************************
+     */
     private static String promptDefault(String label, String defaultValue) {
+        
         System.out.print(label + " [" + defaultValue + "]: ");
         String value = INPUT.nextLine().trim();
         return value.isBlank() ? defaultValue : value;
     }
 
+    /******************************************************************
+     */
     private static boolean confirm(String label, boolean defaultValue) {
+        
         String suffix = defaultValue ? " [Y/n]: " : " [y/N]: ";
         System.out.print(label + suffix);
         String value = INPUT.nextLine().trim();
-
         if (value.isBlank()) return defaultValue;
         return "y".equalsIgnoreCase(value) || "yes".equalsIgnoreCase(value);
     }
 
+    /******************************************************************
+     */
     private static void put(Map<String,List<String>> options, String key, String value) {
+
         options.put(key, value.isEmpty() ? Collections.emptyList() : List.of(value));
     }
 
@@ -577,7 +624,7 @@ public final class JobScheduler {
         System.out.println("        --frequency <once|daily|weekly|monthly> --time <HH:mm>");
         System.out.println("        [--date <YYYY-MM-DD>] [--day <MONDAY|1-31>] [--kb <name>]");
         System.out.println("        [--cnf-timeout <sec>] [--filter-timeout <sec>]");
-        System.out.println("        [--vampire-timeout <sec>] [--disabled]");
+        System.out.println("        [--vampire-timeout <sec>] [--attempts <n>] [--scope <n>] [--max-axioms <n>] [--disabled]");
         System.out.println("  --edit <id> [--mode <tomcat|cron>] [--enabled|--disabled]");
         System.out.println("        [--frequency <frequency> --time <HH:mm> ...]");
         System.out.println("  --remove <id>");
@@ -589,6 +636,7 @@ public final class JobScheduler {
         System.out.println("Job types:");
         System.out.println("  consistency-check");
         System.out.println("  eaxfilter-contradiction");
+        System.out.println("  sine-contradiction");
         System.out.println("  sumo-update");
         System.out.println();
         System.out.println("Examples:");
@@ -641,9 +689,7 @@ public final class JobScheduler {
                 interactiveMenu(scheduler);
                 return;
             }
-
             Map<String,List<String>> options = CLIMapParser.parse(args);
-
             if (options.containsKey("h") || options.containsKey("help")) showHelp();
             else if (options.containsKey("menu") || options.containsKey("interactive")) interactiveMenu(scheduler);
             else executeCommand(scheduler, options);

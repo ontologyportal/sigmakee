@@ -41,8 +41,9 @@ public class TheoremProverController {
     public record FilteredVampireAttempt(Path problemFile, ATPResult result) {
         
         public boolean foundContradiction() {
+
             if (result == null) return false;
-            return result.getSzsStatus() == SZSStatus.THEOREM || result.getSzsStatus() == SZSStatus.UNSATISFIABLE;
+            return result.getSzsStatus() == SZSStatus.THEOREM || result.getSzsStatus() == SZSStatus.UNSATISFIABLE || result.getSzsStatus() == SZSStatus.CONTRADICTORY_AXIOMS;
         }
     }
 
@@ -254,7 +255,11 @@ public class TheoremProverController {
             System.err.println("Command: " + String.join(" ", filterResult.command()));
             System.err.println("Exit code: " + filterResult.exitCode());
             System.err.println("Timed out: " + filterResult.timedOut());
-            if (!filterResult.stderr().isEmpty()) System.err.println(String.join(System.lineSeparator(), filterResult.stderr()));
+            if (!filterResult.stderr().isEmpty()) {
+                int firstLine = Math.max(0, filterResult.stderr().size() - 20);
+                System.err.println("Final " + (filterResult.stderr().size() - firstLine) + " of " + filterResult.stderr().size() + " e_axfilter stderr lines:");
+                System.err.println(String.join(System.lineSeparator(), filterResult.stderr().subList(firstLine, filterResult.stderr().size())));
+            }
             throw new IOException("e_axfilter failed");
         }
         System.out.println("TheoremProverController.runEAxFilterWithVampire(): generated " + filterResult.generatedProblems().size() + " filtered problems");

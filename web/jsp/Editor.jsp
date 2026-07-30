@@ -14,7 +14,11 @@
   <title>Editor</title>
   <script src="/sigma/javascript/codemirror/codemirror.min.js"></script>
   <script src="/sigma/javascript/codemirror/placeholder.min.js"></script>
-  <link rel="stylesheet" href="/sigma/javascript/codemirror/codemirror.min.css" />
+  <script src="/sigma/javascript/codemirror/searchcursor.js"></script>
+  <script src="/sigma/javascript/codemirror/dialog.js"></script>
+  <script src="/sigma/javascript/codemirror/search.js"></script>
+  <link rel="stylesheet" href="/sigma/javascript/codemirror/codemirror.min.css">
+  <link rel="stylesheet" href="/sigma/javascript/codemirror/dialog.css">
   <link rel="stylesheet" href="Editor.css?v=1">
 </head>
 <body>
@@ -104,7 +108,7 @@
   <form onsubmit="return false;" enctype="multipart/form-data" style="display:none;" id="uploadForm">
     <input type="file" name="kifFile" id="kifFile" accept=".kif,.tptp,.tff,.p,.fof,.cnf,.thf,.txt" required />
   </form>
-  <script src="/sigma/javascript/editor.js?v=2"></script>
+  <script src="/sigma/javascript/editor.js?v=3"></script>
   <script>
     window.initialErrors = [
       <%
@@ -143,6 +147,9 @@
         <div class="editor-header">
           <!-- File / Format / Help -->
           <div class="dropdown" id="fileDropdown">
+            <span class="dropdown-file-label" onclick="queryHighlightedExpression()">
+              Query selection
+            </span>
             <span class="dropdown-file-label" onclick="toggleFileMenu(event)">File ></span>
             <span class="dropdown-file-label" onclick="formatBuffer()">Format</span>
             <span class="dropdown-file-label" onclick="openHelpModal()">Help</span>

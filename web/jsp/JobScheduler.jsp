@@ -38,9 +38,12 @@ if (scheduler != null
     try {
         String action = request.getParameter("action");
         String removeJobId = request.getParameter("removeJobId");
-
+        String runJobId = request.getParameter("runJobId");
+        if (runJobId != null && !runJobId.isBlank()) {
+            scheduler.runJobNow(runJobId);
+            jobMessage = "Job \"" + runJobId + "\" completed.";
+        }
         if (removeJobId != null && !removeJobId.isBlank()) {
-
             scheduler.removeJob(removeJobId);
             jobMessage = "Job removed.";
         }
@@ -271,6 +274,11 @@ if (scheduler != null
                 "Could not save jobs: "
                 + exception.getMessage();
     }
+    catch (Exception exception) {
+        jobError =
+                "Job execution failed: "
+                + exception.getMessage();
+    }
 }
 
 String pageName = "Jobs";
@@ -378,7 +386,11 @@ List<Job> jobs =
             color: #555;
             font-size: 0.9em;
         }
-
+        .job-run-now,
+        .job-remove {
+            margin-top: 8px;
+            margin-right: 6px;
+        }
         .schedule-details {
             margin-top: 7px;
         }
@@ -638,6 +650,14 @@ List<Job> jobs =
                         class="job-remove"
                         onclick="return confirm('Remove this scheduled job?');">
                         Remove
+                    </button>
+                    <button
+                        type="submit"
+                        name="runJobId"
+                        value="<%= job.getId() %>"
+                        class="job-run-now"
+                        <%= job.isEnabled() ? "" : "disabled" %>>
+                        Run now
                     </button>
                 </td>
 
