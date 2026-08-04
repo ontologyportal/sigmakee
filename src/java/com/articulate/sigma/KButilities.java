@@ -431,7 +431,9 @@ public class KButilities implements ServletContextListener {
 
         Map<String,Integer> result = new HashMap<>();
         for (Formula f : kb.formulaMap.values()) {
-            Set<String> terms = f.collectTerms();
+            if (f.isCached())
+                continue;
+
             if (f.isRule()) {
                 MapUtils.addToFreqMap(result, "rules", 1);
                 if (f.isHorn(kb))
@@ -447,16 +449,15 @@ public class KButilities implements ServletContextListener {
                     else if (f.isTemporal(kb))
                         MapUtils.addToFreqMap(result, "temporal", 1);
                 }
-                else
-                    MapUtils.addToFreqMap(result, "first-order", 1);
+                else MapUtils.addToFreqMap(result, "first-order", 1);
             }
             else {
                 if (f.isGround())
-                    MapUtils.addToFreqMap(result,"ground",1);
+                    MapUtils.addToFreqMap(result, "ground", 1);
                 if (f.isBinary())
-                    MapUtils.addToFreqMap(result,"binary",1);
+                    MapUtils.addToFreqMap(result, "binary", 1);
                 else
-                    MapUtils.addToFreqMap(result,"higher-arity",1);
+                    MapUtils.addToFreqMap(result, "higher-arity", 1);
             }
         }
         return result;
@@ -1257,11 +1258,9 @@ public class KButilities implements ServletContextListener {
         rels.add("termFormat");
         rels.add("format");
         int counter = 0;
-        Set<Formula> forms = new HashSet<>();
-        forms.addAll(kb.formulaMap.values());
-        for (Formula f : forms) {
-            if (!rels.contains(f.getArgument(0).toString()))
-                counter++;
+        for (Formula f : kb.formulaMap.values()) {
+            if (f.isCached()) continue;
+            if (!rels.contains(f.getStringArgument(0))) counter++;
         }
         return counter;
     }
