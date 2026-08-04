@@ -2156,14 +2156,14 @@ public class KB implements Serializable {
     }
 
     /*****************************************************************
-     * Count the number of formulas in the knowledge base in order to present statistics
-     * to the user.
-     *
+     * Count the number of formulas in the knowledge base in order to present statistics to the user.
      * @return The int(eger) number of formulas in the knowledge base.
      */
     public int getCountAxioms() {
-        
-        return formulaMap.size();
+
+        int count = 0;
+        for (Formula f : formulaMap.values()) if (!f.isCached()) count++;
+        return count;
     }
 
     /*****************************************************************
@@ -2199,10 +2199,7 @@ public class KB implements Serializable {
     public int getCountRules() {
 
         int count = 0;
-        for (Formula f : formulaMap.values()) {
-            if (f.isRule())
-                count++;
-        }
+        for (Formula f : formulaMap.values()) if (!f.isCached() && f.isRule()) count++;
         return count;
     }
 
