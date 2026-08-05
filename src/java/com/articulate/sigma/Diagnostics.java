@@ -433,6 +433,29 @@ public class Diagnostics {
     public static List<String> childrenOfDisjointParents(KB kb) {
 
         List<String> result = new ArrayList<>();
+        for (String term : kb.getTerms()) {
+            if (StringUtil.isNumeric(term)) continue;
+            Set<String> parentSet = kb.kbCache.getParentClasses(term);
+            if (parentSet == null || parentSet.size() < 2) continue;
+            List<String> parents = new ArrayList<>(parentSet);
+            boolean contradiction = false;
+            for (int i = 0; i < parents.size() && !contradiction; i++) {
+                String parent1 = parents.get(i);
+                for (int j = i + 1; j < parents.size(); j++) {
+                    String parent2 = parents.get(j);
+                    if (kb.kbCache.disjoint.contains(parent1 + "\t" + parent2) ||
+                            kb.kbCache.disjoint.contains(parent2 + "\t" + parent1)) {
+                        result.add(term);
+                        contradiction = true;
+                        break;
+                    }
+                }
+            }
+            if (RESULT_LIMIT > 0 && result.size() >= RESULT_LIMIT) {
+                result.add("limited to " + RESULT_LIMIT + " results");
+                break;
+            }
+        }
         return result;
     }
 
