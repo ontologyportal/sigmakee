@@ -57,6 +57,7 @@ public class Configuration {
         "vampireExec",
         "verbnetDir",
         "ollamaHost",
+        "sigmaRsExec",
         "showCachedFormulas",
         "smtpEmailAddress",
         "smtpEmailUser",
@@ -93,6 +94,7 @@ public class Configuration {
         "graphVizExec",
         "jeditExec",
         "leoExec",
+        "sigmaRsExec",
         "tptpExec",
         "vampireExec"
     );
@@ -201,6 +203,7 @@ public class Configuration {
     public String getVampireExec() { return getStringPreference("vampireExec", ""); }
     public String getVerbnetDir() { return getStringPreference("verbnetDir", ""); }
     public String getOllamaHost() { return getStringPreference("ollamaHost", "http://127.0.0.1:11434"); }
+    public String getSigmaRsExec() { return getStringPreference("sigmaRsExec", ""); }
     public boolean isShowCachedFormulas() { return getBooleanPreference("showCachedFormulas", true); }
     public String getSmtpEmailAddress() { return getStringPreference("smtpEmailAddress", ""); }
     public String getSmtpEmailUser() { return getStringPreference("smtpEmailUser", ""); }
@@ -334,6 +337,7 @@ public class Configuration {
         defaults.put("vampireExec", userHome + sep + "Programs" + sep + "vampire" + sep + "build" + sep + "vampire");
         defaults.put("verbnetDir", "");
         defaults.put("ollamaHost", "http://127.0.0.1:11434");
+        defaults.put("sigmaRsExec", userHome + sep + "workspace" + sep + "sigma-rs" + sep + "target" + sep + "release" + sep + "sumo");
         defaults.put("smtpEmailAddress", "");
         defaults.put("smtpEmailUser", "");
         defaults.put("smtpEmailPassword", "");

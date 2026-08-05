@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -141,14 +142,19 @@ public final class SigmaRsAuditRunner {
 
     /***************************************************************
      * Runs a sample audit from the command line.
-     * @param args unused command-line arguments
+     * @param args sigma-rs executable followed by one or more KIF files
      */
     public static void main(String[] args) {
 
-        Path sigmaRs = Path.of("/home/shaun/workspace/sigma-rs/target/release/sumo");
-        SigmaRsAuditRunner runner = new SigmaRsAuditRunner(sigmaRs);
+        if (args.length < 2) {
+            System.err.println("Usage: SigmaRsAuditRunner <sigma-rs-executable> <kif-file>...");
+            return;
+        }
+        Path executable = Path.of(args[0]);
+        List<Path> kifFiles = Arrays.stream(args).skip(1).map(Path::of).toList();
+        SigmaRsAuditRunner runner = new SigmaRsAuditRunner(executable);
         try {
-            SigmaRsAuditRunner.Result result = runner.audit(List.of(Path.of("/home/shaun/.sigmakee/KBs/Merge.kif"), Path.of("/home/shaun/.sigmakee/KBs/Mid-level-ontology.kif")), null, SigmaRsAuditRunner.Options.defaults());
+            SigmaRsAuditRunner.Result result = runner.audit(kifFiles, null, SigmaRsAuditRunner.Options.defaults());
             System.out.println("Command: " + result.command());
             System.out.println("Exit code: " + result.exitCode());
             System.out.println("Java timeout: " + result.timedOut());

@@ -18,7 +18,9 @@
   <preference name="leoExec" value="/home/theuser/Programs/Leo-III/bin/leo3" />
   <preference name="maxPredicateArity" value="7"/>
   <preference name="port" value="8080" />
+  <preference name="sigmaRsExec" value="/home/theuser/workspace/sigma-rs/target/release/sumo" />
   <preference name="showCachedFormulas" value="no" />
+  <preference name="sumokbname" value="SUMO" />
   <preference name="smtpEmailAddress" value=""/>
   <preference name="smtpEmailUser" value=""/>
   <preference name="smtpEmailPassword" value=""/>

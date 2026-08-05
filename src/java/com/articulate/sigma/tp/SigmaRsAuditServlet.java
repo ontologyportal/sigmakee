@@ -4,12 +4,14 @@ import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import org.json.simple.JSONObject;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /** Serves sigma-rs consistency-audit requests and status results. */
@@ -20,14 +22,18 @@ public final class SigmaRsAuditServlet extends HttpServlet {
 
     /***************************************************************
      * Initializes the application-scoped audit manager.
+     * @throws ServletException if the configured sigma-rs executable is unavailable
      */
     @Override
-    public void init() {
+    public void init() throws ServletException {
 
         synchronized (getServletContext()) {
             manager = (SigmaRsAuditManager) getServletContext().getAttribute("sigmaRsAuditManager");
             if (manager == null) {
-                Path executable = Path.of("/home/shaun/workspace/sigma-rs/target/release/sumo");
+                String configuredPath = KBmanager.configuration.getSigmaRsExec();
+                if (configuredPath == null || configuredPath.isBlank()) throw new ServletException("The sigmaRsExec preference is not configured");
+                Path executable = Path.of(configuredPath).toAbsolutePath().normalize();
+                if (!Files.isRegularFile(executable) || !Files.isExecutable(executable)) throw new ServletException("The sigma-rs executable is unavailable: " + executable);
                 manager = new SigmaRsAuditManager(executable);
                 getServletContext().setAttribute("sigmaRsAuditManager", manager);
             }
