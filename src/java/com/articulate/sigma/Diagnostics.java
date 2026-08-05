@@ -19,6 +19,7 @@ import com.articulate.sigma.editor.ErrRec;
 import com.articulate.sigma.editor.KifFileChecker;
 
 import com.articulate.sigma.utils.FileUtil;
+import com.articulate.sigma.utils.LoggingUtils;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.parsing.CLIMapParser;
 
@@ -29,8 +30,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
+import java.util.function.Supplier;
 
-/** *****************************************************************
+/********************************************************************
  * A class that finds problems in a knowledge base.  It is not meant
  * to be instantiated.
  */
@@ -48,13 +50,91 @@ public class Diagnostics {
 
     public static final String TERM_DEPENDENCY_CACHE_FILE = "term_dependency.ser";
 
-    /** *****************************************************************
+
+    /********************************************************************
+     * Build an immutable snapshot of every diagnostic displayed by Diagnostics.jsp.
+     * @param kb the knowledge base
+     * @return the complete diagnostic snapshot
+     */
+    public static DiagnosticsCache buildDiagnosticsCache(KB kb) {
+
+        if (kb == null) throw new IllegalArgumentException("KB cannot be null");
+        long start = System.nanoTime();
+        LoggingUtils.log("INFO", "Building diagnostics cache for KB " + kb.name);
+        Map<String, Set<String>> syntaxErrors = cacheDiagnostic(kb, "KIF syntax errors",
+                () -> kifSyntaxErrors(kb), Collections.emptyMap());
+        List<String> termsWithoutRoot = cacheDiagnostic(kb, "terms without an Entity root",
+                () -> termsNotBelowEntity(kb), Collections.emptyList());
+        List<String> disjointParents = cacheDiagnostic(kb, "terms with disjoint parents",
+                () -> childrenOfDisjointParents(kb), Collections.emptyList());
+        List<String> partitionErrors = cacheDiagnostic(kb, "partition violations",
+                () -> partitionViolation(kb), Collections.emptyList());
+        Map<Formula, Set<String>> typeErrors = cacheDiagnostic(kb, "formula type violations",
+                () -> formulaeWithTypeViolations(kb), Collections.emptyMap());
+        List<String> missingFormats = cacheDiagnostic(kb, "relations without formats",
+                () -> relationsWithoutFormat(kb), Collections.emptyList());
+        List<String> missingDocs = cacheDiagnostic(kb, "terms without documentation",
+                () -> termsWithoutDoc(kb), Collections.emptyList());
+        List<String> multipleDocs = cacheDiagnostic(kb, "terms with multiple documentation",
+                () -> termsWithMultipleDoc(kb), Collections.emptyList());
+        List<String> capitalization = cacheDiagnostic(kb, "capitalization differences",
+                () -> termCapDiff(kb), Collections.emptyList());
+        List<String> missingPartitionMembers = cacheDiagnostic(kb, "missing partition members",
+                () -> membersNotInAnyPartitionClass(kb), Collections.emptyList());
+        List<String> missingRules = cacheDiagnostic(kb, "terms without rules",
+                () -> termsWithoutRules(kb), Collections.emptyList());
+        List<Formula> extraneousQuantifiers = cacheDiagnostic(kb, "extraneous quantified variables",
+                () -> quantifierNotInBody(kb), Collections.emptyList());
+        List<Formula> unquantifiedConsequents = cacheDiagnostic(kb, "unquantified consequent variables",
+                () -> unquantsInConseq(kb), Collections.emptyList());
+        boolean dependencyCacheAvailable = dependencyCacheExists(TERM_DEPENDENCY_CACHE_FILE);
+        Map<String, Map<String, List<String>>> missingDependencies = dependencyCacheAvailable
+                ? cacheDiagnostic(kb, "missing constituent dependencies",
+                        () -> missingConstituentDependencies(kb), Collections.emptyMap())
+                : Collections.emptyMap();
+        Map<String, List<List<String>>> mutualDependencies = cacheDiagnostic(kb, "mutual dependencies",
+                () -> mutualDependency(kb), Collections.emptyMap());
+        DiagnosticsCache cache = new DiagnosticsCache(kb.name, syntaxErrors, termsWithoutRoot,
+                disjointParents, partitionErrors, typeErrors, missingFormats, missingDocs,
+                multipleDocs, capitalization, missingPartitionMembers, missingRules,
+                extraneousQuantifiers, unquantifiedConsequents, dependencyCacheAvailable,
+                missingDependencies, mutualDependencies);
+        double seconds = (System.nanoTime() - start) / 1_000_000_000.0;
+        LoggingUtils.log("INFO", "Diagnostics cache for KB " + kb.name + " built in " + seconds + " seconds");
+        return cache;
+    }
+
+    /********************************************************************
+     * Run one cacheable diagnostic without preventing the remaining diagnostics from building.
+     * @param kb the knowledge base
+     * @param name the diagnostic name
+     * @param diagnostic the diagnostic operation
+     * @param fallback the value used when the diagnostic fails
+     * @return the diagnostic result or fallback value
+     */
+    private static <T> T cacheDiagnostic(KB kb, String name, Supplier<T> diagnostic, T fallback) {
+
+        long start = System.nanoTime();
+        try {
+            T result = diagnostic.get();
+            double seconds = (System.nanoTime() - start) / 1_000_000_000.0;
+            LoggingUtils.log("INFO", "Cached " + name + " for KB " + kb.name + " in " + seconds + " seconds");
+            return result;
+        }
+        catch (Exception e) {
+            LoggingUtils.log("ERROR", "Failed to cache " + name + " for KB " + kb.name + ": " + e.getMessage());
+            return fallback;
+        }
+    }
+
+    /********************************************************************
      * Return a list of terms (for a given argument position) that do not
      * have a specified relation.
      * @param kb the knowledge base
      * @param rel the relation name
      * @param argnum the argument position of the term
      * @param letter the first letter of the term name
+     * @return the computed result
      */
     public static List<String> termsWithoutRelation(KB kb, String rel, int argnum, char letter) {
 
@@ -97,6 +177,8 @@ public class Diagnostics {
 
     /**
      * Parses every constituent and returns only parser errors.
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static Map<String, Set<String>> kifSyntaxErrors(KB kb) {
 
@@ -117,6 +199,8 @@ public class Diagnostics {
 
     /*******************************************************************
      * Return a list of terms that do not have a documentation string.
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static List termsWithoutDoc(KB kb) {
 
@@ -124,8 +208,10 @@ public class Diagnostics {
         return termsWithoutRelation(kb,"documentation",1,' ');
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Return a list of terms that have more than one documentation string.
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static List<String> termsWithMultipleDoc(KB kb) {
 
@@ -137,7 +223,7 @@ public class Diagnostics {
         if (!forms.isEmpty()) {
             boolean isNaN;
             for (Formula f : forms) {
-                term = f.getStringArgument(1);   // Append term and language to make a key.
+                term = f.getStringArgument(1);
                 isNaN = true;
                 try {
                     dval = Double.parseDouble(term);
@@ -161,7 +247,7 @@ public class Diagnostics {
         return new ArrayList<>(result);
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Returns true if term has an explicitly stated parent, or a
      * parent can be inferred from the transitive relation caches,
      * else returns false.
@@ -219,16 +305,22 @@ public class Diagnostics {
     public static boolean termNotBelowEntity(String term, KB kb) {
 
         boolean notBelowEntity = true;
-        if (LOG_OPS.contains(term) || term.equals(Formula.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term))
+        if (LOG_OPS.contains(term) || term.equals(Formula.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term)) {
             notBelowEntity = false;
-        if (kb.kbCache.subclassOf(term, "Entity") || kb.kbCache.transInstOf(term, "Entity"))
+            return notBelowEntity;
+        }
+        if (kb.kbCache.subclassOf(term, "Entity") || kb.kbCache.transInstOf(term, "Entity")) {
             notBelowEntity = false;
+            return notBelowEntity;
+        }
         if (hasFunctionalParentBelowEntity(term, kb)) notBelowEntity = false;
         return notBelowEntity;
     }
 
     /******************************************************************
      * Return a list of terms that do not have Entity as a parent term.
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static List<String> termsNotBelowEntity(KB kb) {
 
@@ -251,11 +343,13 @@ public class Diagnostics {
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Check that partitioned classes don't have any direct subclasses
      * For example, if we have (partition Physical Object Process)
      * (subclass Collection Physical) then the exhaustiveDecomposition is
      * violated
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static List<String> partitionViolation(KB kb) {
 
@@ -263,7 +357,6 @@ public class Diagnostics {
         List<String> result = new ArrayList<>();
         List<Formula> flist = kb.ask("arg",0,"partition");
         for (Formula f : flist) {
-            //System.out.println(f);
             String parent = f.getStringArgument(1);
             List<String> subs = f.argumentsToArrayListString(2);
             List<Formula> foundSubs = kb.askWithRestriction(0,"subclass",2,parent);
@@ -282,119 +375,82 @@ public class Diagnostics {
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * @author Shaun Rose
      * Returns a map of formulae and their associated type violations.
-     * 
-     * @param Kb - the knowledge base
      * @return Map<Formula, List<String>> - each formula in the KB with its error list. 
+     * @param kb the knowledge base
      */
     private static Map<Formula, Set<String>> formulaeWithTypeViolations(KB kb) {
-        
+
         Map<Formula, Set<String>> result = new TreeMap<>();
         KButilities.clearErrors();
         kb.kbCache.errors.clear();
         SUMOtoTFAform.errors.clear();
         for (Formula f : kb.formulaMap.values()) {
-            if (!KButilities.hasCorrectTypes(kb,f)) {
-                result.put(f, new HashSet<>(KButilities.errors));
-            }
+            if (!KButilities.hasCorrectTypes(kb,f)) result.put(f, new HashSet<>(KButilities.errors));
             KButilities.clearErrors();
             kb.kbCache.errors.clear();
             SUMOtoTFAform.errors.clear();
-            // if(result.size() > 20) break;
         }
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
+     * Return HTML describing formulas and their associated type violations.
      * @author Shaun Rose
-     * Returns an HTML formatted String of formulae and their associated type violations.
-     * 
-     * @param Map<Formula,List<String>> - the error list with formulae and their type violations.
      * @return String - the formatted HTML of the error list
+     * @param kb the knowledge base
+     * @param kbHref the knowledge-base URL
      */
     public static String printFormulaeWithTypeViolations(KB kb, String kbHref) {
-        
-        Map<Formula, Set<String>> errors = Diagnostics.formulaeWithTypeViolations(kb);
+
+        return printFormulaeWithTypeViolations(formulaeWithTypeViolations(kb), kbHref);
+    }
+
+    /********************************************************************
+     * Render cached formula type violations.
+     * @param errors cached formula type violations
+     * @param kbHref the knowledge-base URL
+     * @return formatted HTML
+     */
+    public static String printFormulaeWithTypeViolations(Map<Formula, Set<String>> errors, String kbHref) {
+
         StringBuilder html = new StringBuilder();
         for (Map.Entry<Formula,Set<String>> error : errors.entrySet()) {
-            for(String errorString : error.getValue()) {
-                html.append("Error found: " + errorString);
-            }
+            for (String errorString : error.getValue()) html.append("Error found: " + errorString);
             html.append("In Formula:<br>" + error.getKey().htmlFormat(kbHref));
             html.append("<br><br>");
         }
         return html.toString();
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Return a list of terms that have parents which are disjoint.
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static List<String> childrenOfDisjointParents(KB kb) {
 
         List<String> result = new ArrayList<>();
-
-        /*
-        int count = 0;
-        Iterator<String> it = kb.getTerms().iterator();
-        while (it.hasNext()) {
-            boolean contradiction = false;
-            String term = it.next();
-            boolean isNaN = true;
-            try {
-                double dval = Double.parseDouble(term);
-                isNaN = Double.isNaN(dval);
-            }
-            catch (Exception nex) {
-            }
-            if (isNaN) {
-                HashSet<String> parentSet = kb.kbCache.getParentClasses(term);
-                Object[] parents = null;
-                if ((parentSet != null) && !parentSet.isEmpty())
-                    parents = parentSet.toArray();
-                if (parents != null) {
-                    for (int i = 0 ; (i < parents.length) && !contradiction ; i++) {
-                        String termX = (String) parents[i];
-                        Set<String> disjoints = kb.kbCache.getCachedRelationValues("disjoint", termX, 1, 2);
-                        if ((disjoints != null) && !disjoints.isEmpty()) {
-                            for (int j = (i + 1) ; j < parents.length ; j++) {
-                                String termY = (String) parents[j];
-                                if (disjoints.contains(termY)) {
-                                    result.add(term);
-                                    contradiction = true;
-                                    count++;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (resultLimit > 0 && count > resultLimit) {
-                result.add("limited to 100 results");
-                break;
-            }
-        }
-        */
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Returns a list of terms, each of which is an instance of some
      * exhaustively decomposed class but is not an instance of any of
      * the subclasses that constitute the exhaustive decomposition.
      * For example, given (instance E A) and (partition A B C D), then
      * E is included in the list of terms to be returned if E is not a
      * instance of B, C, or D.
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static List<String> membersNotInAnyPartitionClass(KB kb) {
 
         List<String> result = new ArrayList<>();
         try {
             Set<String> reduce = new TreeSet<>();
-            // Use all partition statements and all
-            // exhaustiveDecomposition statements.
             List<Formula> forms = kb.ask("arg",0,"partition");
             if (forms == null)
                 forms = new ArrayList<>();
@@ -420,7 +476,7 @@ public class Diagnostics {
                         isInstanceSubsumed = false;
                         isNaN = true;
                         inst = it2.next();
-                        try {   // For diagnostics, try to avoid treating numbers as bonafide terms.
+                        try {
                             dval = Double.parseDouble(inst);
                             isNaN = Double.isNaN(dval);
                         }
@@ -453,8 +509,10 @@ public class Diagnostics {
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Find all relational terms that are missing an NLG format expression
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static List<String> relationsWithoutFormat(KB kb) {
 
@@ -472,8 +530,11 @@ public class Diagnostics {
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Term does not appear in any implication (rule).
+     * @param kb the knowledge base
+     * @param term the term to check
+     * @return the computed result
      */
     public static boolean termWithoutRules(KB kb, String term) {
 
@@ -494,8 +555,10 @@ public class Diagnostics {
         return false;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Find all terms which do not appear in any implication (rule).
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static List<String> termsWithoutRules(KB kb) {
 
@@ -513,14 +576,16 @@ public class Diagnostics {
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
+     * Find variables used only once in a formula.
      * @return a list of variables used only once.
+     * Perform the singleUseVariables diagnostic operation.
+     * @param f the formula to inspect
      */
     public static Set<String> singleUseVariables(Formula f) {
 
         Set<String> result = new HashSet<>();
         Set<String> vars = f.collectAllVariables();
-
         int index, index2;
         if (debug) System.out.println("\nDiagnostics.singleUseVariables() Formula \n" + f);
         for (String v : vars) {
@@ -535,12 +600,14 @@ public class Diagnostics {
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
+     * Find unquantified variables that occur only in a rule consequent.
      * @return a list of variables only in the consequent that are
      * unquantified
      * TODO: if there's an implication in the consequent, test if
      * the interior consequent has a variable not found in the interior
      * antecedent
+     * @param f the formula to inspect
      */
     public static Set<String> unquantInConsequent(Formula f) {
 
@@ -549,7 +616,6 @@ public class Diagnostics {
             return result;
         Formula ante = new Formula(FormulaUtil.antecedent(f));
         Formula conseq = new Formula(FormulaUtil.consequent(f));
-
         Set<String> anteVars = ante.collectUnquantifiedVariables();
         Set<String> consVars = conseq.collectUnquantifiedVariables();
         if (consVars.isEmpty())
@@ -559,7 +625,10 @@ public class Diagnostics {
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
+     * Perform the unquantsInConseq diagnostic operation.
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static List<Formula> unquantsInConseq(KB kb) {
 
@@ -576,8 +645,11 @@ public class Diagnostics {
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
+     * Check whether a rule antecedent contains an existential quantifier.
      * @return true if an existential is found in the antecedent of a rule.
+     * Perform the existentialInAntecedent diagnostic operation.
+     * @param f the formula to inspect
      */
     public static boolean existentialInAntecedent(Formula f) {
 
@@ -590,9 +662,11 @@ public class Diagnostics {
             return false;
     }
 
-    /** *****************************************************************
+    /********************************************************************
+     * Check whether quantified variables are absent from a statement body.
      * @return true if a quantifiers in a quantifier list is not found
      * in the body of the statement.
+     * @param f the formula to inspect
      */
     public static boolean quantifierNotInStatement(Formula f) {
 
@@ -608,15 +682,15 @@ public class Diagnostics {
         }
         Formula form = new Formula();
         form.read(f.getFormula());
-        if (form.car() != null && form.car().length() > 0) {    // This test shouldn't be needed.
-            String rest = form.cdr();                   // Quantifier list plus rest of statement
+        if (form.car() != null && form.car().length() > 0) {
+            String rest = form.cdr();
             Formula quant = new Formula();
             quant.read(rest);
-            String q = quant.car();                     // Now just the quantifier list.
+            String q = quant.car();
             String body = quant.cdr();
             quant.read(q);
-            List<String> qList = quant.argumentsToArrayListString(0);  // Put all the quantified variables into a list.
-            if (rest.contains(Formula.EQUANT) || rest.contains(Formula.UQUANT)) { //nested quantifiers
+            List<String> qList = quant.argumentsToArrayListString(0);
+            if (rest.contains(Formula.EQUANT) || rest.contains(Formula.UQUANT)) {
                 Formula restForm = new Formula();
                 restForm.read(rest);
                 restForm.read(restForm.cdr());
@@ -635,11 +709,13 @@ public class Diagnostics {
         return false;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Find cases where a variable appears in a quantifier list, but not
      * in the body of the quantified expression.  For example
      * (exists (?FOO) (bar ?FLOO Shmoo))
      * @return an ArrayList of Formula(s).
+     * @param kb the knowledge base
+     * @param fname the file name
      */
     public static List<Formula> quantifierNotInBody(KB kb, String fname) {
 
@@ -663,11 +739,12 @@ public class Diagnostics {
 
     
 
-    /** *****************************************************************
+    /********************************************************************
      * Find cases where a variable appears in a quantifier list, but not
      * in the body of the quantified expression.  For example
      * (exists (?FOO) (bar ?FLOO Shmoo))
      * @return an ArrayList of Formula(s).
+     * @param kb the knowledge base
      */
     public static List<Formula> quantifierNotInBody(KB kb) {
 
@@ -687,9 +764,11 @@ public class Diagnostics {
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
+     * Find duplicate variables in an individual quantifier list.
      * @return duplicate variables that appear in the same quantifier list.
      * Example: (exists (?A ?B ?A) (...)) returns ?A.
+     * @param f the formula to inspect
      */
     public static Set<String> duplicateQuantifiedVariables(Formula f) {
 
@@ -698,17 +777,17 @@ public class Diagnostics {
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Recursively find duplicate variables within each individual
      * exists/forall variable list.
+     * @param f the formula to inspect
+     * @param result the result collection
      */
     private static void duplicateQuantifiedVariablesRecurse(Formula f, Set<String> result) {
 
         if (f == null || f.empty() || f.atom())
             return;
-
         String head = f.car();
-
         if (Formula.EQUANT.equals(head) || Formula.UQUANT.equals(head)) {
             List<Formula> args = f.complexArgumentsToArrayList(1);
             if (args == null || args.size() < 2)
@@ -732,8 +811,10 @@ public class Diagnostics {
         }
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Find formulas with duplicate variables in the same quantifier list.
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static List<String> duplicateQuantifiedVariables(KB kb) {
 
@@ -756,9 +837,12 @@ public class Diagnostics {
         return result;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Add a key to a map and a value to the ArrayList corresponding
      * to the key.  Results are a side effect.
+     * @param m the map to update
+     * @param key the map key
+     * @param value the value to add
      */
     public static void addToMapList(Map<String,List<String>> m, String key, String value) {
 
@@ -771,9 +855,13 @@ public class Diagnostics {
             al.add(value);
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Add a key to a map and a key, value to the map
      * corresponding to the key.  Results are a side effect.
+     * @param m the map to update
+     * @param key1 the outer map key
+     * @param key2 the inner map key
+     * @param value the value to add
      */
     public static void addToDoubleMapList(Map<String,Map<String,List<String>>> m, String key1, String key2, String value) {
 
@@ -785,23 +873,23 @@ public class Diagnostics {
         addToMapList(tm,key2,value);
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Find all the terms used and defined in a KB.  Terms are defined by
      * their appearance in definitionalRelations
+     * @param kb the knowledge base
+     * @param termsUsed the termsUsed value
+     * @param termsDefined the termsDefined value
      */
     private static void termLinks(KB kb, Map<String,List<String>> termsUsed, Map<String,List<String>> termsDefined) {
 
         List<String> definitionalRelations = Arrays.asList("instance", "subclass",
                 "subAttribute", "domain", "domainSubclass", "range",
                 "rangeSubclass", "documentation", "subrelation");
-
         List<Formula> forms, newform;
         String relation, filename;
         Formula form;
         for (String term : kb.getTerms()) {
             forms = kb.ask("arg",1,term);
-            // Get every formula with the term as arg 1
-            // Only definitional uses are in the arg 1 position
             if (forms != null && !forms.isEmpty()) {
                 for (Formula formula : forms) {
                     relation = formula.getStringArgument(0);
@@ -837,7 +925,7 @@ public class Diagnostics {
         }
     }
 
-    /** *****************************************************************
+    /********************************************************************
      */
     private static void fileLinks(KB kb, Map<String,List<String>> fileDefines, Map<String,List<String>> fileUses,
                                   Map<String,List<String>> termsUsed, Map<String,List<String>> termsDefined) {
@@ -862,9 +950,9 @@ public class Diagnostics {
                 addToMapList(fileDefines,value,key);
             }
         }
-    }
+                                  }
 
-    /** *****************************************************************
+    /********************************************************************
      * Return a list of terms that have basic definitional
      * information (instance, subclass, domain, subrelation,
      * documentation) in a KB constituent that also uses terms
@@ -874,36 +962,17 @@ public class Diagnostics {
      *         files on which it depends. The interior TreeMap file
      *         name keys index ArrayLists of terms.  file -depends
      *         on->filenames -that defines-> terms
+     * @param kb the knowledge base
      */
     private static Map<String,Map<String,List<String>>> termDependency(KB kb) {
 
-        // A map of terms keys with an ArrayList as values listing files
-        // in which the term is used.
         Map<String,List<String>> termsUsed = new TreeMap<>();
-
-        // A map of terms keys with an ArrayList as values listing files
-        // in which the term is defined (meaning appearance in an
-        // instance, subclass, domain, subrelation, or documentation statement).
-        //
         Map<String,List<String>> termsDefined = new TreeMap<>();
-
-        // A map of file names and ArrayList values listing term names defined
-        // in the file;
         Map<String,List<String>> fileDefines = new TreeMap<>();
-
-        // A map of file names and ArrayList values listing term names used but not defined
-        // in the file;
         Map<String,List<String>> fileUses = new TreeMap<>();
-
-        // A map of file name keys and TreeMap values listing file names
-        // on which the given file depends.  The interior TreeMap file name
-        // keys index ArrayLists of terms.  file -depends on-> filenames -that defines-> terms
-        //  dependentFile, dependeeFile, Terms
         Map<String,Map<String,List<String>>> fileDepends = new TreeMap<>();
-
         termLinks(kb,termsUsed,termsDefined);
         fileLinks(kb,fileDefines,fileUses,termsUsed,termsDefined);
-
         List<String> termUsedNames, fileDependencies;
         String term, fileDepend;
         for (String fileUsesName : fileUses.keySet()) {
@@ -923,13 +992,13 @@ public class Diagnostics {
         return fileDepends;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Show file dependencies.  If two files depend on each other,
      * show only the smaller list of dependencies, under the
      * assumption that that is the erroneous set.
-     * 
      * @param kb the knowledge base we are printing term dependency for.
      * @param kbHref a helper String for creating clickable href links to KB term pages.
+     * @return the computed result
      */
     public static String printTermDependency(KB kb, String kbHref) {
 
@@ -1068,15 +1137,12 @@ public class Diagnostics {
         }
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * @author Shaun Rose
-     * 
      * This function loads the serialized term dependency Map created by saveDependenciesForAllKif()
      * and returns the resulting nested map.
-     * 
-     * @param String serializedDependencyFilePath is the location where the dependency cache
-     *               for all kifs is located. Usually in .sigmakee/cache/term_dependency.ser.
      * @return Map<String,Map<String,List<String>>> allDepends
+     * @param serializedDependencyFilePath the dependency-cache path
      */
     private static Map<String,Map<String,List<String>>> loadDependenciesForAllKif(String serializedDependencyFilePath) {
 
@@ -1091,14 +1157,14 @@ public class Diagnostics {
         return allDepends;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * @author Shaun Rose
      * This function returns a list of error messages for missing dependencies.
      * If the user has a constituent loaded, and the file depends on another file 
      * that is not loaded as a constituent, then it will be added to the error list.
-     * @param Map<String,Map<String,List<String>>> fileDepends <Dependent, <Dependees, Terms>>
      * @return Map<String,Map<String,List<String>>> TreeMap with the loaded constituent files 
      *         as the outer key, missing dependee constituents as the inner key, and dependent terms as the list. 
+     * @param kb the knowledge base
     */
     private static Map<String,Map<String,List<String>>> missingConstituentDependencies(KB kb) {
 
@@ -1121,25 +1187,34 @@ public class Diagnostics {
     }
 
     
-    /** *****************************************************************
+    /********************************************************************
+     * Return error information for missing constituent dependencies.
      * @author Shaun Rose
-     * 
      * This function returns a list of error messages for missing dependencies.
      * If the user has a constituent loaded, and the file depends on another file 
      * that is not loaded as a constituent, then it will be added to the error list.
-     * 
-     * @param Map<String,Map<String,List<String>>> fileDepends <Dependent, <Dependees, Terms>>
-     * @return Map<String,Map<String,List<String>>> a TreeMap with the loaded constituent files 
-     *         as the outer key, the missing dependee constituent files as the inner key, and 
-     *         dependent terms as the list. 
+     * @return formatted HTML describing missing constituent dependencies
+     * @param kb the knowledge base
+     * @param kbHref the knowledge-base URL
     */
     public static String printMissingConstituentDependencies(KB kb, String kbHref) {
 
         if (!Diagnostics.dependencyCacheExists(TERM_DEPENDENCY_CACHE_FILE)) {
             return "The term dependency cache has not been generated yet. " + "Use the button above to create " + Diagnostics.dependencyCachePath(TERM_DEPENDENCY_CACHE_FILE) + ".";
         }
+        return printMissingConstituentDependencies(missingConstituentDependencies(kb), kbHref);
+    }
+
+    /********************************************************************
+     * Render cached missing constituent dependencies.
+     * @param missing cached missing constituent dependencies
+     * @param kbHref the knowledge-base URL
+     * @return formatted HTML
+     */
+    public static String printMissingConstituentDependencies(
+            Map<String, Map<String, List<String>>> missing, String kbHref) {
+
         StringBuilder html = new StringBuilder();
-        Map<String,Map<String, List<String>>> missing = Diagnostics.missingConstituentDependencies(kb);
         for (Map.Entry<String,Map<String,List<String>>> constituent : missing.entrySet()) {
             if (constituent.getValue().size() != 0) {
                 html.append("Loaded constituent " + constituent.getKey() + " uses terms defined in these unloaded constituents: ");
@@ -1164,32 +1239,28 @@ public class Diagnostics {
         return html.toString();
     }
     
-    /** *****************************************************************
+    /********************************************************************
      * @author Shaun Rose
-     * 
      * This function returns a map of mutual dependencies and the terms used
      * by either file that are defined in the other file. 
-     * 
-     * @param Map<String,Map<String,List<String>>> fileDepends <Dependent, <Dependees, Terms>>
      * @return Map<String,List<String>> a TreeMap of mutual term dependent files in the format of 
      *         Key: (LessDependentFile)>(MoreDependentFile), List<String> TermsLessDependentUsesFromMoreDependent
+     * @param kb the knowledge base
     */
     private static Map<String, List<List<String>>> mutualDependency(KB kb) {
-        
+
         Map<String, Map<String, List<String>>> fileDepends = Diagnostics.termDependency(kb);
         Map<String, List<List<String>>> mutDepends = new TreeMap<>();
         for (Map.Entry<String, Map<String, List<String>>> dependentKif : fileDepends.entrySet()) {
             Map<String, List<String>> innerMap = dependentKif.getValue();
             for (Map.Entry<String, List<String>> dependeeKif : innerMap.entrySet()) {
-                if(fileDepends.containsKey(dependeeKif.getKey()) 
-                && fileDepends.get(dependeeKif.getKey()).containsKey(dependentKif.getKey()) 
+                if(fileDepends.containsKey(dependeeKif.getKey())
+                && fileDepends.get(dependeeKif.getKey()).containsKey(dependentKif.getKey())
                 && dependeeKif.getValue().size() < fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).size()) {
                     List<List<String>> totalTerms = new ArrayList<>();
                     List<String> dependeeFromDependentTerms = new ArrayList<>();
                     List<String> dependentFromDependeeTerms = new ArrayList<>();
-                    for(int i = 0; i < dependeeKif.getValue().size(); i++) {
-                        dependeeFromDependentTerms.add(dependeeKif.getValue().get(i));
-                    }
+                    for (int i = 0; i < dependeeKif.getValue().size(); i++) dependeeFromDependentTerms.add(dependeeKif.getValue().get(i));
                     totalTerms.add(dependeeFromDependentTerms);
                     for(int i = 0; i < fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).size(); i++) {
                         dependentFromDependeeTerms.add(fileDepends.get(dependeeKif.getKey()).get(dependentKif.getKey()).get(i));
@@ -1202,20 +1273,31 @@ public class Diagnostics {
         return mutDepends;
     }
 
-    /** *****************************************************************
+    /********************************************************************
+     * Return HTML displaying mutual constituent dependencies.
      * @author Shaun Rose
-     * 
      * This function returns HTML to display a map of mutual dependencies.
      * The intended application of this function is to find the low hanging fruit 
      * for removing mutual dependencies between files, which increases effeciency.
-     * 
      * @param kb the knowledge base we are printing term dependency for.
      * @param kbHref a helper String for creating clickable href links to KB term pages.
+     * @return the computed result
     */
     public static String printMutualDependencies(KB kb, String kbHref) {
 
+        return printMutualDependencies(mutualDependency(kb), kbHref);
+    }
+
+    /********************************************************************
+     * Render cached mutual constituent dependencies.
+     * @param mutDepends cached mutual dependencies
+     * @param kbHref the knowledge-base URL
+     * @return formatted HTML
+     */
+    public static String printMutualDependencies(
+            Map<String, List<List<String>>> mutDepends, String kbHref) {
+
         StringBuilder html = new StringBuilder();
-        Map<String, List<List<String>>> mutDepends = Diagnostics.mutualDependency(kb);
         for (Map.Entry<String, List<List<String>>> mutDepend : mutDepends.entrySet()) {
             String[] fileNames = mutDepend.getKey().split(">");
             String fileName1 = StringUtil.removeFilePath(fileNames[0]);
@@ -1248,13 +1330,16 @@ public class Diagnostics {
         return html.toString();
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Check the size of the dependency list.
      * @param depend is a map of file name keys and TreeMap values
      *               listing file names on which the given file
      *               depends. The interior TreeMap file name keys
      *               index ArrayLists of terms. file -depends on->
      *               filename -that defines-> terms
+     * @param f the formula to inspect
+     * @param f2 the second file
+     * @return the computed result
      */
     private static int dependencySize(Map<String,Map<String,List<String>>> depend, String f, String f2) {
 
@@ -1272,6 +1357,7 @@ public class Diagnostics {
      * @param termDependency a TreeMap of file name keys and an ArrayList of the
      *         files on which it depends. The interior TreeMap file
      *         name keys index ArrayLists of terms.
+     * @return the computed result
      */
     private static List<String> createDependDotGraphBody(Map<String,Map<String,List<String>>> termDependency) {
 
@@ -1296,17 +1382,19 @@ public class Diagnostics {
         return lines;
     }
 
-    /** *************************************************************
+    /****************************************************************
+     * Perform the sanitizeFilenameForGraphViz diagnostic operation.
+     * @param s the s value
+     * @return the computed result
      */
     public static String sanitizeFilenameForGraphViz(String s) {
 
         return FileUtil.noExt(FileUtil.noPath(s)).replace("-","_");
     }
 
-    /** *************************************************************
+    /****************************************************************
      * Creates a specified formatted image from a generated *.dot file
      * from GraphViz.
-     *
      * @param filename the generated *.dot filename to create an image from
      * @return the path to the generated image file
      */
@@ -1317,7 +1405,6 @@ public class Diagnostics {
         String graphVizExec = KBmanager.configuration.getGraphVizExec();
         String imageExt = "png";
         File file = new File(filename + "." + imageExt);
-
         List<String> cmd = new ArrayList<>();
         cmd.add(graphVizExec);
         cmd.add("-T" + imageExt);
@@ -1325,15 +1412,13 @@ public class Diagnostics {
         cmd.add(filename);
         System.out.println(cmd);
         try {
-            // Build a dependency graph image from an input file
-            // From: https://graphviz.org/doc/info/command.html#-O
             ProcessBuilder pb = new ProcessBuilder(cmd);
             pb.directory(file.getParentFile());
             File log = new File(file.getParentFile(),"log");
             if (log.exists())
                 log.delete();
             pb.redirectErrorStream(true);
-            pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log)); // <- in case of any errors
+            pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log));
             Process proc = pb.start();
             exitCode = proc.waitFor();
         } catch (InterruptedException e) {
@@ -1349,6 +1434,7 @@ public class Diagnostics {
      * Create a dependency graphin a format suitable for GraphViz' input format
      * http://www.graphviz.org/. Generate a dependency image from the .dot output
      * with a command like <code>dot SUMO-graph.dot -Tgif > graph.gif</code>
+     * @param termDependency the termDependency value
      */
     public static void createDependDotGraph(Map<String,Map<String,List<String>>> termDependency) {
 
@@ -1364,8 +1450,8 @@ public class Diagnostics {
             Set<String> result = new HashSet<>();
             result.addAll(createDependDotGraphBody(termDependency));
             pw.println("digraph G {");
-            pw.println("  node [color=black, fontcolor=black];"); // Black text and borders
-            pw.println("  edge [color=black];"); // Black edges
+            pw.println("  node [color=black, fontcolor=black];");
+            pw.println("  edge [color=black];");
             pw.println("  rankdir=BT");
             for (String s : result)
                 pw.println(s);
@@ -1376,25 +1462,21 @@ public class Diagnostics {
         }
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Make an empty KB for use in Diagnostics.
-     *
      * @param kbName the name of the empty KB to make
+     * @return the computed result
      */
     public static KB makeEmptyKB(String kbName) {
 
         String kbDir = (String)KBmanager.configuration.getKbDir();
-        if (KBmanager.getMgr().existsKB(kbName)) {
-            KBmanager.getMgr().removeKB(kbName);
-        }
+        if (KBmanager.getMgr().existsKB(kbName)) KBmanager.getMgr().removeKB(kbName);
         File dir = new File( kbDir );
         File emptyCFile = new File( dir, "emptyConstituent.txt");
         String emptyCFilename = emptyCFile.getAbsolutePath();
         KBmanager.getMgr().addKB(kbName);
         KB empty = KBmanager.getMgr().getKB(kbName);
         System.out.println("empty = " + empty);
-
-        // Fails elsewhere if no constituents, or empty constituent, thus...
         try (Writer fw = new FileWriter( emptyCFile );
              PrintWriter pw = new PrintWriter(fw)) {
             pw.println("(instance instance BinaryPredicate)\n");
@@ -1407,8 +1489,14 @@ public class Diagnostics {
         return empty;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Returns "" if answer is OK, otherwise reports it.
+     * @param kb the knowledge base
+     * @param proof the proof text
+     * @param query the query formula
+     * @param pQuery the processed query
+     * @param testType the test type
+     * @return the computed result
      */
     private static String reportAnswer(KB kb, String proof, Formula query, String pQuery, String testType) {
 
@@ -1424,7 +1512,6 @@ public class Diagnostics {
         String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
         String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
         StringBuilder html = new StringBuilder();
-
         if (proof.contains("Syntax error detected")) {
             html = html.append("Syntax error in formula : <br><br>");
             html = html.append(query.format(kbHref,"&nbsp;","<br>")).append("<br><br>");
@@ -1434,11 +1521,9 @@ public class Diagnostics {
             html = html.append(result);
             return html.toString();
         }
-
         BasicXMLparser res = new BasicXMLparser(proof);
         ProofProcessor pp = new ProofProcessor(res.elements);
         String ansstr = null;
-        //ansstr = pp.returnAnswer(0);
         if (!ansstr.equalsIgnoreCase("no")) {
             html = html.append(testType).append(": <br><br>");
             html = html.append(query.format(kbHref,"&nbsp;","<br>")).append("<br><br>");
@@ -1451,19 +1536,19 @@ public class Diagnostics {
         return "";
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Iterating through all formulas, return a proof of an inconsistent
      * or redundant one, if such a thing exists.
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static String kbConsistencyCheck(KB kb) {
 
         int timeout = 10;
         int maxAnswers = 1;
         String proof;
-
         StringBuilder answer = new StringBuilder();
         KB empty = makeEmptyKB("consistencyCheck");
-
         System.out.println("=================== Consistency Testing ===================");
         try {
             FormulaPreprocessor fp;
@@ -1473,10 +1558,7 @@ public class Diagnostics {
             Collection<Formula> allFormulas = kb.formulaMap.values();
             for (Formula query : allFormulas) {
                 fp = new FormulaPreprocessor();
-                processedQueries = fp.preProcessExpr(query, false, kb); // may be multiple because of row vars.
-                //System.out.println(" query = " + query);
-                //System.out.println(" processedQueries = " + processedQueries);
-
+                processedQueries = fp.preProcessExpr(query, false, kb);
                 System.out.println("INFO in Diagnostics.kbConsistencyCheck(): size = " + processedQueries.size());
                 EProver eprover = new EProver(kb, "tptp", timeout, maxAnswers);
                 for (Expr f : processedQueries) {
@@ -1487,7 +1569,6 @@ public class Diagnostics {
                     proof = eprover.toString() + " ";
                     a = new StringBuilder();
                     a.append(reportAnswer(kb,proof,query,processedQuery,"Redundancy"));
-                    //  if (answer.length() != 0) return answer;
                     answer.append(a);
                     negatedQuery = new StringBuilder();
                     negatedQuery.append(Formula.LP).append(Formula.NOT).append(Formula.SPACE).append(processedQuery).append(Formula.RP);
@@ -1508,8 +1589,9 @@ public class Diagnostics {
         return "No contradictions or redundancies found.";
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Make a table of terms and the files in which they are defined
+     * @param kb the knowledge base
      */
     public static void termDefsByFile(KB kb) {
 
@@ -1545,8 +1627,10 @@ public class Diagnostics {
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Make a table of terms and the files in which they are defined
+     * @param kb the knowledge base
+     * @param files the files to process
      */
     public static void termDefsByGivenFile(KB kb, Set<String> files) {
 
@@ -1580,7 +1664,7 @@ public class Diagnostics {
                 termsByFile.put(simpleName, goodTerms);
             }
         }
-        for (String fnam : termsByFile.keySet()) {  // make all terms not in file set already counted
+        for (String fnam : termsByFile.keySet()) {
             if (files.contains(fnam) || fnam.equals("domainEnglishFormat.kif") &&
                     fnam.equals("english_format.kif") || KButilities.isCacheFile(fnam))
                 continue;
@@ -1617,8 +1701,10 @@ public class Diagnostics {
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Make a table of terms and the files in which they are defined
+     * @param kb the knowledge base
+     * @param file the files to process
      */
     public static void addLabels(KB kb, Set<String> file) {
 
@@ -1644,7 +1730,9 @@ public class Diagnostics {
         }
     }
 
-    /** ***************************************************************
+    /******************************************************************
+     * Perform the printAllTerms diagnostic operation.
+     * @param kb the knowledge base
      */
     public static void printAllTerms(KB kb) {
 
@@ -1652,8 +1740,10 @@ public class Diagnostics {
             System.out.println(t);
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Find all terms that differ only in capitalization
+     * @param kb the knowledge base
+     * @return the computed result
      */
     public static List<String> termCapDiff(KB kb) {
 
@@ -1667,9 +1757,12 @@ public class Diagnostics {
         return result;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * diff the terms in two KBs (small first, then big) and print
      * all the remainder with their filename and termFormats
+     * @param kb the knowledge base
+     * @param f1 the first file
+     * @param f2 the second file
      */
     public static void diffTerms(KB kb, String f1, String f2) {
 
@@ -1688,7 +1781,7 @@ public class Diagnostics {
                 str = f.getStringArgument(3);
                 tformstrs.add(str);
             }
-            System.out.print(term + "\t"); //  + fname + "\t");
+            System.out.print(term + "\t");
             int i = 0;
             for (String st : tformstrs) {
                 if (i < 3)
@@ -1699,59 +1792,42 @@ public class Diagnostics {
         }
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Collects all variables from a list of formula arguments.
      * Gets direct variable arguments plus ALL variables nested inside functions.
-     * 
      * @param args the list of formula arguments to examine
      * @return set of all variables found at any depth
      */
     private static HashSet<String> collectVars(List<Formula> args) {
 
         HashSet<String> vars = new HashSet<>();
-        for (Formula arg : args) {
-            collectAllVarsFromArg(arg, vars);
-        }
+        for (Formula arg : args) collectAllVarsFromArg(arg, vars);
         return vars;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Recursively extracts all variables from a formula argument.
      * Stops at logical operators and quantifiers to avoid crossing formula boundaries.
-     * 
      * @param f the formula to extract variables from
      * @param vars the set to add found variables to
      */
     private static void collectAllVarsFromArg(Formula f, HashSet<String> vars) {
 
-        if (f == null || f.empty()) {
-            return;
-        }
-        
+        if (f == null || f.empty()) return;
         if (f.isVariable()) {
             vars.add(f.getFormula());
             return;
         }
-        
-        if (f.atom()) {
-            return;
-        }
-        
+        if (f.atom()) return;
         String head = f.car();
-        if (Formula.isLogicalOperator(head) || head.equals(Formula.UQUANT) || head.equals(Formula.EQUANT)) {
-            return;
-        }
-        
-        // recurse into all arguments of functions/predicates
+        if (Formula.isLogicalOperator(head) || head.equals(Formula.UQUANT) || head.equals(Formula.EQUANT)) return;
         List<Formula> args = f.complexArgumentsToArrayList(1);
         if (args != null) {
-            for (Formula arg : args) {
-                collectAllVarsFromArg(arg, vars);
-            }
+            for (Formula arg : args) collectAllVarsFromArg(arg, vars);
         }
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Builds a map of variable co-occurrences in a formula
      * @param f the formula to analyze
      * @return map from each variable to the set of variables it co-occurs with
@@ -1762,7 +1838,7 @@ public class Diagnostics {
         return findOrphanVarsRecurse(f,parents);
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Recursively traverses a formula to find variable co-occurrences.
      * @param f the formula to traverse
      * @param parents variables from the outer level that should link to variables found here.
@@ -1773,75 +1849,34 @@ public class Diagnostics {
     private static HashMap<String,HashSet<String>> findOrphanVarsRecurse(Formula f, HashSet<String> parents) {
 
         HashMap<String,HashSet<String>> result = new HashMap<>();
-        // ==== BASE CASES ====
-        // base case 1: empty or null formula
-        if (f == null || f.empty()) {
-            return result;
-        }
-        // base case 2: found a variable, link it to all parent variables
-        // e.g., if parents = {?A, ?B} and f = ?C, create edges ?C<->?A and ?C<->?B
-        if (f.isVariable()) {
-            return addLinks(parents, f);
-        }
-        // base case 3: atom, no variables to link
-        if (f.atom()) {
-            return result;
-        }
-
-        // ==== RECURSIVE CASES ====
-        String head = f.car(); // first element (operator, predicate, etc.)
-        // case 1: quantifiers
-        // skip the variable list, recurse into body with same parents
-        // e.g., (exists (?A ?B) BODY), skip (?A ?B), process BODY
+        if (f == null || f.empty()) return result;
+        if (f.isVariable()) return addLinks(parents, f);
+        if (f.atom()) return result;
+        String head = f.car();
         if (head.equals(Formula.UQUANT) || head.equals(Formula.EQUANT)) {
             List<Formula> qargs = f.complexArgumentsToArrayList(2);
             if (qargs != null && !qargs.isEmpty()) {
-                Formula body = qargs.get(0); // body is 2nd argument
-                mergeResults(result, findOrphanVarsRecurse(body, parents)); // e.g., (containsFormula ?ACK (exists (?X) (agent ?X ?Y)))
-                                                                            // ?ACK should link to ?X and ?Y found in the body
+                Formula body = qargs.get(0);
+                mergeResults(result, findOrphanVarsRecurse(body, parents));
             }
             return result;
         }
-
-        // arguments after the head
         List<Formula> args = f.complexArgumentsToArrayList(1);
-        if (args == null) {
-            return result;
-        }
-
-        // case 2: logical operators (and, or, not, =>, etc.)
-        // modal predicates and equality are treated as non-logical
+        if (args == null) return result;
         boolean isModal = Modals.formulaPreds.contains(head) || Modals.regHOLpred.contains(head);
         boolean isEqual = Formula.EQUAL.contains(head);
         if (Formula.isLogicalOperator(head) && !isModal && !isEqual) {
-            // For 'and', 'or', 'not', '=>', etc
-            for (Formula arg : args) {
-                mergeResults(result, findOrphanVarsRecurse(arg, parents));
-            }
+            for (Formula arg : args) mergeResults(result, findOrphanVarsRecurse(arg, parents));
             return result;
         }
-        
-        // case 3: (agent, patient, equal, holdsDuring, etc.)
-        // collect direct variable args plus vars inside wrapper functions
         HashSet<String> coVars = collectVars(args);
-
-        // recurse into arguments with coVars as the new parent context
-        // this links any variables found deeper to the variables at this level
-        // e.g., (equal ?T1 (ListOrderFn ?LIST ?N))
-        // coVars = {?T1} (plus any wrapper vars)
-        // When we recurse into (ListOrderFn ?LIST ?N), we pass {?T1} as parents
-        // ?LIST and ?N will link back to ?T1
-        for (Formula arg : args)
-            mergeResults(result, findOrphanVarsRecurse(arg, coVars));
-
-        // connect all variables at this level to all variables found in children
+        for (Formula arg : args) mergeResults(result, findOrphanVarsRecurse(arg, coVars));
         return addAllLinks(coVars, result);
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Creates bidirectional links between a variable and all parent variables.
      * Example: if parents = {?A, ?B} and f = ?C, creates edges ?C<->?A and ?C<->?B
-     * 
      * @param parents the set of parent variables to link to
      * @param f the variable formula to link
      * @return map containing the new bidirectional edges (no self-links)
@@ -1849,104 +1884,64 @@ public class Diagnostics {
     private static HashMap<String, HashSet<String>> addLinks(HashSet<String> parents, Formula f) {
 
         HashMap<String,HashSet<String>> out = new HashMap<>();
-        String var = f.getFormula(); // extracts variable name
-        
-        // initialize entry for this variable
-        if (!out.containsKey(var)) {
-            out.put(var, new HashSet<>());
-        }
-        // create bidirectional links between var and each parent
+        String var = f.getFormula();
+        if (!out.containsKey(var)) out.put(var, new HashSet<>());
         for (String p : parents) {
-            if (p.equals(var)) {
-                continue;
-            }
-            // add edge var to parent
+            if (p.equals(var)) continue;
             out.get(var).add(p);
-            // add edge parent to var
-            if (!out.containsKey(p)) {
-                out.put(p, new HashSet<>());
-            }
+            if (!out.containsKey(p)) out.put(p, new HashSet<>());
             out.get(p).add(var);
         }
         return out;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Connects parent variables to all child variables discovered in subformulas.
      * Creates bidirectional edges between each parent and each child variable.
      * Example: if parentVars = {?A, ?B} and childrenMap contains {?C, ?D}, 
      * creates edges ?A<->?C, ?A<->?D, ?B<->?C, ?B<->?D
-     * 
      * @param parentVars variables at the current level (e.g., direct args to a predicate)
      * @param childrenMap co-occurrence map from recursing into subformulas
      * @return merged map with parent↔child edges added (no self-links)
      */
     private static HashMap<String, HashSet<String>> addAllLinks(HashSet<String> parentVars, HashMap<String, HashSet<String>> childrenMap) {
 
-        // a copy of the children's co-occurrence map
         HashMap<String, HashSet<String>> out = new HashMap<>();
         mergeResults(out, childrenMap);
-        // if no parents, just return the children's map unchanged
-        if (parentVars == null || parentVars.isEmpty()) {
-            return out;
-        }
-        // Collect all child variables mentioned anywhere in the children's map
-        // This includes: keys (variables with neighbors) + all values (neighbors themselves)
-        // Example: from {?X: [?Y], ?Y: [?X]}, collect {?X, ?Y}
+        if (parentVars == null || parentVars.isEmpty()) return out;
         HashSet<String> childVars = new HashSet<>(out.keySet());
-        for (HashSet<String> neighbors : out.values()) {
-            childVars.addAll(neighbors);
-        }
-        // ensure all parent and child vars have entries in the map
-        for (String parent : parentVars) {
-            out.putIfAbsent(parent, new HashSet<>());
-        }
-        for (String child : childVars) {
-            out.putIfAbsent(child, new HashSet<>());
-        }
-        // create bidirectional links between each parent and each child variable
+        for (HashSet<String> neighbors : out.values()) childVars.addAll(neighbors);
+        for (String parent : parentVars) out.putIfAbsent(parent, new HashSet<>());
+        for (String child : childVars) out.putIfAbsent(child, new HashSet<>());
         for (String child : childVars) {
             for (String parent : parentVars) {
-                if (parent.equals(child)) {
-                    continue;
-                }
-                // add edge child to parent
+                if (parent.equals(child)) continue;
                 out.get(child).add(parent);
-                
-                // add edge parent to child
                 out.get(parent).add(child);
             }
         }
         return out;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Merges co-occurrence maps by combining neighbor sets for each variable.
      * If a variable exists in both maps, their neighbor sets are unioned.
      * If a variable only exists in source, it's added to target with its neighbors.
-     * 
      * @param target the destination map to merge into (modified in place)
      * @param source the source map to merge from (not modified)
     */
     private static void mergeResults (HashMap<String,HashSet<String>> target, HashMap<String,HashSet<String>> source) {
 
-        // process each variable and its neighbors from the source map
         for (String variable : source.keySet()) {
             HashSet<String> neighbors = source.get(variable);
-            if (target.containsKey(variable)) {
-               // merge the neighbor sets, e.g., target has {?X: [?Y]}, source has {?X: [?Z]} result: {?X: [?Y, ?Z]}
-                target.get(variable).addAll(neighbors);
-            } else {
-                // variable doesn't exist in target, add it with a copy of its neighbors
-                // e.g., source has {?A: [?B]}, target doesn't have ?A, result: add {?A: [?B]} to target
+            if (target.containsKey(variable)) target.get(variable).addAll(neighbors); else {
                 target.put(variable, new HashSet<>(neighbors));
             }
         }
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Finds all disconnected variable groups in the graph.
-     * 
      * @param links the variable co-occurrence map
      * @return list of disconnected groups, where each group is a set of connected variables
      */
@@ -1954,8 +1949,6 @@ public class Diagnostics {
 
         ArrayList<HashSet<String>> groups = new ArrayList<>();
         HashSet<String> allVisited = new HashSet<>();
-        
-        // find each connected component
         for (String var : links.keySet()) {
             if (!allVisited.contains(var)) {
                 HashSet<String> group = new HashSet<>();
@@ -1981,7 +1974,7 @@ public class Diagnostics {
         return groups;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Checks if all variables in the co-occurrence graph are connected.
      * @param links the variable co-occurrence map
      * @return true if all variables form a single connected component
@@ -1991,9 +1984,8 @@ public class Diagnostics {
         return findDisconnectedGroups(links).size() <= 1;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Parses a KIF file and finds all variables that appear together
-     * 
      * @param fKif the KIF file to parse
      * @return a map where each variable is linked to others it co-occurs with
      */
@@ -2002,7 +1994,6 @@ public class Diagnostics {
         HashMap<String, HashSet<String>> links = new HashMap<>();
         if (!fKif.exists())
             return links;
-
         KIF kifInstance = new KIF();
         try {
             kifInstance.readFile(fKif.getPath());
@@ -2015,12 +2006,9 @@ public class Diagnostics {
         for (String key : keys) {
             Formula f = kifInstance.formulaMap.get(key);
             HashMap<String, HashSet<String>> map = findOrphanVars(f);
-            
             boolean hasOrphans = false;
             for (String var : map.keySet()) {
                 if (map.get(var).isEmpty()) {
-                    // variable has no neighbors, check if it's intentional or an error
-                    // a variable appearing multiple times, e.g., on both sides of an implication is intentional usage, not an orphan
                     int count = countOccurrences(f.getFormula(), var);
                     if (count == 1) {
                         System.out.println("\nWARNING in formula: " + f.getFormula());
@@ -2030,29 +2018,23 @@ public class Diagnostics {
                     }
                 }
             }
-            
             if (!hasOrphans && !map.isEmpty()) {
                 ArrayList<HashSet<String>> groups = findDisconnectedGroups(map);
                 if (groups.size() > 1) {
                     System.out.println("\nWARNING in formula: " + f.getFormula());
                     System.out.println("  Formula has " + groups.size() + " variable groups that are disconnected from each other:");
-                    for (int i = 0; i < groups.size(); i++) {
-                        System.out.println("    Group " + (i + 1) + ": " + groups.get(i));
-                    }
+                    for (int i = 0; i < groups.size(); i++) System.out.println("    Group " + (i + 1) + ": " + groups.get(i));
                     foundAnyWarnings = true;
                 }
             }
             mergeResults(links, map);
         }
-        if (!foundAnyWarnings) {
-            System.out.println("\nNo variable connectivity issues found.");
-        }
+        if (!foundAnyWarnings) System.out.println("\nNo variable connectivity issues found.");
         return links;
     }
 
-    /** *****************************************************************
+    /********************************************************************
      * Counts how many times a substring appears in a string.
-     * 
      * @param text the string to search in
      * @param substring the substring to count
      * @return the number of occurrences
@@ -2063,16 +2045,15 @@ public class Diagnostics {
         int index = 0;
         while (true) {
             index = text.indexOf(substring, index);
-            if (index == -1) {
-                break;
-            }
+            if (index == -1) break;
             count++;
             index += substring.length();
         }
         return count;
     }
 
-    /** ***************************************************************
+    /******************************************************************
+     * Perform the showHelp diagnostic operation.
      */
     public static void showHelp() {
 
@@ -2096,8 +2077,9 @@ public class Diagnostics {
         System.out.println("  --vars <fname> - extract variable co-occurrences from a kif file");
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Test method for this class.
+     * @param args the command-line arguments
      */
     public static void main(String args[]) {
 
@@ -2107,12 +2089,9 @@ public class Diagnostics {
         System.out.println("argMap contains e: " + argMap.containsKey("e"));
         if (argMap.isEmpty() || argMap.containsKey("h"))
             showHelp();
-        else if (argMap.containsKey("a")) {
-            Diagnostics.saveDependenciesForAllKif("term_dependency.ser");
-        }
+        else if (argMap.containsKey("a")) Diagnostics.saveDependenciesForAllKif("term_dependency.ser");
         else {
             KBmanager.getMgr().initializeOnce();
-            //resultLimit = 0; // don't limit number of results on command line
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
             System.out.println("Diagnostics: Completed init");
             if (argMap.containsKey("t")) termDefsByFile(kb);
@@ -2135,13 +2114,11 @@ public class Diagnostics {
                 files.addAll(lines);
                 addLabels(kb, files);
             }
-            else if (argMap.containsKey("o")) {
-                System.out.println(termsNotBelowEntity(kb));
-            }
+            else if (argMap.containsKey("o")) System.out.println(termsNotBelowEntity(kb));
             else if (argMap.containsKey("m")) {
                 System.out.println("--------------------------\nFinding Mutual Dependencies mutualDependency()...\n");
                 Map<String, List<List<String>>> mutDepends = Diagnostics.mutualDependency(kb);
-                for(Map.Entry<String, List<List<String>>> mutDepend : mutDepends.entrySet()) { 
+                for(Map.Entry<String, List<List<String>>> mutDepend : mutDepends.entrySet()) {
                     String[] mutuallyDependentFiles = mutDepend.getKey().split(">");
                     System.out.println(StringUtil.removeFilePath(mutuallyDependentFiles[0]) + " depends on " + StringUtil.removeFilePath(mutuallyDependentFiles[1]) + " for " + mutDepend.getValue().get(0).size() + " terms");
                 }
@@ -2164,21 +2141,11 @@ public class Diagnostics {
                     System.out.println();
                 }
             }
-            else if (argMap.containsKey("c")) {
-                System.out.println(termsWithoutDoc(kb));
-            }
-            else if (argMap.containsKey("dq")) {
-                System.out.println(duplicateQuantifiedVariables(kb));
-            }
-            else if (argMap.containsKey("q")) {
-                System.out.println(quantifierNotInBody(kb));
-            }
-            else if (argMap.containsKey("p")) {
-                printAllTerms(kb);
-            }
-            else if (argMap.containsKey("e")) {
-                partitionViolation(kb);
-            }
+            else if (argMap.containsKey("c")) System.out.println(termsWithoutDoc(kb));
+            else if (argMap.containsKey("dq")) System.out.println(duplicateQuantifiedVariables(kb));
+            else if (argMap.containsKey("q")) System.out.println(quantifierNotInBody(kb));
+            else if (argMap.containsKey("p")) printAllTerms(kb);
+            else if (argMap.containsKey("e")) partitionViolation(kb);
             else if (argMap.containsKey("d")) {
                 Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
                 createDependDotGraph(fileDepends);
@@ -2199,7 +2166,6 @@ public class Diagnostics {
             else if (argMap.containsKey("vars") && argMap.get("vars").size() == 1) {
                 String path = argMap.get("vars").get(0);
                 Path inPath = Paths.get(path);
-
                 try (Stream<Path> paths = Files.walk(inPath)) {
                     paths.filter(f -> f.toString().endsWith(".kif")).sorted().forEach(f -> {
                         HashMap<String, HashSet<String>> fileVarLinks = parseFormulaFile(f.toFile());
