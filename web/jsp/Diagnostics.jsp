@@ -1,5 +1,6 @@
 <%@ page import="com.articulate.sigma.Formula" %>
 <%@ page import="com.articulate.sigma.Diagnostics" %>
+<%@ page import="com.articulate.sigma.DiagnosticsCache" %>
 <%@ page import="com.articulate.sigma.KBmanager" %>
 <%@ page import="com.articulate.sigma.editor.ErrRec" %>
 <%@ include file="fragments/universal/Prelude.jspf" %>
@@ -34,6 +35,14 @@
   String formattedFormula = null;
   Map theMap = null;
   kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + lang + "&kb=" + kbName + "&flang=" + flang;
+
+  Map<String, DiagnosticsCache> diagnosticsCaches =
+          (Map<String, DiagnosticsCache>) application.getAttribute("diagnosticsCaches");
+  DiagnosticsCache diagnosticsCache =
+          diagnosticsCaches == null ? null : diagnosticsCaches.get(kbName);
+  boolean diagnosticsCacheAvailable = diagnosticsCache != null;
+  if (!diagnosticsCacheAvailable)
+      diagnosticsCache = DiagnosticsCache.empty(kbName);
 
   String termDependencyMessage = "";
   String termDependencyAction = request.getParameter("diagAction");
@@ -137,8 +146,12 @@
   String termDependencyCachePath = Diagnostics.dependencyCachePath(Diagnostics.TERM_DEPENDENCY_CACHE_FILE).toString();
 %>
 <%
+if (!diagnosticsCacheAvailable)
+    out.println("<div style=\"color:DarkRed;\">Diagnostics cache is unavailable for KB "
+            + kbName + ". Restart SigmaKEE to rebuild it.</div><br>");
+
 Map<String, Set<String>> syntaxErrors =
-        Diagnostics.kifSyntaxErrors(kb);
+        diagnosticsCache.getKifSyntaxErrors();
 int syntaxErrorCount = 0;
 for (Set<String> errors : syntaxErrors.values())
     syntaxErrorCount += errors.size();
@@ -186,7 +199,7 @@ else {
 out.println("</details></br>");
 
 // Terms without parents
-  List<String> termsWithoutParent = Diagnostics.termsNotBelowEntity(kb);
+  List<String> termsWithoutParent = diagnosticsCache.getTermsNotBelowEntity();
   out.println("<details>");
   out.println("<summary><b style=\"color:DarkRed;\">Error: Terms without a root at Entity</b><hr></summary>");
   out.println(HTMLformatter.termList(termsWithoutParent,kbHref));
@@ -204,7 +217,9 @@ out.println("</details></br>");
       out.println(termDependencyMessage);
       out.println("</div>");
   }
-  if (termDependencyCacheExists) out.println(Diagnostics.printMissingConstituentDependencies(kb, kbHref));
+  if (diagnosticsCache.isTermDependencyCacheAvailable())
+      out.println(Diagnostics.printMissingConstituentDependencies(
+              diagnosticsCache.getMissingConstituentDependencies(), kbHref));
   else {
       out.println("The term dependency cache has not been generated yet.<br>");
       out.println("Required cache file: " + termDependencyCachePath);
@@ -212,14 +227,14 @@ out.println("</details></br>");
   out.println("</details></br>");
 
   // Children of disjoint parents
-  List<String> disjoint = Diagnostics.childrenOfDisjointParents(kb);
+  List<String> disjoint = diagnosticsCache.getChildrenOfDisjointParents();
   out.println("<details>");
   out.println("<summary><b style=\"color:DarkRed;\">Error: Terms with disjoint parents</b><hr></summary>");
   out.println(HTMLformatter.termList(disjoint,kbHref));
   out.println("</details></br>");
 
   // Children of disjoint parents
-  List<String> parts = Diagnostics.partitionViolation(kb);
+  List<String> parts = diagnosticsCache.getPartitionViolations();
   out.println("<details>");
   out.println("<summary><b style=\"color:DarkRed;\">Error: Partition violations</b><hr></summary>");
   for (String s : parts) {
@@ -231,32 +246,32 @@ out.println("</details></br>");
   // Formulae with type conflicts
   out.println("<details>");
   out.println("<summary><b style=\"color:DarkRed;\">Error: Formulae with type conflicts</b><hr></summary>");
-  out.println(Diagnostics.printFormulaeWithTypeViolations(kb, kbHref));
+  out.println(Diagnostics.printFormulaeWithTypeViolations(diagnosticsCache.getFormulaeWithTypeViolations(), kbHref));
   out.println("</details></br>");
 
   // relations without format
-  List<String> termsWithoutFormat = Diagnostics.relationsWithoutFormat(kb);
+  List<String> termsWithoutFormat = diagnosticsCache.getRelationsWithoutFormat();
   out.println("<details>");
   out.println("<summary><b style=\"color:#DAA520;\">Warning: Relations without format</b><hr></summary>");
   out.println(HTMLformatter.termList(termsWithoutFormat,kbHref));
   out.println("</details></br>");
 
   // Terms without documentation
-  List<String> termsWithoutDoc = Diagnostics.termsWithoutDoc(kb);
+  List<String> termsWithoutDoc = diagnosticsCache.getTermsWithoutDoc();
   out.println("<details>");
   out.println("<summary><b style=\"color:#DAA520;\">Warning: Terms without documentation</b><hr></summary>");
   out.println(HTMLformatter.termList(termsWithoutDoc,kbHref));
   out.println("</details></br>");
 
   // Terms with multiple documentation
-  List<String> termsWithMultipleDoc = Diagnostics.termsWithMultipleDoc(kb);
+  List<String> termsWithMultipleDoc = diagnosticsCache.getTermsWithMultipleDoc();
   out.println("<details>");
   out.println("<summary><b style=\"color:#DAA520;\">Warning: Terms with multiple documentation</b><hr></summary>");
   out.println(HTMLformatter.termList(termsWithMultipleDoc,kbHref));
   out.println("</details></br>");
 
   // Terms differing only in capitalization
-  List<String> termCapDiff = Diagnostics.termCapDiff(kb);
+  List<String> termCapDiff = diagnosticsCache.getTermCapDiff();
   out.println("<details>");
   out.println("<summary><b style=\"color:#DAA520;\">Warning: Terms differing only in capitalization</b><hr></summary>");
   out.println(HTMLformatter.termList(termCapDiff,kbHref));
@@ -265,21 +280,21 @@ out.println("</details></br>");
   // Members (instances) of a parent class that are not also members
   // of one of the subclasses that constitute the exhaustive
   // decomposition of the parent class.
-  List<String> termsMissingFromPartition = Diagnostics.membersNotInAnyPartitionClass(kb);
+  List<String> termsMissingFromPartition = diagnosticsCache.getMembersNotInAnyPartitionClass();
   out.println("<details>");
   out.println("<summary><b style=\"color:#DAA520;\">Warning: Instances of a partitioned class that are not instances of one of the class's partitioning subclasses</b><hr></summary>");
   out.println(HTMLformatter.termList(termsMissingFromPartition,kbHref));
   out.println("</details></br>");
 
   // Terms without rules
-  List<String> norule = Diagnostics.termsWithoutRules(kb);
+  List<String> norule = diagnosticsCache.getTermsWithoutRules();
   out.println("<details>");
   out.println("<summary><b style=\"color:#DAA520;\">Warning: Terms that do not appear in any rules</b><hr></summary>");
   out.println(HTMLformatter.termList(norule,kbHref));
   out.println("</details></br>");
 
   // Formulae extraneous quanitified variables
-  List<Formula> noquant = Diagnostics.quantifierNotInBody(kb);
+  List<Formula> noquant = diagnosticsCache.getQuantifierNotInBody();
   out.println("<details>");
   out.println("<summary><b style=\"color:#DAA520;\">Warning: Formulae with extraneous quantified variables</b><hr></summary>");
   for (Formula f : noquant)
@@ -287,7 +302,7 @@ out.println("</details></br>");
   out.println("</details></br>");
 
   // Formulae with unquantified variables appearing only in consequent
-  List<Formula> noquantconseq = Diagnostics.unquantsInConseq(kb);
+  List<Formula> noquantconseq = diagnosticsCache.getUnquantsInConseq();
   out.println("<details>");
   out.println("<summary><b style=\"color:#DAA520;\">Warning: Formulae with unquantified variable appearing only in consequent</b><hr></summary>");
   for (Formula f : noquantconseq)
@@ -297,7 +312,7 @@ out.println("</details></br>");
   // Files with mutual term dependencies
   out.println("<details>");
   out.println("<summary><b style=\"color:#DAA520;\">Warning: Files with mutual dependencies</b><hr></summary>");
-  out.println(Diagnostics.printMutualDependencies(kb,kbHref));
+  out.println(Diagnostics.printMutualDependencies(diagnosticsCache.getMutualDependencies(), kbHref));
   out.println("</details></br>");
 
   // Diagnostic runtime

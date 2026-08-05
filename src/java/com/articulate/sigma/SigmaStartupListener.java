@@ -26,6 +26,9 @@ import com.articulate.sigma.utils.*;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /********************************************************************
  * Listens for server startup and automatically runs SigmaKEE initialization, starting with KBmanager.initializeOnce().
@@ -49,9 +52,25 @@ public class SigmaStartupListener implements ServletContextListener {
         System.out.println("================================ SIGMAKEE INITIALIZING ================================");
         LoggingUtils.log("INFO", "SigmaKEE Startup Beginning!");
         try {
-            KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB("SUMO");
-            if (kb == null) LoggingUtils.log("ERROR", "KB was null!");
+            KBmanager manager = KBmanager.getMgr();
+            manager.initializeOnce();
+            Map<String, DiagnosticsCache> diagnosticsCaches = new ConcurrentHashMap<>();
+            for (String kbName : manager.getKBnames()) {
+                KB kb = manager.getKB(kbName);
+                if (kb == null) {
+                    LoggingUtils.log("ERROR", "Cannot build diagnostics cache: KB " + kbName + " was null");
+                    continue;
+                }
+                try {
+                    diagnosticsCaches.put(kbName, Diagnostics.buildDiagnosticsCache(kb));
+                }
+                catch (Exception e) {
+                    LoggingUtils.log("ERROR", "Diagnostics cache failed for KB " + kbName + ": " + e.getMessage());
+                }
+            }
+            event.getServletContext().setAttribute("diagnosticsCaches",
+                    Collections.unmodifiableMap(diagnosticsCaches));
+            LoggingUtils.log("INFO", "Built diagnostics caches for " + diagnosticsCaches.size() + " knowledge bases");
             userManager = new UserManager();
             jobScheduler = new JobScheduler();
             LoggingUtils.log("Job scheduler started");
