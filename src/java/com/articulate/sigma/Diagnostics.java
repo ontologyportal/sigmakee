@@ -112,11 +112,10 @@ public class Diagnostics {
                 result.put(constituent, Collections.singleton("Could not read constituent: " + e.getMessage()));
             }
         }
-
         return result;
     }
 
-    /** *****************************************************************
+    /*******************************************************************
      * Return a list of terms that do not have a documentation string.
      */
     public static List termsWithoutDoc(KB kb) {
@@ -182,19 +181,53 @@ public class Diagnostics {
      return false;
      }
      */
-    /** *****************************************************************
-     * Return a list of terms that do not have Entity as a parent term.
-     */
-    public static boolean termNotBelowEntity(String term, KB kb) {
 
-        if (LOG_OPS.contains(term) || term.equals(Formula.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term))
-            return false;
-        else if (!kb.kbCache.subclassOf(term,"Entity") && !kb.kbCache.transInstOf(term,"Entity"))
-            return true;
+    /*********************************************************************
+     * Returns true when term has a functional-expression superclass whose
+     * function is declared with a rangeSubclass rooted below Entity.
+     * Example:
+     * (subclass NeuroInflammation (InflammationFn NervousSystem))
+     * (rangeSubclass InflammationFn Inflammation)
+     * @param term The term to be checked if below entity 
+     * @param kb The knowledge base
+     * @return true if below entity, false otherwise
+     */
+    private static boolean hasFunctionalParentBelowEntity(String term, KB kb) {
+
+        List<Formula> subclassFormulas = kb.askWithRestriction(0, "subclass", 1, term);
+        if (subclassFormulas == null) return false;
+        for (Formula subclassFormula : subclassFormulas) {
+            String parent = subclassFormula.getStringArgument(2);
+            if (!Formula.listP(parent)) continue;
+            Formula expression = new Formula(parent);
+            String function = expression.car();
+            if (!kb.isFunction(function)) continue;
+            String range = kb.kbCache.getRange(function);
+            if (StringUtil.emptyString(range) || !range.endsWith("+")) continue;
+            String rangeClass = range.substring(0, range.length() - 1);
+            if (rangeClass.equals("Entity") || kb.kbCache.subclassOf(rangeClass, "Entity") || kb.kbCache.transInstOf(rangeClass, "Entity")) return true;
+        }
         return false;
     }
 
-    /** *****************************************************************
+    /********************************************************************
+     * Return a list of terms that do not have Entity as a parent term.
+     * @param term The term to be checked if below entity 
+     * @param kb The knowledge base
+     * @return true if below entity, false otherwise
+     */
+    public static boolean termNotBelowEntity(String term, KB kb) {
+
+        boolean notBelowEntity = true;
+        if (LOG_OPS.contains(term) || term.equals(Formula.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term))
+            notBelowEntity = false;
+        if (kb.kbCache.subclassOf(term, "Entity") || kb.kbCache.transInstOf(term, "Entity"))
+            notBelowEntity = false;
+        if (hasFunctionalParentBelowEntity(term, kb)) notBelowEntity = false;
+        return notBelowEntity;
+    }
+
+    /******************************************************************
      * Return a list of terms that do not have Entity as a parent term.
      */
     public static List<String> termsNotBelowEntity(KB kb) {
