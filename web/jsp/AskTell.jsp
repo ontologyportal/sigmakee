@@ -4,7 +4,7 @@
 <%@ page import="com.articulate.sigma.parsing.Expr" %>
 <%
     /** Copyright header omitted for brevity; keep your original text **/
-    if (!role.equalsIgnoreCase("admin")) {
+    if (!role.equalsIgnoreCase("user")) {
         response.sendRedirect("login.jsp");
         return;
     }
