@@ -269,14 +269,13 @@ public class Diagnostics {
      */
 
     /*********************************************************************
-     * Returns true when term has a functional-expression superclass whose
-     * function is declared with a rangeSubclass rooted below Entity.
-     * Example:
-     * (subclass NeuroInflammation (InflammationFn NervousSystem))
-     * (rangeSubclass InflammationFn Inflammation)
-     * @param term The term to be checked if below entity 
-     * @param kb The knowledge base
-     * @return true if below entity, false otherwise
+     * Returns true when a term has a functional-expression parent whose
+     * function returns something rooted below Entity.
+     * A rangeSubclass result is a subclass of the range class, while a
+     * range result is an instance of the range class.
+     * @param term the term being checked
+     * @param kb the knowledge base
+     * @return true if the functional parent is below Entity
      */
     private static boolean hasFunctionalParentBelowEntity(String term, KB kb) {
 
@@ -289,9 +288,10 @@ public class Diagnostics {
             String function = expression.car();
             if (!kb.isFunction(function)) continue;
             String range = kb.kbCache.getRange(function);
-            if (StringUtil.emptyString(range) || !range.endsWith("+")) continue;
-            String rangeClass = range.substring(0, range.length() - 1);
-            if (rangeClass.equals("Entity") || kb.kbCache.subclassOf(rangeClass, "Entity") || kb.kbCache.transInstOf(rangeClass, "Entity")) return true;
+            if (StringUtil.emptyString(range)) continue;
+            String rangeClass = range.endsWith("+") ? range.substring(0, range.length() - 1) : range;
+            if (rangeClass.equals("Entity") || kb.kbCache.subclassOf(rangeClass, "Entity") || kb.kbCache.transInstOf(rangeClass, "Entity"))
+                return true;
         }
         return false;
     }
