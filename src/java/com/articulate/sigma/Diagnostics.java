@@ -296,6 +296,27 @@ public class Diagnostics {
         return false;
     }
 
+    /*********************************************************************
+     * Returns true when a term has a subAttribute parent rooted below Entity.
+     * Example:
+     * (subAttribute Concussion TraumaticBrainInjury)
+     * (subclass TraumaticBrainInjury DiseaseOrSyndrome)
+     * @param term the term being checked
+     * @param kb the knowledge base
+     * @return true if a subAttribute parent is below Entity
+     */
+    private static boolean hasSubAttributeParentBelowEntity(String term, KB kb) {
+
+        List<Formula> formulas = kb.askWithRestriction(0, "subAttribute", 1, term);
+        if (formulas == null) return false;
+        for (Formula formula : formulas) {
+            String parent = formula.getStringArgument(2);
+            if (parent.equals("Entity") || kb.kbCache.subclassOf(parent, "Entity") || kb.kbCache.transInstOf(parent, "Entity") || kb.kbCache.subAttributeOf(parent, "Entity"))
+                return true;
+        }
+        return false;
+    }
+
     /********************************************************************
      * Return a list of terms that do not have Entity as a parent term.
      * @param term The term to be checked if below entity 
@@ -305,15 +326,9 @@ public class Diagnostics {
     public static boolean termNotBelowEntity(String term, KB kb) {
 
         boolean notBelowEntity = true;
-        if (LOG_OPS.contains(term) || term.equals(Formula.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term)) {
-            notBelowEntity = false;
-            return notBelowEntity;
-        }
-        if (kb.kbCache.subclassOf(term, "Entity") || kb.kbCache.transInstOf(term, "Entity")) {
-            notBelowEntity = false;
-            return notBelowEntity;
-        }
-        if (hasFunctionalParentBelowEntity(term, kb)) notBelowEntity = false;
+        if (LOG_OPS.contains(term) || term.equals(Formula.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term)) return false;
+        else if (kb.kbCache.subclassOf(term, "Entity") || kb.kbCache.transInstOf(term, "Entity")) return false;
+        else if (hasSubAttributeParentBelowEntity(term, kb) || hasFunctionalParentBelowEntity(term, kb)) notBelowEntity = false;
         return notBelowEntity;
     }
 
@@ -331,14 +346,12 @@ public class Diagnostics {
         Iterator<String> it = kb.getTerms().iterator();
         while (it.hasNext() && (RESULT_LIMIT < 1 || count < RESULT_LIMIT)) {
             term = it.next();
-            if (!termNotBelowEntity(term,kb))
-                continue;
+            if (!termNotBelowEntity(term,kb)) continue;
             else {
                 result.add(term);
                 count++;
             }
-            if (RESULT_LIMIT > 0 && count > RESULT_LIMIT)
-                result.add("limited to 100 results");
+            if (RESULT_LIMIT > 0 && count > RESULT_LIMIT) result.add("limited to 100 results");
         }
         return result;
     }
