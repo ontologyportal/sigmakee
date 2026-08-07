@@ -269,14 +269,13 @@ public class Diagnostics {
      */
 
     /*********************************************************************
-     * Returns true when term has a functional-expression superclass whose
-     * function is declared with a rangeSubclass rooted below Entity.
-     * Example:
-     * (subclass NeuroInflammation (InflammationFn NervousSystem))
-     * (rangeSubclass InflammationFn Inflammation)
-     * @param term The term to be checked if below entity 
-     * @param kb The knowledge base
-     * @return true if below entity, false otherwise
+     * Returns true when a term has a functional-expression parent whose
+     * function returns something rooted below Entity.
+     * A rangeSubclass result is a subclass of the range class, while a
+     * range result is an instance of the range class.
+     * @param term the term being checked
+     * @param kb the knowledge base
+     * @return true if the functional parent is below Entity
      */
     private static boolean hasFunctionalParentBelowEntity(String term, KB kb) {
 
@@ -289,9 +288,31 @@ public class Diagnostics {
             String function = expression.car();
             if (!kb.isFunction(function)) continue;
             String range = kb.kbCache.getRange(function);
-            if (StringUtil.emptyString(range) || !range.endsWith("+")) continue;
-            String rangeClass = range.substring(0, range.length() - 1);
-            if (rangeClass.equals("Entity") || kb.kbCache.subclassOf(rangeClass, "Entity") || kb.kbCache.transInstOf(rangeClass, "Entity")) return true;
+            if (StringUtil.emptyString(range)) continue;
+            String rangeClass = range.endsWith("+") ? range.substring(0, range.length() - 1) : range;
+            if (rangeClass.equals("Entity") || kb.kbCache.subclassOf(rangeClass, "Entity") || kb.kbCache.transInstOf(rangeClass, "Entity"))
+                return true;
+        }
+        return false;
+    }
+
+    /*********************************************************************
+     * Returns true when a term has a subAttribute parent rooted below Entity.
+     * Example:
+     * (subAttribute Concussion TraumaticBrainInjury)
+     * (subclass TraumaticBrainInjury DiseaseOrSyndrome)
+     * @param term the term being checked
+     * @param kb the knowledge base
+     * @return true if a subAttribute parent is below Entity
+     */
+    private static boolean hasSubAttributeParentBelowEntity(String term, KB kb) {
+
+        List<Formula> formulas = kb.askWithRestriction(0, "subAttribute", 1, term);
+        if (formulas == null) return false;
+        for (Formula formula : formulas) {
+            String parent = formula.getStringArgument(2);
+            if (parent.equals("Entity") || kb.kbCache.subclassOf(parent, "Entity") || kb.kbCache.transInstOf(parent, "Entity") || kb.kbCache.subAttributeOf(parent, "Entity"))
+                return true;
         }
         return false;
     }
@@ -305,15 +326,9 @@ public class Diagnostics {
     public static boolean termNotBelowEntity(String term, KB kb) {
 
         boolean notBelowEntity = true;
-        if (LOG_OPS.contains(term) || term.equals(Formula.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term)) {
-            notBelowEntity = false;
-            return notBelowEntity;
-        }
-        if (kb.kbCache.subclassOf(term, "Entity") || kb.kbCache.transInstOf(term, "Entity")) {
-            notBelowEntity = false;
-            return notBelowEntity;
-        }
-        if (hasFunctionalParentBelowEntity(term, kb)) notBelowEntity = false;
+        if (LOG_OPS.contains(term) || term.equals(Formula.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term)) return false;
+        else if (kb.kbCache.subclassOf(term, "Entity") || kb.kbCache.transInstOf(term, "Entity")) return false;
+        else if (hasSubAttributeParentBelowEntity(term, kb) || hasFunctionalParentBelowEntity(term, kb)) notBelowEntity = false;
         return notBelowEntity;
     }
 
@@ -331,14 +346,12 @@ public class Diagnostics {
         Iterator<String> it = kb.getTerms().iterator();
         while (it.hasNext() && (RESULT_LIMIT < 1 || count < RESULT_LIMIT)) {
             term = it.next();
-            if (!termNotBelowEntity(term,kb))
-                continue;
+            if (!termNotBelowEntity(term,kb)) continue;
             else {
                 result.add(term);
                 count++;
             }
-            if (RESULT_LIMIT > 0 && count > RESULT_LIMIT)
-                result.add("limited to 100 results");
+            if (RESULT_LIMIT > 0 && count > RESULT_LIMIT) result.add("limited to 100 results");
         }
         return result;
     }
