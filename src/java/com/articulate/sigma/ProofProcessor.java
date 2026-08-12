@@ -30,14 +30,15 @@ import java.util.regex.Pattern;
 
 import tptp_parser.*;
 
-/** Process results from the inference engine.
+/******************************************************************
+ * Process results from the inference engine.
  */
 public class ProofProcessor {
 
      /** An ArrayList of BasicXMLelement (s). */
     private List<BasicXMLelement> xml = null;
 
-    /** ***************************************************************
+    /******************************************************************
      * Take an ArrayList of BasicXMLelement (s) and process them as
      * needed
      */
@@ -46,7 +47,7 @@ public class ProofProcessor {
     	xml = new ArrayList<>(xmlInput);
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Compare the answer with the expected answer.  Note that this method
      * is very unforgiving in that it requires the exact same format for the
      * expected answer, including the order of variables.
@@ -58,31 +59,27 @@ public class ProofProcessor {
     	BasicXMLelement answer = queryResponseElements.get(answerNum);
     	if (((String) answer.attributes.get("result")).equalsIgnoreCase("no"))
     		return false;
-    	if (((String) answer.attributes.get("result")).equalsIgnoreCase("yes") &&
-    			(expectedAnswer.equalsIgnoreCase("yes")))
+    	if (((String) answer.attributes.get("result")).equalsIgnoreCase("yes") && (expectedAnswer.equalsIgnoreCase("yes")))
     		return true;
     	BasicXMLelement bindingSet = answer.subelements.get(0);
     	if (bindingSet != null) {
             String attr =  bindingSet.attributes.get("type");
-            if ( (attr == null) || !(attr.equalsIgnoreCase("definite")) )
-                return false;
+            if ( (attr == null) || !(attr.equalsIgnoreCase("definite"))) return false;
             BasicXMLelement binding = bindingSet.subelements.get(0);
             BasicXMLelement variableBinding;
             String variable, value;
-            // The bindingSet element should just have one subelement, since non-definite answers are rejected.
             for (int j = 0; j < binding.subelements.size(); j++) {
                 variableBinding = binding.subelements.get(j);
                 variable = variableBinding.attributes.get("name");
                 value = variableBinding.attributes.get("value");
                 result = result.append(Formula.LP).append(variable).append(Formula.SPACE).append(value).append(Formula.RP);
-                if (j < binding.subelements.size()-1)
-                    result = result.append(Formula.SPACE);
+                if (j < binding.subelements.size()-1) result = result.append(Formula.SPACE);
             }
     	}
     	return result.toString().equalsIgnoreCase(expectedAnswer);
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Looks for skolem function from proofsteps if query is not given.
      * There are two types of skolem functions:
      * one with arguments, for instance: (sk0 Human123) or
@@ -91,21 +88,18 @@ public class ProofProcessor {
      */
     public static List<String> returnSkolemStmt(String skolem, List<TPTPFormula> proofSteps) {
 
-    	if (skolem.startsWith(Formula.LP) && skolem.endsWith(Formula.RP))
-    		skolem = skolem.substring(1, skolem.length()-1);
+    	if (skolem.startsWith(Formula.LP) && skolem.endsWith(Formula.RP)) skolem = skolem.substring(1, skolem.length()-1);
     	skolem = skolem.split(Formula.SPACE)[0];
     	Pattern pattern = Pattern.compile("(\\([^\\(|.]*?\\(" + skolem + " .+?\\).*?\\)|\\([^\\(|.]*?" + skolem + "[^\\)|.]*?\\))");
     	Matcher match;
-
     	List<String> matches = new ArrayList<>();
         TPTPFormula step;
     	for (int i = 0; i < proofSteps.size(); i++) {
-                step = proofSteps.get(i);
+            step = proofSteps.get(i);
     		match = pattern.matcher(step.sumo);
     		while (match.find()) {
     			for (int j = 1; j <= match.groupCount(); j++) {
-    				if (!matches.contains(match.group(j)))
-    					matches.add(match.group(j));
+    				if (!matches.contains(match.group(j))) matches.add(match.group(j));
     			}
     		}
     	}
@@ -114,18 +108,15 @@ public class ProofProcessor {
     	return null;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * if the answer clause is found, return null
      */
     private static Formula removeNestedAnswerClauseRecurse(Formula f) {
 
-    	if (StringUtil.emptyString(f.getFormula().trim()))
-    		return null;
-    	if (!f.getFormula().contains("answer"))
-    		return f;
+    	if (StringUtil.emptyString(f.getFormula().trim())) return null;
+    	if (!f.getFormula().contains("answer")) return f;
     	String relation = f.car();
-    	if (relation.equals("answer"))
-    		return null;
+    	if (relation.equals("answer")) return null;
     	if (relation.equals(Formula.NOT)) {
             Formula fcdar = f.cdrAsFormula().carAsFormula();
             if (fcdar == null) {
@@ -133,8 +124,7 @@ public class ProofProcessor {
                 return null;
             }
             Formula fnew = removeNestedAnswerClauseRecurse(fcdar);
-            if (fnew == null)
-                return null;
+            if (fnew == null) return null;
             else {
                 Formula result = new Formula();
                 result.read(Formula.LP + Formula.NOT + Formula.SPACE + fnew.getFormula() + Formula.RP);
@@ -152,60 +142,48 @@ public class ProofProcessor {
             argForm = new Formula();
             argForm.setFormula(f.getStringArgument(arg));
             argRes = removeNestedAnswerClauseRecurse(argForm);
-            if (argRes == null)
-                    foundAnswer = true;
+            if (argRes == null) foundAnswer = true;
             else {
-                if (arg > 1)
-                        strArgs = strArgs + Formula.SPACE;
+                if (arg > 1) strArgs = strArgs + Formula.SPACE;
                 strArgs = strArgs + argRes.getFormula();
             }
             arg = arg + 1;
     	}
         Formula result = new Formula();
-    	if (connective && foundAnswer && arg < 4)
-            result.read(strArgs);
-    	else
-            result.read(Formula.LP + relation + Formula.SPACE + strArgs + Formula.RP);
+    	if (connective && foundAnswer && arg < 4) result.read(strArgs);
+    	else result.read(Formula.LP + relation + Formula.SPACE + strArgs + Formula.RP);
     	return result;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Remove the $answer clause that eProver returns, including any
      * surrounding connective.
      */
     public static String removeNestedAnswerClause(String st) {
 
-    	if (st == null || !st.contains("answer"))
-    		return st;
-    	// clean the substring with "answer" in it
+    	if (st == null || !st.contains("answer")) return st;
         Formula f = new Formula();
     	f.read(st);
-
-		// if there are no nested answers, return the original one
         Formula removeNestedAnswerFormula = removeNestedAnswerClauseRecurse(f);
-		if (removeNestedAnswerFormula == null)
-			return st;
+		if (removeNestedAnswerFormula == null) return st;
     	return removeNestedAnswerFormula.getFormula();
     }
 
 
-    /** ***************************************************************
+    /******************************************************************
      * Return the number of answers contained in this proof.
      */
     public int numAnswers() {
 
-    	if (xml == null || xml.isEmpty())
-    		return 0;
+    	if (xml == null || xml.isEmpty()) return 0;
     	BasicXMLelement queryResponse = xml.get(0);
     	if (queryResponse.tagname.equalsIgnoreCase("queryResponse"))
     		return queryResponse.subelements.size()-1;
-    	// Note that there is a <summary> element under the queryResponse element that shouldn't be counted, hence the -1
-    	else
-    		System.err.println("Error in ProofProcessor.numAnswers(): Bad tag: " + queryResponse.tagname);
+    	else System.err.println("Error in ProofProcessor.numAnswers(): Bad tag: " + queryResponse.tagname);
     	return 0;
     }
 
-    /** ***************************************************************
+    /******************************************************************
      * Convert XML proof to TPTP format
      */
     public static String tptpProof(List<ProofStep> proofSteps) {
@@ -216,19 +194,14 @@ public class ProofProcessor {
             boolean isLeaf;
     		for (int j = 0; j < proofSteps.size(); j++) {
     			step = (ProofStep) proofSteps.get(j);
-    			isLeaf = step.premises.isEmpty() ||
-    					(step.premises.size() == 1 && (step.premises.get(0)) == 0);
-    			//----All are fof because the conversion from SUO-KIF quantifies the variables
+    			isLeaf = step.premises.isEmpty() || (step.premises.size() == 1 && (step.premises.get(0)) == 0);
     			result.append("fof(");
     			result.append(step.number);
     			result.append(",");
-    			if (isLeaf)
-    				result.append("axiom");
-    			else
-    				result.append("plain");
+    			if (isLeaf) result.append("axiom");
+    			else result.append("plain");
     			result.append(",");
     			result.append(SUMOformulaToTPTPformula.tptpParseSUOKIFString(step.axiom,false));
-
     			if (!isLeaf) {
     				result.append(",inference(rule,[],[").append(step.premises.get(0));
     				for (int parent = 1; parent < step.premises.size(); parent++)
@@ -244,20 +217,17 @@ public class ProofProcessor {
     	return(result.toString());
     }
 
-     /** ***************************************************************
+     /******************************************************************
       */
      public static void testRemoveAnswer() {
 
-    	 String stmt = "(not (exists (?VAR1) (and (subclass ?VAR1 Object) " +
-    			 "(not (answer (esk1_1 ?VAR1))))))";
+    	 String stmt = "(not (exists (?VAR1) (and (subclass ?VAR1 Object) " + "(not (answer (esk1_1 ?VAR1))))))";
     	 System.out.println(removeNestedAnswerClause(stmt));
-    	 stmt = "(forall (?VAR1) (or (not (subclass ?VAR1 Object)) " +
-    			 "(answer (esk1_1 ?VAR1))))";
+    	 stmt = "(forall (?VAR1) (or (not (subclass ?VAR1 Object)) " + "(answer (esk1_1 ?VAR1))))";
     	 System.out.println(removeNestedAnswerClause(stmt));
      }
 
-	   /**
-     * **************************************************************
+    /****************************************************************
      * Tally the number of appearances of a particular axiom label in a file.
      * This is intended to be used to analyze E output that looks for
      * contradictions, with the intuition that axioms that appear in most or all
@@ -267,15 +237,14 @@ public class ProofProcessor {
 
         Map<String, String> axioms = new HashMap<>();
         Map<String, Integer> counts = new HashMap<>();
-
         String line;
         File f = new File(file);
         if (f == null) {
             System.err.println("Error in ProofProcessor.tallyAxioms(): The file does not exist " + file);
             return;
         }
-        try (FileReader r = new FileReader(f); // System.out.println( "INFO in WordNet.readNouns(): Reading file " + nounFile.getCanonicalPath() );
-                 LineNumberReader lr = new LineNumberReader(r)) {
+        try (FileReader r = new FileReader(f);
+            LineNumberReader lr = new LineNumberReader(r)) {
             String kbName = KBmanager.getMgr().getDefaultKbName();
             Pattern p;
             Matcher m;
@@ -297,16 +266,15 @@ public class ProofProcessor {
                     }
                 }
             }
-        } catch (IOException ex) {
+        } 
+        catch (IOException ex) {
             ex.printStackTrace();
         }
-
         String val;
         for (String key : axioms.keySet()) {
             val = axioms.get(key);
             System.out.println(key + "\t" + val);
         }
-
         System.out.println();
         Integer vall;
         for (String key : counts.keySet()) {
@@ -315,31 +283,31 @@ public class ProofProcessor {
         }
     }
 
-       /** ***************************************************************
-       */
-      public static void testFormatProof() {
+    /******************************************************************
+     */
+    public static void testFormatProof() {
 
-    	  try {
-    		  KBmanager.getMgr().initializeOnce();
-    		  KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
-    		  String stmt = "(subclass ?X Entity)";
-			  EProver eprover = new EProver(kb, "tptp", 30, 3);
-			  eprover.askEProver(stmt);
-    		  String result = eprover.toString() + Formula.SPACE;
-                  TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                  StringBuilder qlist = new StringBuilder();
-                  qlist.append(Formula.VX);
-                  tpp.parseProofOutput(result,kb);
-    		  result = HTMLformatter.formatTPTP3ProofResult(tpp,stmt,"<hr>\n",
-					  KBmanager.getMgr().getDefaultKbName(),"EnglishLanguage");
-    		  System.out.println(result);
-    	  }
-    	  catch (Exception ex) {
-    		  System.err.println(ex.getMessage());
-    	  }
-      }
+        try {
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getDefaultKbName());
+            String stmt = "(subclass ?X Entity)";
+            EProver eprover = new EProver(kb, "tptp", 30, 3);
+            eprover.askEProver(stmt);
+            String result = eprover.toString() + Formula.SPACE;
+                TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                StringBuilder qlist = new StringBuilder();
+                qlist.append(Formula.VX);
+                tpp.parseProofOutput(result,kb);
+            result = HTMLformatter.formatTPTP3ProofResult(tpp,stmt,"<hr>\n",
+                    KBmanager.getMgr().getDefaultKbName(),"EnglishLanguage");
+            System.out.println(result);
+        }
+        catch (Exception ex) {
+            System.err.println(ex.getMessage());
+        }
+    }
 
-	/** ***************************************************************
+	/******************************************************************
 	 */
 	public static void testFormatProof2(String filename) {
 
@@ -360,7 +328,7 @@ public class ProofProcessor {
 		}
 	}
 
-	/** ***************************************************************
+	/******************************************************************
 	 */
 	public static void showHelp() {
 
@@ -370,23 +338,20 @@ public class ProofProcessor {
 		System.out.println("  h - show this help");
 	}
 
-	/** ***************************************************************
+	/******************************************************************
 	*  A main method, used only for testing.  It should not be called
 	*  during normal operation.
 	*/
 	public static void main (String[] args) {
 
-	   System.out.println("INFO in ProofProcessor.main()");
-	   System.out.println("args:" + args.length + " : " + Arrays.toString(args));
-	   if (args == null) {
-		System.out.println("no command given");
-		showHelp();
-	   }
-	   else if (args != null && args.length > 0 && args[0].equals("-h"))
-		showHelp();
-	   else {
-                if (args.length > 1 && args[0].equals("-f"))
-                    testFormatProof2(args[1]);
-	   }
+	    System.out.println("INFO in ProofProcessor.main()");
+	    System.out.println("args:" + args.length + " : " + Arrays.toString(args));
+	    if (args == null) {
+	        System.out.println("no command given");
+	        showHelp();
+	    }
+	    else if (args != null && args.length > 0 && args[0].equals("-h"))
+	    showHelp();
+	    else if (args.length > 1 && args[0].equals("-f")) testFormatProof2(args[1]);
 	}
 }

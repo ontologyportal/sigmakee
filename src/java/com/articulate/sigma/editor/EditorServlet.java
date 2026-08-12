@@ -7,9 +7,10 @@ import com.articulate.sigma.tp.ATPResult;
 import com.articulate.sigma.tp.ProverCrashedException;
 import com.articulate.sigma.tp.ProverTimeoutException;
 import com.articulate.sigma.tp.TheoremProverController;
-
+import com.articulate.sigma.parsing.ExprToTFF;
 
 import javax.servlet.*;
+import com.articulate.sigma.tp.InferenceTest;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 import java.io.*;
@@ -73,8 +74,20 @@ public class EditorServlet extends HttpServlet {
             case "loaduserfile":
                 handleLoadUserFile(req, resp, userDir);
                 break;
+            case "runatp":
+                handleRunAtp(req, resp);
+                break;
+            case "runtq":
+                handleRunTq(req, resp);
+                break;
             case "translatetotptp":
                 handleTranslateToTPTP(req, resp);
+                break;
+            case "translatetotff":
+                handleTranslateToTFF(req, resp);
+                break;
+            case "translatetothf":
+                handleTranslateToTHF(req, resp);
                 break;
             case "query":
                 handleQuery(req, resp);
@@ -151,6 +164,42 @@ public class EditorServlet extends HttpServlet {
                 .replace("\"", "\\\"")
                 .replace("\r", "\\r")
                 .replace("\n", "\\n");
+    }
+
+    private void writeTffJson(HttpServletResponse resp,
+                          boolean success,
+                          String message,
+                          String tff) throws IOException {
+
+        StringBuilder json = new StringBuilder();
+        json.append("{\"success\":").append(success);
+
+        if (message != null)
+            json.append(",\"message\":\"").append(escapeJson(message)).append("\"");
+
+        if (tff != null)
+            json.append(",\"tff\":\"").append(escapeJson(tff)).append("\"");
+
+        json.append("}");
+        resp.getWriter().write(json.toString());
+    }
+
+    private void writeThfJson(HttpServletResponse resp,
+                              boolean success,
+                              String message,
+                              String thf) throws IOException {
+
+        StringBuilder json = new StringBuilder();
+        json.append("{\"success\":").append(success);
+
+        if (message != null)
+            json.append(",\"message\":\"").append(escapeJson(message)).append("\"");
+
+        if (thf != null)
+            json.append(",\"thf\":\"").append(escapeJson(thf)).append("\"");
+
+        json.append("}");
+        resp.getWriter().write(json.toString());
     }
 
     /**
@@ -305,6 +354,146 @@ public class EditorServlet extends HttpServlet {
         }
     }
 
+    private void handleTranslateToTFF(HttpServletRequest req,
+                                  HttpServletResponse resp) throws IOException {
+
+        resp.setContentType("application/json; charset=UTF-8");
+
+        String fileName = Optional.ofNullable(req.getParameter("fileName"))
+                .orElse("buffer.kif");
+        String code = Optional.ofNullable(req.getParameter("code")).orElse("");
+        String kbName = Optional.ofNullable(req.getParameter("kb")).orElse("SUMO");
+
+        if (code.trim().isEmpty()) {
+            writeTffJson(resp, false, "No KIF content received.", null);
+            return;
+        }
+
+        try {
+            String result = EditorWorkerQueue.submit(() -> {
+                synchronized (TRANSLATE_LOCK) {
+                    KBmanager.getMgr().initializeOnce();
+
+                    KB kb = KBmanager.getMgr().getKB(kbName);
+                    if (kb == null)
+                        throw new IllegalArgumentException(
+                                "Knowledge base not found: " + kbName);
+
+                    List<String> formulas = splitKifFormulas(code);
+                    String base = fileName.replaceAll("\\.[^.]+$", "");
+                    if (base.isEmpty()) base = "buf";
+
+                    StringBuilder output = new StringBuilder();
+                    int index = 1;
+
+                    for (String kif : formulas) {
+                        String body =
+                                ExprToTFF.translateKifString(kif, false, kb);
+
+                        if (body == null || body.isBlank())
+                            throw new IllegalArgumentException(
+                                    "Unable to translate formula: " + kif);
+
+                        output.append("tff(")
+                                .append(base).append("_").append(index++)
+                                .append(", axiom, ")
+                                .append(body.trim())
+                                .append(").\n");
+                    }
+
+                    return output.toString();
+                }
+            }, 20000);
+
+            writeTffJson(resp, true, null, result);
+        }
+        catch (RejectedExecutionException e) {
+            resp.setStatus(429);
+            writeTffJson(resp, false, "Server busy. Please retry.", null);
+        }
+        catch (TimeoutException e) {
+            resp.setStatus(503);
+            writeTffJson(resp, false, "Translation timed out.", null);
+        }
+        catch (Exception e) {
+            resp.setStatus(400);
+            writeTffJson(resp, false,
+                    "Exception during translation: " + e.getMessage(), null);
+        }
+    }
+
+    private void handleTranslateToTHF(HttpServletRequest req,
+                                      HttpServletResponse resp) throws IOException {
+
+        resp.setContentType("application/json; charset=UTF-8");
+
+        String fileName = Optional.ofNullable(req.getParameter("fileName"))
+                .orElse("buffer.kif");
+        String code = Optional.ofNullable(req.getParameter("code")).orElse("");
+        String kbName = Optional.ofNullable(req.getParameter("kb")).orElse("SUMO");
+
+        if (code.trim().isEmpty()) {
+            writeThfJson(resp, false, "No KIF content received.", null);
+            return;
+        }
+
+        try {
+            String result = EditorWorkerQueue.submit(() -> {
+                synchronized (TRANSLATE_LOCK) {
+                    KBmanager.getMgr().initializeOnce();
+
+                    KB kb = KBmanager.getMgr().getKB(kbName);
+                    if (kb == null)
+                        throw new IllegalArgumentException(
+                                "Knowledge base not found: " + kbName);
+
+                    List<String> formulas = splitKifFormulas(code);
+                    String base = fileName.replaceAll("\\.[^.]+$", "");
+                    if (base.isEmpty()) base = "buf";
+
+                    StringBuilder output = new StringBuilder();
+                    int index = 1;
+
+                    for (String kif : formulas) {
+                        String body = SUMOformulaToTPTPformula
+                                .tptpParseSUOKIFString(kif, false, "thf");
+
+                        if (body == null || body.isBlank())
+                            throw new IllegalArgumentException(
+                                    "Unable to translate formula: " + kif);
+
+                        output.append("thf(")
+                                .append(base).append("_").append(index++)
+                                .append(", axiom, ")
+                                .append(body.trim())
+                                .append(").\n");
+                    }
+
+                    return output.toString();
+                }
+            }, 20000);
+
+            if (result == null || result.isBlank()) {
+                writeThfJson(resp, false, "Translation produced no output.", null);
+                return;
+            }
+            writeThfJson(resp, true, null, result);
+        }
+        catch (RejectedExecutionException e) {
+            resp.setStatus(429);
+            writeThfJson(resp, false, "Server busy. Please retry.", null);
+        }
+        catch (TimeoutException e) {
+            resp.setStatus(503);
+            writeThfJson(resp, false, "Translation timed out.", null);
+        }
+        catch (Exception e) {
+            resp.setStatus(400);
+            writeThfJson(resp, false,
+                    "Exception during translation: " + e.getMessage(), null);
+        }
+    }
+
     /**
      * Run a highlighted SUO-KIF expression as a query without leaving the editor.
      * The first version intentionally mirrors AskTell's basic Vampire defaults.
@@ -388,6 +577,291 @@ public class EditorServlet extends HttpServlet {
             writeJson(resp, false, "Unable to run query: " +
                     (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), null);
         }
+    }
+    /**
+     * Dispatch ATP execution based on the active editor file type.
+     */
+    private void handleRunAtp(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+
+        String fileName = Optional.ofNullable(req.getParameter("fileName")).orElse("");
+        if (isTqFile(fileName)) {
+            handleRunTq(req, resp);
+            return;
+        }
+        handleRunProblemFile(req, resp);
+    }
+
+    /**
+     * Run a complete TPTP-family editor buffer directly through the selected
+     * prover. This path intentionally does not use InferenceTest.
+     */
+    private void handleRunProblemFile(HttpServletRequest req,
+                                      HttpServletResponse resp) throws IOException {
+
+        resp.setContentType("application/json; charset=UTF-8");
+        String fileName = Optional.ofNullable(req.getParameter("fileName")).orElse("");
+        String code = Optional.ofNullable(req.getParameter("code")).orElse("");
+        String extension = fileExtension(fileName);
+        Set<String> supported = new HashSet<>(Arrays.asList(
+                "tptp", "p", "fof", "tff", "thf", "cnf"));
+
+        if (!supported.contains(extension)) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeJson(resp, false,
+                    "Direct ATP runs require a .tptp, .p, .fof, .tff, .thf, or .cnf file.",
+                    null);
+            return;
+        }
+        if (code.trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeJson(resp, false, "The problem buffer is empty.", null);
+            return;
+        }
+
+        String prover = Optional.ofNullable(req.getParameter("inferenceEngine"))
+                .orElse("VAMPIRE").trim().toUpperCase(Locale.ROOT);
+        String vampireMode = Optional.ofNullable(req.getParameter("vampireMode"))
+                .orElse("CASC").trim().toUpperCase(Locale.ROOT);
+        int timeout = boundedInteger(req.getParameter("timeout"), 30, 1, 300);
+        int maxAnswers = boundedInteger(req.getParameter("maxAnswers"), 1, 1, 100);
+        String language = detectProblemLanguage(extension, code);
+        String kbName = Optional.ofNullable(req.getParameter("kb")).orElse("SUMO").trim();
+        java.nio.file.Path problemFile = null;
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB(kbName.isEmpty() ? "SUMO" : kbName);
+            if (kb == null) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                writeJson(resp, false, "Knowledge base not found: " + kbName, null);
+                return;
+            }
+
+            problemFile = java.nio.file.Files.createTempFile(
+                    "sigma-editor-problem-", "." + extension);
+            java.nio.file.Files.writeString(problemFile, code, StandardCharsets.UTF_8);
+            HttpSession session = req.getSession(false);
+            String sessionId = session == null ? "editor-" + UUID.randomUUID() :
+                    session.getId();
+
+            ATPResult result = new TheoremProverController().runProblemFile(
+                    kb, problemFile, prover, language, vampireMode,
+                    timeout, maxAnswers, sessionId);
+            writeDirectAtpResult(resp, result, language);
+        }
+        catch (ProverTimeoutException e) {
+            resp.setStatus(HttpServletResponse.SC_GATEWAY_TIMEOUT);
+            writeDirectAtpResult(resp, e.getResult(), language);
+        }
+        catch (ProverCrashedException e) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            writeDirectAtpResult(resp, e.getResult(), language);
+        }
+        catch (Exception e) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            writeJson(resp, false, "Unable to run problem file: " +
+                    (e.getMessage() == null ? e.getClass().getSimpleName() :
+                            e.getMessage()), null);
+        }
+        finally {
+            if (problemFile != null)
+                java.nio.file.Files.deleteIfExists(problemFile);
+        }
+    }
+
+    private void writeDirectAtpResult(HttpServletResponse resp, ATPResult result,
+                                      String language) throws IOException {
+
+        if (result == null) {
+            writeJson(resp, false, "The theorem prover returned no result.", null);
+            return;
+        }
+
+        String szs = result.getSzsStatus() == null ? "" :
+                result.getSzsStatus().getTptpName();
+        boolean proved = "Theorem".equalsIgnoreCase(szs);
+        boolean error = result.getSzsStatus() == null ? result.hasErrors() :
+                result.getSzsStatus().isError();
+        List<String> output = new ArrayList<>();
+        if (result.getStdout() != null) output.addAll(result.getStdout());
+        if (result.getStderr() != null) output.addAll(result.getStderr());
+        if (result.getPrimaryError() != null) output.add(result.getPrimaryError());
+
+        StringBuilder json = new StringBuilder();
+        json.append("{\"success\":true")
+                .append(",\"direct\":true")
+                .append(",\"passed\":").append(proved)
+                .append(",\"error\":").append(error)
+                .append(",\"expectationProvided\":false")
+                .append(",\"status\":\"").append(jsonEscape(szs)).append("\"")
+                .append(",\"szs\":\"").append(jsonEscape(szs)).append("\"")
+                .append(",\"translation\":\"").append(jsonEscape(language)).append("\"")
+                .append(",\"time\":").append(result.getElapsedTimeMs())
+                .append(",\"answers\":[]")
+                .append(",\"expected\":[]")
+                .append(",\"proof\":\"")
+                .append(jsonEscape(String.join(System.lineSeparator(), output)))
+                .append("\"}");
+        resp.getWriter().write(json.toString());
+    }
+
+    private static String fileExtension(String fileName) {
+
+        int dot = fileName == null ? -1 : fileName.lastIndexOf('.');
+        return dot < 0 ? "" : fileName.substring(dot + 1).toLowerCase(Locale.ROOT);
+    }
+
+    private static String detectProblemLanguage(String extension, String code) {
+
+        if ("thf".equals(extension) ||
+                java.util.regex.Pattern.compile("(?im)^\\s*thf\\s*\\(").matcher(code).find())
+            return "THF";
+        if ("tff".equals(extension) ||
+                java.util.regex.Pattern.compile("(?im)^\\s*tff\\s*\\(").matcher(code).find())
+            return "TFF";
+        return "FOF";
+
+    }
+
+    /**
+     * Run the active .tq editor buffer with the selected ATP.  The TQ
+     * meta-predicates continue to determine the translation language.
+     */
+    private void handleRunTq(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+
+        resp.setContentType("application/json; charset=UTF-8");
+        String fileName = Optional.ofNullable(req.getParameter("fileName")).orElse("");
+        String code = Optional.ofNullable(req.getParameter("code")).orElse("");
+        String kbName = Optional.ofNullable(req.getParameter("kb")).orElse("SUMO").trim();
+        String prover = Optional.ofNullable(req.getParameter("inferenceEngine"))
+                .orElse("VAMPIRE").trim().toUpperCase(Locale.ROOT);
+        String vampireMode = Optional.ofNullable(req.getParameter("vampireMode"))
+                .orElse("CASC").trim().toUpperCase(Locale.ROOT);
+
+        if (!isTqFile(fileName)) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeJson(resp, false, "ATP runs are available only for .tq files.", null);
+            return;
+        }
+        if (code.trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeJson(resp, false, "The TQ buffer is empty.", null);
+            return;
+        }
+        if (!Arrays.asList("VAMPIRE", "EPROVER", "LEO").contains(prover)) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeJson(resp, false, "Unsupported theorem prover: " + prover, null);
+            return;
+        }
+        if (!Arrays.asList("CASC", "AVATAR", "VAMPIRE").contains(vampireMode))
+            vampireMode = "CASC";
+
+        List<String> available = TheoremProverController.availableProvers();
+        if (!available.contains(prover.toLowerCase(Locale.ROOT))) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeJson(resp, false, prover + " is not configured on this server.", null);
+            return;
+        }
+
+        int timeout = boundedInteger(req.getParameter("timeout"), 30, 1, 300);
+        int maxAnswers = boundedInteger(req.getParameter("maxAnswers"), 1, 1, 100);
+        boolean modusPonens = "yes".equalsIgnoreCase(req.getParameter("ModusPonens"));
+        boolean dropOnePremise = "true".equalsIgnoreCase(req.getParameter("dropOnePremise"));
+        boolean holUseModals = "yes".equalsIgnoreCase(req.getParameter("HolUseModals"));
+        java.nio.file.Path tempTq = null;
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB(kbName.isEmpty() ? "SUMO" : kbName);
+            if (kb == null) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                writeJson(resp, false, "Knowledge base not found: " + kbName, null);
+                return;
+            }
+
+            tempTq = java.nio.file.Files.createTempFile("sigma-editor-", ".tq");
+            java.nio.file.Files.writeString(tempTq, code, StandardCharsets.UTF_8);
+            InferenceTest test = new InferenceTest(tempTq.toString());
+
+            if (!test.errors.isEmpty()) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                writeJson(resp, false, String.join("; ", test.errors), null);
+                return;
+            }
+
+            boolean expectationProvided = !test.expectedAnswers.isEmpty();
+            List<String> displayedExpectations = new ArrayList<>(test.expectedAnswers);
+            // A boolean editor query without an (answer ...) form is still a
+            // proof request. Supplying an implicit "yes" lets InferenceTest
+            // classify and clean up a successful theorem run normally.
+            if (!expectationProvided && !test.query.contains("?"))
+                test.expectedAnswers.add("yes");
+            test.runTest(kb, prover, test.minLang, vampireMode,
+                    test.closedWorldAssumption, modusPonens, dropOnePremise,
+                    holUseModals, timeout, maxAnswers);
+
+            InferenceTest.InferenceTestResult result = test.result;
+            if (result == null) {
+                writeJson(resp, false, "The theorem prover returned no result.", null);
+                return;
+            }
+
+            String proof = result.proof == null ? "" :
+                    String.join(System.lineSeparator(), result.proof);
+            boolean proved = result.szsStatus != null &&
+                    result.szsStatus.startsWith("Theorem");
+            boolean passed = expectationProvided ? result.success : proved;
+            String status = expectationProvided
+                    ? (result.success ? "PASS" : "FAIL")
+                    : (proved ? "PROVED" : "NOT PROVED");
+
+            StringBuilder json = new StringBuilder();
+            json.append("{\"success\":true")
+                    .append(",\"passed\":").append(passed)
+                    .append(",\"expectationProvided\":").append(expectationProvided)
+                    .append(",\"status\":\"").append(status).append("\"")
+                    .append(",\"szs\":\"").append(jsonEscape(result.szsStatus)).append("\"")
+                    .append(",\"translation\":\"").append(jsonEscape(test.minLang)).append("\"")
+                    .append(",\"time\":").append(result.execTime)
+                    .append(",\"answers\":").append(jsonStringArray(result.answers))
+                    .append(",\"expected\":").append(jsonStringArray(displayedExpectations))
+                    .append(",\"proof\":\"").append(jsonEscape(proof)).append("\"")
+                    .append("}");
+            resp.getWriter().write(json.toString());
+        }
+        catch (Exception e) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            writeJson(resp, false, "Unable to run TQ query: " +
+                    (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), null);
+        }
+        finally {
+            if (tempTq != null)
+                java.nio.file.Files.deleteIfExists(tempTq);
+        }
+    }
+
+    private static int boundedInteger(String raw, int fallback, int min, int max) {
+
+        try {
+            int value = Integer.parseInt(raw);
+            return Math.max(min, Math.min(max, value));
+        }
+        catch (Exception ignored) {
+            return fallback;
+        }
+    }
+
+    private static String jsonStringArray(Collection<String> values) {
+
+        if (values == null || values.isEmpty()) return "[]";
+        StringBuilder json = new StringBuilder("[");
+        boolean first = true;
+        for (String value : values) {
+            if (!first) json.append(',');
+            json.append('"').append(jsonEscape(value)).append('"');
+            first = false;
+        }
+        return json.append(']').toString();
     }
 
     private void handleFormatOrCheck(HttpServletRequest req, HttpServletResponse resp)
@@ -473,7 +947,7 @@ public class EditorServlet extends HttpServlet {
                     synchronized (KIF_CHECK_LOCK) {
                         return KifFileChecker.check(textFinal, fileNameFinal);
                     }
-                }, 4000);
+                }, 15000);
             }
             catch (RejectedExecutionException rex) {
                 writeBusy(resp, "Server busy. Please retry.");
@@ -527,7 +1001,7 @@ public class EditorServlet extends HttpServlet {
     }
 
     // ============================================================
-    // KIF splitter used by translate handler
+    // KIF splitter used by translate handle
     // ============================================================
 
     /**

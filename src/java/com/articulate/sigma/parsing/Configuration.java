@@ -63,6 +63,7 @@ public class Configuration {
         "smtpEmailUser",
         "smtpEmailPassword",
         "smtpEmailServer",
+        "sumokbname",
         "sumoDir",
         "systemsDir",
         "isAws"
@@ -128,7 +129,8 @@ public class Configuration {
         "smtpEmailAddress",
         "smtpEmailUser",
         "smtpEmailPassword",
-        "smtpEmailServer"
+        "smtpEmailServer",
+        "sumokbname"
     );
 
     /*****************************************************************
@@ -210,6 +212,7 @@ public class Configuration {
     public String getSmtpEmailPassword() { return getStringPreference("smtpEmailPassword", ""); }
     public String getSmtpEmailServer() { return getStringPreference("smtpEmailServer", ""); }
     public String getSystemsDir() { return getStringPreference("systemsDir", ""); }
+    public String getSumoKbName() { return getStringPreference("sumokbname", "SUMO"); }
     public boolean isAws() { return getBooleanPreference("isAws", false); }
 
     /*****************************************************************
@@ -343,6 +346,7 @@ public class Configuration {
         defaults.put("smtpEmailPassword", "");
         defaults.put("smtpEmailServer", "");
         defaults.put("sumoDir", sumoDir);
+        defaults.put("sumokbname", "SUMO");
         defaults.put("isAws", "false");
         return defaults;
     }

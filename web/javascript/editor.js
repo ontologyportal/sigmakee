@@ -27,6 +27,7 @@ const setMode = () => {
   suppressChangeEvent = true;
   codeEditor.setOption("mode", getActiveMode());
   suppressChangeEvent = false;
+  updateAtpAvailability();
 };
 
 const saveActiveTab = () => codeEditors[activeTab] && (codeEditors[activeTab][1] = codeEditor.getValue());
@@ -212,7 +213,7 @@ function triggerFileUpload() {
 }
 
 function newFile(ext = "kif") {
-  const allowed = ["kif", "tptp", "thf", "tff", "fof", "cnf"];
+  const allowed = ["kif", "tptp", "thf", "tff", "fof", "cnf", "tq"];
   ext = ext.trim().toLowerCase();
   if (!allowed.includes(ext)) {
     alert(`❌ Unsupported base file type: .${ext}`);
@@ -583,6 +584,7 @@ function switchTab(i, { skipSave = false } = {}) {
   const text  = entry ? (entry[1] || "") : "";
   setEditorContent(text);
   setMode();
+  updateTranslateMenu();
   // if (entry && entry.dirty)
   //   markTabUnsaved(i);
   // else
@@ -1070,6 +1072,66 @@ async function translateKifToTptp() {
   }
 }
 
+
+async function translateKifToTff() {
+  const fileName = getActiveFileName();
+  const code = getContent();
+  if (!code.trim()) {
+    alert("Nothing to translate.");
+    return;
+  }
+  try {
+    const res = await postToServlet("translateToTFF", {
+      fileName,
+      code,
+      kb: "SUMO",
+    });
+    if (!res || !res.success) {
+      alert("TFF translation failed:\n" + (res?.message || "Unknown error"));
+      return;
+    }
+    if (!(res.tff || "").trim()) {
+      alert("Translation produced no output.");
+      return;
+    }
+    const newName = fileName.replace(/\.kif$/i, "") + ".tff";
+    openFileInNewTab(newName, res.tff);
+  }
+  catch (e) {
+    console.error("Error while translating to TFF:", e);
+    alert("Unexpected error during translation.");
+  }
+}
+
+async function translateKifToThf() {
+  const fileName = getActiveFileName();
+  const code = getContent();
+  if (!code.trim()) {
+    alert("Nothing to translate.");
+    return;
+  }
+  try {
+    const res = await postToServlet("translateToTHF", {
+      fileName,
+      code,
+      kb: "SUMO",
+    });
+    if (!res || !res.success) {
+      alert("THF translation failed:\n" + (res?.message || "Unknown error"));
+      return;
+    }
+    if (!(res.thf || "").trim()) {
+      alert("Translation produced no output.");
+      return;
+    }
+    const newName = fileName.replace(/\.kif$/i, "") + ".thf";
+    openFileInNewTab(newName, res.thf);
+  }
+  catch (e) {
+    console.error("Error while translating to THF:", e);
+    alert("Unexpected error during translation.");
+  }
+}
 // ======================================================
 // Translate DROPDOWN MENU LOGIC
 // ======================================================
@@ -1134,9 +1196,11 @@ function updateTranslateMenu() {
 
   const label = document.getElementById("translateLabel");
   const kifToTptp = document.getElementById("translate-kif-tptp");
+  const kifToTff = document.getElementById("translate-kif-tff");
+  const kifToThf = document.getElementById("translate-kif-thf");
   const allOptions = document.querySelectorAll(".translate-option");
 
-  if (!label || !kifToTptp) return;
+  if (!label || !kifToTptp || !kifToTff || !kifToThf) return;
 
   // Default: disable all options
   allOptions.forEach((opt) => {
@@ -1146,8 +1210,10 @@ function updateTranslateMenu() {
 
   // Only enable KIF → TPTP when active file is .kif
   if (ext === "kif") {
-    kifToTptp.classList.remove("disabled");
-    kifToTptp.removeAttribute("aria-disabled");
+    [kifToTptp, kifToTff, kifToThf].forEach((option) => {
+      option.classList.remove("disabled");
+      option.removeAttribute("aria-disabled");
+    });
   }
 
   // You can change the label text if you want:
@@ -1166,13 +1232,214 @@ function handleTranslateClick(event, kind) {
     case "kif-tptp":
       translateKifToTptp();
       break;
-    // future cases can go here
+    case "kif-tff":
+      translateKifToTff();
+      break;
+    case "kif-thf":
+      translateKifToThf();
+      break;
     default:
       console.warn("Translate action not implemented:", kind);
   }
 
   closeTranslateMenu();
 }
+
+// ======================================================
+// ATP / TQ QUERY
+// ======================================================
+
+function isActiveTqFile() {
+  return getActiveFileName().toLowerCase().endsWith(".tq");
+}
+
+function activeFileExtension() {
+  return (getActiveFileName().split(".").pop() || "").toLowerCase();
+}
+
+function activeProblemLanguage() {
+  const extension = activeFileExtension();
+  const code = getContent();
+  if (extension === "thf" || /^\s*thf\s*\(/im.test(code))
+    return "THF";
+  if (extension === "tff" || /^\s*tff\s*\(/im.test(code))
+    return "TFF";
+  return "FOF";
+}
+
+function isActiveDirectProblemFile() {
+  return ["tptp", "p", "fof", "tff", "thf", "cnf"]
+    .includes(activeFileExtension());
+}
+
+function isActiveAtpFile() {
+  return isActiveTqFile() || isActiveDirectProblemFile();
+}
+
+function updateAtpAvailability() {
+  const header = document.getElementById("atpHeader");
+  if (!header) return;
+  const available = isActiveAtpFile();
+  header.classList.toggle("atp-unavailable", !available);
+  header.title = available
+    ? "Run the active file with an automated theorem prover"
+    : "Open a TQ or TPTP-family file to use automated theorem proving";
+}
+
+function openAtpModal() {
+  if (!isActiveAtpFile()) {
+    alert("ATP requires an active .tq, .tptp, .p, .fof, .tff, .thf, or .cnf file.");
+    return;
+  }
+  const modal = document.getElementById("atpModal");
+  const note = document.getElementById("atpNote");
+  const runButton = document.getElementById("runAtpButton");
+  if (!modal) return;
+  if (note) note.textContent = isActiveTqFile()
+    ? "The active TQ file's meta-predicates determine the translation language."
+    : "The active problem file will be passed directly to the selected prover.";
+  if (runButton) runButton.textContent = isActiveTqFile()
+    ? "Run TQ Query" : "Run Problem File";
+  modal.style.display = "flex";
+  updateDirectProverCompatibility();
+  toggleVampireOptions();
+}
+
+function closeAtpModal() {
+  const modal = document.getElementById("atpModal");
+  if (modal) modal.style.display = "none";
+}
+function updateDirectProverCompatibility() {
+  const engines = Array.from(document.querySelectorAll(
+    '#atpOptions input[name="inferenceEngine"]'
+  ));
+  const direct = isActiveDirectProblemFile();
+  const thf = activeProblemLanguage() === "THF";
+
+  engines.forEach((engine) => {
+    if (engine.dataset.configuredDisabled === undefined)
+      engine.dataset.configuredDisabled = engine.disabled ? "true" : "false";
+    const unavailable = engine.dataset.configuredDisabled === "true";
+    const incompatible = direct && (
+      (engine.value === "EPROVER" && thf) ||
+      (engine.value === "LEO" && !thf)
+    );
+    engine.disabled = unavailable || incompatible;
+    const card = engine.closest(".card");
+    if (card) card.classList.toggle("engineDisabled", engine.disabled);
+  });
+
+  const selected = engines.find((engine) => engine.checked);
+  if (!selected || selected.disabled) {
+    const fallback = engines.find((engine) =>
+      engine.value === "VAMPIRE" && !engine.disabled
+    ) || engines.find((engine) => !engine.disabled);
+    if (fallback) fallback.checked = true;
+  }
+}
+
+
+function toggleVampireOptions() {
+  const vampire = document.getElementById("engineVampire");
+  const vampireInputs = document.querySelectorAll(
+    '#atpOptions input[name="vampireMode"], #atpOptions #ModusPonens, ' +
+    '#atpOptions #dropOnePremise, #atpOptions #HolUseModals'
+  );
+  vampireInputs.forEach((input) => {
+    input.disabled = vampire && !vampire.checked;
+  });
+}
+
+async function runActiveAtp(event) {
+  event.preventDefault();
+  if (!isActiveAtpFile()) {
+    closeAtpModal();
+    alert("The active tab is no longer an ATP-supported file.");
+    return;
+  }
+
+  const form = document.getElementById("atpOptions");
+  const runButton = document.getElementById("runAtpButton");
+  const status = document.getElementById("atpRunStatus");
+  const results = document.getElementById("atpResults");
+  const options = Object.fromEntries(new FormData(form).entries());
+  const urlParameters = new URLSearchParams(window.location.search);
+
+  runButton.disabled = true;
+  status.className = "atp-run-status running";
+  status.textContent = "Running " +
+    (options.inferenceEngine || "ATP") + "...";
+  results.style.display = "none";
+  results.textContent = "";
+
+  try {
+    const response = await postToServlet("runAtp", {
+      ...options,
+      fileName: getActiveFileName(),
+      code: getContent(),
+      kb: urlParameters.get("kb") || "SUMO"
+    });
+
+    if (!response.success) {
+      status.className = "atp-run-status failed";
+      status.textContent = response.message || "Unable to run the ATP problem.";
+      return;
+    }
+
+    if (response.error) {
+      status.className = "atp-run-status failed";
+      status.textContent = "ERROR: the prover could not process the problem.";
+    }
+    else if (response.direct) {
+      status.className = "atp-run-status " +
+        (response.passed ? "passed" : "failed");
+      status.textContent = response.passed
+        ? "PROVED: the conjecture in the problem file was established."
+        : "NOT PROVED: SZS status " + (response.szs || "Unknown") + ".";
+    }
+    else if (response.expectationProvided) {
+      status.className = "atp-run-status " +
+        (response.passed ? "passed" : "failed");
+      status.textContent = response.passed
+        ? "PASS: returned answers match the TQ expectations."
+        : "FAIL: returned answers do not match the TQ expectations.";
+    }
+    else {
+      status.className = "atp-run-status " +
+        (response.passed ? "passed" : "failed");
+      status.textContent = response.passed
+        ? "PROVED: the conjecture was established. Add (answer yes) to check an explicit expectation."
+        : "NOT PROVED: the prover did not establish the conjecture.";
+    }
+
+    const summary = [
+      "SZS status: " + (response.szs || "Unknown"),
+      (response.direct ? "Input language: " : "Translation: ") +
+        String(response.translation || "").toUpperCase(),
+      "Time: " + response.time + " ms"
+    ];
+    if (!response.direct) {
+      summary.push(
+        "Expected: " + (response.expectationProvided
+          ? JSON.stringify(response.expected || []) : "(none supplied)"),
+        "Actual: " + JSON.stringify(response.answers || [])
+      );
+    }
+    if (response.proof) {
+      summary.push("", "Proof / prover output:", response.proof);
+    }
+    results.textContent = summary.join("\n");
+    results.style.display = "block";
+  }
+  catch (error) {
+    status.className = "atp-run-status failed";
+    status.textContent = "Unable to run the ATP problem: " + error.message;
+  }
+  finally {
+    runButton.disabled = false;
+  }
+}
+
 
 function jumpToLine(line, start = 0) {
   if (!codeEditor) return;

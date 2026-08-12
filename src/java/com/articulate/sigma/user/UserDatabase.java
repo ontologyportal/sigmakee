@@ -57,26 +57,6 @@ public class UserDatabase {
     private void initializeSchema() {
         createUsersTable();
         createPasswordResetTokenTable();
-        createDefaultAdminIfMissing();
-    }
-
-    /********************************************************************
-     */
-    private void createDefaultAdminIfMissing() {
-
-        if (userExists("admin")) return;
-        User admin = new User(
-                "admin",
-                "admin",
-                "admin@example.com",
-                "admin",
-                "Admin",
-                "User",
-                "SigmaKEE",
-                "default bootstrap account"
-        );
-        if (toDB(admin)) System.out.println("UserDatabase: created default admin user admin/admin");
-        else System.err.println("UserDatabase: failed to create default admin user");
     }
 
     /********************************************************************

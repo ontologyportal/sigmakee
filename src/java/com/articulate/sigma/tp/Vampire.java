@@ -112,8 +112,37 @@ public class Vampire {
     }
 
     /*****************************************************************
-     * Initialize a new Vampire Object with a knowledge base reference.
-     * @
+     * Construct Vampire for a complete TPTP-family problem file. This
+     * does not generate or load a SUMO inference file.
+     */
+    public Vampire(String requestedTptpLang, String mode,
+                   int timeout, int maxAnswers) {
+
+        this();
+        if ("tff".equalsIgnoreCase(requestedTptpLang)) {
+            this.requestedTptpLanguage = "tff";
+            this.inferenceFileExtension = "tff";
+        }
+        else if ("thf".equalsIgnoreCase(requestedTptpLang)) {
+            this.requestedTptpLanguage = "thf";
+            this.inferenceFileExtension = "thf";
+            this.logic = Logic.HOL;
+        }
+        if (mode != null) {
+            try {
+                this.mode = ModeType.valueOf(mode.toUpperCase());
+            }
+            catch (IllegalArgumentException ignored) {
+                this.mode = ModeType.CASC;
+            }
+        }
+        this.timeout = timeout;
+        this.maxAnswers = maxAnswers;
+    }
+
+    /*****************************************************************
+     * Initialize a new Vampire object with a knowledge base reference.
+     * @param kb knowledge base used for translated-query inference
      */
     public Vampire(KB kb) {
 
@@ -569,7 +598,7 @@ public class Vampire {
         if (debug > 0) System.out.printf("\nVampire.createCustomCommandList(%s, %d, %s, %s)", executable.getName(), timeout, kbFile.getName(), commands);
         String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder();
-        boolean callerSuppliesMode = commands.contains("--mode");
+        boolean callerSuppliesMode = commands != null && commands.contains("--mode");
         if (!callerSuppliesMode) {
             if (mode == ModeType.AVATAR) {
                 opts.append("-av").append(space).append("on").append(space)
@@ -588,7 +617,8 @@ public class Vampire {
                 System.err.println("Error in Vampire.createCustomCommandList(): no mode selected");
             }
         }
-        for (String s : commands) opts.append(s).append(space);
+        if (commands != null)
+            for (String s : commands) opts.append(s).append(space);
         if (timeout != 0) {
             opts.append("-t").append(space);
             opts.append(timeout).append(space);

@@ -4,7 +4,7 @@
 <%@ page import="com.articulate.sigma.parsing.Expr" %>
 <%
     /** Copyright header omitted for brevity; keep your original text **/
-    if (!role.equalsIgnoreCase("user") || !role.equalsIgnoreCase("admin")) {
+    if (!role.equalsIgnoreCase("user") && !role.equalsIgnoreCase("admin")) {
         response.sendRedirect("login.jsp");
         return;
     }
@@ -715,11 +715,12 @@
                             out.println("<div class='exception-panel'><h4>Unexpected Error</h4><p>" + htmlEncode(e.getMessage()) + "</p></div>");
                         }
                     }
-                } else {
+                } 
+                else {
                     out.println("<font color='red'>Unsupported test file type: " + ext + "</font>");
                 }
-            } else {
-
+            } 
+            else {
                 System.out.println("AskTell running custom");
                 // ---- RUN CUSTOM QUERY (Ask) ----
                 // Reset spinner message to default (clear any stale "Regenerating KB..." from previous Tell)
@@ -776,14 +777,18 @@
                                 out.println("Status: " + tpp.status);
                             }
                         }
-                    } catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
+                    } 
+                    catch (com.articulate.sigma.tp.ExecutableNotFoundException enfe) {
                         renderExceptionPanel(enfe, out);
-                    } catch (ProverTimeoutException | ProverCrashedException pte) {
+                    } 
+                    catch (ProverTimeoutException | ProverCrashedException pte) {
                         renderExceptionPanel(pte, out);
                         if (pte.getResult() != null) out.println(pte.getResult().resultPanelToHTML());
-                    } catch (com.articulate.sigma.tp.ATPException ae) {
+                    } 
+                    catch (com.articulate.sigma.tp.ATPException ae) {
                         renderExceptionPanel(ae, out);
-                    } catch (Exception e) {
+                    } 
+                    catch (Exception e) {
                         out.println("<div class='exception-panel'><h4>Unexpected Error</h4><p>" + htmlEncode(e.getMessage()) + "</p></div>");
                     }
                 }
@@ -909,10 +914,8 @@
 
 <%!
     void setGraphFormat(String format, com.articulate.sigma.trans.TPTP3ProofProcessor tpp){
-        if ("TPTP".equalsIgnoreCase(format))
-            tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.TPTP);
-        else
-            tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.SUO_KIF);
+        if ("TPTP".equalsIgnoreCase(format)) tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.TPTP);
+        else tpp.setGraphFormulaFormat(TPTP3ProofProcessor.GraphFormulaFormat.SUO_KIF);
     }
 
     /** 2) Publish the proof graph (the big repeated block) */
@@ -951,37 +954,25 @@
     }
 
     /** Render an exception panel for ATP exceptions */
-    void renderExceptionPanel(com.articulate.sigma.tp.ATPException e,
-                              javax.servlet.jsp.JspWriter out) throws java.io.IOException {
+    void renderExceptionPanel(com.articulate.sigma.tp.ATPException e, javax.servlet.jsp.JspWriter out) throws java.io.IOException {
         if (e == null) return;
-
         out.println("<div class='exception-panel'>");
         out.println("<h4>" + htmlEncode(e.getEngineName() != null ? e.getEngineName() : "Prover") + " Error</h4>");
         out.println("<p>" + htmlEncode(e.getMessage()) + "</p>");
-
-        // Show command line if available
         if (e.getCommandLine() != null && !e.getCommandLine().isEmpty()) {
             out.println("<div class='meta'>Command: <code>" + htmlEncode(e.getCommandLineString()) + "</code></div>");
         }
-
-        // Show stderr if available
         System.out.println(e.getStderr());
         if (e.hasStderr()) {
             out.println("<details open>");
             out.println("<summary>Error Output</summary>");
             out.println("<pre>");
             java.util.List<String> stderr = e.getStderr();
-            for (int i = 0; i < Math.min(15, stderr.size()); i++) {
-                out.println(htmlEncode(stderr.get(i)));
-            }
-            if (stderr.size() > 15) {
-                out.println("... (" + (stderr.size() - 15) + " more lines)");
-            }
+            for (int i = 0; i < Math.min(15, stderr.size()); i++) out.println(htmlEncode(stderr.get(i)));
+            if (stderr.size() > 15) out.println("... (" + (stderr.size() - 15) + " more lines)");
             out.println("</pre>");
             out.println("</details>");
         }
-
-        // Show suggestion
         String suggestion = e.getSuggestion();
         if (suggestion != null && !suggestion.isEmpty()) {
             out.println("<div class='suggestion'>");
@@ -989,7 +980,6 @@
             out.println(htmlEncode(suggestion).replace("\n", "<br>"));
             out.println("</div>");
         }
-
         out.println("</div>");
     }
 
@@ -1004,53 +994,38 @@
     }
 %>
 <%!
-    void printAnswersBlock(com.articulate.sigma.trans.TPTP3ProofProcessor tpp,
-                           String kbName, String language,
-                           javax.servlet.jsp.JspWriter out) throws java.io.IOException {
-
+    void printAnswersBlock(com.articulate.sigma.trans.TPTP3ProofProcessor tpp, String kbName, String language, javax.servlet.jsp.JspWriter out) throws java.io.IOException {
         boolean hasMap = (tpp.bindingMap != null && !tpp.bindingMap.isEmpty());
         boolean hasList = (tpp.bindings != null && !tpp.bindings.isEmpty());
-
         out.println("<div class='answers-card'>");
         out.println("<h3>Answers</h3>");
-
         if (!hasMap && !hasList) {
             out.println("<div class='answers-empty'>No explicit answer bindings were produced.</div>");
             out.println("</div>");
             return;
         }
-
         out.println("<ol class='answers-list'>");
-
         if (hasMap) {
-            // Variable bindings: ?X = term
             for (java.util.Map.Entry<String,String> e : tpp.bindingMap.entrySet()) {
                 String var = e.getKey();
                 String raw = e.getValue();
                 System.out.println("\n\n\n\n\nAskTell Raw\n" + raw);
                 String term = com.articulate.sigma.trans.TPTP2SUMO.transformTerm(raw);
                 String kbHref = com.articulate.sigma.HTMLformatter.createKBHref(kbName, language);
-                out.println("<li><code>" + var + "</code> = "
-                        + "<a href='" + kbHref + "&term=" + term + "'>" + term + "</a></li>");
+                out.println("<li><code>" + var + "</code> = " + "<a href='" + kbHref + "&term=" + term + "'>" + term + "</a></li>");
             }
-        } else if (hasList) {
-            // Positional answers: 1. term
+        } 
+        else if (hasList) {
             for (int i = 0; i < tpp.bindings.size(); i++) {
                 String raw = String.valueOf(tpp.bindings.get(i));
                 String term = com.articulate.sigma.trans.TPTP2SUMO.transformTerm(raw);
                 String kbHref = com.articulate.sigma.HTMLformatter.createKBHref(kbName, language);
-                out.println("<li>" + (i+1) + ". "
-                        + "<a href='" + kbHref + "&term=" + term + "'>" + term + "</a></li>");
+                out.println("<li>" + (i+1) + ". " + "<a href='" + kbHref + "&term=" + term + "'>" + term + "</a></li>");
             }
         }
-
         out.println("</ol>");
-
-        // Handy meta line
         int count = hasMap ? tpp.bindingMap.size() : tpp.bindings.size();
-        out.println("<div class='answers-meta'>" + count + " answer"
-                + (count==1 ? "" : "s") + " shown.</div>");
-
+        out.println("<div class='answers-meta'>" + count + " answer" + (count==1 ? "" : "s") + " shown.</div>");
         out.println("</div>");
     }
 %>

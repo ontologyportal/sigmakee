@@ -210,3 +210,77 @@ body {font-family: system-ui, sans-serif;}
     background: rgba(200, 200, 200, 0.08);
   }
 }
+/* ATP runner */
+.dropdown-file-label.atp-unavailable {
+  color: #888;
+  opacity: 0.65;
+}
+.atp-modal-window {
+  width: min(900px, 92vw);
+  max-height: 88vh;
+  overflow: auto;
+}
+.atp-note {
+  color: #555;
+  margin: -4px 0 12px;
+}
+.atp-selector .step {
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  padding: 12px 14px;
+  background: #fafafa;
+}
+.atp-selector .row { margin: 8px 0; }
+.atp-selector .inline {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.atp-selector .grid2 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(190px, 1fr));
+  gap: 12px;
+}
+.atp-selector .card {
+  border: 1px solid #ddd;
+  background: #fff;
+  padding: 10px;
+  border-radius: 6px;
+}
+.atp-selector .engineDisabled { opacity: 0.5; }
+.atp-selector .sub,
+.atp-selector .muted {
+  color: #666;
+  font-size: 12px;
+}
+.atp-selector .advanced { margin-top: 8px; }
+.atp-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.atp-actions button {
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.atp-run-status {
+  margin-top: 14px;
+  padding: 8px 10px;
+  border-radius: 4px;
+}
+.atp-run-status:empty { display: none; }
+.atp-run-status.running { background: #eef4ff; color: #174a8b; }
+.atp-run-status.passed { background: #e8f6ec; color: #08752f; }
+.atp-run-status.failed { background: #fdecec; color: #a01420; }
+.atp-results {
+  max-height: 300px;
+  overflow: auto;
+  white-space: pre-wrap;
+  background: #f7f7f7;
+  border: 1px solid #ddd;
+  padding: 10px;
+}
+@media (max-width: 760px) {
+  .atp-selector .grid2 { grid-template-columns: 1fr; }
+}
