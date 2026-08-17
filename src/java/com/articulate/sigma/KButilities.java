@@ -1416,7 +1416,7 @@ public class KButilities implements ServletContextListener {
                 sb.append("<a href=\"").append(s).append("dict.html\">").append(s).append("</a>&nbsp;&nbsp;");
         }
         sb.append("<P>\n");
-        sb.append("<table><tr><th style:\"width:20%\"><b>Term</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
+        sb.append("<table><tr><th style=\"width:20%\"><b>Term</b></th><th style=\"width:15%\"><b>Source</b></th><th style=\"width:65%\"><b>Doc</b></th></tr>\n");
         return sb.toString();
     }
 
@@ -1441,13 +1441,24 @@ public class KButilities implements ServletContextListener {
         return files;
     }
 
+    private static class DocumentationEntry {
+
+        private final String source;
+        private final String text;
+
+        private DocumentationEntry(String source, String text) {
+            this.source = source;
+            this.text = text;
+        }
+    }
+
     /** *************************************************************
      * collect all the documentation strings
      */
-    private static Map<String,String> genDocList(KB kb) {
+    private static Map<String,DocumentationEntry> genDocList(KB kb) {
 
         List<Formula> al = kb.ask("arg",0,"documentation");
-        Map<String,String> map = new TreeMap<>();
+        Map<String,DocumentationEntry> map = new TreeMap<>();
         String arg2;
         for (Formula form : al) {
             if (form.getArgument(2).toString().equals("EnglishLanguage")) {
@@ -1456,7 +1467,10 @@ public class KButilities implements ServletContextListener {
                 String arg1 = form.getArgument(1).toString();
                 arg2 = StringUtil.removeEnclosingQuotes(kb.formatStaticDocumentation(arg2, "EnglishLanguage", true));
                 arg2 = arg2.replace("&term=", "");
-                map.put(arg1, arg2);
+                String source = StringUtil.isNonEmptyString(form.sourceFile)
+                        ? new File(form.sourceFile).getName()
+                        : "";
+                map.put(arg1, new DocumentationEntry(source, arg2));
             }
         }
         return map;
@@ -1493,10 +1507,12 @@ public class KButilities implements ServletContextListener {
      *                 This is useful only for specific applications
      * Show term, label, inCore, doc
      */
-    private static String htmlForDoc(KB kb, String term, String lang, String doc, boolean noSUMO, boolean coreTerm) {
+    private static String htmlForDoc(KB kb, String term, String lang, String source, String doc, boolean noSUMO, boolean coreTerm) {
 
         StringBuilder sb = new StringBuilder();
         sb.append("<a name=\"").append(term).append("\">").append(term).append("</a></td><td>");
+        sb.append(source);
+        sb.append("</td><td>");
         if (coreTerm) {
             List<String> labels = getLabelsForTerm(kb,term,lang);
             sb.append(String.join(", ", labels));
@@ -1516,14 +1532,14 @@ public class KButilities implements ServletContextListener {
     /** *************************************************************
      * generate one documentation string entry
      */
-    private static String genDocLine(boolean shade, KB kb, String term, String lang, String doc, boolean noSUMO, boolean coreTerm) {
+    private static String genDocLine(boolean shade, KB kb, String term, String lang, String source, String doc, boolean noSUMO, boolean coreTerm) {
 
         StringBuilder sb = new StringBuilder();
         if (shade)
             sb.append("<tr bgcolor=\"#ddd\"><td>");
         else
             sb.append("<tr><td>");
-        sb.append(htmlForDoc(kb,term,lang,doc,noSUMO,coreTerm));
+        sb.append(htmlForDoc(kb,term,lang,source,doc,noSUMO,coreTerm));
         return sb.toString();
     }
 
@@ -1534,15 +1550,15 @@ public class KButilities implements ServletContextListener {
      */
     public static void genAllAlphaHTMLDoc(KB kb) {
 
-        Map<String,String> map = genDocList(kb);
+        Map<String,DocumentationEntry> map = genDocList(kb);
         Map<String,PrintWriter> files = genHTMLDocFiles(kb);
         boolean shade = false;
-        String arg2;
+        DocumentationEntry entry;
         PrintWriter pw;
         for (String term : map.keySet()) {
-            arg2 = map.get(term);
+            entry = map.get(term);
             pw = files.get(Character.toString(term.charAt(0)));
-            pw.println(genDocLine(shade, kb, term, "EnglishLanguage", arg2,false,false));
+            pw.println(genDocLine(shade, kb, term, "EnglishLanguage", entry.source, entry.text,false,false));
             shade = ! shade;
         }
         closeDocList(files);
@@ -1555,18 +1571,18 @@ public class KButilities implements ServletContextListener {
     public static void genAllHTMLDoc(KB kb) {
 
         System.out.println("<h2>Data Dictionary</h2>");
-        System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
-        Map<String,String> map = genDocList(kb);
+        System.out.println("<table><tr><th style=\"width:20%\"><b>Term</b></th><th style=\"width:15%\"><b>Source</b></th><th style=\"width:65%\"><b>Doc</b></th></tr>\n");
+        Map<String,DocumentationEntry> map = genDocList(kb);
         boolean shade = false;
-        String arg2;
+        DocumentationEntry entry;
         for (String term : map.keySet()) {
-            arg2 = map.get(term);
+            entry = map.get(term);
             if (shade)
                 System.out.println("<tr bgcolor=\"#ddd\"><td>");
             else
                 System.out.println("<tr><td>");
             // (KB kb, String term, String lang, String doc, boolean noSUMO, boolean coreTerm)
-            System.out.println(htmlForDoc(kb,term,"EnglishLanguage",arg2,false,false));
+            System.out.println(htmlForDoc(kb,term,"EnglishLanguage",entry.source,entry.text,false,false));
             shade = !shade;
         }
         System.out.println("</table>\n");
@@ -1590,22 +1606,22 @@ public class KButilities implements ServletContextListener {
         List<String> aux = new ArrayList<>();
         genDocHeader(true); // true = one page
         System.out.println("<h2>Data Dictionary</h2>");
-        System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th><b>label</b></th><th><b>in List or Aux</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
-        Map<String,String> map = genDocList(kb);
+        System.out.println("<table><tr><th style=\"width:20%\"><b>Term</b></th><th><b>Source</b></th><th><b>label</b></th><th><b>in List or Aux</b></th><th style=\"width:60%\"><b>Doc</b></th></tr>\n");
+        Map<String,DocumentationEntry> map = genDocList(kb);
         boolean shade = false;
         List<String> links;
-        String arg2;
+        DocumentationEntry entry;
         for (String term : map.keySet()) {
             if (!lines.contains(term))
                 continue;
             links = getLinkedTermsInDoc(kb,term); // empty list if none
             aux.addAll(links);
-            arg2 = map.get(term);
+            entry = map.get(term);
             if (shade)
                 System.out.println("<tr bgcolor=\"#ddd\"><td>");
             else
                 System.out.println("<tr><td>");
-            System.out.println(htmlForDoc(kb,term,"EnglishLanguage",arg2,false,true));
+            System.out.println(htmlForDoc(kb,term,"EnglishLanguage",entry.source,entry.text,false,true));
             shade = !shade;
         }
         System.out.println("</table>\n");
