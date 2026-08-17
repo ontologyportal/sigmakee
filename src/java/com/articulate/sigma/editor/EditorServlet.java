@@ -8,6 +8,8 @@ import com.articulate.sigma.tp.ProverCrashedException;
 import com.articulate.sigma.tp.ProverTimeoutException;
 import com.articulate.sigma.tp.TheoremProverController;
 import com.articulate.sigma.parsing.ExprToTFF;
+import com.articulate.sigma.parsing.SuokifVisitor;
+import com.articulate.sigma.trans.THFnew;
 
 import javax.servlet.*;
 import com.articulate.sigma.tp.InferenceTest;
@@ -431,6 +433,15 @@ public class EditorServlet extends HttpServlet {
                 .orElse("buffer.kif");
         String code = Optional.ofNullable(req.getParameter("code")).orElse("");
         String kbName = Optional.ofNullable(req.getParameter("kb")).orElse("SUMO");
+        String thfVariant = Optional.ofNullable(req.getParameter("thfVariant"))
+                .orElse("plain").trim().toLowerCase(Locale.ROOT);
+        if (!"plain".equals(thfVariant) && !"modal".equals(thfVariant)) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            writeThfJson(resp, false, "Unknown THF variant: " + thfVariant, null);
+            return;
+        }
+        boolean useModal = "modal".equals(thfVariant);
+
 
         if (code.trim().isEmpty()) {
             writeThfJson(resp, false, "No KIF content received.", null);
@@ -448,25 +459,34 @@ public class EditorServlet extends HttpServlet {
                                 "Knowledge base not found: " + kbName);
 
                     List<String> formulas = splitKifFormulas(code);
-                    String base = fileName.replaceAll("\\.[^.]+$", "");
-                    if (base.isEmpty()) base = "buf";
-
                     StringBuilder output = new StringBuilder();
-                    int index = 1;
 
                     for (String kif : formulas) {
-                        String body = SUMOformulaToTPTPformula
-                                .tptpParseSUOKIFString(kif, false, "thf");
-
-                        if (body == null || body.isBlank())
+                        SuokifVisitor visitor = SuokifVisitor.parseString(kif);
+                        Formula formula = visitor.result.isEmpty()
+                                ? null
+                                : visitor.result.values().iterator().next();
+                        if (formula == null || formula.expr == null)
                             throw new IllegalArgumentException(
-                                    "Unable to translate formula: " + kif);
+                                    "Unable to parse formula: " + kif);
 
-                        output.append("thf(")
-                                .append(base).append("_").append(index++)
-                                .append(", axiom, ")
-                                .append(body.trim())
-                                .append(").\n");
+                        StringWriter translated = new StringWriter();
+                        if (useModal) {
+                            PrintWriter writer = new PrintWriter(translated);
+                            THFnew.oneTransExpr(kb, formula, writer);
+                            writer.flush();
+                        }
+                        else {
+                            THFnew.oneTransNonModalExpr(kb, formula, translated);
+                        }
+
+                        String thf = translated.toString();
+                        if (!thf.contains("thf("))
+                            throw new IllegalArgumentException(
+                                    "Formula was excluded from " + thfVariant +
+                                    " THF translation: " + kif);
+
+                        output.append(thf);
                     }
 
                     return output.toString();

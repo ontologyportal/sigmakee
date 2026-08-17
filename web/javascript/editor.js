@@ -1103,7 +1103,7 @@ async function translateKifToTff() {
   }
 }
 
-async function translateKifToThf() {
+async function translateKifToThf(variant = "plain") {
   const fileName = getActiveFileName();
   const code = getContent();
   if (!code.trim()) {
@@ -1115,16 +1115,18 @@ async function translateKifToThf() {
       fileName,
       code,
       kb: "SUMO",
+      thfVariant: variant,
     });
     if (!res || !res.success) {
-      alert("THF translation failed:\n" + (res?.message || "Unknown error"));
+      alert(`THF ${variant} translation failed:\n` + (res?.message || "Unknown error"));
       return;
     }
     if (!(res.thf || "").trim()) {
       alert("Translation produced no output.");
       return;
     }
-    const newName = fileName.replace(/\.kif$/i, "") + ".thf";
+    const suffix = variant === "modal" ? "_modal.thf" : "_plain.thf";
+    const newName = fileName.replace(/\.kif$/i, "") + suffix;
     openFileInNewTab(newName, res.thf);
   }
   catch (e) {
@@ -1197,10 +1199,12 @@ function updateTranslateMenu() {
   const label = document.getElementById("translateLabel");
   const kifToTptp = document.getElementById("translate-kif-tptp");
   const kifToTff = document.getElementById("translate-kif-tff");
-  const kifToThf = document.getElementById("translate-kif-thf");
+  const kifToThfPlain = document.getElementById("translate-kif-thf-plain");
+  const kifToThfModal = document.getElementById("translate-kif-thf-modal");
   const allOptions = document.querySelectorAll(".translate-option");
 
-  if (!label || !kifToTptp || !kifToTff || !kifToThf) return;
+  if (!label || !kifToTptp || !kifToTff ||
+      !kifToThfPlain || !kifToThfModal) return;
 
   // Default: disable all options
   allOptions.forEach((opt) => {
@@ -1210,7 +1214,7 @@ function updateTranslateMenu() {
 
   // Only enable KIF → TPTP when active file is .kif
   if (ext === "kif") {
-    [kifToTptp, kifToTff, kifToThf].forEach((option) => {
+    [kifToTptp, kifToTff, kifToThfPlain, kifToThfModal].forEach((option) => {
       option.classList.remove("disabled");
       option.removeAttribute("aria-disabled");
     });
@@ -1235,8 +1239,11 @@ function handleTranslateClick(event, kind) {
     case "kif-tff":
       translateKifToTff();
       break;
-    case "kif-thf":
-      translateKifToThf();
+    case "kif-thf-plain":
+      translateKifToThf("plain");
+      break;
+    case "kif-thf-modal":
+      translateKifToThf("modal");
       break;
     default:
       console.warn("Translate action not implemented:", kind);

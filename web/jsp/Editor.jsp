@@ -198,10 +198,16 @@
                 KIF -> TFF
               </a>
               <a href="#"
-                id="translate-kif-thf"
+                id="translate-kif-thf-plain"
                 class="translate-option"
-                onclick="handleTranslateClick(event, 'kif-thf')">
-                KIF -> THF
+                onclick="handleTranslateClick(event, 'kif-thf-plain')">
+                KIF -> THF (plain)
+              </a>
+              <a href="#"
+                id="translate-kif-thf-modal"
+                class="translate-option"
+                onclick="handleTranslateClick(event, 'kif-thf-modal')">
+                KIF -> THF (modal)
               </a>
               <a href="#" class="translate-option disabled">TPTP -> KIF (coming soon)</a>
               <a href="#" class="translate-option disabled">TPTP -> THF (coming soon)</a>
