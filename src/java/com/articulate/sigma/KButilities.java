@@ -1428,7 +1428,8 @@ public class KButilities implements ServletContextListener {
         Map<String,PrintWriter> files = new TreeMap<>();
         List<String> ascii = genAscii();
         for (String s : ascii) {
-            try (FileWriter fw = new FileWriter(s + "dict.html"); PrintWriter pw = new PrintWriter(fw)) {
+            try {
+                PrintWriter pw = new PrintWriter(new FileWriter(s + "dict.html"));
                 pw.println(head + "\n");
                 files.put(s,pw);
             }
@@ -1481,6 +1482,8 @@ public class KButilities implements ServletContextListener {
 
         List<String> result = new ArrayList<>();
         List<Formula> al = kb.askWithTwoRestrictions(0,"termFormat",1,lang,2,term);
+        for (Formula form : al)
+            result.add(StringUtil.removeEnclosingQuotes(form.getArgument(3).toString()));
         return result;
     }
 
@@ -1492,18 +1495,15 @@ public class KButilities implements ServletContextListener {
      */
     private static String htmlForDoc(KB kb, String term, String lang, String doc, boolean noSUMO, boolean coreTerm) {
 
-        List<String> labels = getLabelsForTerm(kb,term,lang);
         StringBuilder sb = new StringBuilder();
         sb.append("<a name=\"").append(term).append("\">").append(term).append("</a></td><td>");
-        for (String s : labels)
-            sb.append(s).append(", ");
-        sb.delete(sb.length()-2,sb.length());
-        sb.append("</td><td>");
-        if (coreTerm)
+        if (coreTerm) {
+            List<String> labels = getLabelsForTerm(kb,term,lang);
+            sb.append(String.join(", ", labels));
+            sb.append("</td><td>");
             sb.append("yes");
-        else
-            sb.append("no");
-        sb.append("</td><td>");
+            sb.append("</td><td>");
+        }
         sb.append(doc);
         if (!noSUMO) {
             sb.append("[and <a href=\"https://sigma.ontologyportal.org:8443/sigma/Browse.jsp?term=");
