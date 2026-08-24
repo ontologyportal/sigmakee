@@ -309,6 +309,15 @@ public class LEO {
      * @throws ProverTimeoutException if LEO-III times out
      * @throws Exception for other errors
      */
+
+    /**
+     * Run a complete THF problem file without translating a SUO-KIF query.
+     */
+    public void runProblemFile(File problemFile) throws Exception {
+
+        run(problemFile);
+    }
+
     private void run(File kbFile) throws Exception {
 
         if (debug>0) System.out.printf("\nLEO.run(%s)", kbFile.getName());

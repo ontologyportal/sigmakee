@@ -41,6 +41,7 @@ userPages.add("TreeView.jsp");
 userPages.add("WordNet.jsp");
 userPages.add("CheckKifFile.jsp");
 userPages.add("Editor.jsp");
+userPages.add("Downloads.jsp");
 String URLString = request.getRequestURL().toString();
 String pageURLString = URLString.substring(URLString.lastIndexOf("/") + 1);
 HttpSession session = request.getSession(false);

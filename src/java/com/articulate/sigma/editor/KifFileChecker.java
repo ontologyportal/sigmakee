@@ -249,6 +249,7 @@ public class KifFileChecker {
      * Pretty-print KIF contents using the KIF parser and Formula.toString().
      * Preserves top-level forms and tries to keep comments and blank lines
      * in roughly the same places.
+     * @param contents The Kif formulas to be formatted
      */
     public static String formatKif(String contents) {
 
@@ -524,7 +525,7 @@ public class KifFileChecker {
                 int absCol = rel[1] >= 0 ? rel[1] : 0;
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
-                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + uq.length(), errorMessage + offendingLine));
+                msgs.add(new ErrRec(1, fileName, absLine, absCol, absCol + uq.length(), errorMessage + offendingLine));
             }
         }
     }

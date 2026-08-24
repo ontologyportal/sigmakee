@@ -25,6 +25,7 @@ import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KIF;
 import com.articulate.sigma.utils.StringUtil;
+import java.io.File;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -113,6 +114,54 @@ public class TheoremProverController {
                 break;
         }
         return null;
+    }
+
+    /**
+     * Run a complete TPTP-family problem file as-is. No SUMO translation,
+     * generated KB, or InferenceTest processing is involved.
+     */
+    public ATPResult runProblemFile(KB kb, Path problemFile, String proverType,
+                                    String language, String vampireMode,
+                                    int timeout, int maxAnswers,
+                                    String sessionId) throws Exception {
+
+        if (problemFile == null || !Files.isRegularFile(problemFile))
+            throw new IOException("Problem file does not exist: " + problemFile);
+
+        String prover = proverType == null ? "VAMPIRE" :
+                proverType.trim().toUpperCase();
+        String lang = language == null ? "FOF" :
+                language.trim().toUpperCase();
+        File file = problemFile.toFile();
+
+        switch (prover) {
+            case "VAMPIRE": {
+                Vampire vampire = new Vampire(lang, vampireMode, timeout, maxAnswers);
+                vampire.runCustom(file);
+                return vampire.getResult();
+            }
+            case "EPROVER": {
+                if ("THF".equals(lang))
+                    return ATPResult.notRun("EProver",
+                            "EProver does not support THF problems.");
+                EProver eprover = new EProver(kb,
+                        "TFF".equals(lang) ? "tff" : "fof",
+                        timeout, maxAnswers, null);
+                eprover.runProblemFile(file);
+                return eprover.getResult();
+            }
+            case "LEO": {
+                if (!"THF".equals(lang))
+                    return ATPResult.notRun("LEO-III",
+                            "LEO-III direct editor runs require a THF file.");
+                LEO leo = new LEO(kb, "thf", timeout, maxAnswers, null);
+                leo.runProblemFile(file);
+                return leo.getResult();
+            }
+            default:
+                throw new IllegalArgumentException(
+                        "Unsupported theorem prover: " + proverType);
+        }
     }
 
     /********************************************************************

@@ -1,5 +1,6 @@
 <%@ include file="fragments/universal/Prelude.jspf" %>
 <%@ page import="com.articulate.sigma.*, com.articulate.sigma.editor.*, java.util.List" %>
+<%@ page import="com.articulate.sigma.tp.TheoremProverController" %>
 <%@ page import="java.io.*, java.nio.charset.StandardCharsets, java.nio.file.*" %>
 <%
     String pageName = "Editor";
@@ -19,7 +20,7 @@
   <script src="/sigma/javascript/codemirror/search.js"></script>
   <link rel="stylesheet" href="/sigma/javascript/codemirror/codemirror.min.css">
   <link rel="stylesheet" href="/sigma/javascript/codemirror/dialog.css">
-  <link rel="stylesheet" href="Editor.css?v=1">
+  <link rel="stylesheet" href="Editor.css?v=2">
 </head>
 <body>
 <%!
@@ -103,12 +104,22 @@
           errorMessage = "Unable to open file: " + e.getMessage();
       }
   }
+
+  List<String> availableProvers = TheoremProverController.availableProvers();
+  String inferenceEngine = availableProvers.contains("vampire") ? "VAMPIRE" :
+          (availableProvers.contains("eprover") ? "EPROVER" : "LEO");
+  String vampireMode = "CASC";
+  int maxAnswers = 1;
+  int timeout = 30;
+  boolean modusPonens = false;
+  Boolean dropOnePremise = false;
+  boolean holUseModals = false;
 %>
 <div class="card">
   <form onsubmit="return false;" enctype="multipart/form-data" style="display:none;" id="uploadForm">
-    <input type="file" name="kifFile" id="kifFile" accept=".kif,.tptp,.tff,.p,.fof,.cnf,.thf,.txt" required />
+    <input type="file" name="kifFile" id="kifFile" accept=".kif,.tq,.tptp,.tff,.p,.fof,.cnf,.thf,.txt" required />
   </form>
-  <script src="/sigma/javascript/editor.js?v=3"></script>
+  <script src="/sigma/javascript/editor.js?v=8"></script>
   <script>
     window.initialErrors = [
       <%
@@ -147,9 +158,6 @@
         <div class="editor-header">
           <!-- File / Format / Help -->
           <div class="dropdown" id="fileDropdown">
-            <span class="dropdown-file-label" onclick="queryHighlightedExpression()">
-              Query selection
-            </span>
             <span class="dropdown-file-label" onclick="toggleFileMenu(event)">File ></span>
             <span class="dropdown-file-label" onclick="formatBuffer()">Format</span>
             <span class="dropdown-file-label" onclick="openHelpModal()">Help</span>
@@ -159,10 +167,10 @@
                 <div class="submenu-content">
                   <a href="#" onclick="newFile('kif')">KIF (.kif)</a>
                   <a href="#" onclick="newFile('tptp')">TPTP (.tptp)</a>
-                  <a href="#" onclick="newFile('thf')">THF (.thf)</a>
                   <a href="#" onclick="newFile('tff')">TFF (.tff)</a>
-                  <a href="#" onclick="newFile('fof')">FOF (.fof)</a>
+                  <a href="#" onclick="newFile('thf')">THF (.thf)</a>
                   <a href="#" onclick="newFile('cnf')">CNF (.cnf)</a>
+                  <a href="#" onclick="newFile('tq')">TQ (.tq)</a>
                 </div>
               </div>
               <a href="#" onclick="openServerPathPrompt()">Open Server Path</a>
@@ -173,62 +181,75 @@
               <a href="#" onclick="triggerFileUpload()">Upload</a>
             </div>
           </div>
-
-          <!-- NEW: Translate dropdown -->
           <div class="dropdown" id="translateDropdown">
             <span class="dropdown-file-label" id="translateLabel"
                   onclick="toggleTranslateMenu(event)">Translate ></span>
             <div class="dropdown-content" id="translateDropdownContent">
-              <!-- Only this one is implemented; JS will enable it for .kif files -->
               <a href="#"
                 id="translate-kif-tptp"
                 class="translate-option"
                 onclick="handleTranslateClick(event, 'kif-tptp')">
                 KIF -> TPTP
               </a>
-              <a href="#" class="translate-option disabled">KIF -> THF (coming soon)</a>
-              <a href="#" class="translate-option disabled">KIF -> TFF (coming soon)</a>
+              <a href="#"
+                id="translate-kif-tff"
+                class="translate-option"
+                onclick="handleTranslateClick(event, 'kif-tff')">
+                KIF -> TFF
+              </a>
+              <a href="#"
+                id="translate-kif-thf-plain"
+                class="translate-option"
+                onclick="handleTranslateClick(event, 'kif-thf-plain')">
+                KIF -> THF (plain)
+              </a>
+              <a href="#"
+                id="translate-kif-thf-modal"
+                class="translate-option"
+                onclick="handleTranslateClick(event, 'kif-thf-modal')">
+                KIF -> THF (modal)
+              </a>
               <a href="#" class="translate-option disabled">TPTP -> KIF (coming soon)</a>
               <a href="#" class="translate-option disabled">TPTP -> THF (coming soon)</a>
             </div>
           </div>
-
-          <%-- existing file-name display stays as-is --%>
+          <span class="dropdown-file-label" id="atpHeader" onclick="openAtpModal()">ATP ></span>
+          <!--<span class="dropdown-file-label" onclick="queryHighlightedExpression()">
+            Query selection
+          </span> -->
           <% if (fileName != null) { %>
             <div class="file-name-display" id="file-name">Uploaded: <%= esc(fileName) %></div>
           <% } else { %>
             <div class="file-name-display" id="file-name"></div>
           <% } %>
         </div>
-
         <hr class="divider">
         <div class="tab-bar" id="tabBar"></div>
-        <!-- Editor -->
         <textarea id="codeEditor" style="display: none;"></textarea>
       </div>
-
-      <!-- Error box -->
       <div class="scroller msg <%= (errors == null || errors.isEmpty()) ? "success" : "errors-box" %>"><div class="problems-title">Problems:</div><hr class="problems-divider"><div class="problems-body">
     <%
         if (errorMessage != null) {
     %>
           <%= esc(errorMessage) %>
     <%
-        } else if (errors == null || errors.isEmpty()) {
+        } 
+        else if (errors == null || errors.isEmpty()) {
           if (fileName != null || codeContent != null) {
     %>
           &#9989; No errors found.
     <%
-          } else {
+          } 
+          else {
     %>
           Ready to check code.
     <%
           }
-        } else {
+        } 
+        else {
           java.util.Set<Integer> errorLines = new java.util.HashSet<>();
           for (ErrRec e : errors) {
-              if (e.line >= 0)
-                  errorLines.add(e.line);
+              if (e.line >= 0) errorLines.add(e.line);
           }
           boolean first = true;
           for (ErrRec e : errors) {
@@ -249,7 +270,6 @@
   </div>   <!-- scroller msg -->
 </div>     <!-- layout -->
 </div>     <!-- card -->
-
 <!-- Open File Modal -->
 <div id="openFileModal" class="modal-overlay" style="display:none;">
   <div class="modal-window">
@@ -264,30 +284,23 @@
     <button class="modal-close" onclick="closeOpenFileModal()">Close</button>
   </div>
 </div>
-
 <!-- Save File Modal -->
 <div id="saveFileModal" class="modal-overlay" style="display:none;">
   <div class="modal-window">
     <h3>Save File</h3>
     <hr class="divider">
-
     <label>File name:</label>
     <input id="saveFileNameInput" type="text" style="width:100%; margin-top:6px;">
-
     <h4 style="margin-top:12px;">Existing Files:</h4>
     <ul id="saveFileList" class="file-list" style="max-height:180px; overflow-y:auto; border:1px solid #ccc; padding:6px;">
       <li>Loading...</li>
     </ul>
-
     <div style="flex:1; margin-top:10px;">
       <button class="modal-close" onclick="saveFile()">Save</button>
       <button class="modal-close" onclick="closeSaveFileModal()">Cancel</button>
     </div>
-
   </div>
 </div>
-
-
 <div id="saveAsModal" class="modal-overlay" style="display:none;">
   <div class="modal-window">
     <h3>Save File As</h3>
@@ -302,12 +315,29 @@
     <button onclick="closeSaveAsModal()">Cancel</button>
   </div>
 </div>
-
+<div id="atpModal" class="modal-overlay" style="display:none;">
+  <div class="modal-window atp-modal-window">
+    <h3>Automated Theorem Proving</h3>
+    <p class="atp-note" id="atpNote">
+      The active TQ file's meta-predicates determine the translation language.
+    </p>
+    <form id="atpOptions" onsubmit="runActiveAtp(event)">
+      <div class="atp-selector">
+        <%@ include file="fragments/tp/ProverSelector.jspf" %>
+      </div>
+      <div class="atp-actions">
+        <button type="submit" id="runAtpButton">Run TQ Query</button>
+        <button type="button" class="modal-close" onclick="closeAtpModal()">Close</button>
+      </div>
+    </form>
+    <div id="atpRunStatus" class="atp-run-status" aria-live="polite"></div>
+    <pre id="atpResults" class="atp-results" style="display:none;"></pre>
+  </div>
+</div>
 <div id="helpModal" class="modal-overlay" style="display:none;">
   <div class="modal-window">
     <h3>Editor Help</h3>
     <hr class="divider">
-
     <div class="help-content" style="max-height:260px; overflow-y:auto; font-size:0.9rem; line-height:1.4;">
       <p><strong>Tabs & Files</strong></p>
       <ul>
@@ -317,17 +347,22 @@
         <li>Click the <strong>x</strong> on a tab to close it.</li>
         <li>A small dot after the name means the tab has unsaved changes.</li>
       </ul>
-
       <p style="margin-top:8px;"><strong>File menu</strong></p>
       <ul>
-        <li><strong>File -> New</strong>: create a new empty file of the chosen type (KIF, TPTP, THF, TFF, FOF, CNF).</li>
+        <li><strong>File -> New</strong>: create a new empty file of the chosen type (KIF, TQ, TPTP, THF, TFF, FOF, CNF).</li>
         <li><strong>File -> Open File</strong>: open a file previously saved in your user area.</li>
         <li><strong>File -> Save</strong>: save the current tab to your user directory (overwrites if the name already exists).</li>
         <li><strong>File -> Save As</strong>: save the current content under a new name.</li>
         <li><strong>File -> Download</strong>: download the current buffer as a plain text file.</li>
         <li><strong>File -> Upload</strong>: load a file from your local machine into a new tab.</li>
       </ul>
-
+      <p style="margin-top:8px;"><strong>Automated Theorem Proving</strong></p>
+      <ul>
+        <li>Open a TQ or TPTP-family tab and select <strong>ATP</strong> in the header.</li>
+        <li>Choose an installed prover and its options, then run the query or problem file.</li>
+        <li>The TQ meta-predicates determine whether FOF, TFF, or THF translation is used.</li>
+        <li>TPTP, P, FOF, TFF, THF, and CNF buffers are complete problem files. They are passed directly to the prover, including any conjectures already in the file.</li>
+      </ul>
       <p style="margin-top:8px;"><strong>Editing & Formatting</strong></p>
       <ul>
         <li>The editor automatically chooses syntax highlighting based on the file extension (.kif vs .tptp/.thf/.tff/.fof/.cnf).</li>
@@ -335,7 +370,6 @@
         <li>After you stop typing for about 2 seconds, the editor automatically runs checks.</li>
         <li>Errors and warnings appear in the right-hand panel and are highlighted in the gutter and text.</li>
       </ul>
-
       <p style="margin-top:8px;"><strong>Checks & Errors</strong></p>
       <ul>
         <li>Red lines / text indicate errors; yellow indicates warnings.</li>
@@ -343,13 +377,11 @@
         <li>If the buffer is empty, the checker does nothing.</li>
       </ul>
     </div>
-
     <div style="margin-top:12px; text-align:right;">
       <button class="modal-close" onclick="closeHelpModal()">Close</button>
     </div>
   </div>
 </div>
-
 <%@ include file="fragments/universal/Postlude.jspf" %>
 </body>
 </html>

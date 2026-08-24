@@ -450,6 +450,70 @@ public class EProver {
      * @param commands initial command list
      * @return the command list
      */
+
+    /**
+     * Run a complete TPTP-family problem file without translating a SUO-KIF query.
+     */
+    public void runProblemFile(File problemFile) throws Exception {
+
+        if (problemFile == null || !problemFile.isFile())
+            throw new FileNotFoundException("Problem file not found: " + problemFile);
+
+        long startTime = System.currentTimeMillis();
+        long timeoutMs = this.timeout * 1000L;
+        result = new ATPResult.Builder()
+                .engineName("EProver")
+                .engineMode("standalone")
+                .inputLanguage(this.requestedTptpLanguage.toUpperCase())
+                .inputSource(problemFile.getName())
+                .timeoutMs(timeoutMs)
+                .build();
+
+        List<String> runCommands = new ArrayList<>(this.commands);
+        runCommands.add("--auto");
+        runCommands.add("--tstp-format");
+        runCommands.add("--proof-object");
+        runCommands.add(problemFile.getAbsolutePath());
+        result.setCommandLine(runCommands);
+
+        Process process = new ProcessBuilder(runCommands)
+                .directory(problemFile.getParentFile())
+                .start();
+        List<String> stdoutLines = new ArrayList<>();
+        List<String> stderrLines = new ArrayList<>();
+        Thread stderrReader = new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getErrorStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) stderrLines.add(line);
+            }
+            catch (IOException ignored) {
+            }
+        });
+        stderrReader.start();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stdoutLines.add(line);
+                output.add(line);
+            }
+        }
+        stderrReader.join(5000);
+        int exitCode = process.waitFor();
+        long elapsed = System.currentTimeMillis() - startTime;
+        result.setStdout(stdoutLines);
+        result.setStderr(stderrLines);
+        result.finalize(exitCode, elapsed, elapsed >= timeoutMs);
+
+        if (result.isTimedOut() || result.getSzsStatus() == SZSStatus.TIMEOUT)
+            throw new ProverTimeoutException("EProver", timeoutMs, elapsed,
+                    true, stdoutLines, stderrLines, result);
+        if (exitCode > 128 && exitCode < 160)
+            throw new ProverCrashedException("EProver", exitCode,
+                    stdoutLines, stderrLines, result);
+    }
+
     private static String[] createCustomCommandList(File executable, int timeout, File kbFile, Collection<String> commands) {
 
         if (debug>0) System.out.printf("\nEProver.createCustomCommandList(%s, %d, %s, %s)", executable.getName(), timeout, kbFile.getName(), commands);
