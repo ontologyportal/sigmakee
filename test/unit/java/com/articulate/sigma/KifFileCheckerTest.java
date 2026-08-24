@@ -121,7 +121,7 @@ public class KifFileCheckerTest extends UnitTestBase {
         Formula kifFormula = new Formula(kifString);
         List<ErrRec> errorList = new ArrayList<>();
         kfc.CheckUnquantInConsequent("fileName", kifFormula, kifString, 0, errorList);
-        ErrRec expected = new ErrRec( ErrRec.ERROR, "fileName", 4, 12, 14, "Unquantified variable in consequent - (instance ?Y Man))");
+        ErrRec expected = new ErrRec( ErrRec.WARNING, "fileName", 4, 12, 14, "Unquantified variable in consequent - (instance ?Y Man))");
         ErrRec actual = errorList.get(0);
         if (debug) {
             System.out.println(divider + "TEST = KifFileCheckerTest.testCheckSingleUseVariables1()");
