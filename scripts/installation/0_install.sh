@@ -35,6 +35,9 @@ Options:
   --branch <name>     Branch to install from. Default: $SIGMAKEE_BRANCH
   -h, --help          Show this help.
 
+All other options (--phase, --skip-verify, --no-pull, ...) are passed
+through to the OS-specific installer / common installer unchanged.
+
 Examples:
   bash scripts/installation/install.sh
   bash scripts/installation/install.sh --branch development
@@ -61,7 +64,7 @@ parse_args() {
                 exit 0
                 ;;
             *)
-                die "Unknown option: $1"
+                PASSTHROUGH_ARGS+=("$1")
                 ;;
         esac
         shift
@@ -95,7 +98,7 @@ bootstrap_from_github() {
 }
 
 need_bootstrap() {
-    [ -z "$SCRIPT_DIR" ] || [ ! -f "$SCRIPT_DIR/common.sh" ]
+    [ -z "$SCRIPT_DIR" ] || [ ! -f "$SCRIPT_DIR/2_common.sh" ]
 }
 
 ensure_installer_scripts_exist() {

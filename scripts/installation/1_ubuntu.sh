@@ -140,10 +140,22 @@ EOF
 }
 
 main() {
-    install_ubuntu_prerequisites
-    configure_java
-    configure_ubuntu_environment
-    write_bashrc
+    local phase
+    phase="$(detect_phase_arg "$@")"
+    [ -n "$phase" ] && INSTALL_PHASE="$phase"
+
+    if [ "$INSTALL_PHASE" = "build" ]; then
+        # System packages, Java, and ~/.bashrc were already set up during
+        # the "deps" phase; just make sure this shell has them so `ant`
+        # (invoked by build_all) can run.
+        configure_java
+        configure_ubuntu_environment
+    else
+        install_ubuntu_prerequisites
+        configure_java
+        configure_ubuntu_environment
+        write_bashrc
+    fi
     run_common_install "$@"
 }
 

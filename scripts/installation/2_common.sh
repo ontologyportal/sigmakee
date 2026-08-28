@@ -38,9 +38,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 : "${SUMOJEDIT_SRC:=$ONTOLOGYPORTAL_GIT/SUMOjEdit}"
 : "${SIGMA_CP:=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*}"
+: "${TPTP4X_EXEC:=$ONTOLOGYPORTAL_GIT/TPTP4X/tptp4X}"
 
 : "${SKIP_VERIFY:=false}"
 : "${NO_PULL:=false}"
+: "${INSTALL_PHASE:=all}"
 
 export SIGMAKEE_BRANCH SIGMAKEE_REPO
 export PROGRAMS_DIR ONTOLOGYPORTAL_GIT SIGMA_HOME SIGMA_SRC SUMO_SRC
@@ -49,7 +51,7 @@ export VAMPIRE_VERSION VAMPIRE_INSTALL_DIR VAMPIRE_HOME VAMPIRE_EXEC
 export E_INSTALL_DIR E_HOME EPROVER_EXEC
 export LEO_VERSION LEO_INSTALL_DIR LEO_BIN_DIR LEO_EXEC
 export WORDNET_VERSION WORDNET_DIR
-export SUMOJEDIT_SRC SIGMA_CP
+export SUMOJEDIT_SRC SIGMA_CP TPTP4X_EXEC
 export PATH="$HOME/.local/bin:$VAMPIRE_HOME:$E_HOME:$CATALINA_HOME/bin:$PATH"
 
 INSTALL_ERRORS=()
@@ -132,6 +134,22 @@ download_file() {
     curl -fsSL "$url" -o "$dest"
 }
 
+# Replaces every literal occurrence of $old with $new in $file. Both are
+# treated as literal text (not regexes), so paths with '.', '/', '&', etc.
+# are safe to pass as-is. Avoids `sed -i`, whose flag differs between GNU
+# and BSD sed, so this works the same on Linux and macOS.
+replace_config_value() {
+    local file="$1"
+    local old="$2"
+    local new="$3"
+    local pattern replacement tmp
+    pattern="$(printf '%s' "$old" | sed -e 's/[.[\*^$\/]/\\&/g')"
+    replacement="$(printf '%s' "$new" | sed -e 's/[\/&]/\\&/g')"
+    tmp="$(mktemp)"
+    sed "s/${pattern}/${replacement}/g" "$file" > "$tmp"
+    mv "$tmp" "$file"
+}
+
 usage_common() {
     cat <<EOF
 Usage: bash scripts/installation/install.sh [options]
@@ -140,7 +158,19 @@ Options:
   --branch <name>     Branch to install from. Default: $SIGMAKEE_BRANCH
   --skip-verify       Do not run prerequisite/install verification scripts.
   --no-pull           Do not pull updates for existing repositories.
+  --phase <phase>     Which part of the install to run: deps, build, or all
+                       (default: all). See below.
   -h, --help          Show help.
+
+Phases (useful for splitting a Dockerfile into cacheable layers):
+  deps   Install system/programs prerequisites, clone SigmaKEE and its
+         sibling repos, and install external programs (Tomcat, WordNet,
+         Vampire, E, Leo-III). Does not touch/require the SigmaKEE source
+         tree beyond cloning it.
+  build  Build SigmaKEE and its companions from the source already present
+         at \$SIGMA_SRC. Does not re-clone or re-install anything from
+         the "deps" phase.
+  all    Run both phases in sequence (default, matches prior behavior).
 
 Environment overrides:
   SIGMA_HOME          Default: \$HOME/.sigmakee
@@ -150,6 +180,16 @@ Environment overrides:
   CATALINA_HOME       Default: \$HOME/Programs/apache-tomcat-9.0.107
   TOMCAT_VERSION      Default: 9.0.107
 EOF
+}
+
+detect_phase_arg() {
+    while (($#)); do
+        if [ "$1" = "--phase" ] && [ $# -gt 1 ]; then
+            printf '%s\n' "$2"
+            return
+        fi
+        shift
+    done
 }
 
 parse_common_args() {
@@ -163,6 +203,12 @@ parse_common_args() {
                 NO_PULL=true
                 ;;
 
+            --phase)
+                shift
+                [ $# -gt 0 ] || fail "--phase requires a value."
+                INSTALL_PHASE="$1"
+                ;;
+
             -h|--help)
                 usage_common
                 exit 0
@@ -174,7 +220,11 @@ parse_common_args() {
         esac
         shift
     done
-    export SKIP_VERIFY NO_PULL
+    case "$INSTALL_PHASE" in
+        deps|build|all) ;;
+        *) fail "Unknown --phase: $INSTALL_PHASE (expected deps, build, or all)" ;;
+    esac
+    export SKIP_VERIFY NO_PULL INSTALL_PHASE
 }
 
 welcome() {
@@ -258,11 +308,6 @@ ensure_sumo_checkout() {
 clone_or_update_optional_workspace_repositories() {
     clone_or_update_repo_to_dir "https://github.com/ontologyportal/sigmanlp" \
         "$ONTOLOGYPORTAL_GIT/sigmanlp"
-}
-
-install_workspace_repos() {
-    clone_or_update_sigmakee_repo
-    clone_or_update_workspace_repositories
 }
 
 ensure_sigmakee_checkout() {
@@ -684,14 +729,29 @@ print_error_summary_if_needed() {
 run_common_install() {
     parse_common_args "$@"
     welcome
-    run_required "Creating install directories" ensure_install_directories
-    run_required "Cloning or updating workspace repositories" install_workspace_repos
-    run_optional "Cloning or updating optional workspace repositories" clone_or_update_optional_workspace_repositories
-    run_required "Checking SigmaKEE checkout" ensure_sigmakee_checkout
-    run_required "Checking SUMO checkout" ensure_sumo_checkout
-    run_required "Installing external programs" install_programs
-    run_required "Building and installing SigmaKEE components" build_all
-    verify_installation
+
+    if [ "$INSTALL_PHASE" = "deps" ] || [ "$INSTALL_PHASE" = "all" ]; then
+        run_required "Creating install directories" ensure_install_directories
+        if [ "$INSTALL_PHASE" = "all" ]; then
+            # Only needed when there is no source tree yet (e.g. the curl
+            # bootstrap). Docker's "deps" phase supplies the source itself
+            # afterward (COPY/ADD), so it skips this and only clones siblings.
+            run_required "Cloning or updating SigmaKEE" clone_or_update_sigmakee_repo
+        fi
+        run_required "Cloning or updating workspace repositories" clone_or_update_workspace_repositories
+        run_optional "Cloning or updating optional workspace repositories" clone_or_update_optional_workspace_repositories
+        run_required "Installing external programs" install_programs
+    fi
+
+    if [ "$INSTALL_PHASE" = "build" ] || [ "$INSTALL_PHASE" = "all" ]; then
+        run_required "Checking SigmaKEE checkout" ensure_sigmakee_checkout
+        run_required "Checking SUMO checkout" ensure_sumo_checkout
+        run_required "Building and installing SigmaKEE components" build_all
+        verify_installation
+    fi
+
     print_error_summary_if_needed
-    print_success_message
+    if [ "$INSTALL_PHASE" != "deps" ]; then
+        print_success_message
+    fi
 }
