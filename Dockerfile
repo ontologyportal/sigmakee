@@ -8,7 +8,6 @@ ENV PROGRAMS_DIR=/root/Programs
 ENV CATALINA_OPTS="-Xmx10g -Xss1m"
 
 VOLUME /root/.sigmakee
-VOLUME /root/workspace
 
 RUN apt-get update && apt-get install -y \
     ca-certificates curl unzip git ant make cmake gcc g++ graphviz \

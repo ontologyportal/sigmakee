@@ -1,0 +1,6 @@
+build/
+doc/
+docs/
+docker/
+suo-kif.pdf
+.git/

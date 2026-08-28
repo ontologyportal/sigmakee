@@ -197,7 +197,7 @@ public class Configuration {
     public boolean isLoadLexicons() { return getBooleanPreference("loadLexicons", true); }
     public String getLeoExec() { return getStringPreference("leoExec", ""); }
     public int getMaxPredicateArity() { return getIntegerPreference("maxPredicateArity", 7); }
-    public String getPort() { return getStringPreference("port", "8080"); }
+    public String getPort() { return getStringPreference("port", ""); }
     public boolean isTermFormats() { return getBooleanPreference("termFormats", true); }
     public String getTptpExec() { return getStringPreference("tptpExec", ""); }
     public boolean isTypePrefix() { return getBooleanPreference("typePrefix", true); }
@@ -330,7 +330,7 @@ public class Configuration {
         defaults.put("loadLexicons", "true");
         defaults.put("leoExec", userHome + sep + "Programs" + sep + "Leo-III" + sep + "leo3");
         defaults.put("maxPredicateArity", "7");
-        defaults.put("port", "8080");
+        defaults.put("port", "");
         defaults.put("showCachedFormulas", "true");
         defaults.put("systemsDir", systemsHome);
         defaults.put("termFormats", "true");
