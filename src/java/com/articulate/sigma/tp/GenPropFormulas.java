@@ -575,13 +575,29 @@ public class GenPropFormulas {
     }
 
     /**
+     * Shared Log Learn cache beside the sigmakee checkout.
+     * SIGMA_SRC identifies the checkout; the default is ~/workspace/sigmakee.
+     */
+    public static File getGeneratedFormulasDirectory() {
+
+        String sigmaSrc = System.getenv("SIGMA_SRC");
+        File sourceDir = (sigmaSrc == null || sigmaSrc.isBlank())
+                ? new File(System.getProperty("user.home"), "workspace/sigmakee")
+                : new File(sigmaSrc);
+        File directory = new File(sourceDir.getAbsoluteFile().getParentFile(), "GenerateFormulas");
+        if (!directory.isDirectory() && !directory.mkdirs() && !directory.isDirectory())
+            throw new IllegalStateException("Failed to create directory: " + directory);
+        return directory;
+    }
+
+    /**
      * Store generated formulas HTML into a per-(numvars,depth) file.
      * Each entry is delimited with a marker for indexing later.
      */
     public static void storeGeneratedFormulas(String html, int numvars, int depth) {
 
-        String filename = System.getProperty("user.home")
-                + "/.sigmakee/KBs/GeneratedFormulas/numvars"
+        String filename = getGeneratedFormulasDirectory().getAbsolutePath()
+                + File.separator + "numvar"
                 + numvars + "_depth" + depth + ".html";
         File outFile = new File(filename);
         File parent = outFile.getParentFile();
@@ -606,8 +622,8 @@ public class GenPropFormulas {
      */
     public String getGeneratedFormula(int numvars, int depth, int index) {
 
-     String filename = System.getProperty("user.home")
-                + "/.sigmakee/KBs/GeneratedFormulas/numvar"
+     String filename = getGeneratedFormulasDirectory().getAbsolutePath()
+                + File.separator + "numvar"
                 + numvars + "_depth" + depth + ".html";
         File inFile = new File(filename);
         if (!inFile.exists()) {
@@ -636,8 +652,8 @@ public class GenPropFormulas {
     public static String getRandomGeneratedFormula(int numvars, int depth) {
 
         if (debug) System.out.println("Getting RAND");
-        String filename = System.getProperty("user.home")
-                + "/.sigmakee/KBs/GeneratedFormulas/numvar"
+        String filename = getGeneratedFormulasDirectory().getAbsolutePath()
+                + File.separator + "numvar"
                 + numvars + "_depth" + depth + ".html";
         File inFile = new File(filename);
         if (!inFile.exists()) {
@@ -685,8 +701,8 @@ public static void populateCachedFormulas() {
                         continue;
                     }
 
-                    String filePath = System.getProperty("user.home")
-                            + "/.sigmakee/KBs/GeneratedFormulas/numvar"
+                    String filePath = getGeneratedFormulasDirectory().getAbsolutePath()
+                            + File.separator + "numvar"
                             + numvars + "_depth" + depth + ".html";
 
                     fw = new FileWriter(filePath, true);

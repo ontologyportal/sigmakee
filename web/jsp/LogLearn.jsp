@@ -20,9 +20,7 @@
 // SECURITY AND ENVIRONMENT
 // ======================================================
 GenPropFormulas gpf = new GenPropFormulas();
-String kbDir = KBmanager.configuration.getKbDir();
-String genDir = kbDir + File.separator + "GeneratedFormulas";
-new File(genDir).mkdirs();
+String genDir = GenPropFormulas.getGeneratedFormulasDirectory().getAbsolutePath();
 // ======================================================
 // PARAMETERS
 // ======================================================
